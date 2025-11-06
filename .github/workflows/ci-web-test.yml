@@ -1,0 +1,156 @@
+name: CI - Web Test
+
+on:
+  push:
+    branches:
+      - develop
+      - 'release/**'
+      - main
+    paths:
+      - 'apps/web-test/**'
+      - 'packages/types/**'
+      - '.github/workflows/ci-web-test.yml'
+  pull_request:
+    branches:
+      - develop
+      - 'release/**'
+      - main
+    paths:
+      - 'apps/web-test/**'
+      - 'packages/types/**'
+
+env:
+  REGISTRY: ${{ secrets.HARBOR_REGISTRY }}
+  IMAGE_NAME: my-girok/web-test
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run lint
+        run: |
+          cd apps/web-test
+          pnpm lint || true
+
+      - name: Run type check
+        run: |
+          cd apps/web-test
+          pnpm type-check || true
+
+      - name: Run E2E tests
+        run: |
+          cd apps/web-test
+          pnpm test:e2e || true
+
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Determine environment and API URL
+        id: env
+        run: |
+          # Get short commit SHA
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+
+          # Determine environment, tag, and API URL based on branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # Production
+            ENV="production"
+            TAG="latest"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            # CHANGE THIS: Update with your production API URL
+            API_URL="https://auth-api.girok.dev/api/v1"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            # Development: develop:<hash> + develop:latest
+            ENV="development"
+            TAG="develop:${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop:latest"
+            # CHANGE THIS: Update with your development API URL
+            API_URL="https://auth-api-dev.girok.dev/api/v1"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            # Staging: release:<hash> + release:latest
+            ENV="staging"
+            TAG="release:${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release:latest"
+            # CHANGE THIS: Update with your staging API URL
+            API_URL="https://auth-api-staging.girok.dev/api/v1"
+          else
+            # Other branches: branch:<hash>
+            ENV="development"
+            BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
+            TAG="${BRANCH_NAME}:${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            API_URL="https://auth-api-dev.girok.dev/api/v1"
+          fi
+
+          echo "environment=${ENV}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "version=${TAG}" >> $GITHUB_OUTPUT
+          echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/web-test/Dockerfile
+          push: true
+          tags: ${{ steps.env.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          build-args: |
+            VITE_API_URL=${{ steps.env.outputs.api_url }}
+
+      - name: Image digest
+        run: |
+          echo "Environment: ${{ steps.env.outputs.environment }}"
+          echo "Image pushed with tags: ${{ steps.env.outputs.tags }}"
+          echo "Version: ${{ steps.env.outputs.version }}"
+          echo "API URL: ${{ steps.env.outputs.api_url }}"

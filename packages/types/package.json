@@ -1,0 +1,16 @@
+{
+  "name": "@my-girok/types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types for my-girok",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

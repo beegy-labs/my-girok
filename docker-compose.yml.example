@@ -1,0 +1,205 @@
+version: '3.9'
+
+# My-Girok Docker Compose Configuration Example
+#
+# USAGE:
+#   1. Copy this file: cp docker-compose.yml.example docker-compose.yml
+#   2. Edit docker-compose.yml with your settings
+#   3. Start services: docker compose up -d
+#
+# IMPORTANT:
+#   - docker-compose.yml is gitignored - never commit your actual configuration
+#   - Customize for your environment (development, staging, production)
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: my-girok-postgres
+    restart: unless-stopped
+    environment:
+      # CHANGE THESE VALUES
+      POSTGRES_USER: ${DB_USER:-your_db_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-this-password}
+      POSTGRES_DB: ${DB_NAME:-your_db_name}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-your_db_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my-girok-network
+
+  # Redis Cache (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: my-girok-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my-girok-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: my-girok-auth-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # CHANGE THESE VALUES
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_NAME:-your_db_name}?schema=public
+
+      # JWT Configuration - GENERATE SECURE SECRETS
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-secure-secret-min-32-chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-this-to-secure-refresh-secret}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-15m}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+
+      # URLs
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # OAuth Credentials (Optional)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3001/api/v1/auth/google/callback}
+
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
+      KAKAO_CALLBACK_URL: ${KAKAO_CALLBACK_URL:-http://localhost:3001/api/v1/auth/kakao/callback}
+
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
+      NAVER_CALLBACK_URL: ${NAVER_CALLBACK_URL:-http://localhost:3001/api/v1/auth/naver/callback}
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/v1/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
+    # Development: Uncomment to enable hot reload
+    # volumes:
+    #   - ./services/auth-service/src:/app/services/auth-service/src:ro
+    # command: ["pnpm", "dev"]
+
+  # Web Test Application
+  web-test:
+    build:
+      context: .
+      dockerfile: apps/web-test/Dockerfile
+    container_name: my-girok-web-test
+    restart: unless-stopped
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - my-girok-network
+
+# Persistent Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Network
+networks:
+  my-girok-network:
+    driver: bridge
+
+# ==============================================================================
+# ENVIRONMENT-SPECIFIC CONFIGURATIONS
+# ==============================================================================
+#
+# DEVELOPMENT:
+#   - Use local PostgreSQL and Redis
+#   - Enable source code volumes for hot reload
+#   - Use development secrets
+#   - Set NODE_ENV=development
+#
+# STAGING:
+#   - May use external database
+#   - Production-like configuration
+#   - Set NODE_ENV=staging
+#   - Use proper secrets
+#
+# PRODUCTION:
+#   - MUST use external managed database (RDS, Cloud SQL)
+#   - MUST use external Redis (ElastiCache, Memorystore)
+#   - MUST use strong secrets
+#   - MUST enable HTTPS
+#   - Set NODE_ENV=production
+#   - Consider using Docker Swarm or Kubernetes for scaling
+#
+# ==============================================================================
+# DEPLOYMENT TIPS
+# ==============================================================================
+#
+# For production:
+# 1. Remove postgres and redis services (use managed services)
+# 2. Update DATABASE_URL to point to external database
+# 3. Use docker-compose.override.yml for local customizations
+# 4. Enable resource limits:
+#
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '1.0'
+#          memory: 512M
+#        reservations:
+#          cpus: '0.25'
+#          memory: 256M
+#
+# 5. Enable replicas for high availability:
+#
+#    deploy:
+#      replicas: 3
+#
+# 6. Add logging:
+#
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "10m"
+#        max-file: "3"
+#
+# ==============================================================================

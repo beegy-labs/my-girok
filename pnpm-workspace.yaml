@@ -1,0 +1,7 @@
+packages:
+  - 'apps/*'
+  - 'apps/web/*'
+  - 'apps/mobile/*'
+  - 'services/*'
+  - 'services/gateway/*'
+  - 'packages/*'
