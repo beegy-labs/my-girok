@@ -1,0 +1,20 @@
+apiVersion: v2
+name: my-girok-web-test
+description: Test web application for My-Girok authentication system
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - react
+  - frontend
+  - web
+  - test-app
+
+maintainers:
+  - name: My-Girok Team
+    email: your-team@example.com
+
+home: https://github.com/your-org/my-girok
+sources:
+  - https://github.com/your-org/my-girok

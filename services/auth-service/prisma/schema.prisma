@@ -1,0 +1,94 @@
+// Prisma schema for auth-service
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["typedSql", "relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String?        // null for OAuth users
+  name          String?
+  avatar        String?
+  role          Role           @default(USER)
+  provider      AuthProvider   @default(LOCAL)
+  providerId    String?        // OAuth provider user ID
+  emailVerified Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  sessions      Session[]
+  domainAccess  DomainAccessToken[]
+
+  @@index([email])
+  @@index([provider, providerId])
+  @@map("users")
+}
+
+// Session model for refresh token management
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@map("sessions")
+}
+
+// Domain access token for time-limited sharing
+model DomainAccessToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain    String   // e.g., 'resume', 'portfolio'
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([domain])
+  @@index([token])
+  @@map("domain_access_tokens")
+}
+
+// OAuth provider configuration (enable/disable providers)
+model OAuthProviderConfig {
+  id          String       @id @default(uuid())
+  provider    AuthProvider @unique
+  enabled     Boolean      @default(true)
+  displayName String       // Korean/English name
+  description String?      // Additional info
+  clientId    String?      // OAuth client ID
+  clientSecret String?     // OAuth client secret (encrypted)
+  callbackUrl String?      // OAuth callback URL
+  updatedAt   DateTime     @updatedAt
+  updatedBy   String?      // User ID who made the change
+
+  @@map("oauth_provider_configs")
+}
+
+// Enums
+enum Role {
+  GUEST
+  USER
+  MANAGER
+  MASTER
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  KAKAO
+  NAVER
+  APPLE
+}
