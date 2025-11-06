@@ -23,8 +23,8 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
 
   async validate(
     accessToken: string,
-    refreshToken: string,
-    profile: any,
+    _refreshToken: string,
+    _profile: any,
   ): Promise<any> {
     // Fetch user profile from Naver API
     const response = await fetch('https://openapi.naver.com/v1/nid/me', {
@@ -33,7 +33,7 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
       },
     });
 
-    const data = await response.json();
+    const data = await response.json() as { response: { id: string; email: string; nickname: string; profile_image: string } };
     const { id, email, nickname, profile_image } = data.response;
 
     const user = await this.authService.findOrCreateOAuthUser(

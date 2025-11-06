@@ -180,7 +180,7 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(
+  async generateTokens(
     userId: string,
     email: string,
     role: string,
@@ -211,7 +211,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await this.prisma.session.create({

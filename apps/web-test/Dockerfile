@@ -7,18 +7,27 @@ ENV VITE_API_URL=${VITE_API_URL}
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-COPY apps/web-test/package.json ./apps/web-test/
-
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
-# Install dependencies
+# Copy workspace configuration
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy all package.json files for proper dependency resolution
+COPY apps/web-test/package.json ./apps/web-test/
+COPY packages/types/package.json ./packages/types/
+COPY tsconfig.json ./
+
+# Install dependencies including devDependencies for build
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
+COPY packages/types ./packages/types
 COPY apps/web-test ./apps/web-test
+
+# Build shared packages first
+WORKDIR /app/packages/types
+RUN pnpm build
 
 # Build application
 WORKDIR /app/apps/web-test
@@ -36,18 +45,16 @@ COPY --from=builder /app/apps/web-test/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY apps/web-test/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /usr/share/nginx/html && \
-    chown -R appuser:appuser /var/cache/nginx && \
-    chown -R appuser:appuser /var/log/nginx && \
-    chown -R appuser:appuser /etc/nginx/conf.d && \
+# Setup permissions for nginx user (already exists in nginx:alpine image)
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && \
-    chown -R appuser:appuser /var/run/nginx.pid
+    chown nginx:nginx /var/run/nginx.pid
 
 # Switch to non-root user
-USER appuser
+USER nginx
 
 # Expose port
 EXPOSE 3000

@@ -3,12 +3,15 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-COPY packages/types/package.json ./packages/types/
-
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+# Copy workspace configuration
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
+
+# Copy package files for dependency resolution
+COPY packages/types/package.json ./packages/types/
+COPY services/auth-service/package.json ./services/auth-service/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -21,12 +24,10 @@ COPY services/auth-service ./services/auth-service
 WORKDIR /app/packages/types
 RUN pnpm build
 
-# Build auth service
+# Generate Prisma client and build auth service
 WORKDIR /app/services/auth-service
+RUN pnpm prisma:generate
 RUN pnpm build
-
-# Generate Prisma client
-RUN pnpm prisma generate
 
 # Production stage
 FROM node:22-alpine AS production
@@ -34,36 +35,34 @@ FROM node:22-alpine AS production
 # Install security updates
 RUN apk upgrade --no-cache
 
-# Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser
-
 WORKDIR /app
-
-# Copy package files
-COPY --chown=appuser:appuser package.json pnpm-lock.yaml ./
-COPY --chown=appuser:appuser services/auth-service/package.json ./services/auth-service/
-COPY --chown=appuser:appuser packages/types/package.json ./packages/types/
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+# Copy workspace configuration
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy package files
+COPY --chown=node:node services/auth-service/package.json ./services/auth-service/
+COPY --chown=node:node packages/types/package.json ./packages/types/
 
 # Install production dependencies only
 ENV NODE_ENV=production
 RUN pnpm install --prod --frozen-lockfile
 
 # Copy built files from builder
-COPY --chown=appuser:appuser --from=builder /app/packages/types/dist ./packages/types/dist
-COPY --chown=appuser:appuser --from=builder /app/services/auth-service/dist ./services/auth-service/dist
-COPY --chown=appuser:appuser --from=builder /app/services/auth-service/prisma ./services/auth-service/prisma
-COPY --chown=appuser:appuser --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --chown=appuser:appuser --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --chown=node:node --from=builder /app/services/auth-service/dist ./services/auth-service/dist
+COPY --chown=node:node --from=builder /app/services/auth-service/prisma ./services/auth-service/prisma
+COPY --chown=node:node --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --chown=node:node --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Create temp directory
-RUN mkdir -p /tmp && chown -R appuser:appuser /tmp
+# Create temp directory with proper permissions
+RUN mkdir -p /tmp && chown -R node:node /tmp
 
-# Switch to non-root user
-USER appuser
+# Switch to non-root user (node user is provided by node:alpine image)
+USER node
 
 # Set working directory
 WORKDIR /app/services/auth-service

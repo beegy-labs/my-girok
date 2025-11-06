@@ -25,6 +25,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@my-girok/types$': '<rootDir>/../../../packages/types/src',
   },
   setupFilesAfterEnv: ['<rootDir>/../test/setup.ts'],
 };

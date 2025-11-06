@@ -23,8 +23,8 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
 
   async validate(
     accessToken: string,
-    refreshToken: string,
-    profile: any,
+    _refreshToken: string,
+    _profile: any,
   ): Promise<any> {
     // Fetch user profile from Kakao API
     const response = await fetch('https://kapi.kakao.com/v2/user/me', {
@@ -33,7 +33,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
       },
     });
 
-    const data = await response.json();
+    const data = await response.json() as { id: string; kakao_account: { email: string; profile?: { nickname: string; profile_image_url: string } } };
     const { id, kakao_account } = data;
 
     const user = await this.authService.findOrCreateOAuthUser(

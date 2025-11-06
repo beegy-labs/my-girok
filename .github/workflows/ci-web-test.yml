@@ -39,8 +39,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -111,29 +109,40 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             # Development: develop:<hash> + develop:latest
             ENV="development"
-            TAG="develop:${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop:latest"
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:latest"
             # CHANGE THIS: Update with your development API URL
             API_URL="https://auth-api-dev.girok.dev/api/v1"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
             # Staging: release:<hash> + release:latest
             ENV="staging"
-            TAG="release:${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release:latest"
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:latest"
             # CHANGE THIS: Update with your staging API URL
             API_URL="https://auth-api-staging.girok.dev/api/v1"
           else
-            # Other branches: branch:<hash>
+            # Other branches: branch-<hash>
             ENV="development"
             BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
-            TAG="${BRANCH_NAME}:${SHORT_SHA}"
+            TAG="${BRANCH_NAME}-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
             API_URL="https://auth-api-dev.girok.dev/api/v1"
           fi
 
+          # Set version for display (include environment prefix for non-main branches)
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            VERSION="${TAG}"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            VERSION="develop:${TAG}"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            VERSION="release:${TAG}"
+          else
+            VERSION="${TAG}"
+          fi
+
           echo "environment=${ENV}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-          echo "version=${TAG}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image

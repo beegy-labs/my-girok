@@ -114,11 +114,3 @@ export class AuthController {
     return this.authService.grantDomainAccess(user.id, dto);
   }
 }
-
-// Fix for private method visibility
-declare module './auth.service' {
-  interface AuthService {
-    generateTokens(userId: string, email: string, role: string): Promise<any>;
-    saveRefreshToken(userId: string, refreshToken: string): Promise<void>;
-  }
-}

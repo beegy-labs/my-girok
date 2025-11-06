@@ -52,7 +52,7 @@ export interface RefreshTokenDto {
  */
 export interface TokenResponse {
   accessToken: string;
-  refreshToken?: string;
+  refreshToken: string;
 }
 
 /**

@@ -39,8 +39,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -58,6 +56,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @my-girok/auth-service prisma:generate
 
       - name: Run tests
         run: |
@@ -100,23 +101,27 @@ jobs:
             # Main branch: latest
             TAG="latest"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            VERSION="${TAG}"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             # Develop branch: develop:<hash> + develop:latest
-            TAG="develop:${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop:latest"
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:latest"
+            VERSION="develop:${TAG}"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
             # Release branch: release:<hash> + release:latest
-            TAG="release:${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release:latest"
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:latest"
+            VERSION="release:${TAG}"
           else
-            # Other branches: branch:<hash>
+            # Other branches: branch-<hash>
             BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
-            TAG="${BRANCH_NAME}:${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${BRANCH_NAME}:${TAG}"
+            VERSION="${BRANCH_NAME}:${TAG}"
           fi
 
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-          echo "version=${TAG}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
