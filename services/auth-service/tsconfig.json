@@ -10,7 +10,6 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
@@ -22,7 +21,7 @@
     "moduleResolution": "node",
     "paths": {
       "@/*": ["src/*"],
-      "@my-girok/types": ["../../packages/types/dist"]
+      "@my-girok/types": ["../../packages/types/src"]
     }
   },
   "include": ["src/**/*"],
