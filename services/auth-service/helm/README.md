@@ -21,7 +21,7 @@ kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/downloa
 
 ```bash
 # Create plain secret (DO NOT commit this file)
-kubectl create secret generic my-girok-auth-service-secret \
+kubectl create secret generic auth-service-secret \
   --from-literal=database-url="postgresql://user:pass@host:5432/db?schema=public" \
   --from-literal=jwt-secret="your-secure-jwt-secret-min-32-chars" \
   --from-literal=jwt-refresh-secret="your-secure-refresh-secret-min-32-chars" \
@@ -48,19 +48,19 @@ rm secret.yaml
 
 ```bash
 # Development
-helm install my-girok-auth ./helm \
+helm install auth-service ./helm \
   -f helm/values-development.yaml \
   --namespace my-girok-dev \
   --create-namespace
 
 # Staging
-helm install my-girok-auth ./helm \
+helm install auth-service ./helm \
   -f helm/values-staging.yaml \
   --namespace my-girok-staging \
   --create-namespace
 
 # Production
-helm install my-girok-auth ./helm \
+helm install auth-service ./helm \
   -f helm/values-production.yaml \
   --namespace my-girok-prod \
   --create-namespace
@@ -112,8 +112,8 @@ app:
 
 ```bash
 # Install directly from Git repository
-helm install my-girok-auth \
-  https://github.com/beegy/my-girok/releases/download/v0.1.0/my-girok-auth-service-0.1.0.tgz \
+helm install auth-service \
+  https://github.com/beegy/my-girok/releases/download/v0.1.0/auth-service-0.1.0.tgz \
   -f https://raw.githubusercontent.com/beegy/my-girok/main/services/auth-service/helm/values-production.yaml \
   --namespace my-girok-prod
 ```
@@ -126,7 +126,7 @@ helm repo add my-girok https://charts.example.com
 helm repo update
 
 # Install from repository
-helm install my-girok-auth my-girok/auth-service \
+helm install auth-service my-girok/auth-service \
   --version 0.1.0 \
   -f values-production.yaml \
   --namespace my-girok-prod
@@ -136,12 +136,12 @@ helm install my-girok-auth my-girok/auth-service \
 
 ```bash
 # Upgrade with new values
-helm upgrade my-girok-auth ./helm \
+helm upgrade auth-service ./helm \
   -f helm/values-production.yaml \
   --namespace my-girok-prod
 
 # Upgrade with new image version
-helm upgrade my-girok-auth ./helm \
+helm upgrade auth-service ./helm \
   --set image.tag=v0.2.0 \
   --namespace my-girok-prod
 ```
@@ -150,19 +150,19 @@ helm upgrade my-girok-auth ./helm \
 
 ```bash
 # List releases
-helm history my-girok-auth -n my-girok-prod
+helm history auth-service -n my-girok-prod
 
 # Rollback to previous version
-helm rollback my-girok-auth -n my-girok-prod
+helm rollback auth-service -n my-girok-prod
 
 # Rollback to specific revision
-helm rollback my-girok-auth 1 -n my-girok-prod
+helm rollback auth-service 1 -n my-girok-prod
 ```
 
 ## Uninstall
 
 ```bash
-helm uninstall my-girok-auth --namespace my-girok-prod
+helm uninstall auth-service --namespace my-girok-prod
 ```
 
 ## Security Best Practices
@@ -251,7 +251,7 @@ kubectl get pods -n my-girok-prod -l app.kubernetes.io/name=auth-service
 ### View Logs
 
 ```bash
-kubectl logs -f deployment/my-girok-auth-auth-service -n my-girok-prod
+kubectl logs -f deployment/auth-service -n my-girok-prod
 ```
 
 ### Check Sealed Secret
@@ -261,7 +261,7 @@ kubectl logs -f deployment/my-girok-auth-auth-service -n my-girok-prod
 kubectl get sealedsecret -n my-girok-prod
 
 # Check if secret was created
-kubectl get secret my-girok-auth-service-secret -n my-girok-prod
+kubectl get secret auth-service-secret -n my-girok-prod
 ```
 
 ### Debug Pod
@@ -290,7 +290,7 @@ kubectl create secret docker-registry regcred \
 
 ```bash
 # Check logs for errors
-kubectl logs deployment/my-girok-auth-auth-service -n my-girok-prod
+kubectl logs deployment/auth-service -n my-girok-prod
 
 # Check if secrets are properly mounted
 kubectl describe pod <pod-name> -n my-girok-prod
@@ -313,7 +313,7 @@ kubectl exec -it <pod-name> -n my-girok-prod -- sh
 git checkout develop
 git pull origin develop
 
-helm upgrade --install my-girok-auth ./helm \
+helm upgrade --install auth-service ./helm \
   -f helm/values-development.yaml \
   --namespace my-girok-dev \
   --set image.tag=dev-$(git rev-parse --short HEAD)
@@ -325,7 +325,7 @@ helm upgrade --install my-girok-auth ./helm \
 git checkout release/v0.2.0
 git pull origin release/v0.2.0
 
-helm upgrade --install my-girok-auth ./helm \
+helm upgrade --install auth-service ./helm \
   -f helm/values-staging.yaml \
   --namespace my-girok-staging \
   --set image.tag=staging-$(git rev-parse --short HEAD)
@@ -337,7 +337,7 @@ helm upgrade --install my-girok-auth ./helm \
 git checkout main
 git pull origin main
 
-helm upgrade --install my-girok-auth ./helm \
+helm upgrade --install auth-service ./helm \
   -f helm/values-production.yaml \
   --namespace my-girok-prod \
   --set image.tag=v0.2.0
@@ -374,7 +374,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          helm upgrade --install my-girok-auth ./services/auth-service/helm \
+          helm upgrade --install auth-service ./services/auth-service/helm \
             -f services/auth-service/helm/values-production.yaml \
             --namespace my-girok-prod \
             --set image.tag=${GITHUB_REF#refs/tags/} \
