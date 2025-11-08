@@ -353,7 +353,7 @@ pnpm test:watch        # Watch mode
 pnpm test:cov          # Coverage report
 
 # E2E tests
-cd apps/web-test
+cd apps/web-main
 pnpm test:e2e          # Playwright tests
 ```
 

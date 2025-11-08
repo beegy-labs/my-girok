@@ -70,7 +70,7 @@ This project follows a Code of Conduct. By participating, you are expected to up
    pnpm dev
 
    # Web Test App
-   cd apps/web-test
+   cd apps/web-main
    pnpm dev
    ```
 
