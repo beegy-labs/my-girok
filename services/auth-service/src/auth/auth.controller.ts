@@ -20,8 +20,8 @@ import { ConfigService } from '@nestjs/config';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private configService: ConfigService,
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Public()
