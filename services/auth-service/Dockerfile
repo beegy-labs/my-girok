@@ -56,9 +56,9 @@ COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/
 COPY --chown=node:node --from=builder /app/services/auth-service/dist ./services/auth-service/dist
 COPY --chown=node:node --from=builder /app/services/auth-service/prisma ./services/auth-service/prisma
 
-# Copy generated Prisma Client from builder (pnpm stores it in .pnpm)
-COPY --chown=node:node --from=builder /app/node_modules/.pnpm/@prisma+client@*/node_modules/.prisma ./node_modules/.prisma
-COPY --chown=node:node --from=builder /app/node_modules/.pnpm/@prisma+client@*/node_modules/@prisma ./node_modules/@prisma
+# Generate Prisma Client in production
+WORKDIR /app/services/auth-service
+RUN npx prisma@6.2.1 generate
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp
