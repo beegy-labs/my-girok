@@ -35,21 +35,21 @@ Update the following:
 
 ```bash
 # Development (develop branch)
-helm install my-girok-web-main . \
+helm install web-main . \
   -f values.yaml \
   --set image.tag=develop \
   --namespace my-girok-dev \
   --create-namespace
 
 # Main Branch (release)
-helm install my-girok-web-main . \
+helm install web-main . \
   -f values.yaml \
   --set image.tag=release \
   --namespace my-girok-prod \
   --create-namespace
 
 # Production (version tag)
-helm install my-girok-web-main . \
+helm install web-main . \
   -f values.yaml \
   --set image.tag=v1.0.0 \
   --namespace my-girok-prod \
@@ -141,12 +141,12 @@ docker push harbor.girok.dev/my-girok/web-main:v1.0.0
 
 ```bash
 # Upgrade with new values
-helm upgrade my-girok-web-main . \
+helm upgrade web-main . \
   -f values.yaml \
   --namespace my-girok-prod
 
 # Upgrade with new image version
-helm upgrade my-girok-web-main . \
+helm upgrade web-main . \
   --set image.tag=v0.2.0 \
   --namespace my-girok-prod
 ```
@@ -155,19 +155,19 @@ helm upgrade my-girok-web-main . \
 
 ```bash
 # List releases
-helm history my-girok-web-main -n my-girok-prod
+helm history web-main -n my-girok-prod
 
 # Rollback to previous version
-helm rollback my-girok-web-main -n my-girok-prod
+helm rollback web-main -n my-girok-prod
 
 # Rollback to specific revision
-helm rollback my-girok-web-main 1 -n my-girok-prod
+helm rollback web-main 1 -n my-girok-prod
 ```
 
 ## Uninstall
 
 ```bash
-helm uninstall my-girok-web-main --namespace my-girok-prod
+helm uninstall web-main --namespace my-girok-prod
 ```
 
 ## Security
@@ -216,7 +216,7 @@ The application exposes a health endpoint:
 ### Access Logs
 
 ```bash
-kubectl logs -f deployment/my-girok-web-test -n my-girok-prod
+kubectl logs -f deployment/web-main -n my-girok-prod
 ```
 
 ## Troubleshooting
@@ -230,7 +230,7 @@ kubectl get pods -n my-girok-prod -l app.kubernetes.io/name=web-main
 ### View Logs
 
 ```bash
-kubectl logs -f deployment/my-girok-web-main -n my-girok-prod
+kubectl logs -f deployment/web-main -n my-girok-prod
 ```
 
 ### Check Service
@@ -243,7 +243,7 @@ kubectl get svc -n my-girok-prod -l app.kubernetes.io/name=web-main
 
 ```bash
 kubectl get ingress -n my-girok-prod
-kubectl describe ingress my-girok-web-main -n my-girok-prod
+kubectl describe ingress web-main -n my-girok-prod
 ```
 
 ### Common Issues
@@ -315,7 +315,7 @@ docker build \
 docker push harbor.girok.dev/my-girok/web-main:develop
 
 # Deploy
-helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+helm upgrade --install web-main ./apps/web-main/helm \
   -f apps/web-main/helm/values-dev.yaml \
   --namespace my-girok-dev \
   --set image.tag=develop
@@ -335,7 +335,7 @@ docker build \
 docker push harbor.girok.dev/my-girok/web-main:release
 
 # Deploy
-helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+helm upgrade --install web-main ./apps/web-main/helm \
   -f apps/web-main/helm/values-prod.yaml \
   --namespace my-girok-prod \
   --set image.tag=release
@@ -355,7 +355,7 @@ docker build \
 docker push harbor.girok.dev/my-girok/web-main:v0.2.0
 
 # Deploy
-helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+helm upgrade --install web-main ./apps/web-main/helm \
   -f apps/web-main/helm/values-prod.yaml \
   --namespace my-girok-prod \
   --set image.tag=v0.2.0
@@ -417,7 +417,7 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+          helm upgrade --install web-main ./apps/web-main/helm \
             -f apps/web-main/helm/values-prod.yaml \
             --namespace my-girok-prod \
             --set image.tag=${{ steps.tag.outputs.tag }} \
