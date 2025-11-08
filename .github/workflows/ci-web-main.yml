@@ -249,11 +249,10 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore(${ENVIRONMENT}): update web-main image to ${{ steps.image.outputs.tag }}
-
-Updated by GitHub Actions from my-girok@${{ github.sha }}
-Branch: ${{ github.ref_name }}
-Environment: ${ENVIRONMENT}"
+            git commit -m "chore(${ENVIRONMENT}): update web-main image to ${{ steps.image.outputs.tag }}" \
+                       -m "Updated by GitHub Actions from my-girok@${{ github.sha }}" \
+                       -m "Branch: ${{ github.ref_name }}" \
+                       -m "Environment: ${ENVIRONMENT}"
             git push
             echo "Successfully updated GitOps repository for ${ENVIRONMENT}"
           fi
