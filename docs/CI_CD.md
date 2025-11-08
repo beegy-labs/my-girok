@@ -115,14 +115,14 @@ Developer Push → GitHub Actions → Harbor → ArgoCD → Kubernetes
 - `release/*` → `harbor.girok.dev/my-girok/auth-service:release:<hash>` + `release:latest`
 - `main` → `harbor.girok.dev/my-girok/auth-service:latest`
 
-#### 2. Web Test CI (`.github/workflows/ci-web-test.yml`)
+#### 2. Web Test CI (`.github/workflows/ci-web-main.yml`)
 
 **Triggers:**
 - Push to `develop`, `release/**`, `main`
 - Only when files change in:
-  - `apps/web-test/**`
+  - `apps/web-main/**`
   - `packages/types/**`
-  - `.github/workflows/ci-web-test.yml`
+  - `.github/workflows/ci-web-main.yml`
 
 **Jobs:**
 
@@ -181,7 +181,7 @@ Developer Push → GitHub Actions → Harbor → ArgoCD → Kubernetes
 
 ```
 harbor.girok.dev/my-girok/auth-service
-harbor.girok.dev/my-girok/web-test
+harbor.girok.dev/my-girok/web-main
 ```
 
 ### Robot Account
@@ -353,7 +353,7 @@ kubectl create secret docker-registry harbor-regcred \
 
 ```yaml
 # services/auth-service/helm/values.yaml
-# apps/web-test/helm/values.yaml
+# apps/web-main/helm/values.yaml
 
 image:
   repository: harbor.girok.dev/my-girok/auth-service

@@ -14,8 +14,8 @@
 - **Steps**: Test → Build → Push to Harbor
 
 ### Web Test CI
-- **File**: `.github/workflows/ci-web-test.yml`
-- **Triggers**: Push to develop, release/*, main (when web-test changes)
+- **File**: `.github/workflows/ci-web-main.yml`
+- **Triggers**: Push to develop, release/*, main (when web-main changes)
 - **Steps**: Test → Build (with API URL) → Push to Harbor
 
 ## Image Tagging Strategy
@@ -39,11 +39,11 @@ harbor.girok.dev/my-girok/auth-service:latest
 
 **Web Test:**
 ```
-harbor.girok.dev/my-girok/web-test:develop:a1b2c3d
-harbor.girok.dev/my-girok/web-test:develop:latest
-harbor.girok.dev/my-girok/web-test:release:a1b2c3d
-harbor.girok.dev/my-girok/web-test:release:latest
-harbor.girok.dev/my-girok/web-test:latest
+harbor.girok.dev/my-girok/web-main:develop:a1b2c3d
+harbor.girok.dev/my-girok/web-main:develop:latest
+harbor.girok.dev/my-girok/web-main:release:a1b2c3d
+harbor.girok.dev/my-girok/web-main:release:latest
+harbor.girok.dev/my-girok/web-main:latest
 ```
 
 ## Required GitHub Secrets
@@ -62,7 +62,7 @@ Build-time environment variable injection:
 - **release/***: `https://auth-api-staging.girok.dev/api/v1`
 - **main**: `https://auth-api.girok.dev/api/v1`
 
-**Update in**: `.github/workflows/ci-web-test.yml`
+**Update in**: `.github/workflows/ci-web-main.yml`
 
 ## Workflow Trigger Paths
 
@@ -72,9 +72,9 @@ Build-time environment variable injection:
 - `.github/workflows/ci-auth-service.yml`
 
 **Web Test** triggers on changes to:
-- `apps/web-test/**`
+- `apps/web-main/**`
 - `packages/types/**`
-- `.github/workflows/ci-web-test.yml`
+- `.github/workflows/ci-web-main.yml`
 
 ## ArgoCD Integration
 
@@ -106,8 +106,8 @@ docker build \
 # Web Test
 docker build \
   --build-arg VITE_API_URL=https://auth-api-dev.girok.dev/api/v1 \
-  -t test/web-test:local \
-  -f apps/web-test/Dockerfile \
+  -t test/web-main:local \
+  -f apps/web-main/Dockerfile \
   .
 ```
 

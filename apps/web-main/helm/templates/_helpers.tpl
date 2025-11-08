@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "web-test.name" -}}
+{{- define "web-main.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "web-test.fullname" -}}
+{{- define "web-main.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "web-test.chart" -}}
+{{- define "web-main.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "web-test.labels" -}}
-helm.sh/chart: {{ include "web-test.chart" . }}
-{{ include "web-test.selectorLabels" . }}
+{{- define "web-main.labels" -}}
+helm.sh/chart: {{ include "web-main.chart" . }}
+{{ include "web-main.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "web-test.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "web-test.name" . }}
+{{- define "web-main.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "web-main.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "web-test.serviceAccountName" -}}
+{{- define "web-main.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "web-test.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "web-main.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
