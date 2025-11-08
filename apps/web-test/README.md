@@ -1,14 +1,16 @@
-# My-Girok Auth Test Web App
+# My-Girok Web Main Application
 
-React 18 + Vite + TypeScript test application for My-Girok authentication system.
+React 18 + Vite + TypeScript application for My-Girok main features (blog, finance tracker, resume).
 
 ## Features
 
-- ✅ User Registration & Login
+- ✅ User Authentication (Registration & Login)
 - ✅ JWT Token-based Authentication
 - ✅ Automatic Token Refresh
 - ✅ Role-based Access Control (GUEST, USER, MANAGER, MASTER)
-- ✅ Public and Protected Pages
+- ✅ Blog functionality
+- ✅ Finance tracker (planned)
+- ✅ Resume builder (planned)
 - ✅ Responsive UI with Tailwind CSS
 
 ## Tech Stack
