@@ -1,24 +1,24 @@
-# My-Girok Web Test Application Helm Values Example
+# My-Girok Web Main Application Helm Values Example
 #
 # USAGE:
 #   1. Copy this file: cp values.yaml.example values.yaml
 #   2. Edit values.yaml with your settings
-#   3. Install: helm install my-girok-web-test . -f values.yaml
+#   3. Install: helm install my-girok-web-main . -f values.yaml
 #
 # IMPORTANT:
 #   - values.yaml is gitignored - never commit your actual configuration
 #   - Customize for your environment (development, staging, production)
-#   - This is a test web application for the authentication system
+#   - This is the main web application (blog, finance, resume)
 
 # Number of replicas
 # Development: 1, Staging: 2, Production: 2-3
 replicaCount: 2
 
 image:
-  repository: your-registry.io/my-girok/web-test
+  repository: harbor.girok.dev/my-girok/web-main
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion
-  # Development: "dev", Staging: "staging", Production: "latest" or version tag
+  # Development: "develop", Main branch: "release", Production: version tag (e.g., "v1.0.0")
   tag: ""
 
 imagePullSecrets: []
@@ -102,7 +102,7 @@ affinity:
               - key: app.kubernetes.io/name
                 operator: In
                 values:
-                  - web-test
+                  - web-main
           topologyKey: kubernetes.io/hostname
 
 # ============================================================================
@@ -138,29 +138,29 @@ readinessProbe:
 # ENVIRONMENT-SPECIFIC CONFIGURATIONS
 # ============================================================================
 #
-# DEVELOPMENT:
+# DEVELOPMENT (develop branch):
 #   replicaCount: 1
-#   image.tag: "dev"
+#   image.tag: "develop"
 #   autoscaling.enabled: false
 #   app.apiUrl: "https://auth-api-dev.example.com/api/v1"
 #   resources.limits.cpu: 250m
 #   resources.limits.memory: 128Mi
 #   ingress.hosts[0].host: app-dev.example.com
 #
-# STAGING:
+# MAIN BRANCH (release tag):
 #   replicaCount: 2
-#   image.tag: "staging"
+#   image.tag: "release"
 #   autoscaling.enabled: true
 #   autoscaling.minReplicas: 2
 #   autoscaling.maxReplicas: 4
-#   app.apiUrl: "https://auth-api-staging.example.com/api/v1"
+#   app.apiUrl: "https://auth-api.example.com/api/v1"
 #   resources.limits.cpu: 400m
 #   resources.limits.memory: 192Mi
-#   ingress.hosts[0].host: app-staging.example.com
+#   ingress.hosts[0].host: app.example.com
 #
-# PRODUCTION:
+# PRODUCTION (version tags):
 #   replicaCount: 3
-#   image.tag: "latest" or "v1.0.0"
+#   image.tag: "v1.0.0"
 #   autoscaling.enabled: true
 #   autoscaling.minReplicas: 2
 #   autoscaling.maxReplicas: 5
@@ -175,16 +175,18 @@ readinessProbe:
 # ============================================================================
 #
 # 1. Create separate values files for each environment:
-#    - values-dev.yaml (for your local development)
-#    - values-staging.yaml (for staging environment)
-#    - values-prod.yaml (for production environment)
+#    - values-dev.yaml (for development with "develop" tag)
+#    - values-main.yaml (for main branch with "release" tag)
+#    - values-prod.yaml (for production with version tags like "v1.0.0")
 #
 # 2. Install with specific values:
-#    helm install my-girok-web-test . -f values.yaml -f values-prod.yaml
+#    helm install my-girok-web-main . -f values.yaml -f values-prod.yaml
 #
-# 3. This is a test application:
-#    - For production use, consider building a separate production-ready app
-#    - Update app.apiUrl to point to your actual auth-service
+# 3. Harbor Registry:
+#    - Images are stored at harbor.girok.dev/my-girok/web-main
+#    - Tag "develop" for develop branch deployments
+#    - Tag "release" for main branch deployments
+#    - Tag "v1.0.0" style for production releases
 #
 # 4. Frontend considerations:
 #    - Static files are served via Nginx

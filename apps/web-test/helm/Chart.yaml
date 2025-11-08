@@ -1,6 +1,6 @@
 apiVersion: v2
-name: my-girok-web-test
-description: Test web application for My-Girok authentication system
+name: my-girok-web-main
+description: Main web application for My-Girok (blog, finance, resume)
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
@@ -9,7 +9,7 @@ keywords:
   - react
   - frontend
   - web
-  - test-app
+  - main-app
 
 maintainers:
   - name: My-Girok Team
