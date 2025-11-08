@@ -129,7 +129,7 @@ export class AuthService {
       });
 
       return tokens;
-    } catch (error) {
+    } catch (_error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
