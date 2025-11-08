@@ -1,21 +1,14 @@
-# My-Girok Web Test Application Helm Chart
+# My-Girok Web Main Application Helm Chart
 
-Kubernetes Helm Chart for My-Girok test web application - A React-based frontend for testing the authentication system.
+Kubernetes Helm Chart for My-Girok main web application - A React-based frontend for blog, finance tracker, and resume features.
 
 ## Prerequisites
 
 - Kubernetes 1.24+
 - Helm 3.12+
 - kubectl configured with cluster access
-- Auth Service deployed and accessible
-
-## Important Note
-
-**This is a test/demo application** designed for testing the My-Girok authentication system. For production use, consider:
-- Building a production-ready application
-- Implementing proper error handling and monitoring
-- Using a CDN for static assets
-- Adding analytics and logging
+- Harbor registry access (harbor.girok.dev)
+- Auth Service and other backend services deployed
 
 ## Quick Start
 
@@ -33,29 +26,32 @@ nano values.yaml
 ```
 
 Update the following:
-- `image.repository` - Your container registry
-- `image.tag` - Image version
+- `image.repository` - Harbor registry path (harbor.girok.dev/my-girok/web-main)
+- `image.tag` - Image version (develop/release/v1.0.0)
 - `ingress.hosts` - Your domain
 - `app.apiUrl` - Auth service API URL
 
 ### 3. Install the Chart
 
 ```bash
-# Development
-helm install my-girok-web-test . \
+# Development (develop branch)
+helm install my-girok-web-main . \
   -f values.yaml \
+  --set image.tag=develop \
   --namespace my-girok-dev \
   --create-namespace
 
-# Staging
-helm install my-girok-web-test . \
+# Main Branch (release)
+helm install my-girok-web-main . \
   -f values.yaml \
-  --namespace my-girok-staging \
+  --set image.tag=release \
+  --namespace my-girok-prod \
   --create-namespace
 
-# Production
-helm install my-girok-web-test . \
+# Production (version tag)
+helm install my-girok-web-main . \
   -f values.yaml \
+  --set image.tag=v1.0.0 \
   --namespace my-girok-prod \
   --create-namespace
 ```
@@ -67,8 +63,8 @@ helm install my-girok-web-test . \
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `replicaCount` | Number of replicas | `2` |
-| `image.repository` | Image repository | `your-registry.io/my-girok/web-test` |
-| `image.tag` | Image tag | Chart appVersion |
+| `image.repository` | Image repository | `harbor.girok.dev/my-girok/web-main` |
+| `image.tag` | Image tag (develop/release/v1.0.0) | Chart appVersion |
 | `service.port` | Service port | `80` |
 | `service.targetPort` | Container port | `3000` |
 | `ingress.enabled` | Enable ingress | `true` |
@@ -106,12 +102,12 @@ cp values.yaml values-prod.yaml
 # From repository root
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
-  -t your-registry.io/my-girok/web-test:v0.1.0 \
+  -t harbor.girok.dev/my-girok/web-main:v0.1.0 \
   -f apps/web-test/Dockerfile \
   .
 
-# Push to registry
-docker push your-registry.io/my-girok/web-test:v0.1.0
+# Push to Harbor registry
+docker push harbor.girok.dev/my-girok/web-main:v0.1.0
 ```
 
 ### Multi-Environment Builds
@@ -119,35 +115,38 @@ docker push your-registry.io/my-girok/web-test:v0.1.0
 Build separate images for each environment:
 
 ```bash
-# Development
+# Development (develop branch)
 docker build \
   --build-arg VITE_API_URL=https://auth-api-dev.example.com/api/v1 \
-  -t your-registry.io/my-girok/web-test:dev \
+  -t harbor.girok.dev/my-girok/web-main:develop \
   -f apps/web-test/Dockerfile .
+docker push harbor.girok.dev/my-girok/web-main:develop
 
-# Staging
-docker build \
-  --build-arg VITE_API_URL=https://auth-api-staging.example.com/api/v1 \
-  -t your-registry.io/my-girok/web-test:staging \
-  -f apps/web-test/Dockerfile .
-
-# Production
+# Main Branch (release)
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
-  -t your-registry.io/my-girok/web-test:latest \
+  -t harbor.girok.dev/my-girok/web-main:release \
   -f apps/web-test/Dockerfile .
+docker push harbor.girok.dev/my-girok/web-main:release
+
+# Production (version tag)
+docker build \
+  --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+  -t harbor.girok.dev/my-girok/web-main:v1.0.0 \
+  -f apps/web-test/Dockerfile .
+docker push harbor.girok.dev/my-girok/web-main:v1.0.0
 ```
 
 ## Upgrade
 
 ```bash
 # Upgrade with new values
-helm upgrade my-girok-web-test . \
+helm upgrade my-girok-web-main . \
   -f values.yaml \
   --namespace my-girok-prod
 
 # Upgrade with new image version
-helm upgrade my-girok-web-test . \
+helm upgrade my-girok-web-main . \
   --set image.tag=v0.2.0 \
   --namespace my-girok-prod
 ```
@@ -156,19 +155,19 @@ helm upgrade my-girok-web-test . \
 
 ```bash
 # List releases
-helm history my-girok-web-test -n my-girok-prod
+helm history my-girok-web-main -n my-girok-prod
 
 # Rollback to previous version
-helm rollback my-girok-web-test -n my-girok-prod
+helm rollback my-girok-web-main -n my-girok-prod
 
 # Rollback to specific revision
-helm rollback my-girok-web-test 1 -n my-girok-prod
+helm rollback my-girok-web-main 1 -n my-girok-prod
 ```
 
 ## Uninstall
 
 ```bash
-helm uninstall my-girok-web-test --namespace my-girok-prod
+helm uninstall my-girok-web-main --namespace my-girok-prod
 ```
 
 ## Security
@@ -192,7 +191,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: web-test
+      app.kubernetes.io/name: web-main
   policyTypes:
   - Ingress
   ingress:
@@ -225,26 +224,26 @@ kubectl logs -f deployment/my-girok-web-test -n my-girok-prod
 ### Check Pod Status
 
 ```bash
-kubectl get pods -n my-girok-prod -l app.kubernetes.io/name=web-test
+kubectl get pods -n my-girok-prod -l app.kubernetes.io/name=web-main
 ```
 
 ### View Logs
 
 ```bash
-kubectl logs -f deployment/my-girok-web-test -n my-girok-prod
+kubectl logs -f deployment/my-girok-web-main -n my-girok-prod
 ```
 
 ### Check Service
 
 ```bash
-kubectl get svc -n my-girok-prod -l app.kubernetes.io/name=web-test
+kubectl get svc -n my-girok-prod -l app.kubernetes.io/name=web-main
 ```
 
 ### Check Ingress
 
 ```bash
 kubectl get ingress -n my-girok-prod
-kubectl describe ingress my-girok-web-test -n my-girok-prod
+kubectl describe ingress my-girok-web-main -n my-girok-prod
 ```
 
 ### Common Issues
@@ -308,38 +307,18 @@ kubectl exec -it <pod-name> -n my-girok-prod -- sh
 git checkout develop
 git pull origin develop
 
-# Build dev image
+# Build and push to Harbor
 docker build \
   --build-arg VITE_API_URL=https://auth-api-dev.example.com/api/v1 \
-  -t your-registry.io/my-girok/web-test:dev-$(git rev-parse --short HEAD) \
+  -t harbor.girok.dev/my-girok/web-main:develop \
   -f apps/web-test/Dockerfile .
-docker push your-registry.io/my-girok/web-test:dev-$(git rev-parse --short HEAD)
+docker push harbor.girok.dev/my-girok/web-main:develop
 
 # Deploy
-helm upgrade --install my-girok-web-test ./apps/web-test/helm \
+helm upgrade --install my-girok-web-main ./apps/web-test/helm \
   -f apps/web-test/helm/values-dev.yaml \
   --namespace my-girok-dev \
-  --set image.tag=dev-$(git rev-parse --short HEAD)
-```
-
-### Release Branch → Staging Environment
-
-```bash
-git checkout release/v0.2.0
-git pull origin release/v0.2.0
-
-# Build staging image
-docker build \
-  --build-arg VITE_API_URL=https://auth-api-staging.example.com/api/v1 \
-  -t your-registry.io/my-girok/web-test:staging-$(git rev-parse --short HEAD) \
-  -f apps/web-test/Dockerfile .
-docker push your-registry.io/my-girok/web-test:staging-$(git rev-parse --short HEAD)
-
-# Deploy
-helm upgrade --install my-girok-web-test ./apps/web-test/helm \
-  -f apps/web-test/helm/values-staging.yaml \
-  --namespace my-girok-staging \
-  --set image.tag=staging-$(git rev-parse --short HEAD)
+  --set image.tag=develop
 ```
 
 ### Main Branch → Production Environment
@@ -348,15 +327,35 @@ helm upgrade --install my-girok-web-test ./apps/web-test/helm \
 git checkout main
 git pull origin main
 
-# Build production image
+# Build and push release tag to Harbor
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
-  -t your-registry.io/my-girok/web-test:v0.2.0 \
+  -t harbor.girok.dev/my-girok/web-main:release \
   -f apps/web-test/Dockerfile .
-docker push your-registry.io/my-girok/web-test:v0.2.0
+docker push harbor.girok.dev/my-girok/web-main:release
 
 # Deploy
-helm upgrade --install my-girok-web-test ./apps/web-test/helm \
+helm upgrade --install my-girok-web-main ./apps/web-test/helm \
+  -f apps/web-test/helm/values-prod.yaml \
+  --namespace my-girok-prod \
+  --set image.tag=release
+```
+
+### Production Release (Version Tag)
+
+```bash
+# Tag and build specific version
+git tag v0.2.0
+git push origin v0.2.0
+
+docker build \
+  --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+  -t harbor.girok.dev/my-girok/web-main:v0.2.0 \
+  -f apps/web-test/Dockerfile .
+docker push harbor.girok.dev/my-girok/web-main:v0.2.0
+
+# Deploy
+helm upgrade --install my-girok-web-main ./apps/web-test/helm \
   -f apps/web-test/helm/values-prod.yaml \
   --namespace my-girok-prod \
   --set image.tag=v0.2.0
@@ -367,12 +366,12 @@ helm upgrade --install my-girok-web-test ./apps/web-test/helm \
 ### GitHub Actions Example
 
 ```yaml
-# .github/workflows/deploy-web-test-production.yml
-name: Deploy Web Test to Production
+# .github/workflows/deploy-web-main-production.yml
+name: Deploy Web Main to Production
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags: ['v*']
     paths:
       - 'apps/web-test/**'
@@ -383,13 +382,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Login to Harbor
+        run: |
+          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login harbor.girok.dev -u "${{ secrets.HARBOR_USERNAME }}" --password-stdin
+
+      - name: Determine image tag
+        id: tag
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          elif [[ $GITHUB_REF == refs/heads/main ]]; then
+            echo "tag=release" >> $GITHUB_OUTPUT
+          elif [[ $GITHUB_REF == refs/heads/develop ]]; then
+            echo "tag=develop" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Docker image
         run: |
           docker build \
             --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
-            -t your-registry.io/my-girok/web-test:${GITHUB_REF#refs/tags/} \
+            -t harbor.girok.dev/my-girok/web-main:${{ steps.tag.outputs.tag }} \
             -f apps/web-test/Dockerfile .
-          docker push your-registry.io/my-girok/web-test:${GITHUB_REF#refs/tags/}
+          docker push harbor.girok.dev/my-girok/web-main:${{ steps.tag.outputs.tag }}
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
@@ -403,10 +417,10 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          helm upgrade --install my-girok-web-test ./apps/web-test/helm \
+          helm upgrade --install my-girok-web-main ./apps/web-test/helm \
             -f apps/web-test/helm/values-prod.yaml \
             --namespace my-girok-prod \
-            --set image.tag=${GITHUB_REF#refs/tags/} \
+            --set image.tag=${{ steps.tag.outputs.tag }} \
             --wait --timeout=5m
 ```
 
@@ -421,9 +435,9 @@ Deploy to environments in order:
 
 ### 2. Image Tagging Strategy
 
-- Development: `dev-<git-hash>`
-- Staging: `staging-<git-hash>`
-- Production: `v<semver>` (e.g., `v0.1.0`)
+- Development (develop branch): `develop`
+- Main branch: `release`
+- Production releases: `v<semver>` (e.g., `v0.1.0`, `v1.0.0`)
 
 ### 3. Resource Allocation
 
