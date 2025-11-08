@@ -112,11 +112,11 @@ services:
     # command: ["pnpm", "dev"]
 
   # Web Test Application
-  web-test:
+  web-main:
     build:
       context: .
-      dockerfile: apps/web-test/Dockerfile
-    container_name: my-girok-web-test
+      dockerfile: apps/web-main/Dockerfile
+    container_name: my-girok-web-main
     restart: unless-stopped
     depends_on:
       auth-service:

@@ -64,7 +64,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: web-test-tls
+    - secretName: web-main-tls
       hosts:
         - app.example.com
 

@@ -70,7 +70,7 @@ pnpm dev
 # Development
 pnpm dev                          # All services
 cd services/auth-service && pnpm dev
-cd apps/web-test && pnpm dev
+cd apps/web-main && pnpm dev
 
 # Database
 pnpm prisma studio                # GUI
@@ -80,7 +80,7 @@ pnpm prisma migrate dev           # Create migration
 # Testing
 pnpm test                         # All tests
 pnpm test:cov                     # Coverage
-cd apps/web-test && pnpm test:e2e # E2E
+cd apps/web-main && pnpm test:e2e # E2E
 
 # Build
 pnpm build                        # All
@@ -104,7 +104,7 @@ my-girok/
 ├── .ai/                   # LLM instructions (concise)
 ├── docs/                  # Human documentation (detailed)
 ├── apps/
-│   └── web-test/         # React 18 + Vite
+│   └── web-main/         # React 18 + Vite
 ├── services/
 │   └── auth-service/     # NestJS 10 + Prisma 6
 │       ├── helm/         # K8s deployment

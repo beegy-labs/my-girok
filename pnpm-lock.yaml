@@ -24,7 +24,7 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
-  apps/web-test:
+  apps/web-main:
     dependencies:
       axios:
         specifier: ^1.7.9

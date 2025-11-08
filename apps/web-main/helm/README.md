@@ -15,7 +15,7 @@ Kubernetes Helm Chart for My-Girok main web application - A React-based frontend
 ### 1. Copy Example Values
 
 ```bash
-cd apps/web-test/helm
+cd apps/web-main/helm
 cp values.yaml.example values.yaml
 ```
 
@@ -103,7 +103,7 @@ cp values.yaml values-prod.yaml
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
   -t harbor.girok.dev/my-girok/web-main:v0.1.0 \
-  -f apps/web-test/Dockerfile \
+  -f apps/web-main/Dockerfile \
   .
 
 # Push to Harbor registry
@@ -119,21 +119,21 @@ Build separate images for each environment:
 docker build \
   --build-arg VITE_API_URL=https://auth-api-dev.example.com/api/v1 \
   -t harbor.girok.dev/my-girok/web-main:develop \
-  -f apps/web-test/Dockerfile .
+  -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:develop
 
 # Main Branch (release)
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
   -t harbor.girok.dev/my-girok/web-main:release \
-  -f apps/web-test/Dockerfile .
+  -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:release
 
 # Production (version tag)
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
   -t harbor.girok.dev/my-girok/web-main:v1.0.0 \
-  -f apps/web-test/Dockerfile .
+  -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:v1.0.0
 ```
 
@@ -187,7 +187,7 @@ The chart includes:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: web-test-netpol
+  name: web-main-netpol
 spec:
   podSelector:
     matchLabels:
@@ -311,12 +311,12 @@ git pull origin develop
 docker build \
   --build-arg VITE_API_URL=https://auth-api-dev.example.com/api/v1 \
   -t harbor.girok.dev/my-girok/web-main:develop \
-  -f apps/web-test/Dockerfile .
+  -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:develop
 
 # Deploy
-helm upgrade --install my-girok-web-main ./apps/web-test/helm \
-  -f apps/web-test/helm/values-dev.yaml \
+helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+  -f apps/web-main/helm/values-dev.yaml \
   --namespace my-girok-dev \
   --set image.tag=develop
 ```
@@ -331,12 +331,12 @@ git pull origin main
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
   -t harbor.girok.dev/my-girok/web-main:release \
-  -f apps/web-test/Dockerfile .
+  -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:release
 
 # Deploy
-helm upgrade --install my-girok-web-main ./apps/web-test/helm \
-  -f apps/web-test/helm/values-prod.yaml \
+helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+  -f apps/web-main/helm/values-prod.yaml \
   --namespace my-girok-prod \
   --set image.tag=release
 ```
@@ -351,12 +351,12 @@ git push origin v0.2.0
 docker build \
   --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
   -t harbor.girok.dev/my-girok/web-main:v0.2.0 \
-  -f apps/web-test/Dockerfile .
+  -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:v0.2.0
 
 # Deploy
-helm upgrade --install my-girok-web-main ./apps/web-test/helm \
-  -f apps/web-test/helm/values-prod.yaml \
+helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+  -f apps/web-main/helm/values-prod.yaml \
   --namespace my-girok-prod \
   --set image.tag=v0.2.0
 ```
@@ -374,7 +374,7 @@ on:
     branches: [main, develop]
     tags: ['v*']
     paths:
-      - 'apps/web-test/**'
+      - 'apps/web-main/**'
 
 jobs:
   deploy:
@@ -402,7 +402,7 @@ jobs:
           docker build \
             --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
             -t harbor.girok.dev/my-girok/web-main:${{ steps.tag.outputs.tag }} \
-            -f apps/web-test/Dockerfile .
+            -f apps/web-main/Dockerfile .
           docker push harbor.girok.dev/my-girok/web-main:${{ steps.tag.outputs.tag }}
 
       - name: Install kubectl
@@ -417,8 +417,8 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          helm upgrade --install my-girok-web-main ./apps/web-test/helm \
-            -f apps/web-test/helm/values-prod.yaml \
+          helm upgrade --install my-girok-web-main ./apps/web-main/helm \
+            -f apps/web-main/helm/values-prod.yaml \
             --namespace my-girok-prod \
             --set image.tag=${{ steps.tag.outputs.tag }} \
             --wait --timeout=5m

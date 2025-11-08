@@ -14,7 +14,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Copy all package.json files for proper dependency resolution
-COPY apps/web-test/package.json ./apps/web-test/
+COPY apps/web-main/package.json ./apps/web-main/
 COPY packages/types/package.json ./packages/types/
 COPY tsconfig.json ./
 
@@ -23,14 +23,14 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY packages/types ./packages/types
-COPY apps/web-test ./apps/web-test
+COPY apps/web-main ./apps/web-main
 
 # Build shared packages first
 WORKDIR /app/packages/types
 RUN pnpm build
 
 # Build application
-WORKDIR /app/apps/web-test
+WORKDIR /app/apps/web-main
 RUN pnpm build
 
 # Production stage with nginx
@@ -40,10 +40,10 @@ FROM nginx:1.27-alpine AS production
 RUN apk upgrade --no-cache
 
 # Copy built files
-COPY --from=builder /app/apps/web-test/dist /usr/share/nginx/html
+COPY --from=builder /app/apps/web-main/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY apps/web-test/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/web-main/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Setup permissions for nginx user (already exists in nginx:alpine image)
 RUN chown -R nginx:nginx /usr/share/nginx/html && \

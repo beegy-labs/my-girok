@@ -1,4 +1,4 @@
-name: CI - Web Test
+name: CI - Web Main
 
 on:
   push:
@@ -7,21 +7,21 @@ on:
       - 'release/**'
       - main
     paths:
-      - 'apps/web-test/**'
+      - 'apps/web-main/**'
       - 'packages/types/**'
-      - '.github/workflows/ci-web-test.yml'
+      - '.github/workflows/ci-web-main.yml'
   pull_request:
     branches:
       - develop
       - 'release/**'
       - main
     paths:
-      - 'apps/web-test/**'
+      - 'apps/web-main/**'
       - 'packages/types/**'
 
 env:
   REGISTRY: ${{ secrets.HARBOR_REGISTRY }}
-  IMAGE_NAME: my-girok/web-test
+  IMAGE_NAME: my-girok/web-main
 
 jobs:
   test:
@@ -59,17 +59,17 @@ jobs:
 
       - name: Run lint
         run: |
-          cd apps/web-test
+          cd apps/web-main
           pnpm lint || true
 
       - name: Run type check
         run: |
-          cd apps/web-test
+          cd apps/web-main
           pnpm type-check || true
 
       - name: Run E2E tests
         run: |
-          cd apps/web-test
+          cd apps/web-main
           pnpm test:e2e || true
 
   build:
@@ -149,7 +149,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/web-test/Dockerfile
+          file: ./apps/web-main/Dockerfile
           push: true
           tags: ${{ steps.env.outputs.tags }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache

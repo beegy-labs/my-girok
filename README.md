@@ -148,7 +148,7 @@ pnpm prisma db push
 pnpm dev
 
 # Terminal 2: Start web test app
-cd apps/web-test
+cd apps/web-main
 pnpm dev
 ```
 
@@ -166,7 +166,7 @@ pnpm dev
 - **[Database Management](./docs/DATABASE.md)** - Migrations, backups, collaboration
 - **[Docker Deployment](./docs/DOCKER_DEPLOYMENT.md)** - Complete Docker guide
 - **[Helm Deployment - Auth Service](./services/auth-service/helm/README.md)** - Kubernetes deployment
-- **[Helm Deployment - Web Test](./apps/web-test/helm/README.md)** - Web app deployment
+- **[Helm Deployment - Web Test](./apps/web-main/helm/README.md)** - Web app deployment
 
 ### Developer Documentation
 - **[Testing Guide](./.ai/testing.md)** - TDD, test coverage, best practices
@@ -181,7 +181,7 @@ pnpm dev
 ```
 my-girok/
 ├── apps/
-│   └── web-test/              # React test application
+│   └── web-main/              # React test application
 │       ├── src/
 │       ├── e2e/              # Playwright E2E tests
 │       └── Dockerfile
@@ -216,7 +216,7 @@ pnpm install
 # Development
 pnpm dev                                    # Start all services
 cd services/auth-service && pnpm dev        # Auth service only
-cd apps/web-test && pnpm dev                # Web app only
+cd apps/web-main && pnpm dev                # Web app only
 
 # Database
 cd services/auth-service
@@ -227,7 +227,7 @@ pnpm prisma migrate dev                     # Create migration
 # Testing
 pnpm test                                   # Run all tests
 pnpm test:cov                               # Test coverage
-cd apps/web-test && pnpm test:e2e          # E2E tests
+cd apps/web-main && pnpm test:e2e          # E2E tests
 
 # Build
 pnpm build                                  # Build all packages
@@ -361,7 +361,7 @@ pnpm test
 pnpm test:integration
 
 # E2E tests
-cd apps/web-test
+cd apps/web-main
 pnpm test:e2e
 
 # Coverage report
