@@ -1,29 +1,32 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { getPublicResume, Resume } from '../../api/resume';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getUserResume, Resume } from '../../api/resume';
+import { useAuthStore } from '../../stores/authStore';
 import ResumePreview from '../../components/resume/ResumePreview';
 
 export default function PublicResumePage() {
-  const { token } = useParams<{ token: string }>();
+  const { username } = useParams<{ username: string }>();
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (token) {
-      loadResume(token);
-    }
-  }, [token]);
+  const isOwnProfile = user?.username === username;
 
-  const loadResume = async (token: string) => {
+  useEffect(() => {
+    if (username) {
+      loadResume(username);
+    }
+  }, [username]);
+
+  const loadResume = async (username: string) => {
     try {
-      const data = await getPublicResume(token);
+      const data = await getUserResume(username);
       setResume(data);
     } catch (err: any) {
-      if (err.response?.status === 403) {
-        setError('This share link has expired or been deactivated');
-      } else if (err.response?.status === 404) {
-        setError('Invalid share link');
+      if (err.response?.status === 404) {
+        setError('User not found');
       } else {
         setError('Failed to load resume');
       }
@@ -34,6 +37,10 @@ export default function PublicResumePage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleEdit = () => {
+    navigate(`/${username}/edit`);
   };
 
   if (loading) {
@@ -51,8 +58,8 @@ export default function PublicResumePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <div className="text-6xl mb-4">🔍</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Not Found</h1>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -69,15 +76,30 @@ export default function PublicResumePage() {
       <div className="bg-white border-b print:hidden sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-semibold">{resume.name}'s Resume</h1>
-            <p className="text-sm text-gray-600">Shared via My-Girok</p>
+            <h1 className="text-xl font-semibold">
+              {resume.name}'s Resume
+              {isOwnProfile && (
+                <span className="ml-2 text-sm font-normal text-blue-600">(Your Profile)</span>
+              )}
+            </h1>
+            <p className="text-sm text-gray-600">@{username}</p>
           </div>
-          <button
-            onClick={handlePrint}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Print / Save as PDF
-          </button>
+          <div className="flex gap-2">
+            {isOwnProfile && (
+              <button
+                onClick={handleEdit}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Edit Resume
+              </button>
+            )}
+            <button
+              onClick={handlePrint}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Print / Save as PDF
+            </button>
+          </div>
         </div>
       </div>
 

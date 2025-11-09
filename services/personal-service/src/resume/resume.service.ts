@@ -1,10 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ResumeService {
-  constructor(private prisma: PrismaService) {}
+  private readonly authServiceUrl: string;
+
+  constructor(
+    private prisma: PrismaService,
+    private httpService: HttpService,
+    private configService: ConfigService,
+  ) {
+    this.authServiceUrl = this.configService.get('AUTH_SERVICE_URL') || 'http://auth-service:4001';
+  }
 
   async create(userId: string, dto: CreateResumeDto) {
     // Use Prisma transaction for multi-step DB operations (CLAUDE.md policy)
@@ -328,6 +339,57 @@ export class ResumeService {
 
     if (!resume) {
       throw new NotFoundException('Resume not found');
+    }
+
+    return resume;
+  }
+
+  // Get user's default resume by username (public access)
+  async getPublicResumeByUsername(username: string) {
+    // First, get user ID from auth-service using username
+    let userId: string;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.authServiceUrl}/v1/users/by-username/${username}`)
+      );
+      userId = response.data.id;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Then get the default resume (or first resume if no default)
+    const resume = await this.prisma.resume.findFirst({
+      where: { userId },
+      orderBy: [
+        { isDefault: 'desc' }, // Default resume first
+        { createdAt: 'desc' },  // Otherwise, most recent
+      ],
+      include: {
+        skills: {
+          where: { visible: true },
+          orderBy: { order: 'asc' },
+        },
+        experiences: {
+          where: { visible: true },
+          orderBy: { order: 'asc' },
+        },
+        projects: {
+          where: { visible: true },
+          orderBy: { order: 'asc' },
+        },
+        educations: {
+          where: { visible: true },
+          orderBy: { order: 'asc' },
+        },
+        certificates: {
+          where: { visible: true },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!resume) {
+      throw new NotFoundException('No resume found for this user');
     }
 
     return resume;

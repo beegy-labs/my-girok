@@ -249,3 +249,9 @@ export const getPublicResume = async (token: string): Promise<Resume> => {
   const response = await personalApi.get(`/share/public/${token}`);
   return response.data;
 };
+
+// Get user's default resume by username (public access)
+export const getUserResume = async (username: string): Promise<Resume> => {
+  const response = await personalApi.get(`/resume/public/${username}`);
+  return response.data;
+};
