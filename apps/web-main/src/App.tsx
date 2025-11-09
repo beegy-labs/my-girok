@@ -7,6 +7,7 @@ import PrivateRoute from './components/PrivateRoute';
 import ResumeEditPage from './pages/resume/ResumeEditPage';
 import ResumePreviewPage from './pages/resume/ResumePreviewPage';
 import PublicResumePage from './pages/resume/PublicResumePage';
+import MyResumePage from './pages/resume/MyResumePage';
 
 function App() {
 
@@ -20,6 +21,14 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Resume routes with /resume prefix */}
+          <Route
+            path="/resume/my"
+            element={
+              <PrivateRoute>
+                <MyResumePage />
+              </PrivateRoute>
+            }
+          />
           <Route path="/resume/:username" element={<PublicResumePage />} />
           <Route
             path="/resume/:username/edit"
