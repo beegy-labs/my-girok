@@ -3,6 +3,7 @@ import { ResumeService } from './resume.service';
 import { PrismaService } from '../database/prisma.service';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { StorageService } from '../storage/storage.service';
 import { NotFoundException } from '@nestjs/common';
 import { SectionType } from './dto/update-section-order.dto';
 import { of } from 'rxjs';
@@ -19,6 +20,13 @@ describe('ResumeService', () => {
       if (key === 'AUTH_SERVICE_URL') return 'http://auth-service:4001';
       return null;
     }),
+  };
+
+  const mockStorageService = {
+    uploadFile: jest.fn(),
+    uploadWithGrayscale: jest.fn(),
+    deleteFile: jest.fn(),
+    getFileUrl: jest.fn(),
   };
 
   const mockPrismaService = {
@@ -66,6 +74,7 @@ describe('ResumeService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: HttpService, useValue: mockHttpService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 

@@ -17,7 +17,7 @@ const apps: AppCard[] = [
     name: '이력서',
     description: '나의 커리어를 기록하고 관리하세요',
     icon: '📄',
-    route: '/apps/resume',
+    route: '/resume/edit',
     color: 'bg-amber-700',
     status: 'active',
   },
