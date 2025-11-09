@@ -29,7 +29,7 @@ export class OAuthConfigController {
   constructor(private readonly oauthConfigService: OAuthConfigService) {}
 
   /**
-   * GET /oauth-config
+   * GET /v1/oauth-config
    * Get all OAuth provider configurations
    * Access: MASTER only
    */
@@ -47,7 +47,7 @@ export class OAuthConfigController {
   }
 
   /**
-   * GET /oauth-config/:provider
+   * GET /v1/oauth-config/:provider
    * Get specific provider configuration
    * Access: MASTER only
    */
@@ -70,7 +70,7 @@ export class OAuthConfigController {
   }
 
   /**
-   * PATCH /oauth-config/:provider/toggle
+   * PATCH /v1/oauth-config/:provider/toggle
    * Enable or disable OAuth provider
    * Access: MASTER only
    */
@@ -104,7 +104,7 @@ export class OAuthConfigController {
   }
 
   /**
-   * GET /oauth-config/:provider/status
+   * GET /v1/oauth-config/:provider/status
    * Check if provider is enabled (public endpoint)
    * Access: Public
    */

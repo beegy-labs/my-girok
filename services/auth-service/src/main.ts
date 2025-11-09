@@ -11,6 +11,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get('NODE_ENV', 'development');
 
+  app.setGlobalPrefix('v1');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -90,6 +92,7 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`Auth service is running on: http://localhost:${port}`);
+  console.log(`API version: v1`);
   console.log(`Swagger docs: http://localhost:${port}/docs`);
 }
 
