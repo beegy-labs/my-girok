@@ -16,60 +16,48 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-lg">
-      <div className="container mx-auto px-4">
+    <nav className="bg-white border-b border-gray-200">
+      <div className="container mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-xl font-bold text-gray-800">
-              My-Girok
+            <Link to="/" className="flex items-center space-x-2">
+              <span className="text-2xl font-bold text-blue-600">My-Girok</span>
             </Link>
-            <div className="hidden md:flex space-x-4">
-              <Link
-                to="/public"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
-              >
-                Public Page
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/protected"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
-                >
-                  Protected Page
-                </Link>
-              )}
-            </div>
           </div>
 
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <span className="text-gray-700">
-                  {user?.name || user?.email}
-                </span>
-                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  {user?.role}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-                >
-                  Logout
-                </button>
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-700">
+                      {user?.name || user?.email}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {user?.role}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                  >
+                    로그아웃
+                  </button>
+                </div>
               </>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className="text-gray-600 hover:text-gray-900 px-4 py-2"
+                  className="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-medium transition-colors"
                 >
-                  Login
+                  로그인
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
-                  Register
+                  회원가입
                 </Link>
               </>
             )}
