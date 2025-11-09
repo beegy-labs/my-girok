@@ -11,8 +11,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get('NODE_ENV', 'development');
 
-  app.setGlobalPrefix(configService.get('API_PREFIX', 'api/v1'));
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -77,7 +75,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
+  SwaggerModule.setup('docs', app, document, {
     customSiteTitle: 'My-Girok Auth API',
     customCss: '.swagger-ui .topbar { display: none }',
     swaggerOptions: {
@@ -92,8 +90,7 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`Auth service is running on: http://localhost:${port}`);
-  console.log(`API prefix: ${configService.get('API_PREFIX', 'api/v1')}`);
-  console.log(`Swagger docs: http://localhost:${port}/api/docs`);
+  console.log(`Swagger docs: http://localhost:${port}/docs`);
 }
 
 bootstrap();
