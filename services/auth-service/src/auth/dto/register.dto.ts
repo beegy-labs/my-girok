@@ -8,8 +8,8 @@ export class RegisterDto implements IRegisterDto {
   @IsString()
   @MinLength(3)
   @MaxLength(20)
-  @Matches(/^[a-z0-9_-]+$/, {
-    message: 'Username must contain only lowercase letters, numbers, hyphens, and underscores',
+  @Matches(/^[a-z0-9]+$/, {
+    message: 'Username must contain only lowercase letters and numbers',
   })
   username!: string;
 
