@@ -1,454 +1,220 @@
 # Web Main App
 
-> Public-facing web application
-
-## Purpose
-
-Main web application for end users. Built with Next.js 15 App Router for optimal performance and SEO.
+> Public-facing web application for My-Girok
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: React 19 + Vite
+- **Router**: React Router v6
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **State**: React Hooks + Server State
-- **API**: Fetch wrapper + GraphQL client (optional)
+- **State**: Zustand + React Query
+- **API**: Axios wrapper
 
-## Project Structure
+## Structure
 
 ```
-apps/web/main/
-├── app/                    # App Router
-│   ├── (auth)/            # Auth route group
-│   │   ├── login/
-│   │   └── register/
-│   ├── (main)/            # Main route group
-│   │   ├── page.tsx       # Home
-│   │   ├── dashboard/
-│   │   ├── posts/
-│   │   └── profile/
-│   ├── layout.tsx         # Root layout (with Rybbit)
-│   └── api/               # API routes (if needed)
+apps/web-main/src/
+├── pages/              # Route pages
+│   ├── HomePage.tsx
+│   ├── LoginPage.tsx
+│   ├── RegisterPage.tsx
+│   └── resume/
+│       ├── MyResumePage.tsx      # Resume management (/resume/my)
+│       ├── PublicResumePage.tsx  # Public view (/resume/:username)
+│       ├── ResumeEditPage.tsx    # Editor (/resume/:username/edit)
+│       └── ResumePreviewPage.tsx # Preview (/resume/:username/preview)
 ├── components/
-│   ├── auth/              # Login, Register forms
-│   ├── layout/            # Header, Footer, Sidebar
-│   ├── posts/             # Post components
-│   └── shared/            # Buttons, Inputs, Cards
-└── lib/
-    ├── api/               # API client
-    ├── auth/              # Auth helpers
-    └── utils/
+│   ├── Navbar.tsx
+│   ├── PrivateRoute.tsx
+│   └── resume/
+│       ├── ResumeForm.tsx
+│       └── ResumePreview.tsx
+├── api/                # API clients
+│   ├── auth.ts
+│   └── resume.ts
+├── stores/             # Zustand stores
+│   └── authStore.ts
+└── App.tsx             # Router config
 ```
 
-## API Integration
+## Key Routes
 
-### API Client
+### Public Routes
+- `/` - HomePage (dashboard for logged-in, landing for visitors)
+- `/login` - LoginPage
+- `/register` - RegisterPage
+- `/resume/:username` - PublicResumePage (public resume view)
+
+### Protected Routes (PrivateRoute)
+- `/resume/my` - MyResumePage (resume management dashboard)
+- `/resume/:username/edit` - ResumeEditPage (create/edit)
+- `/resume/:username/preview` - ResumePreviewPage (print preview)
+
+## Resume Feature
+
+### MyResumePage (`/resume/my`)
+**Purpose**: Resume management dashboard
+
+**Features**:
+- List all user's resumes
+- Create new resume
+- Edit/preview/delete resumes
+- Share with time-limited links
+- View share statistics
+
+**APIs Used**:
+```typescript
+getAllResumes()           // Get user's resume list
+getMyShareLinks()         // Get share links
+createResumeShare()       // Create share link
+deleteShareLink()         // Delete share link
+deleteResume()            // Delete resume
+```
+
+### PublicResumePage (`/resume/:username`)
+**Purpose**: Public resume view (no auth required)
+
+**Features**:
+- View user's default resume
+- Edit button (if own profile)
+- Print button
+
+**APIs Used**:
+```typescript
+getUserResume(username)   // Get public resume by username
+```
+
+### ResumeEditPage (`/resume/:username/edit`)
+**Purpose**: Create/edit resume (auth required)
+
+**Features**:
+- Full resume editor
+- Save/update resume
+- Navigate to preview
+
+**APIs Used**:
+```typescript
+getDefaultResume()        // Load existing
+createResume(dto)         // Create new
+updateResume(id, dto)     // Update existing
+```
+
+## API Client Pattern
 
 ```typescript
-// lib/api/client.ts
-const API_BASE = process.env.NEXT_PUBLIC_WEB_BFF_URL || 'http://localhost:3001';
+// api/resume.ts
+import { authApi } from './auth';
 
-export const apiClient = {
-  async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const token = getAccessToken();
+const PERSONAL_API_URL = import.meta.env.VITE_PERSONAL_API_URL;
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options?.headers,
-      },
-    });
+export const personalApi = authApi.create({
+  baseURL: `${PERSONAL_API_URL}/v1`,
+});
 
-    if (response.status === 401) {
-      // Token expired, try refresh
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        return this.request(endpoint, options); // Retry
-      }
-      // Redirect to login
-      window.location.href = '/login';
-      throw new Error('Unauthorized');
-    }
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'API request failed');
-    }
-
-    return response.json();
-  },
-
-  get<T>(endpoint: string) {
-    return this.request<T>(endpoint, { method: 'GET' });
-  },
-
-  post<T>(endpoint: string, data: any) {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+export const getDefaultResume = async (): Promise<Resume> => {
+  const response = await personalApi.get('/resume/default');
+  return response.data;
 };
 ```
 
-### GraphQL Client (Optional)
-
-```typescript
-// lib/api/graphql-client.ts
-import { GraphQLClient } from 'graphql-request';
-
-const endpoint = `${process.env.NEXT_PUBLIC_WEB_BFF_URL}/graphql`;
-
-export const graphqlClient = new GraphQLClient(endpoint, {
-  headers: () => ({
-    Authorization: `Bearer ${getAccessToken()}`,
-  }),
-});
-
-// Usage
-import { gql } from 'graphql-request';
-
-const DASHBOARD_QUERY = gql`
-  query Dashboard {
-    dashboard {
-      user {
-        name
-        avatar
-      }
-      recentPosts {
-        id
-        title
-        createdAt
-      }
-      stats {
-        totalPosts
-        totalViews
-      }
-    }
-  }
-`;
-
-const data = await graphqlClient.request(DASHBOARD_QUERY);
-```
-
-## Key Pages
-
-### Home Page
-
-```typescript
-// app/(main)/page.tsx
-export default async function HomePage() {
-  const posts = await getPosts({ limit: 10 });
-
-  return (
-    <main>
-      <h1>Welcome to My Girok</h1>
-      <PostList posts={posts} />
-    </main>
-  );
-}
-
-// ISR: Revalidate every 60 seconds
-export const revalidate = 60;
-```
-
-### Dashboard Page
-
-```typescript
-// app/(main)/dashboard/page.tsx
-import { Suspense } from 'react';
-
-export default async function DashboardPage() {
-  // Server Component - fetch on server
-  const user = await getCurrentUser();
-
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <UserProfile user={user} />
-
-      {/* Streaming with Suspense */}
-      <Suspense fallback={<PostsSkeleton />}>
-        <RecentPosts userId={user.id} />
-      </Suspense>
-
-      <Suspense fallback={<StatsSkeleton />}>
-        <UserStats userId={user.id} />
-      </Suspense>
-    </div>
-  );
-}
-```
-
-### Login Page
-
-```typescript
-// app/(auth)/login/page.tsx
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const router = useRouter();
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-
-    try {
-      const { accessToken, refreshToken } = await apiClient.post('/api/auth/login', {
-        email,
-        password,
-      });
-
-      // Store tokens
-      setAccessToken(accessToken);
-      setRefreshToken(refreshToken);
-
-      // Redirect to dashboard
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-      />
-      <button type="submit">Login</button>
-    </form>
-  );
-}
-```
-
-## Authentication
+## Auth Pattern
 
 ### Token Storage
+- **Access Token**: localStorage
+- **Refresh Token**: HttpOnly cookie (set by BFF)
 
+### Auth Store (Zustand)
 ```typescript
-// lib/auth/tokens.ts
-
-// Access token in localStorage (client-side only)
-export function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('accessToken');
-}
-
-export function setAccessToken(token: string) {
-  localStorage.setItem('accessToken', token);
-}
-
-// Refresh token in HttpOnly cookie (set by BFF)
-export async function refreshAccessToken(): Promise<boolean> {
-  try {
-    const response = await fetch(`${API_BASE}/api/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include', // Send HttpOnly cookie
-    });
-
-    if (response.ok) {
-      const { accessToken } = await response.json();
-      setAccessToken(accessToken);
-      return true;
-    }
-
-    return false;
-  } catch {
-    return false;
-  }
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  setUser: (user: User | null) => void;
 }
 ```
 
-### Protected Route
-
+### PrivateRoute
 ```typescript
-// app/(main)/dashboard/layout.tsx
-import { redirect } from 'next/navigation';
-
-export default async function DashboardLayout({ children }) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  return <>{children}</>;
-}
+// Redirects to /login if not authenticated
+<PrivateRoute>
+  <MyResumePage />
+</PrivateRoute>
 ```
 
-## Root Layout (CRITICAL)
+## Design System
 
-```typescript
-// app/layout.tsx
-import Script from 'next/script';
-import './globals.css';
+**Color Theme**: Library/book theme with amber colors
 
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <head>
-        {/* Rybbit Analytics (REQUIRED) */}
-        <Script
-          src="https://rybbit.girok.dev/api/script.js"
-          data-site-id="7a5f53c5f793"
-          strategy="afterInteractive"
-        />
-      </head>
-      <body>
-        {children}
-      </body>
-    </html>
-  );
-}
-```
+**Key Classes**:
+- Cards: `bg-amber-50/30 border-amber-100 rounded-2xl`
+- Primary Button: `bg-gradient-to-r from-amber-700 to-amber-600`
+- Secondary Button: `bg-gray-100 text-gray-700 border-gray-300`
 
-## Performance Optimization
+**See**: `/docs/DESIGN_SYSTEM.md` for full guidelines
 
-### Image Optimization
-
-```typescript
-import Image from 'next/image';
-
-<Image
-  src={post.coverImage}
-  alt={post.title}
-  width={1200}
-  height={630}
-  priority // For above-the-fold images
-  placeholder="blur"
-/>
-```
-
-### Dynamic Imports
-
-```typescript
-import dynamic from 'next/dynamic';
-
-const HeavyChart = dynamic(() => import('@/components/HeavyChart'), {
-  loading: () => <ChartSkeleton />,
-  ssr: false, // Client-side only
-});
-```
-
-### Data Fetching
-
-```typescript
-// Server Component (default)
-async function getData() {
-  const res = await fetch('https://api.mygirok.dev/posts', {
-    next: { revalidate: 60 }, // ISR
-  });
-  return res.json();
-}
-
-// Client Component
-'use client';
-import { useEffect, useState } from 'react';
-
-function ClientComponent() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/data').then(res => res.json()).then(setData);
-  }, []);
-}
-```
-
-## Integration Points
-
-### Outgoing (This app calls)
-- **web-bff**: Primary API for data
-- **api-gateway**: Alternative routing
-
-### Environment Variables
+## Environment Variables
 
 ```bash
-NEXT_PUBLIC_WEB_BFF_URL=https://web-bff.mygirok.dev
-NEXT_PUBLIC_API_GATEWAY_URL=https://api.mygirok.dev
+VITE_WEB_BFF_URL=https://web-bff.mygirok.dev
+VITE_PERSONAL_API_URL=https://personal.mygirok.dev
 ```
 
 ## Common Patterns
 
-### Server Action (Form Submission)
-
+### Page Loading State
 ```typescript
-// app/actions/posts.ts
-'use server';
-
-export async function createPost(formData: FormData) {
-  const title = formData.get('title');
-  const content = formData.get('content');
-
-  const post = await apiClient.post('/api/posts', { title, content });
-
-  revalidatePath('/posts');
-  return post;
-}
-
-// Usage in component
-'use client';
-import { createPost } from '@/app/actions/posts';
-
-<form action={createPost}>
-  <input name="title" />
-  <textarea name="content" />
-  <button type="submit">Create</button>
-</form>
-```
-
-### Error Handling
-
-```typescript
-// app/error.tsx
-'use client';
-
-export default function Error({ error, reset }) {
+if (loading) {
   return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <button onClick={() => reset()}>Try again</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700" />
     </div>
   );
 }
 ```
 
-## Testing
-
+### Error Handling
 ```typescript
-// __tests__/LoginPage.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import LoginPage from '@/app/(auth)/login/page';
+const [error, setError] = useState<string | null>(null);
 
-test('login form submission', async () => {
-  render(<LoginPage />);
-
-  fireEvent.change(screen.getByPlaceholderText('Email'), {
-    target: { value: 'test@example.com' },
-  });
-
-  fireEvent.click(screen.getByText('Login'));
-
-  // Assert...
-});
+// Display error
+{error && (
+  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+    {error}
+  </div>
+)}
 ```
 
-## Deployment
+### Navigation
+```typescript
+const navigate = useNavigate();
+const { user } = useAuthStore();
 
-- Build: `pnpm build`
-- Output: `.next/` directory
-- Deploy: Vercel, Docker, or static export
+navigate(`/resume/${user?.username}/edit`);
+```
+
+## Testing
+
+- **Unit**: Component tests with Vitest + React Testing Library
+- **E2E**: Playwright for critical flows
+- **Coverage**: 80% minimum
+
+## Build & Deploy
+
+```bash
+# Development
+pnpm dev
+
+# Build
+pnpm build
+
+# Preview
+pnpm preview
+```
+
+**Deploy**: Docker container to Kubernetes
+
+## References
+
+- **Design System**: `/docs/DESIGN_SYSTEM.md`
+- **Resume Policy**: `/docs/policies/RESUME.md`
+- **API Docs**: Personal Service API
