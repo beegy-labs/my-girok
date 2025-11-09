@@ -9,7 +9,9 @@ echo "Replacing environment variables in index.html..."
 RYBBIT_SITE_ID="${RYBBIT_SITE_ID:-default-site-id}"
 
 # Use envsubst to replace variables in index.html
-envsubst '${RYBBIT_SITE_ID}' < /usr/share/nginx/html/index.html.template > /usr/share/nginx/html/index.html
+# Write to /tmp first (writable by nginx user), then move
+envsubst '${RYBBIT_SITE_ID}' < /usr/share/nginx/html/index.html.template > /tmp/index.html
+mv /tmp/index.html /usr/share/nginx/html/index.html
 
 echo "Environment variables replaced successfully"
 echo "RYBBIT_SITE_ID: ${RYBBIT_SITE_ID}"
