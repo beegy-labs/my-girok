@@ -1,0 +1,20 @@
+apiVersion: v2
+name: personal-service
+description: Personal data management microservice for My-Girok (Resume, Budget, Share)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - personal
+  - resume
+  - budget
+  - share
+
+maintainers:
+  - name: My-Girok Team
+    email: your-team@example.com
+
+home: https://github.com/your-org/my-girok
+sources:
+  - https://github.com/your-org/my-girok

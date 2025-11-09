@@ -1,0 +1,234 @@
+name: CI - Personal Service
+
+on:
+  push:
+    branches:
+      - develop
+      - 'release/**'
+      - main
+    paths:
+      - 'services/personal-service/**'
+      - 'packages/types/**'
+      - '.github/workflows/ci-personal-service.yml'
+  pull_request:
+    branches:
+      - develop
+      - 'release/**'
+      - main
+    paths:
+      - 'services/personal-service/**'
+      - 'packages/types/**'
+
+env:
+  REGISTRY: ${{ secrets.HARBOR_REGISTRY }}
+  IMAGE_NAME: my-girok/personal-service
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @my-girok/personal-service prisma:generate
+
+      - name: Run tests
+        run: |
+          cd services/personal-service
+          pnpm test
+
+      - name: Run linter
+        run: |
+          cd services/personal-service
+          pnpm lint || true
+
+  build:
+    name: Build and Push Docker Image
+    runs-on: [self-hosted, kubernetes, gitops]
+    needs: test
+    if: github.event_name == 'push'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          # Get short commit SHA
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+
+          # Determine tag based on branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # Main branch: latest
+            TAG="latest"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            VERSION="${TAG}"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            # Develop branch: develop:<hash> + develop:latest
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:latest"
+            VERSION="develop:${TAG}"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            # Release branch: release:<hash> + release:latest
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:latest"
+            VERSION="release:${TAG}"
+          else
+            # Other branches: branch-<hash>
+            BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${BRANCH_NAME}:${TAG}"
+            VERSION="${BRANCH_NAME}:${TAG}"
+          fi
+
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./services/personal-service/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          build-args: |
+            NODE_ENV=production
+
+      - name: Image digest
+        run: |
+          echo "Image pushed with tags: ${{ steps.meta.outputs.tags }}"
+          echo "Version: ${{ steps.meta.outputs.version }}"
+
+  update-gitops:
+    name: Update GitOps Repository
+    runs-on: [self-hosted, kubernetes, gitops]
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    timeout-minutes: 10
+
+    steps:
+      - name: Get short commit SHA
+        id: sha
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Determine image tag
+        id: image
+        run: |
+          SHORT_SHA=${{ steps.sha.outputs.short_sha }}
+
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            TAG="latest"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TAG="${SHORT_SHA}"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            TAG="${SHORT_SHA}"
+          fi
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Checkout GitOps repository
+        uses: actions/checkout@v4
+        with:
+          repository: beegy-labs/platform-gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          path: gitops
+
+      - name: Update image tag in GitOps repository
+        run: |
+          cd gitops
+
+          # Determine values file path based on branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-prod.yaml"
+            ENVIRONMENT="production"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-dev.yaml"
+            ENVIRONMENT="development"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-staging.yaml"
+            ENVIRONMENT="staging"
+          fi
+
+          # Update image tag using sed
+          sed -i "s|tag: \".*\"|tag: \"${{ steps.image.outputs.tag }}\"|g" ${VALUES_FILE}
+
+          echo "Updated ${VALUES_FILE} with tag: ${{ steps.image.outputs.tag }}"
+          echo "Environment: ${ENVIRONMENT}"
+          cat ${VALUES_FILE} | grep -A 3 "image:"
+
+      - name: Commit and push changes
+        run: |
+          cd gitops
+
+          # Determine values file path and environment (same logic as update step)
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-prod.yaml"
+            ENVIRONMENT="production"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-dev.yaml"
+            ENVIRONMENT="development"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-staging.yaml"
+            ENVIRONMENT="staging"
+          fi
+
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add ${VALUES_FILE}
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(${ENVIRONMENT}): update personal-service image to ${{ steps.image.outputs.tag }}" \
+                       -m "Updated by GitHub Actions from my-girok@${{ github.sha }}" \
+                       -m "Branch: ${{ github.ref_name }}" \
+                       -m "Environment: ${ENVIRONMENT}"
+            git push
+            echo "Successfully updated GitOps repository for ${ENVIRONMENT}"
+          fi

@@ -1,0 +1,64 @@
+/* A4 Print Styles for Resume */
+
+@media print {
+  /* Reset margins */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide all non-printable elements */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Ensure single page */
+  .print\:py-0 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:max-w-none {
+    max-width: none !important;
+  }
+
+  .print\:p-\[1\.5cm\] {
+    padding: 1.5cm !important;
+  }
+
+  /* Convert colored links to gray for printing */
+  .print\:text-gray-900 {
+    color: #111827 !important;
+  }
+
+  /* Avoid page breaks inside elements */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  /* Avoid orphans and widows */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Better table printing */
+  table {
+    page-break-inside: avoid;
+  }
+
+  /* Optimize for print quality */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
