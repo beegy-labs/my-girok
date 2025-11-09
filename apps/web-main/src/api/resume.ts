@@ -79,6 +79,32 @@ export interface ResumeSection {
 
 export type PaperSize = 'A4' | 'LETTER';
 
+export enum AttachmentType {
+  PROFILE_PHOTO = 'PROFILE_PHOTO',
+  PORTFOLIO = 'PORTFOLIO',
+  CERTIFICATE = 'CERTIFICATE',
+  OTHER = 'OTHER',
+}
+
+export interface ResumeAttachmentBase {
+  id: string;
+  resumeId: string;
+  type: AttachmentType;
+  fileName: string;
+  fileKey: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  isProcessed: boolean;
+  originalUrl?: string;
+  title?: string;
+  description?: string;
+  order: number;
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Resume {
   id: string;
   userId: string;
@@ -101,6 +127,7 @@ export interface Resume {
   projects: Project[];
   educations: Education[];
   certificates: Certificate[];
+  attachments?: ResumeAttachmentBase[]; // Optional for backwards compatibility
   createdAt: string;
   updatedAt: string;
 }
@@ -258,4 +285,75 @@ export const getPublicResume = async (token: string): Promise<Resume> => {
 export const getUserResume = async (username: string): Promise<Resume> => {
   const response = await personalApi.get(`/resume/public/${username}`);
   return response.data;
+};
+
+// ========== Attachment Types ==========
+
+export interface ResumeAttachment {
+  id: string;
+  resumeId: string;
+  type: AttachmentType;
+  fileName: string;
+  fileKey: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  isProcessed: boolean;
+  originalUrl?: string;
+  title?: string;
+  description?: string;
+  order: number;
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ========== Attachment APIs ==========
+
+export const uploadAttachment = async (
+  resumeId: string,
+  file: File,
+  type: AttachmentType,
+  title?: string,
+  description?: string
+): Promise<ResumeAttachment> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('type', type);
+  if (title) formData.append('title', title);
+  if (description) formData.append('description', description);
+
+  const response = await personalApi.post(`/resume/${resumeId}/attachments`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+export const getAttachments = async (resumeId: string, type?: AttachmentType): Promise<ResumeAttachment[]> => {
+  const params = type ? { type } : {};
+  const response = await personalApi.get(`/resume/${resumeId}/attachments`, { params });
+  return response.data;
+};
+
+export const updateAttachment = async (
+  resumeId: string,
+  attachmentId: string,
+  data: { title?: string; description?: string; visible?: boolean }
+): Promise<ResumeAttachment> => {
+  const response = await personalApi.patch(`/resume/${resumeId}/attachments/${attachmentId}`, data);
+  return response.data;
+};
+
+export const deleteAttachment = async (resumeId: string, attachmentId: string): Promise<void> => {
+  await personalApi.delete(`/resume/${resumeId}/attachments/${attachmentId}`);
+};
+
+export const reorderAttachments = async (
+  resumeId: string,
+  type: AttachmentType,
+  attachmentIds: string[]
+): Promise<void> => {
+  await personalApi.patch(`/resume/${resumeId}/attachments/reorder`, { type, attachmentIds });
 };
