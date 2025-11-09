@@ -63,16 +63,16 @@ export default function RegisterPage() {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
               required
               minLength={3}
               maxLength={20}
-              pattern="[a-z0-9_-]+"
+              pattern="[a-z0-9]+"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="username"
             />
             <p className="text-xs text-gray-500 mt-1">
-              3-20 characters, lowercase letters, numbers, hyphens, and underscores only
+              3-20 characters, lowercase letters and numbers only
             </p>
           </div>
 
