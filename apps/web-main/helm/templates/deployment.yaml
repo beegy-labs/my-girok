@@ -43,6 +43,9 @@ spec:
           {{- toYaml .Values.readinessProbe | nindent 12 }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
+        env:
+        - name: RYBBIT_SITE_ID
+          value: {{ .Values.app.rybbitSiteId | quote }}
         volumeMounts:
         - name: nginx-cache
           mountPath: /var/cache/nginx

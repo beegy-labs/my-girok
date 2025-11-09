@@ -36,14 +36,22 @@ RUN pnpm build
 # Production stage with nginx
 FROM nginx:1.27-alpine AS production
 
-# Install security updates
-RUN apk upgrade --no-cache
+# Install security updates and gettext for envsubst
+RUN apk upgrade --no-cache && \
+    apk add --no-cache gettext
 
 # Copy built files
 COPY --from=builder /app/apps/web-main/dist /usr/share/nginx/html
 
+# Backup index.html as template for environment variable substitution
+RUN cp /usr/share/nginx/html/index.html /usr/share/nginx/html/index.html.template
+
 # Copy nginx configuration
 COPY apps/web-main/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy entrypoint script
+COPY apps/web-main/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Setup permissions for nginx user (already exists in nginx:alpine image)
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
@@ -51,7 +59,8 @@ RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/log/nginx && \
     chown -R nginx:nginx /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && \
-    chown nginx:nginx /var/run/nginx.pid
+    chown nginx:nginx /var/run/nginx.pid && \
+    chown nginx:nginx /docker-entrypoint.sh
 
 # Switch to non-root user
 USER nginx
@@ -63,5 +72,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Use entrypoint to replace environment variables
+ENTRYPOINT ["/docker-entrypoint.sh"]
