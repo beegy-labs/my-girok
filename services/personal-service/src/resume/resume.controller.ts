@@ -1,7 +1,25 @@
-import { Controller, Get, Post, Put, Delete, Body, UseGuards, Patch, Param, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  UseGuards,
+  Patch,
+  Param,
+  HttpCode,
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  Query,
+  ParseEnumPipe,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { ResumeService } from './resume.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
+import { AttachmentType } from '../storage/dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators';
 
@@ -109,5 +127,124 @@ export class ResumeController {
     @Body() dto: ToggleSectionVisibilityDto,
   ) {
     return this.resumeService.toggleSectionVisibility(resumeId, user.id, dto);
+  }
+
+  // ========== File Attachment Endpoints ==========
+
+  @Post(':resumeId/attachments')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: 'Upload file attachment to resume',
+    description: 'Upload profile photo (auto-converted to grayscale), portfolio, or certificate. Max size: 10MB.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'type'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'File to upload',
+        },
+        type: {
+          type: 'string',
+          enum: ['PROFILE_PHOTO', 'PORTFOLIO', 'CERTIFICATE', 'OTHER'],
+          description: 'Type of attachment',
+        },
+        title: {
+          type: 'string',
+          description: 'Optional title',
+          maxLength: 200,
+        },
+        description: {
+          type: 'string',
+          description: 'Optional description',
+          maxLength: 1000,
+        },
+      },
+    },
+  })
+  @ApiParam({ name: 'resumeId', description: 'Resume ID' })
+  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file or file type' })
+  @ApiResponse({ status: 404, description: 'Resume not found' })
+  async uploadAttachment(
+    @CurrentUser() user: any,
+    @Param('resumeId') resumeId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('type', new ParseEnumPipe(AttachmentType)) type: AttachmentType,
+    @Body('title') title?: string,
+    @Body('description') description?: string,
+  ) {
+    return this.resumeService.uploadAttachment(resumeId, user.id, file, type, title, description);
+  }
+
+  @Get(':resumeId/attachments')
+  @ApiOperation({ summary: 'Get all attachments for a resume' })
+  @ApiParam({ name: 'resumeId', description: 'Resume ID' })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: AttachmentType,
+    description: 'Filter by attachment type',
+  })
+  @ApiResponse({ status: 200, description: 'Attachments found', isArray: true })
+  @ApiResponse({ status: 404, description: 'Resume not found' })
+  async getAttachments(
+    @CurrentUser() user: any,
+    @Param('resumeId') resumeId: string,
+    @Query('type') type?: AttachmentType,
+  ) {
+    if (type) {
+      return this.resumeService.getAttachmentsByType(resumeId, user.id, type);
+    }
+    return this.resumeService.getAttachments(resumeId, user.id);
+  }
+
+  @Patch(':resumeId/attachments/:attachmentId')
+  @ApiOperation({ summary: 'Update attachment metadata' })
+  @ApiParam({ name: 'resumeId', description: 'Resume ID' })
+  @ApiParam({ name: 'attachmentId', description: 'Attachment ID' })
+  @ApiResponse({ status: 200, description: 'Attachment updated successfully' })
+  @ApiResponse({ status: 404, description: 'Resume or attachment not found' })
+  async updateAttachment(
+    @CurrentUser() user: any,
+    @Param('resumeId') resumeId: string,
+    @Param('attachmentId') attachmentId: string,
+    @Body('title') title?: string,
+    @Body('description') description?: string,
+    @Body('visible') visible?: boolean,
+  ) {
+    return this.resumeService.updateAttachment(attachmentId, resumeId, user.id, title, description, visible);
+  }
+
+  @Delete(':resumeId/attachments/:attachmentId')
+  @ApiOperation({ summary: 'Delete attachment' })
+  @ApiParam({ name: 'resumeId', description: 'Resume ID' })
+  @ApiParam({ name: 'attachmentId', description: 'Attachment ID' })
+  @ApiResponse({ status: 200, description: 'Attachment deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Resume or attachment not found' })
+  async deleteAttachment(
+    @CurrentUser() user: any,
+    @Param('resumeId') resumeId: string,
+    @Param('attachmentId') attachmentId: string,
+  ) {
+    return this.resumeService.deleteAttachment(attachmentId, resumeId, user.id);
+  }
+
+  @Patch(':resumeId/attachments/reorder')
+  @ApiOperation({ summary: 'Reorder attachments of a specific type' })
+  @ApiParam({ name: 'resumeId', description: 'Resume ID' })
+  @ApiResponse({ status: 200, description: 'Attachments reordered successfully' })
+  @ApiResponse({ status: 404, description: 'Resume not found' })
+  async reorderAttachments(
+    @CurrentUser() user: any,
+    @Param('resumeId') resumeId: string,
+    @Body('type', new ParseEnumPipe(AttachmentType)) type: AttachmentType,
+    @Body('attachmentIds') attachmentIds: string[],
+  ) {
+    return this.resumeService.reorderAttachments(resumeId, user.id, type, attachmentIds);
   }
 }

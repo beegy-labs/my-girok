@@ -2,7 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
+import { AttachmentType } from '../storage/dto';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -13,6 +15,7 @@ export class ResumeService {
     private prisma: PrismaService,
     private httpService: HttpService,
     private configService: ConfigService,
+    private storageService: StorageService,
   ) {
     this.authServiceUrl = this.configService.get('AUTH_SERVICE_URL') || 'http://auth-service:4001';
   }
@@ -393,5 +396,183 @@ export class ResumeService {
     }
 
     return resume;
+  }
+
+  // ========== File Attachment Methods ==========
+
+  /**
+   * Upload file attachment to resume
+   * For PROFILE_PHOTO type, automatically converts to grayscale
+   * @Transactional decorator ensures DB consistency
+   */
+  async uploadAttachment(
+    resumeId: string,
+    userId: string,
+    file: Express.Multer.File,
+    type: AttachmentType,
+    title?: string,
+    description?: string,
+  ) {
+    // Verify resume ownership
+    await this.findByIdAndUserId(resumeId, userId);
+
+    return await this.prisma.$transaction(async (tx) => {
+      let fileUrl: string;
+      let fileKey: string;
+      let originalUrl: string | null = null;
+      let isProcessed = false;
+
+      // For profile photos, convert to grayscale (company standard)
+      if (type === AttachmentType.PROFILE_PHOTO) {
+        const result = await this.storageService.uploadWithGrayscale(file, userId, resumeId);
+        fileUrl = result.grayscaleUrl; // Use grayscale as main
+        fileKey = result.grayscaleKey;
+        originalUrl = result.originalUrl; // Keep original for backup
+        isProcessed = true;
+      } else {
+        // For other files, upload normally
+        const result = await this.storageService.uploadFile(file, userId, resumeId);
+        fileUrl = result.fileUrl;
+        fileKey = result.fileKey;
+      }
+
+      // Get current max order for this type
+      const maxOrder = await tx.resumeAttachment.findFirst({
+        where: { resumeId, type },
+        orderBy: { order: 'desc' },
+        select: { order: true },
+      });
+
+      // Create attachment record
+      const attachment = await tx.resumeAttachment.create({
+        data: {
+          resumeId,
+          type,
+          fileName: file.originalname,
+          fileKey,
+          fileUrl,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          isProcessed,
+          originalUrl,
+          title,
+          description,
+          order: (maxOrder?.order ?? -1) + 1,
+          visible: true,
+        },
+      });
+
+      return attachment;
+    });
+  }
+
+  /**
+   * Get all attachments for a resume
+   */
+  async getAttachments(resumeId: string, userId: string) {
+    await this.findByIdAndUserId(resumeId, userId);
+
+    return await this.prisma.resumeAttachment.findMany({
+      where: { resumeId },
+      orderBy: [{ type: 'asc' }, { order: 'asc' }],
+    });
+  }
+
+  /**
+   * Get attachments by type
+   */
+  async getAttachmentsByType(resumeId: string, userId: string, type: AttachmentType) {
+    await this.findByIdAndUserId(resumeId, userId);
+
+    return await this.prisma.resumeAttachment.findMany({
+      where: { resumeId, type },
+      orderBy: { order: 'asc' },
+    });
+  }
+
+  /**
+   * Delete attachment
+   * @Transactional ensures both file and DB record are deleted atomically
+   */
+  async deleteAttachment(attachmentId: string, resumeId: string, userId: string) {
+    await this.findByIdAndUserId(resumeId, userId);
+
+    return await this.prisma.$transaction(async (tx) => {
+      const attachment = await tx.resumeAttachment.findFirst({
+        where: { id: attachmentId, resumeId },
+      });
+
+      if (!attachment) {
+        throw new NotFoundException('Attachment not found');
+      }
+
+      // Delete from storage
+      await this.storageService.deleteFile(attachment.fileKey);
+
+      // If there's an original file (for grayscale photos), delete it too
+      if (attachment.originalUrl) {
+        const originalKey = attachment.originalUrl.split('/').slice(-4).join('/');
+        await this.storageService.deleteFile(originalKey);
+      }
+
+      // Delete from database
+      await tx.resumeAttachment.delete({
+        where: { id: attachmentId },
+      });
+
+      return { message: 'Attachment deleted successfully' };
+    });
+  }
+
+  /**
+   * Update attachment metadata
+   */
+  async updateAttachment(
+    attachmentId: string,
+    resumeId: string,
+    userId: string,
+    title?: string,
+    description?: string,
+    visible?: boolean,
+  ) {
+    await this.findByIdAndUserId(resumeId, userId);
+
+    const attachment = await this.prisma.resumeAttachment.findFirst({
+      where: { id: attachmentId, resumeId },
+    });
+
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found');
+    }
+
+    return await this.prisma.resumeAttachment.update({
+      where: { id: attachmentId },
+      data: {
+        title: title !== undefined ? title : attachment.title,
+        description: description !== undefined ? description : attachment.description,
+        visible: visible !== undefined ? visible : attachment.visible,
+      },
+    });
+  }
+
+  /**
+   * Reorder attachments
+   */
+  async reorderAttachments(resumeId: string, userId: string, type: AttachmentType, attachmentIds: string[]) {
+    await this.findByIdAndUserId(resumeId, userId);
+
+    return await this.prisma.$transaction(async (tx) => {
+      // Update order for each attachment
+      const updates = attachmentIds.map((id, index) =>
+        tx.resumeAttachment.updateMany({
+          where: { id, resumeId, type },
+          data: { order: index },
+        }),
+      );
+
+      await Promise.all(updates);
+
+      return { message: 'Attachments reordered successfully' };
+    });
   }
 }
