@@ -29,9 +29,10 @@ function App() {
               </PrivateRoute>
             }
           />
-          {/* Resume Routes */}
+          {/* Username-based profile and resume routes */}
+          <Route path="/:username" element={<PublicResumePage />} />
           <Route
-            path="/resume/edit"
+            path="/:username/edit"
             element={
               <PrivateRoute>
                 <ResumeEditPage />
@@ -39,14 +40,13 @@ function App() {
             }
           />
           <Route
-            path="/resume/preview"
+            path="/:username/preview"
             element={
               <PrivateRoute>
                 <ResumePreviewPage />
               </PrivateRoute>
             }
           />
-          <Route path="/resume/:token" element={<PublicResumePage />} />
         </Routes>
       </main>
     </div>

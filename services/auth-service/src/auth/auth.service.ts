@@ -26,12 +26,22 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthPayload> {
-    const existingUser = await this.prisma.user.findUnique({
+    // Check email uniqueness
+    const existingEmail = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
-    if (existingUser) {
+    if (existingEmail) {
       throw new ConflictException('Email already registered');
+    }
+
+    // Check username uniqueness
+    const existingUsername = await this.prisma.user.findUnique({
+      where: { username: dto.username },
+    });
+
+    if (existingUsername) {
+      throw new ConflictException('Username already taken');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
@@ -39,6 +49,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
+        username: dto.username,
         password: hashedPassword,
         name: dto.name,
         role: Role.USER,
@@ -54,6 +65,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         name: user.name,
         avatar: user.avatar,
         role: user.role as Role,
@@ -89,6 +101,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         name: user.name,
         avatar: user.avatar,
         role: user.role as Role,

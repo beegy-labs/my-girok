@@ -5,6 +5,7 @@ import { AuthProvider, Role } from './enums';
  */
 export interface RegisterDto {
   email: string;
+  username: string;  // Unique username for public profile (/:username)
   password: string;
   name: string;
 }
@@ -32,6 +33,7 @@ export interface AuthPayload {
 export interface UserPayload {
   id: string;
   email: string;
+  username: string;  // Unique username for public profile URLs
   name: string | null;
   avatar: string | null;
   role: Role;
@@ -77,6 +79,7 @@ export interface DomainAccessPayload {
  * Update profile request
  */
 export interface UpdateProfileDto {
+  username?: string;  // Cannot be changed if already used by another user
   name?: string;
   avatar?: string;
 }

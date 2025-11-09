@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -19,9 +20,9 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await register({ email, password, name });
+      const response = await register({ email, username, password, name });
       setAuth(response.user, response.accessToken, response.refreshToken);
-      navigate('/');
+      navigate(`/${username}`); // Redirect to user's profile
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
@@ -53,6 +54,26 @@ export default function RegisterPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Your name"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+              required
+              minLength={3}
+              maxLength={20}
+              pattern="[a-z0-9_-]+"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="username"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              3-20 characters, lowercase letters, numbers, hyphens, and underscores only
+            </p>
           </div>
 
           <div>

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, UseGuards, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, UseGuards, Patch, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ResumeService } from './resume.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
@@ -7,10 +7,23 @@ import { CurrentUser } from '../common/decorators';
 
 @ApiTags('resume')
 @Controller('v1/resume')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('JWT-auth')
 export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
+
+  // Public endpoint - Get user's default resume by username
+  @Get('public/:username')
+  @ApiOperation({ summary: 'Get user default resume by username (public access)' })
+  @ApiParam({ name: 'username', description: 'User username' })
+  @ApiResponse({ status: 200, description: 'Resume found' })
+  @ApiResponse({ status: 404, description: 'User or resume not found' })
+  @HttpCode(HttpStatus.OK)
+  async getPublicResumeByUsername(@Param('username') username: string) {
+    return this.resumeService.getPublicResumeByUsername(username);
+  }
+
+  // Protected endpoints below
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
 
   @Post()
   @ApiOperation({ summary: 'Create a new resume' })
