@@ -257,9 +257,15 @@ export class AuthService {
     });
 
     if (!user) {
+      // Generate unique username from email prefix + random suffix
+      const emailPrefix = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      const username = `${emailPrefix}${randomSuffix}`;
+
       user = await this.prisma.user.create({
         data: {
           email,
+          username,
           name,
           avatar,
           provider,
