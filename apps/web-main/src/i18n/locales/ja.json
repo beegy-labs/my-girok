@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "login": "ログイン",
+    "register": "新規登録",
+    "logout": "ログアウト"
+  },
+  "home": {
+    "title": "My-Girokへようこそ",
+    "subtitle": "あなたのプロフィールを管理",
+    "description": "My-Girokは、履歴書、ブログ、予算管理を一箇所で行えるプラットフォームです。",
+    "myApps": "マイアプリ",
+    "resume": {
+      "title": "履歴書",
+      "description": "プロフェッショナルな履歴書を作成・管理"
+    },
+    "blog": {
+      "title": "ブログ",
+      "description": "考えを文章にして共有"
+    },
+    "budget": {
+      "title": "予算管理",
+      "description": "収入と支出を追跡"
+    },
+    "getStarted": "始める"
+  },
+  "auth": {
+    "loginTitle": "ログイン",
+    "registerTitle": "新規登録",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "name": "名前",
+    "username": "ユーザー名",
+    "loginButton": "ログイン",
+    "registerButton": "登録",
+    "noAccount": "アカウントをお持ちでないですか？",
+    "hasAccount": "すでにアカウントをお持ちですか？",
+    "registerHere": "新規登録",
+    "loginHere": "ログイン"
+  },
+  "resume": {
+    "edit": "履歴書編集",
+    "preview": "プレビュー",
+    "viewPublic": "公開プロフィール表示"
+  }
+}

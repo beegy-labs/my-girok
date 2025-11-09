@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "Welcome to My-Girok",
+    "subtitle": "Manage Your Professional Profile",
+    "description": "My-Girok is a platform for managing your resume, blog, and budget all in one place.",
+    "myApps": "My Apps",
+    "resume": {
+      "title": "Resume",
+      "description": "Create and manage your professional resume"
+    },
+    "blog": {
+      "title": "Blog",
+      "description": "Write and share your thoughts"
+    },
+    "budget": {
+      "title": "Budget",
+      "description": "Track your income and expenses"
+    },
+    "getStarted": "Get Started"
+  },
+  "auth": {
+    "loginTitle": "Login to Your Account",
+    "registerTitle": "Create New Account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "username": "Username",
+    "loginButton": "Login",
+    "registerButton": "Register",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "registerHere": "Register here",
+    "loginHere": "Login here"
+  },
+  "resume": {
+    "edit": "Edit Resume",
+    "preview": "Preview",
+    "viewPublic": "View Public Profile"
+  }
+}

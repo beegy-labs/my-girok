@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "login": "로그인",
+    "register": "회원가입",
+    "logout": "로그아웃"
+  },
+  "home": {
+    "title": "My-Girok에 오신 것을 환영합니다",
+    "subtitle": "나만의 프로필을 관리하세요",
+    "description": "My-Girok은 이력서, 블로그, 예산 관리를 한 곳에서 할 수 있는 플랫폼입니다.",
+    "myApps": "나의 앱",
+    "resume": {
+      "title": "이력서",
+      "description": "전문적인 이력서를 작성하고 관리하세요"
+    },
+    "blog": {
+      "title": "블로그",
+      "description": "생각을 글로 작성하고 공유하세요"
+    },
+    "budget": {
+      "title": "예산 관리",
+      "description": "수입과 지출을 추적하세요"
+    },
+    "getStarted": "시작하기"
+  },
+  "auth": {
+    "loginTitle": "로그인",
+    "registerTitle": "회원가입",
+    "email": "이메일",
+    "password": "비밀번호",
+    "confirmPassword": "비밀번호 확인",
+    "name": "이름",
+    "username": "사용자명",
+    "loginButton": "로그인",
+    "registerButton": "회원가입",
+    "noAccount": "계정이 없으신가요?",
+    "hasAccount": "이미 계정이 있으신가요?",
+    "registerHere": "회원가입하기",
+    "loginHere": "로그인하기"
+  },
+  "resume": {
+    "edit": "이력서 편집",
+    "preview": "미리보기",
+    "viewPublic": "공개 프로필 보기"
+  }
+}
