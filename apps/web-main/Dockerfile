@@ -16,6 +16,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # Copy all package.json files for proper dependency resolution
 COPY apps/web-main/package.json ./apps/web-main/
 COPY packages/types/package.json ./packages/types/
+COPY packages/types/tsconfig.json ./packages/types/
 COPY tsconfig.json ./
 
 # Install dependencies including devDependencies for build
