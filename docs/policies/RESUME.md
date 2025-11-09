@@ -168,7 +168,7 @@ interface ShareLink {
   - `THREE_MONTHS`: 90 days
   - `PERMANENT`: No expiration
 - **Token Generation**: Secure random token
-- **URL Format**: `https://mygirok.dev/share/public/{token}`
+- **URL Format**: `https://my.girok.dev/share/public/{token}`
 
 #### 2. Share Link Access
 - **No Authentication**: Public access via token
