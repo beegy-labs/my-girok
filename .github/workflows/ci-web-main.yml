@@ -114,7 +114,7 @@ jobs:
             TAG="${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:latest"
             # CHANGE THIS: Update with your development API URL
-            API_URL="https://auth-api-dev.girok.dev/api/v1"
+            API_URL="https://my-api-dev.girok.dev/auth"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
             # Staging: release:<hash> + release:latest
             ENV="staging"
@@ -128,7 +128,7 @@ jobs:
             BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
             TAG="${BRANCH_NAME}-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-            API_URL="https://auth-api-dev.girok.dev/api/v1"
+            API_URL="https://my-api-dev.girok.dev/auth"
           fi
 
           # Set version for display (include environment prefix for non-main branches)
