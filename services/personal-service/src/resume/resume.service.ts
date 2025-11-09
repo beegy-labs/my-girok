@@ -350,7 +350,7 @@ export class ResumeService {
     let userId: string;
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.authServiceUrl}/v1/users/by-username/${username}`)
+        this.httpService.get<{ id: string }>(`${this.authServiceUrl}/v1/users/by-username/${username}`)
       );
       userId = response.data.id;
     } catch (error) {
