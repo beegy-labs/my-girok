@@ -77,12 +77,15 @@ export interface ResumeSection {
   visible: boolean;
 }
 
+export type PaperSize = 'A4' | 'LETTER';
+
 export interface Resume {
   id: string;
   userId: string;
   title: string; // "대기업용", "스타트업용", etc.
   description?: string;
   isDefault: boolean;
+  paperSize?: PaperSize; // Preferred paper size for PDF export
   name: string;
   email: string;
   phone?: string;
@@ -106,6 +109,7 @@ export interface CreateResumeDto {
   title: string; // "대기업용 이력서", "스타트업용 이력서", etc.
   description?: string; // Brief description of resume purpose
   isDefault?: boolean; // Set as default resume
+  paperSize?: PaperSize; // Preferred paper size
   name: string;
   email: string;
   phone?: string;

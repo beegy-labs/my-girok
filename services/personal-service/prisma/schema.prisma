@@ -20,6 +20,7 @@ model Resume {
   title       String // "회사용", "프리랜서용", "스타트업용", etc.
   description String? // Brief description of resume purpose
   isDefault   Boolean @default(false) @map("is_default") // Default resume to show
+  paperSize   PaperSize @default(A4) @map("paper_size") // Preferred paper size for PDF export
 
   // Basic Info
   name      String
@@ -89,6 +90,11 @@ enum SectionType {
   PROJECT
   EDUCATION
   CERTIFICATE
+}
+
+enum PaperSize {
+  A4
+  LETTER
 }
 
 // Skills (Frontend, Backend, DevOps, etc.)

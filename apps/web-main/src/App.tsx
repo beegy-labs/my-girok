@@ -18,10 +18,11 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          {/* Username-based profile and resume routes */}
-          <Route path="/:username" element={<PublicResumePage />} />
+
+          {/* Resume routes with /resume prefix */}
+          <Route path="/resume/:username" element={<PublicResumePage />} />
           <Route
-            path="/:username/edit"
+            path="/resume/:username/edit"
             element={
               <PrivateRoute>
                 <ResumeEditPage />
@@ -29,7 +30,7 @@ function App() {
             }
           />
           <Route
-            path="/:username/preview"
+            path="/resume/:username/preview"
             element={
               <PrivateRoute>
                 <ResumePreviewPage />
