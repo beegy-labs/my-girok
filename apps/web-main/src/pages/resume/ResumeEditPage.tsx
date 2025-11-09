@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyResume, createResume, updateResume, CreateResumeDto, Resume } from '../../api/resume';
+import { getDefaultResume, createResume, updateResume, CreateResumeDto, Resume } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 
 export default function ResumeEditPage() {
@@ -16,7 +16,7 @@ export default function ResumeEditPage() {
   const loadResume = async () => {
     try {
       setLoading(true);
-      const data = await getMyResume();
+      const data = await getDefaultResume();
       setResume(data);
     } catch (err: any) {
       if (err.response?.status === 404) {
@@ -33,7 +33,7 @@ export default function ResumeEditPage() {
   const handleSubmit = async (data: CreateResumeDto) => {
     try {
       if (resume) {
-        await updateResume(data);
+        await updateResume(resume.id, data);
       } else {
         await createResume(data);
       }
