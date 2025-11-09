@@ -58,7 +58,7 @@ COPY --chown=node:node --from=builder /app/services/auth-service/prisma ./servic
 
 # Generate Prisma Client in production
 WORKDIR /app/services/auth-service
-RUN npx prisma@6.2.1 generate
+RUN pnpm prisma generate
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp
