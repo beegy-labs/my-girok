@@ -203,6 +203,20 @@ export class CreateCertificateDto {
 }
 
 export class CreateResumeDto {
+  @ApiProperty({ example: '대기업용 이력서', description: 'Resume title (e.g., "대기업용", "스타트업용")' })
+  @IsString()
+  title: string;
+
+  @ApiPropertyOptional({ example: '네이버, 카카오 지원용 이력서', description: 'Brief description of resume purpose' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ default: false, description: 'Set as default resume' })
+  @IsOptional()
+  @IsBoolean()
+  isDefault?: boolean;
+
   @ApiProperty({ example: 'Hong Gildong' })
   @IsString()
   name: string;

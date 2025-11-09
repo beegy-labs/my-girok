@@ -7,28 +7,32 @@ export class ResumeService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateResumeDto) {
-    // Check if user already has a resume
-    const existing = await this.prisma.resume.findUnique({
-      where: { userId },
-    });
+    // Use Prisma transaction for multi-step DB operations (CLAUDE.md policy)
+    return await this.prisma.$transaction(async (tx) => {
+      // If this resume is set as default, unset all other default resumes
+      if (dto.isDefault) {
+        await tx.resume.updateMany({
+          where: { userId, isDefault: true },
+          data: { isDefault: false },
+        });
+      }
 
-    if (existing) {
-      throw new ConflictException('User already has a resume. Use update instead.');
-    }
-
-    // Create resume with all nested data
-    const resume = await this.prisma.resume.create({
-      data: {
-        userId,
-        name: dto.name,
-        email: dto.email,
-        phone: dto.phone,
-        github: dto.github,
-        blog: dto.blog,
-        linkedin: dto.linkedin,
-        portfolio: dto.portfolio,
-        summary: dto.summary,
-        profileImage: dto.profileImage,
+      // Create resume with all nested data
+      const resume = await tx.resume.create({
+        data: {
+          userId,
+          title: dto.title,
+          description: dto.description,
+          isDefault: dto.isDefault ?? false,
+          name: dto.name,
+          email: dto.email,
+          phone: dto.phone,
+          github: dto.github,
+          blog: dto.blog,
+          linkedin: dto.linkedin,
+          portfolio: dto.portfolio,
+          summary: dto.summary,
+          profileImage: dto.profileImage,
         skills: dto.skills ? {
           create: dto.skills,
         } : undefined,
@@ -44,16 +48,34 @@ export class ResumeService {
         certificates: dto.certificates ? {
           create: dto.certificates,
         } : undefined,
-        sections: {
-          create: [
-            { type: 'SKILLS', order: 0, visible: true },
-            { type: 'EXPERIENCE', order: 1, visible: true },
-            { type: 'PROJECT', order: 2, visible: true },
-            { type: 'EDUCATION', order: 3, visible: true },
-            { type: 'CERTIFICATE', order: 4, visible: true },
-          ],
+          sections: {
+            create: [
+              { type: 'SKILLS', order: 0, visible: true },
+              { type: 'EXPERIENCE', order: 1, visible: true },
+              { type: 'PROJECT', order: 2, visible: true },
+              { type: 'EDUCATION', order: 3, visible: true },
+              { type: 'CERTIFICATE', order: 4, visible: true },
+            ],
+          },
         },
-      },
+        include: {
+          sections: { orderBy: { order: 'asc' } },
+          skills: { orderBy: { order: 'asc' } },
+          experiences: { orderBy: { order: 'asc' } },
+          projects: { orderBy: { order: 'asc' } },
+          educations: { orderBy: { order: 'asc' } },
+          certificates: { orderBy: { order: 'asc' } },
+        },
+      });
+
+      return resume;
+    });
+  }
+
+  // Get all resumes for a user
+  async findAllByUserId(userId: string) {
+    const resumes = await this.prisma.resume.findMany({
+      where: { userId },
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
@@ -62,14 +84,44 @@ export class ResumeService {
         educations: { orderBy: { order: 'asc' } },
         certificates: { orderBy: { order: 'asc' } },
       },
+      orderBy: [
+        { isDefault: 'desc' }, // Default resume first
+        { createdAt: 'desc' }, // Then by creation date
+      ],
     });
+
+    return resumes;
+  }
+
+  // Get default resume or first resume for a user
+  async getDefaultResume(userId: string) {
+    const resume = await this.prisma.resume.findFirst({
+      where: { userId },
+      include: {
+        sections: { orderBy: { order: 'asc' } },
+        skills: { orderBy: { order: 'asc' } },
+        experiences: { orderBy: { order: 'asc' } },
+        projects: { orderBy: { order: 'asc' } },
+        educations: { orderBy: { order: 'asc' } },
+        certificates: { orderBy: { order: 'asc' } },
+      },
+      orderBy: [
+        { isDefault: 'desc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    if (!resume) {
+      throw new NotFoundException('No resume found for user');
+    }
 
     return resume;
   }
 
-  async findByUserId(userId: string) {
-    const resume = await this.prisma.resume.findUnique({
-      where: { userId },
+  // Get specific resume by ID (with ownership check)
+  async findByIdAndUserId(resumeId: string, userId: string) {
+    const resume = await this.prisma.resume.findFirst({
+      where: { id: resumeId, userId },
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
@@ -88,14 +140,25 @@ export class ResumeService {
   }
 
   // Use Prisma transaction for multi-step DB operations (CLAUDE.md policy)
-  async update(userId: string, dto: UpdateResumeDto) {
-    const resume = await this.findByUserId(userId);
+  async update(resumeId: string, userId: string, dto: UpdateResumeDto) {
+    const resume = await this.findByIdAndUserId(resumeId, userId);
 
     return await this.prisma.$transaction(async (tx) => {
+      // If setting as default, unset all other default resumes
+      if (dto.isDefault) {
+        await tx.resume.updateMany({
+          where: { userId, isDefault: true, id: { not: resume.id } },
+          data: { isDefault: false },
+        });
+      }
+
       // Update basic info
       await tx.resume.update({
         where: { id: resume.id },
         data: {
+          title: dto.title,
+          description: dto.description,
+          isDefault: dto.isDefault,
           name: dto.name,
           email: dto.email,
           phone: dto.phone,
@@ -159,8 +222,8 @@ export class ResumeService {
     });
   }
 
-  async delete(userId: string) {
-    const resume = await this.findByUserId(userId);
+  async delete(resumeId: string, userId: string) {
+    const resume = await this.findByIdAndUserId(resumeId, userId);
 
     await this.prisma.resume.delete({
       where: { id: resume.id },
@@ -169,8 +232,34 @@ export class ResumeService {
     return { message: 'Resume deleted successfully' };
   }
 
-  async updateSectionOrder(userId: string, dto: UpdateSectionOrderDto) {
-    const resume = await this.findByUserId(userId);
+  async setDefaultResume(resumeId: string, userId: string) {
+    const resume = await this.findByIdAndUserId(resumeId, userId);
+
+    return await this.prisma.$transaction(async (tx) => {
+      // Unset all other default resumes
+      await tx.resume.updateMany({
+        where: { userId, isDefault: true, id: { not: resumeId } },
+        data: { isDefault: false },
+      });
+
+      // Set this resume as default
+      return await tx.resume.update({
+        where: { id: resumeId },
+        data: { isDefault: true },
+        include: {
+          sections: { orderBy: { order: 'asc' } },
+          skills: { orderBy: { order: 'asc' } },
+          experiences: { orderBy: { order: 'asc' } },
+          projects: { orderBy: { order: 'asc' } },
+          educations: { orderBy: { order: 'asc' } },
+          certificates: { orderBy: { order: 'asc' } },
+        },
+      });
+    });
+  }
+
+  async updateSectionOrder(resumeId: string, userId: string, dto: UpdateSectionOrderDto) {
+    const resume = await this.findByIdAndUserId(resumeId, userId);
 
     await this.prisma.resumeSection.update({
       where: {
@@ -184,11 +273,11 @@ export class ResumeService {
       },
     });
 
-    return this.findByUserId(userId);
+    return this.findByIdAndUserId(resumeId, userId);
   }
 
-  async toggleSectionVisibility(userId: string, dto: ToggleSectionVisibilityDto) {
-    const resume = await this.findByUserId(userId);
+  async toggleSectionVisibility(resumeId: string, userId: string, dto: ToggleSectionVisibilityDto) {
+    const resume = await this.findByIdAndUserId(resumeId, userId);
 
     await this.prisma.resumeSection.update({
       where: {
@@ -202,7 +291,7 @@ export class ResumeService {
       },
     });
 
-    return this.findByUserId(userId);
+    return this.findByIdAndUserId(resumeId, userId);
   }
 
   // For public access (no auth required)

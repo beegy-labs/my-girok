@@ -28,9 +28,9 @@ export class ShareService {
     }
   }
 
-  async createForResume(userId: string, dto: CreateShareLinkDto) {
-    // Check if resume exists
-    const resume = await this.resumeService.findByUserId(userId);
+  async createForResume(userId: string, resumeId: string, dto: CreateShareLinkDto) {
+    // Check if resume exists and belongs to user
+    const resume = await this.resumeService.findByIdAndUserId(resumeId, userId);
 
     const expiresAt = this.calculateExpiration(dto.duration);
 

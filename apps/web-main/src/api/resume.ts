@@ -80,6 +80,9 @@ export interface ResumeSection {
 export interface Resume {
   id: string;
   userId: string;
+  title: string; // "대기업용", "스타트업용", etc.
+  description?: string;
+  isDefault: boolean;
   name: string;
   email: string;
   phone?: string;
@@ -100,6 +103,9 @@ export interface Resume {
 }
 
 export interface CreateResumeDto {
+  title: string; // "대기업용 이력서", "스타트업용 이력서", etc.
+  description?: string; // Brief description of resume purpose
+  isDefault?: boolean; // Set as default resume
   name: string;
   email: string;
   phone?: string;
@@ -174,34 +180,49 @@ export const createResume = async (data: CreateResumeDto): Promise<Resume> => {
   return response.data;
 };
 
-export const getMyResume = async (): Promise<Resume> => {
+export const getAllResumes = async (): Promise<Resume[]> => {
   const response = await personalApi.get('/resume');
   return response.data;
 };
 
-export const updateResume = async (data: UpdateResumeDto): Promise<Resume> => {
-  const response = await personalApi.put('/resume', data);
+export const getDefaultResume = async (): Promise<Resume> => {
+  const response = await personalApi.get('/resume/default');
   return response.data;
 };
 
-export const deleteResume = async (): Promise<void> => {
-  await personalApi.delete('/resume');
-};
-
-export const updateSectionOrder = async (data: UpdateSectionOrderDto): Promise<Resume> => {
-  const response = await personalApi.patch('/resume/sections/order', data);
+export const getResume = async (resumeId: string): Promise<Resume> => {
+  const response = await personalApi.get(`/resume/${resumeId}`);
   return response.data;
 };
 
-export const toggleSectionVisibility = async (data: ToggleSectionVisibilityDto): Promise<Resume> => {
-  const response = await personalApi.patch('/resume/sections/visibility', data);
+export const updateResume = async (resumeId: string, data: UpdateResumeDto): Promise<Resume> => {
+  const response = await personalApi.put(`/resume/${resumeId}`, data);
+  return response.data;
+};
+
+export const deleteResume = async (resumeId: string): Promise<void> => {
+  await personalApi.delete(`/resume/${resumeId}`);
+};
+
+export const setDefaultResume = async (resumeId: string): Promise<Resume> => {
+  const response = await personalApi.patch(`/resume/${resumeId}/default`);
+  return response.data;
+};
+
+export const updateSectionOrder = async (resumeId: string, data: UpdateSectionOrderDto): Promise<Resume> => {
+  const response = await personalApi.patch(`/resume/${resumeId}/sections/order`, data);
+  return response.data;
+};
+
+export const toggleSectionVisibility = async (resumeId: string, data: ToggleSectionVisibilityDto): Promise<Resume> => {
+  const response = await personalApi.patch(`/resume/${resumeId}/sections/visibility`, data);
   return response.data;
 };
 
 // ========== Share Link APIs ==========
 
-export const createResumeShare = async (data: CreateShareLinkDto): Promise<ShareLink> => {
-  const response = await personalApi.post('/share/resume', data);
+export const createResumeShare = async (resumeId: string, data: CreateShareLinkDto): Promise<ShareLink> => {
+  const response = await personalApi.post(`/share/resume/${resumeId}`, data);
   return response.data;
 };
 

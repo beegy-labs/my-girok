@@ -10,14 +10,18 @@ import { CurrentUser, Public } from '../common/decorators';
 export class ShareController {
   constructor(private readonly shareService: ShareService) {}
 
-  @Post('resume')
+  @Post('resume/:resumeId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create resume share link' })
   @ApiResponse({ status: 201, description: 'Share link created' })
   @ApiResponse({ status: 404, description: 'Resume not found' })
-  async createResumeShare(@CurrentUser() user: any, @Body() dto: CreateShareLinkDto) {
-    return this.shareService.createForResume(user.id, dto);
+  async createResumeShare(
+    @CurrentUser() user: any,
+    @Param('resumeId') resumeId: string,
+    @Body() dto: CreateShareLinkDto,
+  ) {
+    return this.shareService.createForResume(user.id, resumeId, dto);
   }
 
   @Get()

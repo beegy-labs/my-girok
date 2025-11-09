@@ -14,7 +14,12 @@ datasource db {
 
 model Resume {
   id     String @id @default(uuid())
-  userId String @unique // One resume per user
+  userId String // Multiple resumes per user
+
+  // Resume Metadata
+  title       String // "회사용", "프리랜서용", "스타트업용", etc.
+  description String? // Brief description of resume purpose
+  isDefault   Boolean @default(false) // Default resume to show
 
   // Basic Info
   name     String
@@ -56,6 +61,7 @@ model Resume {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, isDefault])
 }
 
 // Section visibility and ordering
