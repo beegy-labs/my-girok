@@ -11,7 +11,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get('NODE_ENV', 'development');
 
-  app.setGlobalPrefix('v1');
+  app.setGlobalPrefix('v1', {
+    exclude: ['health'],
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
