@@ -47,18 +47,22 @@ COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --chown=node:node services/auth-service/package.json ./services/auth-service/
 COPY --chown=node:node packages/types/package.json ./packages/types/
 
-# Install production dependencies only
+# Copy prisma schema BEFORE installing dependencies so it's available for prisma generate
+COPY --chown=node:node --from=builder /app/services/auth-service/prisma ./services/auth-service/prisma
+
+# Copy built files
+COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --chown=node:node --from=builder /app/packages/types/package.json ./packages/types/package.json
+COPY --chown=node:node --from=builder /app/services/auth-service/dist ./services/auth-service/dist
+
+# Install production dependencies (now includes prisma CLI)
 ENV NODE_ENV=production
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy built files and prisma schema
-COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
-COPY --chown=node:node --from=builder /app/services/auth-service/dist ./services/auth-service/dist
-COPY --chown=node:node --from=builder /app/services/auth-service/prisma ./services/auth-service/prisma
-
-# Generate Prisma Client in production
 WORKDIR /app/services/auth-service
-RUN pnpm prisma generate
+
+# Generate Prisma Client
+RUN pnpm prisma:generate
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp
