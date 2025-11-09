@@ -140,6 +140,7 @@ enum AttachmentType {
   OTHER          // Other attachments
 }
 
+
 // Skills (Frontend, Backend, DevOps, etc.)
 model Skill {
   id       String @id @default(uuid())
