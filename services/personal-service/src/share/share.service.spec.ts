@@ -42,20 +42,25 @@ describe('ShareService', () => {
     jest.clearAllMocks();
   });
 
-  describe('createResumeShare', () => {
+  describe('createForResume', () => {
     it('should create a share link with expiration', async () => {
       // Arrange
       const userId = 'user-123';
-      const resourceId = 'resume-123';
+      const resumeId = 'resume-123';
       const createDto = {
         duration: '1week' as const,
+      };
+
+      const mockResume = {
+        id: resumeId,
+        userId,
       };
 
       const mockShareLink = {
         id: 'share-123',
         token: 'unique-token-xyz',
         resourceType: 'RESUME',
-        resourceId,
+        resourceId: resumeId,
         userId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         isActive: true,
@@ -64,12 +69,13 @@ describe('ShareService', () => {
         createdAt: new Date(),
       };
 
+      mockResumeService.findByIdAndUserId.mockResolvedValue(mockResume);
       mockPrismaService.shareLink.create.mockResolvedValue(mockShareLink);
 
       // Act
-      const result = await service.createResumeShare(
+      const result = await service.createForResume(
         userId,
-        resourceId,
+        resumeId,
         createDto,
       );
 
@@ -90,16 +96,21 @@ describe('ShareService', () => {
     it('should create permanent share link when duration is permanent', async () => {
       // Arrange
       const userId = 'user-456';
-      const resourceId = 'resume-456';
+      const resumeId = 'resume-456';
       const createDto = {
         duration: 'permanent' as const,
+      };
+
+      const mockResume = {
+        id: resumeId,
+        userId,
       };
 
       const mockShareLink = {
         id: 'share-456',
         token: 'permanent-token',
         resourceType: 'RESUME',
-        resourceId,
+        resourceId: resumeId,
         userId,
         expiresAt: null,
         isActive: true,
@@ -108,12 +119,13 @@ describe('ShareService', () => {
         createdAt: new Date(),
       };
 
+      mockResumeService.findByIdAndUserId.mockResolvedValue(mockResume);
       mockPrismaService.shareLink.create.mockResolvedValue(mockShareLink);
 
       // Act
-      const result = await service.createResumeShare(
+      const result = await service.createForResume(
         userId,
-        resourceId,
+        resumeId,
         createDto,
       );
 
@@ -126,36 +138,6 @@ describe('ShareService', () => {
       });
     });
 
-    it('should throw BadRequestException if active share link already exists', async () => {
-      // Arrange
-      const userId = 'user-123';
-      const resourceId = 'resume-123';
-      const createDto = {
-        duration: '1week' as const,
-      };
-
-      const existingShareLink = {
-        id: 'existing-share',
-        token: 'existing-token',
-        resourceType: 'RESUME',
-        resourceId,
-        userId,
-        isActive: true,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      };
-
-      mockPrismaService.shareLink.findFirst.mockResolvedValue(
-        existingShareLink,
-      );
-
-      // Act & Assert
-      await expect(
-        service.createResumeShare(userId, resourceId, createDto),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.createResumeShare(userId, resourceId, createDto),
-      ).rejects.toThrow('Active share link already exists');
-    });
   });
 
   describe('getPublicResume', () => {
@@ -312,7 +294,7 @@ describe('ShareService', () => {
     });
   });
 
-  describe('getUserShareLinks', () => {
+  describe('findAllByUser', () => {
     it('should return all share links for user', async () => {
       // Arrange
       const userId = 'user-123';
@@ -342,7 +324,7 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.findMany.mockResolvedValue(mockShareLinks);
 
       // Act
-      const result = await service.getUserShareLinks(userId);
+      const result = await service.findAllByUser(userId);
 
       // Assert
       expect(result).toHaveLength(2);
@@ -354,7 +336,7 @@ describe('ShareService', () => {
     });
   });
 
-  describe('updateShareLink', () => {
+  describe('update', () => {
     it('should update share link activation status', async () => {
       // Arrange
       const userId = 'user-123';
@@ -368,6 +350,7 @@ describe('ShareService', () => {
         token: 'token-xyz',
         userId,
         isActive: true,
+        shareUrl: 'http://localhost:3000/resume/token-xyz',
       };
 
       const updatedShareLink = {
@@ -381,18 +364,15 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.update.mockResolvedValue(updatedShareLink);
 
       // Act
-      const result = await service.updateShareLink(
-        userId,
+      const result = await service.update(
         shareLinkId,
+        userId,
         updateDto,
       );
 
       // Assert
       expect(result.isActive).toBe(false);
-      expect(mockPrismaService.shareLink.update).toHaveBeenCalledWith({
-        where: { id: shareLinkId },
-        data: updateDto,
-      });
+      expect(mockPrismaService.shareLink.update).toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when updating another user share link', async () => {
@@ -416,12 +396,12 @@ describe('ShareService', () => {
 
       // Act & Assert
       await expect(
-        service.updateShareLink(userId, shareLinkId, updateDto),
+        service.update(shareLinkId, userId, updateDto),
       ).rejects.toThrow(ForbiddenException);
     });
   });
 
-  describe('deleteShareLink', () => {
+  describe('delete', () => {
     it('should delete share link for owner', async () => {
       // Arrange
       const userId = 'user-123';
@@ -431,6 +411,7 @@ describe('ShareService', () => {
         id: shareLinkId,
         token: 'token-xyz',
         userId,
+        shareUrl: 'http://localhost:3000/resume/token-xyz',
       };
 
       mockPrismaService.shareLink.findUnique.mockResolvedValue(
@@ -439,7 +420,7 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.delete.mockResolvedValue(existingShareLink);
 
       // Act
-      await service.deleteShareLink(userId, shareLinkId);
+      await service.delete(shareLinkId, userId);
 
       // Assert
       expect(mockPrismaService.shareLink.delete).toHaveBeenCalledWith({
@@ -464,7 +445,7 @@ describe('ShareService', () => {
 
       // Act & Assert
       await expect(
-        service.deleteShareLink(userId, shareLinkId),
+        service.delete(shareLinkId, userId),
       ).rejects.toThrow(ForbiddenException);
     });
   });

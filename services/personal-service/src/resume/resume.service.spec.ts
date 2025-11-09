@@ -10,13 +10,16 @@ describe('ResumeService', () => {
     resume: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       delete: jest.fn(),
     },
     resumeSection: {
       createMany: jest.fn(),
       deleteMany: jest.fn(),
+      update: jest.fn(),
     },
     skill: {
       createMany: jest.fn(),
