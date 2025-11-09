@@ -53,23 +53,14 @@ authApi.interceptors.response.use(
   },
 );
 
-export interface RegisterDto {
-  email: string;
-  password: string;
-  name: string;
-}
+import type { RegisterDto as IRegisterDto, LoginDto as ILoginDto } from '@my-girok/types';
 
-export interface LoginDto {
-  email: string;
-  password: string;
-}
-
-export const register = async (data: RegisterDto) => {
+export const register = async (data: IRegisterDto) => {
   const response = await authApi.post('/auth/register', data);
   return response.data;
 };
 
-export const login = async (data: LoginDto) => {
+export const login = async (data: ILoginDto) => {
   const response = await authApi.post('/auth/login', data);
   return response.data;
 };
