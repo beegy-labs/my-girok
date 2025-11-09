@@ -13,13 +13,13 @@ datasource db {
 // ========== Resume Models ==========
 
 model Resume {
-  id      String @id @default(uuid())
-  user_id String @map("user_id") // Multiple resumes per user
+  id          String  @id @default(uuid())
+  userId      String  @map("user_id") // Multiple resumes per user
 
   // Resume Metadata
   title       String // "회사용", "프리랜서용", "스타트업용", etc.
   description String? // Brief description of resume purpose
-  is_default  Boolean @default(false) @map("is_default") // Default resume to show
+  isDefault   Boolean @default(false) @map("is_default") // Default resume to show
 
   // Basic Info
   name      String
@@ -34,7 +34,7 @@ model Resume {
   summary String?
 
   // Profile Image
-  profile_image String? @map("profile_image")
+  profileImage String? @map("profile_image")
 
   // Sections (ordered and toggleable)
   sections ResumeSection[]
@@ -57,29 +57,29 @@ model Resume {
   // Share Links
   shares ShareLink[] @relation("ResumeShares")
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([user_id])
-  @@index([user_id, is_default])
+  @@index([userId])
+  @@index([userId, isDefault])
   @@map("resumes")
 }
 
 // Section visibility and ordering
 model ResumeSection {
-  id        String  @id @default(uuid())
-  resume_id String  @map("resume_id")
-  resume    Resume  @relation(fields: [resume_id], references: [id], onDelete: Cascade)
+  id       String  @id @default(uuid())
+  resumeId String  @map("resume_id")
+  resume   Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   type    SectionType // SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE
   order   Int         @default(0) // Display order
   visible Boolean     @default(true) // Show/hide toggle
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([resume_id, type])
-  @@index([resume_id, order])
+  @@unique([resumeId, type])
+  @@index([resumeId, order])
   @@map("resume_sections")
 }
 
@@ -93,118 +93,118 @@ enum SectionType {
 
 // Skills (Frontend, Backend, DevOps, etc.)
 model Skill {
-  id        String @id @default(uuid())
-  resume_id String @map("resume_id")
-  resume    Resume @relation(fields: [resume_id], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  resumeId String @map("resume_id")
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   category String   // Frontend, Backend, DevOps, Database, Tools, etc.
   items    String[] // ["React", "TypeScript", "Next.js"]
   order    Int      @default(0)
   visible  Boolean  @default(true)
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([resume_id, order])
+  @@index([resumeId, order])
   @@map("skills")
 }
 
 // Work Experience
 model Experience {
-  id        String @id @default(uuid())
-  resume_id String @map("resume_id")
-  resume    Resume @relation(fields: [resume_id], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  resumeId String @map("resume_id")
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   company     String
   position    String
-  start_date  String   @map("start_date") // "2023-01" format
-  end_date    String?  @map("end_date") // null = current
+  startDate   String   @map("start_date") // "2023-01" format
+  endDate     String?  @map("end_date") // null = current
   description String   // Job description
 
   achievements String[] // Key achievements
-  tech_stack   String[] @map("tech_stack") // Technologies used
+  techStack    String[] @map("tech_stack") // Technologies used
 
   order   Int     @default(0)
   visible Boolean @default(true)
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([resume_id, order])
+  @@index([resumeId, order])
   @@map("experiences")
 }
 
 // Projects
 model Project {
-  id        String @id @default(uuid())
-  resume_id String @map("resume_id")
-  resume    Resume @relation(fields: [resume_id], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  resumeId String @map("resume_id")
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   name        String
-  start_date  String   @map("start_date") // "2023-01" format
-  end_date    String?  @map("end_date") // null = ongoing
+  startDate   String   @map("start_date") // "2023-01" format
+  endDate     String?  @map("end_date") // null = ongoing
   description String
 
   role         String?  // Your role in project
   achievements String[] // Key achievements
-  tech_stack   String[] @map("tech_stack") // Technologies used
+  techStack    String[] @map("tech_stack") // Technologies used
 
-  url        String? // Project URL
-  github_url String? @map("github_url") // GitHub repository
+  url       String? // Project URL
+  githubUrl String? @map("github_url") // GitHub repository
 
   order   Int     @default(0)
   visible Boolean @default(true)
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([resume_id, order])
+  @@index([resumeId, order])
   @@map("projects")
 }
 
 // Education
 model Education {
-  id        String @id @default(uuid())
-  resume_id String @map("resume_id")
-  resume    Resume @relation(fields: [resume_id], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  resumeId String @map("resume_id")
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  school     String
-  major      String
-  degree     String  // Bachelor, Master, PhD
-  start_date String  @map("start_date") // "2015-03" format
-  end_date   String? @map("end_date") // null = ongoing
-  gpa        String?
+  school    String
+  major     String
+  degree    String  // Bachelor, Master, PhD
+  startDate String  @map("start_date") // "2015-03" format
+  endDate   String? @map("end_date") // null = ongoing
+  gpa       String?
 
   order   Int     @default(0)
   visible Boolean @default(true)
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([resume_id, order])
+  @@index([resumeId, order])
   @@map("educations")
 }
 
 // Certificates and Awards
 model Certificate {
-  id        String @id @default(uuid())
-  resume_id String @map("resume_id")
-  resume    Resume @relation(fields: [resume_id], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  resumeId String @map("resume_id")
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  name           String
-  issuer         String  // Issuing organization
-  issue_date     String  @map("issue_date") // "2023-01" format
-  expiry_date    String? @map("expiry_date") // null = no expiry
-  credential_id  String? @map("credential_id")
-  credential_url String? @map("credential_url")
+  name          String
+  issuer        String  // Issuing organization
+  issueDate     String  @map("issue_date") // "2023-01" format
+  expiryDate    String? @map("expiry_date") // null = no expiry
+  credentialId  String? @map("credential_id")
+  credentialUrl String? @map("credential_url")
 
   order   Int     @default(0)
   visible Boolean @default(true)
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([resume_id, order])
+  @@index([resumeId, order])
   @@map("certificates")
 }
 
@@ -215,28 +215,28 @@ model ShareLink {
   token String @unique @default(cuid())
 
   // Resource
-  resource_type ResourceType @map("resource_type")
-  resource_id   String       @map("resource_id")
-  user_id       String       @map("user_id")
+  resourceType ResourceType @map("resource_type")
+  resourceId   String       @map("resource_id")
+  userId       String       @map("user_id")
 
   // Share settings
-  expires_at DateTime? @map("expires_at")
-  is_active  Boolean   @default(true) @map("is_active")
+  expiresAt DateTime? @map("expires_at")
+  isActive  Boolean   @default(true) @map("is_active")
 
   // Analytics
-  view_count     Int       @default(0) @map("view_count")
-  last_viewed_at DateTime? @map("last_viewed_at")
+  viewCount    Int       @default(0) @map("view_count")
+  lastViewedAt DateTime? @map("last_viewed_at")
 
   // Relations
-  resume Resume? @relation("ResumeShares", fields: [resource_id], references: [id], onDelete: Cascade)
+  resume Resume? @relation("ResumeShares", fields: [resourceId], references: [id], onDelete: Cascade)
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([token])
-  @@index([user_id])
-  @@index([resource_type, resource_id])
-  @@index([expires_at])
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@index([expiresAt])
   @@map("share_links")
 }
 
@@ -248,20 +248,20 @@ enum ResourceType {
 // ========== Budget Models (Future) ==========
 
 model Transaction {
-  id      String          @id @default(uuid())
-  user_id String          @map("user_id")
-  type    TransactionType
+  id     String          @id @default(uuid())
+  userId String          @map("user_id")
+  type   TransactionType
 
   amount      Decimal  @db.Decimal(12, 2)
   category    String
   description String?
   date        DateTime
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([user_id, date(sort: Desc)])
-  @@index([user_id, category])
+  @@index([userId, date(sort: Desc)])
+  @@index([userId, category])
   @@map("transactions")
 }
 
@@ -272,16 +272,16 @@ enum TransactionType {
 
 model Budget {
   id       String  @id @default(uuid())
-  user_id  String  @map("user_id")
+  userId   String  @map("user_id")
   category String
   amount   Decimal @db.Decimal(12, 2)
   period   Period  @default(MONTHLY)
 
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([user_id, category, period])
-  @@index([user_id])
+  @@unique([userId, category, period])
+  @@index([userId])
   @@map("budgets")
 }
 

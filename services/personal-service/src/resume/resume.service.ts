@@ -23,7 +23,7 @@ export class ResumeService {
       // If this resume is set as default, unset all other default resumes
       if (dto.isDefault) {
         await tx.resume.updateMany({
-          where: { userId, isDefault: true },
+          where: { userId: userId, isDefault: true },
           data: { isDefault: false },
         });
       }
@@ -31,7 +31,7 @@ export class ResumeService {
       // Create resume with all nested data
       const resume = await tx.resume.create({
         data: {
-          userId,
+          userId: userId,
           title: dto.title,
           description: dto.description,
           isDefault: dto.isDefault ?? false,
@@ -86,7 +86,7 @@ export class ResumeService {
   // Get all resumes for a user
   async findAllByUserId(userId: string) {
     const resumes = await this.prisma.resume.findMany({
-      where: { userId },
+      where: { userId: userId },
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
@@ -107,7 +107,7 @@ export class ResumeService {
   // Get default resume or first resume for a user
   async getDefaultResume(userId: string) {
     const resume = await this.prisma.resume.findFirst({
-      where: { userId },
+      where: { userId: userId },
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
@@ -132,7 +132,7 @@ export class ResumeService {
   // Get specific resume by ID (with ownership check)
   async findByIdAndUserId(resumeId: string, userId: string) {
     const resume = await this.prisma.resume.findFirst({
-      where: { id: resumeId, userId },
+      where: { id: resumeId, userId: userId },
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
@@ -158,7 +158,7 @@ export class ResumeService {
       // If setting as default, unset all other default resumes
       if (dto.isDefault) {
         await tx.resume.updateMany({
-          where: { userId, isDefault: true, id: { not: resume.id } },
+          where: { userId: userId, isDefault: true, id: { not: resume.id } },
           data: { isDefault: false },
         });
       }
