@@ -1,8 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
 import { logout } from '../api/auth';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -25,7 +28,8 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
+            <LanguageSwitcher />
             {isAuthenticated ? (
               <>
                 <div className="flex items-center space-x-3">
@@ -41,7 +45,7 @@ export default function Navbar() {
                     onClick={handleLogout}
                     className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
                   >
-                    로그아웃
+                    {t('nav.logout')}
                   </button>
                 </div>
               </>
@@ -51,13 +55,13 @@ export default function Navbar() {
                   to="/login"
                   className="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-medium transition-colors"
                 >
-                  로그인
+                  {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
-                  회원가입
+                  {t('nav.register')}
                 </Link>
               </>
             )}
