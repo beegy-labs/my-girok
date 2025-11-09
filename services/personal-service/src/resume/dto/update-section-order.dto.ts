@@ -12,10 +12,10 @@ export enum SectionType {
 export class UpdateSectionOrderDto {
   @ApiProperty({ enum: SectionType })
   @IsEnum(SectionType)
-  type: SectionType;
+  type!: SectionType;
 
   @ApiProperty({ example: 0 })
   @IsInt()
   @Min(0)
-  order: number;
+  order!: number;
 }

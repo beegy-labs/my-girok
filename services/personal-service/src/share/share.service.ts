@@ -83,7 +83,7 @@ export class ShareService {
   }
 
   async update(id: string, userId: string, dto: UpdateShareLinkDto) {
-    const shareLink = await this.findOne(id, userId);
+    await this.findOne(id, userId);
 
     const updateData: any = {};
 

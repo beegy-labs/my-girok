@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
 
@@ -233,7 +233,7 @@ export class ResumeService {
   }
 
   async setDefaultResume(resumeId: string, userId: string) {
-    const resume = await this.findByIdAndUserId(resumeId, userId);
+    await this.findByIdAndUserId(resumeId, userId);
 
     return await this.prisma.$transaction(async (tx) => {
       // Unset all other default resumes

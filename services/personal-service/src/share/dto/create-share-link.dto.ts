@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ShareDuration {
@@ -11,5 +11,5 @@ export enum ShareDuration {
 export class CreateShareLinkDto {
   @ApiProperty({ enum: ShareDuration, default: ShareDuration.ONE_MONTH })
   @IsEnum(ShareDuration)
-  duration: ShareDuration;
+  duration!: ShareDuration;
 }
