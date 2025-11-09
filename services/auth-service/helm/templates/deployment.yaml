@@ -99,22 +99,14 @@ spec:
               name: {{ include "auth-service.fullname" . }}-secret
               key: naver-client-secret
               optional: true
+        {{- with .Values.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /{{ trimPrefix "/" (default "api/v1" .Values.app.apiPrefix) }}/health
-            port: http
-          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds | default 30 }}
-          periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 10 }}
-          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 5 }}
-          failureThreshold: {{ .Values.livenessProbe.failureThreshold | default 3 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /{{ trimPrefix "/" (default "api/v1" .Values.app.apiPrefix) }}/health
-            port: http
-          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds | default 10 }}
-          periodSeconds: {{ .Values.readinessProbe.periodSeconds | default 5 }}
-          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds | default 3 }}
-          failureThreshold: {{ .Values.readinessProbe.failureThreshold | default 3 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
         volumeMounts:
