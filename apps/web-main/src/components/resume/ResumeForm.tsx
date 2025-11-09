@@ -8,6 +8,9 @@ interface ResumeFormProps {
 
 export default function ResumeForm({ resume, onSubmit }: ResumeFormProps) {
   const [formData, setFormData] = useState<CreateResumeDto>({
+    title: resume?.title || 'My Resume',
+    description: resume?.description || '',
+    isDefault: resume?.isDefault || false,
     name: resume?.name || '',
     email: resume?.email || '',
     phone: resume?.phone || '',
