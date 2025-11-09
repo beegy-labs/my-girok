@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyResume, Resume } from '../../api/resume';
+import { getDefaultResume, Resume } from '../../api/resume';
 import ResumePreview from '../../components/resume/ResumePreview';
 import ShareLinkModal from '../../components/resume/ShareLinkModal';
 
@@ -16,7 +16,7 @@ export default function ResumePreviewPage() {
 
   const loadResume = async () => {
     try {
-      const data = await getMyResume();
+      const data = await getDefaultResume();
       setResume(data);
     } catch (err) {
       console.error('Failed to load resume', err);
