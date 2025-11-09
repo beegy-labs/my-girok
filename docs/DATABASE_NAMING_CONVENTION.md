@@ -4,14 +4,18 @@ This document defines the naming conventions for all database schemas in the my-
 
 ## Overview
 
-All database objects (tables, columns, indexes, constraints) MUST use **snake_case** naming convention to follow PostgreSQL best practices and industry standards.
+**Database Layer**: All database objects (tables, columns, indexes, constraints) use **snake_case** naming convention to follow PostgreSQL best practices.
+
+**Application Layer**: All TypeScript/Node.js code uses **camelCase** naming convention to follow JavaScript conventions.
+
+**Mapping**: Prisma `@map()` directive bridges the two conventions automatically.
 
 ## Rationale
 
 1. **PostgreSQL Standard**: PostgreSQL internally converts unquoted identifiers to lowercase. Using snake_case avoids the need for quoted identifiers and potential confusion.
-2. **Readability**: Snake_case is more readable in SQL queries compared to camelCase
-3. **Consistency**: Aligns with most PostgreSQL ecosystem tools and ORMs
-4. **Best Practice**: Widely adopted in the PostgreSQL community
+2. **JavaScript Convention**: camelCase is the standard for JavaScript/TypeScript variables and properties
+3. **Best of Both Worlds**: Prisma ORM allows us to use idiomatic naming in each layer
+4. **Developer Experience**: Developers work with camelCase in code, database stays in snake_case
 
 ## Naming Rules
 
@@ -65,17 +69,17 @@ All database objects (tables, columns, indexes, constraints) MUST use **snake_ca
 
 ## Prisma Schema Mapping
 
-Prisma models use camelCase in TypeScript but map to snake_case in the database using the `@map()` and `@@map()` directives.
+**KEY PRINCIPLE**: Prisma model field names use **camelCase** (for TypeScript), and `@map()` directive maps them to **snake_case** database columns.
 
-### Example
+### Correct Example ✅
 
 ```prisma
 model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
-  email_verified Boolean  @default(false) @map("email_verified")
-  created_at     DateTime @default(now()) @map("created_at")
-  updated_at     DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")  // ✅ Field: camelCase, DB: snake_case
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   sessions Session[]
 
@@ -83,48 +87,99 @@ model User {
 }
 
 model Session {
-  id            String   @id @default(uuid())
-  user_id       String   @map("user_id")
-  user          User     @relation(fields: [user_id], references: [id])
-  refresh_token String   @unique @map("refresh_token")
-  expires_at    DateTime @map("expires_at")
-  created_at    DateTime @default(now()) @map("created_at")
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")          // ✅ Field: camelCase, DB: snake_case
+  user         User     @relation(fields: [userId], references: [id])
+  refreshToken String   @unique @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
 
-  @@index([user_id])
+  @@index([userId])
   @@map("sessions")
 }
+```
+
+### Incorrect Example ❌
+
+```prisma
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  email_verified Boolean  @default(false) @map("email_verified")  // ❌ Field is snake_case!
+  created_at     DateTime @default(now()) @map("created_at")       // ❌ Wrong!
+
+  @@map("users")
+}
+```
+
+### How It Works
+
+1. **Prisma Schema**: Define fields in camelCase
+2. **Database**: Columns are created in snake_case via `@map()`
+3. **TypeScript Code**: Use camelCase naturally
+4. **Prisma Client**: Automatically handles the mapping
+
+```typescript
+// TypeScript code - uses camelCase naturally
+const user = await prisma.user.create({
+  data: {
+    email: "test@example.com",
+    emailVerified: false,  // ✅ camelCase in code
+    createdAt: new Date()
+  }
+});
+
+// Prisma generates SQL with snake_case:
+// INSERT INTO users (email, email_verified, created_at) VALUES (...)
 ```
 
 ## Migration Guide
 
 When creating new tables or altering existing ones:
 
-1. **Always use snake_case** for table and column names
-2. **Use `@map()` directive** in Prisma schema to map camelCase field names to snake_case columns
-3. **Use `@@map()` directive** to map PascalCase model names to snake_case table names
+1. **Prisma Model**: Use PascalCase for model names, camelCase for field names
+2. **Use `@map()` directive** for every field that should be snake_case in DB
+3. **Use `@@map()` directive** to map model names to snake_case table names
 4. **Generate migration** and review the SQL before applying
-5. **Test thoroughly** before deploying to production
+5. **NO backend code changes needed** - Prisma handles everything!
 
-### Bad Example (Don't do this)
+### Bad Example (Don't do this) ❌
 
 ```prisma
 model User {
-  userId        String   @id @default(uuid())
-  emailVerified Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  userId        String   @id @default(uuid())           // ❌ Missing @map()
+  emailVerified Boolean  @default(false)                // ❌ Missing @map()
+  createdAt     DateTime @default(now())                // ❌ Missing @map()
+}  // ❌ Missing @@map("users")
+```
+
+### Good Example (Do this) ✅
+
+```prisma
+model User {
+  userId        String   @id @default(uuid()) @map("user_id")        // ✅
+  emailVerified Boolean  @default(false) @map("email_verified")      // ✅
+  createdAt     DateTime @default(now()) @map("created_at")          // ✅
+
+  @@map("users")  // ✅
 }
 ```
 
-### Good Example (Do this)
+### Backend Code - No Changes Needed! ✅
 
-```prisma
-model User {
-  user_id        String   @id @default(uuid()) @map("user_id")
-  email_verified Boolean  @default(false) @map("email_verified")
-  created_at     DateTime @default(now()) @map("created_at")
+```typescript
+// Just use camelCase naturally - Prisma handles DB mapping!
+const user = await prisma.user.create({
+  data: {
+    userId: uuid(),
+    emailVerified: false,  // ✅ camelCase in code
+    createdAt: new Date()
+  }
+});
 
-  @@map("users")
-}
+// Access fields with camelCase
+console.log(user.emailVerified);  // ✅ Works perfectly
+console.log(user.createdAt);      // ✅ TypeScript autocomplete works
 ```
 
 ## Applied Services

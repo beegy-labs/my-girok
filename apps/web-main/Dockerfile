@@ -11,13 +11,12 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # Copy workspace configuration
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 
 # Copy all package.json files for proper dependency resolution
 COPY apps/web-main/package.json ./apps/web-main/
 COPY packages/types/package.json ./packages/types/
 COPY packages/types/tsconfig.json ./packages/types/
-COPY tsconfig.json ./
 
 # Install dependencies including devDependencies for build
 RUN pnpm install --frozen-lockfile
@@ -29,6 +28,10 @@ COPY apps/web-main ./apps/web-main
 # Build shared packages first
 WORKDIR /app/packages/types
 RUN pnpm build
+
+# Generate Prisma client types if needed (for future use)
+# WORKDIR /app
+# RUN pnpm --filter @my-girok/types exec prisma generate
 
 # Build application
 WORKDIR /app/apps/web-main
