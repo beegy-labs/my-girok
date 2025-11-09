@@ -11,53 +11,53 @@ datasource db {
 
 // User model
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  username      String         @unique  // Unique username for public profile URLs (/:username)
-  password      String?        // null for OAuth users
-  name          String?
-  avatar        String?
-  role          Role           @default(USER)
-  provider      AuthProvider   @default(LOCAL)
-  providerId    String?        // OAuth provider user ID
-  emailVerified Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id             String         @id @default(uuid())
+  email          String         @unique
+  username       String         @unique  // Unique username for public profile URLs (/:username)
+  password       String?        // null for OAuth users
+  name           String?
+  avatar         String?
+  role           Role           @default(USER)
+  provider       AuthProvider   @default(LOCAL)
+  provider_id    String?        @map("provider_id") // OAuth provider user ID
+  email_verified Boolean        @default(false) @map("email_verified")
+  created_at     DateTime       @default(now()) @map("created_at")
+  updated_at     DateTime       @updatedAt @map("updated_at")
 
   sessions      Session[]
   domainAccess  DomainAccessToken[]
 
   @@index([email])
   @@index([username])
-  @@index([provider, providerId])
+  @@index([provider, provider_id])
   @@map("users")
 }
 
 // Session model for refresh token management
 model Session {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refreshToken String   @unique
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  id            String   @id @default(uuid())
+  user_id       String   @map("user_id")
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  refresh_token String   @unique @map("refresh_token")
+  expires_at    DateTime @map("expires_at")
+  created_at    DateTime @default(now()) @map("created_at")
 
-  @@index([userId])
-  @@index([refreshToken])
+  @@index([user_id])
+  @@index([refresh_token])
   @@map("sessions")
 }
 
 // Domain access token for time-limited sharing
 model DomainAccessToken {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  domain    String   // e.g., 'resume', 'portfolio'
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  user_id    String   @map("user_id")
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  domain     String   // e.g., 'resume', 'portfolio'
+  token      String   @unique
+  expires_at DateTime @map("expires_at")
+  created_at DateTime @default(now()) @map("created_at")
 
-  @@index([userId])
+  @@index([user_id])
   @@index([domain])
   @@index([token])
   @@map("domain_access_tokens")
@@ -65,16 +65,16 @@ model DomainAccessToken {
 
 // OAuth provider configuration (enable/disable providers)
 model OAuthProviderConfig {
-  id          String       @id @default(uuid())
-  provider    AuthProvider @unique
-  enabled     Boolean      @default(true)
-  displayName String       // Korean/English name
-  description String?      // Additional info
-  clientId    String?      // OAuth client ID
-  clientSecret String?     // OAuth client secret (encrypted)
-  callbackUrl String?      // OAuth callback URL
-  updatedAt   DateTime     @updatedAt
-  updatedBy   String?      // User ID who made the change
+  id            String       @id @default(uuid())
+  provider      AuthProvider @unique
+  enabled       Boolean      @default(true)
+  display_name  String       @map("display_name") // Korean/English name
+  description   String?      // Additional info
+  client_id     String?      @map("client_id") // OAuth client ID
+  client_secret String?      @map("client_secret") // OAuth client secret (encrypted)
+  callback_url  String?      @map("callback_url") // OAuth callback URL
+  updated_at    DateTime     @updatedAt @map("updated_at")
+  updated_by    String?      @map("updated_by") // User ID who made the change
 
   @@map("oauth_provider_configs")
 }
