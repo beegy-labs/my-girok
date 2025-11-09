@@ -1,11 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ResumeService } from './resume.service';
 import { PrismaService } from '../database/prisma.service';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { NotFoundException } from '@nestjs/common';
 import { SectionType } from './dto/update-section-order.dto';
+import { of } from 'rxjs';
 
 describe('ResumeService', () => {
   let service: ResumeService;
+
+  const mockHttpService = {
+    get: jest.fn(() => of({ data: { id: 'user-123' } })),
+  };
+
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      if (key === 'AUTH_SERVICE_URL') return 'http://auth-service:4001';
+      return null;
+    }),
+  };
 
   const mockPrismaService = {
     resume: {
@@ -50,6 +64,8 @@ describe('ResumeService', () => {
       providers: [
         ResumeService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: HttpService, useValue: mockHttpService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
