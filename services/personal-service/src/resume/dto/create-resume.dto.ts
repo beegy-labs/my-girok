@@ -5,12 +5,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CreateSkillDto {
   @ApiProperty({ example: 'Frontend' })
   @IsString()
-  category: string;
+  category!: string;
 
   @ApiProperty({ example: ['React', 'TypeScript', 'Next.js'] })
   @IsArray()
   @IsString({ each: true })
-  items: string[];
+  items!: string[];
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
@@ -27,15 +27,15 @@ export class CreateSkillDto {
 export class CreateExperienceDto {
   @ApiProperty({ example: 'Beegy Inc.' })
   @IsString()
-  company: string;
+  company!: string;
 
   @ApiProperty({ example: 'Senior Backend Developer' })
   @IsString()
-  position: string;
+  position!: string;
 
   @ApiProperty({ example: '2023-01' })
   @IsString()
-  startDate: string;
+  startDate!: string;
 
   @ApiPropertyOptional({ example: '2024-12' })
   @IsOptional()
@@ -44,17 +44,17 @@ export class CreateExperienceDto {
 
   @ApiProperty({ example: 'Developed microservices architecture' })
   @IsString()
-  description: string;
+  description!: string;
 
   @ApiProperty({ example: ['Reduced API latency by 40%', 'Led team of 5 developers'] })
   @IsArray()
   @IsString({ each: true })
-  achievements: string[];
+  achievements!: string[];
 
   @ApiProperty({ example: ['NestJS', 'PostgreSQL', 'Kubernetes'] })
   @IsArray()
   @IsString({ each: true })
-  techStack: string[];
+  techStack!: string[];
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
@@ -71,11 +71,11 @@ export class CreateExperienceDto {
 export class CreateProjectDto {
   @ApiProperty({ example: 'My-Girok Platform' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: '2024-01' })
   @IsString()
-  startDate: string;
+  startDate!: string;
 
   @ApiPropertyOptional({ example: '2024-12' })
   @IsOptional()
@@ -84,7 +84,7 @@ export class CreateProjectDto {
 
   @ApiProperty({ example: 'Personal productivity platform with microservices' })
   @IsString()
-  description: string;
+  description!: string;
 
   @ApiPropertyOptional({ example: 'Full-stack Developer' })
   @IsOptional()
@@ -94,12 +94,12 @@ export class CreateProjectDto {
   @ApiProperty({ example: ['Built 3 microservices', 'Deployed on Kubernetes'] })
   @IsArray()
   @IsString({ each: true })
-  achievements: string[];
+  achievements!: string[];
 
   @ApiProperty({ example: ['NestJS', 'React', 'PostgreSQL'] })
   @IsArray()
   @IsString({ each: true })
-  techStack: string[];
+  techStack!: string[];
 
   @ApiPropertyOptional({ example: 'https://mygirok.dev' })
   @IsOptional()
@@ -126,19 +126,19 @@ export class CreateProjectDto {
 export class CreateEducationDto {
   @ApiProperty({ example: 'Seoul National University' })
   @IsString()
-  school: string;
+  school!: string;
 
   @ApiProperty({ example: 'Computer Science' })
   @IsString()
-  major: string;
+  major!: string;
 
   @ApiProperty({ example: 'Bachelor' })
   @IsString()
-  degree: string;
+  degree!: string;
 
   @ApiProperty({ example: '2015-03' })
   @IsString()
-  startDate: string;
+  startDate!: string;
 
   @ApiPropertyOptional({ example: '2019-02' })
   @IsOptional()
@@ -165,15 +165,15 @@ export class CreateEducationDto {
 export class CreateCertificateDto {
   @ApiProperty({ example: 'AWS Certified Solutions Architect' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: 'Amazon Web Services' })
   @IsString()
-  issuer: string;
+  issuer!: string;
 
   @ApiProperty({ example: '2023-06' })
   @IsString()
-  issueDate: string;
+  issueDate!: string;
 
   @ApiPropertyOptional({ example: '2026-06' })
   @IsOptional()
@@ -205,7 +205,7 @@ export class CreateCertificateDto {
 export class CreateResumeDto {
   @ApiProperty({ example: '대기업용 이력서', description: 'Resume title (e.g., "대기업용", "스타트업용")' })
   @IsString()
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({ example: '네이버, 카카오 지원용 이력서', description: 'Brief description of resume purpose' })
   @IsOptional()
@@ -219,11 +219,11 @@ export class CreateResumeDto {
 
   @ApiProperty({ example: 'Hong Gildong' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: 'hong@example.com' })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiPropertyOptional({ example: '010-1234-5678' })
   @IsOptional()

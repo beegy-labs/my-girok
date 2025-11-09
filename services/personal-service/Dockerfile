@@ -47,18 +47,17 @@ COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --chown=node:node services/personal-service/package.json ./services/personal-service/
 COPY --chown=node:node packages/types/package.json ./packages/types/
 
-# Install production dependencies only
-ENV NODE_ENV=production
-RUN pnpm install --prod --frozen-lockfile
-
-# Copy built files and prisma schema
+# Copy built files
 COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --chown=node:node --from=builder /app/packages/types/package.json ./packages/types/package.json
 COPY --chown=node:node --from=builder /app/services/personal-service/dist ./services/personal-service/dist
 COPY --chown=node:node --from=builder /app/services/personal-service/prisma ./services/personal-service/prisma
 
-# Generate Prisma Client in production
+# Install production dependencies (this will trigger Prisma Client generation via postinstall)
+ENV NODE_ENV=production
+RUN pnpm install --prod --frozen-lockfile
+
 WORKDIR /app/services/personal-service
-RUN pnpm prisma generate
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ResumeService } from './resume.service';
 import { PrismaService } from '../database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { SectionType } from './dto/update-section-order.dto';
 
 describe('ResumeService', () => {
   let service: ResumeService;
@@ -299,8 +300,8 @@ describe('ResumeService', () => {
 
       // Assert
       expect(result).toBeDefined();
-      expect(result.title).toBe(updateDto.title);
-      expect(result.name).toBe(updateDto.name);
+      expect(result?.title).toBe(updateDto.title);
+      expect(result?.name).toBe(updateDto.name);
       expect(mockPrismaService.$transaction).toHaveBeenCalled();
     });
 
@@ -359,7 +360,7 @@ describe('ResumeService', () => {
       // Arrange
       const userId = 'user-123';
       const resumeId = 'resume-123';
-      const dto = { type: 'SKILLS' as const, order: 2 };
+      const dto = { type: SectionType.SKILLS, order: 2 };
 
       const mockResume = {
         id: resumeId,

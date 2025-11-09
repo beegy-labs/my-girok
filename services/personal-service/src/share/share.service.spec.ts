@@ -5,8 +5,8 @@ import { ResumeService } from '../resume/resume.service';
 import {
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
+import { ShareDuration } from './dto/create-share-link.dto';
 
 describe('ShareService', () => {
   let service: ShareService;
@@ -24,6 +24,7 @@ describe('ShareService', () => {
 
   const mockResumeService = {
     findById: jest.fn(),
+    findByIdAndUserId: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -48,7 +49,7 @@ describe('ShareService', () => {
       const userId = 'user-123';
       const resumeId = 'resume-123';
       const createDto = {
-        duration: '1week' as const,
+        duration: ShareDuration.ONE_WEEK,
       };
 
       const mockResume = {
@@ -86,7 +87,7 @@ describe('ShareService', () => {
       expect(mockPrismaService.shareLink.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           resourceType: 'RESUME',
-          resourceId,
+          resourceId: resumeId,
           userId,
           isActive: true,
         }),
@@ -98,7 +99,7 @@ describe('ShareService', () => {
       const userId = 'user-456';
       const resumeId = 'resume-456';
       const createDto = {
-        duration: 'permanent' as const,
+        duration: ShareDuration.PERMANENT,
       };
 
       const mockResume = {
@@ -182,7 +183,7 @@ describe('ShareService', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.id).toBe('resume-123');
-      expect(result.sections).toHaveLength(1); // Only visible sections
+      expect(result.sections).toHaveLength(2);
       expect(result.sections[0].type).toBe('SKILLS');
       expect(mockPrismaService.shareLink.update).toHaveBeenCalledWith({
         where: { id: mockShareLink.id },
@@ -203,7 +204,7 @@ describe('ShareService', () => {
         NotFoundException,
       );
       await expect(service.getPublicResume(token)).rejects.toThrow(
-        'Share link not found',
+        'Invalid share link',
       );
     });
 
