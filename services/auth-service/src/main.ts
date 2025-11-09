@@ -2,12 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
+  const nodeEnv = configService.get('NODE_ENV', 'development');
 
   app.setGlobalPrefix(configService.get('API_PREFIX', 'api/v1'));
 
@@ -19,9 +21,38 @@ async function bootstrap() {
     }),
   );
 
+  // Security Headers (SECURITY.md)
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", 'https://rybbit.girok.dev'],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+        },
+      },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+    }),
+  );
+
+  // CORS Policy (SECURITY.md)
   app.enableCors({
-    origin: configService.get('FRONTEND_URL', 'http://localhost:3000'),
+    origin:
+      nodeEnv === 'production'
+        ? ['https://mygirok.dev', 'https://admin.mygirok.dev']
+        : [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'https://my-dev.girok.dev',
+          ],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Swagger API Documentation
