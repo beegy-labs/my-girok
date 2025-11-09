@@ -87,70 +87,76 @@ export class ResumeService {
     return resume;
   }
 
+  // Use Prisma transaction for multi-step DB operations (CLAUDE.md policy)
   async update(userId: string, dto: UpdateResumeDto) {
     const resume = await this.findByUserId(userId);
 
-    // Update basic info
-    const updated = await this.prisma.resume.update({
-      where: { id: resume.id },
-      data: {
-        name: dto.name,
-        email: dto.email,
-        phone: dto.phone,
-        github: dto.github,
-        blog: dto.blog,
-        linkedin: dto.linkedin,
-        portfolio: dto.portfolio,
-        summary: dto.summary,
-        profileImage: dto.profileImage,
-      },
-      include: {
-        sections: { orderBy: { order: 'asc' } },
-        skills: { orderBy: { order: 'asc' } },
-        experiences: { orderBy: { order: 'asc' } },
-        projects: { orderBy: { order: 'asc' } },
-        educations: { orderBy: { order: 'asc' } },
-        certificates: { orderBy: { order: 'asc' } },
-      },
+    return await this.prisma.$transaction(async (tx) => {
+      // Update basic info
+      await tx.resume.update({
+        where: { id: resume.id },
+        data: {
+          name: dto.name,
+          email: dto.email,
+          phone: dto.phone,
+          github: dto.github,
+          blog: dto.blog,
+          linkedin: dto.linkedin,
+          portfolio: dto.portfolio,
+          summary: dto.summary,
+          profileImage: dto.profileImage,
+        },
+      });
+
+      // Update nested data if provided
+      if (dto.skills) {
+        await tx.skill.deleteMany({ where: { resumeId: resume.id } });
+        await tx.skill.createMany({
+          data: dto.skills.map(skill => ({ ...skill, resumeId: resume.id })),
+        });
+      }
+
+      if (dto.experiences) {
+        await tx.experience.deleteMany({ where: { resumeId: resume.id } });
+        await tx.experience.createMany({
+          data: dto.experiences.map(exp => ({ ...exp, resumeId: resume.id })),
+        });
+      }
+
+      if (dto.projects) {
+        await tx.project.deleteMany({ where: { resumeId: resume.id } });
+        await tx.project.createMany({
+          data: dto.projects.map(proj => ({ ...proj, resumeId: resume.id })),
+        });
+      }
+
+      if (dto.educations) {
+        await tx.education.deleteMany({ where: { resumeId: resume.id } });
+        await tx.education.createMany({
+          data: dto.educations.map(edu => ({ ...edu, resumeId: resume.id })),
+        });
+      }
+
+      if (dto.certificates) {
+        await tx.certificate.deleteMany({ where: { resumeId: resume.id } });
+        await tx.certificate.createMany({
+          data: dto.certificates.map(cert => ({ ...cert, resumeId: resume.id })),
+        });
+      }
+
+      // Return updated resume
+      return await tx.resume.findUnique({
+        where: { id: resume.id },
+        include: {
+          sections: { orderBy: { order: 'asc' } },
+          skills: { orderBy: { order: 'asc' } },
+          experiences: { orderBy: { order: 'asc' } },
+          projects: { orderBy: { order: 'asc' } },
+          educations: { orderBy: { order: 'asc' } },
+          certificates: { orderBy: { order: 'asc' } },
+        },
+      });
     });
-
-    // Update nested data if provided
-    if (dto.skills) {
-      await this.prisma.skill.deleteMany({ where: { resumeId: resume.id } });
-      await this.prisma.skill.createMany({
-        data: dto.skills.map(skill => ({ ...skill, resumeId: resume.id })),
-      });
-    }
-
-    if (dto.experiences) {
-      await this.prisma.experience.deleteMany({ where: { resumeId: resume.id } });
-      await this.prisma.experience.createMany({
-        data: dto.experiences.map(exp => ({ ...exp, resumeId: resume.id })),
-      });
-    }
-
-    if (dto.projects) {
-      await this.prisma.project.deleteMany({ where: { resumeId: resume.id } });
-      await this.prisma.project.createMany({
-        data: dto.projects.map(proj => ({ ...proj, resumeId: resume.id })),
-      });
-    }
-
-    if (dto.educations) {
-      await this.prisma.education.deleteMany({ where: { resumeId: resume.id } });
-      await this.prisma.education.createMany({
-        data: dto.educations.map(edu => ({ ...edu, resumeId: resume.id })),
-      });
-    }
-
-    if (dto.certificates) {
-      await this.prisma.certificate.deleteMany({ where: { resumeId: resume.id } });
-      await this.prisma.certificate.createMany({
-        data: dto.certificates.map(cert => ({ ...cert, resumeId: resume.id })),
-      });
-    }
-
-    return this.findByUserId(userId);
   }
 
   async delete(userId: string) {
