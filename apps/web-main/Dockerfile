@@ -43,11 +43,8 @@ RUN apk upgrade --no-cache && \
 # Copy built files
 COPY --from=builder /app/apps/web-main/dist /usr/share/nginx/html
 
-# Backup index.html as template for environment variable substitution
-RUN cp /usr/share/nginx/html/index.html /usr/share/nginx/html/index.html.template
-
-# Copy nginx configuration
-COPY apps/web-main/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration as template
+COPY apps/web-main/nginx.conf /etc/nginx/conf.d/default.conf.template
 
 # Copy entrypoint script
 COPY apps/web-main/docker-entrypoint.sh /docker-entrypoint.sh
@@ -58,14 +55,12 @@ RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && \
     chown nginx:nginx /var/run/nginx.pid && \
-    chmod +x /docker-entrypoint.sh && \
-    chown nginx:nginx /docker-entrypoint.sh
+    chmod +x /docker-entrypoint.sh
 
-# Switch to non-root user
-USER nginx
+# Note: Entrypoint runs as root to modify nginx config,
+# then nginx process runs as nginx user (configured in nginx.conf)
 
 # Expose port
 EXPOSE 3000
