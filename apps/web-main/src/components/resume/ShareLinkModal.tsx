@@ -30,7 +30,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
   const handleCreate = async () => {
     setCreating(true);
     try {
-      await createResumeShare({ duration });
+      await createResumeShare(resumeId, { duration });
       await loadShareLinks();
     } catch (err) {
       alert('Failed to create share link');
