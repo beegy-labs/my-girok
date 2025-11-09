@@ -34,8 +34,11 @@ model Resume {
   // Summary
   summary String?
 
-  // Profile Image
+  // Profile Image (URL to MinIO)
   profileImage String? @map("profile_image")
+
+  // Attachments
+  attachments ResumeAttachment[]
 
   // Sections (ordered and toggleable)
   sections ResumeSection[]
@@ -96,6 +99,47 @@ enum PaperSize {
   A4
   LETTER
 }
+
+// Resume File Attachments (profile photos, portfolios, certificates)
+model ResumeAttachment {
+  id       String @id @default(uuid())
+  resumeId String @map("resume_id")
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  // File metadata
+  type         AttachmentType // PROFILE_PHOTO, PORTFOLIO, CERTIFICATE, OTHER
+  fileName     String         @map("file_name") // Original filename
+  fileKey      String         @map("file_key") // MinIO object key (UUID-based)
+  fileUrl      String         @map("file_url") // Full MinIO URL
+  fileSize     Int            @map("file_size") // Size in bytes
+  mimeType     String         @map("mime_type") // image/jpeg, application/pdf, etc.
+
+  // Processing metadata
+  isProcessed  Boolean        @default(false) @map("is_processed") // Grayscale conversion done
+  originalUrl  String?        @map("original_url") // Original color image URL (before grayscale)
+
+  // Display metadata
+  title        String? // User-defined title (e.g., "Portfolio 2024")
+  description  String? // Description
+  order        Int     @default(0) // Display order
+  visible      Boolean @default(true) // Show/hide toggle
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([resumeId, type])
+  @@index([resumeId, order])
+  @@index([fileKey])
+  @@map("resume_attachments")
+}
+
+enum AttachmentType {
+  PROFILE_PHOTO  // Interview photo (will be converted to grayscale)
+  PORTFOLIO      // Portfolio documents (PDF, images)
+  CERTIFICATE    // Certificate images
+  OTHER          // Other attachments
+}
+
 
 // Skills (Frontend, Backend, DevOps, etc.)
 model Skill {
