@@ -22,20 +22,27 @@ Resume
     └── Certificates
 ```
 
-### 2. Work Experience Structure
+### 2. Work Experience Structure (Unified with Projects)
 
 ```
 Company
-└── Role
-    ├── title (required) - "Backend Development Lead"
-    ├── position (optional) - "Senior Developer"
-    ├── responsibilities (optional) - Main job duties
-    └── tasks (hierarchical, 4 depth levels)
-        ├── Depth 1 (•): Main tasks
-        ├── Depth 2 (◦): Sub-tasks
+├── finalPosition (required) - "Backend Team Lead" (최종 직책)
+├── jobTitle (required) - "Senior Developer" (직급)
+└── Projects (unlimited)
+    ├── name (required) - "E-Commerce Platform Rebuild"
+    ├── role (optional) - "Lead Backend Developer"
+    ├── description (required) - Project overview
+    ├── startDate/endDate - Project timeline
+    ├── techStack[] - Technologies used
+    ├── url/githubUrl - Project links
+    └── achievements (hierarchical, 4 depth levels)
+        ├── Depth 1 (•): Main achievements
+        ├── Depth 2 (◦): Sub-achievements
         ├── Depth 3 (▪): Details
         └── Depth 4 (▫): Specific items
 ```
+
+**Key Change**: Work Experience and Projects are now unified. Each company has ONE final position/job title, and unlimited projects with hierarchical achievements (replacing the old Role → Tasks structure).
 
 ### 3. Design Theme - Library Concept
 
@@ -56,18 +63,18 @@ Company
 
 ## Implementation Patterns
 
-### Adding New Fields to ExperienceRole
+### Adding New Fields to Experience/ExperienceProject
 
 1. Update schema: `services/personal-service/prisma/schema.prisma`
 2. Update types: `apps/web-main/src/api/resume.ts`
 3. Update DTO: `services/personal-service/src/resume/dto/create-resume.dto.ts`
-4. Update service: Include in create/update operations
-5. Update UI: Add to ResumeForm with library theme
-6. Update preview: Add to ResumePreview
+4. Update service: Include in create/update operations with nested relations
+5. Update UI: Add to ExperienceSection component with library theme
+6. Update preview: Add to ResumePreview ExperienceSection function
 
 ### Library Theme Styling
 
-**Role Cards**:
+**Project Cards**:
 ```jsx
 className="border border-amber-200 rounded-lg p-4 bg-amber-50/20"
 ```
@@ -75,7 +82,7 @@ className="border border-amber-200 rounded-lg p-4 bg-amber-50/20"
 **Section Headers**:
 ```jsx
 <h5 className="text-sm font-semibold text-amber-900 flex items-center gap-1">
-  📖 Role #{roleIndex + 1}
+  📁 Project #{projectIndex + 1}
 </h5>
 ```
 
@@ -91,9 +98,9 @@ className="px-2 py-1 bg-amber-600 text-white text-xs rounded-lg
            hover:bg-amber-700 transition-all"
 ```
 
-### Task Depth Selector
+### Achievement Depth Selector
 
-Shows bullet symbols instead of dashes:
+Shows bullet symbols for hierarchical achievements:
 ```jsx
 <option value="1">• (1)</option>
 <option value="2">◦ (2)</option>
@@ -178,6 +185,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - **DTOs**: `services/personal-service/src/resume/dto/`
 - **Service**: `services/personal-service/src/resume/resume.service.ts`
 - **Form UI**: `apps/web-main/src/components/resume/ResumeForm.tsx`
+- **Experience Component**: `apps/web-main/src/components/resume/ExperienceSection.tsx` (new unified component with drag-and-drop)
 - **Preview**: `apps/web-main/src/components/resume/ResumePreview.tsx`
 
 ## Quick Reference
