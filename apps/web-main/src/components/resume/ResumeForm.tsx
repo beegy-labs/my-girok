@@ -172,7 +172,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               required
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="e.g., For Tech Companies, For Startups"
             />
           </div>
@@ -183,7 +183,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <select
               value={formData.paperSize}
               onChange={e => setFormData({ ...formData, paperSize: e.target.value as PaperSize })}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
             >
               <option value="A4">A4 (210 × 297 mm)</option>
               <option value="LETTER">Letter (8.5 × 11 in)</option>
@@ -217,7 +217,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               required
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="Hong Gildong"
             />
           </div>
@@ -230,7 +230,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               required
               value={formData.email}
               onChange={e => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="hong@example.com"
             />
           </div>
@@ -242,7 +242,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               type="tel"
               value={formData.phone || ''}
               onChange={e => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="010-1234-5678"
             />
           </div>
@@ -254,7 +254,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               type="url"
               value={formData.github || ''}
               onChange={e => setFormData({ ...formData, github: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="https://github.com/username"
             />
           </div>
@@ -266,7 +266,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               type="url"
               value={formData.blog || ''}
               onChange={e => setFormData({ ...formData, blog: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="https://blog.example.com"
             />
           </div>
@@ -278,7 +278,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               type="url"
               value={formData.linkedin || ''}
               onChange={e => setFormData({ ...formData, linkedin: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="https://linkedin.com/in/username"
             />
           </div>
@@ -291,7 +291,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             value={formData.summary || ''}
             onChange={e => setFormData({ ...formData, summary: e.target.value })}
             rows={4}
-            className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
             placeholder="Brief introduction about yourself..."
           />
         </div>

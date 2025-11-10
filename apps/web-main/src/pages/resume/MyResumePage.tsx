@@ -297,7 +297,7 @@ export default function MyResumePage() {
                 <select
                   value={shareDuration}
                   onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                 >
                   <option value={ShareDuration.ONE_WEEK}>1주일</option>
                   <option value={ShareDuration.ONE_MONTH}>1개월</option>
