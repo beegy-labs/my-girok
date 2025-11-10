@@ -170,7 +170,7 @@ model Skill {
   @@map("skills")
 }
 
-// Work Experience
+// Work Experience (unified with projects)
 model Experience {
   id       String @id @default(uuid())
   resumeId String @map("resume_id")
@@ -180,8 +180,12 @@ model Experience {
   startDate String  @map("start_date") // "2023-01" format
   endDate   String? @map("end_date") // null = current
 
-  // Roles/Positions at this company
-  roles ExperienceRole[]
+  // Final position and job title at this company
+  finalPosition String  @map("final_position") // 최종 직책 (e.g., "Backend Team Lead")
+  jobTitle      String  @map("job_title")      // 직급 (e.g., "Senior Developer")
+
+  // Projects at this company
+  projects ExperienceProject[]
 
   order   Int     @default(0)
   visible Boolean @default(true)
@@ -193,16 +197,24 @@ model Experience {
   @@map("experiences")
 }
 
-// Individual roles/positions within an experience
-model ExperienceRole {
+// Projects within a company experience
+model ExperienceProject {
   id           String     @id @default(uuid())
   experienceId String     @map("experience_id")
   experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 
-  title            String  // Job title / Role name
-  position         String? // 직급 (e.g., "Senior Developer", "Tech Lead")
-  responsibilities String? @db.Text // 담당업무 (main job responsibilities)
-  tasks            ExperienceTask[] // Hierarchical task tree
+  name        String       // Project name
+  startDate   String       @map("start_date") // "2023-01" format
+  endDate     String?      @map("end_date")   // null = ongoing
+  description String       @db.Text           // Project description
+  role        String?      // Role in this project (e.g., "Lead Developer")
+
+  // Hierarchical achievements (4 depth levels)
+  achievements ProjectAchievement[]
+
+  techStack  String[] @map("tech_stack") // Technologies used
+  url        String?                     // Project URL
+  githubUrl  String?  @map("github_url") // GitHub repository URL
 
   order Int @default(0)
 
@@ -210,30 +222,30 @@ model ExperienceRole {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([experienceId, order])
-  @@map("experience_roles")
+  @@map("experience_projects")
 }
 
-// Hierarchical task structure (supports up to 4 levels of depth)
-model ExperienceTask {
-  id     String @id @default(uuid())
-  roleId String @map("role_id")
-  role   ExperienceRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+// Hierarchical achievements structure (supports up to 4 levels of depth)
+model ProjectAchievement {
+  id        String            @id @default(uuid())
+  projectId String            @map("project_id")
+  project   ExperienceProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  content  String // Task content
-  depth    Int    // Indentation level (1-4)
-  order    Int    @default(0)
+  content String // Achievement content
+  depth   Int    // Indentation level (1-4)
+  order   Int    @default(0)
 
   // Self-referencing relation for parent-child hierarchy
-  parentId String?         @map("parent_id")
-  parent   ExperienceTask? @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children ExperienceTask[] @relation("TaskHierarchy")
+  parentId String?              @map("parent_id")
+  parent   ProjectAchievement?  @relation("AchievementHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children ProjectAchievement[] @relation("AchievementHierarchy")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([roleId, order])
+  @@index([projectId, order])
   @@index([parentId])
-  @@map("experience_tasks")
+  @@map("project_achievements")
 }
 
 // Projects

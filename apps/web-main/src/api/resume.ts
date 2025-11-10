@@ -18,20 +18,25 @@ export interface Skill {
   visible: boolean;
 }
 
-export interface ExperienceTask {
+export interface ProjectAchievement {
   id?: string;
-  content: string; // 작업 내용
-  depth: number; // 1-4 (들여쓰기 레벨)
+  content: string; // Achievement content
+  depth: number; // 1-4 (indentation level)
   order: number;
-  children?: ExperienceTask[]; // 하위 작업들 (재귀 구조)
+  children?: ProjectAchievement[]; // Hierarchical structure
 }
 
-export interface ExperienceRole {
+export interface ExperienceProject {
   id?: string;
-  title: string; // 역할/직책명
-  position?: string; // 직급 (e.g., "Senior Developer", "Tech Lead")
-  responsibilities?: string; // 담당업무 (main job responsibilities)
-  tasks: ExperienceTask[]; // 해당 역할의 작업 트리 (무제한)
+  name: string; // Project name
+  startDate: string; // YYYY-MM format
+  endDate?: string; // null = ongoing
+  description: string; // Project description
+  role?: string; // Role in project (e.g., "Lead Developer")
+  achievements: ProjectAchievement[]; // Hierarchical achievements (4 depth levels)
+  techStack: string[];
+  url?: string;
+  githubUrl?: string;
   order: number;
 }
 
@@ -40,7 +45,9 @@ export interface Experience {
   company: string;
   startDate: string; // YYYY-MM format
   endDate?: string;
-  roles: ExperienceRole[]; // 역할 목록 (무제한)
+  finalPosition: string; // 최종 직책 (e.g., "Backend Team Lead")
+  jobTitle: string; // 직급 (e.g., "Senior Developer")
+  projects: ExperienceProject[]; // Projects at this company
   order: number;
   visible: boolean;
 }
