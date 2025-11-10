@@ -1,23 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
   Resume,
   CreateResumeDto,
   PaperSize,
@@ -62,10 +45,19 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       company: e.company,
       startDate: e.startDate,
       endDate: e.endDate,
-      roles: e.roles?.map(r => ({
-        title: r.title,
-        tasks: r.tasks || [],
-        order: r.order,
+      finalPosition: e.finalPosition,
+      jobTitle: e.jobTitle,
+      projects: e.projects?.map(p => ({
+        name: p.name,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        description: p.description,
+        role: p.role,
+        achievements: p.achievements || [],
+        techStack: p.techStack || [],
+        url: p.url,
+        githubUrl: p.githubUrl,
+        order: p.order,
       })) || [],
       order: e.order,
       visible: e.visible,
