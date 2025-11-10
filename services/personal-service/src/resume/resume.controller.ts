@@ -24,7 +24,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators';
 
 @ApiTags('resume')
-@Controller('v1/resume')
+@Controller('resume')
 export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 
