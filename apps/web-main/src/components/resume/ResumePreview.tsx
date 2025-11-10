@@ -60,24 +60,36 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 {resume.github && (
-                  <a href={resume.github} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                    GitHub
-                  </a>
+                  <span>
+                    <span className="print:hidden text-amber-700 hover:underline">
+                      <a href={resume.github}>GitHub</a>
+                    </span>
+                    <span className="hidden print:inline text-gray-900">GitHub: {resume.github}</span>
+                  </span>
                 )}
                 {resume.blog && (
-                  <a href={resume.blog} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                    Blog
-                  </a>
+                  <span>
+                    <span className="print:hidden text-amber-700 hover:underline">
+                      <a href={resume.blog}>Blog</a>
+                    </span>
+                    <span className="hidden print:inline text-gray-900">Blog: {resume.blog}</span>
+                  </span>
                 )}
                 {resume.linkedin && (
-                  <a href={resume.linkedin} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                    LinkedIn
-                  </a>
+                  <span>
+                    <span className="print:hidden text-amber-700 hover:underline">
+                      <a href={resume.linkedin}>LinkedIn</a>
+                    </span>
+                    <span className="hidden print:inline text-gray-900">LinkedIn: {resume.linkedin}</span>
+                  </span>
                 )}
                 {resume.portfolio && (
-                  <a href={resume.portfolio} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                    Portfolio
-                  </a>
+                  <span>
+                    <span className="print:hidden text-amber-700 hover:underline">
+                      <a href={resume.portfolio}>Portfolio</a>
+                    </span>
+                    <span className="hidden print:inline text-gray-900">Portfolio: {resume.portfolio}</span>
+                  </span>
                 )}
               </div>
             </div>
@@ -229,14 +241,20 @@ function ProjectsSection({ projects }: { projects: any[] }) {
           {(project.url || project.githubUrl) && (
             <div className="flex gap-3 mt-2 text-sm">
               {project.url && (
-                <a href={project.url} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                  Demo
-                </a>
+                <span>
+                  <span className="print:hidden text-amber-700 hover:underline">
+                    <a href={project.url}>Demo</a>
+                  </span>
+                  <span className="hidden print:inline text-gray-900">Demo: {project.url}</span>
+                </span>
               )}
               {project.githubUrl && (
-                <a href={project.githubUrl} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                  GitHub
-                </a>
+                <span>
+                  <span className="print:hidden text-amber-700 hover:underline">
+                    <a href={project.githubUrl}>GitHub</a>
+                  </span>
+                  <span className="hidden print:inline text-gray-900">GitHub: {project.githubUrl}</span>
+                </span>
               )}
             </div>
           )}
@@ -289,9 +307,12 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
               <h3 className="font-semibold text-gray-900">{cert.name}</h3>
               <p className="text-gray-700">{cert.issuer}</p>
               {cert.credentialUrl && (
-                <a href={cert.credentialUrl} className="text-sm text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                  Verify
-                </a>
+                <span>
+                  <span className="print:hidden text-sm text-amber-700 hover:underline">
+                    <a href={cert.credentialUrl}>Verify</a>
+                  </span>
+                  <span className="hidden print:inline text-sm text-gray-900">Verify: {cert.credentialUrl}</span>
+                </span>
               )}
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
