@@ -603,6 +603,8 @@ All resume sections support unlimited entries, allowing users to create comprehe
 - **Unlimited Roles per Company**: Each company can have multiple roles/positions
 - **Role Fields**:
   - Role title (required) - e.g., "Senior Backend Developer", "Team Lead"
+  - Position (optional) - 직급, e.g., "Senior Developer", "Tech Lead"
+  - Responsibilities (optional) - 담당업무, main job responsibilities (textarea)
   - Hierarchical tasks (unlimited)
 
 - **Hierarchical Task Structure**: Each role supports up to 4 levels of indentation
@@ -1316,6 +1318,39 @@ The resume feature follows the My-Girok design system with a library/book theme.
 - Use rounded-2xl for cards, rounded-lg for inputs/buttons
 
 ## Change Log
+
+- **2025-01-13**: Added position and responsibilities fields with library-themed UI
+  - **New Fields**:
+    - `position` field added to ExperienceRole (직급, e.g., "Senior Developer", "Tech Lead")
+    - `responsibilities` field added to ExperienceRole (담당업무, main job responsibilities)
+    - Both fields are optional and support flexible input
+  - **Database Schema**:
+    - Added `position` (String?) field to ExperienceRole model
+    - Added `responsibilities` (Text?) field to ExperienceRole model
+    - Fields are nullable to support existing data and optional input
+  - **API Changes**:
+    - Updated `CreateExperienceRoleDto` to include optional `position` and `responsibilities`
+    - Service layer automatically handles new fields in create/update operations
+  - **UI Improvements - Library Theme**:
+    - Applied "My Records" library concept with warm amber colors
+    - Role cards redesigned with amber-50/20 background and amber-200 borders
+    - Added 📖 emoji icon to role headers for book/library feel
+    - Position field with placeholder "e.g., Senior Developer, Tech Lead"
+    - Responsibilities textarea for detailed job description
+    - Task section labeled as "✍️ Detailed Tasks" with book/writing metaphor
+    - Depth selector shows bullet symbols (• ◦ ▪ ▫) instead of dashes
+    - Task inputs wrapped in clean white cards with amber-100 borders
+    - Consistent amber-themed buttons and focus states throughout
+  - **Preview Rendering**:
+    - Position displayed in italic below role title
+    - Responsibilities shown as separate block before tasks
+    - Maintains professional document formatting
+    - Print-optimized grayscale rendering
+  - **Design System Compliance**:
+    - All colors follow amber library theme (DESIGN_SYSTEM.md)
+    - Warm amber tones create cozy record-keeping atmosphere
+    - Professional yet personal feel like a library catalog
+    - Maintains accessibility standards (WCAG 2.1 AA)
 
 - **2025-01-12**: Enhanced work experience with hierarchical task structure
   - **Hierarchical Task System**:

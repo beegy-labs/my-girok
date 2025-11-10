@@ -229,7 +229,20 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
             <div className="space-y-4">
               {exp.roles.sort((a: any, b: any) => a.order - b.order).map((role: any, roleIdx: number) => (
                 <div key={roleIdx}>
-                  <h4 className="font-semibold text-gray-900 mb-2">{role.title}</h4>
+                  {/* Role Title and Position */}
+                  <div className="mb-2">
+                    <h4 className="font-semibold text-gray-900">{role.title}</h4>
+                    {role.position && (
+                      <p className="text-sm text-gray-700 italic">{role.position}</p>
+                    )}
+                  </div>
+
+                  {/* Responsibilities */}
+                  {role.responsibilities && (
+                    <div className="text-sm text-gray-700 mb-3 whitespace-pre-wrap">
+                      {role.responsibilities}
+                    </div>
+                  )}
 
                   {/* Hierarchical Tasks */}
                   {role.tasks && role.tasks.length > 0 && (

@@ -53,6 +53,16 @@ export class CreateExperienceRoleDto {
   @IsString()
   title!: string;
 
+  @ApiPropertyOptional({ example: 'Senior Developer' })
+  @IsOptional()
+  @IsString()
+  position?: string;
+
+  @ApiPropertyOptional({ example: 'Led backend team and managed microservices architecture' })
+  @IsOptional()
+  @IsString()
+  responsibilities?: string;
+
   @ApiProperty({ type: [CreateExperienceTaskDto], description: 'Hierarchical task tree for this role' })
   @IsArray()
   @ValidateNested({ each: true })
