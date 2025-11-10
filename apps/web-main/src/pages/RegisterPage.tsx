@@ -24,7 +24,7 @@ export default function RegisterPage() {
     try {
       const response = await register({ email, username, password, name });
       setAuth(response.user, response.accessToken, response.refreshToken);
-      navigate(`/${username}`); // Redirect to user's profile
+      navigate('/'); // Redirect to home page after registration
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
