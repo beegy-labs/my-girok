@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, Public } from '../common/decorators';
 
 @ApiTags('share')
-@Controller('v1/share')
+@Controller('share')
 export class ShareController {
   constructor(private readonly shareService: ShareService) {}
 
