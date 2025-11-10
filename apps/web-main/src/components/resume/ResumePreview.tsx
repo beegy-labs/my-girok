@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Resume } from '../../api/resume';
 
 interface ResumePreviewProps {
@@ -154,12 +155,13 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
 // Skills Section
 function SkillsSection({ skills }: { skills: any[] }) {
+  const { t } = useTranslation();
   if (skills.length === 0) return null;
 
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        기술 스택
+        {t('resume.sections.skills')}
       </h2>
       <div className="space-y-2">
         {skills.sort((a, b) => a.order - b.order).map((skill, idx) => (
@@ -175,12 +177,13 @@ function SkillsSection({ skills }: { skills: any[] }) {
 
 // Experience Section
 function ExperienceSection({ experiences }: { experiences: any[] }) {
+  const { t } = useTranslation();
   if (experiences.length === 0) return null;
 
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        경력
+        {t('resume.sections.experience')}
       </h2>
       {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
         <div key={idx} className="mb-4">
@@ -214,12 +217,13 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
 
 // Projects Section
 function ProjectsSection({ projects }: { projects: any[] }) {
+  const { t } = useTranslation();
   if (projects.length === 0) return null;
 
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        프로젝트
+        {t('resume.sections.projects')}
       </h2>
       {projects.sort((a, b) => a.order - b.order).map((project, idx) => (
         <div key={idx} className="mb-4">
@@ -273,12 +277,13 @@ function ProjectsSection({ projects }: { projects: any[] }) {
 
 // Education Section
 function EducationSection({ educations }: { educations: any[] }) {
+  const { t } = useTranslation();
   if (educations.length === 0) return null;
 
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        학력
+        {t('resume.sections.education')}
       </h2>
       {educations.sort((a, b) => a.order - b.order).map((edu, idx) => (
         <div key={idx} className="mb-3">
@@ -300,12 +305,13 @@ function EducationSection({ educations }: { educations: any[] }) {
 
 // Certificates Section
 function CertificatesSection({ certificates }: { certificates: any[] }) {
+  const { t } = useTranslation();
   if (certificates.length === 0) return null;
 
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        자격증
+        {t('resume.sections.certifications')}
       </h2>
       {certificates.sort((a, b) => a.order - b.order).map((cert, idx) => (
         <div key={idx} className="mb-3">

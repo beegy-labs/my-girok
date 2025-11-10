@@ -41,6 +41,22 @@
   "resume": {
     "edit": "Edit Resume",
     "preview": "Preview",
-    "viewPublic": "View Public Profile"
+    "viewPublic": "View Public Profile",
+    "sections": {
+      "settings": "Resume Settings",
+      "basicInfo": "Basic Information",
+      "experience": "Work Experience",
+      "projects": "Projects",
+      "skills": "Skills",
+      "education": "Education",
+      "certifications": "Certifications"
+    },
+    "descriptions": {
+      "experience": "Add your work history and achievements",
+      "projects": "Add your personal and professional projects",
+      "skills": "Organize your technical skills by category",
+      "education": "Add your educational background",
+      "certifications": "Add professional certifications and awards"
+    }
   }
 }

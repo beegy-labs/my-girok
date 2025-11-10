@@ -41,6 +41,22 @@
   "resume": {
     "edit": "履歴書編集",
     "preview": "プレビュー",
-    "viewPublic": "公開プロフィール表示"
+    "viewPublic": "公開プロフィール表示",
+    "sections": {
+      "settings": "履歴書設定",
+      "basicInfo": "基本情報",
+      "experience": "職務経歴",
+      "projects": "プロジェクト",
+      "skills": "スキル",
+      "education": "学歴",
+      "certifications": "資格"
+    },
+    "descriptions": {
+      "experience": "職務経験と実績を追加してください",
+      "projects": "個人またはチームプロジェクトを追加してください",
+      "skills": "技術スキルをカテゴリ別に整理してください",
+      "education": "学歴を追加してください",
+      "certifications": "保有資格と受賞歴を追加してください"
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Resume,
   CreateResumeDto,
@@ -19,6 +20,7 @@ interface ResumeFormProps {
 }
 
 export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<CreateResumeDto>({
     title: resume?.title || 'My Resume',
     description: resume?.description || '',
@@ -179,7 +181,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Resume Settings */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">⚙️ 이력서 설정</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">⚙️ {t('resume.sections.settings')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -224,7 +226,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       {/* Basic Info */}
       <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-amber-900 mb-4">📋 기본 정보</h2>
+        <h2 className="text-xl font-bold text-amber-900 mb-4">📋 {t('resume.sections.basicInfo')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -403,8 +405,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">💼 경력</h2>
-            <p className="text-sm text-gray-600">회사에서의 업무 경험을 추가하세요</p>
+            <h2 className="text-xl font-bold text-gray-900">💼 {t('resume.sections.experience')}</h2>
+            <p className="text-sm text-gray-600">{t('resume.descriptions.experience')}</p>
           </div>
           <button
             type="button"
@@ -590,8 +592,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">🚀 프로젝트</h2>
-            <p className="text-sm text-gray-600">개인 또는 팀 프로젝트를 추가하세요</p>
+            <h2 className="text-xl font-bold text-gray-900">🚀 {t('resume.sections.projects')}</h2>
+            <p className="text-sm text-gray-600">{t('resume.descriptions.projects')}</p>
           </div>
           <button
             type="button"
@@ -813,8 +815,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">⚡ 기술 스택</h2>
-            <p className="text-sm text-gray-600">보유 기술을 카테고리별로 정리하세요</p>
+            <h2 className="text-xl font-bold text-gray-900">⚡ {t('resume.sections.skills')}</h2>
+            <p className="text-sm text-gray-600">{t('resume.descriptions.skills')}</p>
           </div>
           <button
             type="button"
@@ -908,8 +910,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">🎓 학력</h2>
-            <p className="text-sm text-gray-600">학교와 전공을 추가하세요</p>
+            <h2 className="text-xl font-bold text-gray-900">🎓 {t('resume.sections.education')}</h2>
+            <p className="text-sm text-gray-600">{t('resume.descriptions.education')}</p>
           </div>
           <button
             type="button"
@@ -1071,8 +1073,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">🏆 자격증</h2>
-            <p className="text-sm text-gray-600">보유한 자격증과 수상 경력을 추가하세요</p>
+            <h2 className="text-xl font-bold text-gray-900">🏆 {t('resume.sections.certifications')}</h2>
+            <p className="text-sm text-gray-600">{t('resume.descriptions.certifications')}</p>
           </div>
           <button
             type="button"
