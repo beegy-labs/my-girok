@@ -218,7 +218,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             type="text"
             value={formData.description || ''}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
             placeholder="Brief description of this resume"
           />
         </div>
