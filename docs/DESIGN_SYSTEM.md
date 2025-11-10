@@ -74,6 +74,67 @@ All color combinations meet WCAG 2.1 AA standards:
 - `gray-700` on `white`: 7.21:1 (AAA)
 - `amber-700` on `white`: 5.12:1 (AA)
 
+### Special Case: Resume Pages (Print-Optimized)
+
+**Important**: Resume-related pages use grayscale design to optimize for printing.
+
+#### Resume Color Palette
+```css
+/* Grayscale only - No colored elements */
+--resume-primary: #111827;    /* gray-900 - Headers */
+--resume-secondary: #374151;  /* gray-700 - Body text */
+--resume-border: #9CA3AF;     /* gray-400 - Section dividers */
+--resume-light: #F3F4F6;      /* gray-100 - Backgrounds */
+--resume-bg: #F9FAFB;         /* gray-50 - Page background */
+```
+
+#### Resume Pages
+The following pages **MUST** use grayscale design:
+- Resume Edit Page (`/resume/:username/edit`)
+- Resume Preview Page (`/resume/:username/preview`)
+- Public Resume Page (`/:username/resume`)
+- Resume Print View (all resume displays)
+
+#### Resume Design Rules
+1. **No Brand Colors**: Do NOT use amber/brown colors
+2. **Grayscale Only**: Use gray-50 through gray-900
+3. **Print First**: Design for black & white printing
+4. **High Contrast**: Ensure 7:1 contrast minimum for text
+5. **Grayscale Images**: Apply `filter: grayscale(100%)` to profile photos
+
+#### Resume Component Examples
+
+**Resume Section Header**
+```jsx
+className="text-xl font-bold text-gray-900 mb-3
+           border-b border-gray-400 pb-1"
+```
+
+**Resume Action Button**
+```jsx
+className="px-6 py-3 bg-gray-700 hover:bg-gray-800
+           text-white font-semibold rounded-lg
+           transition-all shadow-lg shadow-gray-700/30"
+```
+
+**Resume Card/Container**
+```jsx
+className="bg-gray-50 border border-gray-200
+           rounded-2xl shadow-md p-6"
+```
+
+**Resume Text Link**
+```jsx
+className="text-gray-700 hover:underline"
+```
+
+#### Why Grayscale for Resumes?
+- **Print Optimization**: Most resumes are printed in black & white
+- **Cost Effective**: Reduces color printing costs
+- **Professional Appearance**: Clean, distraction-free layout
+- **Better Readability**: High contrast text on neutral background
+- **ATS Friendly**: Applicant Tracking Systems prefer simple formatting
+
 ## Typography
 
 ### Font Stack

@@ -71,7 +71,7 @@ export default function ResumePreviewPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600"></div>
       </div>
     );
   }
@@ -83,11 +83,11 @@ export default function ResumePreviewPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Action Bar - Hidden when printing */}
-      <div className="bg-amber-50/30 border-b border-amber-100 print:hidden sticky top-0 z-10 shadow-sm">
+      <div className="bg-gray-50 border-b border-gray-200 print:hidden sticky top-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-amber-900">📄 Resume Preview</h1>
+              <h1 className="text-2xl font-bold text-gray-900">📄 Resume Preview</h1>
               <p className="text-sm text-gray-600 mt-1">
                 Preview and export your resume
               </p>
@@ -109,7 +109,7 @@ export default function ResumePreviewPage() {
                   onClick={() => handlePaperSizeChange('A4')}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     paperSize === 'A4'
-                      ? 'bg-amber-700 text-white shadow-lg shadow-amber-700/30'
+                      ? 'bg-gray-700 text-white shadow-lg shadow-gray-700/30'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -119,7 +119,7 @@ export default function ResumePreviewPage() {
                   onClick={() => handlePaperSizeChange('LETTER')}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     paperSize === 'LETTER'
-                      ? 'bg-amber-700 text-white shadow-lg shadow-amber-700/30'
+                      ? 'bg-gray-700 text-white shadow-lg shadow-gray-700/30'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -134,7 +134,7 @@ export default function ResumePreviewPage() {
             <button
               onClick={handleExportPDF}
               disabled={exporting}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-gray-700/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {exporting ? '📥 Exporting...' : '📥 Download PDF'}
             </button>
@@ -146,14 +146,14 @@ export default function ResumePreviewPage() {
             </button>
             <button
               onClick={() => setShowShareModal(true)}
-              className="flex-1 px-6 py-3 bg-white hover:bg-gray-50 text-amber-700 font-semibold rounded-lg border border-amber-300 transition-all"
+              className="flex-1 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
             >
               🔗 Share Link
             </button>
           </div>
 
           {/* Print Notice */}
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <p className="text-sm text-gray-700">
               💡 <strong>Tip:</strong> For best results, use "Download PDF" for digital distribution.
               Use "Print" for direct printing with optimized black & white settings.

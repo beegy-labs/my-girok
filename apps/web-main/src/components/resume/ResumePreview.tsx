@@ -24,18 +24,18 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     >
       {/* Page container - shows actual print dimensions */}
       <div
-        className="p-[2cm] print:p-[1.5cm] bg-amber-50/10 relative"
+        className="p-[2cm] print:p-[1.5cm] bg-gray-50 relative"
         style={{
           width: paperDimensions.width,
           minHeight: paperDimensions.height,
         }}
       >
         {/* Page size indicator (hidden in print) */}
-        <div className="print:hidden absolute top-2 right-2 bg-blue-100 border border-blue-300 rounded px-2 py-1 text-xs text-blue-800 z-10">
+        <div className="print:hidden absolute top-2 right-2 bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800 z-10">
           📄 {paperSize} ({paperDimensions.width} × {paperDimensions.height})
         </div>
-        {/* Header - Using CI amber colors for emphasis */}
-        <div className="border-b-2 border-amber-800 print:border-gray-800 pb-6 mb-6">
+        {/* Header - Grayscale design for print compatibility */}
+        <div className="border-b-2 border-gray-800 pb-6 mb-6">
           <div className="flex items-start gap-6">
             {/* Profile Photo */}
             {resume.profileImage && (
@@ -43,14 +43,14 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 <img
                   src={resume.profileImage}
                   alt={resume.name}
-                  className="w-32 h-40 object-cover rounded-lg border-2 border-amber-200 print:border-gray-300 print:filter print:grayscale"
+                  className="w-32 h-40 object-cover rounded-lg border-2 border-gray-300 filter grayscale"
                 />
               </div>
             )}
 
             {/* Name and Contact Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-amber-900 print:text-gray-900 mb-2">{resume.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{resume.name}</h1>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700 mb-2">
                 <span>{resume.email}</span>
                 {resume.phone && <span>{resume.phone}</span>}
@@ -69,7 +69,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 {resume.github && (
                   <span>
-                    <span className="print:hidden text-amber-700 hover:underline">
+                    <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.github}>GitHub</a>
                     </span>
                     <span className="hidden print:inline text-gray-900">GitHub: {resume.github}</span>
@@ -77,7 +77,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 )}
                 {resume.blog && (
                   <span>
-                    <span className="print:hidden text-amber-700 hover:underline">
+                    <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.blog}>Blog</a>
                     </span>
                     <span className="hidden print:inline text-gray-900">Blog: {resume.blog}</span>
@@ -85,7 +85,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 )}
                 {resume.linkedin && (
                   <span>
-                    <span className="print:hidden text-amber-700 hover:underline">
+                    <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.linkedin}>LinkedIn</a>
                     </span>
                     <span className="hidden print:inline text-gray-900">LinkedIn: {resume.linkedin}</span>
@@ -93,7 +93,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 )}
                 {resume.portfolio && (
                   <span>
-                    <span className="print:hidden text-amber-700 hover:underline">
+                    <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.portfolio}>Portfolio</a>
                     </span>
                     <span className="hidden print:inline text-gray-900">Portfolio: {resume.portfolio}</span>
@@ -114,7 +114,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         {/* Cover Letter */}
         {resume.coverLetter && (
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+            <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               Cover Letter
             </h2>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.coverLetter}</p>
@@ -124,7 +124,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         {/* Career Goals */}
         {resume.careerGoals && (
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+            <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               Career Goals
             </h2>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.careerGoals}</p>
@@ -160,7 +160,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.skills')}
       </h2>
       <div className="space-y-2">
@@ -182,7 +182,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.experience')}
       </h2>
       {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
@@ -222,7 +222,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.projects')}
       </h2>
       {projects.sort((a, b) => a.order - b.order).map((project, idx) => (
@@ -253,7 +253,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
             <div className="flex gap-3 mt-2 text-sm">
               {project.url && (
                 <span>
-                  <span className="print:hidden text-amber-700 hover:underline">
+                  <span className="print:hidden text-gray-700 hover:underline">
                     <a href={project.url}>Demo</a>
                   </span>
                   <span className="hidden print:inline text-gray-900">Demo: {project.url}</span>
@@ -261,7 +261,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
               )}
               {project.githubUrl && (
                 <span>
-                  <span className="print:hidden text-amber-700 hover:underline">
+                  <span className="print:hidden text-gray-700 hover:underline">
                     <a href={project.githubUrl}>GitHub</a>
                   </span>
                   <span className="hidden print:inline text-gray-900">GitHub: {project.githubUrl}</span>
@@ -282,7 +282,7 @@ function EducationSection({ educations }: { educations: any[] }) {
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.education')}
       </h2>
       {educations.sort((a, b) => a.order - b.order).map((edu, idx) => (
@@ -310,7 +310,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.certifications')}
       </h2>
       {certificates.sort((a, b) => a.order - b.order).map((cert, idx) => (
@@ -321,7 +321,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
               <p className="text-gray-700">{cert.issuer}</p>
               {cert.credentialUrl && (
                 <span>
-                  <span className="print:hidden text-sm text-amber-700 hover:underline">
+                  <span className="print:hidden text-sm text-gray-700 hover:underline">
                     <a href={cert.credentialUrl}>Verify</a>
                   </span>
                   <span className="hidden print:inline text-sm text-gray-900">Verify: {cert.credentialUrl}</span>
