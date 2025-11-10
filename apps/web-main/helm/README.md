@@ -29,7 +29,8 @@ Update the following:
 - `image.repository` - Harbor registry path (harbor.girok.dev/my-girok/web-main)
 - `image.tag` - Image version (develop/release/v1.0.0)
 - `ingress.hosts` - Your domain
-- `app.apiUrl` - Auth service API URL
+- `app.apiUrl` - Unified API gateway URL for auth (e.g., https://my-api.example.com/auth)
+- `app.personalApiUrl` - Unified API gateway URL for personal service (e.g., https://my-api.example.com/personal)
 
 ### 3. Install the Chart
 
@@ -74,7 +75,9 @@ helm install web-main . \
 | `autoscaling.maxReplicas` | Max replicas | `5` |
 | `resources.limits.cpu` | CPU limit | `500m` |
 | `resources.limits.memory` | Memory limit | `256Mi` |
-| `app.apiUrl` | Auth service API URL | `https://auth-api.example.com/api/v1` |
+| `app.apiUrl` | Unified API gateway URL for auth | `https://my-api.example.com/auth` |
+| `app.personalApiUrl` | Unified API gateway URL for personal | `https://my-api.example.com/personal` |
+| `app.rybbitSiteId` | Rybbit Analytics Site ID | `4bc4e6b821e8` |
 
 ### Environment-Specific Configuration
 
@@ -96,12 +99,13 @@ cp values.yaml values-prod.yaml
 
 ## Building the Docker Image
 
-**Important**: The API URL must be set at build time (not runtime) for Vite applications.
+**Important**: The API URLs must be set at build time (not runtime) for Vite applications.
 
 ```bash
 # From repository root
 docker build \
-  --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+  --build-arg VITE_API_URL=https://my-api.example.com/auth \
+  --build-arg VITE_PERSONAL_API_URL=https://my-api.example.com/personal \
   -t harbor.girok.dev/my-girok/web-main:v0.1.0 \
   -f apps/web-main/Dockerfile \
   .
@@ -117,21 +121,24 @@ Build separate images for each environment:
 ```bash
 # Development (develop branch)
 docker build \
-  --build-arg VITE_API_URL=https://auth-api-dev.example.com/api/v1 \
+  --build-arg VITE_API_URL=https://my-api-dev.example.com/auth \
+  --build-arg VITE_PERSONAL_API_URL=https://my-api-dev.example.com/personal \
   -t harbor.girok.dev/my-girok/web-main:develop \
   -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:develop
 
 # Main Branch (release)
 docker build \
-  --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+  --build-arg VITE_API_URL=https://my-api.example.com/auth \
+  --build-arg VITE_PERSONAL_API_URL=https://my-api.example.com/personal \
   -t harbor.girok.dev/my-girok/web-main:release \
   -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:release
 
 # Production (version tag)
 docker build \
-  --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+  --build-arg VITE_API_URL=https://my-api.example.com/auth \
+  --build-arg VITE_PERSONAL_API_URL=https://my-api.example.com/personal \
   -t harbor.girok.dev/my-girok/web-main:v1.0.0 \
   -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:v1.0.0
@@ -309,7 +316,8 @@ git pull origin develop
 
 # Build and push to Harbor
 docker build \
-  --build-arg VITE_API_URL=https://auth-api-dev.example.com/api/v1 \
+  --build-arg VITE_API_URL=https://my-api-dev.example.com/auth \
+  --build-arg VITE_PERSONAL_API_URL=https://my-api-dev.example.com/personal \
   -t harbor.girok.dev/my-girok/web-main:develop \
   -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:develop
@@ -329,7 +337,8 @@ git pull origin main
 
 # Build and push release tag to Harbor
 docker build \
-  --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+  --build-arg VITE_API_URL=https://my-api.example.com/auth \
+  --build-arg VITE_PERSONAL_API_URL=https://my-api.example.com/personal \
   -t harbor.girok.dev/my-girok/web-main:release \
   -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:release
@@ -349,7 +358,8 @@ git tag v0.2.0
 git push origin v0.2.0
 
 docker build \
-  --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+  --build-arg VITE_API_URL=https://my-api.example.com/auth \
+  --build-arg VITE_PERSONAL_API_URL=https://my-api.example.com/personal \
   -t harbor.girok.dev/my-girok/web-main:v0.2.0 \
   -f apps/web-main/Dockerfile .
 docker push harbor.girok.dev/my-girok/web-main:v0.2.0
@@ -400,7 +410,8 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker build \
-            --build-arg VITE_API_URL=https://auth-api.example.com/api/v1 \
+            --build-arg VITE_API_URL=https://my-api.example.com/auth \
+            --build-arg VITE_PERSONAL_API_URL=https://my-api.example.com/personal \
             -t harbor.girok.dev/my-girok/web-main:${{ steps.tag.outputs.tag }} \
             -f apps/web-main/Dockerfile .
           docker push harbor.girok.dev/my-girok/web-main:${{ steps.tag.outputs.tag }}

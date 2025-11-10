@@ -110,10 +110,21 @@ affinity:
 # ============================================================================
 
 app:
-  # API URL for auth service
-  # CHANGE THIS: Point to your auth-service
+  # API URL for unified API gateway - auth service
+  # CHANGE THIS: Point to your unified API gateway
   # This is injected as VITE_API_URL during build time
-  apiUrl: "https://auth-api.example.com/api/v1"
+  # Format: https://<gateway-domain>/auth (without /v1, it's added in code)
+  apiUrl: "https://my-api.example.com/auth"
+
+  # API URL for unified API gateway - personal service
+  # CHANGE THIS: Point to your unified API gateway
+  # This is injected as VITE_PERSONAL_API_URL during build time
+  # Format: https://<gateway-domain>/personal (without /v1, it's added in code)
+  personalApiUrl: "https://my-api.example.com/personal"
+
+  # Rybbit Analytics Site ID (CRITICAL - Never remove)
+  # Development: 4bc4e6b821e8
+  rybbitSiteId: "4bc4e6b821e8"
 
 # Health checks
 livenessProbe:
@@ -142,7 +153,8 @@ readinessProbe:
 #   replicaCount: 1
 #   image.tag: "develop"
 #   autoscaling.enabled: false
-#   app.apiUrl: "https://auth-api-dev.example.com/api/v1"
+#   app.apiUrl: "https://my-api-dev.example.com/auth"
+#   app.personalApiUrl: "https://my-api-dev.example.com/personal"
 #   resources.limits.cpu: 250m
 #   resources.limits.memory: 128Mi
 #   ingress.hosts[0].host: app-dev.example.com
@@ -153,7 +165,8 @@ readinessProbe:
 #   autoscaling.enabled: true
 #   autoscaling.minReplicas: 2
 #   autoscaling.maxReplicas: 4
-#   app.apiUrl: "https://auth-api.example.com/api/v1"
+#   app.apiUrl: "https://my-api.example.com/auth"
+#   app.personalApiUrl: "https://my-api.example.com/personal"
 #   resources.limits.cpu: 400m
 #   resources.limits.memory: 192Mi
 #   ingress.hosts[0].host: app.example.com
@@ -164,7 +177,8 @@ readinessProbe:
 #   autoscaling.enabled: true
 #   autoscaling.minReplicas: 2
 #   autoscaling.maxReplicas: 5
-#   app.apiUrl: "https://auth-api.example.com/api/v1"
+#   app.apiUrl: "https://my-api.example.com/auth"
+#   app.personalApiUrl: "https://my-api.example.com/personal"
 #   resources.limits.cpu: 500m
 #   resources.limits.memory: 256Mi
 #   ingress.hosts[0].host: app.example.com
