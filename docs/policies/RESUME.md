@@ -772,9 +772,207 @@ Typical section order and emphasis:
    - Senior developers: Experience → Projects → Skills → Education
 
 #### Localization
-- Korean labels in UI (병역, 자기소개서, 입사 후 포부)
-- English labels in resume output (for international opportunities)
-- Support for both Korean and English content in all fields
+- **Multi-language Support**: Korean, English, Japanese via i18n
+- **Default Language**: Korean (ko)
+- **Fallback Language**: English (en)
+- **Language Persistence**: User preference stored in localStorage
+- **Translation Coverage**: All section headers, descriptions, and UI labels
+- Support for both localized labels and multi-language content in all fields
+
+## Internationalization (i18n)
+
+### Overview
+The resume system supports multiple languages through react-i18next, enabling users to view and edit resumes in their preferred language.
+
+### Supported Languages
+
+#### 1. Korean (ko) - Default
+```json
+{
+  "resume.sections.settings": "이력서 설정",
+  "resume.sections.basicInfo": "기본 정보",
+  "resume.sections.experience": "경력",
+  "resume.sections.projects": "프로젝트",
+  "resume.sections.skills": "기술 스택",
+  "resume.sections.education": "학력",
+  "resume.sections.certifications": "자격증"
+}
+```
+
+**Descriptions:**
+- experience: "회사에서의 업무 경험을 추가하세요"
+- projects: "개인 또는 팀 프로젝트를 추가하세요"
+- skills: "보유 기술을 카테고리별로 정리하세요"
+- education: "학교와 전공을 추가하세요"
+- certifications: "보유한 자격증과 수상 경력을 추가하세요"
+
+#### 2. English (en) - Fallback
+```json
+{
+  "resume.sections.settings": "Resume Settings",
+  "resume.sections.basicInfo": "Basic Information",
+  "resume.sections.experience": "Work Experience",
+  "resume.sections.projects": "Projects",
+  "resume.sections.skills": "Skills",
+  "resume.sections.education": "Education",
+  "resume.sections.certifications": "Certifications"
+}
+```
+
+**Descriptions:**
+- experience: "Add your work history and achievements"
+- projects: "Add your personal and professional projects"
+- skills: "Organize your technical skills by category"
+- education: "Add your educational background"
+- certifications: "Add professional certifications and awards"
+
+#### 3. Japanese (ja)
+```json
+{
+  "resume.sections.settings": "履歴書設定",
+  "resume.sections.basicInfo": "基本情報",
+  "resume.sections.experience": "職務経歴",
+  "resume.sections.projects": "プロジェクト",
+  "resume.sections.skills": "スキル",
+  "resume.sections.education": "学歴",
+  "resume.sections.certifications": "資格"
+}
+```
+
+**Descriptions:**
+- experience: "職務経験と実績を追加してください"
+- projects: "個人またはチームプロジェクトを追加してください"
+- skills: "技術スキルをカテゴリ別に整理してください"
+- education: "学歴を追加してください"
+- certifications: "保有資格と受賞歴を追加してください"
+
+### Configuration
+
+#### i18n Setup (src/i18n/config.ts)
+```typescript
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import en from './locales/en.json';
+import ko from './locales/ko.json';
+import ja from './locales/ja.json';
+
+const resources = {
+  en: { translation: en },
+  ko: { translation: ko },
+  ja: { translation: ja },
+};
+
+i18n
+  .use(initReactI18next)
+  .init({
+    resources,
+    lng: localStorage.getItem('language') || 'ko', // Default: Korean
+    fallbackLng: 'en', // Fallback: English
+    interpolation: {
+      escapeValue: false,
+    },
+  });
+```
+
+### Usage in Components
+
+#### ResumeForm.tsx
+```typescript
+import { useTranslation } from 'react-i18next';
+
+export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <h2>{t('resume.sections.experience')}</h2>
+      <p>{t('resume.descriptions.experience')}</p>
+    </div>
+  );
+}
+```
+
+#### ResumePreview.tsx
+```typescript
+function SkillsSection({ skills }: { skills: any[] }) {
+  const { t } = useTranslation();
+
+  return (
+    <h2>{t('resume.sections.skills')}</h2>
+  );
+}
+```
+
+#### SectionOrderManager.tsx
+```typescript
+function SortableSection({ section }: { section: ResumeSection }) {
+  const { t } = useTranslation();
+
+  const getSectionLabel = (type: SectionType): string => {
+    const labelMap: Record<SectionType, string> = {
+      SKILLS: t('resume.sections.skills'),
+      EXPERIENCE: t('resume.sections.experience'),
+      PROJECT: t('resume.sections.projects'),
+      EDUCATION: t('resume.sections.education'),
+      CERTIFICATE: t('resume.sections.certifications'),
+    };
+    return labelMap[type];
+  };
+
+  return <span>{getSectionLabel(section.type)}</span>;
+}
+```
+
+### Language Switching
+
+Users can switch languages using the `LanguageSwitcher` component in the navbar:
+- Changes apply immediately across all resume components
+- Selected language is persisted to `localStorage`
+- Page refresh maintains language preference
+
+### Translation Keys Structure
+
+```
+resume
+├── edit              # "Edit Resume"
+├── preview           # "Preview"
+├── viewPublic        # "View Public Profile"
+├── sections
+│   ├── settings      # Section headers
+│   ├── basicInfo
+│   ├── experience
+│   ├── projects
+│   ├── skills
+│   ├── education
+│   └── certifications
+└── descriptions
+    ├── experience    # Helper text
+    ├── projects
+    ├── skills
+    ├── education
+    └── certifications
+```
+
+### Best Practices
+
+#### Adding New Translations
+1. Add key to all three language files (ko.json, en.json, ja.json)
+2. Use descriptive key names with dot notation (e.g., `resume.sections.newSection`)
+3. Keep translations concise and professional
+4. Test with all three languages
+
+#### Translation Guidelines
+- **Korean**: Use standard modern Korean (표준 한국어), not archaic terms
+- **English**: Use professional American English
+- **Japanese**: Use polite form (です・ます調)
+- Maintain consistency in terminology across the application
+- Use title case for English, sentence case for Korean/Japanese
+
+#### Don'ts
+- ❌ Don't hardcode text strings in components
+- ❌ Don't use machine translation without review
+- ❌ Don't mix languages in a single UI element
+- ❌ Don't forget to add fallback translations
 
 ## Technical Implementation
 
@@ -1001,7 +1199,124 @@ const handleDragEnd = (event: DragEndEvent) => {
 };
 ```
 
+## Design System Integration
+
+### Brand Identity
+The resume feature follows the My-Girok design system with a library/book theme.
+
+#### Color Palette
+- **Primary Brand**: `amber-900` (#78350F) - Main headings, brand logo
+- **Primary Action**: `amber-700 to amber-600` gradient - CTA buttons
+- **Links**: `amber-700` with `hover:amber-800` - Interactive text
+- **Borders**: `amber-100` - Cards, containers, navbar
+- **Secondary Text**: `gray-700` for body, `gray-600` for hints
+
+#### Component Styling
+
+##### Navbar
+```typescript
+<nav className="bg-white border-b border-amber-100">
+  <Link to="/">
+    <span className="text-2xl">📚</span>
+    <span className="text-2xl font-bold text-amber-900">My-Girok</span>
+  </Link>
+
+  {/* Primary CTA Button */}
+  <Link className="bg-gradient-to-r from-amber-700 to-amber-600
+                   hover:from-amber-800 hover:to-amber-700
+                   text-white px-4 py-2 rounded-lg
+                   transform hover:scale-[1.02]
+                   shadow-lg shadow-amber-700/30">
+    회원가입
+  </Link>
+</nav>
+```
+
+##### Form Inputs
+```typescript
+<input
+  className="w-full px-4 py-3 bg-white
+             border border-amber-200 rounded-lg
+             focus:outline-none focus:ring-2
+             focus:ring-amber-400 focus:border-transparent
+             transition-all text-gray-900"
+/>
+```
+
+##### Section Headers
+```typescript
+<h2 className="text-xl font-bold text-amber-900 mb-4">
+  ⚡ {t('resume.sections.skills')}
+</h2>
+```
+
+##### Cards
+```typescript
+<div className="bg-amber-50/30 border border-amber-100
+                rounded-2xl shadow-md p-6
+                hover:shadow-xl hover:-translate-y-1
+                hover:border-amber-300 transition-all">
+  {/* Card content */}
+</div>
+```
+
+#### Typography
+- **Headings**: Bold, `amber-900` or `gray-900`
+- **Body Text**: Regular, `gray-700` (minimum for accessibility)
+- **Input Text**: `gray-900` (ensures visibility on white backgrounds)
+- **Hints**: Semibold labels with `gray-700`, small `gray-600` for descriptions
+
+#### Accessibility
+- All color combinations meet WCAG 2.1 AA standards
+- `amber-900` on white: 8.52:1 contrast ratio (AAA)
+- `gray-900` on white: Excellent visibility for form inputs
+- Focus states use `ring-amber-400` for keyboard navigation
+
+#### Iconography
+- Emoji-based icons for warmth and approachability
+- Book/library theme: 📚 (brand), 📋 (info), 💼 (career), 🚀 (projects)
+- Consistent emoji usage across all sections
+
+### Design Compliance Checklist
+
+#### ✅ Compliant Elements
+- Navbar uses amber color scheme with brand emoji
+- All buttons use amber gradient with proper hover effects
+- Form inputs have amber borders and focus rings
+- Text colors meet accessibility standards
+- Section headers use amber-900 for emphasis
+- Cards use amber-50 backgrounds with amber-100 borders
+
+#### ⚠️ Important Notes
+- Never use `blue-600` or other off-brand colors
+- Always use `text-gray-900` for input fields (not white)
+- Maintain amber theme throughout resume components
+- Follow spacing system (multiples of 4px/0.25rem)
+- Use rounded-2xl for cards, rounded-lg for inputs/buttons
+
 ## Change Log
+
+- **2025-01-11**: Added internationalization and design system compliance
+  - **Internationalization (i18n)**:
+    - Full multi-language support (Korean, English, Japanese)
+    - Translation files for all resume sections
+    - Dynamic language switching via LanguageSwitcher component
+    - Language preference persistence in localStorage
+    - Default language: Korean, fallback: English
+    - Professional terminology for each language
+  - **Design System Compliance**:
+    - Updated Navbar to match brand identity
+    - Changed brand color from blue-600 to amber-900
+    - Applied amber gradient buttons (from-amber-700 to-amber-600)
+    - Added 📚 emoji icon to brand logo
+    - Border color updated to amber-100
+    - All interactive elements use amber color scheme
+    - Hover effects and transitions aligned with design guidelines
+  - **Component Localization**:
+    - ResumeForm.tsx: All section headers use t() function
+    - ResumePreview.tsx: Dynamic translations for preview sections
+    - SectionOrderManager.tsx: i18n-based section labels
+    - Removed hardcoded text strings from all components
 
 - **2025-01-10**: Added universal dynamic sections and Korean features
   - **Universal Dynamic Sections**:
