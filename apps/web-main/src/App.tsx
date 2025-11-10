@@ -29,9 +29,18 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/resume/:username" element={<PublicResumePage />} />
+          {/* New resume creation - no resumeId */}
           <Route
-            path="/resume/:username/edit"
+            path="/resume/edit"
+            element={
+              <PrivateRoute>
+                <ResumeEditPage />
+              </PrivateRoute>
+            }
+          />
+          {/* Edit existing resume - with resumeId */}
+          <Route
+            path="/resume/edit/:resumeId"
             element={
               <PrivateRoute>
                 <ResumeEditPage />
@@ -39,13 +48,15 @@ function App() {
             }
           />
           <Route
-            path="/resume/:username/preview"
+            path="/resume/preview/:resumeId"
             element={
               <PrivateRoute>
                 <ResumePreviewPage />
               </PrivateRoute>
             }
           />
+          {/* Public resume view by username */}
+          <Route path="/resume/:username" element={<PublicResumePage />} />
         </Routes>
       </main>
     </div>

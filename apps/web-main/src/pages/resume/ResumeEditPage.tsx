@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getDefaultResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
+import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreview from '../../components/resume/ResumePreview';
 
 export default function ResumeEditPage() {
   const navigate = useNavigate();
-  const { username } = useParams<{ username: string }>();
+  const { resumeId } = useParams<{ resumeId: string }>();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,20 +14,25 @@ export default function ResumeEditPage() {
   const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
-    loadResume();
-  }, []);
+    if (resumeId) {
+      loadResume();
+    } else {
+      // New resume creation - no need to load
+      setLoading(false);
+    }
+  }, [resumeId]);
 
   const loadResume = async () => {
+    if (!resumeId) return;
+
     try {
       setLoading(true);
-      const data = await getDefaultResume();
+      const data = await getResume(resumeId);
       setResume(data);
       setPreviewData(data);
     } catch (err: any) {
       if (err.response?.status === 404) {
-        // No resume yet
-        setResume(null);
-        setPreviewData(null);
+        setError('Resume not found');
       } else {
         setError('Failed to load resume');
       }
@@ -78,16 +83,19 @@ export default function ResumeEditPage() {
 
   const handleSubmit = async (data: CreateResumeDto) => {
     try {
-      if (resume) {
-        const updated = await updateResume(resume.id, data);
+      if (resumeId) {
+        // Update existing resume
+        const updated = await updateResume(resumeId, data);
         setResume(updated);
         setPreviewData(updated);
+        navigate(`/resume/preview/${updated.id}`);
       } else {
+        // Create new resume
         const created = await createResume(data);
         setResume(created);
         setPreviewData(created);
+        navigate(`/resume/preview/${created.id}`);
       }
-      navigate(`/resume/${username}/preview`);
     } catch (err) {
       setError('Failed to save resume');
     }
@@ -114,10 +122,10 @@ export default function ResumeEditPage() {
               <span className="text-3xl">✍️</span>
               <div>
                 <h1 className="text-3xl font-bold text-amber-900">
-                  {resume ? 'Edit Resume' : 'Create Resume'}
+                  {resumeId ? 'Edit Resume' : 'Create New Resume'}
                 </h1>
                 <p className="text-gray-700">
-                  Fill in your information - see live preview on the right
+                  {resumeId ? 'Update your resume information' : 'Fill in your information to create a new resume'}
                 </p>
               </div>
             </div>

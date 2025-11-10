@@ -10,10 +10,8 @@ import {
   ShareLink,
   ShareDuration,
 } from '../../api/resume';
-import { useAuthStore } from '../../stores/authStore';
 
 export default function MyResumePage() {
-  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
@@ -115,7 +113,7 @@ export default function MyResumePage() {
               <p className="text-gray-700 ml-12">이력서를 관리하고 공유하세요</p>
             </div>
             <button
-              onClick={() => navigate(`/resume/${user?.username}/edit`)}
+              onClick={() => navigate('/resume/edit')}
               className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               ✍️ 새 이력서 만들기
@@ -142,7 +140,7 @@ export default function MyResumePage() {
               <h3 className="text-xl font-bold text-amber-900 mb-2">아직 이력서가 없습니다</h3>
               <p className="text-gray-600 mb-4">첫 이력서를 만들어보세요</p>
               <button
-                onClick={() => navigate(`/resume/${user?.username}/edit`)}
+                onClick={() => navigate('/resume/edit')}
                 className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 이력서 만들기
@@ -201,13 +199,13 @@ export default function MyResumePage() {
 
                       <div className="flex gap-2">
                         <button
-                          onClick={() => navigate(`/resume/${user?.username}/preview`)}
+                          onClick={() => navigate(`/resume/preview/${resume.id}`)}
                           className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
                         >
                           👁️ 미리보기
                         </button>
                         <button
-                          onClick={() => navigate(`/resume/${user?.username}/edit`)}
+                          onClick={() => navigate(`/resume/edit/${resume.id}`)}
                           className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30"
                         >
                           ✍️ 수정
