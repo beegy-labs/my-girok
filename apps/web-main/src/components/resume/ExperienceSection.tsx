@@ -30,13 +30,11 @@ function SortableExperienceCard({
   index,
   onUpdate,
   onRemove,
-  t,
 }: {
   experience: Experience;
   index: number;
   onUpdate: (exp: Experience) => void;
   onRemove: () => void;
-  t: (key: string) => string;
 }) {
   const {
     attributes,
@@ -726,7 +724,6 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
                   index={index}
                   onUpdate={(e) => updateExperience(index, e)}
                   onRemove={() => removeExperience(index)}
-                  t={t}
                 />
               ))}
             </div>
