@@ -55,6 +55,7 @@ export default function ResumeEditPage() {
       summary: data.summary,
       profileImage: data.profileImage,
       militaryService: data.militaryService,
+      militaryDischarge: data.militaryDischarge,
       coverLetter: data.coverLetter,
       careerGoals: data.careerGoals,
       sections: resume?.sections || [

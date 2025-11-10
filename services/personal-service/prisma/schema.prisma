@@ -37,6 +37,12 @@ model Resume {
   // Profile Image (URL to MinIO)
   profileImage String? @map("profile_image")
 
+  // Korean-specific fields
+  militaryService       MilitaryService? @map("military_service") // 병역 여부
+  militaryDischarge     String?          @map("military_discharge") // 예: "병장 제대", "2020.01 - 2021.10"
+  coverLetter           String?          @map("cover_letter") @db.Text // 자기소개서
+  careerGoals           String?          @map("career_goals") @db.Text // 입사 후 포부
+
   // Attachments
   attachments ResumeAttachment[]
 
@@ -98,6 +104,12 @@ enum SectionType {
 enum PaperSize {
   A4
   LETTER
+}
+
+enum MilitaryService {
+  COMPLETED       // 군필
+  EXEMPTED        // 면제
+  NOT_APPLICABLE  // 해당없음
 }
 
 // Resume File Attachments (profile photos, portfolios, certificates)

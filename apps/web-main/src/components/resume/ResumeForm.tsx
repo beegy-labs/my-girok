@@ -8,7 +8,9 @@ import {
   uploadAttachment,
   getAttachments,
   deleteAttachment,
+  SectionType,
 } from '../../api/resume';
+import SectionOrderManager from './SectionOrderManager';
 
 interface ResumeFormProps {
   resume: Resume | null;
@@ -32,6 +34,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     summary: resume?.summary || '',
     profileImage: resume?.profileImage || '',
     militaryService: resume?.militaryService,
+    militaryDischarge: resume?.militaryDischarge || '',
     coverLetter: resume?.coverLetter || '',
     careerGoals: resume?.careerGoals || '',
     skills: resume?.skills?.map(s => ({ category: s.category, items: s.items, order: s.order, visible: s.visible })) || [],
@@ -86,12 +89,23 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Trigger onChange when formData changes
+  // Section ordering
+  const [sections, setSections] = useState(
+    resume?.sections?.sort((a, b) => a.order - b.order) || [
+      { id: '1', type: SectionType.SKILLS, order: 0, visible: true },
+      { id: '2', type: SectionType.EXPERIENCE, order: 1, visible: true },
+      { id: '3', type: SectionType.PROJECT, order: 2, visible: true },
+      { id: '4', type: SectionType.EDUCATION, order: 3, visible: true },
+      { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
+    ]
+  );
+
+  // Trigger onChange when formData or sections change
   useEffect(() => {
     if (onChange) {
       onChange(formData);
     }
-  }, [formData, onChange]);
+  }, [formData, sections, onChange]);
 
   // Load attachments if resume exists
   useEffect(() => {
@@ -317,6 +331,23 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <option value="NOT_APPLICABLE">Not Applicable (해당없음)</option>
           </select>
         </div>
+        {formData.militaryService === 'COMPLETED' && (
+          <div className="mt-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Military Discharge Details
+            </label>
+            <input
+              type="text"
+              value={formData.militaryDischarge || ''}
+              onChange={e => setFormData({ ...formData, militaryDischarge: e.target.value })}
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+              placeholder="예: 병장 제대, 2020.01 - 2021.10"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter rank and service period (e.g., "병장 제대", "2020.01 - 2021.10")
+            </p>
+          </div>
+        )}
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Summary
@@ -519,6 +550,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </div>
         </div>
       </div>
+
+      {/* Section Order Manager */}
+      {resume?.id && (
+        <SectionOrderManager
+          sections={sections}
+          onReorder={(newSections) => {
+            setSections(newSections);
+            // Update will be saved when form is submitted
+          }}
+        />
+      )}
 
       {/* Submit Buttons */}
       <div className="flex justify-end gap-4">

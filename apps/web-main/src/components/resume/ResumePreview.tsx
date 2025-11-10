@@ -49,9 +49,11 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 {resume.militaryService && (
                   <span>
                     Military: {
-                      resume.militaryService === 'COMPLETED' ? 'Completed' :
-                      resume.militaryService === 'EXEMPTED' ? 'Exempted' :
-                      'N/A'
+                      resume.militaryService === 'COMPLETED'
+                        ? (resume.militaryDischarge || 'Completed')
+                        : resume.militaryService === 'EXEMPTED'
+                        ? 'Exempted'
+                        : 'N/A'
                     }
                   </span>
                 )}
