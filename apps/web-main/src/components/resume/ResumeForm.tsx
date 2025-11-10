@@ -535,26 +535,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   {exp.roles && exp.roles.length > 0 ? (
                     <div className="space-y-4">
                       {exp.roles.map((role, roleIndex) => (
-                        <div key={roleIndex} className="border border-amber-200 rounded-lg p-4 bg-white">
+                        <div key={roleIndex} className="border border-amber-200 rounded-lg p-4 bg-amber-50/20">
                           <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Role Title <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={role.title}
-                                onChange={e => {
-                                  const newExperiences = [...(formData.experiences || [])];
-                                  const newRoles = [...(newExperiences[expIndex].roles || [])];
-                                  newRoles[roleIndex] = { ...newRoles[roleIndex], title: e.target.value };
-                                  newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
-                                  setFormData({ ...formData, experiences: newExperiences });
-                                }}
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
-                                placeholder="e.g., Senior Backend Developer"
-                              />
-                            </div>
+                            <h5 className="text-sm font-semibold text-amber-900 flex items-center gap-1">
+                              📖 Role #{roleIndex + 1}
+                            </h5>
                             <button
                               type="button"
                               onClick={() => {
@@ -563,17 +548,78 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                 newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
                                 setFormData({ ...formData, experiences: newExperiences });
                               }}
-                              className="ml-2 text-red-600 hover:text-red-800 text-sm font-semibold"
+                              className="text-red-600 hover:text-red-800 text-xs font-semibold"
                             >
                               Remove Role
                             </button>
                           </div>
 
+                          {/* Role Title */}
+                          <div className="mb-3">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Role Title <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={role.title}
+                              onChange={e => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                newRoles[roleIndex] = { ...newRoles[roleIndex], title: e.target.value };
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                              placeholder="e.g., Backend Development Lead"
+                            />
+                          </div>
+
+                          {/* Position (직급) */}
+                          <div className="mb-3">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              직급 / Position
+                            </label>
+                            <input
+                              type="text"
+                              value={role.position || ''}
+                              onChange={e => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                newRoles[roleIndex] = { ...newRoles[roleIndex], position: e.target.value };
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                              placeholder="e.g., Senior Developer, Tech Lead"
+                            />
+                          </div>
+
+                          {/* Responsibilities (담당업무) */}
+                          <div className="mb-3">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              담당업무 / Responsibilities
+                            </label>
+                            <textarea
+                              value={role.responsibilities || ''}
+                              onChange={e => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                newRoles[roleIndex] = { ...newRoles[roleIndex], responsibilities: e.target.value };
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              rows={3}
+                              className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                              placeholder="Describe main job responsibilities..."
+                            />
+                          </div>
+
                           {/* Tasks - Hierarchical Structure */}
-                          <div className="mt-3 border-t border-gray-200 pt-3">
+                          <div className="mt-3 border-t border-amber-200 pt-3">
                             <div className="flex items-center justify-between mb-2">
-                              <label className="block text-sm font-semibold text-gray-700">
-                                Tasks (use depth 1-4 for indentation)
+                              <label className="block text-sm font-semibold text-amber-900 flex items-center gap-1">
+                                ✍️ Detailed Tasks
+                                <span className="text-xs text-gray-500 font-normal">(use depth 1-4)</span>
                               </label>
                               <button
                                 type="button"
@@ -595,7 +641,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                   newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
                                   setFormData({ ...formData, experiences: newExperiences });
                                 }}
-                                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                className="px-2 py-1 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 transition-all"
                               >
                                 + Add Task
                               </button>
@@ -604,7 +650,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                             {role.tasks && role.tasks.length > 0 ? (
                               <div className="space-y-2">
                                 {role.tasks.map((task: any, taskIndex: number) => (
-                                  <div key={taskIndex} className="flex items-start gap-2">
+                                  <div key={taskIndex} className="flex items-start gap-2 bg-white rounded-lg p-2 border border-amber-100">
                                     <select
                                       value={task.depth}
                                       onChange={e => {
@@ -616,13 +662,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                         newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
                                         setFormData({ ...formData, experiences: newExperiences });
                                       }}
-                                      className="px-2 py-1 border border-gray-300 rounded text-xs"
+                                      className="px-2 py-1 border border-amber-200 rounded text-xs bg-amber-50 text-gray-900"
                                       title="Indentation depth"
                                     >
-                                      <option value="1">-</option>
-                                      <option value="2">--</option>
-                                      <option value="3">---</option>
-                                      <option value="4">----</option>
+                                      <option value="1">• (1)</option>
+                                      <option value="2">◦ (2)</option>
+                                      <option value="3">▪ (3)</option>
+                                      <option value="4">▫ (4)</option>
                                     </select>
                                     <input
                                       type="text"
@@ -636,8 +682,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                         newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
                                         setFormData({ ...formData, experiences: newExperiences });
                                       }}
-                                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                                      placeholder="Task description"
+                                      className="flex-1 px-2 py-1 border-0 focus:outline-none text-sm text-gray-900"
+                                      placeholder="Task description..."
                                       style={{ marginLeft: `${(task.depth - 1) * 1.5}rem` }}
                                     />
                                     <button
@@ -650,7 +696,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                         newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
                                         setFormData({ ...formData, experiences: newExperiences });
                                       }}
-                                      className="text-red-600 hover:text-red-800 text-xs"
+                                      className="text-red-600 hover:text-red-700 text-xs font-semibold"
                                     >
                                       ✕
                                     </button>
