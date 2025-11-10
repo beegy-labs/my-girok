@@ -123,6 +123,7 @@ export interface Resume {
   profileImage?: string;
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
+  militaryDischarge?: string; // 병역 상세 (예: "병장 제대", "2020.01 - 2021.10")
   coverLetter?: string; // 자기소개서
   careerGoals?: string; // 입사 후 포부/하고 싶은 일
   sections: ResumeSection[];
@@ -152,6 +153,7 @@ export interface CreateResumeDto {
   profileImage?: string;
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
+  militaryDischarge?: string;
   coverLetter?: string;
   careerGoals?: string;
   skills?: Omit<Skill, 'id'>[];
