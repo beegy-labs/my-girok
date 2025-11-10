@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { register } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -41,12 +43,12 @@ export default function RegisterPage() {
               My-Girok
             </h1>
           </div>
-          <p className="text-gray-600 text-sm">나만의 기록장을 만드세요</p>
+          <p className="text-gray-600 text-sm">{t('auth.createYourSpace')}</p>
         </div>
 
         {/* Register Form */}
         <div className="bg-amber-50/30 rounded-2xl shadow-xl p-8 border border-amber-100">
-          <h2 className="text-2xl font-bold text-amber-900 mb-6">새 기록장 만들기</h2>
+          <h2 className="text-2xl font-bold text-amber-900 mb-6">{t('auth.registerTitle')}</h2>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-start">
@@ -60,7 +62,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                이름
+                {t('auth.name')}
               </label>
               <input
                 id="name"
@@ -75,7 +77,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
-                사용자명 (URL 주소가 됩니다)
+                {t('auth.usernameHint')}
               </label>
               <input
                 id="username"
@@ -91,13 +93,13 @@ export default function RegisterPage() {
               />
               <p className="text-xs text-gray-500 mt-2 flex items-center">
                 <span className="mr-1">📖</span>
-                3-20자, 영문 소문자와 숫자만 사용 가능
+                {t('auth.usernameRule')}
               </p>
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                이메일
+                {t('auth.email')}
               </label>
               <input
                 id="email"
@@ -112,7 +114,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                비밀번호
+                {t('auth.password')}
               </label>
               <input
                 id="password"
@@ -125,7 +127,7 @@ export default function RegisterPage() {
                 placeholder="••••••••"
               />
               <p className="text-xs text-gray-500 mt-2">
-                최소 8자 이상
+                {t('auth.passwordRule')}
               </p>
             </div>
 
@@ -140,10 +142,10 @@ export default function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  기록장 만드는 중...
+                  {t('auth.registering')}
                 </span>
               ) : (
-                '기록장 만들기'
+                t('auth.registerButton')
               )}
             </button>
           </form>
@@ -151,12 +153,12 @@ export default function RegisterPage() {
           {/* Divider */}
           <div className="mt-8 pt-6 border-t border-amber-200">
             <p className="text-center text-sm text-gray-600">
-              이미 기록장이 있으신가요?{' '}
+              {t('auth.hasAccount')}{' '}
               <Link
                 to="/login"
                 className="font-semibold text-amber-700 hover:text-amber-800 transition-colors"
               >
-                로그인하기
+                {t('auth.loginHere')}
               </Link>
             </p>
           </div>
@@ -164,7 +166,7 @@ export default function RegisterPage() {
 
         {/* Footer Note */}
         <p className="text-center text-xs text-gray-500 mt-6">
-          가입하시면 서비스 약관 및 개인정보 처리방침에 동의하게 됩니다
+          {t('auth.termsAgreement')}
         </p>
       </div>
     </div>

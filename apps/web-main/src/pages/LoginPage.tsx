@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -39,7 +41,7 @@ export default function LoginPage() {
               My-Girok
             </h1>
           </div>
-          <p className="text-gray-600 text-sm">나의 기록을 시작하세요</p>
+          <p className="text-gray-600 text-sm">{t('auth.startRecording')}</p>
         </div>
 
         {/* Login Form */}
@@ -56,7 +58,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Email Address
+                {t('auth.emailAddress')}
               </label>
               <input
                 id="email"
@@ -71,7 +73,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                Password
+                {t('auth.password')}
               </label>
               <input
                 id="password"
@@ -95,10 +97,10 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing in...
+                  {t('auth.loginButton')}
                 </span>
               ) : (
-                'Sign In'
+                t('auth.loginButton')
               )}
             </button>
           </form>
@@ -106,12 +108,12 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
-              Don't have an account?{' '}
+              {t('auth.noAccount')}{' '}
               <Link
                 to="/register"
                 className="font-semibold text-amber-700 hover:text-amber-800 transition-colors"
               >
-                Create one now
+                {t('auth.registerHere')}
               </Link>
             </p>
           </div>
