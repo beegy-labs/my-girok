@@ -471,7 +471,7 @@ export class ResumeService {
         this.httpService.get<{ id: string }>(`${this.authServiceUrl}/v1/users/by-username/${username}`)
       );
       userId = response.data.id;
-    } catch (error) {
+    } catch (_error) {
       throw new NotFoundException('User not found');
     }
 
