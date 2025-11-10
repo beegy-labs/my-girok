@@ -85,30 +85,51 @@
     color: #4b5563;
   }
 
-  /* Avoid page breaks inside important elements */
+  /* Page break control for multi-page resumes */
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
     page-break-inside: avoid;
+    break-after: avoid;
+    break-inside: avoid;
   }
 
-  /* Avoid breaking inside content blocks */
-  div[class*="mb-"] {
-    page-break-inside: avoid;
+  /* Allow content to flow across pages naturally for long resumes */
+  .resume-section {
+    page-break-inside: auto;
+    break-inside: auto;
   }
 
-  ul, ol {
+  /* Keep individual experience/project/education items together */
+  .resume-item,
+  div[class*="mb-4"],
+  div[class*="mb-3"] {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   /* Avoid orphans and widows */
   p {
-    orphans: 3;
-    widows: 3;
+    orphans: 2;
+    widows: 2;
   }
 
   /* Better table printing */
   table {
     page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Allow lists to break across pages if needed */
+  ul, ol {
+    page-break-inside: auto;
+    break-inside: auto;
+    margin-left: 1em;
+  }
+
+  /* But keep list items together */
+  li {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   /* Optimize border rendering */
@@ -141,13 +162,18 @@
     color: #374151 !important;
   }
 
-  /* Clean up list styles for print */
-  ul, ol {
-    margin-left: 1em;
+  /* Ensure proper spacing between sections */
+  .mb-6 {
+    margin-bottom: 1.5rem !important;
   }
 
-  li {
-    margin-bottom: 0.25em;
+  /* Add page number for multi-page resumes */
+  @page {
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-size: 10pt;
+      color: #6b7280;
+    }
   }
 }
 
