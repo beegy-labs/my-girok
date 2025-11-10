@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext,
   closestCenter,
@@ -30,15 +31,10 @@ interface SectionOrderManagerProps {
   onReorder: (sections: ResumeSection[]) => void;
 }
 
-const SECTION_LABELS: Record<SectionType, string> = {
-  SKILLS: '기술 스택',
-  EXPERIENCE: '경력',
-  PROJECT: '프로젝트',
-  EDUCATION: '학력',
-  CERTIFICATE: '자격증',
-};
+// Section labels are now handled via i18n
 
 function SortableSection({ section }: { section: ResumeSection }) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -52,6 +48,17 @@ function SortableSection({ section }: { section: ResumeSection }) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const getSectionLabel = (type: SectionType): string => {
+    const labelMap: Record<SectionType, string> = {
+      SKILLS: t('resume.sections.skills'),
+      EXPERIENCE: t('resume.sections.experience'),
+      PROJECT: t('resume.sections.projects'),
+      EDUCATION: t('resume.sections.education'),
+      CERTIFICATE: t('resume.sections.certifications'),
+    };
+    return labelMap[type];
   };
 
   return (
@@ -71,7 +78,7 @@ function SortableSection({ section }: { section: ResumeSection }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </button>
-        <span className="font-medium text-gray-900">{SECTION_LABELS[section.type]}</span>
+        <span className="font-medium text-gray-900">{getSectionLabel(section.type)}</span>
       </div>
       <span className="text-sm text-gray-500">#{section.order + 1}</span>
     </div>
