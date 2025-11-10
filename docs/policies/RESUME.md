@@ -100,16 +100,17 @@ interface Resume {
 
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
+  militaryDischarge?: string;    // "병장 제대", "2020.01 - 2021.10"
   coverLetter?: string;
   careerGoals?: string;
 
-  // Resume Sections
+  // Resume Sections (all support unlimited entries)
   sections: ResumeSection[];
-  skills: Skill[];
-  experiences: Experience[];
-  projects: Project[];
-  educations: Education[];
-  certificates: Certificate[];
+  skills: Skill[];              // Unlimited skill categories
+  experiences: Experience[];    // Unlimited work experiences
+  projects: Project[];          // Unlimited projects
+  educations: Education[];      // Unlimited education entries
+  certificates: Certificate[];  // Unlimited certifications
   attachments?: ResumeAttachment[];
 
   createdAt: string;
@@ -489,15 +490,22 @@ The resume system has been enhanced to support Korean job market requirements, s
 
 ### Korean-Specific Fields
 
-#### 1. Military Service Status (병역 여부)
-- **Field**: `militaryService`
-- **Type**: Enum - `COMPLETED` | `EXEMPTED` | `NOT_APPLICABLE`
+#### 1. Military Service Details (병역 사항)
+- **Status Field**: `militaryService`
+  - **Type**: Enum - `COMPLETED` | `EXEMPTED` | `NOT_APPLICABLE`
+  - **Options**:
+    - `COMPLETED`: Military service completed (군필)
+    - `EXEMPTED`: Exempted from service (면제)
+    - `NOT_APPLICABLE`: Not applicable (해당없음) - for female applicants or foreign nationals
+- **Discharge Field**: `militaryDischarge`
+  - **Type**: Free text string
+  - **Examples**:
+    - "병장 제대" (Sergeant discharge)
+    - "2020.01 - 2021.10" (Service period)
+    - "의무경찰 만기 제대" (Conscripted police completed service)
 - **Purpose**: Required information for male job applicants in Korea
 - **Display**: Shows in header section next to contact information
-- **Options**:
-  - `COMPLETED`: Military service completed (군필)
-  - `EXEMPTED`: Exempted from service (면제)
-  - `NOT_APPLICABLE`: Not applicable (해당없음) - for female applicants or foreign nationals
+- **Note**: Simple text field allows flexible formats without complex date/rank/branch inputs
 
 #### 2. Cover Letter (자기소개서)
 - **Field**: `coverLetter`
@@ -576,6 +584,176 @@ Users can drag-and-drop these sections to customize their resume order:
 - Helps maintain consistent style
 - Shows exactly how resume will look when printed/exported
 
+### Universal Dynamic Sections
+
+#### Overview
+All resume sections support unlimited entries, allowing users to create comprehensive resumes regardless of career path (service development, SI development, research, freelance, etc.).
+
+#### Dynamic Section Features
+
+##### 1. Work Experience (경력)
+- **Unlimited Entries**: Add as many companies/positions as needed
+- **Fields Per Entry**:
+  - Company name (required)
+  - Position/title (required)
+  - Start date (required)
+  - End date (optional - leave empty for "Present")
+  - Description (summary of role)
+  - Achievements (bullet points - unlimited)
+  - Tech stack (array of technologies)
+  - Order (for drag-and-drop)
+  - Visibility toggle
+- **Add/Remove**: Dynamic buttons to manage entries
+- **Use Cases**:
+  - Multiple companies in career
+  - Different roles at same company
+  - Contract/freelance positions
+  - Part-time roles
+
+##### 2. Projects (프로젝트)
+- **Unlimited Entries**: Add all significant projects
+- **Fields Per Entry**:
+  - Project name (required)
+  - Your role (e.g., "Lead Developer", "Solo Developer")
+  - Start date (required)
+  - End date (optional - "Ongoing" if empty)
+  - Description (project overview)
+  - Achievements (bullet points - unlimited)
+  - Tech stack (array of technologies)
+  - Demo URL (live deployment link)
+  - GitHub URL (repository link)
+  - Order (for drag-and-drop)
+  - Visibility toggle
+- **Add/Remove**: Dynamic buttons to manage entries
+- **Use Cases**:
+  - Personal projects
+  - Open-source contributions
+  - Hackathon projects
+  - Side projects
+  - Company projects (if different from experience)
+
+##### 3. Skills (기술 스택)
+- **Unlimited Categories**: Organize skills by category
+- **Fields Per Entry**:
+  - Category name (e.g., "Languages", "Frameworks", "Tools")
+  - Items (array of skill names)
+  - Order (for drag-and-drop)
+  - Visibility toggle
+- **Add/Remove**: Dynamic buttons to manage categories
+- **Common Categories**:
+  - Programming Languages
+  - Frontend Frameworks
+  - Backend Frameworks
+  - Databases
+  - DevOps/Infrastructure
+  - Tools & Methodologies
+  - Cloud Platforms
+  - Mobile Development
+
+##### 4. Education (학력)
+- **Unlimited Entries**: Add all degrees and certifications
+- **Fields Per Entry**:
+  - School name (required)
+  - Degree (e.g., "Bachelor's", "Master's", "Ph.D.")
+  - Major (field of study)
+  - GPA (optional)
+  - Start date
+  - End date (optional - "Present" if empty)
+  - Order (for drag-and-drop)
+  - Visibility toggle
+- **Add/Remove**: Dynamic buttons to manage entries
+- **Use Cases**:
+  - Multiple degrees
+  - Bootcamps
+  - Online courses (if relevant)
+  - Exchange programs
+  - Continuing education
+
+##### 5. Certifications (자격증)
+- **Unlimited Entries**: Add all relevant certifications
+- **Fields Per Entry**:
+  - Certification name (required)
+  - Issuing organization (required)
+  - Issue date (required)
+  - Expiry date (optional)
+  - Credential URL (verification link)
+  - Order (for drag-and-drop)
+  - Visibility toggle
+- **Add/Remove**: Dynamic buttons to manage entries
+- **Common Certifications**:
+  - AWS/GCP/Azure certifications
+  - Programming language certifications
+  - Security certifications (CISSP, CEH, etc.)
+  - Project management (PMP, Scrum Master, etc.)
+  - Korean certifications (정보처리기사, etc.)
+
+#### Universal Resume Strategy
+
+##### Service Development Companies
+Typical section order and emphasis:
+1. **Experience** (highlight company experience)
+2. **Skills** (comprehensive tech stack)
+3. **Projects** (side projects to show passion)
+4. **Education**
+5. **Certifications**
+
+##### SI Development / Consulting
+Typical section order and emphasis:
+1. **Projects** (diverse client projects)
+2. **Skills** (wide range of technologies)
+3. **Experience** (consulting firms)
+4. **Certifications** (professional credentials)
+5. **Education**
+
+##### Junior Developers / Bootcamp Graduates
+Typical section order and emphasis:
+1. **Projects** (showcase work)
+2. **Skills** (learned technologies)
+3. **Education** (bootcamp/degree)
+4. **Certifications** (if any)
+5. **Experience** (internships/part-time)
+
+##### Research / Academic Positions
+Typical section order and emphasis:
+1. **Education** (degrees and publications)
+2. **Projects** (research projects)
+3. **Skills** (research tools and languages)
+4. **Experience** (research positions)
+5. **Certifications** (if relevant)
+
+#### Print Optimization
+
+##### Multi-Page Support
+- **Natural Flow**: Content flows naturally across multiple pages
+- **Page Breaks**:
+  - Sections can break across pages (`page-break-inside: auto`)
+  - Individual items stay together (`page-break-inside: avoid`)
+  - Headings don't break from content (`page-break-after: avoid`)
+- **Page Numbering**: Automatic "Page X / Y" in footer
+- **No Orphans/Widows**: Minimum 2 lines at page top/bottom
+
+##### URL Visibility in Print
+- **Screen View**: Links shown as clickable text (e.g., "GitHub")
+- **Print View**: Full URLs displayed (e.g., "GitHub: https://github.com/username")
+- **Applies To**:
+  - Personal links (GitHub, blog, LinkedIn, portfolio)
+  - Project links (demo URL, GitHub URL)
+  - Certification links (credential URL)
+- **Implementation**: Conditional rendering with `print:hidden` and `hidden print:inline`
+
+##### Paper Size Support
+- **A4**: 210mm × 297mm (default for Korea, Europe)
+- **Letter**: 215.9mm × 279.4mm (USA)
+- **Margins**: 1.5cm all sides for print
+- **Indicator**: Shows current paper size in preview (hidden in print)
+
+##### Print Styling
+- **Black & White Optimized**: All colors convert to grayscale
+- **High Contrast**: Text uses #000000 for headings, #1f2937 for body
+- **Profile Photo**: Auto-grayscale filter for printing
+- **Borders**: All borders in black for clear printing
+- **No Backgrounds**: White backgrounds only for ink efficiency
+
 ### Best Practices
 
 #### For Korean Developer Resumes
@@ -598,16 +776,262 @@ Users can drag-and-drop these sections to customize their resume order:
 - English labels in resume output (for international opportunities)
 - Support for both Korean and English content in all fields
 
+## Technical Implementation
+
+### Dynamic Section Management Pattern
+
+All dynamic sections (Experience, Projects, Skills, Education, Certificates) follow a consistent implementation pattern:
+
+#### State Management
+```typescript
+// Form state holds arrays of entries
+const [formData, setFormData] = useState<CreateResumeDto>({
+  experiences: [],
+  projects: [],
+  skills: [],
+  educations: [],
+  certificates: [],
+  // ... other fields
+});
+```
+
+#### Add Entry Pattern
+```typescript
+<button
+  onClick={() => {
+    setFormData({
+      ...formData,
+      projects: [
+        ...(formData.projects || []),
+        {
+          name: '',
+          startDate: '',
+          endDate: '',
+          description: '',
+          role: '',
+          achievements: [],
+          techStack: [],
+          url: '',
+          githubUrl: '',
+          order: formData.projects?.length || 0,
+          visible: true,
+        },
+      ],
+    });
+  }}
+>
+  + Add Project
+</button>
+```
+
+#### Remove Entry Pattern
+```typescript
+<button
+  onClick={() => {
+    const newProjects = formData.projects?.filter((_, i) => i !== index);
+    setFormData({ ...formData, projects: newProjects });
+  }}
+>
+  Remove
+</button>
+```
+
+#### Update Entry Pattern
+```typescript
+onChange={e => {
+  const newProjects = [...(formData.projects || [])];
+  newProjects[index] = { ...newProjects[index], name: e.target.value };
+  setFormData({ ...formData, projects: newProjects });
+}}
+```
+
+#### Live Preview Integration
+```typescript
+// Parent component (ResumeEditPage)
+const handleFormChange = (data: CreateResumeDto) => {
+  // Convert form data to Resume format for preview
+  const mockResume: Resume = {
+    id: resume?.id || 'preview',
+    userId: user?.id || 'preview',
+    title: data.title,
+    // ... map all fields
+    experiences: data.experiences?.map((exp, idx) => ({
+      id: `exp-${idx}`,
+      ...exp,
+    })) || [],
+    // ... other sections
+  };
+  setPreviewData(mockResume);
+};
+
+// Child component (ResumeForm)
+<ResumeForm
+  resume={resume}
+  onSubmit={handleSubmit}
+  onChange={handleFormChange}  // Triggers on every formData change
+/>
+```
+
+### Print-Specific Styling Patterns
+
+#### Conditional Rendering for URLs
+```tsx
+{/* Screen: Clickable link */}
+<span className="print:hidden text-amber-700 hover:underline">
+  <a href={resume.github}>GitHub</a>
+</span>
+
+{/* Print: Full URL displayed */}
+<span className="hidden print:inline text-gray-900">
+  GitHub: {resume.github}
+</span>
+```
+
+#### Page Break Control
+```css
+/* In print.css */
+
+/* Allow sections to break across pages */
+.resume-section {
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+/* Keep individual items together */
+.resume-item,
+div[class*="mb-4"],
+div[class*="mb-3"] {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Prevent headings from separating from content */
+h1, h2, h3, h4, h5, h6 {
+  page-break-after: avoid;
+  page-break-inside: avoid;
+  break-after: avoid;
+  break-inside: avoid;
+}
+```
+
+#### Grayscale Conversion
+```tsx
+{/* Profile photo with print grayscale */}
+<img
+  src={resume.profileImage}
+  alt={resume.name}
+  className="w-32 h-40 object-cover rounded-lg border-2 border-amber-200 print:border-gray-300 print:filter print:grayscale"
+/>
+```
+
+### Form Validation
+
+#### Required Fields
+```typescript
+// Resume level
+title: string;        // Required
+name: string;         // Required
+email: string;        // Required
+
+// Experience level
+company: string;      // Required
+position: string;     // Required
+startDate: string;    // Required
+
+// Project level
+name: string;         // Required
+startDate: string;    // Required
+
+// Education level
+school: string;       // Required
+degree: string;       // Required
+major: string;        // Required
+
+// Certificate level
+name: string;         // Required
+issuer: string;       // Required
+issueDate: string;    // Required
+```
+
+#### Field Indicators
+```tsx
+<label className="block text-sm font-semibold text-gray-700 mb-2">
+  Project Name <span className="text-red-500">*</span>
+</label>
+```
+
+### Section Ordering with Drag-and-Drop
+
+#### Dependencies
+```json
+{
+  "@dnd-kit/core": "^6.x.x",
+  "@dnd-kit/sortable": "^8.x.x",
+  "@dnd-kit/utilities": "^3.x.x"
+}
+```
+
+#### Implementation (SectionOrderManager.tsx)
+```typescript
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+
+// Only dynamic sections are reorderable
+const dynamicSections = resume.sections.filter(s =>
+  s.type !== 'HEADER' &&
+  s.type !== 'SUMMARY' &&
+  s.type !== 'COVER_LETTER' &&
+  s.type !== 'CAREER_GOALS'
+);
+
+// Drag end handler
+const handleDragEnd = (event: DragEndEvent) => {
+  const { active, over } = event;
+  if (over && active.id !== over.id) {
+    const oldIndex = items.findIndex(item => item.id === active.id);
+    const newIndex = items.findIndex(item => item.id === over.id);
+    const newItems = arrayMove(items, oldIndex, newIndex);
+    // Update order field for each item
+    const updatedItems = newItems.map((item, idx) => ({
+      ...item,
+      order: idx,
+    }));
+    onReorder(updatedItems);
+  }
+};
+```
+
 ## Change Log
 
-- **2025-01-10**: Added Korean developer resume features
-  - Military service status field
-  - Cover letter section
-  - Career goals section
-  - Profile photo support in header
-  - Live preview with side-by-side layout
-  - Section reordering capability (dynamic sections only)
-  - Input text visibility improvements
+- **2025-01-10**: Added universal dynamic sections and Korean features
+  - **Universal Dynamic Sections**:
+    - Projects: Unlimited project entries with demo/GitHub URLs
+    - Skills: Unlimited skill categories with custom items
+    - Education: Unlimited education entries with GPA support
+    - Certificates: Unlimited certifications with credential URLs
+    - All sections support add/remove, ordering, and visibility toggles
+  - **Korean Developer Features**:
+    - Military service status and discharge details
+    - Cover letter section (자기소개서)
+    - Career goals section (입사 후 포부)
+    - Profile photo support in header
+    - Military discharge free text field ("병장 제대" format)
+  - **UI/UX Improvements**:
+    - Live preview with side-by-side layout
+    - Section reordering capability (dynamic sections only)
+    - Input text visibility improvements (text-gray-900)
+    - Real-time form updates with onChange callbacks
+  - **Print Optimization**:
+    - Multi-page print support with proper page breaks
+    - URL visibility in print mode for all links
+    - A4 and Letter paper size support
+    - Black & white optimized styling
+    - Auto-grayscale profile photo for printing
+  - **Work Experience Enhancement**:
+    - Unlimited work experience entries
+    - Achievements as bullet points
+    - Tech stack per experience
+    - Dynamic add/remove functionality
 
 - **2025-01-09**: Initial resume policy documentation
   - Resume management dashboard
