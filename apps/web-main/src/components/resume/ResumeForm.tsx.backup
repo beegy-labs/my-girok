@@ -1,6 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   Resume,
   CreateResumeDto,
   PaperSize,
@@ -45,19 +62,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       company: e.company,
       startDate: e.startDate,
       endDate: e.endDate,
-      finalPosition: e.finalPosition,
-      jobTitle: e.jobTitle,
-      projects: e.projects?.map(p => ({
-        name: p.name,
-        startDate: p.startDate,
-        endDate: p.endDate,
-        description: p.description,
-        role: p.role,
-        achievements: p.achievements || [],
-        techStack: p.techStack || [],
-        url: p.url,
-        githubUrl: p.githubUrl,
-        order: p.order,
+      roles: e.roles?.map(r => ({
+        title: r.title,
+        tasks: r.tasks || [],
+        order: r.order,
       })) || [],
       order: e.order,
       visible: e.visible,
@@ -413,14 +421,551 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </div>
 
       {/* Work Experience Section */}
-      <ExperienceSection
-        experiences={formData.experiences || []}
-        onChange={(experiences) => {
-          setFormData({ ...formData, experiences });
-          onChange?.({ ...formData, experiences });
-        }}
-        t={t}
-      />
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">💼 {t('resume.sections.experience')}</h2>
+            <p className="text-sm text-gray-600">{t('resume.descriptions.experience')}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                experiences: [
+                  ...(formData.experiences || []),
+                  {
+                    company: '',
+                    startDate: '',
+                    endDate: '',
+                    roles: [],
+                    order: formData.experiences?.length || 0,
+                    visible: true,
+                  },
+                ],
+              });
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          >
+            + Add Experience
+          </button>
+        </div>
+
+        {formData.experiences && formData.experiences.length > 0 ? (
+          <div className="space-y-6">
+            {formData.experiences.map((exp, expIndex) => (
+              <div key={expIndex} className="border border-gray-200 rounded-lg p-4 bg-amber-50/30">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Company #{expIndex + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newExperiences = formData.experiences?.filter((_, i) => i !== expIndex);
+                      setFormData({ ...formData, experiences: newExperiences });
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Remove Company
+                  </button>
+                </div>
+
+                {/* Company Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Company <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={exp.company}
+                      onChange={e => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        newExperiences[expIndex] = { ...newExperiences[expIndex], company: e.target.value };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Company name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="month"
+                      value={exp.startDate}
+                      onChange={e => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        newExperiences[expIndex] = { ...newExperiences[expIndex], startDate: e.target.value };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="month"
+                      value={exp.endDate || ''}
+                      onChange={e => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        newExperiences[expIndex] = { ...newExperiences[expIndex], endDate: e.target.value };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Leave empty if current"
+                    />
+                  </div>
+                </div>
+
+                {/* Roles Section */}
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-md font-semibold text-amber-900">Roles / Positions</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        const currentRoles = newExperiences[expIndex].roles || [];
+                        newExperiences[expIndex] = {
+                          ...newExperiences[expIndex],
+                          roles: [
+                            ...currentRoles,
+                            {
+                              title: '',
+                              tasks: [],
+                              order: currentRoles.length,
+                            },
+                          ],
+                        };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="px-3 py-1 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-all"
+                    >
+                      + Add Role
+                    </button>
+                  </div>
+
+                  {exp.roles && exp.roles.length > 0 ? (
+                    <div className="space-y-4">
+                      {exp.roles.map((role, roleIndex) => (
+                        <div key={roleIndex} className="border border-amber-200 rounded-lg p-4 bg-amber-50/20">
+                          <div className="flex justify-between items-start mb-3">
+                            <h5 className="text-sm font-semibold text-amber-900 flex items-center gap-1">
+                              📖 Role #{roleIndex + 1}
+                            </h5>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = newExperiences[expIndex].roles?.filter((_, i) => i !== roleIndex);
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              className="text-red-600 hover:text-red-800 text-xs font-semibold"
+                            >
+                              Remove Role
+                            </button>
+                          </div>
+
+                          {/* Role Title */}
+                          <div className="mb-3">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Role Title <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={role.title}
+                              onChange={e => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                newRoles[roleIndex] = { ...newRoles[roleIndex], title: e.target.value };
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                              placeholder="e.g., Backend Development Lead"
+                            />
+                          </div>
+
+                          {/* Position (직급) */}
+                          <div className="mb-3">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              직급 / Position
+                            </label>
+                            <input
+                              type="text"
+                              value={role.position || ''}
+                              onChange={e => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                newRoles[roleIndex] = { ...newRoles[roleIndex], position: e.target.value };
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                              placeholder="e.g., Senior Developer, Tech Lead"
+                            />
+                          </div>
+
+                          {/* Responsibilities (담당업무) */}
+                          <div className="mb-3">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              담당업무 / Responsibilities
+                            </label>
+                            <textarea
+                              value={role.responsibilities || ''}
+                              onChange={e => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                newRoles[roleIndex] = { ...newRoles[roleIndex], responsibilities: e.target.value };
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              rows={3}
+                              className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                              placeholder="Describe main job responsibilities..."
+                            />
+                          </div>
+
+                          {/* Tasks - Hierarchical Structure */}
+                          <div className="mt-3 border-t border-amber-200 pt-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-sm font-semibold text-amber-900 flex items-center gap-1">
+                                ✍️ Detailed Tasks
+                                <span className="text-xs text-gray-500 font-normal">(use depth 1-4)</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newExperiences = [...(formData.experiences || [])];
+                                  const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                  const currentTasks = newRoles[roleIndex].tasks || [];
+                                  newRoles[roleIndex] = {
+                                    ...newRoles[roleIndex],
+                                    tasks: [
+                                      ...currentTasks,
+                                      {
+                                        content: '',
+                                        depth: 1,
+                                        order: currentTasks.length,
+                                      },
+                                    ],
+                                  };
+                                  newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                  setFormData({ ...formData, experiences: newExperiences });
+                                }}
+                                className="px-2 py-1 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 transition-all"
+                              >
+                                + Add Task
+                              </button>
+                            </div>
+
+                            {role.tasks && role.tasks.length > 0 ? (
+                              <div className="space-y-2">
+                                {role.tasks.map((task: any, taskIndex: number) => (
+                                  <div key={taskIndex} className="flex items-start gap-2 bg-white rounded-lg p-2 border border-amber-100">
+                                    <select
+                                      value={task.depth}
+                                      onChange={e => {
+                                        const newExperiences = [...(formData.experiences || [])];
+                                        const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                        const newTasks = [...(newRoles[roleIndex].tasks || [])];
+                                        newTasks[taskIndex] = { ...newTasks[taskIndex], depth: parseInt(e.target.value) };
+                                        newRoles[roleIndex] = { ...newRoles[roleIndex], tasks: newTasks };
+                                        newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                        setFormData({ ...formData, experiences: newExperiences });
+                                      }}
+                                      className="px-2 py-1 border border-amber-200 rounded text-xs bg-amber-50 text-gray-900"
+                                      title="Indentation depth"
+                                    >
+                                      <option value="1">• (1)</option>
+                                      <option value="2">◦ (2)</option>
+                                      <option value="3">▪ (3)</option>
+                                      <option value="4">▫ (4)</option>
+                                    </select>
+                                    <input
+                                      type="text"
+                                      value={task.content}
+                                      onChange={e => {
+                                        const newExperiences = [...(formData.experiences || [])];
+                                        const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                        const newTasks = [...(newRoles[roleIndex].tasks || [])];
+                                        newTasks[taskIndex] = { ...newTasks[taskIndex], content: e.target.value };
+                                        newRoles[roleIndex] = { ...newRoles[roleIndex], tasks: newTasks };
+                                        newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                        setFormData({ ...formData, experiences: newExperiences });
+                                      }}
+                                      className="flex-1 px-2 py-1 border-0 focus:outline-none text-sm text-gray-900"
+                                      placeholder="Task description..."
+                                      style={{ marginLeft: `${(task.depth - 1) * 1.5}rem` }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newExperiences = [...(formData.experiences || [])];
+                                        const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                        const newTasks = newRoles[roleIndex].tasks?.filter((_: any, i: number) => i !== taskIndex);
+                                        newRoles[roleIndex] = { ...newRoles[roleIndex], tasks: newTasks };
+                                        newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                        setFormData({ ...formData, experiences: newExperiences });
+                                      }}
+                                      className="text-red-600 hover:text-red-700 text-xs font-semibold"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-500 italic">No tasks yet. Click "Add Task" to add work details.</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      <p>No roles added yet. Click "Add Role" to add your positions at this company.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No work experience added yet. Click "Add Experience" to get started.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Projects Section */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">🚀 {t('resume.sections.projects')}</h2>
+            <p className="text-sm text-gray-600">{t('resume.descriptions.projects')}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                projects: [
+                  ...(formData.projects || []),
+                  {
+                    name: '',
+                    startDate: '',
+                    endDate: '',
+                    description: '',
+                    role: '',
+                    achievements: [],
+                    techStack: [],
+                    url: '',
+                    githubUrl: '',
+                    order: formData.projects?.length || 0,
+                    visible: true,
+                  },
+                ],
+              });
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          >
+            + Add Project
+          </button>
+        </div>
+
+        {formData.projects && formData.projects.length > 0 ? (
+          <div className="space-y-4">
+            {formData.projects.map((project, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Project #{index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newProjects = formData.projects?.filter((_, i) => i !== index);
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Project Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={project.name}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], name: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., E-commerce Platform"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Your Role
+                    </label>
+                    <input
+                      type="text"
+                      value={project.role || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], role: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., Lead Developer"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="month"
+                      value={project.startDate}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], startDate: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="month"
+                      value={project.endDate || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], endDate: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Leave empty if ongoing"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Demo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={project.url || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], url: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="https://demo.example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      GitHub URL
+                    </label>
+                    <input
+                      type="url"
+                      value={project.githubUrl || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], githubUrl: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="https://github.com/username/repo"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={project.description}
+                    onChange={e => {
+                      const newProjects = [...(formData.projects || [])];
+                      newProjects[index] = { ...newProjects[index], description: e.target.value };
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="Brief description of the project"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Tech Stack
+                  </label>
+                  <input
+                    type="text"
+                    value={project.techStack?.join(', ') || ''}
+                    onChange={e => {
+                      const newProjects = [...(formData.projects || [])];
+                      newProjects[index] = {
+                        ...newProjects[index],
+                        techStack: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                      };
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="React, Node.js, MongoDB (comma-separated)"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Key Achievements (one per line)
+                  </label>
+                  <textarea
+                    value={project.achievements?.join('\n') || ''}
+                    onChange={e => {
+                      const newProjects = [...(formData.projects || [])];
+                      newProjects[index] = {
+                        ...newProjects[index],
+                        achievements: e.target.value.split('\n').filter(s => s.trim()),
+                      };
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="Reduced load time by 40%&#10;Implemented real-time features&#10;10,000+ active users"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No projects added yet. Click "Add Project" to get started.</p>
+          </div>
+        )}
+      </div>
 
       {/* Skills Section */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
