@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getDefaultResume, Resume, updateResume, PaperSize } from '../../api/resume';
+import { getResume, Resume, updateResume, PaperSize } from '../../api/resume';
 import ResumePreview from '../../components/resume/ResumePreview';
 import ShareLinkModal from '../../components/resume/ShareLinkModal';
 import { exportResumeToPDF, printResume } from '../../utils/pdf';
 
 export default function ResumePreviewPage() {
   const navigate = useNavigate();
-  const { username } = useParams<{ username: string }>();
+  const { resumeId } = useParams<{ resumeId: string }>();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -16,11 +16,16 @@ export default function ResumePreviewPage() {
 
   useEffect(() => {
     loadResume();
-  }, []);
+  }, [resumeId]);
 
   const loadResume = async () => {
+    if (!resumeId) {
+      navigate('/resume/my');
+      return;
+    }
+
     try {
-      const data = await getDefaultResume();
+      const data = await getResume(resumeId);
       setResume(data);
       // Set paper size from resume if available
       if (data.paperSize) {
@@ -28,7 +33,7 @@ export default function ResumePreviewPage() {
       }
     } catch (err) {
       console.error('Failed to load resume', err);
-      navigate(`/resume/${username}/edit`);
+      navigate('/resume/my');
     } finally {
       setLoading(false);
     }
@@ -93,7 +98,7 @@ export default function ResumePreviewPage() {
               </p>
             </div>
             <button
-              onClick={() => navigate(`/resume/${username}/edit`)}
+              onClick={() => navigate(`/resume/edit/${resumeId}`)}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium border border-gray-300 transition-all"
             >
               ✍️ Edit
