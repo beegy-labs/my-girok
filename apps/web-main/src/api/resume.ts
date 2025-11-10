@@ -18,15 +18,27 @@ export interface Skill {
   visible: boolean;
 }
 
+export interface ExperienceTask {
+  id?: string;
+  content: string; // 작업 내용
+  depth: number; // 1-4 (들여쓰기 레벨)
+  order: number;
+  children?: ExperienceTask[]; // 하위 작업들 (재귀 구조)
+}
+
+export interface ExperienceRole {
+  id?: string;
+  title: string; // 역할/직책명
+  tasks: ExperienceTask[]; // 해당 역할의 작업 트리 (무제한)
+  order: number;
+}
+
 export interface Experience {
   id?: string;
   company: string;
-  position: string;
   startDate: string; // YYYY-MM format
   endDate?: string;
-  description: string;
-  achievements: string[];
-  techStack: string[];
+  roles: ExperienceRole[]; // 역할 목록 (무제한)
   order: number;
   visible: boolean;
 }

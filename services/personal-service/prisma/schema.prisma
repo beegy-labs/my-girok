@@ -176,14 +176,12 @@ model Experience {
   resumeId String @map("resume_id")
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  company     String
-  position    String
-  startDate   String   @map("start_date") // "2023-01" format
-  endDate     String?  @map("end_date") // null = current
-  description String   // Job description
+  company   String
+  startDate String  @map("start_date") // "2023-01" format
+  endDate   String? @map("end_date") // null = current
 
-  achievements String[] // Key achievements
-  techStack    String[] @map("tech_stack") // Technologies used
+  // Roles/Positions at this company
+  roles ExperienceRole[]
 
   order   Int     @default(0)
   visible Boolean @default(true)
@@ -193,6 +191,47 @@ model Experience {
 
   @@index([resumeId, order])
   @@map("experiences")
+}
+
+// Individual roles/positions within an experience
+model ExperienceRole {
+  id           String     @id @default(uuid())
+  experienceId String     @map("experience_id")
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  title String // Job title / Role name
+  tasks ExperienceTask[] // Hierarchical task tree
+
+  order Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([experienceId, order])
+  @@map("experience_roles")
+}
+
+// Hierarchical task structure (supports up to 4 levels of depth)
+model ExperienceTask {
+  id     String @id @default(uuid())
+  roleId String @map("role_id")
+  role   ExperienceRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  content  String // Task content
+  depth    Int    // Indentation level (1-4)
+  order    Int    @default(0)
+
+  // Self-referencing relation for parent-child hierarchy
+  parentId String?         @map("parent_id")
+  parent   ExperienceTask? @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children ExperienceTask[] @relation("TaskHierarchy")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([roleId, order])
+  @@index([parentId])
+  @@map("experience_tasks")
 }
 
 // Projects

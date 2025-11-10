@@ -24,14 +24,52 @@ export class CreateSkillDto {
   visible?: boolean;
 }
 
+export class CreateExperienceTaskDto {
+  @ApiProperty({ example: 'Implemented microservices architecture' })
+  @IsString()
+  content!: string;
+
+  @ApiProperty({ example: 1, description: 'Indentation depth (1-4)' })
+  @IsInt()
+  @Min(1)
+  depth!: number;
+
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  order?: number;
+
+  @ApiPropertyOptional({ type: [CreateExperienceTaskDto], description: 'Child tasks (recursive structure)' })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateExperienceTaskDto)
+  children?: CreateExperienceTaskDto[];
+}
+
+export class CreateExperienceRoleDto {
+  @ApiProperty({ example: 'Backend Development Lead' })
+  @IsString()
+  title!: string;
+
+  @ApiProperty({ type: [CreateExperienceTaskDto], description: 'Hierarchical task tree for this role' })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateExperienceTaskDto)
+  tasks!: CreateExperienceTaskDto[];
+
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  order?: number;
+}
+
 export class CreateExperienceDto {
   @ApiProperty({ example: 'Beegy Inc.' })
   @IsString()
   company!: string;
-
-  @ApiProperty({ example: 'Senior Backend Developer' })
-  @IsString()
-  position!: string;
 
   @ApiProperty({ example: '2023-01' })
   @IsString()
@@ -42,19 +80,11 @@ export class CreateExperienceDto {
   @IsString()
   endDate?: string;
 
-  @ApiProperty({ example: 'Developed microservices architecture' })
-  @IsString()
-  description!: string;
-
-  @ApiProperty({ example: ['Reduced API latency by 40%', 'Led team of 5 developers'] })
+  @ApiProperty({ type: [CreateExperienceRoleDto], description: 'List of roles/positions at this company (unlimited)' })
   @IsArray()
-  @IsString({ each: true })
-  achievements!: string[];
-
-  @ApiProperty({ example: ['NestJS', 'PostgreSQL', 'Kubernetes'] })
-  @IsArray()
-  @IsString({ each: true })
-  techStack!: string[];
+  @ValidateNested({ each: true })
+  @Type(() => CreateExperienceRoleDto)
+  roles!: CreateExperienceRoleDto[];
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
