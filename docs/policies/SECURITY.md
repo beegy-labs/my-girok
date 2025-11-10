@@ -341,10 +341,39 @@ spec:
 
 ## Authentication Security
 
-### Token Expiration
-- Access Token: 15 minutes
-- Refresh Token: 7 days
-- Domain Access Token: Configurable (1-72 hours)
+### Token Expiration Policy
+
+**Current Configuration:**
+- **Access Token**: 15 minutes (JWT_ACCESS_EXPIRATION)
+- **Refresh Token**: 14 days (JWT_REFRESH_EXPIRATION)
+- **Domain Access Token**: Configurable (1-72 hours)
+
+**Token Lifecycle:**
+1. User logs in → receives both access token (15m) and refresh token (14d)
+2. Access token used for API authentication
+3. When access token expires → automatically refreshed using refresh token
+4. **Proactive Refresh**: Refresh token is automatically renewed when it has 7 days or less remaining
+5. After 14 days of inactivity → user must re-login
+
+**Rationale:**
+- **15-minute access token**: Minimizes security risk if token is compromised
+- **14-day refresh token**: Balances security and user convenience (2-week session)
+- **7-day proactive refresh**: Ensures active users never need to re-login
+  - Users who login weekly will have refresh token automatically extended
+  - Token is silently renewed in background without user interruption
+
+**Implementation:**
+```typescript
+// Check if refresh token expires within 7 days and renew it
+const shouldRefreshToken = (token: string): boolean => {
+  const decoded = JSON.parse(atob(token.split('.')[1]));
+  const expiryTime = decoded.exp * 1000;
+  const currentTime = Date.now();
+  const daysUntilExpiry = (expiryTime - currentTime) / (1000 * 60 * 60 * 24);
+
+  return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
+};
+```
 
 ### Token Storage
 - **Web**: HttpOnly cookies (refresh token) + localStorage (access token)

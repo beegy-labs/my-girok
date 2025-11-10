@@ -10,13 +10,40 @@ export const authApi = axios.create({
   },
 });
 
-// Request interceptor - Add access token
+// Flag to prevent multiple simultaneous refresh calls
+let isRefreshing = false;
+
+// Request interceptor - Add access token and check for proactive refresh
 authApi.interceptors.request.use(
-  (config) => {
-    const { accessToken } = useAuthStore.getState();
+  async (config) => {
+    const { accessToken, needsProactiveRefresh, refreshToken } = useAuthStore.getState();
+
+    // Add access token to headers
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+
+    // Proactive refresh: renew refresh token if it has 7 days or less remaining
+    if (!isRefreshing && needsProactiveRefresh() && refreshToken) {
+      isRefreshing = true;
+      try {
+        const response = await axios.post(`${API_URL}/auth/refresh`, {
+          refreshToken,
+        });
+
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+        useAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
+
+        // Update current request with new token
+        config.headers.Authorization = `Bearer ${newAccessToken}`;
+      } catch (error) {
+        console.warn('Proactive token refresh failed:', error);
+        // Don't block the request if proactive refresh fails
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error),
@@ -37,8 +64,13 @@ authApi.interceptors.response.use(
           refreshToken,
         });
 
-        const { accessToken } = response.data;
-        useAuthStore.getState().updateAccessToken(accessToken);
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        // Update both tokens (refresh endpoint returns new refresh token)
+        if (newRefreshToken) {
+          useAuthStore.getState().updateTokens(accessToken, newRefreshToken);
+        } else {
+          useAuthStore.getState().updateAccessToken(accessToken);
+        }
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return authApi(originalRequest);

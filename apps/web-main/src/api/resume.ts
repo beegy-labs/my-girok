@@ -240,13 +240,41 @@ export const personalApi = axios.create({
   },
 });
 
-// Copy request interceptor from authApi to add JWT token
+// Flag to prevent multiple simultaneous refresh calls
+let isRefreshingPersonal = false;
+
+// Copy request interceptor from authApi to add JWT token and check for proactive refresh
 personalApi.interceptors.request.use(
-  (config) => {
-    const { accessToken } = useAuthStore.getState();
+  async (config) => {
+    const { accessToken, needsProactiveRefresh, refreshToken } = useAuthStore.getState();
+
+    // Add access token to headers
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+
+    // Proactive refresh: renew refresh token if it has 7 days or less remaining
+    if (!isRefreshingPersonal && needsProactiveRefresh() && refreshToken) {
+      isRefreshingPersonal = true;
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const response = await axios.post(`${API_URL}/auth/refresh`, {
+          refreshToken,
+        });
+
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+        useAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
+
+        // Update current request with new token
+        config.headers.Authorization = `Bearer ${newAccessToken}`;
+      } catch (error) {
+        console.warn('Proactive token refresh failed:', error);
+        // Don't block the request if proactive refresh fails
+      } finally {
+        isRefreshingPersonal = false;
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error),
@@ -268,8 +296,13 @@ personalApi.interceptors.response.use(
           refreshToken,
         });
 
-        const { accessToken } = response.data;
-        useAuthStore.getState().updateAccessToken(accessToken);
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        // Update both tokens (refresh endpoint returns new refresh token)
+        if (newRefreshToken) {
+          useAuthStore.getState().updateTokens(accessToken, newRefreshToken);
+        } else {
+          useAuthStore.getState().updateAccessToken(accessToken);
+        }
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return personalApi(originalRequest);

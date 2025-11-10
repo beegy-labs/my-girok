@@ -137,7 +137,7 @@ export class AuthService {
         where: { id: session.id },
         data: {
           refreshToken: tokens.refreshToken,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
         },
       });
 
@@ -217,7 +217,7 @@ export class AuthService {
         expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '15m'),
       }),
       this.jwtService.signAsync(refreshPayload, {
-        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '7d'),
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '14d'),
       }),
     ]);
 
@@ -225,7 +225,7 @@ export class AuthService {
   }
 
   async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
     await this.prisma.session.create({
       data: {
