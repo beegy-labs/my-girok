@@ -13,9 +13,10 @@ import {
 interface ResumeFormProps {
   resume: Resume | null;
   onSubmit: (data: CreateResumeDto) => Promise<void>;
+  onChange?: (data: CreateResumeDto) => void;
 }
 
-export default function ResumeForm({ resume, onSubmit }: ResumeFormProps) {
+export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormProps) {
   const [formData, setFormData] = useState<CreateResumeDto>({
     title: resume?.title || 'My Resume',
     description: resume?.description || '',
@@ -80,6 +81,13 @@ export default function ResumeForm({ resume, onSubmit }: ResumeFormProps) {
   const [attachments, setAttachments] = useState<ResumeAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Trigger onChange when formData changes
+  useEffect(() => {
+    if (onChange) {
+      onChange(formData);
+    }
+  }, [formData, onChange]);
 
   // Load attachments if resume exists
   useEffect(() => {
