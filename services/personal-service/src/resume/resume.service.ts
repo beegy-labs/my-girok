@@ -60,6 +60,8 @@ export class ResumeService {
             roles: {
               create: exp.roles?.map(role => ({
                 title: role.title,
+                position: role.position,
+                responsibilities: role.responsibilities,
                 order: role.order,
                 tasks: {
                   create: role.tasks?.map(task => ({

@@ -199,8 +199,10 @@ model ExperienceRole {
   experienceId String     @map("experience_id")
   experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 
-  title String // Job title / Role name
-  tasks ExperienceTask[] // Hierarchical task tree
+  title            String  // Job title / Role name
+  position         String? // 직급 (e.g., "Senior Developer", "Tech Lead")
+  responsibilities String? @db.Text // 담당업무 (main job responsibilities)
+  tasks            ExperienceTask[] // Hierarchical task tree
 
   order Int @default(0)
 

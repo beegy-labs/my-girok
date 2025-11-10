@@ -29,6 +29,8 @@ export interface ExperienceTask {
 export interface ExperienceRole {
   id?: string;
   title: string; // 역할/직책명
+  position?: string; // 직급 (e.g., "Senior Developer", "Tech Lead")
+  responsibilities?: string; // 담당업무 (main job responsibilities)
   tasks: ExperienceTask[]; // 해당 역할의 작업 트리 (무제한)
   order: number;
 }
