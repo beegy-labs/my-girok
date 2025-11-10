@@ -454,7 +454,117 @@ describe('PostsService @Transactional', () => {
 });
 ```
 
-## Performance Testing
+## Test Execution Performance
+
+### Parallel Test Execution
+
+**All unit tests SHOULD run in parallel for faster feedback.**
+
+#### Configuration
+
+```javascript
+// jest.config.js
+module.exports = {
+  // Enable parallel execution
+  maxWorkers: '50%', // Use 50% of CPU cores (safe default)
+  // maxWorkers: 4,   // Or specify exact number
+
+  // Performance optimizations
+  cache: true,
+  cacheDirectory: '<rootDir>/../.jest-cache',
+  bail: false, // Continue even if some tests fail
+
+  // Timeout configuration
+  testTimeout: 10000, // 10 seconds per test
+};
+```
+
+#### When Parallel Tests Are Safe
+
+✅ **Safe for parallel execution:**
+- Unit tests with mocked dependencies
+- Tests with isolated state (`beforeEach` setup)
+- Tests without shared resources
+- Tests without file system dependencies
+- Tests without real database connections
+
+❌ **NOT safe for parallel execution:**
+- Integration tests with shared database
+- Tests that modify global state
+- Tests with file system race conditions
+- Tests with shared network resources
+
+#### Best Practices
+
+1. **Isolate Test State**
+```typescript
+describe('Service', () => {
+  let service: Service;
+  let mockRepo: MockRepository;
+
+  // ✅ GOOD: Fresh instance per test
+  beforeEach(() => {
+    mockRepo = createMockRepository();
+    service = new Service(mockRepo);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+});
+```
+
+2. **Avoid Shared State**
+```typescript
+// ❌ BAD: Shared state across tests
+let sharedCounter = 0;
+
+it('test 1', () => {
+  sharedCounter++;
+  expect(sharedCounter).toBe(1); // Flaky in parallel
+});
+
+// ✅ GOOD: Isolated state
+it('test 1', () => {
+  const counter = 0;
+  const result = increment(counter);
+  expect(result).toBe(1);
+});
+```
+
+3. **Mock External Dependencies**
+```typescript
+// ✅ All external calls mocked
+const mockPrismaService = {
+  user: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+  },
+};
+
+const mockHttpService = {
+  get: jest.fn(() => of({ data: {} })),
+};
+```
+
+#### Performance Metrics
+
+**Target times (with parallel execution):**
+- Unit tests: < 15 seconds for entire suite
+- Individual test: < 1 second
+- Integration tests: < 30 seconds per file
+
+**Example parallel speedup:**
+```bash
+# Sequential execution
+pnpm test --runInBand
+# Time: 25-30 seconds
+
+# Parallel execution (50% workers)
+pnpm test
+# Time: 15-18 seconds
+# Speedup: ~40-50%
+```
 
 ### Load Testing
 

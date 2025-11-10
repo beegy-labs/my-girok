@@ -313,7 +313,51 @@ module.exports = {
       statements: 80,
     },
   },
+
+  // ⚡ Parallel execution for faster tests
+  maxWorkers: '50%', // Use 50% of CPU cores
+  cache: true,
+  cacheDirectory: '<rootDir>/../.jest-cache',
+  testTimeout: 10000, // 10s per test
 };
+```
+
+### Parallel Test Execution
+
+**Default behavior:** Jest runs tests in parallel for faster feedback.
+
+**Safe for parallel:**
+- ✅ Unit tests with mocked dependencies
+- ✅ Tests with `beforeEach`/`afterEach` isolation
+- ✅ No shared state between tests
+
+**NOT safe for parallel:**
+- ❌ Integration tests with real database
+- ❌ Tests modifying global state
+- ❌ Tests with file system dependencies
+
+**Example:**
+```typescript
+describe('Service', () => {
+  let service: Service;
+  let mockRepo: MockRepository;
+
+  // ✅ Fresh instance per test = parallel safe
+  beforeEach(() => {
+    mockRepo = jest.fn();
+    service = new Service(mockRepo);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks(); // Clean up
+  });
+});
+```
+
+**Disable parallel for specific tests:**
+```bash
+# Run sequentially if needed
+pnpm test --runInBand
 ```
 
 ## Running Tests
