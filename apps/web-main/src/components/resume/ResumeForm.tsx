@@ -30,6 +30,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     linkedin: resume?.linkedin || '',
     portfolio: resume?.portfolio || '',
     summary: resume?.summary || '',
+    profileImage: resume?.profileImage || '',
+    militaryService: resume?.militaryService,
+    coverLetter: resume?.coverLetter || '',
+    careerGoals: resume?.careerGoals || '',
     skills: resume?.skills?.map(s => ({ category: s.category, items: s.items, order: s.order, visible: s.visible })) || [],
     experiences: resume?.experiences?.map(e => ({
       company: e.company,
@@ -285,6 +289,36 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </div>
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Profile Photo URL
+          </label>
+          <input
+            type="url"
+            value={formData.profileImage || ''}
+            onChange={e => setFormData({ ...formData, profileImage: e.target.value })}
+            className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            placeholder="https://example.com/photo.jpg (or upload below)"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            You can also upload a photo in the Attachments section below
+          </p>
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Military Service (Korean)
+          </label>
+          <select
+            value={formData.militaryService || ''}
+            onChange={e => setFormData({ ...formData, militaryService: e.target.value as any })}
+            className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+          >
+            <option value="">Select status</option>
+            <option value="COMPLETED">Completed (군필)</option>
+            <option value="EXEMPTED">Exempted (면제)</option>
+            <option value="NOT_APPLICABLE">Not Applicable (해당없음)</option>
+          </select>
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             Summary
           </label>
           <textarea
@@ -294,6 +328,43 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
             placeholder="Brief introduction about yourself..."
           />
+        </div>
+      </div>
+
+      {/* Korean-specific sections */}
+      <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6">
+        <h2 className="text-xl font-bold text-amber-900 mb-4">📝 Korean Resume Sections</h2>
+
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Cover Letter (자기소개서)
+          </label>
+          <textarea
+            value={formData.coverLetter || ''}
+            onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}
+            rows={8}
+            className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            placeholder="Write about your background, strengths, and why you're a good fit for this position..."
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Describe your background, experiences, and what makes you unique
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Career Goals (입사 후 포부)
+          </label>
+          <textarea
+            value={formData.careerGoals || ''}
+            onChange={e => setFormData({ ...formData, careerGoals: e.target.value })}
+            rows={6}
+            className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            placeholder="Describe what you want to achieve after joining the company..."
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Share your aspirations and what you hope to accomplish in this role
+          </p>
         </div>
       </div>
 
