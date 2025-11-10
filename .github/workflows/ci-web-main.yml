@@ -100,28 +100,31 @@ jobs:
           # Get short commit SHA
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
 
-          # Determine environment, tag, and API URL based on branch
+          # Determine environment, tag, and API URLs based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             # Production
             ENV="production"
             TAG="latest"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-            # CHANGE THIS: Update with your production API URL
-            API_URL="https://auth-api.girok.dev/api/v1"
+            # Production API URLs
+            API_URL="https://my-api.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api.girok.dev/personal"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             # Development: develop:<hash> + develop:latest
             ENV="development"
             TAG="${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:latest"
-            # CHANGE THIS: Update with your development API URL
+            # Development API URLs
             API_URL="https://my-api-dev.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
             # Staging: release:<hash> + release:latest
             ENV="staging"
             TAG="${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:latest"
-            # CHANGE THIS: Update with your staging API URL
-            API_URL="https://auth-api-staging.girok.dev/api/v1"
+            # Staging API URLs
+            API_URL="https://my-api-staging.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api-staging.girok.dev/personal"
           else
             # Other branches: branch-<hash>
             ENV="development"
@@ -129,6 +132,7 @@ jobs:
             TAG="${BRANCH_NAME}-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
             API_URL="https://my-api-dev.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
           fi
 
           # Set version for display (include environment prefix for non-main branches)
@@ -146,6 +150,7 @@ jobs:
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
+          echo "personal_api_url=${PERSONAL_API_URL}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -158,6 +163,7 @@ jobs:
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           build-args: |
             VITE_API_URL=${{ steps.env.outputs.api_url }}
+            VITE_PERSONAL_API_URL=${{ steps.env.outputs.personal_api_url }}
 
       - name: Image digest
         run: |
@@ -165,6 +171,7 @@ jobs:
           echo "Image pushed with tags: ${{ steps.env.outputs.tags }}"
           echo "Version: ${{ steps.env.outputs.version }}"
           echo "API URL: ${{ steps.env.outputs.api_url }}"
+          echo "Personal API URL: ${{ steps.env.outputs.personal_api_url }}"
 
   update-gitops:
     name: Update GitOps Repository

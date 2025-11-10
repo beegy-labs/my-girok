@@ -3,7 +3,9 @@ FROM node:22-alpine AS builder
 
 # Build arguments for environment variables
 ARG VITE_API_URL
+ARG VITE_PERSONAL_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_PERSONAL_API_URL=${VITE_PERSONAL_API_URL}
 
 WORKDIR /app
 
