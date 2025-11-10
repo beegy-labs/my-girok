@@ -53,11 +53,11 @@ describe('ResumeService', () => {
       createMany: jest.fn(),
       deleteMany: jest.fn(),
     },
-    experienceRole: {
+    experienceProject: {
       createMany: jest.fn(),
       deleteMany: jest.fn(),
     },
-    experienceTask: {
+    projectAchievement: {
       createMany: jest.fn(),
       deleteMany: jest.fn(),
     },

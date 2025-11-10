@@ -24,8 +24,8 @@ export class CreateSkillDto {
   visible?: boolean;
 }
 
-export class CreateExperienceTaskDto {
-  @ApiProperty({ example: 'Implemented microservices architecture' })
+export class CreateProjectAchievementDto {
+  @ApiProperty({ example: 'Improved API response time by 40%' })
   @IsString()
   content!: string;
 
@@ -40,34 +40,57 @@ export class CreateExperienceTaskDto {
   @Min(0)
   order?: number;
 
-  @ApiPropertyOptional({ type: [CreateExperienceTaskDto], description: 'Child tasks (recursive structure)' })
+  @ApiPropertyOptional({ type: [CreateProjectAchievementDto], description: 'Child achievements (recursive structure)' })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateExperienceTaskDto)
-  children?: CreateExperienceTaskDto[];
+  @Type(() => CreateProjectAchievementDto)
+  children?: CreateProjectAchievementDto[];
 }
 
-export class CreateExperienceRoleDto {
-  @ApiProperty({ example: 'Backend Development Lead' })
+export class CreateExperienceProjectDto {
+  @ApiProperty({ example: 'E-Commerce Platform Rebuild' })
   @IsString()
-  title!: string;
+  name!: string;
 
-  @ApiPropertyOptional({ example: 'Senior Developer' })
+  @ApiProperty({ example: '2023-01' })
+  @IsString()
+  startDate!: string;
+
+  @ApiPropertyOptional({ example: '2023-12' })
   @IsOptional()
   @IsString()
-  position?: string;
+  endDate?: string;
 
-  @ApiPropertyOptional({ example: 'Led backend team and managed microservices architecture' })
+  @ApiProperty({ example: 'Built modern e-commerce platform using microservices architecture' })
+  @IsString()
+  description!: string;
+
+  @ApiPropertyOptional({ example: 'Lead Backend Developer' })
   @IsOptional()
   @IsString()
-  responsibilities?: string;
+  role?: string;
 
-  @ApiProperty({ type: [CreateExperienceTaskDto], description: 'Hierarchical task tree for this role' })
+  @ApiProperty({ type: [CreateProjectAchievementDto], description: 'Hierarchical achievements (4 depth levels)' })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateExperienceTaskDto)
-  tasks!: CreateExperienceTaskDto[];
+  @Type(() => CreateProjectAchievementDto)
+  achievements!: CreateProjectAchievementDto[];
+
+  @ApiProperty({ example: ['NestJS', 'React', 'PostgreSQL'] })
+  @IsArray()
+  @IsString({ each: true })
+  techStack!: string[];
+
+  @ApiPropertyOptional({ example: 'https://myproject.com' })
+  @IsOptional()
+  @IsString()
+  url?: string;
+
+  @ApiPropertyOptional({ example: 'https://github.com/user/project' })
+  @IsOptional()
+  @IsString()
+  githubUrl?: string;
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
@@ -90,11 +113,19 @@ export class CreateExperienceDto {
   @IsString()
   endDate?: string;
 
-  @ApiProperty({ type: [CreateExperienceRoleDto], description: 'List of roles/positions at this company (unlimited)' })
+  @ApiProperty({ example: 'Backend Team Lead' })
+  @IsString()
+  finalPosition!: string;
+
+  @ApiProperty({ example: 'Senior Developer' })
+  @IsString()
+  jobTitle!: string;
+
+  @ApiProperty({ type: [CreateExperienceProjectDto], description: 'List of projects at this company' })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateExperienceRoleDto)
-  roles!: CreateExperienceRoleDto[];
+  @Type(() => CreateExperienceProjectDto)
+  projects!: CreateExperienceProjectDto[];
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()

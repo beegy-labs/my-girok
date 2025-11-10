@@ -209,6 +209,26 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
     }
   };
 
+  // Render hierarchical achievements recursively
+  const renderAchievements = (achievements: any[]) => {
+    if (!achievements || achievements.length === 0) return null;
+    return achievements.sort((a: any, b: any) => a.order - b.order).map((achievement: any, idx: number) => (
+      <div key={idx}>
+        <div
+          className="flex items-start"
+          style={{
+            marginLeft: getIndentation(achievement.depth),
+            marginBottom: '0.25rem'
+          }}
+        >
+          <span className="mr-1 select-none">{getBulletStyle(achievement.depth)}</span>
+          <span className="flex-1">{achievement.content}</span>
+        </div>
+        {achievement.children && achievement.children.length > 0 && renderAchievements(achievement.children)}
+      </div>
+    ));
+  };
+
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
@@ -224,42 +244,72 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
             </span>
           </div>
 
-          {/* Roles */}
-          {exp.roles && exp.roles.length > 0 && (
+          {/* Final Position and Job Title */}
+          <div className="mb-3">
+            <h4 className="font-semibold text-gray-900">{exp.finalPosition}</h4>
+            <p className="text-sm text-gray-700 italic">{exp.jobTitle}</p>
+          </div>
+
+          {/* Projects */}
+          {exp.projects && exp.projects.length > 0 && (
             <div className="space-y-4">
-              {exp.roles.sort((a: any, b: any) => a.order - b.order).map((role: any, roleIdx: number) => (
-                <div key={roleIdx}>
-                  {/* Role Title and Position */}
+              {exp.projects.sort((a: any, b: any) => a.order - b.order).map((project: any, projectIdx: number) => (
+                <div key={projectIdx} className="ml-4">
+                  {/* Project Name and Role */}
                   <div className="mb-2">
-                    <h4 className="font-semibold text-gray-900">{role.title}</h4>
-                    {role.position && (
-                      <p className="text-sm text-gray-700 italic">{role.position}</p>
+                    <div className="flex justify-between items-start">
+                      <h5 className="font-semibold text-gray-900">{project.name}</h5>
+                      <span className="text-xs text-gray-600 whitespace-nowrap ml-2">
+                        {project.startDate} - {project.endDate || 'Ongoing'}
+                      </span>
+                    </div>
+                    {project.role && (
+                      <p className="text-sm text-gray-700 italic">{project.role}</p>
                     )}
                   </div>
 
-                  {/* Responsibilities */}
-                  {role.responsibilities && (
-                    <div className="text-sm text-gray-700 mb-3 whitespace-pre-wrap">
-                      {role.responsibilities}
+                  {/* Project Description */}
+                  {project.description && (
+                    <p className="text-sm text-gray-700 mb-2">{project.description}</p>
+                  )}
+
+                  {/* Hierarchical Achievements */}
+                  {project.achievements && project.achievements.length > 0 && (
+                    <div className="text-sm text-gray-700 mb-2">
+                      {renderAchievements(project.achievements)}
                     </div>
                   )}
 
-                  {/* Hierarchical Tasks */}
-                  {role.tasks && role.tasks.length > 0 && (
-                    <div className="text-sm text-gray-700">
-                      {role.tasks.sort((a: any, b: any) => a.order - b.order).map((task: any, taskIdx: number) => (
-                        <div
-                          key={taskIdx}
-                          className="flex items-start"
-                          style={{
-                            marginLeft: getIndentation(task.depth),
-                            marginBottom: '0.25rem'
-                          }}
-                        >
-                          <span className="mr-1 select-none">{getBulletStyle(task.depth)}</span>
-                          <span className="flex-1">{task.content}</span>
+                  {/* Tech Stack */}
+                  {project.techStack && project.techStack.length > 0 && (
+                    <p className="text-xs text-gray-600 mb-1">
+                      <span className="font-semibold">Tech:</span> {project.techStack.join(', ')}
+                    </p>
+                  )}
+
+                  {/* Project Links */}
+                  {(project.url || project.githubUrl) && (
+                    <div className="text-xs text-gray-600 flex gap-3">
+                      {project.url && (
+                        <div>
+                          <span className="print:hidden text-gray-700 hover:underline">
+                            <a href={project.url}>Demo</a>
+                          </span>
+                          <span className="hidden print:inline text-gray-900">
+                            <span className="font-semibold">Demo:</span> {project.url}
+                          </span>
                         </div>
-                      ))}
+                      )}
+                      {project.githubUrl && (
+                        <div>
+                          <span className="print:hidden text-gray-700 hover:underline">
+                            <a href={project.githubUrl}>GitHub</a>
+                          </span>
+                          <span className="hidden print:inline text-gray-900">
+                            <span className="font-semibold">GitHub:</span> {project.githubUrl}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -591,25 +591,35 @@ All resume sections support unlimited entries, allowing users to create comprehe
 
 #### Dynamic Section Features
 
-##### 1. Work Experience (경력)
+##### 1. Work Experience (경력) - Unified with Projects
+
+**IMPORTANT CHANGE (2025-01-13)**: Work Experience and Projects have been unified. Each company now has ONE final position and unlimited projects, replacing the previous multiple-roles structure.
+
 - **Unlimited Companies**: Add as many companies as needed
 - **Company Fields**:
   - Company name (required)
   - Start date (required)
   - End date (optional - leave empty for "Present")
+  - **Final Position** (required) - 최종 직책, e.g., "Backend Team Lead"
+  - **Job Title** (required) - 직급, e.g., "Senior Developer"
   - Order (for drag-and-drop)
   - Visibility toggle
 
-- **Unlimited Roles per Company**: Each company can have multiple roles/positions
-- **Role Fields**:
-  - Role title (required) - e.g., "Senior Backend Developer", "Team Lead"
-  - Position (optional) - 직급, e.g., "Senior Developer", "Tech Lead"
-  - Responsibilities (optional) - 담당업무, main job responsibilities (textarea)
-  - Hierarchical tasks (unlimited)
+- **Unlimited Projects per Company**: Each company can have unlimited projects
+- **Project Fields**:
+  - Project name (required) - e.g., "E-Commerce Platform Rebuild"
+  - Role (optional) - e.g., "Lead Backend Developer"
+  - Description (required) - Project overview
+  - Start date (required)
+  - End date (optional - leave empty for "Ongoing")
+  - Tech stack (array) - Technologies used
+  - URL (optional) - Project demo link
+  - GitHub URL (optional) - Repository link
+  - Hierarchical achievements (unlimited, 4 depth levels)
 
-- **Hierarchical Task Structure**: Each role supports up to 4 levels of indentation
-  - **Depth 1** (•): Main tasks/responsibilities
-  - **Depth 2** (◦): Sub-tasks or details
+- **Hierarchical Achievement Structure**: Each project supports up to 4 levels of indentation
+  - **Depth 1** (•): Main achievements/accomplishments
+  - **Depth 2** (◦): Sub-achievements or details
   - **Depth 3** (▪): Further breakdown
   - **Depth 4** (▫): Most detailed level
   - **Indentation**: Standard 1.5em per level (approximately 6 spaces)
@@ -618,23 +628,29 @@ All resume sections support unlimited entries, allowing users to create comprehe
     - Level 2: Open circle (◦)
     - Level 3: Filled square (▪)
     - Level 4: Open square (▫)
+  - **Recursive Structure**: Achievements can have children for nested structure
 
 - **UI Features**:
-  - Depth selector dropdown (--, ---, ----, ----) for each task
+  - Drag-and-drop reordering at all levels (companies, projects, achievements)
+  - Depth selector dropdown (•, ◦, ▪, ▫) for each achievement
   - Visual indentation in form editor
-  - Dynamic add/remove for companies, roles, and tasks
-  - Tasks can be reordered within each role
+  - Collapsible project cards
+  - Dynamic add/remove for companies, projects, and achievements
+  - Library theme with amber colors (📚 for companies, 📁 for projects, ⭐ for achievements)
 
 - **Use Cases**:
   - Multiple companies in career history
-  - Different roles/promotions at same company
-  - Detailed breakdown of responsibilities and achievements
-  - Hierarchical project structures (e.g., main feature → components → implementations → optimizations)
-  - Contract/freelance positions with multiple deliverables
-  - Team lead roles with oversight responsibilities
+  - Multiple projects at each company
+  - Detailed breakdown of project achievements
+  - Hierarchical accomplishment structures (e.g., main feature → components → implementations → optimizations)
+  - Contract/freelance positions with multiple projects
+  - Team lead roles with project oversight
 
-##### 2. Projects (프로젝트)
-- **Unlimited Entries**: Add all significant projects
+##### 2. Standalone Projects (프로젝트)
+
+**NOTE**: As of 2025-01-13, the standalone Projects section has been removed from the UI. Projects are now entered within Work Experience under each company. This standalone Project type is kept for backward compatibility only.
+
+- **Unlimited Entries**: Add all significant projects NOT associated with a company
 - **Fields Per Entry**:
   - Project name (required)
   - Your role (e.g., "Lead Developer", "Solo Developer")
@@ -1319,7 +1335,53 @@ The resume feature follows the My-Girok design system with a library/book theme.
 
 ## Change Log
 
-- **2025-01-13**: Added position and responsibilities fields with library-themed UI
+- **2025-01-13 (Part 2)**: Complete restructuring - Unified Work Experience and Projects
+  - **Major Architectural Change**:
+    - Merged Work Experience and Projects into single unified section
+    - Removed multi-role structure - each company now has ONE final position and job title
+    - Projects moved inside Work Experience (each company has unlimited projects)
+    - Replaced Role → Tasks hierarchy with Project → Achievements hierarchy
+  - **Database Schema**:
+    - **Removed Models**: `ExperienceRole`, `ExperienceTask`
+    - **Added Models**: `ExperienceProject`, `ProjectAchievement`
+    - Experience model updated with `finalPosition` (최종 직책) and `jobTitle` (직급) fields
+    - ProjectAchievement supports recursive self-referencing for 4-depth hierarchy
+  - **API Changes**:
+    - Updated `CreateExperienceDto` to include `finalPosition`, `jobTitle`, and `projects` array
+    - Added `CreateExperienceProjectDto` with project details and achievements
+    - Added `CreateProjectAchievementDto` with recursive `children` support
+    - Removed old Role and Task DTOs
+  - **UI Overhaul**:
+    - Created new `ExperienceSection.tsx` component (900+ lines) with full drag-and-drop
+    - Removed standalone Projects section from ResumeForm
+    - Three-level sortable hierarchy: Companies → Projects → Achievements
+    - Drag handles with hamburger icons at all levels
+    - Collapsible project cards with amber library theme
+    - Achievement depth selector with bullet symbols (• ◦ ▪ ▫)
+    - Library-themed icons: 📚 companies, 📁 projects, ⭐ achievements
+  - **Preview Updates**:
+    - Updated ResumePreview ExperienceSection to render new structure
+    - Hierarchical achievement rendering with proper indentation
+    - Project details (name, role, description, tech stack, URLs) within each company
+  - **Service Layer**:
+    - Updated all include queries to use `projects` with `achievements`
+    - Updated create/update operations for nested project creation
+    - Transactional updates for data integrity
+  - **Tests**:
+    - Updated mock Prisma service with `experienceProject` and `projectAchievement`
+    - All 10 service tests passing
+  - **Documentation**:
+    - Updated `.ai/resume.md` with new unified structure
+    - Updated `docs/policies/RESUME.md` with detailed architecture changes
+    - Added backward compatibility notes for standalone Projects
+  - **Rationale**:
+    - Simplifies UX - one final position per company instead of tracking multiple roles
+    - Better reflects actual career progression (final position is what matters)
+    - Projects are the natural unit of work for showcasing achievements
+    - Drag-and-drop for better control over presentation order
+    - Aligns with user request to merge Work Experience and Projects
+
+- **2025-01-13 (Part 1)**: Added position and responsibilities fields with library-themed UI
   - **New Fields**:
     - `position` field added to ExperienceRole (직급, e.g., "Senior Developer", "Tech Lead")
     - `responsibilities` field added to ExperienceRole (담당업무, main job responsibilities)
