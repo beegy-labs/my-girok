@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/guards';
 import { CurrentUser } from '../common/decorators';
 
 @ApiTags('users')
-@Controller('v1/users')
+@Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
