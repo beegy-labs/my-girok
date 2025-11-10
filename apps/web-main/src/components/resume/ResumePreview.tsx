@@ -159,7 +159,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        Skills
+        기술 스택
       </h2>
       <div className="space-y-2">
         {skills.sort((a, b) => a.order - b.order).map((skill, idx) => (
@@ -180,7 +180,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        Work Experience
+        경력
       </h2>
       {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
         <div key={idx} className="mb-4">
@@ -219,7 +219,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        Projects
+        프로젝트
       </h2>
       {projects.sort((a, b) => a.order - b.order).map((project, idx) => (
         <div key={idx} className="mb-4">
@@ -278,7 +278,7 @@ function EducationSection({ educations }: { educations: any[] }) {
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        Education
+        학력
       </h2>
       {educations.sort((a, b) => a.order - b.order).map((edu, idx) => (
         <div key={idx} className="mb-3">
@@ -305,7 +305,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
-        Certifications
+        자격증
       </h2>
       {certificates.sort((a, b) => a.order - b.order).map((cert, idx) => (
         <div key={idx} className="mb-3">

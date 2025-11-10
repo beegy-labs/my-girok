@@ -31,11 +31,11 @@ interface SectionOrderManagerProps {
 }
 
 const SECTION_LABELS: Record<SectionType, string> = {
-  SKILLS: '기술 스택 (Skills)',
-  EXPERIENCE: '경력 (Experience)',
-  PROJECT: '프로젝트 (Projects)',
-  EDUCATION: '학력 (Education)',
-  CERTIFICATE: '자격증 (Certifications)',
+  SKILLS: '기술 스택',
+  EXPERIENCE: '경력',
+  PROJECT: '프로젝트',
+  EDUCATION: '학력',
+  CERTIFICATE: '자격증',
 };
 
 function SortableSection({ section }: { section: ResumeSection }) {
