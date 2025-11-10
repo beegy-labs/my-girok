@@ -55,19 +55,26 @@ export class ResumeService {
             company: exp.company,
             startDate: exp.startDate,
             endDate: exp.endDate,
+            finalPosition: exp.finalPosition,
+            jobTitle: exp.jobTitle,
             order: exp.order,
             visible: exp.visible,
-            roles: {
-              create: exp.roles?.map(role => ({
-                title: role.title,
-                position: role.position,
-                responsibilities: role.responsibilities,
-                order: role.order,
-                tasks: {
-                  create: role.tasks?.map(task => ({
-                    content: task.content,
-                    depth: task.depth,
-                    order: task.order,
+            projects: {
+              create: exp.projects?.map(project => ({
+                name: project.name,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                description: project.description,
+                role: project.role,
+                techStack: project.techStack,
+                url: project.url,
+                githubUrl: project.githubUrl,
+                order: project.order,
+                achievements: {
+                  create: project.achievements?.map(achievement => ({
+                    content: achievement.content,
+                    depth: achievement.depth,
+                    order: achievement.order,
                   })) || [],
                 },
               })) || [],
@@ -99,10 +106,10 @@ export class ResumeService {
           experiences: {
             orderBy: { order: 'asc' },
             include: {
-              roles: {
+              projects: {
                 orderBy: { order: 'asc' },
                 include: {
-                  tasks: {
+                  achievements: {
                     orderBy: { order: 'asc' },
                   },
                 },
@@ -129,10 +136,10 @@ export class ResumeService {
         experiences: {
           orderBy: { order: 'asc' },
           include: {
-            roles: {
+            projects: {
               orderBy: { order: 'asc' },
               include: {
-                tasks: {
+                achievements: {
                   orderBy: { order: 'asc' },
                 },
               },
@@ -162,10 +169,10 @@ export class ResumeService {
         experiences: {
           orderBy: { order: 'asc' },
           include: {
-            roles: {
+            projects: {
               orderBy: { order: 'asc' },
               include: {
-                tasks: {
+                achievements: {
                   orderBy: { order: 'asc' },
                 },
               },
@@ -199,10 +206,10 @@ export class ResumeService {
         experiences: {
           orderBy: { order: 'asc' },
           include: {
-            roles: {
+            projects: {
               orderBy: { order: 'asc' },
               include: {
-                tasks: {
+                achievements: {
                   orderBy: { order: 'asc' },
                 },
               },
@@ -271,17 +278,26 @@ export class ResumeService {
               company: exp.company,
               startDate: exp.startDate,
               endDate: exp.endDate,
+              finalPosition: exp.finalPosition,
+              jobTitle: exp.jobTitle,
               order: exp.order,
               visible: exp.visible,
-              roles: {
-                create: exp.roles?.map(role => ({
-                  title: role.title,
-                  order: role.order,
-                  tasks: {
-                    create: role.tasks?.map(task => ({
-                      content: task.content,
-                      depth: task.depth,
-                      order: task.order,
+              projects: {
+                create: exp.projects?.map(project => ({
+                  name: project.name,
+                  startDate: project.startDate,
+                  endDate: project.endDate,
+                  description: project.description,
+                  role: project.role,
+                  techStack: project.techStack,
+                  url: project.url,
+                  githubUrl: project.githubUrl,
+                  order: project.order,
+                  achievements: {
+                    create: project.achievements?.map(achievement => ({
+                      content: achievement.content,
+                      depth: achievement.depth,
+                      order: achievement.order,
                     })) || [],
                   },
                 })) || [],
@@ -321,10 +337,10 @@ export class ResumeService {
           experiences: {
             orderBy: { order: 'asc' },
             include: {
-              roles: {
+              projects: {
                 orderBy: { order: 'asc' },
                 include: {
-                  tasks: {
+                  achievements: {
                     orderBy: { order: 'asc' },
                   },
                 },
@@ -369,10 +385,10 @@ export class ResumeService {
           experiences: {
             orderBy: { order: 'asc' },
             include: {
-              roles: {
+              projects: {
                 orderBy: { order: 'asc' },
                 include: {
-                  tasks: {
+                  achievements: {
                     orderBy: { order: 'asc' },
                   },
                 },
