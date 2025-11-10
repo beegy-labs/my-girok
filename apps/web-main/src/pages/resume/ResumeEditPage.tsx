@@ -97,7 +97,7 @@ export default function ResumeEditPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-700 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
           <p className="mt-4 text-gray-700 font-medium">Loading resume...</p>
         </div>
       </div>
@@ -108,12 +108,12 @@ export default function ResumeEditPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl shadow-md p-6 mb-6">
+        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">✍️</span>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-amber-900">
                   {resume ? 'Edit Resume' : 'Create Resume'}
                 </h1>
                 <p className="text-gray-700">
@@ -123,7 +123,7 @@ export default function ResumeEditPage() {
             </div>
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className="lg:hidden px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-all"
+              className="lg:hidden px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all"
             >
               {showPreview ? 'Show Form' : 'Show Preview'}
             </button>

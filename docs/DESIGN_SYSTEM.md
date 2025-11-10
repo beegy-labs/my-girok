@@ -74,13 +74,13 @@ All color combinations meet WCAG 2.1 AA standards:
 - `gray-700` on `white`: 7.21:1 (AAA)
 - `amber-700` on `white`: 5.12:1 (AA)
 
-### Special Case: Resume Pages (Print-Optimized)
+### Special Case: Resume Preview & Print (Print-Optimized)
 
-**Important**: Resume-related pages use grayscale design to optimize for printing.
+**Important**: Only the resume preview component and PDF output use grayscale design for optimal printing. The resume editing UI follows standard brand colors.
 
-#### Resume Color Palette
+#### Print-Only Grayscale Palette
 ```css
-/* Grayscale only - No colored elements */
+/* Grayscale only for ResumePreview component and PDF export */
 --resume-primary: #111827;    /* gray-900 - Headers */
 --resume-secondary: #374151;  /* gray-700 - Body text */
 --resume-border: #9CA3AF;     /* gray-400 - Section dividers */
@@ -88,52 +88,61 @@ All color combinations meet WCAG 2.1 AA standards:
 --resume-bg: #F9FAFB;         /* gray-50 - Page background */
 ```
 
-#### Resume Pages
-The following pages **MUST** use grayscale design:
-- Resume Edit Page (`/resume/:username/edit`)
-- Resume Preview Page (`/resume/:username/preview`)
-- Public Resume Page (`/:username/resume`)
-- Resume Print View (all resume displays)
+#### Grayscale vs Brand Colors
 
-#### Resume Design Rules
-1. **No Brand Colors**: Do NOT use amber/brown colors
+**Use Grayscale (ONLY for preview/print):**
+- `ResumePreview` component - The actual resume content display
+- PDF export output
+- Print view (when printing from browser)
+- Public resume page (`:username/resume`) - The displayed resume
+
+**Use Brand Colors (amber) - Standard UI:**
+- Resume Edit Page UI (`/resume/:username/edit`) - Form, headers, buttons
+- Resume Preview Page UI (`/resume/:username/preview`) - Action bar, controls, buttons
+- All navigation and controls surrounding the resume
+
+#### Resume Preview Component Rules
+Applied ONLY to the `ResumePreview` component:
+
+1. **No Brand Colors**: Do NOT use amber/brown colors in resume content
 2. **Grayscale Only**: Use gray-50 through gray-900
 3. **Print First**: Design for black & white printing
 4. **High Contrast**: Ensure 7:1 contrast minimum for text
 5. **Grayscale Images**: Apply `filter: grayscale(100%)` to profile photos
 
-#### Resume Component Examples
+#### Resume Preview Component Examples
 
-**Resume Section Header**
+**Resume Section Header (in ResumePreview component)**
 ```jsx
 className="text-xl font-bold text-gray-900 mb-3
            border-b border-gray-400 pb-1"
 ```
 
-**Resume Action Button**
-```jsx
-className="px-6 py-3 bg-gray-700 hover:bg-gray-800
-           text-white font-semibold rounded-lg
-           transition-all shadow-lg shadow-gray-700/30"
-```
-
-**Resume Card/Container**
+**Resume Container (in ResumePreview component)**
 ```jsx
 className="bg-gray-50 border border-gray-200
            rounded-2xl shadow-md p-6"
 ```
 
-**Resume Text Link**
+**Resume Text Link (in ResumePreview component)**
 ```jsx
 className="text-gray-700 hover:underline"
 ```
 
-#### Why Grayscale for Resumes?
+**Page Action Buttons (OUTSIDE ResumePreview - use amber)**
+```jsx
+className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600
+           hover:from-amber-800 hover:to-amber-700 text-white
+           font-semibold rounded-lg shadow-lg shadow-amber-700/30"
+```
+
+#### Why Grayscale for Resume Content Only?
 - **Print Optimization**: Most resumes are printed in black & white
-- **Cost Effective**: Reduces color printing costs
-- **Professional Appearance**: Clean, distraction-free layout
+- **Cost Effective**: Reduces color printing costs for end users
+- **Professional Appearance**: Clean, distraction-free resume layout
 - **Better Readability**: High contrast text on neutral background
 - **ATS Friendly**: Applicant Tracking Systems prefer simple formatting
+- **UI Consistency**: Editing interface maintains brand identity
 
 ## Typography
 
