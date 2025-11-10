@@ -42,12 +42,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     skills: resume?.skills?.map(s => ({ category: s.category, items: s.items, order: s.order, visible: s.visible })) || [],
     experiences: resume?.experiences?.map(e => ({
       company: e.company,
-      position: e.position,
       startDate: e.startDate,
       endDate: e.endDate,
-      description: e.description,
-      achievements: e.achievements,
-      techStack: e.techStack,
+      roles: e.roles?.map(r => ({
+        title: r.title,
+        tasks: r.tasks || [],
+        order: r.order,
+      })) || [],
       order: e.order,
       visible: e.visible,
     })) || [],
@@ -417,12 +418,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   ...(formData.experiences || []),
                   {
                     company: '',
-                    position: '',
                     startDate: '',
                     endDate: '',
-                    description: '',
-                    achievements: [],
-                    techStack: [],
+                    roles: [],
                     order: formData.experiences?.length || 0,
                     visible: true,
                   },
@@ -436,24 +434,25 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </div>
 
         {formData.experiences && formData.experiences.length > 0 ? (
-          <div className="space-y-4">
-            {formData.experiences.map((exp, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+          <div className="space-y-6">
+            {formData.experiences.map((exp, expIndex) => (
+              <div key={expIndex} className="border border-gray-200 rounded-lg p-4 bg-amber-50/30">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Experience #{index + 1}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Company #{expIndex + 1}</h3>
                   <button
                     type="button"
                     onClick={() => {
-                      const newExperiences = formData.experiences?.filter((_, i) => i !== index);
+                      const newExperiences = formData.experiences?.filter((_, i) => i !== expIndex);
                       setFormData({ ...formData, experiences: newExperiences });
                     }}
                     className="text-red-600 hover:text-red-800 text-sm font-semibold"
                   >
-                    Remove
+                    Remove Company
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Company Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Company <span className="text-red-500">*</span>
@@ -463,28 +462,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       value={exp.company}
                       onChange={e => {
                         const newExperiences = [...(formData.experiences || [])];
-                        newExperiences[index] = { ...newExperiences[index], company: e.target.value };
+                        newExperiences[expIndex] = { ...newExperiences[expIndex], company: e.target.value };
                         setFormData({ ...formData, experiences: newExperiences });
                       }}
                       className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                       placeholder="Company name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Position <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={exp.position}
-                      onChange={e => {
-                        const newExperiences = [...(formData.experiences || [])];
-                        newExperiences[index] = { ...newExperiences[index], position: e.target.value };
-                        setFormData({ ...formData, experiences: newExperiences });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="e.g., Senior Backend Developer"
                     />
                   </div>
 
@@ -497,7 +479,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       value={exp.startDate}
                       onChange={e => {
                         const newExperiences = [...(formData.experiences || [])];
-                        newExperiences[index] = { ...newExperiences[index], startDate: e.target.value };
+                        newExperiences[expIndex] = { ...newExperiences[expIndex], startDate: e.target.value };
                         setFormData({ ...formData, experiences: newExperiences });
                       }}
                       className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
@@ -513,7 +495,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       value={exp.endDate || ''}
                       onChange={e => {
                         const newExperiences = [...(formData.experiences || [])];
-                        newExperiences[index] = { ...newExperiences[index], endDate: e.target.value };
+                        newExperiences[expIndex] = { ...newExperiences[expIndex], endDate: e.target.value };
                         setFormData({ ...formData, experiences: newExperiences });
                       }}
                       className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
@@ -522,61 +504,171 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={exp.description}
-                    onChange={e => {
-                      const newExperiences = [...(formData.experiences || [])];
-                      newExperiences[index] = { ...newExperiences[index], description: e.target.value };
-                      setFormData({ ...formData, experiences: newExperiences });
-                    }}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                    placeholder="Brief description of your role and responsibilities"
-                  />
-                </div>
+                {/* Roles Section */}
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-md font-semibold text-amber-900">Roles / Positions</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        const currentRoles = newExperiences[expIndex].roles || [];
+                        newExperiences[expIndex] = {
+                          ...newExperiences[expIndex],
+                          roles: [
+                            ...currentRoles,
+                            {
+                              title: '',
+                              tasks: [],
+                              order: currentRoles.length,
+                            },
+                          ],
+                        };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="px-3 py-1 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-all"
+                    >
+                      + Add Role
+                    </button>
+                  </div>
 
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tech Stack
-                  </label>
-                  <input
-                    type="text"
-                    value={exp.techStack?.join(', ') || ''}
-                    onChange={e => {
-                      const newExperiences = [...(formData.experiences || [])];
-                      newExperiences[index] = {
-                        ...newExperiences[index],
-                        techStack: e.target.value.split(',').map(s => s.trim()).filter(s => s),
-                      };
-                      setFormData({ ...formData, experiences: newExperiences });
-                    }}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                    placeholder="React, Node.js, PostgreSQL (comma-separated)"
-                  />
-                </div>
+                  {exp.roles && exp.roles.length > 0 ? (
+                    <div className="space-y-4">
+                      {exp.roles.map((role, roleIndex) => (
+                        <div key={roleIndex} className="border border-amber-200 rounded-lg p-4 bg-white">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Role Title <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={role.title}
+                                onChange={e => {
+                                  const newExperiences = [...(formData.experiences || [])];
+                                  const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                  newRoles[roleIndex] = { ...newRoles[roleIndex], title: e.target.value };
+                                  newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                  setFormData({ ...formData, experiences: newExperiences });
+                                }}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                                placeholder="e.g., Senior Backend Developer"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newExperiences = [...(formData.experiences || [])];
+                                const newRoles = newExperiences[expIndex].roles?.filter((_, i) => i !== roleIndex);
+                                newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                setFormData({ ...formData, experiences: newExperiences });
+                              }}
+                              className="ml-2 text-red-600 hover:text-red-800 text-sm font-semibold"
+                            >
+                              Remove Role
+                            </button>
+                          </div>
 
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Key Achievements (one per line)
-                  </label>
-                  <textarea
-                    value={exp.achievements?.join('\n') || ''}
-                    onChange={e => {
-                      const newExperiences = [...(formData.experiences || [])];
-                      newExperiences[index] = {
-                        ...newExperiences[index],
-                        achievements: e.target.value.split('\n').filter(s => s.trim()),
-                      };
-                      setFormData({ ...formData, experiences: newExperiences });
-                    }}
-                    rows={4}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                    placeholder="Improved system performance by 50%&#10;Led a team of 5 engineers&#10;Implemented CI/CD pipeline"
-                  />
+                          {/* Tasks - Hierarchical Structure */}
+                          <div className="mt-3 border-t border-gray-200 pt-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-sm font-semibold text-gray-700">
+                                Tasks (use depth 1-4 for indentation)
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newExperiences = [...(formData.experiences || [])];
+                                  const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                  const currentTasks = newRoles[roleIndex].tasks || [];
+                                  newRoles[roleIndex] = {
+                                    ...newRoles[roleIndex],
+                                    tasks: [
+                                      ...currentTasks,
+                                      {
+                                        content: '',
+                                        depth: 1,
+                                        order: currentTasks.length,
+                                      },
+                                    ],
+                                  };
+                                  newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                  setFormData({ ...formData, experiences: newExperiences });
+                                }}
+                                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                              >
+                                + Add Task
+                              </button>
+                            </div>
+
+                            {role.tasks && role.tasks.length > 0 ? (
+                              <div className="space-y-2">
+                                {role.tasks.map((task: any, taskIndex: number) => (
+                                  <div key={taskIndex} className="flex items-start gap-2">
+                                    <select
+                                      value={task.depth}
+                                      onChange={e => {
+                                        const newExperiences = [...(formData.experiences || [])];
+                                        const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                        const newTasks = [...(newRoles[roleIndex].tasks || [])];
+                                        newTasks[taskIndex] = { ...newTasks[taskIndex], depth: parseInt(e.target.value) };
+                                        newRoles[roleIndex] = { ...newRoles[roleIndex], tasks: newTasks };
+                                        newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                        setFormData({ ...formData, experiences: newExperiences });
+                                      }}
+                                      className="px-2 py-1 border border-gray-300 rounded text-xs"
+                                      title="Indentation depth"
+                                    >
+                                      <option value="1">-</option>
+                                      <option value="2">--</option>
+                                      <option value="3">---</option>
+                                      <option value="4">----</option>
+                                    </select>
+                                    <input
+                                      type="text"
+                                      value={task.content}
+                                      onChange={e => {
+                                        const newExperiences = [...(formData.experiences || [])];
+                                        const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                        const newTasks = [...(newRoles[roleIndex].tasks || [])];
+                                        newTasks[taskIndex] = { ...newTasks[taskIndex], content: e.target.value };
+                                        newRoles[roleIndex] = { ...newRoles[roleIndex], tasks: newTasks };
+                                        newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                        setFormData({ ...formData, experiences: newExperiences });
+                                      }}
+                                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                                      placeholder="Task description"
+                                      style={{ marginLeft: `${(task.depth - 1) * 1.5}rem` }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newExperiences = [...(formData.experiences || [])];
+                                        const newRoles = [...(newExperiences[expIndex].roles || [])];
+                                        const newTasks = newRoles[roleIndex].tasks?.filter((_: any, i: number) => i !== taskIndex);
+                                        newRoles[roleIndex] = { ...newRoles[roleIndex], tasks: newTasks };
+                                        newExperiences[expIndex] = { ...newExperiences[expIndex], roles: newRoles };
+                                        setFormData({ ...formData, experiences: newExperiences });
+                                      }}
+                                      className="text-red-600 hover:text-red-800 text-xs"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-500 italic">No tasks yet. Click "Add Task" to add work details.</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      <p>No roles added yet. Click "Add Role" to add your positions at this company.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
