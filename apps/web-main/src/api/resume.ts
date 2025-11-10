@@ -121,6 +121,10 @@ export interface Resume {
   portfolio?: string;
   summary?: string;
   profileImage?: string;
+  // Korean-specific fields
+  militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
+  coverLetter?: string; // 자기소개서
+  careerGoals?: string; // 입사 후 포부/하고 싶은 일
   sections: ResumeSection[];
   skills: Skill[];
   experiences: Experience[];
@@ -146,6 +150,10 @@ export interface CreateResumeDto {
   portfolio?: string;
   summary?: string;
   profileImage?: string;
+  // Korean-specific fields
+  militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
+  coverLetter?: string;
+  careerGoals?: string;
   skills?: Omit<Skill, 'id'>[];
   experiences?: Omit<Experience, 'id'>[];
   projects?: Omit<Project, 'id'>[];

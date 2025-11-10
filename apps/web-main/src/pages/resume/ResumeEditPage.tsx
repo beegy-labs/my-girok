@@ -53,6 +53,10 @@ export default function ResumeEditPage() {
       linkedin: data.linkedin,
       portfolio: data.portfolio,
       summary: data.summary,
+      profileImage: data.profileImage,
+      militaryService: data.militaryService,
+      coverLetter: data.coverLetter,
+      careerGoals: data.careerGoals,
       sections: resume?.sections || [
         { id: '1', type: SectionType.SKILLS, order: 1, visible: true },
         { id: '2', type: SectionType.EXPERIENCE, order: 2, visible: true },

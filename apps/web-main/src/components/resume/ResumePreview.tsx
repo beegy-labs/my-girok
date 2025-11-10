@@ -28,30 +28,57 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       >
         {/* Header - Using CI amber colors for emphasis */}
         <div className="border-b-2 border-amber-800 print:border-gray-800 pb-6 mb-6">
-          <h1 className="text-3xl font-bold text-amber-900 print:text-gray-900 mb-2">{resume.name}</h1>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700">
-            <span>{resume.email}</span>
-            {resume.phone && <span>{resume.phone}</span>}
-            {resume.github && (
-              <a href={resume.github} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                GitHub
-              </a>
+          <div className="flex items-start gap-6">
+            {/* Profile Photo */}
+            {resume.profileImage && (
+              <div className="flex-shrink-0">
+                <img
+                  src={resume.profileImage}
+                  alt={resume.name}
+                  className="w-32 h-40 object-cover rounded-lg border-2 border-amber-200 print:border-gray-300 print:filter print:grayscale"
+                />
+              </div>
             )}
-            {resume.blog && (
-              <a href={resume.blog} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                Blog
-              </a>
-            )}
-            {resume.linkedin && (
-              <a href={resume.linkedin} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                LinkedIn
-              </a>
-            )}
-            {resume.portfolio && (
-              <a href={resume.portfolio} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
-                Portfolio
-              </a>
-            )}
+
+            {/* Name and Contact Info */}
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-amber-900 print:text-gray-900 mb-2">{resume.name}</h1>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700 mb-2">
+                <span>{resume.email}</span>
+                {resume.phone && <span>{resume.phone}</span>}
+                {resume.militaryService && (
+                  <span>
+                    Military: {
+                      resume.militaryService === 'COMPLETED' ? 'Completed' :
+                      resume.militaryService === 'EXEMPTED' ? 'Exempted' :
+                      'N/A'
+                    }
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                {resume.github && (
+                  <a href={resume.github} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
+                    GitHub
+                  </a>
+                )}
+                {resume.blog && (
+                  <a href={resume.blog} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
+                    Blog
+                  </a>
+                )}
+                {resume.linkedin && (
+                  <a href={resume.linkedin} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
+                    LinkedIn
+                  </a>
+                )}
+                {resume.portfolio && (
+                  <a href={resume.portfolio} className="text-amber-700 hover:underline print:text-gray-900 print:no-underline">
+                    Portfolio
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -59,6 +86,26 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         {resume.summary && (
           <div className="mb-6">
             <p className="text-gray-700 leading-relaxed">{resume.summary}</p>
+          </div>
+        )}
+
+        {/* Cover Letter */}
+        {resume.coverLetter && (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+              Cover Letter
+            </h2>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.coverLetter}</p>
+          </div>
+        )}
+
+        {/* Career Goals */}
+        {resume.careerGoals && (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-amber-900 print:text-gray-900 mb-3 border-b border-amber-300 print:border-gray-400 pb-1">
+              Career Goals
+            </h2>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.careerGoals}</p>
           </div>
         )}
 

@@ -98,6 +98,11 @@ interface Resume {
   summary?: string;
   profileImage?: string;
 
+  // Korean-specific fields
+  militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
+  coverLetter?: string;
+  careerGoals?: string;
+
   // Resume Sections
   sections: ResumeSection[];
   skills: Skill[];
@@ -477,7 +482,132 @@ logger.warn('Share link expired access', { token, resumeId });
 - **Security Policy**: `/docs/policies/SECURITY.md`
 - **Testing Guidelines**: `/docs/policies/TESTING.md`
 
+## Korean Developer Resume Features
+
+### Overview
+The resume system has been enhanced to support Korean job market requirements, specifically tailored for software developers.
+
+### Korean-Specific Fields
+
+#### 1. Military Service Status (병역 여부)
+- **Field**: `militaryService`
+- **Type**: Enum - `COMPLETED` | `EXEMPTED` | `NOT_APPLICABLE`
+- **Purpose**: Required information for male job applicants in Korea
+- **Display**: Shows in header section next to contact information
+- **Options**:
+  - `COMPLETED`: Military service completed (군필)
+  - `EXEMPTED`: Exempted from service (면제)
+  - `NOT_APPLICABLE`: Not applicable (해당없음) - for female applicants or foreign nationals
+
+#### 2. Cover Letter (자기소개서)
+- **Field**: `coverLetter`
+- **Type**: Long text (textarea)
+- **Purpose**: Self-introduction describing background, strengths, and fit for the position
+- **Display**: Appears as a dedicated section after Summary
+- **Guidelines**:
+  - Describe background and experiences
+  - Highlight unique qualities and strengths
+  - Explain why you're a good fit for the position
+  - Typical length: 500-1000 words
+
+#### 3. Career Goals (입사 후 포부)
+- **Field**: `careerGoals`
+- **Type**: Long text (textarea)
+- **Purpose**: Describe aspirations and what you want to achieve after joining
+- **Display**: Appears as a dedicated section after Cover Letter
+- **Guidelines**:
+  - Share professional aspirations
+  - Describe what you hope to accomplish in the role
+  - Show alignment with company goals
+  - Demonstrate long-term commitment
+  - Typical length: 300-500 words
+
+### Profile Photo
+
+#### Requirements
+- **Field**: `profileImage`
+- **Type**: URL string (can be uploaded via Attachments)
+- **Purpose**: Professional headshot for Korean resume format
+- **Display**:
+  - Position: Top-left of resume header
+  - Size: 3cm × 4cm (passport photo size)
+  - Style: Auto-converts to grayscale for print
+  - Border: Subtle border matching resume theme
+
+#### Upload Options
+1. **URL Input**: Paste direct image URL in Basic Information section
+2. **File Upload**: Use Attachments section → Profile Photo category
+3. **MinIO Storage**: Files uploaded via attachments are stored in MinIO
+
+### Resume Sections and Ordering
+
+#### Fixed Sections (Non-reorderable)
+These sections always appear at the top in a fixed order:
+1. **Header** - Name, photo, contact info, military service
+2. **Summary** - Brief professional introduction
+3. **Cover Letter** - Self-introduction (if filled)
+4. **Career Goals** - Professional aspirations (if filled)
+
+#### Dynamic Sections (Reorderable)
+Users can drag-and-drop these sections to customize their resume order:
+1. **Skills** (기술 스택)
+2. **Experience** (경력)
+3. **Projects** (프로젝트)
+4. **Education** (학력)
+5. **Certifications** (자격증)
+
+#### Section Visibility
+- Each dynamic section can be toggled visible/hidden
+- Hidden sections don't appear in the final resume
+- Useful for creating multiple resume versions (startup vs. large company)
+
+### Live Preview Feature
+
+#### Implementation
+- **Layout**: Side-by-side on desktop (form left, preview right)
+- **Mobile**: Toggle button to switch between form and preview
+- **Update Frequency**: Real-time (updates as you type)
+- **Scaling**: Preview scaled to 75% for optimal viewport fit
+- **Sticky**: Preview panel stays visible while scrolling form
+
+#### Benefits
+- Instant visual feedback
+- Reduces formatting errors
+- Helps maintain consistent style
+- Shows exactly how resume will look when printed/exported
+
+### Best Practices
+
+#### For Korean Developer Resumes
+1. **Profile Photo**: Professional, recent photo (last 6 months)
+2. **Military Service**: Always fill for male Korean nationals
+3. **Cover Letter**:
+   - Be specific about technical achievements
+   - Mention relevant projects and technologies
+   - Show personality and communication skills
+4. **Career Goals**:
+   - Align with company's tech stack and culture
+   - Demonstrate growth mindset
+   - Be realistic and achievable
+5. **Section Order**:
+   - Junior developers: Projects → Skills → Education → Experience
+   - Senior developers: Experience → Projects → Skills → Education
+
+#### Localization
+- Korean labels in UI (병역, 자기소개서, 입사 후 포부)
+- English labels in resume output (for international opportunities)
+- Support for both Korean and English content in all fields
+
 ## Change Log
+
+- **2025-01-10**: Added Korean developer resume features
+  - Military service status field
+  - Cover letter section
+  - Career goals section
+  - Profile photo support in header
+  - Live preview with side-by-side layout
+  - Section reordering capability (dynamic sections only)
+  - Input text visibility improvements
 
 - **2025-01-09**: Initial resume policy documentation
   - Resume management dashboard
