@@ -258,7 +258,7 @@ personalApi.interceptors.request.use(
       isRefreshingPersonal = true;
       try {
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
+        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
           refreshToken,
         });
 
@@ -292,7 +292,7 @@ personalApi.interceptors.response.use(
       try {
         const { refreshToken } = useAuthStore.getState();
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
+        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
           refreshToken,
         });
 
@@ -320,83 +320,83 @@ personalApi.interceptors.response.use(
 // ========== Resume APIs ==========
 
 export const createResume = async (data: CreateResumeDto): Promise<Resume> => {
-  const response = await personalApi.post('/resume', data);
+  const response = await personalApi.post('/v1/resume', data);
   return response.data;
 };
 
 export const getAllResumes = async (): Promise<Resume[]> => {
-  const response = await personalApi.get('/resume');
+  const response = await personalApi.get('/v1/resume');
   return response.data;
 };
 
 export const getDefaultResume = async (): Promise<Resume> => {
-  const response = await personalApi.get('/resume/default');
+  const response = await personalApi.get('/v1/resume/default');
   return response.data;
 };
 
 export const getResume = async (resumeId: string): Promise<Resume> => {
-  const response = await personalApi.get(`/resume/${resumeId}`);
+  const response = await personalApi.get(`/v1/resume/${resumeId}`);
   return response.data;
 };
 
 export const updateResume = async (resumeId: string, data: UpdateResumeDto): Promise<Resume> => {
-  const response = await personalApi.put(`/resume/${resumeId}`, data);
+  const response = await personalApi.put(`/v1/resume/${resumeId}`, data);
   return response.data;
 };
 
 export const deleteResume = async (resumeId: string): Promise<void> => {
-  await personalApi.delete(`/resume/${resumeId}`);
+  await personalApi.delete(`/v1/resume/${resumeId}`);
 };
 
 export const setDefaultResume = async (resumeId: string): Promise<Resume> => {
-  const response = await personalApi.patch(`/resume/${resumeId}/default`);
+  const response = await personalApi.patch(`/v1/resume/${resumeId}/default`);
   return response.data;
 };
 
 export const updateSectionOrder = async (resumeId: string, data: UpdateSectionOrderDto): Promise<Resume> => {
-  const response = await personalApi.patch(`/resume/${resumeId}/sections/order`, data);
+  const response = await personalApi.patch(`/v1/resume/${resumeId}/sections/order`, data);
   return response.data;
 };
 
 export const toggleSectionVisibility = async (resumeId: string, data: ToggleSectionVisibilityDto): Promise<Resume> => {
-  const response = await personalApi.patch(`/resume/${resumeId}/sections/visibility`, data);
+  const response = await personalApi.patch(`/v1/resume/${resumeId}/sections/visibility`, data);
   return response.data;
 };
 
 // ========== Share Link APIs ==========
 
 export const createResumeShare = async (resumeId: string, data: CreateShareLinkDto): Promise<ShareLink> => {
-  const response = await personalApi.post(`/share/resume/${resumeId}`, data);
+  const response = await personalApi.post(`/v1/share/resume/${resumeId}`, data);
   return response.data;
 };
 
 export const getMyShareLinks = async (): Promise<ShareLink[]> => {
-  const response = await personalApi.get('/share');
+  const response = await personalApi.get('/v1/share');
   return response.data;
 };
 
 export const getShareLink = async (id: string): Promise<ShareLink> => {
-  const response = await personalApi.get(`/share/${id}`);
+  const response = await personalApi.get(`/v1/share/${id}`);
   return response.data;
 };
 
 export const updateShareLink = async (id: string, data: UpdateShareLinkDto): Promise<ShareLink> => {
-  const response = await personalApi.patch(`/share/${id}`, data);
+  const response = await personalApi.patch(`/v1/share/${id}`, data);
   return response.data;
 };
 
 export const deleteShareLink = async (id: string): Promise<void> => {
-  await personalApi.delete(`/share/${id}`);
+  await personalApi.delete(`/v1/share/${id}`);
 };
 
 export const getPublicResume = async (token: string): Promise<Resume> => {
-  const response = await personalApi.get(`/share/public/${token}`);
+  const response = await personalApi.get(`/v1/share/public/${token}`);
   return response.data;
 };
 
 // Get user's default resume by username (public access)
 export const getUserResume = async (username: string): Promise<Resume> => {
-  const response = await personalApi.get(`/resume/public/${username}`);
+  const response = await personalApi.get(`/v1/resume/public/${username}`);
   return response.data;
 };
 
@@ -436,7 +436,7 @@ export const uploadAttachment = async (
   if (title) formData.append('title', title);
   if (description) formData.append('description', description);
 
-  const response = await personalApi.post(`/resume/${resumeId}/attachments`, formData, {
+  const response = await personalApi.post(`/v1/resume/${resumeId}/attachments`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -446,7 +446,7 @@ export const uploadAttachment = async (
 
 export const getAttachments = async (resumeId: string, type?: AttachmentType): Promise<ResumeAttachment[]> => {
   const params = type ? { type } : {};
-  const response = await personalApi.get(`/resume/${resumeId}/attachments`, { params });
+  const response = await personalApi.get(`/v1/resume/${resumeId}/attachments`, { params });
   return response.data;
 };
 
@@ -455,12 +455,12 @@ export const updateAttachment = async (
   attachmentId: string,
   data: { title?: string; description?: string; visible?: boolean }
 ): Promise<ResumeAttachment> => {
-  const response = await personalApi.patch(`/resume/${resumeId}/attachments/${attachmentId}`, data);
+  const response = await personalApi.patch(`/v1/resume/${resumeId}/attachments/${attachmentId}`, data);
   return response.data;
 };
 
 export const deleteAttachment = async (resumeId: string, attachmentId: string): Promise<void> => {
-  await personalApi.delete(`/resume/${resumeId}/attachments/${attachmentId}`);
+  await personalApi.delete(`/v1/resume/${resumeId}/attachments/${attachmentId}`);
 };
 
 export const reorderAttachments = async (
@@ -468,5 +468,5 @@ export const reorderAttachments = async (
   type: AttachmentType,
   attachmentIds: string[]
 ): Promise<void> => {
-  await personalApi.patch(`/resume/${resumeId}/attachments/reorder`, { type, attachmentIds });
+  await personalApi.patch(`/v1/resume/${resumeId}/attachments/reorder`, { type, attachmentIds });
 };
