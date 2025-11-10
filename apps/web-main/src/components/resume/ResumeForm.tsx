@@ -586,6 +586,650 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         )}
       </div>
 
+      {/* Projects Section */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">🚀 Projects</h2>
+            <p className="text-sm text-gray-600">Add your personal and professional projects</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                projects: [
+                  ...(formData.projects || []),
+                  {
+                    name: '',
+                    startDate: '',
+                    endDate: '',
+                    description: '',
+                    role: '',
+                    achievements: [],
+                    techStack: [],
+                    url: '',
+                    githubUrl: '',
+                    order: formData.projects?.length || 0,
+                    visible: true,
+                  },
+                ],
+              });
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          >
+            + Add Project
+          </button>
+        </div>
+
+        {formData.projects && formData.projects.length > 0 ? (
+          <div className="space-y-4">
+            {formData.projects.map((project, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Project #{index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newProjects = formData.projects?.filter((_, i) => i !== index);
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Project Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={project.name}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], name: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., E-commerce Platform"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Your Role
+                    </label>
+                    <input
+                      type="text"
+                      value={project.role || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], role: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., Lead Developer"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="month"
+                      value={project.startDate}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], startDate: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="month"
+                      value={project.endDate || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], endDate: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Leave empty if ongoing"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Demo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={project.url || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], url: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="https://demo.example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      GitHub URL
+                    </label>
+                    <input
+                      type="url"
+                      value={project.githubUrl || ''}
+                      onChange={e => {
+                        const newProjects = [...(formData.projects || [])];
+                        newProjects[index] = { ...newProjects[index], githubUrl: e.target.value };
+                        setFormData({ ...formData, projects: newProjects });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="https://github.com/username/repo"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={project.description}
+                    onChange={e => {
+                      const newProjects = [...(formData.projects || [])];
+                      newProjects[index] = { ...newProjects[index], description: e.target.value };
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="Brief description of the project"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Tech Stack
+                  </label>
+                  <input
+                    type="text"
+                    value={project.techStack?.join(', ') || ''}
+                    onChange={e => {
+                      const newProjects = [...(formData.projects || [])];
+                      newProjects[index] = {
+                        ...newProjects[index],
+                        techStack: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                      };
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="React, Node.js, MongoDB (comma-separated)"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Key Achievements (one per line)
+                  </label>
+                  <textarea
+                    value={project.achievements?.join('\n') || ''}
+                    onChange={e => {
+                      const newProjects = [...(formData.projects || [])];
+                      newProjects[index] = {
+                        ...newProjects[index],
+                        achievements: e.target.value.split('\n').filter(s => s.trim()),
+                      };
+                      setFormData({ ...formData, projects: newProjects });
+                    }}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="Reduced load time by 40%&#10;Implemented real-time features&#10;10,000+ active users"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No projects added yet. Click "Add Project" to get started.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Skills Section */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">⚡ Skills</h2>
+            <p className="text-sm text-gray-600">Organize your technical skills by category</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                skills: [
+                  ...(formData.skills || []),
+                  {
+                    category: '',
+                    items: [],
+                    order: formData.skills?.length || 0,
+                    visible: true,
+                  },
+                ],
+              });
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          >
+            + Add Skill Category
+          </button>
+        </div>
+
+        {formData.skills && formData.skills.length > 0 ? (
+          <div className="space-y-4">
+            {formData.skills.map((skill, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Skill Category #{index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSkills = formData.skills?.filter((_, i) => i !== index);
+                      setFormData({ ...formData, skills: newSkills });
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={skill.category}
+                      onChange={e => {
+                        const newSkills = [...(formData.skills || [])];
+                        newSkills[index] = { ...newSkills[index], category: e.target.value };
+                        setFormData({ ...formData, skills: newSkills });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., Frontend, Backend, DevOps"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Skills <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={skill.items?.join(', ') || ''}
+                      onChange={e => {
+                        const newSkills = [...(formData.skills || [])];
+                        newSkills[index] = {
+                          ...newSkills[index],
+                          items: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                        };
+                        setFormData({ ...formData, skills: newSkills });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="React, TypeScript, Next.js (comma-separated)"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No skills added yet. Click "Add Skill Category" to get started.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Education Section */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">🎓 Education</h2>
+            <p className="text-sm text-gray-600">Add your educational background</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                educations: [
+                  ...(formData.educations || []),
+                  {
+                    school: '',
+                    major: '',
+                    degree: '',
+                    startDate: '',
+                    endDate: '',
+                    gpa: '',
+                    order: formData.educations?.length || 0,
+                    visible: true,
+                  },
+                ],
+              });
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          >
+            + Add Education
+          </button>
+        </div>
+
+        {formData.educations && formData.educations.length > 0 ? (
+          <div className="space-y-4">
+            {formData.educations.map((edu, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Education #{index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newEducations = formData.educations?.filter((_, i) => i !== index);
+                      setFormData({ ...formData, educations: newEducations });
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      School <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={edu.school}
+                      onChange={e => {
+                        const newEducations = [...(formData.educations || [])];
+                        newEducations[index] = { ...newEducations[index], school: e.target.value };
+                        setFormData({ ...formData, educations: newEducations });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="University name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Major <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={edu.major}
+                      onChange={e => {
+                        const newEducations = [...(formData.educations || [])];
+                        newEducations[index] = { ...newEducations[index], major: e.target.value };
+                        setFormData({ ...formData, educations: newEducations });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., Computer Science"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Degree <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={edu.degree}
+                      onChange={e => {
+                        const newEducations = [...(formData.educations || [])];
+                        newEducations[index] = { ...newEducations[index], degree: e.target.value };
+                        setFormData({ ...formData, educations: newEducations });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., Bachelor, Master, PhD"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      GPA
+                    </label>
+                    <input
+                      type="text"
+                      value={edu.gpa || ''}
+                      onChange={e => {
+                        const newEducations = [...(formData.educations || [])];
+                        newEducations[index] = { ...newEducations[index], gpa: e.target.value };
+                        setFormData({ ...formData, educations: newEducations });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., 3.8/4.0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="month"
+                      value={edu.startDate}
+                      onChange={e => {
+                        const newEducations = [...(formData.educations || [])];
+                        newEducations[index] = { ...newEducations[index], startDate: e.target.value };
+                        setFormData({ ...formData, educations: newEducations });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="month"
+                      value={edu.endDate || ''}
+                      onChange={e => {
+                        const newEducations = [...(formData.educations || [])];
+                        newEducations[index] = { ...newEducations[index], endDate: e.target.value };
+                        setFormData({ ...formData, educations: newEducations });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Leave empty if current"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No education added yet. Click "Add Education" to get started.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Certificates Section */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">🏆 Certifications</h2>
+            <p className="text-sm text-gray-600">Add professional certifications and awards</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                certificates: [
+                  ...(formData.certificates || []),
+                  {
+                    name: '',
+                    issuer: '',
+                    issueDate: '',
+                    expiryDate: '',
+                    credentialId: '',
+                    credentialUrl: '',
+                    order: formData.certificates?.length || 0,
+                    visible: true,
+                  },
+                ],
+              });
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          >
+            + Add Certificate
+          </button>
+        </div>
+
+        {formData.certificates && formData.certificates.length > 0 ? (
+          <div className="space-y-4">
+            {formData.certificates.map((cert, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Certificate #{index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newCertificates = formData.certificates?.filter((_, i) => i !== index);
+                      setFormData({ ...formData, certificates: newCertificates });
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Certificate Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cert.name}
+                      onChange={e => {
+                        const newCertificates = [...(formData.certificates || [])];
+                        newCertificates[index] = { ...newCertificates[index], name: e.target.value };
+                        setFormData({ ...formData, certificates: newCertificates });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., AWS Certified Solutions Architect"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Issuer <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={cert.issuer}
+                      onChange={e => {
+                        const newCertificates = [...(formData.certificates || [])];
+                        newCertificates[index] = { ...newCertificates[index], issuer: e.target.value };
+                        setFormData({ ...formData, certificates: newCertificates });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., Amazon Web Services"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Issue Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="month"
+                      value={cert.issueDate}
+                      onChange={e => {
+                        const newCertificates = [...(formData.certificates || [])];
+                        newCertificates[index] = { ...newCertificates[index], issueDate: e.target.value };
+                        setFormData({ ...formData, certificates: newCertificates });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Expiry Date
+                    </label>
+                    <input
+                      type="month"
+                      value={cert.expiryDate || ''}
+                      onChange={e => {
+                        const newCertificates = [...(formData.certificates || [])];
+                        newCertificates[index] = { ...newCertificates[index], expiryDate: e.target.value };
+                        setFormData({ ...formData, certificates: newCertificates });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Leave empty if no expiry"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Credential ID
+                    </label>
+                    <input
+                      type="text"
+                      value={cert.credentialId || ''}
+                      onChange={e => {
+                        const newCertificates = [...(formData.certificates || [])];
+                        newCertificates[index] = { ...newCertificates[index], credentialId: e.target.value };
+                        setFormData({ ...formData, certificates: newCertificates });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Credential ID"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Credential URL
+                    </label>
+                    <input
+                      type="url"
+                      value={cert.credentialUrl || ''}
+                      onChange={e => {
+                        const newCertificates = [...(formData.certificates || [])];
+                        newCertificates[index] = { ...newCertificates[index], credentialUrl: e.target.value };
+                        setFormData({ ...formData, certificates: newCertificates });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="https://verify.example.com"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No certifications added yet. Click "Add Certificate" to get started.</p>
+          </div>
+        )}
+      </div>
+
       {/* Attachments Section */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-2">📎 Attachments</h2>
