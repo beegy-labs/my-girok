@@ -22,6 +22,7 @@ coverage/
 pytest_cache/
 .pytest_cache/
 .jest-cache/
+.vitest-cache/
 
 # Next.js
 .next/
