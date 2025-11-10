@@ -399,6 +399,193 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </div>
       </div>
 
+      {/* Work Experience Section */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">💼 Work Experience</h2>
+            <p className="text-sm text-gray-600">Add your work history and achievements</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                experiences: [
+                  ...(formData.experiences || []),
+                  {
+                    company: '',
+                    position: '',
+                    startDate: '',
+                    endDate: '',
+                    description: '',
+                    achievements: [],
+                    techStack: [],
+                    order: formData.experiences?.length || 0,
+                    visible: true,
+                  },
+                ],
+              });
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          >
+            + Add Experience
+          </button>
+        </div>
+
+        {formData.experiences && formData.experiences.length > 0 ? (
+          <div className="space-y-4">
+            {formData.experiences.map((exp, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Experience #{index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newExperiences = formData.experiences?.filter((_, i) => i !== index);
+                      setFormData({ ...formData, experiences: newExperiences });
+                    }}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Company <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={exp.company}
+                      onChange={e => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        newExperiences[index] = { ...newExperiences[index], company: e.target.value };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Company name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Position <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={exp.position}
+                      onChange={e => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        newExperiences[index] = { ...newExperiences[index], position: e.target.value };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="e.g., Senior Backend Developer"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="month"
+                      value={exp.startDate}
+                      onChange={e => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        newExperiences[index] = { ...newExperiences[index], startDate: e.target.value };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="month"
+                      value={exp.endDate || ''}
+                      onChange={e => {
+                        const newExperiences = [...(formData.experiences || [])];
+                        newExperiences[index] = { ...newExperiences[index], endDate: e.target.value };
+                        setFormData({ ...formData, experiences: newExperiences });
+                      }}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      placeholder="Leave empty if current"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={exp.description}
+                    onChange={e => {
+                      const newExperiences = [...(formData.experiences || [])];
+                      newExperiences[index] = { ...newExperiences[index], description: e.target.value };
+                      setFormData({ ...formData, experiences: newExperiences });
+                    }}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="Brief description of your role and responsibilities"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Tech Stack
+                  </label>
+                  <input
+                    type="text"
+                    value={exp.techStack?.join(', ') || ''}
+                    onChange={e => {
+                      const newExperiences = [...(formData.experiences || [])];
+                      newExperiences[index] = {
+                        ...newExperiences[index],
+                        techStack: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                      };
+                      setFormData({ ...formData, experiences: newExperiences });
+                    }}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="React, Node.js, PostgreSQL (comma-separated)"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Key Achievements (one per line)
+                  </label>
+                  <textarea
+                    value={exp.achievements?.join('\n') || ''}
+                    onChange={e => {
+                      const newExperiences = [...(formData.experiences || [])];
+                      newExperiences[index] = {
+                        ...newExperiences[index],
+                        achievements: e.target.value.split('\n').filter(s => s.trim()),
+                      };
+                      setFormData({ ...formData, experiences: newExperiences });
+                    }}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                    placeholder="Improved system performance by 50%&#10;Led a team of 5 engineers&#10;Implemented CI/CD pipeline"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No work experience added yet. Click "Add Experience" to get started.</p>
+          </div>
+        )}
+      </div>
+
       {/* Attachments Section */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-2">📎 Attachments</h2>

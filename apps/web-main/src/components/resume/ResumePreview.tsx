@@ -21,11 +21,18 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       className="mx-auto bg-white shadow-lg print:shadow-none print:max-w-none"
       style={{ maxWidth: paperDimensions.width }}
     >
-      {/* Page container */}
+      {/* Page container - shows actual print dimensions */}
       <div
-        className="p-[2cm] print:p-[1.5cm] bg-amber-50/10"
-        style={{ width: paperDimensions.width, minHeight: paperDimensions.height }}
+        className="p-[2cm] print:p-[1.5cm] bg-amber-50/10 relative"
+        style={{
+          width: paperDimensions.width,
+          minHeight: paperDimensions.height,
+        }}
       >
+        {/* Page size indicator (hidden in print) */}
+        <div className="print:hidden absolute top-2 right-2 bg-blue-100 border border-blue-300 rounded px-2 py-1 text-xs text-blue-800 z-10">
+          📄 {paperSize} ({paperDimensions.width} × {paperDimensions.height})
+        </div>
         {/* Header - Using CI amber colors for emphasis */}
         <div className="border-b-2 border-amber-800 print:border-gray-800 pb-6 mb-6">
           <div className="flex items-start gap-6">
