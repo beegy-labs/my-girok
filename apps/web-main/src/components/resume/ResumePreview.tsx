@@ -66,38 +66,46 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm print:flex-col print:gap-y-0.5">
                 {resume.github && (
-                  <span>
+                  <div>
                     <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.github}>GitHub</a>
                     </span>
-                    <span className="hidden print:inline text-gray-900">GitHub: {resume.github}</span>
-                  </span>
+                    <span className="hidden print:block text-gray-900">
+                      <span className="font-semibold">GitHub:</span> {resume.github}
+                    </span>
+                  </div>
                 )}
                 {resume.blog && (
-                  <span>
+                  <div>
                     <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.blog}>Blog</a>
                     </span>
-                    <span className="hidden print:inline text-gray-900">Blog: {resume.blog}</span>
-                  </span>
+                    <span className="hidden print:block text-gray-900">
+                      <span className="font-semibold">Blog:</span> {resume.blog}
+                    </span>
+                  </div>
                 )}
                 {resume.linkedin && (
-                  <span>
+                  <div>
                     <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.linkedin}>LinkedIn</a>
                     </span>
-                    <span className="hidden print:inline text-gray-900">LinkedIn: {resume.linkedin}</span>
-                  </span>
+                    <span className="hidden print:block text-gray-900">
+                      <span className="font-semibold">LinkedIn:</span> {resume.linkedin}
+                    </span>
+                  </div>
                 )}
                 {resume.portfolio && (
-                  <span>
+                  <div>
                     <span className="print:hidden text-gray-700 hover:underline">
                       <a href={resume.portfolio}>Portfolio</a>
                     </span>
-                    <span className="hidden print:inline text-gray-900">Portfolio: {resume.portfolio}</span>
-                  </span>
+                    <span className="hidden print:block text-gray-900">
+                      <span className="font-semibold">Portfolio:</span> {resume.portfolio}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
@@ -250,22 +258,26 @@ function ProjectsSection({ projects }: { projects: any[] }) {
             </p>
           )}
           {(project.url || project.githubUrl) && (
-            <div className="flex gap-3 mt-2 text-sm">
+            <div className="flex gap-3 mt-2 text-sm print:flex-col print:gap-1">
               {project.url && (
-                <span>
+                <div>
                   <span className="print:hidden text-gray-700 hover:underline">
                     <a href={project.url}>Demo</a>
                   </span>
-                  <span className="hidden print:inline text-gray-900">Demo: {project.url}</span>
-                </span>
+                  <span className="hidden print:block text-gray-900">
+                    <span className="font-semibold">Demo:</span> {project.url}
+                  </span>
+                </div>
               )}
               {project.githubUrl && (
-                <span>
+                <div>
                   <span className="print:hidden text-gray-700 hover:underline">
                     <a href={project.githubUrl}>GitHub</a>
                   </span>
-                  <span className="hidden print:inline text-gray-900">GitHub: {project.githubUrl}</span>
-                </span>
+                  <span className="hidden print:block text-gray-900">
+                    <span className="font-semibold">GitHub:</span> {project.githubUrl}
+                  </span>
+                </div>
               )}
             </div>
           )}
@@ -320,12 +332,14 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
               <h3 className="font-semibold text-gray-900">{cert.name}</h3>
               <p className="text-gray-700">{cert.issuer}</p>
               {cert.credentialUrl && (
-                <span>
+                <div className="mt-1">
                   <span className="print:hidden text-sm text-gray-700 hover:underline">
                     <a href={cert.credentialUrl}>Verify</a>
                   </span>
-                  <span className="hidden print:inline text-sm text-gray-900">Verify: {cert.credentialUrl}</span>
-                </span>
+                  <span className="hidden print:block text-sm text-gray-900">
+                    <span className="font-semibold">Verify:</span> {cert.credentialUrl}
+                  </span>
+                </div>
               )}
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
