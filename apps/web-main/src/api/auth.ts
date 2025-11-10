@@ -27,7 +27,7 @@ authApi.interceptors.request.use(
     if (!isRefreshing && needsProactiveRefresh() && refreshToken) {
       isRefreshing = true;
       try {
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
+        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
           refreshToken,
         });
 
@@ -60,7 +60,7 @@ authApi.interceptors.response.use(
 
       try {
         const { refreshToken } = useAuthStore.getState();
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
+        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
           refreshToken,
         });
 
@@ -88,22 +88,22 @@ authApi.interceptors.response.use(
 import type { RegisterDto as IRegisterDto, LoginDto as ILoginDto } from '@my-girok/types';
 
 export const register = async (data: IRegisterDto) => {
-  const response = await authApi.post('/auth/register', data);
+  const response = await authApi.post('/v1/auth/register', data);
   return response.data;
 };
 
 export const login = async (data: ILoginDto) => {
-  const response = await authApi.post('/auth/login', data);
+  const response = await authApi.post('/v1/auth/login', data);
   return response.data;
 };
 
 export const logout = async () => {
   const { refreshToken } = useAuthStore.getState();
-  await authApi.post('/auth/logout', { refreshToken });
+  await authApi.post('/v1/auth/logout', { refreshToken });
   useAuthStore.getState().clearAuth();
 };
 
 export const getCurrentUser = async () => {
-  const response = await authApi.get('/users/me');
+  const response = await authApi.get('/v1/users/me');
   return response.data;
 };
