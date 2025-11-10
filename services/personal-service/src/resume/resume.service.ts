@@ -51,7 +51,26 @@ export class ResumeService {
           create: dto.skills,
         } : undefined,
         experiences: dto.experiences ? {
-          create: dto.experiences,
+          create: dto.experiences.map(exp => ({
+            company: exp.company,
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            order: exp.order,
+            visible: exp.visible,
+            roles: {
+              create: exp.roles?.map(role => ({
+                title: role.title,
+                order: role.order,
+                tasks: {
+                  create: role.tasks?.map(task => ({
+                    content: task.content,
+                    depth: task.depth,
+                    order: task.order,
+                  })) || [],
+                },
+              })) || [],
+            },
+          })),
         } : undefined,
         projects: dto.projects ? {
           create: dto.projects,
@@ -75,7 +94,19 @@ export class ResumeService {
         include: {
           sections: { orderBy: { order: 'asc' } },
           skills: { orderBy: { order: 'asc' } },
-          experiences: { orderBy: { order: 'asc' } },
+          experiences: {
+            orderBy: { order: 'asc' },
+            include: {
+              roles: {
+                orderBy: { order: 'asc' },
+                include: {
+                  tasks: {
+                    orderBy: { order: 'asc' },
+                  },
+                },
+              },
+            },
+          },
           projects: { orderBy: { order: 'asc' } },
           educations: { orderBy: { order: 'asc' } },
           certificates: { orderBy: { order: 'asc' } },
@@ -93,7 +124,19 @@ export class ResumeService {
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
-        experiences: { orderBy: { order: 'asc' } },
+        experiences: {
+          orderBy: { order: 'asc' },
+          include: {
+            roles: {
+              orderBy: { order: 'asc' },
+              include: {
+                tasks: {
+                  orderBy: { order: 'asc' },
+                },
+              },
+            },
+          },
+        },
         projects: { orderBy: { order: 'asc' } },
         educations: { orderBy: { order: 'asc' } },
         certificates: { orderBy: { order: 'asc' } },
@@ -114,7 +157,19 @@ export class ResumeService {
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
-        experiences: { orderBy: { order: 'asc' } },
+        experiences: {
+          orderBy: { order: 'asc' },
+          include: {
+            roles: {
+              orderBy: { order: 'asc' },
+              include: {
+                tasks: {
+                  orderBy: { order: 'asc' },
+                },
+              },
+            },
+          },
+        },
         projects: { orderBy: { order: 'asc' } },
         educations: { orderBy: { order: 'asc' } },
         certificates: { orderBy: { order: 'asc' } },
@@ -139,7 +194,19 @@ export class ResumeService {
       include: {
         sections: { orderBy: { order: 'asc' } },
         skills: { orderBy: { order: 'asc' } },
-        experiences: { orderBy: { order: 'asc' } },
+        experiences: {
+          orderBy: { order: 'asc' },
+          include: {
+            roles: {
+              orderBy: { order: 'asc' },
+              include: {
+                tasks: {
+                  orderBy: { order: 'asc' },
+                },
+              },
+            },
+          },
+        },
         projects: { orderBy: { order: 'asc' } },
         educations: { orderBy: { order: 'asc' } },
         certificates: { orderBy: { order: 'asc' } },
@@ -195,9 +262,31 @@ export class ResumeService {
 
       if (dto.experiences) {
         await tx.experience.deleteMany({ where: { resumeId: resume.id } });
-        await tx.experience.createMany({
-          data: dto.experiences.map(exp => ({ ...exp, resumeId: resume.id })),
-        });
+        for (const exp of dto.experiences) {
+          await tx.experience.create({
+            data: {
+              resumeId: resume.id,
+              company: exp.company,
+              startDate: exp.startDate,
+              endDate: exp.endDate,
+              order: exp.order,
+              visible: exp.visible,
+              roles: {
+                create: exp.roles?.map(role => ({
+                  title: role.title,
+                  order: role.order,
+                  tasks: {
+                    create: role.tasks?.map(task => ({
+                      content: task.content,
+                      depth: task.depth,
+                      order: task.order,
+                    })) || [],
+                  },
+                })) || [],
+              },
+            },
+          });
+        }
       }
 
       if (dto.projects) {
@@ -227,7 +316,19 @@ export class ResumeService {
         include: {
           sections: { orderBy: { order: 'asc' } },
           skills: { orderBy: { order: 'asc' } },
-          experiences: { orderBy: { order: 'asc' } },
+          experiences: {
+            orderBy: { order: 'asc' },
+            include: {
+              roles: {
+                orderBy: { order: 'asc' },
+                include: {
+                  tasks: {
+                    orderBy: { order: 'asc' },
+                  },
+                },
+              },
+            },
+          },
           projects: { orderBy: { order: 'asc' } },
           educations: { orderBy: { order: 'asc' } },
           certificates: { orderBy: { order: 'asc' } },
@@ -263,7 +364,19 @@ export class ResumeService {
         include: {
           sections: { orderBy: { order: 'asc' } },
           skills: { orderBy: { order: 'asc' } },
-          experiences: { orderBy: { order: 'asc' } },
+          experiences: {
+            orderBy: { order: 'asc' },
+            include: {
+              roles: {
+                orderBy: { order: 'asc' },
+                include: {
+                  tasks: {
+                    orderBy: { order: 'asc' },
+                  },
+                },
+              },
+            },
+          },
           projects: { orderBy: { order: 'asc' } },
           educations: { orderBy: { order: 'asc' } },
           certificates: { orderBy: { order: 'asc' } },

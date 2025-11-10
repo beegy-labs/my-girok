@@ -592,23 +592,44 @@ All resume sections support unlimited entries, allowing users to create comprehe
 #### Dynamic Section Features
 
 ##### 1. Work Experience (경력)
-- **Unlimited Entries**: Add as many companies/positions as needed
-- **Fields Per Entry**:
+- **Unlimited Companies**: Add as many companies as needed
+- **Company Fields**:
   - Company name (required)
-  - Position/title (required)
   - Start date (required)
   - End date (optional - leave empty for "Present")
-  - Description (summary of role)
-  - Achievements (bullet points - unlimited)
-  - Tech stack (array of technologies)
   - Order (for drag-and-drop)
   - Visibility toggle
-- **Add/Remove**: Dynamic buttons to manage entries
+
+- **Unlimited Roles per Company**: Each company can have multiple roles/positions
+- **Role Fields**:
+  - Role title (required) - e.g., "Senior Backend Developer", "Team Lead"
+  - Hierarchical tasks (unlimited)
+
+- **Hierarchical Task Structure**: Each role supports up to 4 levels of indentation
+  - **Depth 1** (•): Main tasks/responsibilities
+  - **Depth 2** (◦): Sub-tasks or details
+  - **Depth 3** (▪): Further breakdown
+  - **Depth 4** (▫): Most detailed level
+  - **Indentation**: Standard 1.5em per level (approximately 6 spaces)
+  - **Bullet Styles**: Follows standard document formatting conventions
+    - Level 1: Filled circle (•)
+    - Level 2: Open circle (◦)
+    - Level 3: Filled square (▪)
+    - Level 4: Open square (▫)
+
+- **UI Features**:
+  - Depth selector dropdown (--, ---, ----, ----) for each task
+  - Visual indentation in form editor
+  - Dynamic add/remove for companies, roles, and tasks
+  - Tasks can be reordered within each role
+
 - **Use Cases**:
-  - Multiple companies in career
-  - Different roles at same company
-  - Contract/freelance positions
-  - Part-time roles
+  - Multiple companies in career history
+  - Different roles/promotions at same company
+  - Detailed breakdown of responsibilities and achievements
+  - Hierarchical project structures (e.g., main feature → components → implementations → optimizations)
+  - Contract/freelance positions with multiple deliverables
+  - Team lead roles with oversight responsibilities
 
 ##### 2. Projects (프로젝트)
 - **Unlimited Entries**: Add all significant projects
@@ -1295,6 +1316,33 @@ The resume feature follows the My-Girok design system with a library/book theme.
 - Use rounded-2xl for cards, rounded-lg for inputs/buttons
 
 ## Change Log
+
+- **2025-01-12**: Enhanced work experience with hierarchical task structure
+  - **Hierarchical Task System**:
+    - Restructured work experience to support unlimited roles per company
+    - Each role now contains a hierarchical task tree instead of flat achievements
+    - Support for 4 levels of indentation with standard bullet styles
+    - Depth-based indentation: 1.5em per level (≈6 spaces)
+    - Standard bullet progression: • (filled circle) → ◦ (open circle) → ▪ (filled square) → ▫ (open square)
+  - **Database Schema**:
+    - Added `ExperienceTask` model with self-referencing parent-child relations
+    - Removed flat `description`, `achievements`, `techStack` fields from `ExperienceRole`
+    - Tasks stored with `content`, `depth` (1-4), and `order` fields
+    - Cascade delete ensures data integrity
+  - **API Changes**:
+    - Updated `CreateExperienceRoleDto` to include `tasks` array
+    - Added `CreateExperienceTaskDto` with recursive `children` support
+    - Role-based task organization instead of flat achievement lists
+  - **UI Improvements**:
+    - Depth selector dropdown (--, ---, ----, ----) for visual feedback
+    - Dynamic indentation in form editor matching preview
+    - Simplified role management without tech stack/achievement fields
+    - Clean task-focused interface for detailed work breakdowns
+  - **Preview Rendering**:
+    - Professional document formatting with proper bullet styles
+    - Hierarchical display with consistent indentation
+    - Print-optimized layout following standard document conventions
+    - Visual hierarchy matches depth levels
 
 - **2025-01-11**: Added internationalization and design system compliance
   - **Internationalization (i18n)**:

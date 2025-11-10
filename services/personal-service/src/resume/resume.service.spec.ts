@@ -49,6 +49,15 @@ describe('ResumeService', () => {
       deleteMany: jest.fn(),
     },
     experience: {
+      create: jest.fn(),
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    experienceRole: {
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    experienceTask: {
       createMany: jest.fn(),
       deleteMany: jest.fn(),
     },
@@ -122,6 +131,16 @@ describe('ResumeService', () => {
         projects: [],
         educations: [],
         certificates: [],
+        militaryService: null,
+        militaryDischarge: null,
+        coverLetter: null,
+        careerGoals: null,
+        paperSize: 'A4',
+        github: null,
+        blog: null,
+        linkedin: null,
+        portfolio: null,
+        profileImage: null,
       };
 
       mockPrismaService.$transaction.mockImplementation(async (callback) => {
@@ -200,6 +219,8 @@ describe('ResumeService', () => {
           projects: [],
           educations: [],
           certificates: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
         {
           id: 'resume-2',
@@ -214,6 +235,8 @@ describe('ResumeService', () => {
           projects: [],
           educations: [],
           certificates: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ];
 

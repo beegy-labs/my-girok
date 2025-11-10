@@ -188,34 +188,70 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
   const { t } = useTranslation();
   if (experiences.length === 0) return null;
 
+  // Standard indentation: 1.5em per depth level (approximately 6 spaces)
+  const getIndentation = (depth: number) => {
+    return `${(depth - 1) * 1.5}em`;
+  };
+
+  // Bullet style based on depth following standard document formatting
+  const getBulletStyle = (depth: number) => {
+    switch (depth) {
+      case 1:
+        return '• '; // Filled circle
+      case 2:
+        return '◦ '; // Open circle
+      case 3:
+        return '▪ '; // Filled square
+      case 4:
+        return '▫ '; // Open square
+      default:
+        return '• ';
+    }
+  };
+
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.experience')}
       </h2>
       {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
-        <div key={idx} className="mb-4">
-          <div className="flex justify-between items-start mb-1">
-            <div>
-              <h3 className="font-semibold text-gray-900">{exp.company}</h3>
-              <p className="text-gray-700">{exp.position}</p>
-            </div>
+        <div key={idx} className="mb-5">
+          {/* Company Header */}
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
             <span className="text-sm text-gray-700 whitespace-nowrap">
               {exp.startDate} - {exp.endDate || 'Present'}
             </span>
           </div>
-          <p className="text-sm text-gray-700 mb-2">{exp.description}</p>
-          {exp.achievements.length > 0 && (
-            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-2">
-              {exp.achievements.map((achievement: string, i: number) => (
-                <li key={i}>{achievement}</li>
+
+          {/* Roles */}
+          {exp.roles && exp.roles.length > 0 && (
+            <div className="space-y-4">
+              {exp.roles.sort((a: any, b: any) => a.order - b.order).map((role: any, roleIdx: number) => (
+                <div key={roleIdx}>
+                  <h4 className="font-semibold text-gray-900 mb-2">{role.title}</h4>
+
+                  {/* Hierarchical Tasks */}
+                  {role.tasks && role.tasks.length > 0 && (
+                    <div className="text-sm text-gray-700">
+                      {role.tasks.sort((a: any, b: any) => a.order - b.order).map((task: any, taskIdx: number) => (
+                        <div
+                          key={taskIdx}
+                          className="flex items-start"
+                          style={{
+                            marginLeft: getIndentation(task.depth),
+                            marginBottom: '0.25rem'
+                          }}
+                        >
+                          <span className="mr-1 select-none">{getBulletStyle(task.depth)}</span>
+                          <span className="flex-1">{task.content}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
-            </ul>
-          )}
-          {exp.techStack.length > 0 && (
-            <p className="text-sm text-gray-700 mt-2">
-              <span className="font-semibold">Tech:</span> {exp.techStack.join(', ')}
-            </p>
+            </div>
           )}
         </div>
       ))}
