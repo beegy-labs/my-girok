@@ -38,6 +38,7 @@ export class ResumeService {
           title: dto.title,
           description: dto.description,
           isDefault: dto.isDefault ?? false,
+          paperSize: dto.paperSize,
           name: dto.name,
           email: dto.email,
           phone: dto.phone,
@@ -47,6 +48,10 @@ export class ResumeService {
           portfolio: dto.portfolio,
           summary: dto.summary,
           profileImage: dto.profileImage,
+          militaryService: dto.militaryService,
+          militaryDischarge: dto.militaryDischarge,
+          coverLetter: dto.coverLetter,
+          careerGoals: dto.careerGoals,
         skills: dto.skills ? {
           create: dto.skills,
         } : undefined,
@@ -249,6 +254,7 @@ export class ResumeService {
           title: dto.title,
           description: dto.description,
           isDefault: dto.isDefault,
+          paperSize: dto.paperSize,
           name: dto.name,
           email: dto.email,
           phone: dto.phone,
@@ -258,6 +264,10 @@ export class ResumeService {
           portfolio: dto.portfolio,
           summary: dto.summary,
           profileImage: dto.profileImage,
+          militaryService: dto.militaryService,
+          militaryDischarge: dto.militaryDischarge,
+          coverLetter: dto.coverLetter,
+          careerGoals: dto.careerGoals,
         },
       });
 

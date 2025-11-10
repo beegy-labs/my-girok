@@ -1,6 +1,17 @@
-import { IsString, IsEmail, IsOptional, IsArray, ValidateNested, IsBoolean, IsInt, Min } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsArray, ValidateNested, IsBoolean, IsInt, Min, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export enum PaperSize {
+  A4 = 'A4',
+  LETTER = 'LETTER',
+}
+
+export enum MilitaryService {
+  COMPLETED = 'COMPLETED',
+  EXEMPTED = 'EXEMPTED',
+  NOT_APPLICABLE = 'NOT_APPLICABLE',
+}
 
 export class CreateSkillDto {
   @ApiProperty({ example: 'Frontend' })
@@ -288,6 +299,11 @@ export class CreateResumeDto {
   @IsBoolean()
   isDefault?: boolean;
 
+  @ApiPropertyOptional({ enum: PaperSize, default: PaperSize.A4, description: 'Preferred paper size for PDF export' })
+  @IsOptional()
+  @IsEnum(PaperSize)
+  paperSize?: PaperSize;
+
   @ApiProperty({ example: 'Hong Gildong' })
   @IsString()
   name!: string;
@@ -330,6 +346,26 @@ export class CreateResumeDto {
   @IsOptional()
   @IsString()
   profileImage?: string;
+
+  @ApiPropertyOptional({ enum: MilitaryService, description: 'Military service status (Korean-specific)' })
+  @IsOptional()
+  @IsEnum(MilitaryService)
+  militaryService?: MilitaryService;
+
+  @ApiPropertyOptional({ example: '병장 제대, 2020.01 - 2021.10', description: 'Military service details (Korean-specific)' })
+  @IsOptional()
+  @IsString()
+  militaryDischarge?: string;
+
+  @ApiPropertyOptional({ example: '저는 백엔드 개발자로서...', description: 'Cover letter (Korean-specific)' })
+  @IsOptional()
+  @IsString()
+  coverLetter?: string;
+
+  @ApiPropertyOptional({ example: '입사 후에는 팀의 기술 리더로서...', description: 'Career goals after joining (Korean-specific)' })
+  @IsOptional()
+  @IsString()
+  careerGoals?: string;
 
   @ApiPropertyOptional({ type: [CreateSkillDto] })
   @IsOptional()
