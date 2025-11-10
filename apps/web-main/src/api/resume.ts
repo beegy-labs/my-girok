@@ -1,4 +1,5 @@
-import { authApi } from './auth';
+import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
 
 // ========== Types ==========
 
@@ -231,9 +232,57 @@ export interface UpdateShareLinkDto {
 
 const PERSONAL_API_URL = import.meta.env.VITE_PERSONAL_API_URL || 'http://localhost:4002';
 
-export const personalApi = authApi.create({
-  baseURL: `${PERSONAL_API_URL}/v1`,
+// Create personalApi using axios.create and copy interceptors from authApi
+export const personalApi = axios.create({
+  baseURL: PERSONAL_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
+
+// Copy request interceptor from authApi to add JWT token
+personalApi.interceptors.request.use(
+  (config) => {
+    const { accessToken } = useAuthStore.getState();
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+// Copy response interceptor for token refresh
+personalApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const { refreshToken } = useAuthStore.getState();
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const response = await axios.post(`${API_URL}/auth/refresh`, {
+          refreshToken,
+        });
+
+        const { accessToken } = response.data;
+        useAuthStore.getState().updateAccessToken(accessToken);
+
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return personalApi(originalRequest);
+      } catch (refreshError) {
+        useAuthStore.getState().clearAuth();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 // ========== Resume APIs ==========
 
