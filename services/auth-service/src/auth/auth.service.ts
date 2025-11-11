@@ -16,6 +16,7 @@ import {
   Role,
   AuthProvider
 } from '@my-girok/types';
+import { generateUniqueExternalId } from '../common/utils/id-generator';
 
 @Injectable()
 export class AuthService {
@@ -46,10 +47,19 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
+    // Generate unique external_id with collision checking
+    const externalId = await generateUniqueExternalId(async (id) => {
+      const existing = await this.prisma.user.findUnique({
+        where: { externalId: id },
+      });
+      return !existing; // Return true if unique (not existing)
+    });
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         username: dto.username,
+        externalId,
         password: hashedPassword,
         name: dto.name,
         role: Role.USER,
@@ -262,10 +272,19 @@ export class AuthService {
       const randomSuffix = Math.random().toString(36).substring(2, 8);
       const username = `${emailPrefix}${randomSuffix}`;
 
+      // Generate unique external_id with collision checking
+      const externalId = await generateUniqueExternalId(async (id) => {
+        const existing = await this.prisma.user.findUnique({
+          where: { externalId: id },
+        });
+        return !existing; // Return true if unique (not existing)
+      });
+
       user = await this.prisma.user.create({
         data: {
           email,
           username,
+          externalId,
           name,
           avatar,
           provider,
