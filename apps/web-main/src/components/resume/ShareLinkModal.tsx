@@ -11,6 +11,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [duration, setDuration] = useState<ShareDuration>(ShareDuration.ONE_MONTH);
+  const [customDate, setCustomDate] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,10 +32,20 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
   };
 
   const handleCreate = async () => {
+    if (duration === ShareDuration.CUSTOM && !customDate) {
+      alert('Please select a custom expiration date.');
+      return;
+    }
+
     setCreating(true);
     try {
-      await createResumeShare(resumeId, { duration });
+      const dto: any = { duration };
+      if (duration === ShareDuration.CUSTOM && customDate) {
+        dto.customExpiresAt = new Date(customDate).toISOString();
+      }
+      await createResumeShare(resumeId, dto);
       await loadShareLinks();
+      setCustomDate(''); // Reset custom date
     } catch (err) {
       alert('Failed to create share link. Please try again.');
     } finally {
@@ -102,26 +113,43 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
             <p className="text-sm text-gray-700 mb-4">
               Generate a shareable link that allows others to view your resume
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Expiration Period
-                </label>
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value as ShareDuration)}
-                  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
-                >
-                  <option value={ShareDuration.ONE_WEEK}>⏱️ 1 Week</option>
-                  <option value={ShareDuration.ONE_MONTH}>📅 1 Month</option>
-                  <option value={ShareDuration.THREE_MONTHS}>📆 3 Months</option>
-                  <option value={ShareDuration.PERMANENT}>♾️ Permanent</option>
-                </select>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Expiration Period
+                  </label>
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value as ShareDuration)}
+                    className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+                  >
+                    <option value={ShareDuration.ONE_WEEK}>⏱️ 1 Week</option>
+                    <option value={ShareDuration.ONE_MONTH}>📅 1 Month</option>
+                    <option value={ShareDuration.THREE_MONTHS}>📆 3 Months</option>
+                    <option value={ShareDuration.PERMANENT}>♾️ Permanent</option>
+                    <option value={ShareDuration.CUSTOM}>🗓️ Custom Date</option>
+                  </select>
+                </div>
+                {duration === ShareDuration.CUSTOM && (
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Custom Expiration Date
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+                    />
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="sm:mt-7 px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creating ? '⏳ Creating...' : '➕ Create Link'}
               </button>

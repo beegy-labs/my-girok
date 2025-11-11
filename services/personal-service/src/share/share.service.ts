@@ -11,7 +11,7 @@ export class ShareService {
     private resumeService: ResumeService,
   ) {}
 
-  private calculateExpiration(duration: ShareDuration): Date | null {
+  private calculateExpiration(duration: ShareDuration, customDate?: string): Date | null {
     const now = new Date();
 
     switch (duration) {
@@ -21,6 +21,8 @@ export class ShareService {
         return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       case ShareDuration.THREE_MONTHS:
         return new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+      case ShareDuration.CUSTOM:
+        return customDate ? new Date(customDate) : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       case ShareDuration.PERMANENT:
         return null;
       default:
@@ -32,7 +34,7 @@ export class ShareService {
     // Check if resume exists and belongs to user
     const resume = await this.resumeService.findByIdAndUserId(resumeId, userId);
 
-    const expiresAt = this.calculateExpiration(dto.duration);
+    const expiresAt = this.calculateExpiration(dto.duration, dto.customExpiresAt);
 
     const shareLink = await this.prisma.shareLink.create({
       data: {
@@ -88,7 +90,7 @@ export class ShareService {
     const updateData: any = {};
 
     if (dto.duration !== undefined) {
-      updateData.expiresAt = this.calculateExpiration(dto.duration);
+      updateData.expiresAt = this.calculateExpiration(dto.duration, dto.customExpiresAt);
     }
 
     if (dto.isActive !== undefined) {
