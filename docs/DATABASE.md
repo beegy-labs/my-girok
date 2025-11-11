@@ -390,6 +390,183 @@ gunzip < backup.sql.gz | psql -h db-host -U user database
 psql -h db-host -U user database < backup.sql
 ```
 
+## Timezone Handling
+
+### Standard: UTC with TIMESTAMPTZ
+
+**All timestamps in the database MUST use TIMESTAMPTZ (TIMESTAMP WITH TIME ZONE) with UTC.**
+
+#### Why TIMESTAMPTZ?
+
+1. **Explicit Timezone Information**
+   - Stores timezone metadata with each timestamp
+   - Eliminates ambiguity in distributed systems
+   - PostgreSQL handles timezone conversions automatically
+
+2. **Global Consistency**
+   - Same timestamp value regardless of server location
+   - Safe for multi-region deployments
+   - Consistent behavior across all environments
+
+3. **Better Developer Experience**
+   - Clear timezone guarantees in schema
+   - Easier debugging of time-related issues
+   - Reduced mental overhead
+
+#### Prisma Schema Convention
+
+```prisma
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+}
+```
+
+**Key Points:**
+- Always add `@db.Timestamptz(6)` to DateTime fields
+- Use 6 digits of microsecond precision
+- Database timezone is set to `Etc/UTC`
+
+#### Migration Pattern
+
+When adding new timestamp columns:
+
+```sql
+-- Correct: Use TIMESTAMPTZ
+ALTER TABLE "users"
+  ADD COLUMN "last_login" TIMESTAMPTZ(6) DEFAULT now();
+
+-- Incorrect: Don't use TIMESTAMP without timezone
+ALTER TABLE "users"
+  ADD COLUMN "last_login" TIMESTAMP DEFAULT now();  -- ❌ WRONG
+```
+
+When converting existing TIMESTAMP columns:
+
+```sql
+-- Safe conversion preserving data as UTC
+ALTER TABLE "users"
+  ALTER COLUMN "created_at" TYPE TIMESTAMPTZ(6)
+  USING "created_at" AT TIME ZONE 'UTC';
+```
+
+#### Application Code Guidelines
+
+**Backend (Node.js/TypeScript):**
+```typescript
+// ✅ Correct: Use Date.now() or new Date()
+const now = Date.now(); // Returns UTC milliseconds
+const date = new Date(); // Stores UTC internally
+
+// ✅ Correct: Prisma handles UTC automatically
+const user = await prisma.user.create({
+  data: {
+    email: 'user@example.com',
+    createdAt: new Date(), // Automatically stored as UTC
+  },
+});
+
+// ❌ Wrong: Don't manually convert timezones
+const date = new Date().toLocaleString('Asia/Seoul'); // Returns string, not Date
+```
+
+**Frontend (JavaScript):**
+```typescript
+// ✅ Correct: Let JavaScript handle timezone conversion
+const date = new Date(user.createdAt); // UTC timestamp from server
+const localTime = date.toLocaleString(); // Converts to user's timezone
+
+// ✅ Correct: Display in user's locale
+date.toLocaleDateString('ko-KR'); // "2025. 1. 11."
+date.toLocaleDateString('en-US'); // "1/11/2025"
+
+// ❌ Wrong: Don't assume server timezone
+const date = new Date(user.createdAt + ' KST'); // Wrong!
+```
+
+#### API Response Format
+
+Always return timestamps in ISO 8601 format with UTC timezone:
+
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "createdAt": "2025-01-11T14:40:01.708Z",  // ✅ ISO 8601 with Z (UTC)
+  "updatedAt": "2025-01-11T14:40:01.708Z"
+}
+```
+
+**Do NOT:**
+- Return timestamps without timezone: `"2025-01-11T14:40:01"` ❌
+- Return in server's local timezone: `"2025-01-11T23:40:01+09:00"` ❌
+- Return as Unix timestamp: `1704983041708` ❌ (unless specifically needed)
+
+#### Verification Checklist
+
+Before deploying:
+
+1. **Schema Check**
+   ```sql
+   -- All timestamp columns should be TIMESTAMPTZ
+   SELECT table_name, column_name, data_type
+   FROM information_schema.columns
+   WHERE table_schema = 'public'
+     AND data_type LIKE '%timestamp%';
+   ```
+
+2. **Timezone Check**
+   ```sql
+   -- Database timezone should be UTC
+   SHOW timezone;  -- Should return: Etc/UTC
+   ```
+
+3. **Prisma Schema Check**
+   ```bash
+   # All DateTime fields should have @db.Timestamptz(6)
+   grep -n "DateTime" prisma/schema.prisma | grep -v "Timestamptz"
+   ```
+
+#### Common Pitfalls
+
+❌ **Pitfall 1: Forgetting @db.Timestamptz**
+```prisma
+// Wrong: Missing @db.Timestamptz annotation
+createdAt DateTime @default(now()) @map("created_at")
+
+// Correct
+createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+```
+
+❌ **Pitfall 2: Manual Timezone Conversion**
+```typescript
+// Wrong: Manual conversion can introduce bugs
+const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+
+// Correct: Let system handle it
+const localDate = utcDate.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+```
+
+❌ **Pitfall 3: Comparing Timestamps Without Timezone**
+```typescript
+// Wrong: String comparison doesn't work
+if (date1 > date2) { } // May fail if formats differ
+
+// Correct: Compare as Date objects or milliseconds
+if (new Date(date1).getTime() > new Date(date2).getTime()) { }
+```
+
+#### Reference Implementation
+
+See migration: `docs/changelogs/2025-01-11-timezone-migration.md`
+
+Example files:
+- `services/auth-service/prisma/schema.prisma`
+- `services/auth-service/src/common/utils/id-generator.ts`
+- `services/auth-service/prisma/migrations/20250111120000_convert_to_timestamptz/`
+
 ## Best Practices
 
 ### 1. Migration Safety
