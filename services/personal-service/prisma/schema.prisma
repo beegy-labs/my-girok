@@ -165,10 +165,10 @@ model Skill {
   resumeId String @map("resume_id")
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  category String   // Frontend, Backend, DevOps, Database, Tools, etc.
-  items    String[] // ["React", "TypeScript", "Next.js"]
-  order    Int      @default(0)
-  visible  Boolean  @default(true)
+  category String // Frontend, Backend, DevOps, Database, Tools, etc.
+  items    Json   // [{ name: "React", level: "상", description: "3년 실무 경험" }]
+  order    Int    @default(0)
+  visible  Boolean @default(true)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

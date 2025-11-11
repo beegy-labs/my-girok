@@ -13,7 +13,6 @@ export enum SectionType {
 
 export interface SkillItem {
   name: string; // 기술명 (e.g., "React", "Node.js")
-  level?: string; // 숙련도 (e.g., "상", "중", "하" or "Expert", "Advanced", "Intermediate", "Basic")
   description?: string; // 활용 경험/세부 설명
 }
 
