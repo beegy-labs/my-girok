@@ -7,6 +7,7 @@ import PrivateRoute from './components/PrivateRoute';
 import ResumeEditPage from './pages/resume/ResumeEditPage';
 import ResumePreviewPage from './pages/resume/ResumePreviewPage';
 import PublicResumePage from './pages/resume/PublicResumePage';
+import SharedResumePage from './pages/resume/SharedResumePage';
 import MyResumePage from './pages/resume/MyResumePage';
 
 function App() {
@@ -57,6 +58,8 @@ function App() {
           />
           {/* Public resume view by username */}
           <Route path="/resume/:username" element={<PublicResumePage />} />
+          {/* Shared resume view by token */}
+          <Route path="/shared/:token" element={<SharedResumePage />} />
         </Routes>
       </main>
     </div>
