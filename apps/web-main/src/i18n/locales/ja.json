@@ -50,6 +50,11 @@
     "edit": "履歴書編集",
     "preview": "プレビュー",
     "viewPublic": "公開プロフィール表示",
+    "contactInfo": {
+      "email": "Email",
+      "phone": "Phone",
+      "address": "住所"
+    },
     "sections": {
       "settings": "履歴書設定",
       "basicInfo": "基本情報",

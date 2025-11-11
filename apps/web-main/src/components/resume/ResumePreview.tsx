@@ -54,16 +54,16 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{resume.name}</h1>
               <div className="flex flex-col gap-y-0.5 text-sm text-gray-700 mb-2">
                 <div>
-                  <span className="font-semibold">Email:</span> {resume.email}
+                  <span className="font-semibold">{t('resume.contactInfo.email')}:</span> {resume.email}
                 </div>
                 {resume.phone && (
                   <div>
-                    <span className="font-semibold">Phone:</span> {resume.phone}
+                    <span className="font-semibold">{t('resume.contactInfo.phone')}:</span> {resume.phone}
                   </div>
                 )}
                 {resume.address && (
                   <div>
-                    <span className="font-semibold">Address:</span> {resume.address}
+                    <span className="font-semibold">{t('resume.contactInfo.address')}:</span> {resume.address}
                   </div>
                 )}
               </div>

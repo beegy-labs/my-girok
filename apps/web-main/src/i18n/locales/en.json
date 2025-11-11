@@ -52,6 +52,11 @@
     "preview": "Preview",
     "viewPublic": "View Public Profile",
     "address": "Address",
+    "contactInfo": {
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address"
+    },
     "sections": {
       "settings": "Resume Settings",
       "basicInfo": "Basic Information",
