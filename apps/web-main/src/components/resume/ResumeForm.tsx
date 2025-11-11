@@ -45,7 +45,16 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     militaryServiceEndDate: resume?.militaryServiceEndDate || '',
     coverLetter: resume?.coverLetter || '',
     careerGoals: resume?.careerGoals || '',
-    skills: resume?.skills?.map(s => ({ category: s.category, items: s.items, order: s.order, visible: s.visible })) || [],
+    skills: resume?.skills?.map(s => ({
+      category: s.category,
+      items: s.items?.map((item: any) =>
+        typeof item === 'string'
+          ? { name: item, level: '', description: '' }
+          : item
+      ) || [],
+      order: s.order,
+      visible: s.visible
+    })) || [],
     experiences: resume?.experiences?.map(e => ({
       company: e.company,
       startDate: e.startDate,
@@ -106,6 +115,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const [attachments, setAttachments] = useState<ResumeAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Section ordering
   const [sections, setSections] = useState(
@@ -117,6 +128,46 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
     ]
   );
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+    const savedDraft = localStorage.getItem(draftKey);
+
+    if (savedDraft && !resume) {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        setFormData(parsedDraft);
+      } catch (error) {
+        console.error('Failed to load draft:', error);
+      }
+    }
+  }, []);
+
+  // Auto-save draft to localStorage (debounced)
+  useEffect(() => {
+    // Clear existing timeout
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout);
+    }
+
+    // Set new timeout for auto-save (3 seconds after last change)
+    const timeout = setTimeout(() => {
+      const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+      localStorage.setItem(draftKey, JSON.stringify(formData));
+      setDraftSaved(true);
+
+      // Hide the "saved" message after 2 seconds
+      setTimeout(() => setDraftSaved(false), 2000);
+    }, 3000);
+
+    setAutoSaveTimeout(timeout);
+
+    // Cleanup on unmount
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [formData]);
 
   // Trigger onChange when formData or sections change
   useEffect(() => {
@@ -183,11 +234,29 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const getAttachmentsByType = (type: AttachmentType) =>
     attachments.filter(a => a.type === type);
 
+  const handleSaveDraft = () => {
+    const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+    localStorage.setItem(draftKey, JSON.stringify(formData));
+    setDraftSaved(true);
+    setTimeout(() => setDraftSaved(false), 2000);
+  };
+
+  const handleClearDraft = () => {
+    if (confirm('저장된 내용을 삭제하시겠습니까?')) {
+      const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+      localStorage.removeItem(draftKey);
+      alert('저장 내용이 삭제되었습니다.');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
       await onSubmit(formData);
+      // Clear draft after successful submission
+      const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+      localStorage.removeItem(draftKey);
     } finally {
       setSubmitting(false);
     }
@@ -507,72 +576,179 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             }}
             className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
           >
-            + Add Skill Category
+            + 카테고리 추가
           </button>
         </div>
 
         {formData.skills && formData.skills.length > 0 ? (
-          <div className="space-y-4">
-            {formData.skills.map((skill, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+          <div className="space-y-6">
+            {formData.skills.map((skill, skillIndex) => (
+              <div key={skillIndex} className="border border-amber-200 rounded-lg p-5 bg-amber-50/20">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Skill Category #{index + 1}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">📚 카테고리 #{skillIndex + 1}</h3>
                   <button
                     type="button"
                     onClick={() => {
-                      const newSkills = formData.skills?.filter((_, i) => i !== index);
+                      const newSkills = formData.skills?.filter((_, i) => i !== skillIndex);
                       setFormData({ ...formData, skills: newSkills });
                     }}
                     className="text-red-600 hover:text-red-800 text-sm font-semibold"
                   >
-                    Remove
+                    삭제
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={skill.category}
-                      onChange={e => {
-                        const newSkills = [...(formData.skills || [])];
-                        newSkills[index] = { ...newSkills[index], category: e.target.value };
-                        setFormData({ ...formData, skills: newSkills });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="e.g., Frontend, Backend, DevOps"
-                    />
-                  </div>
+                {/* Category Name */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    카테고리명 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={skill.category}
+                    onChange={e => {
+                      const newSkills = [...(formData.skills || [])];
+                      newSkills[skillIndex] = { ...newSkills[skillIndex], category: e.target.value };
+                      setFormData({ ...formData, skills: newSkills });
+                    }}
+                    className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900"
+                    placeholder="예: 프로그래밍 언어, 프레임워크, 데이터베이스, 클라우드"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Skills <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={skill.items?.join(', ') || ''}
-                      onChange={e => {
+                {/* Skill Items */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-gray-700">기술 스택</label>
+                    <button
+                      type="button"
+                      onClick={() => {
                         const newSkills = [...(formData.skills || [])];
-                        newSkills[index] = {
-                          ...newSkills[index],
-                          items: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                        const currentItems = Array.isArray(newSkills[skillIndex].items)
+                          ? newSkills[skillIndex].items
+                          : [];
+                        newSkills[skillIndex] = {
+                          ...newSkills[skillIndex],
+                          items: [
+                            ...currentItems,
+                            { name: '', level: '', description: '' },
+                          ],
                         };
                         setFormData({ ...formData, skills: newSkills });
                       }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="React, TypeScript, Next.js (comma-separated)"
-                    />
+                      className="px-3 py-1 text-sm bg-white border border-amber-600 text-amber-700 rounded-lg hover:bg-amber-50 transition-all font-semibold"
+                    >
+                      + 기술 추가
+                    </button>
                   </div>
+
+                  {Array.isArray(skill.items) && skill.items.length > 0 ? (
+                    <div className="space-y-3">
+                      {skill.items.map((item: any, itemIndex: number) => (
+                        <div key={itemIndex} className="border border-gray-200 rounded-lg p-4 bg-white">
+                          <div className="flex justify-between items-start mb-3">
+                            <span className="text-sm font-semibold text-gray-600">기술 #{itemIndex + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSkills = [...(formData.skills || [])];
+                                const newItems = Array.isArray(newSkills[skillIndex].items)
+                                  ? newSkills[skillIndex].items.filter((_: any, i: number) => i !== itemIndex)
+                                  : [];
+                                newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                                setFormData({ ...formData, skills: newSkills });
+                              }}
+                              className="text-red-600 hover:text-red-800 text-xs font-semibold"
+                            >
+                              삭제
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            {/* Skill Name */}
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                기술명 <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={typeof item === 'string' ? item : item.name || ''}
+                                onChange={e => {
+                                  const newSkills = [...(formData.skills || [])];
+                                  const newItems = [...(newSkills[skillIndex].items || [])];
+                                  newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
+                                    ? { name: e.target.value, level: '', description: '' }
+                                    : { ...newItems[itemIndex], name: e.target.value };
+                                  newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                                  setFormData({ ...formData, skills: newSkills });
+                                }}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
+                                placeholder="예: React, Node.js, PostgreSQL"
+                              />
+                            </div>
+
+                            {/* Proficiency Level */}
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                숙련도
+                              </label>
+                              <select
+                                value={typeof item === 'string' ? '' : item.level || ''}
+                                onChange={e => {
+                                  const newSkills = [...(formData.skills || [])];
+                                  const newItems = [...(newSkills[skillIndex].items || [])];
+                                  newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
+                                    ? { name: newItems[itemIndex], level: e.target.value, description: '' }
+                                    : { ...newItems[itemIndex], level: e.target.value };
+                                  newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                                  setFormData({ ...formData, skills: newSkills });
+                                }}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
+                              >
+                                <option value="">선택</option>
+                                <option value="상">상 (능숙하게 활용)</option>
+                                <option value="중">중 (업무 활용 가능)</option>
+                                <option value="하">하 (기본 이해)</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">
+                              활용 경험 / 세부 설명
+                            </label>
+                            <textarea
+                              value={typeof item === 'string' ? '' : item.description || ''}
+                              onChange={e => {
+                                const newSkills = [...(formData.skills || [])];
+                                const newItems = [...(newSkills[skillIndex].items || [])];
+                                newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
+                                  ? { name: newItems[itemIndex], level: '', description: e.target.value }
+                                  : { ...newItems[itemIndex], description: e.target.value };
+                                newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                                setFormData({ ...formData, skills: newSkills });
+                              }}
+                              rows={2}
+                              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
+                              placeholder="예: 3년 실무 경험, React Hooks와 Context API를 활용한 상태 관리"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-gray-500 text-sm bg-white rounded-lg border border-dashed border-gray-300">
+                      <p>기술을 추가하려면 "+ 기술 추가" 버튼을 클릭하세요</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <p>No skills added yet. Click "Add Skill Category" to get started.</p>
+            <p>카테고리를 추가하려면 "+ 카테고리 추가" 버튼을 클릭하세요</p>
           </div>
         )}
       </div>
@@ -1067,21 +1243,48 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       )}
 
       {/* Submit Buttons */}
-      <div className="flex justify-end gap-4">
+      {/* Auto-save indicator */}
+      {draftSaved && (
+        <div className="flex justify-end">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+            <span>✓</span>
+            <span>저장됨</span>
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center">
         <button
           type="button"
-          onClick={() => window.history.back()}
-          className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold border border-gray-300 transition-all"
+          onClick={handleClearDraft}
+          className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 underline transition-all"
         >
-          Cancel
+          저장 내용 삭제
         </button>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {submitting ? '💾 Saving...' : '💾 Save & Preview'}
-        </button>
+
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold border border-gray-300 transition-all"
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            className="px-6 py-3 bg-white hover:bg-gray-50 text-amber-700 rounded-lg font-semibold border-2 border-amber-700 transition-all transform hover:scale-[1.02]"
+          >
+            📝 저장
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? '💾 저장 중...' : '💾 저장 및 미리보기'}
+          </button>
+        </div>
       </div>
     </form>
   );

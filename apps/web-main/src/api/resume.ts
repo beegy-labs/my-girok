@@ -11,10 +11,16 @@ export enum SectionType {
   CERTIFICATE = 'CERTIFICATE',
 }
 
+export interface SkillItem {
+  name: string; // 기술명 (e.g., "React", "Node.js")
+  level?: string; // 숙련도 (e.g., "상", "중", "하" or "Expert", "Advanced", "Intermediate", "Basic")
+  description?: string; // 활용 경험/세부 설명
+}
+
 export interface Skill {
   id?: string;
-  category: string;
-  items: string[];
+  category: string; // 카테고리 (e.g., "Language", "Framework", "Database")
+  items: SkillItem[]; // 기술 항목들
   order: number;
   visible: boolean;
 }
