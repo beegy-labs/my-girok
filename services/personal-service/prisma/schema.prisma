@@ -43,7 +43,6 @@ model Resume {
   militaryService           MilitaryService? @map("military_service") // 병역 여부
   militaryDischarge         String?          @map("military_discharge") // 예: "병장 제대", "2020.01 - 2021.10"
   // Detailed military service information
-  militaryBranch            String?          @map("military_branch") // 군별 (e.g., "육군", "해군", "공군", "해병대")
   militaryRank              String?          @map("military_rank") // 계급 (e.g., "병장", "상병")
   militaryDischargeType     String?          @map("military_discharge_type") // 전역 사유 (e.g., "만기전역", "의병전역")
   militaryServiceStartDate  String?          @map("military_service_start_date") // 입대일 (YYYY-MM format)

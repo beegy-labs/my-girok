@@ -68,17 +68,16 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                       {/* For Korean locale, show detailed information */}
                       {i18n.language === 'ko' ? (
                         <>
-                          {resume.militaryBranch && <span>{resume.militaryBranch} </span>}
                           {resume.militaryRank && <span>{resume.militaryRank} </span>}
                           {resume.militaryDischargeType && <span>{resume.militaryDischargeType}</span>}
                           {resume.militaryServiceStartDate && resume.militaryServiceEndDate && (
                             <span> ({resume.militaryServiceStartDate} ~ {resume.militaryServiceEndDate})</span>
                           )}
                           {/* Fallback to old format if new fields are not available */}
-                          {!resume.militaryBranch && !resume.militaryRank && resume.militaryDischarge && (
+                          {!resume.militaryRank && resume.militaryDischarge && (
                             <span>{resume.militaryDischarge}</span>
                           )}
-                          {!resume.militaryBranch && !resume.militaryRank && !resume.militaryDischarge && (
+                          {!resume.militaryRank && !resume.militaryDischarge && (
                             <span>{t('resume.militaryService.completed')}</span>
                           )}
                         </>

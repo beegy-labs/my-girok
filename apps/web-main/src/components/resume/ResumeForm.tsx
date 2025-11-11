@@ -39,7 +39,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     profileImage: resume?.profileImage || '',
     militaryService: resume?.militaryService,
     militaryDischarge: resume?.militaryDischarge || '',
-    militaryBranch: resume?.militaryBranch || '',
     militaryRank: resume?.militaryRank || '',
     militaryDischargeType: resume?.militaryDischargeType || '',
     militaryServiceStartDate: resume?.militaryServiceStartDate || '',
@@ -369,22 +368,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('resume.militaryService.branch')}
-              </label>
-              <select
-                value={formData.militaryBranch || ''}
-                onChange={e => setFormData({ ...formData, militaryBranch: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-              >
-                <option value="">선택</option>
-                <option value="육군">육군 (Army)</option>
-                <option value="해군">해군 (Navy)</option>
-                <option value="공군">공군 (Air Force)</option>
-                <option value="해병대">해병대 (Marine Corps)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {t('resume.militaryService.rank')}
               </label>
               <select
@@ -413,25 +396,23 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <option value="의병전역">의병전역 (Medical Discharge)</option>
               </select>
             </div>
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {t('resume.militaryService.servicePeriod')}
               </label>
               <div className="flex gap-2 items-center">
                 <input
-                  type="text"
+                  type="month"
                   value={formData.militaryServiceStartDate || ''}
                   onChange={e => setFormData({ ...formData, militaryServiceStartDate: e.target.value })}
                   className="flex-1 px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                  placeholder="2020-01"
                 />
                 <span className="text-gray-500">~</span>
                 <input
-                  type="text"
+                  type="month"
                   value={formData.militaryServiceEndDate || ''}
                   onChange={e => setFormData({ ...formData, militaryServiceEndDate: e.target.value })}
                   className="flex-1 px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                  placeholder="2021-10"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
