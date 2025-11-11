@@ -52,6 +52,11 @@
     "preview": "미리보기",
     "viewPublic": "공개 프로필 보기",
     "address": "주소",
+    "contactInfo": {
+      "email": "Email",
+      "phone": "Phone",
+      "address": "주소"
+    },
     "sections": {
       "settings": "이력서 설정",
       "basicInfo": "기본 정보",
