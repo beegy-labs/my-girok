@@ -44,7 +44,8 @@
     "loginHere": "로그인하기",
     "startRecording": "나의 기록을 시작하세요",
     "createYourSpace": "나만의 기록장을 만드세요",
-    "termsAgreement": "가입하시면 서비스 약관 및 개인정보 처리방침에 동의하게 됩니다"
+    "termsAgreement": "가입하시면 서비스 약관 및 개인정보 처리방침에 동의하게 됩니다",
+    "rememberEmail": "이메일 기억하기"
   },
   "resume": {
     "edit": "이력서 편집",
