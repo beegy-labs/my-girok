@@ -317,6 +317,11 @@ export class CreateResumeDto {
   @IsString()
   phone?: string;
 
+  @ApiPropertyOptional({ example: '서울특별시 강남구', description: 'Address (City/District level)' })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
   @ApiPropertyOptional({ example: 'https://github.com/hong' })
   @IsOptional()
   @IsString()
@@ -356,6 +361,31 @@ export class CreateResumeDto {
   @IsOptional()
   @IsString()
   militaryDischarge?: string;
+
+  @ApiPropertyOptional({ example: '육군', description: 'Military branch (e.g., 육군, 해군, 공군, 해병대)' })
+  @IsOptional()
+  @IsString()
+  militaryBranch?: string;
+
+  @ApiPropertyOptional({ example: '병장', description: 'Military rank (e.g., 병장, 상병)' })
+  @IsOptional()
+  @IsString()
+  militaryRank?: string;
+
+  @ApiPropertyOptional({ example: '만기전역', description: 'Discharge type (e.g., 만기전역, 의병전역)' })
+  @IsOptional()
+  @IsString()
+  militaryDischargeType?: string;
+
+  @ApiPropertyOptional({ example: '2020-01', description: 'Military service start date (YYYY-MM format)' })
+  @IsOptional()
+  @IsString()
+  militaryServiceStartDate?: string;
+
+  @ApiPropertyOptional({ example: '2021-10', description: 'Military service end date (YYYY-MM format)' })
+  @IsOptional()
+  @IsString()
+  militaryServiceEndDate?: string;
 
   @ApiPropertyOptional({ example: '저는 백엔드 개발자로서...', description: 'Cover letter (Korean-specific)' })
   @IsOptional()

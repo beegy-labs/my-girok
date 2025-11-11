@@ -7,6 +7,7 @@ interface ResumePreviewProps {
 }
 
 export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePreviewProps) {
+  const { t, i18n } = useTranslation();
   const visibleSections = resume.sections
     .filter(s => s.visible)
     .sort((a, b) => a.order - b.order);
@@ -54,18 +55,50 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700 mb-2">
                 <span>{resume.email}</span>
                 {resume.phone && <span>{resume.phone}</span>}
-                {resume.militaryService && (
-                  <span>
-                    Military: {
-                      resume.militaryService === 'COMPLETED'
-                        ? (resume.militaryDischarge || 'Completed')
-                        : resume.militaryService === 'EXEMPTED'
-                        ? 'Exempted'
-                        : 'N/A'
-                    }
-                  </span>
-                )}
+                {resume.address && <span>{resume.address}</span>}
               </div>
+              {/* Military Service Information */}
+              {resume.militaryService && resume.militaryService !== 'NOT_APPLICABLE' && (
+                <div className="text-sm text-gray-700 mb-2">
+                  <span className="font-semibold">{t('resume.militaryService.title')}:</span>{' '}
+                  {resume.militaryService === 'EXEMPTED' ? (
+                    <span>{t('resume.militaryService.exempted')}</span>
+                  ) : (
+                    <span>
+                      {/* For Korean locale, show detailed information */}
+                      {i18n.language === 'ko' ? (
+                        <>
+                          {resume.militaryBranch && <span>{resume.militaryBranch} </span>}
+                          {resume.militaryRank && <span>{resume.militaryRank} </span>}
+                          {resume.militaryDischargeType && <span>{resume.militaryDischargeType}</span>}
+                          {resume.militaryServiceStartDate && resume.militaryServiceEndDate && (
+                            <span> ({resume.militaryServiceStartDate} ~ {resume.militaryServiceEndDate})</span>
+                          )}
+                          {/* Fallback to old format if new fields are not available */}
+                          {!resume.militaryBranch && !resume.militaryRank && resume.militaryDischarge && (
+                            <span>{resume.militaryDischarge}</span>
+                          )}
+                          {!resume.militaryBranch && !resume.militaryRank && !resume.militaryDischarge && (
+                            <span>{t('resume.militaryService.completed')}</span>
+                          )}
+                        </>
+                      ) : (
+                        // For English locale, show simplified information
+                        <>
+                          {t('resume.militaryService.completed')}
+                          {resume.militaryServiceStartDate && resume.militaryServiceEndDate && (
+                            <span> ({resume.militaryServiceStartDate} - {resume.militaryServiceEndDate})</span>
+                          )}
+                          {/* Fallback to old format */}
+                          {!resume.militaryServiceStartDate && resume.militaryDischarge && (
+                            <span> ({resume.militaryDischarge})</span>
+                          )}
+                        </>
+                      )}
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm print:flex-col print:gap-y-0.5">
                 {resume.github && (
                   <div>
