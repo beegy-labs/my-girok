@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Cookies from 'js-cookie';
 import { login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
+
+const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
+const COOKIE_EXPIRY_DAYS = 30;
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -10,9 +14,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(true);
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
+
+  // Load saved email from cookie on component mount
+  useEffect(() => {
+    const savedEmail = Cookies.get(SAVED_EMAIL_COOKIE);
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberEmail(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +34,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // Save email to cookie if remember is checked
+      if (rememberEmail) {
+        Cookies.set(SAVED_EMAIL_COOKIE, email, { expires: COOKIE_EXPIRY_DAYS });
+      } else {
+        Cookies.remove(SAVED_EMAIL_COOKIE);
+      }
+
       const response = await login({ email, password });
       setAuth(response.user, response.accessToken, response.refreshToken);
       navigate('/');
@@ -84,6 +105,19 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                 placeholder="••••••••"
               />
+            </div>
+
+            <div className="flex items-center">
+              <input
+                id="rememberEmail"
+                type="checkbox"
+                checked={rememberEmail}
+                onChange={(e) => setRememberEmail(e.target.checked)}
+                className="w-4 h-4 text-amber-600 bg-white border-amber-300 rounded focus:ring-amber-500 focus:ring-2"
+              />
+              <label htmlFor="rememberEmail" className="ml-2 text-sm text-gray-700">
+                {t('auth.rememberEmail')}
+              </label>
             </div>
 
             <button

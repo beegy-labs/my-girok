@@ -44,7 +44,8 @@
     "loginHere": "Login here",
     "startRecording": "Start your recording journey",
     "createYourSpace": "Create your personal record",
-    "termsAgreement": "By signing up, you agree to our Terms of Service and Privacy Policy"
+    "termsAgreement": "By signing up, you agree to our Terms of Service and Privacy Policy",
+    "rememberEmail": "Remember my email"
   },
   "resume": {
     "edit": "Edit Resume",
