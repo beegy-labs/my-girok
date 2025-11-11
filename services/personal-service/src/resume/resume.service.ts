@@ -58,7 +58,10 @@ export class ResumeService {
           coverLetter: dto.coverLetter,
           careerGoals: dto.careerGoals,
         skills: dto.skills ? {
-          create: dto.skills,
+          create: dto.skills.map(skill => ({
+            ...skill,
+            items: skill.items as any, // Cast to any for Prisma Json type
+          })),
         } : undefined,
         experiences: dto.experiences ? {
           create: dto.experiences.map(exp => ({
@@ -285,7 +288,11 @@ export class ResumeService {
       if (dto.skills) {
         await tx.skill.deleteMany({ where: { resumeId: resume.id } });
         await tx.skill.createMany({
-          data: dto.skills.map(skill => ({ ...skill, resumeId: resume.id })),
+          data: dto.skills.map(skill => ({
+            ...skill,
+            resumeId: resume.id,
+            items: skill.items as any, // Cast to any for Prisma Json type
+          })),
         });
       }
 
