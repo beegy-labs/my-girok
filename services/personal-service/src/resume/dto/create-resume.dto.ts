@@ -13,15 +13,33 @@ export enum MilitaryService {
   NOT_APPLICABLE = 'NOT_APPLICABLE',
 }
 
+export class SkillItemDto {
+  @ApiProperty({ example: 'React' })
+  @IsString()
+  name!: string;
+
+  @ApiPropertyOptional({ example: '3년 실무 경험, React Hooks와 Context API를 활용한 상태 관리' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+}
+
 export class CreateSkillDto {
   @ApiProperty({ example: 'Frontend' })
   @IsString()
   category!: string;
 
-  @ApiProperty({ example: ['React', 'TypeScript', 'Next.js'] })
+  @ApiProperty({
+    example: [
+      { name: 'React', description: '3년 실무 경험' },
+      { name: 'TypeScript', description: '2년 실무 경험' }
+    ],
+    type: [SkillItemDto]
+  })
   @IsArray()
-  @IsString({ each: true })
-  items!: string[];
+  @ValidateNested({ each: true })
+  @Type(() => SkillItemDto)
+  items!: SkillItemDto[];
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()

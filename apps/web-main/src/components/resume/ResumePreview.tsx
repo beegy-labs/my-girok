@@ -204,11 +204,6 @@ function SkillsSection({ skills }: { skills: any[] }) {
                       <span className="text-gray-700">•</span>
                       <div className="flex-1">
                         <span className="font-semibold text-gray-900">{item.name}</span>
-                        {item.level && (
-                          <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
-                            {item.level}
-                          </span>
-                        )}
                         {item.description && (
                           <p className="text-gray-700 mt-1 ml-0">
                             {item.description}

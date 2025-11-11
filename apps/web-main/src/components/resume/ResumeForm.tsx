@@ -49,7 +49,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       category: s.category,
       items: s.items?.map((item: any) =>
         typeof item === 'string'
-          ? { name: item, level: '', description: '' }
+          ? { name: item, description: '' }
           : item
       ) || [],
       order: s.order,
@@ -631,7 +631,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                           ...newSkills[skillIndex],
                           items: [
                             ...currentItems,
-                            { name: '', level: '', description: '' },
+                            { name: '', description: '' },
                           ],
                         };
                         setFormData({ ...formData, skills: newSkills });
@@ -664,7 +664,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                             </button>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                          <div className="mb-3">
                             {/* Skill Name */}
                             <div>
                               <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -677,7 +677,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                   const newSkills = [...(formData.skills || [])];
                                   const newItems = [...(newSkills[skillIndex].items || [])];
                                   newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-                                    ? { name: e.target.value, level: '', description: '' }
+                                    ? { name: e.target.value, description: '' }
                                     : { ...newItems[itemIndex], name: e.target.value };
                                   newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
                                   setFormData({ ...formData, skills: newSkills });
@@ -685,31 +685,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
                                 placeholder="예: React, Node.js, PostgreSQL"
                               />
-                            </div>
-
-                            {/* Proficiency Level */}
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                숙련도
-                              </label>
-                              <select
-                                value={typeof item === 'string' ? '' : item.level || ''}
-                                onChange={e => {
-                                  const newSkills = [...(formData.skills || [])];
-                                  const newItems = [...(newSkills[skillIndex].items || [])];
-                                  newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-                                    ? { name: newItems[itemIndex], level: e.target.value, description: '' }
-                                    : { ...newItems[itemIndex], level: e.target.value };
-                                  newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                                  setFormData({ ...formData, skills: newSkills });
-                                }}
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
-                              >
-                                <option value="">선택</option>
-                                <option value="상">상 (능숙하게 활용)</option>
-                                <option value="중">중 (업무 활용 가능)</option>
-                                <option value="하">하 (기본 이해)</option>
-                              </select>
                             </div>
                           </div>
 
@@ -724,7 +699,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                 const newSkills = [...(formData.skills || [])];
                                 const newItems = [...(newSkills[skillIndex].items || [])];
                                 newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-                                  ? { name: newItems[itemIndex], level: '', description: e.target.value }
+                                  ? { name: newItems[itemIndex], description: e.target.value }
                                   : { ...newItems[itemIndex], description: e.target.value };
                                 newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
                                 setFormData({ ...formData, skills: newSkills });
