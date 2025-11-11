@@ -1,9 +1,11 @@
 import * as crypto from 'crypto';
 
 /**
- * Base62 character set (URL-safe: A-Z, a-z, 0-9)
+ * Base62 character set (URL-safe: 0-9, A-Z, a-z)
+ * Ordered for lexicographic sorting: numbers first, then uppercase, then lowercase
+ * This ensures string sorting matches numeric sorting
  */
-const BASE62_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const BASE62_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 /**
  * Epoch timestamp (2025-01-01 00:00:00 UTC)
@@ -76,7 +78,7 @@ export function generateRandomBase62(length: number): string {
  * @returns 10-character external ID (e.g., "k7Bx9mPq2A")
  *
  * Structure:
- * - First 8 characters: Base62-encoded milliseconds since epoch (2025-01-01)
+ * - First 8 characters: Base62-encoded milliseconds since epoch (2025-01-01 UTC)
  * - Last 2 characters: Random Base62 characters for collision avoidance
  *
  * Features:
@@ -85,13 +87,20 @@ export function generateRandomBase62(length: number): string {
  * - Collision-resistant (3,844 combinations per millisecond)
  * - Compact (10 characters)
  * - Supports 100+ years and 10 billion users
+ * - **All timestamps are in UTC** (consistent with database timezone)
+ *
+ * @remarks
+ * Date.now() returns UTC milliseconds since Unix epoch.
+ * This is timezone-independent and safe for distributed systems.
  */
 export function generateExternalId(): string {
-  // Calculate milliseconds since epoch
+  // Calculate milliseconds since epoch (UTC)
+  // Date.now() always returns UTC milliseconds, regardless of server timezone
   const now = Date.now();
   const timeSinceEpoch = now - EPOCH_MS;
 
   // Encode time part as 8-character Base62 string
+  // Pad with '0' (Base62 value 0) for lexicographic sorting
   const timePart = base62Encode(timeSinceEpoch).padStart(8, '0');
 
   // Generate 2-character random suffix for collision avoidance
@@ -136,7 +145,11 @@ export async function generateUniqueExternalId(
 /**
  * Extract timestamp from external ID
  * @param externalId - External ID to parse
- * @returns Date object representing creation time
+ * @returns Date object representing creation time (UTC)
+ *
+ * @remarks
+ * The returned Date object represents a UTC timestamp.
+ * When displaying to users, convert to their local timezone.
  */
 export function extractTimestampFromExternalId(externalId: string): Date {
   if (externalId.length !== 10) {
@@ -149,7 +162,7 @@ export function extractTimestampFromExternalId(externalId: string): Date {
   // Decode Base62 to milliseconds since epoch
   const timeSinceEpoch = base62Decode(timePart);
 
-  // Convert to absolute timestamp
+  // Convert to absolute timestamp (UTC)
   return new Date(EPOCH_MS + timeSinceEpoch);
 }
 

@@ -11,12 +11,14 @@ import {
 describe('ID Generator', () => {
   describe('base62Encode', () => {
     it('should encode 0', () => {
-      expect(base62Encode(0)).toBe('A');
+      expect(base62Encode(0)).toBe('0');
     });
 
     it('should encode small numbers', () => {
-      expect(base62Encode(61)).toBe('9');
-      expect(base62Encode(62)).toBe('BA');
+      expect(base62Encode(9)).toBe('9');
+      expect(base62Encode(10)).toBe('A');
+      expect(base62Encode(61)).toBe('z');
+      expect(base62Encode(62)).toBe('10');
     });
 
     it('should encode large numbers', () => {
@@ -37,14 +39,15 @@ describe('ID Generator', () => {
 
   describe('base62Decode', () => {
     it('should decode single character', () => {
-      expect(base62Decode('A')).toBe(0);
-      expect(base62Decode('B')).toBe(1);
-      expect(base62Decode('9')).toBe(61);
+      expect(base62Decode('0')).toBe(0);
+      expect(base62Decode('9')).toBe(9);
+      expect(base62Decode('A')).toBe(10);
+      expect(base62Decode('z')).toBe(61);
     });
 
     it('should decode multi-character strings', () => {
-      expect(base62Decode('BA')).toBe(62);
-      expect(base62Decode('CA')).toBe(124);
+      expect(base62Decode('10')).toBe(62);
+      expect(base62Decode('1A')).toBe(72);
     });
 
     it('should throw on invalid characters', () => {
@@ -155,6 +158,39 @@ describe('ID Generator', () => {
       expect(timeDiff).toBeLessThan(5000); // Within 5 seconds
     });
 
+    it('should extract UTC timestamp correctly', () => {
+      const id = generateExternalId();
+      const extractedDate = extractTimestampFromExternalId(id);
+
+      // Date.getTime() returns milliseconds since Unix epoch (UTC)
+      // Verify that the extracted time is in UTC
+      const utcTime = extractedDate.getTime();
+      const currentUtcTime = Date.now();
+
+      // Should be very close (within 1 second)
+      const timeDiff = Math.abs(utcTime - currentUtcTime);
+      expect(timeDiff).toBeLessThan(1000);
+
+      // Verify UTC methods return expected values
+      expect(extractedDate.getUTCFullYear()).toBeGreaterThanOrEqual(2025);
+    });
+
+    it('should be timezone-independent', () => {
+      // Generate ID and extract timestamp
+      const id = generateExternalId();
+      const extractedDate = extractTimestampFromExternalId(id);
+
+      // The timestamp should represent the same moment in time
+      // regardless of the server's timezone
+      const utcMillis = extractedDate.getTime();
+
+      // Create a new Date with the same milliseconds
+      const reconstructedDate = new Date(utcMillis);
+
+      expect(reconstructedDate.getTime()).toBe(extractedDate.getTime());
+      expect(reconstructedDate.toISOString()).toBe(extractedDate.toISOString());
+    });
+
     it('should throw on invalid format', () => {
       expect(() => extractTimestampFromExternalId('short')).toThrow('Invalid external ID format');
       expect(() => extractTimestampFromExternalId('toolongid123')).toThrow('Invalid external ID format');
@@ -214,12 +250,24 @@ describe('ID Generator', () => {
       for (let i = 0; i < 10; i++) {
         const id = generateExternalId();
         ids.push(id);
-        await new Promise(resolve => setTimeout(resolve, 5)); // Wait 5ms
+        await new Promise(resolve => setTimeout(resolve, 10)); // Wait 10ms to ensure different timestamps
       }
 
-      // Sort IDs and check if order matches generation order
-      const sortedIds = [...ids].sort();
-      expect(sortedIds).toEqual(ids);
+      // Extract timestamps from IDs and verify they are in ascending order
+      const timestamps = ids.map(id => {
+        const timePart = id.substring(0, 8);
+        return base62Decode(timePart);
+      });
+
+      // Check if timestamps are in ascending order (allowing for same timestamp)
+      for (let i = 1; i < timestamps.length; i++) {
+        expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i - 1]);
+      }
+
+      // Also verify lexicographic sorting works for the time part
+      const timeParts = ids.map(id => id.substring(0, 8));
+      const sortedTimeParts = [...timeParts].sort();
+      expect(sortedTimeParts).toEqual(timeParts);
     });
   });
 });

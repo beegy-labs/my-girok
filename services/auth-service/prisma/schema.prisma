@@ -23,8 +23,8 @@ model User {
   provider      AuthProvider   @default(LOCAL)
   providerId    String?        @map("provider_id") // OAuth provider user ID
   emailVerified Boolean        @default(false) @map("email_verified")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   sessions      Session[]
   domainAccess  DomainAccessToken[]
@@ -42,8 +42,8 @@ model Session {
   userId       String   @map("user_id")
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshToken String   @unique @map("refresh_token")
-  expiresAt    DateTime @map("expires_at")
-  createdAt    DateTime @default(now()) @map("created_at")
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([userId])
   @@index([refreshToken])
@@ -57,8 +57,8 @@ model DomainAccessToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   domain    String   // e.g., 'resume', 'portfolio'
   token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([userId])
   @@index([domain])
@@ -76,7 +76,7 @@ model OAuthProviderConfig {
   clientId     String?      @map("client_id") // OAuth client ID
   clientSecret String?      @map("client_secret") // OAuth client secret (encrypted)
   callbackUrl  String?      @map("callback_url") // OAuth callback URL
-  updatedAt    DateTime     @updatedAt @map("updated_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
   updatedBy    String?      @map("updated_by") // User ID who made the change
 
   @@map("oauth_provider_configs")
