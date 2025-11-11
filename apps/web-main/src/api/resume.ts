@@ -137,6 +137,7 @@ export interface Resume {
   name: string;
   email: string;
   phone?: string;
+  address?: string; // Address (City/District level, e.g., "서울특별시 강남구" or "Seoul, Gangnam-gu")
   github?: string;
   blog?: string;
   linkedin?: string;
@@ -146,6 +147,12 @@ export interface Resume {
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
   militaryDischarge?: string; // 병역 상세 (예: "병장 제대", "2020.01 - 2021.10")
+  // Detailed military service information
+  militaryBranch?: string; // 군별 (e.g., "육군", "해군", "공군", "해병대")
+  militaryRank?: string; // 계급 (e.g., "병장", "상병")
+  militaryDischargeType?: string; // 전역 사유 (e.g., "만기전역", "의병전역")
+  militaryServiceStartDate?: string; // 입대일 (YYYY-MM format)
+  militaryServiceEndDate?: string; // 전역일 (YYYY-MM format)
   coverLetter?: string; // 자기소개서
   careerGoals?: string; // 입사 후 포부/하고 싶은 일
   sections: ResumeSection[];
@@ -167,6 +174,7 @@ export interface CreateResumeDto {
   name: string;
   email: string;
   phone?: string;
+  address?: string; // Address (City/District level, e.g., "서울특별시 강남구" or "Seoul, Gangnam-gu")
   github?: string;
   blog?: string;
   linkedin?: string;
@@ -176,6 +184,12 @@ export interface CreateResumeDto {
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
   militaryDischarge?: string;
+  // Detailed military service information
+  militaryBranch?: string; // 군별 (e.g., "육군", "해군", "공군", "해병대")
+  militaryRank?: string; // 계급 (e.g., "병장", "상병")
+  militaryDischargeType?: string; // 전역 사유 (e.g., "만기전역", "의병전역")
+  militaryServiceStartDate?: string; // 입대일 (YYYY-MM format)
+  militaryServiceEndDate?: string; // 전역일 (YYYY-MM format)
   coverLetter?: string;
   careerGoals?: string;
   skills?: Omit<Skill, 'id'>[];
