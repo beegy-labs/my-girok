@@ -50,6 +50,7 @@
     "edit": "Edit Resume",
     "preview": "Preview",
     "viewPublic": "View Public Profile",
+    "address": "Address",
     "sections": {
       "settings": "Resume Settings",
       "basicInfo": "Basic Information",
@@ -65,6 +66,16 @@
       "skills": "Organize your technical skills by category",
       "education": "Add your educational background",
       "certifications": "Add professional certifications and awards"
+    },
+    "militaryService": {
+      "title": "Military Service",
+      "completed": "Completed",
+      "exempted": "Exempted",
+      "notApplicable": "N/A",
+      "branch": "Branch",
+      "rank": "Rank",
+      "dischargeType": "Discharge Type",
+      "servicePeriod": "Service Period"
     }
   }
 }
