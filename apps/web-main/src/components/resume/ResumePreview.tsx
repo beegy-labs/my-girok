@@ -52,10 +52,10 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             {/* Name and Contact Info */}
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{resume.name}</h1>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700 mb-2">
-                <span>{resume.email}</span>
-                {resume.phone && <span>{resume.phone}</span>}
-                {resume.address && <span>{resume.address}</span>}
+              <div className="flex flex-col gap-y-0.5 text-sm text-gray-700 mb-2">
+                <div>{resume.email}</div>
+                {resume.phone && <div>{resume.phone}</div>}
+                {resume.address && <div>{resume.address}</div>}
               </div>
               {/* Military Service Information */}
               {resume.militaryService && resume.militaryService !== 'NOT_APPLICABLE' && (
@@ -183,11 +183,43 @@ function SkillsSection({ skills }: { skills: any[] }) {
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.skills')}
       </h2>
-      <div className="space-y-2">
+      <div className="space-y-4">
         {skills.sort((a, b) => a.order - b.order).map((skill, idx) => (
-          <div key={idx} className="flex">
-            <div className="w-32 font-semibold text-gray-800">{skill.category}</div>
-            <div className="flex-1 text-gray-700">{skill.items.join(', ')}</div>
+          <div key={idx}>
+            <h3 className="font-bold text-gray-900 mb-2">{skill.category}</h3>
+            <div className="space-y-2 ml-4">
+              {Array.isArray(skill.items) && skill.items.map((item: any, itemIdx: number) => {
+                // Handle both old format (string) and new format (object)
+                if (typeof item === 'string') {
+                  return (
+                    <div key={itemIdx} className="text-sm text-gray-700">
+                      • {item}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={itemIdx} className="text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-gray-700">•</span>
+                      <div className="flex-1">
+                        <span className="font-semibold text-gray-900">{item.name}</span>
+                        {item.level && (
+                          <span className="ml-2 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
+                            {item.level}
+                          </span>
+                        )}
+                        {item.description && (
+                          <p className="text-gray-700 mt-1 ml-0">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>
