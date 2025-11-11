@@ -47,7 +47,7 @@ export class ShareService {
 
     return {
       ...shareLink,
-      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/resume/${shareLink.token}`,
+      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shared/${shareLink.token}`,
     };
   }
 
@@ -78,7 +78,7 @@ export class ShareService {
 
     return {
       ...shareLink,
-      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/resume/${shareLink.token}`,
+      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shared/${shareLink.token}`,
     };
   }
 
