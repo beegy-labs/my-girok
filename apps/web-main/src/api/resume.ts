@@ -148,7 +148,6 @@ export interface Resume {
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
   militaryDischarge?: string; // 병역 상세 (예: "병장 제대", "2020.01 - 2021.10")
   // Detailed military service information
-  militaryBranch?: string; // 군별 (e.g., "육군", "해군", "공군", "해병대")
   militaryRank?: string; // 계급 (e.g., "병장", "상병")
   militaryDischargeType?: string; // 전역 사유 (e.g., "만기전역", "의병전역")
   militaryServiceStartDate?: string; // 입대일 (YYYY-MM format)
@@ -185,7 +184,6 @@ export interface CreateResumeDto {
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
   militaryDischarge?: string;
   // Detailed military service information
-  militaryBranch?: string; // 군별 (e.g., "육군", "해군", "공군", "해병대")
   militaryRank?: string; // 계급 (e.g., "병장", "상병")
   militaryDischargeType?: string; // 전역 사유 (e.g., "만기전역", "의병전역")
   militaryServiceStartDate?: string; // 입대일 (YYYY-MM format)

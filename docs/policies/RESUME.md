@@ -102,7 +102,6 @@ interface Resume {
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
   militaryDischarge?: string;    // Legacy field (backward compatibility)
-  militaryBranch?: string;       // 군별: 육군, 해군, 공군, 해병대
   militaryRank?: string;         // 계급: 병장, 상병, 일병, 이병
   militaryDischargeType?: string; // 전역사유: 만기전역, 의병전역
   militaryServiceStartDate?: string; // 입대일: YYYY-MM format
@@ -504,9 +503,6 @@ The resume system has been enhanced to support Korean job market requirements, s
     - `EXEMPTED`: Exempted from service (면제)
     - `NOT_APPLICABLE`: Not applicable (해당없음) - for female applicants or foreign nationals
 - **Structured Fields** (for COMPLETED status):
-  - **Branch** (`militaryBranch`):
-    - Dropdown selection: 육군 (Army), 해군 (Navy), 공군 (Air Force), 해병대 (Marine Corps)
-    - Ensures consistent data format
   - **Rank** (`militaryRank`):
     - Dropdown selection: 병장 (Sergeant), 상병 (Corporal), 일병 (Private First Class), 이병 (Private)
     - Standard Korean military ranks
@@ -514,22 +510,25 @@ The resume system has been enhanced to support Korean job market requirements, s
     - Dropdown selection: 만기전역 (Honorable Discharge), 의병전역 (Medical Discharge)
     - Common discharge categories
   - **Service Period** (`militaryServiceStartDate`, `militaryServiceEndDate`):
-    - Two date inputs for start and end dates
+    - Two month picker inputs for start and end dates
+    - Input type: `month` (browser native picker)
     - Format: YYYY-MM (e.g., "2020-01" ~ "2021-10")
     - Structured for validation and search
+    - Prevents invalid date formats
 - **Legacy Field**: `militaryDischarge`
   - **Type**: Free text string (maintained for backward compatibility)
   - **Examples**: "병장 제대", "2020.01 - 2021.10"
   - Used as fallback if structured fields are not available
 - **Purpose**: Required information for male job applicants in Korea
 - **Display**:
-  - Korean locale: Shows full details (e.g., "육군 병장 만기전역 (2020-01 ~ 2021-10)")
+  - Korean locale: Shows rank, discharge type, and period (e.g., "병장 만기전역 (2020-01 ~ 2021-10)")
   - English locale: Shows simplified format (e.g., "Completed (2020-01 - 2021-10)")
 - **Benefits**:
   - Consistent data format across all resumes
   - Easier to search and filter by service details
-  - Professional structured input with dropdowns
-  - Better UX than free text fields
+  - Professional structured input with dropdowns and month pickers
+  - Better UX with native date pickers preventing format errors
+  - Streamlined interface focusing on essential information
 
 #### 2. Cover Letter (자기소개서)
 - **Field**: `coverLetter`
@@ -1359,6 +1358,32 @@ The resume feature follows the My-Girok design system with a library/book theme.
 
 ## Change Log
 
+- **2025-01-13 (Part 3)**: Removed military branch field and improved date input UX
+  - **Military Branch Removal**:
+    - Removed `militaryBranch` field from all layers (frontend, backend, database)
+    - Simplified military service input to focus on essential information (rank, discharge type, service period)
+    - Updated Prisma schema: removed `military_branch` column from resumes table
+    - Updated DTOs: removed `militaryBranch` from `CreateResumeDto`
+    - Updated API types: removed `militaryBranch` from Resume and CreateResumeDto interfaces
+    - Updated preview display: removed military branch from Korean and English formats
+    - Database migration: `ALTER TABLE resumes DROP COLUMN military_branch`
+  - **Service Period Input Enhancement**:
+    - Changed input type from `text` to `month` for service period dates
+    - Browser native month picker provides better UX and format validation
+    - Prevents invalid date formats (e.g., "13-01" or "2020/01")
+    - Consistent YYYY-MM format guaranteed
+    - Better mobile experience with native pickers
+  - **Rationale**:
+    - Military branch information was deemed unnecessary for resume purposes
+    - Streamlined form reduces input burden on users
+    - Focus on key information: rank, discharge type, and service dates
+    - Native month picker provides superior UX compared to text input
+    - Maintains all essential military service data for Korean job applications
+  - **Backward Compatibility**:
+    - Existing resumes with `militaryBranch` data remain intact in database
+    - Preview component gracefully handles missing branch field
+    - Legacy `militaryDischarge` field still supported as fallback
+
 - **2025-01-11 (Part 3)**: Enhanced resume forms and preview with address and military service fields
   - **Address Field**:
     - Added `address` field to Resume model (city/district level)
@@ -1368,8 +1393,7 @@ The resume feature follows the My-Girok design system with a library/book theme.
     - i18n: Korean ("주소") and English ("Address") translations
     - Example format: "서울특별시 강남구" or "Seoul, Gangnam-gu"
   - **Military Service Enhancement**:
-    - **Database Schema**: Added 5 new military service fields
-      - `militaryBranch` - 군별 (육군, 해군, 공군, 해병대)
+    - **Database Schema**: Added 4 new military service fields
       - `militaryRank` - 계급 (병장, 상병, 일병, 이병)
       - `militaryDischargeType` - 전역사유 (만기전역, 의병전역)
       - `militaryServiceStartDate` - 입대일 (YYYY-MM format)
@@ -1381,10 +1405,11 @@ The resume feature follows the My-Girok design system with a library/book theme.
       - All fields only shown when status is "COMPLETED"
       - Replaces previous single text field with structured approach
     - **Preview Display**:
-      - Korean locale: "육군 병장 만기전역 (2020-01 ~ 2021-10)"
+      - Korean locale: "병장 만기전역 (2020-01 ~ 2021-10)"
       - English locale: "Completed (2020-01 - 2021-10)"
       - Backward compatible with old `militaryDischarge` field
       - i18n support for all field labels
+    - **Note**: Military branch field was initially added but later removed in 2025-01-13 Part 3
     - **Benefits**:
       - Enforces consistent data format
       - Easier to validate and search

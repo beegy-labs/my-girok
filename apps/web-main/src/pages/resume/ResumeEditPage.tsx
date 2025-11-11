@@ -53,6 +53,7 @@ export default function ResumeEditPage() {
       name: data.name,
       email: data.email,
       phone: data.phone,
+      address: data.address,
       github: data.github,
       blog: data.blog,
       linkedin: data.linkedin,
@@ -61,6 +62,10 @@ export default function ResumeEditPage() {
       profileImage: data.profileImage,
       militaryService: data.militaryService,
       militaryDischarge: data.militaryDischarge,
+      militaryRank: data.militaryRank,
+      militaryDischargeType: data.militaryDischargeType,
+      militaryServiceStartDate: data.militaryServiceStartDate,
+      militaryServiceEndDate: data.militaryServiceEndDate,
       coverLetter: data.coverLetter,
       careerGoals: data.careerGoals,
       sections: resume?.sections || [

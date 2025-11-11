@@ -362,11 +362,6 @@ export class CreateResumeDto {
   @IsString()
   militaryDischarge?: string;
 
-  @ApiPropertyOptional({ example: '육군', description: 'Military branch (e.g., 육군, 해군, 공군, 해병대)' })
-  @IsOptional()
-  @IsString()
-  militaryBranch?: string;
-
   @ApiPropertyOptional({ example: '병장', description: 'Military rank (e.g., 병장, 상병)' })
   @IsOptional()
   @IsString()
