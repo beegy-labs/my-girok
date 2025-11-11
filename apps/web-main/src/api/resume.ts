@@ -216,6 +216,7 @@ export enum ShareDuration {
   ONE_MONTH = '1_month',
   THREE_MONTHS = '3_months',
   PERMANENT = 'permanent',
+  CUSTOM = 'custom',
 }
 
 export interface ShareLink {
@@ -235,10 +236,12 @@ export interface ShareLink {
 
 export interface CreateShareLinkDto {
   duration: ShareDuration;
+  customExpiresAt?: string;
 }
 
 export interface UpdateShareLinkDto {
   duration?: ShareDuration;
+  customExpiresAt?: string;
   isActive?: boolean;
 }
 
