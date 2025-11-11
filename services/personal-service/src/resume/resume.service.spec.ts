@@ -106,7 +106,7 @@ describe('ResumeService', () => {
         email: 'john@example.com',
         phone: '010-1234-5678',
         summary: 'Experienced developer',
-        skills: [{ category: 'Language', items: ['TypeScript'], order: 0, visible: true }],
+        skills: [{ category: 'Language', items: [{ name: 'TypeScript', description: 'Programming language' }], order: 0, visible: true }],
         experiences: [],
         projects: [],
         educations: [],
@@ -308,7 +308,7 @@ describe('ResumeService', () => {
         title: 'Updated Title',
         name: 'Updated Name',
         email: 'updated@example.com',
-        skills: [{ category: 'Framework', items: ['React'], order: 0, visible: true }],
+        skills: [{ category: 'Framework', items: [{ name: 'React', description: 'JavaScript library' }], order: 0, visible: true }],
       };
 
       const existingResume = {
