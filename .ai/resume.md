@@ -180,12 +180,17 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 4. **Cover Letter** (`coverLetter`): 자기소개서
 5. **Career Goals** (`careerGoals`): 입사 후 포부
 
-## Print Optimization
+## Resume Preview Design
 
-- **Preview**: Amber theme (brand colors)
-- **Print**: Grayscale (black & white)
-- Use `print:` Tailwind prefix for print-specific styles
-- Profile photos auto-convert to grayscale
+**Concept**: Print-optimized, high-contrast design with user control
+
+- **Content**: Uses grayscale (gray-50 ~ gray-900) for text and layout
+- **Profile Photos**: Show in color by default, optional grayscale toggle
+- **Grayscale Toggle**: 🎨/🖤 button lets users switch to full B&W mode
+- **Editing UI**: Uses amber brand colors (form inputs, buttons, navigation)
+- **Multi-Page**: Supports both A4 (21cm × 29.7cm) and Letter (21.59cm × 27.94cm)
+- **Page Separation**: Visual shadows between pages, page numbers on screen
+- **Print-Friendly**: Automatic page breaks, cost-effective, ATS-compatible
 
 ## Common Mistakes to Avoid
 
