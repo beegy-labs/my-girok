@@ -286,7 +286,7 @@ function stripIds<T>(obj: T): T {
   if (typeof obj === 'object') {
     const result: any = {};
     // List of database-generated fields that should be removed before API submission
-    const dbFields = ['id', 'projectId', 'resumeId', 'experienceId', 'createdAt', 'updatedAt'];
+    const dbFields = ['id', 'projectId', 'resumeId', 'experienceId', 'parentId', 'createdAt', 'updatedAt'];
 
     for (const [key, value] of Object.entries(obj)) {
       // Skip database-generated fields
