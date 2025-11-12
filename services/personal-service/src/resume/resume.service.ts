@@ -133,7 +133,23 @@ export class ResumeService {
                 orderBy: { order: 'asc' },
                 include: {
                   achievements: {
+                    where: { parentId: null },
                     orderBy: { order: 'asc' },
+                    include: {
+                      children: {
+                        orderBy: { order: 'asc' },
+                        include: {
+                          children: {
+                            orderBy: { order: 'asc' },
+                            include: {
+                              children: {
+                                orderBy: { order: 'asc' },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -414,7 +430,7 @@ export class ResumeService {
         });
       }
 
-      // Return updated resume
+      // Return updated resume with hierarchical achievements
       return await tx.resume.findUnique({
         where: { id: resume.id },
         include: {
@@ -427,7 +443,23 @@ export class ResumeService {
                 orderBy: { order: 'asc' },
                 include: {
                   achievements: {
+                    where: { parentId: null },
                     orderBy: { order: 'asc' },
+                    include: {
+                      children: {
+                        orderBy: { order: 'asc' },
+                        include: {
+                          children: {
+                            orderBy: { order: 'asc' },
+                            include: {
+                              children: {
+                                orderBy: { order: 'asc' },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
