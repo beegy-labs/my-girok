@@ -85,6 +85,14 @@ export interface UpdateProfileDto {
 }
 
 /**
+ * Change password request
+ */
+export interface ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/**
  * JWT payload structure
  */
 export interface JwtPayload {

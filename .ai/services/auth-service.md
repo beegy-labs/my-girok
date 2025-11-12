@@ -59,6 +59,12 @@ Headers: Authorization: Bearer {token}
 Body: { name?: string, avatar?: string }
 Response: User
 
+// Change Password
+POST /v1/users/me/change-password
+Headers: Authorization: Bearer {token}
+Body: { currentPassword: string, newPassword: string }
+Response: { message: 'Password changed successfully' }
+
 // Domain Access Token (Time-limited)
 POST /v1/domain-access/grant
 Headers: Authorization: Bearer {token}
@@ -172,6 +178,19 @@ enum Role {
 4. Generate new access token (15min)
 5. Optionally rotate refresh token
 6. Return { accessToken, refreshToken? }
+```
+
+### Password Change Flow
+
+```typescript
+1. Client sends: { currentPassword, newPassword }
+2. Verify JWT token (user must be authenticated)
+3. Check if user is OAuth user → 401 if OAuth (they don't have passwords)
+4. Verify current password with bcrypt.compare
+5. If invalid → 401 Unauthorized
+6. Hash new password (bcrypt, 12 rounds)
+7. Update user password in DB
+8. Return { message: 'Password changed successfully' }
 ```
 
 ### Domain Access Flow

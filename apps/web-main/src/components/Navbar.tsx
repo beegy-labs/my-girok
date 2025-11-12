@@ -42,6 +42,12 @@ export default function Navbar() {
                       {user?.role}
                     </p>
                   </div>
+                  <Link
+                    to="/change-password"
+                    className="text-amber-700 hover:text-amber-800 px-3 py-2 text-sm font-medium transition-colors"
+                  >
+                    Change Password
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="text-amber-700 hover:text-amber-800 px-3 py-2 text-sm font-medium transition-colors"
