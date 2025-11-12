@@ -46,7 +46,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     militaryServiceStartDate: resume?.militaryServiceStartDate || '',
     militaryServiceEndDate: resume?.militaryServiceEndDate || '',
     coverLetter: resume?.coverLetter || '',
-    careerGoals: resume?.careerGoals || '',
+    applicationReason: resume?.applicationReason || '',
     skills: resume?.skills?.map(s => ({
       category: s.category,
       items: s.items?.map((item: any) =>
@@ -528,17 +528,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Career Goals (입사 후 포부)
+            Application Reason (지원 동기)
           </label>
           <textarea
-            value={formData.careerGoals || ''}
-            onChange={e => setFormData({ ...formData, careerGoals: e.target.value })}
+            value={formData.applicationReason || ''}
+            onChange={e => setFormData({ ...formData, applicationReason: e.target.value })}
             rows={6}
             className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-            placeholder="Describe what you want to achieve after joining the company..."
+            placeholder="귀사에 지원하게 된 동기와 이유를 작성해주세요..."
           />
           <p className="text-xs text-gray-500 mt-1">
-            Share your aspirations and what you hope to accomplish in this role
+            회사의 비전, 직무의 매력, 본인의 강점과의 연결성 등을 작성
           </p>
         </div>
       </div>

@@ -48,7 +48,7 @@ model Resume {
   militaryServiceStartDate  String?          @map("military_service_start_date") // 입대일 (YYYY-MM format)
   militaryServiceEndDate    String?          @map("military_service_end_date") // 전역일 (YYYY-MM format)
   coverLetter               String?          @map("cover_letter") @db.Text // 자기소개서
-  careerGoals               String?          @map("career_goals") @db.Text // 입사 후 포부
+  applicationReason         String?          @map("application_reason") @db.Text // 지원 동기
 
   // Attachments
   attachments ResumeAttachment[]
@@ -126,6 +126,12 @@ enum DegreeType {
   BACHELOR     // 학사 (4년제)
   MASTER       // 석사
   DOCTORATE    // 박사
+}
+
+enum GpaFormat {
+  SCALE_4_0   // 4.0 scale (US: 3.8/4.0)
+  SCALE_4_5   // 4.5 scale (KR: 4.2/4.5)
+  SCALE_100   // 100-point scale (JP: 85/100)
 }
 
 // Resume File Attachments (profile photos, portfolios, certificates)
@@ -304,6 +310,7 @@ model Education {
   startDate String  @map("start_date") // "2015-03" format
   endDate   String? @map("end_date") // null = ongoing
   gpa       String?
+  gpaFormat GpaFormat? @default(SCALE_4_0) @map("gpa_format") // GPA scale format
 
   order   Int     @default(0)
   visible Boolean @default(true)

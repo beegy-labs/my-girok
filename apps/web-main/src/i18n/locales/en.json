@@ -90,6 +90,11 @@
       "BACHELOR": "Bachelor's Degree (4-year)",
       "MASTER": "Master's Degree",
       "DOCTORATE": "Doctorate (Ph.D.)"
+    },
+    "gpaFormats": {
+      "SCALE_4_0": "4.0/4.0",
+      "SCALE_4_5": "4.5/4.5",
+      "SCALE_100": "100/100"
     }
   }
 }

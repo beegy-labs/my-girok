@@ -78,6 +78,11 @@
       "BACHELOR": "学士 (4年制)",
       "MASTER": "修士",
       "DOCTORATE": "博士"
+    },
+    "gpaFormats": {
+      "SCALE_4_0": "4.0/4.0",
+      "SCALE_4_5": "4.5/4.5",
+      "SCALE_100": "100/100"
     }
   }
 }

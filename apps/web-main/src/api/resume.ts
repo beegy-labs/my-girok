@@ -20,6 +20,12 @@ export enum DegreeType {
   DOCTORATE = 'DOCTORATE',
 }
 
+export enum GpaFormat {
+  SCALE_4_0 = 'SCALE_4_0',   // 4.0 scale (US: 3.8/4.0)
+  SCALE_4_5 = 'SCALE_4_5',   // 4.5 scale (KR: 4.2/4.5)
+  SCALE_100 = 'SCALE_100',   // 100-point scale (JP: 85/100)
+}
+
 export interface SkillDescription {
   id?: string;
   content: string; // Description text
@@ -99,6 +105,7 @@ export interface Education {
   startDate: string;
   endDate?: string;
   gpa?: string;
+  gpaFormat?: GpaFormat;
   order: number;
   visible: boolean;
 }
@@ -176,7 +183,7 @@ export interface Resume {
   militaryServiceStartDate?: string; // 입대일 (YYYY-MM format)
   militaryServiceEndDate?: string; // 전역일 (YYYY-MM format)
   coverLetter?: string; // 자기소개서
-  careerGoals?: string; // 입사 후 포부/하고 싶은 일
+  applicationReason?: string; // 지원 동기
   sections: ResumeSection[];
   skills: Skill[];
   experiences: Experience[];
@@ -212,7 +219,7 @@ export interface CreateResumeDto {
   militaryServiceStartDate?: string; // 입대일 (YYYY-MM format)
   militaryServiceEndDate?: string; // 전역일 (YYYY-MM format)
   coverLetter?: string;
-  careerGoals?: string;
+  applicationReason?: string;
   skills?: Omit<Skill, 'id'>[];
   experiences?: Omit<Experience, 'id'>[];
   projects?: Omit<Project, 'id'>[];

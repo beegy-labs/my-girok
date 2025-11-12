@@ -200,13 +200,13 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
           </div>
         )}
 
-        {/* Career Goals */}
-        {resume.careerGoals && (
+        {/* Application Reason */}
+        {resume.applicationReason && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-              Career Goals
+              Application Reason
             </h2>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.careerGoals}</p>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.applicationReason}</p>
           </div>
         )}
 
@@ -429,18 +429,18 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                     <p className="text-sm text-gray-700 mb-2">{project.description}</p>
                   )}
 
+                  {/* Tech Stack */}
+                  {project.techStack && project.techStack.length > 0 && (
+                    <p className="text-xs text-gray-600 mb-2">
+                      <span className="font-semibold">Tech:</span> {project.techStack.join(', ')}
+                    </p>
+                  )}
+
                   {/* Hierarchical Achievements */}
                   {project.achievements && project.achievements.length > 0 && (
                     <div className="text-sm text-gray-700 mb-2">
                       {renderAchievements(project.achievements)}
                     </div>
-                  )}
-
-                  {/* Tech Stack */}
-                  {project.techStack && project.techStack.length > 0 && (
-                    <p className="text-xs text-gray-600 mb-1">
-                      <span className="font-semibold">Tech:</span> {project.techStack.join(', ')}
-                    </p>
                   )}
 
                   {/* Project Links */}

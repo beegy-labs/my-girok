@@ -220,7 +220,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 2. **Position** (`position`): 직급 (e.g., "Senior Developer")
 3. **Responsibilities** (`responsibilities`): 담당업무
 4. **Cover Letter** (`coverLetter`): 자기소개서
-5. **Career Goals** (`careerGoals`): 입사 후 포부
+5. **Application Reason** (`applicationReason`): 지원 동기
 
 ## Resume Preview Design
 
@@ -274,6 +274,12 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 **Max Depth**: 4 levels (achievements, skill descriptions)
 
 ## Recent Updates
+
+**2025-01-16 (Part 3)**: Career goals → Application reason + Tech Stack positioning
+- Changed `careerGoals` to `applicationReason` (지원 동기)
+- Updated wording to be more resume-appropriate
+- Moved Tech Stack display after Description in preview (before achievements)
+- Updated schema, types, DTOs, UI components
 
 **2025-01-16 (Part 2)**: Fix achievements save validation error
 - Added `stripIds()` utility to recursively remove `id` fields
