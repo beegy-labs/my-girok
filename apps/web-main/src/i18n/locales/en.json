@@ -82,6 +82,14 @@
       "rank": "Rank",
       "dischargeType": "Discharge Type",
       "servicePeriod": "Service Period"
+    },
+    "degreeTypes": {
+      "HIGH_SCHOOL": "High School Diploma",
+      "ASSOCIATE_2": "Associate Degree (2-year)",
+      "ASSOCIATE_3": "Associate Degree (3-year)",
+      "BACHELOR": "Bachelor's Degree (4-year)",
+      "MASTER": "Master's Degree",
+      "DOCTORATE": "Doctorate (Ph.D.)"
     }
   }
 }

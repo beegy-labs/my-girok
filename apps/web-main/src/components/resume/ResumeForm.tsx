@@ -13,6 +13,7 @@ import {
 } from '../../api/resume';
 import SectionOrderManager from './SectionOrderManager';
 import ExperienceSection from './ExperienceSection';
+import EducationSection from './EducationSection';
 import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
 
 interface ResumeFormProps {
@@ -773,167 +774,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </div>
 
       {/* Education Section */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">🎓 {t('resume.sections.education')}</h2>
-            <p className="text-sm text-gray-600">{t('resume.descriptions.education')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setFormData({
-                ...formData,
-                educations: [
-                  ...(formData.educations || []),
-                  {
-                    school: '',
-                    major: '',
-                    degree: '',
-                    startDate: '',
-                    endDate: '',
-                    gpa: '',
-                    order: formData.educations?.length || 0,
-                    visible: true,
-                  },
-                ],
-              });
-            }}
-            className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
-          >
-            + Add Education
-          </button>
-        </div>
-
-        {formData.educations && formData.educations.length > 0 ? (
-          <div className="space-y-4">
-            {formData.educations.map((edu, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Education #{index + 1}</h3>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newEducations = formData.educations?.filter((_, i) => i !== index);
-                      setFormData({ ...formData, educations: newEducations });
-                    }}
-                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
-                  >
-                    Remove
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      School <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={edu.school}
-                      onChange={e => {
-                        const newEducations = [...(formData.educations || [])];
-                        newEducations[index] = { ...newEducations[index], school: e.target.value };
-                        setFormData({ ...formData, educations: newEducations });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="University name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Major <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={edu.major}
-                      onChange={e => {
-                        const newEducations = [...(formData.educations || [])];
-                        newEducations[index] = { ...newEducations[index], major: e.target.value };
-                        setFormData({ ...formData, educations: newEducations });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="e.g., Computer Science"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Degree <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={edu.degree}
-                      onChange={e => {
-                        const newEducations = [...(formData.educations || [])];
-                        newEducations[index] = { ...newEducations[index], degree: e.target.value };
-                        setFormData({ ...formData, educations: newEducations });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="e.g., Bachelor, Master, PhD"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      GPA
-                    </label>
-                    <input
-                      type="text"
-                      value={edu.gpa || ''}
-                      onChange={e => {
-                        const newEducations = [...(formData.educations || [])];
-                        newEducations[index] = { ...newEducations[index], gpa: e.target.value };
-                        setFormData({ ...formData, educations: newEducations });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="e.g., 3.8/4.0"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Start Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="month"
-                      value={edu.startDate}
-                      onChange={e => {
-                        const newEducations = [...(formData.educations || [])];
-                        newEducations[index] = { ...newEducations[index], startDate: e.target.value };
-                        setFormData({ ...formData, educations: newEducations });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      End Date
-                    </label>
-                    <input
-                      type="month"
-                      value={edu.endDate || ''}
-                      onChange={e => {
-                        const newEducations = [...(formData.educations || [])];
-                        newEducations[index] = { ...newEducations[index], endDate: e.target.value };
-                        setFormData({ ...formData, educations: newEducations });
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-                      placeholder="Leave empty if current"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <p>No education added yet. Click "Add Education" to get started.</p>
-          </div>
-        )}
-      </div>
+      <EducationSection
+        educations={formData.educations || []}
+        onChange={(educations) => setFormData({ ...formData, educations })}
+        t={t}
+      />
 
       {/* Certificates Section */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">

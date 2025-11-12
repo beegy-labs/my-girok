@@ -11,6 +11,15 @@ export enum SectionType {
   CERTIFICATE = 'CERTIFICATE',
 }
 
+export enum DegreeType {
+  HIGH_SCHOOL = 'HIGH_SCHOOL',
+  ASSOCIATE_2 = 'ASSOCIATE_2', // 2-year college
+  ASSOCIATE_3 = 'ASSOCIATE_3', // 3-year college (Korea specific)
+  BACHELOR = 'BACHELOR',
+  MASTER = 'MASTER',
+  DOCTORATE = 'DOCTORATE',
+}
+
 export interface SkillDescription {
   id?: string;
   content: string; // Description text
@@ -86,7 +95,7 @@ export interface Education {
   id?: string;
   school: string;
   major: string;
-  degree: string;
+  degree?: DegreeType;
   startDate: string;
   endDate?: string;
   gpa?: string;

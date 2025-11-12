@@ -44,7 +44,28 @@ Company
 
 **Key Change**: Work Experience and Projects are now unified. Each company has ONE final position/job title, and unlimited projects with hierarchical achievements (replacing the old Role → Tasks structure).
 
-### 3. Skills Structure (with Hierarchical Descriptions)
+### 3. Education Structure (with Degree Enum)
+
+```
+Education
+├── school (required)
+├── major (required)
+├── degree? (DegreeType enum - optional)
+│   ├── HIGH_SCHOOL
+│   ├── ASSOCIATE_2 (2년제)
+│   ├── ASSOCIATE_3 (3년제)
+│   ├── BACHELOR
+│   ├── MASTER
+│   └── DOCTORATE
+├── startDate (YYYY-MM)
+├── endDate? (nullable = current)
+├── gpa?
+└── order (drag-and-drop)
+```
+
+**Drag-and-drop**: EducationSection.tsx uses @dnd-kit for reordering
+
+### 4. Skills Structure (with Hierarchical Descriptions)
 
 ```
 Skill Category (e.g., "Frontend")
@@ -77,7 +98,7 @@ Skill Category (e.g., "Frontend")
 - Up button only shows if not first, down only if not last
 - Simple array swap, no drag-and-drop library needed
 
-### 4. Design Theme - Library Concept
+### 5. Design Theme - Library Concept
 
 **Concept**: "나의 기록" (My Records) - Personal library for documenting life and career
 
@@ -239,8 +260,9 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - **DTOs**: `services/personal-service/src/resume/dto/`
 - **Service**: `services/personal-service/src/resume/resume.service.ts`
 - **Form UI**: `apps/web-main/src/components/resume/ResumeForm.tsx`
-- **Experience Component**: `apps/web-main/src/components/resume/ExperienceSection.tsx` (new unified component with drag-and-drop)
-- **Hierarchical Component**: `apps/web-main/src/components/resume/HierarchicalDescription.tsx` (reusable for any hierarchical input)
+- **Experience Component**: `apps/web-main/src/components/resume/ExperienceSection.tsx` (drag-and-drop)
+- **Education Component**: `apps/web-main/src/components/resume/EducationSection.tsx` (drag-and-drop, degree select)
+- **Hierarchical Component**: `apps/web-main/src/components/resume/HierarchicalDescription.tsx` (reusable, 4 depth)
 - **Preview**: `apps/web-main/src/components/resume/ResumePreview.tsx`
 
 ## Quick Reference
@@ -251,22 +273,22 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
-**2025-01-15 (Part 2)**: Fixed skill save bug + added reordering
-- **Bug Fix**: Changed `createMany` to individual `create` for proper JSON serialization
-- **Feature**: Added ▲/▼ buttons to reorder skill items
-- File: `resume.service.ts` (lines 288-302), `ResumeForm.tsx` (lines 651-685)
-- Changelog: `docs/changelogs/2025-01-15-skill-save-fix-and-reordering.md`
+**2025-01-16**: Education degree enum + drag-and-drop
+- DegreeType enum: HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE
+- i18n: KR (2년제/3년제), JP, EN
+- EducationSection.tsx: drag-and-drop sortable component
+- Schema: degree → DegreeType? (nullable)
+- UI: Select with t(`resume.degreeTypes.${degree}`)
 
-**2025-01-15 (Part 1)**: Skills section now supports hierarchical descriptions (4 depth levels)
-- Added `SkillDescription` interface (recursive)
-- Created `HierarchicalDescription.tsx` component (reusable)
-- Updated `ResumeForm.tsx` and `ResumePreview.tsx`
-- Backward compatible with legacy text descriptions
-- No database changes (Skills already use Json type)
+**2025-01-15 (Part 2)**: Skill save fix + reordering
+- Fix: `create()` loop vs `createMany()` for JSON
+- Feature: ▲/▼ buttons for skill items
 
-**Colors**: Amber theme (see DESIGN_SYSTEM.md)
-**i18n**: Korean default, English fallback
-**Tests**: Jest (backend), Vitest (frontend)
+**2025-01-15 (Part 1)**: Skills hierarchical descriptions
+- HierarchicalDescription.tsx (reusable, 4 depth)
+- Backward compatible
+
+**Stack**: Amber theme, i18n (KR/EN), Jest/Vitest
 
 ---
 
