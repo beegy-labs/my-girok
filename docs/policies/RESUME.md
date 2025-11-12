@@ -1394,6 +1394,24 @@ The resume feature follows the My-Girok design system with a library/book theme.
 
 ## Change Log
 
+- **2025-01-15 (Part 4)**: Fixed skill descriptions save bug and added item reordering
+  - **Bug Fix - Skill Descriptions Not Saving**:
+    - Root cause: Used `createMany` which doesn't properly serialize nested JSON
+    - Solution: Changed to individual `create` calls for proper JSON handling
+    - Impact: Hierarchical descriptions with children arrays now save correctly
+    - File: `services/personal-service/src/resume/resume.service.ts` (lines 288-302)
+  - **Feature - Skill Item Reordering**:
+    - Added ▲ (up) and ▼ (down) arrow buttons to reorder skill items
+    - Buttons conditionally rendered based on position (first, last, middle)
+    - Uses array destructuring for efficient item swapping
+    - File: `apps/web-main/src/components/resume/ResumeForm.tsx` (lines 651-685)
+  - **Benefits**:
+    - Users can now successfully save hierarchical skill descriptions
+    - Simple, intuitive reordering without drag-and-drop complexity
+    - No additional dependencies required
+    - Data integrity maintained for complex nested structures
+  - **Changelog**: `docs/changelogs/2025-01-15-skill-save-fix-and-reordering.md`
+
 - **2025-01-15 (Part 3)**: Added grayscale toggle and multi-page layout to resume preview
   - **Grayscale Mode Toggle**:
     - Added user-controlled toggle button (🎨 컬러 모드 / 🖤 흑백 모드)

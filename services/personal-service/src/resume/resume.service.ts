@@ -287,13 +287,18 @@ export class ResumeService {
       // Update nested data if provided
       if (dto.skills) {
         await tx.skill.deleteMany({ where: { resumeId: resume.id } });
-        await tx.skill.createMany({
-          data: dto.skills.map(skill => ({
-            ...skill,
-            resumeId: resume.id,
-            items: skill.items as any, // Cast to any for Prisma Json type
-          })),
-        });
+        // Use individual creates instead of createMany for proper JSON serialization
+        for (const skill of dto.skills) {
+          await tx.skill.create({
+            data: {
+              resumeId: resume.id,
+              category: skill.category,
+              items: skill.items as any, // Cast to any for Prisma Json type
+              order: skill.order ?? 0,
+              visible: skill.visible ?? true,
+            },
+          });
+        }
       }
 
       if (dto.experiences) {

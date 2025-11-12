@@ -72,6 +72,11 @@ Skill Category (e.g., "Frontend")
 - Supports drag & drop, collapse/expand, recursive structure
 - Same UX as Work Experience achievements
 
+**Reordering**:
+- Skill items have ▲/▼ buttons to change order
+- Up button only shows if not first, down only if not last
+- Simple array swap, no drag-and-drop library needed
+
 ### 4. Design Theme - Library Concept
 
 **Concept**: "나의 기록" (My Records) - Personal library for documenting life and career
@@ -90,6 +95,22 @@ Skill Category (e.g., "Frontend")
 - 💼 Career
 
 ## Implementation Patterns
+
+### Saving Skills with JSON Fields
+
+**CRITICAL**: Use individual `create()` not `createMany()` for Skills
+
+```typescript
+// ❌ DON'T - corrupts nested JSON
+await tx.skill.createMany({ data: skills });
+
+// ✅ DO - properly serializes JSON
+for (const skill of skills) {
+  await tx.skill.create({ data: skill });
+}
+```
+
+**Reason**: `createMany` doesn't handle complex nested JSON (like hierarchical descriptions with children arrays)
 
 ### Adding New Fields to Experience/ExperienceProject
 
@@ -230,12 +251,19 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
-**2025-01-15**: Skills section now supports hierarchical descriptions (4 depth levels)
+**2025-01-15 (Part 2)**: Fixed skill save bug + added reordering
+- **Bug Fix**: Changed `createMany` to individual `create` for proper JSON serialization
+- **Feature**: Added ▲/▼ buttons to reorder skill items
+- File: `resume.service.ts` (lines 288-302), `ResumeForm.tsx` (lines 651-685)
+- Changelog: `docs/changelogs/2025-01-15-skill-save-fix-and-reordering.md`
+
+**2025-01-15 (Part 1)**: Skills section now supports hierarchical descriptions (4 depth levels)
 - Added `SkillDescription` interface (recursive)
 - Created `HierarchicalDescription.tsx` component (reusable)
 - Updated `ResumeForm.tsx` and `ResumePreview.tsx`
 - Backward compatible with legacy text descriptions
 - No database changes (Skills already use Json type)
+
 **Colors**: Amber theme (see DESIGN_SYSTEM.md)
 **i18n**: Korean default, English fallback
 **Tests**: Jest (backend), Vitest (frontend)
