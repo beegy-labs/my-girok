@@ -97,7 +97,7 @@ export class StorageService {
         file.size,
         {
           'Content-Type': file.mimetype,
-          'X-Amz-Meta-Original-Name': file.originalname,
+          'X-Amz-Meta-Original-Name': encodeURIComponent(file.originalname),
         },
       );
 
@@ -150,7 +150,7 @@ export class StorageService {
         grayscaleBuffer.length,
         {
           'Content-Type': 'image/jpeg',
-          'X-Amz-Meta-Original-Name': `grayscale_${file.originalname}`,
+          'X-Amz-Meta-Original-Name': encodeURIComponent(`grayscale_${file.originalname}`),
           'X-Amz-Meta-Processed': 'true',
         },
       );
