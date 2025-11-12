@@ -271,8 +271,8 @@ export function calculateExperienceDuration(startDate: string, endDate?: string,
 }
 
 /**
- * Recursively strips 'id' fields from nested objects
- * This is needed because DTOs don't accept id fields for nested relations
+ * Recursively strips database-specific fields from nested objects
+ * This is needed because DTOs don't accept database-generated fields for nested relations
  */
 function stripIds<T>(obj: T): T {
   if (obj === null || obj === undefined) {
@@ -285,9 +285,12 @@ function stripIds<T>(obj: T): T {
 
   if (typeof obj === 'object') {
     const result: any = {};
+    // List of database-generated fields that should be removed before API submission
+    const dbFields = ['id', 'projectId', 'resumeId', 'experienceId', 'parentId', 'createdAt', 'updatedAt'];
+
     for (const [key, value] of Object.entries(obj)) {
-      // Skip 'id' field
-      if (key === 'id') {
+      // Skip database-generated fields
+      if (dbFields.includes(key)) {
         continue;
       }
       // Recursively process nested objects and arrays

@@ -22,8 +22,62 @@ interface ResumeFormProps {
   onChange?: (data: CreateResumeDto) => void;
 }
 
+// Collapsible Section Header Component
+interface CollapsibleHeaderProps {
+  title: string;
+  icon: string;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  count?: number;
+}
+
+function CollapsibleHeader({ title, icon, isCollapsed, onToggle, count }: CollapsibleHeaderProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
+    >
+      <div className="flex items-center gap-2">
+        <h2 className="text-xl font-bold text-amber-900">
+          {icon} {title}
+        </h2>
+        {count !== undefined && count > 0 && (
+          <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
+            {count}
+          </span>
+        )}
+      </div>
+      <svg
+        className={`w-5 h-5 text-amber-900 transform transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  );
+}
+
 export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormProps) {
   const { t } = useTranslation();
+
+  // Collapsible section states
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    basicInfo: false,
+    skills: false,
+    experience: false,
+    education: false,
+    certificates: false,
+    military: false,
+    coverLetter: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const [formData, setFormData] = useState<CreateResumeDto>({
     title: resume?.title || 'My Resume',
     description: resume?.description || '',
@@ -313,7 +367,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       {/* Basic Info */}
       <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-amber-900 mb-4">📋 {t('resume.sections.basicInfo')}</h2>
+        <CollapsibleHeader
+          title={t('resume.sections.basicInfo')}
+          icon="📋"
+          isCollapsed={collapsedSections.basicInfo}
+          onToggle={() => toggleSection('basicInfo')}
+        />
+        {!collapsedSections.basicInfo && (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -504,11 +565,20 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             placeholder="Brief introduction about yourself..."
           />
         </div>
+        </>
+        )}
       </div>
 
       {/* Korean-specific sections */}
       <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-amber-900 mb-4">📝 Korean Resume Sections</h2>
+        <CollapsibleHeader
+          title="Korean Resume Sections"
+          icon="📝"
+          isCollapsed={collapsedSections.coverLetter}
+          onToggle={() => toggleSection('coverLetter')}
+        />
+        {!collapsedSections.coverLetter && (
+        <>
 
         <div className="mb-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -541,6 +611,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             회사의 비전, 직무의 매력, 본인의 강점과의 연결성 등을 작성
           </p>
         </div>
+        </>
+        )}
       </div>
 
       {/* Work Experience Section */}
@@ -555,9 +627,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       {/* Skills Section */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <CollapsibleHeader
+          title={t('resume.sections.skills')}
+          icon="⚡"
+          isCollapsed={collapsedSections.skills}
+          onToggle={() => toggleSection('skills')}
+          count={formData.skills?.length}
+        />
+        {!collapsedSections.skills && (
+        <>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">⚡ {t('resume.sections.skills')}</h2>
             <p className="text-sm text-gray-600">{t('resume.descriptions.skills')}</p>
           </div>
           <button
@@ -771,6 +851,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <p>카테고리를 추가하려면 "+ 카테고리 추가" 버튼을 클릭하세요</p>
           </div>
         )}
+        </>
+        )}
       </div>
 
       {/* Education Section */}
@@ -782,9 +864,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       {/* Certificates Section */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+        <CollapsibleHeader
+          title={t('resume.sections.certifications')}
+          icon="🏆"
+          isCollapsed={collapsedSections.certificates}
+          onToggle={() => toggleSection('certificates')}
+          count={formData.certificates?.length}
+        />
+        {!collapsedSections.certificates && (
+        <>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">🏆 {t('resume.sections.certifications')}</h2>
             <p className="text-sm text-gray-600">{t('resume.descriptions.certifications')}</p>
           </div>
           <button
@@ -940,6 +1030,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <div className="text-center py-8 text-gray-500">
             <p>No certifications added yet. Click "Add Certificate" to get started.</p>
           </div>
+        )}
+        </>
         )}
       </div>
 

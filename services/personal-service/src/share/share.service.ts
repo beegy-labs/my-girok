@@ -61,7 +61,7 @@ export class ShareService {
 
     return shareLinks.map(link => ({
       ...link,
-      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/resume/${link.token}`,
+      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shared/${link.token}`,
     }));
   }
 
@@ -104,7 +104,7 @@ export class ShareService {
 
     return {
       ...updated,
-      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/resume/${updated.token}`,
+      shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shared/${updated.token}`,
     };
   }
 

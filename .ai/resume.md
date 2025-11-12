@@ -198,8 +198,16 @@ PATCH  /v1/resume/:id/default  // Set default
 PATCH /v1/resume/:id/sections/order       // Reorder
 PATCH /v1/resume/:id/sections/visibility  // Toggle
 
-// Public access
-GET /v1/resume/public/:username  // User's default resume
+// Public access & Sharing
+GET /v1/resume/public/:username  // User's default resume by username
+GET /v1/share/public/:token      // Shared resume by token
+
+// Share links
+POST   /v1/share/resume/:resumeId  // Create share link
+GET    /v1/share                   // Get my share links
+GET    /v1/share/:id               // Get specific share link
+PATCH  /v1/share/:id               // Update share link
+DELETE /v1/share/:id               // Delete share link
 ```
 
 ## Database Migration
@@ -246,7 +254,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - Use arbitrary values like `w-[123px]`
 - Forget to add translation keys for new text
 - Create nested relations with `createMany` (not supported)
-- Send `id` fields in nested objects to API (DTOs reject them)
+- Send database-generated fields (`id`, `projectId`, `resumeId`, `experienceId`, `parentId`, `createdAt`, `updatedAt`) to API
 - Skip test coverage updates
 
 ✅ **DO**:
@@ -254,7 +262,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - Use standard spacing (multiples of 0.25rem)
 - Add i18n keys for all user-facing text
 - Use `create` with nested data for relations
-- Strip `id` fields before API calls (handled automatically by `prepareResumeForSubmit`)
+- Strip all DB fields before API calls (handled automatically by `prepareResumeForSubmit`)
 - Update documentation with changes
 
 ## File Locations
@@ -279,6 +287,24 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 **Max Depth**: 4 levels (achievements, skill descriptions)
 
 ## Recent Updates
+
+**2025-11-12 (Part 3)**: Collapsible sections + Share link fixes + DB field stripping
+- Added collapsible functionality to all resume form sections for better UX
+- Fixed share link URL format: `/shared/:token` (was incorrectly `/resume/:token`)
+- Enhanced `stripIds()` to remove all DB fields: `id`, `projectId`, `resumeId`, `experienceId`, `parentId`, `createdAt`, `updatedAt`
+- Prevents validation errors when submitting previously-fetched data
+- Certificates and Education saving confirmed working correctly
+
+**2025-11-12 (Part 2)**: Share link creation and management
+- Share links now generate correct URLs: `https://domain/shared/{token}`
+- Frontend routes: `/resume/:username` (public profile), `/shared/:token` (share link)
+- Backend endpoints: `/v1/resume/public/:username`, `/v1/share/public/:token`
+- Fixed `findAllByUser()` and `update()` in share.service.ts
+
+**2025-11-12 (Part 1)**: Database field validation fix
+- `stripIds()` function now removes all database-generated fields
+- Prevents "property X should not exist" validation errors
+- Applies recursively to all nested objects (achievements, projects, etc.)
 
 **2025-01-16 (Part 4)**: Experience duration auto-calculation + Currently working flag
 - Added `isCurrentlyWorking` (재직중) checkbox for Experience
