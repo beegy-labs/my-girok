@@ -81,22 +81,23 @@ export class ResumeService {
           create: dto.experiences.map(exp => ({
             company: exp.company,
             startDate: exp.startDate,
-            endDate: exp.endDate,
+            endDate: exp.endDate || null,
+            isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
             finalPosition: exp.finalPosition,
             jobTitle: exp.jobTitle,
-            order: exp.order,
-            visible: exp.visible,
+            order: exp.order ?? 0,
+            visible: exp.visible ?? true,
             projects: {
               create: exp.projects?.map(project => ({
                 name: project.name,
                 startDate: project.startDate,
-                endDate: project.endDate,
+                endDate: project.endDate || null,
                 description: project.description,
                 role: project.role,
                 techStack: project.techStack,
                 url: project.url,
                 githubUrl: project.githubUrl,
-                order: project.order,
+                order: project.order ?? 0,
                 achievements: project.achievements && project.achievements.length > 0
                   ? { create: this.transformAchievements(project.achievements) }
                   : undefined,
@@ -383,22 +384,23 @@ export class ResumeService {
               resumeId: resume.id,
               company: exp.company,
               startDate: exp.startDate,
-              endDate: exp.endDate,
+              endDate: exp.endDate || null,
+              isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
               finalPosition: exp.finalPosition,
               jobTitle: exp.jobTitle,
-              order: exp.order,
-              visible: exp.visible,
+              order: exp.order ?? 0,
+              visible: exp.visible ?? true,
               projects: {
                 create: exp.projects?.map(project => ({
                   name: project.name,
                   startDate: project.startDate,
-                  endDate: project.endDate,
+                  endDate: project.endDate || null,
                   description: project.description,
                   role: project.role,
                   techStack: project.techStack,
                   url: project.url,
                   githubUrl: project.githubUrl,
-                  order: project.order,
+                  order: project.order ?? 0,
                   achievements: project.achievements && project.achievements.length > 0
                     ? { create: this.transformAchievements(project.achievements) }
                     : undefined,
