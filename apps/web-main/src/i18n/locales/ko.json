@@ -82,6 +82,14 @@
       "rank": "계급",
       "dischargeType": "전역사유",
       "servicePeriod": "복무기간"
+    },
+    "degreeTypes": {
+      "HIGH_SCHOOL": "고등학교 졸업",
+      "ASSOCIATE_2": "전문학사 (2년제)",
+      "ASSOCIATE_3": "전문학사 (3년제)",
+      "BACHELOR": "학사 (4년제)",
+      "MASTER": "석사",
+      "DOCTORATE": "박사"
     }
   }
 }

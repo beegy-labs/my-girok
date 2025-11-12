@@ -119,6 +119,15 @@ enum MilitaryService {
   NOT_APPLICABLE  // 해당없음
 }
 
+enum DegreeType {
+  HIGH_SCHOOL  // 고등학교 졸업
+  ASSOCIATE_2  // 전문학사 (2년제)
+  ASSOCIATE_3  // 전문학사 (3년제)
+  BACHELOR     // 학사 (4년제)
+  MASTER       // 석사
+  DOCTORATE    // 박사
+}
+
 // Resume File Attachments (profile photos, portfolios, certificates)
 model ResumeAttachment {
   id       String @id @default(uuid())
@@ -291,7 +300,7 @@ model Education {
 
   school    String
   major     String
-  degree    String  // Bachelor, Master, PhD
+  degree    DegreeType?  // Enum: HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE (nullable for backward compatibility)
   startDate String  @map("start_date") // "2015-03" format
   endDate   String? @map("end_date") // null = ongoing
   gpa       String?

@@ -537,7 +537,9 @@ function EducationSection({ educations }: { educations: any[] }) {
           <div className="flex justify-between items-start">
             <div>
               <h3 className="font-semibold text-gray-900">{edu.school}</h3>
-              <p className="text-gray-700">{edu.degree} in {edu.major}</p>
+              <p className="text-gray-700">
+                {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : 'Degree'} in {edu.major}
+              </p>
               {edu.gpa && <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>}
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
