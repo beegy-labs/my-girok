@@ -36,6 +36,7 @@ export class StorageService {
       useSSL,
       accessKey,
       secretKey,
+      region: '', // Empty region for MinIO (not AWS S3)
     });
 
     this.ensureBucketExists();
@@ -48,7 +49,7 @@ export class StorageService {
     try {
       const exists = await this.minioClient.bucketExists(this.bucketName);
       if (!exists) {
-        await this.minioClient.makeBucket(this.bucketName, 'us-east-1');
+        await this.minioClient.makeBucket(this.bucketName, '');
         this.logger.log(`Bucket ${this.bucketName} created successfully`);
 
         // Set bucket policy to allow public read
