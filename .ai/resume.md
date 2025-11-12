@@ -193,6 +193,7 @@ GET    /v1/resume/:id          // Get one
 PUT    /v1/resume/:id          // Update
 DELETE /v1/resume/:id          // Delete
 PATCH  /v1/resume/:id/default  // Set default
+POST   /v1/resume/:id/copy     // Copy/duplicate resume
 
 // Section management
 PATCH /v1/resume/:id/sections/order       // Reorder
@@ -287,6 +288,21 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 **Max Depth**: 4 levels (achievements, skill descriptions)
 
 ## Recent Updates
+
+**2025-11-12 (Part 5)**: Resume copy/duplicate feature + Nested achievements retrieval fix
+- Added resume copy endpoint: `POST /v1/resume/:id/copy`
+- Copies all nested data: sections, skills, experiences with projects/achievements (4 depth), education, certificates
+- Copied resume title gets " (Copy)" suffix and is never set as default
+- Fixed 500 error when retrieving resumes with nested achievements
+- Updated `findByIdAndUserId()` to properly fetch hierarchical achievements with `where: { parentId: null }`
+- Added `copyAchievements()` helper for recursive copying
+- Frontend API: `copyResume(resumeId)`
+
+**2025-11-12 (Part 4)**: Nested achievements save fix
+- Fixed critical bug where only first level of achievements was saved
+- Added `transformAchievements()` recursive helper method
+- Properly handles children at all depth levels (1-4)
+- Applied to both `create()` and `update()` methods in resume service
 
 **2025-11-12 (Part 3)**: Collapsible sections + Share link fixes + DB field stripping
 - Added collapsible functionality to all resume form sections for better UX

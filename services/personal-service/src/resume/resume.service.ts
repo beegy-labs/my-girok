@@ -233,7 +233,23 @@ export class ResumeService {
               orderBy: { order: 'asc' },
               include: {
                 achievements: {
+                  where: { parentId: null },
                   orderBy: { order: 'asc' },
+                  include: {
+                    children: {
+                      orderBy: { order: 'asc' },
+                      include: {
+                        children: {
+                          orderBy: { order: 'asc' },
+                          include: {
+                            children: {
+                              orderBy: { order: 'asc' },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -401,6 +417,251 @@ export class ResumeService {
     });
 
     return { message: 'Resume deleted successfully' };
+  }
+
+  /**
+   * Copy/duplicate a resume with all its nested data
+   */
+  async copyResume(resumeId: string, userId: string) {
+    // Get the original resume with all relations
+    const original = await this.prisma.resume.findUnique({
+      where: { id: resumeId },
+      include: {
+        sections: true,
+        skills: true,
+        experiences: {
+          include: {
+            projects: {
+              include: {
+                achievements: {
+                  include: {
+                    children: {
+                      include: {
+                        children: {
+                          include: {
+                            children: true, // Up to 4 levels
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        projects: true,
+        educations: true,
+        certificates: true,
+      },
+    });
+
+    if (!original || original.userId !== userId) {
+      throw new NotFoundException('Resume not found');
+    }
+
+    // Create a copy
+    return await this.prisma.$transaction(async (tx) => {
+      const copy = await tx.resume.create({
+        data: {
+          userId,
+          title: `${original.title} (Copy)`,
+          description: original.description,
+          isDefault: false, // Copies are never default
+          paperSize: original.paperSize,
+          name: original.name,
+          email: original.email,
+          phone: original.phone,
+          address: original.address,
+          github: original.github,
+          blog: original.blog,
+          linkedin: original.linkedin,
+          portfolio: original.portfolio,
+          summary: original.summary,
+          profileImage: original.profileImage,
+          militaryService: original.militaryService,
+          militaryDischarge: original.militaryDischarge,
+          militaryRank: original.militaryRank,
+          militaryDischargeType: original.militaryDischargeType,
+          militaryServiceStartDate: original.militaryServiceStartDate,
+          militaryServiceEndDate: original.militaryServiceEndDate,
+          coverLetter: original.coverLetter,
+          applicationReason: original.applicationReason,
+        },
+      });
+
+      // Copy sections
+      if (original.sections && original.sections.length > 0) {
+        await tx.resumeSection.createMany({
+          data: original.sections.map(section => ({
+            resumeId: copy.id,
+            type: section.type,
+            order: section.order,
+            visible: section.visible,
+          })),
+        });
+      }
+
+      // Copy skills (need to use individual create for JSON fields)
+      if (original.skills && original.skills.length > 0) {
+        for (const skill of original.skills) {
+          await tx.skill.create({
+            data: {
+              resumeId: copy.id,
+              category: skill.category,
+              items: skill.items as any, // Prisma JSON type
+              order: skill.order,
+              visible: skill.visible,
+            },
+          });
+        }
+      }
+
+      // Copy experiences with projects and achievements
+      if (original.experiences && original.experiences.length > 0) {
+        for (const exp of original.experiences) {
+          await tx.experience.create({
+            data: {
+              resumeId: copy.id,
+              company: exp.company,
+              startDate: exp.startDate,
+              endDate: exp.endDate,
+              isCurrentlyWorking: exp.isCurrentlyWorking,
+              finalPosition: exp.finalPosition,
+              jobTitle: exp.jobTitle,
+              order: exp.order,
+              visible: exp.visible,
+              projects: {
+                create: exp.projects?.map(project => ({
+                  name: project.name,
+                  startDate: project.startDate,
+                  endDate: project.endDate,
+                  description: project.description,
+                  role: project.role,
+                  techStack: project.techStack,
+                  url: project.url,
+                  githubUrl: project.githubUrl,
+                  order: project.order,
+                  achievements: project.achievements && project.achievements.length > 0
+                    ? { create: this.copyAchievements(project.achievements) }
+                    : undefined,
+                })) || [],
+              },
+            },
+          });
+        }
+      }
+
+      // Copy projects (standalone)
+      if (original.projects && original.projects.length > 0) {
+        await tx.project.createMany({
+          data: original.projects.map(project => ({
+            resumeId: copy.id,
+            name: project.name,
+            startDate: project.startDate,
+            endDate: project.endDate,
+            description: project.description,
+            role: project.role,
+            achievements: project.achievements,
+            techStack: project.techStack,
+            url: project.url,
+            githubUrl: project.githubUrl,
+            order: project.order,
+            visible: project.visible,
+          })),
+        });
+      }
+
+      // Copy educations
+      if (original.educations && original.educations.length > 0) {
+        await tx.education.createMany({
+          data: original.educations.map(edu => ({
+            resumeId: copy.id,
+            school: edu.school,
+            major: edu.major,
+            degree: edu.degree,
+            startDate: edu.startDate,
+            endDate: edu.endDate,
+            gpa: edu.gpa,
+            gpaFormat: edu.gpaFormat,
+            order: edu.order,
+            visible: edu.visible,
+          })),
+        });
+      }
+
+      // Copy certificates
+      if (original.certificates && original.certificates.length > 0) {
+        await tx.certificate.createMany({
+          data: original.certificates.map(cert => ({
+            resumeId: copy.id,
+            name: cert.name,
+            issuer: cert.issuer,
+            issueDate: cert.issueDate,
+            expiryDate: cert.expiryDate,
+            credentialId: cert.credentialId,
+            credentialUrl: cert.credentialUrl,
+            order: cert.order,
+            visible: cert.visible,
+          })),
+        });
+      }
+
+      // Return the copied resume with all relations
+      return await tx.resume.findUnique({
+        where: { id: copy.id },
+        include: {
+          sections: { orderBy: { order: 'asc' } },
+          skills: { orderBy: { order: 'asc' } },
+          experiences: {
+            orderBy: { order: 'asc' },
+            include: {
+              projects: {
+                orderBy: { order: 'asc' },
+                include: {
+                  achievements: {
+                    where: { parentId: null },
+                    orderBy: { order: 'asc' },
+                    include: {
+                      children: {
+                        orderBy: { order: 'asc' },
+                        include: {
+                          children: {
+                            orderBy: { order: 'asc' },
+                            include: {
+                              children: {
+                                orderBy: { order: 'asc' },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          projects: { orderBy: { order: 'asc' } },
+          educations: { orderBy: { order: 'asc' } },
+          certificates: { orderBy: { order: 'asc' } },
+        },
+      });
+    });
+  }
+
+  /**
+   * Recursively copy achievements with their children
+   */
+  private copyAchievements(achievements: any[]): any[] {
+    return achievements.map(achievement => ({
+      content: achievement.content,
+      depth: achievement.depth,
+      order: achievement.order,
+      children: achievement.children && achievement.children.length > 0
+        ? { create: this.copyAchievements(achievement.children) }
+        : undefined,
+    }));
   }
 
   async setDefaultResume(resumeId: string, userId: string) {
