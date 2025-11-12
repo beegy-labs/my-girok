@@ -835,12 +835,22 @@ Typical section order and emphasis:
 - **Margins**: 1.5cm all sides for print
 - **Indicator**: Shows current paper size in preview (hidden in print)
 
-##### Print Styling
-- **Black & White Optimized**: All colors convert to grayscale
-- **High Contrast**: Text uses #000000 for headings, #1f2937 for body
-- **Profile Photo**: Auto-grayscale filter for printing
-- **Borders**: All borders in black for clear printing
-- **No Backgrounds**: White backgrounds only for ink efficiency
+##### Print Styling & Preview Design
+
+**Design Philosophy**: The resume preview uses high-contrast grayscale design for optimal readability and print compatibility, separate from the brand's amber theme used in editing UI.
+
+- **Grayscale Palette**: Uses gray-50 through gray-900 (NOT pure black/white)
+  - Headers: `gray-900` (#111827) - Strong emphasis
+  - Body text: `gray-700` (#374151) - Readable
+  - Secondary text: `gray-600` (#4B5563)
+  - Borders: `gray-400` (#9CA3AF) - Section dividers
+  - Backgrounds: `gray-50` (#F9FAFB), `gray-100` (#F3F4F6)
+- **High Contrast**: Ensures 7:1 minimum contrast ratio for text
+- **Profile Photo**: Auto-grayscale filter (`filter: grayscale(100%)`)
+- **No Brand Colors**: ResumePreview component does NOT use amber theme
+- **Clean Layout**: Minimal decoration, focus on content hierarchy
+- **Print-Optimized**: Reduces printing costs, ATS-friendly format
+- **Separate UI**: Editing interface maintains amber brand identity
 
 ### Best Practices
 
@@ -1384,7 +1394,26 @@ The resume feature follows the My-Girok design system with a library/book theme.
 
 ## Change Log
 
-- **2025-01-15**: Added hierarchical descriptions to Skills section (4 depth levels)
+- **2025-01-15 (Part 2)**: Clarified resume preview design philosophy (documentation update)
+  - **Design Clarification**:
+    - Emphasized that resume preview uses **high-contrast grayscale** (gray-50 ~ gray-900)
+    - **NOT pure black & white** - uses grayscale range for visual hierarchy
+    - Separate from brand's amber theme used in editing UI
+  - **Documentation Updates**:
+    - Updated DESIGN_SYSTEM.md with detailed grayscale palette
+    - Added "Design Philosophy" section explaining print-optimized approach
+    - Updated .ai/resume.md to clarify preview vs. editing UI colors
+    - Updated RESUME.md "Print Styling" section with specific hex codes
+  - **Rationale**:
+    - Print-optimized: Reduces printing costs for users
+    - Professional: Clean, distraction-free resume layout
+    - ATS-friendly: Simple formatting for Applicant Tracking Systems
+    - High readability: 7:1 minimum contrast ratio
+    - Maintains brand identity in editing interface
+  - **Implementation Status**: Already implemented correctly, documentation-only update
+  - **Changelog**: `docs/changelogs/2025-01-15-resume-preview-design-clarification.md`
+
+- **2025-01-15 (Part 1)**: Added hierarchical descriptions to Skills section (4 depth levels)
   - **Hierarchical Skill Descriptions**:
     - Added `SkillDescription` interface with recursive structure (4 depth levels)
     - Added `descriptions` field to `SkillItem` (hierarchical)
