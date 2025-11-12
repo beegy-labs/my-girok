@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Experience, ExperienceProject, ProjectAchievement } from '../../api/resume';
+import { Experience, ExperienceProject, ProjectAchievement, calculateExperienceDuration } from '../../api/resume';
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -217,12 +217,38 @@ function SortableExperienceCard({
               <input
                 type="month"
                 value={experience.endDate || ''}
-                onChange={e => onUpdate({ ...experience, endDate: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900"
+                onChange={e => onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })}
+                disabled={experience.isCurrentlyWorking}
+                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Leave empty if current"
               />
+              <label className="flex items-center mt-2 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={experience.isCurrentlyWorking || false}
+                  onChange={e => onUpdate({ ...experience, isCurrentlyWorking: e.target.checked, endDate: e.target.checked ? '' : experience.endDate })}
+                  className="mr-2 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-400"
+                />
+                재직중 (Currently Working)
+              </label>
             </div>
           </div>
+
+          {/* Experience Duration */}
+          {experience.startDate && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <span className="text-sm font-semibold text-amber-900">
+                경력 기간: {(() => {
+                  const duration = calculateExperienceDuration(
+                    experience.startDate,
+                    experience.endDate,
+                    experience.isCurrentlyWorking
+                  );
+                  return `${duration.years}년 ${duration.months}개월`;
+                })()}
+              </span>
+            </div>
+          )}
 
           {/* Final Position and Job Title */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

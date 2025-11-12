@@ -90,6 +90,18 @@
       "BACHELOR": "학사 (4년제)",
       "MASTER": "석사",
       "DOCTORATE": "박사"
+    },
+    "gpaFormats": {
+      "SCALE_4_0": "4.0/4.0",
+      "SCALE_4_5": "4.5/4.5",
+      "SCALE_100": "100/100"
+    },
+    "experience": {
+      "currentlyWorking": "재직중",
+      "totalExperience": "총 경력",
+      "years": "년",
+      "months": "개월",
+      "duration": "{{years}}년 {{months}}개월"
     }
   }
 }

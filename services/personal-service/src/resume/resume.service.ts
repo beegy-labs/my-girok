@@ -56,7 +56,7 @@ export class ResumeService {
           militaryServiceStartDate: dto.militaryServiceStartDate,
           militaryServiceEndDate: dto.militaryServiceEndDate,
           coverLetter: dto.coverLetter,
-          careerGoals: dto.careerGoals,
+          applicationReason: dto.applicationReason,
         skills: dto.skills ? {
           create: dto.skills.map(skill => ({
             ...skill,
@@ -280,7 +280,7 @@ export class ResumeService {
           militaryServiceStartDate: dto.militaryServiceStartDate,
           militaryServiceEndDate: dto.militaryServiceEndDate,
           coverLetter: dto.coverLetter,
-          careerGoals: dto.careerGoals,
+          applicationReason: dto.applicationReason,
         },
       });
 

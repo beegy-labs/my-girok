@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Resume } from '../../api/resume';
+import { Resume, calculateExperienceDuration } from '../../api/resume';
 import '../../styles/resume-print.css';
 
 interface ResumePreviewProps {
@@ -200,13 +200,13 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
           </div>
         )}
 
-        {/* Career Goals */}
-        {resume.careerGoals && (
+        {/* Application Reason */}
+        {resume.applicationReason && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-              Career Goals
+              Application Reason
             </h2>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.careerGoals}</p>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.applicationReason}</p>
           </div>
         )}
 
@@ -394,9 +394,23 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
         <div key={idx} className="mb-5">
           {/* Company Header */}
           <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
+            <div>
+              <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
+              {exp.startDate && (
+                <p className="text-xs text-gray-600 mt-1">
+                  {(() => {
+                    const duration = calculateExperienceDuration(
+                      exp.startDate,
+                      exp.endDate,
+                      exp.isCurrentlyWorking
+                    );
+                    return t('resume.experience.duration', { years: duration.years, months: duration.months });
+                  })()}
+                </p>
+              )}
+            </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
-              {exp.startDate} - {exp.endDate || 'Present'}
+              {exp.startDate} - {exp.isCurrentlyWorking ? t('resume.experience.currentlyWorking') : (exp.endDate || t('resume.experience.currentlyWorking'))}
             </span>
           </div>
 
@@ -429,18 +443,18 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                     <p className="text-sm text-gray-700 mb-2">{project.description}</p>
                   )}
 
+                  {/* Tech Stack */}
+                  {project.techStack && project.techStack.length > 0 && (
+                    <p className="text-xs text-gray-600 mb-2">
+                      <span className="font-semibold">Tech:</span> {project.techStack.join(', ')}
+                    </p>
+                  )}
+
                   {/* Hierarchical Achievements */}
                   {project.achievements && project.achievements.length > 0 && (
                     <div className="text-sm text-gray-700 mb-2">
                       {renderAchievements(project.achievements)}
                     </div>
-                  )}
-
-                  {/* Tech Stack */}
-                  {project.techStack && project.techStack.length > 0 && (
-                    <p className="text-xs text-gray-600 mb-1">
-                      <span className="font-semibold">Tech:</span> {project.techStack.join(', ')}
-                    </p>
                   )}
 
                   {/* Project Links */}

@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Education, DegreeType } from '../../api/resume';
+import { Education, DegreeType, GpaFormat } from '../../api/resume';
 
 interface EducationSectionProps {
   educations: Education[];
@@ -53,6 +53,7 @@ function SortableEducationCard({
   };
 
   const degreeTypes = Object.values(DegreeType);
+  const gpaFormats = Object.values(GpaFormat);
 
   return (
     <div
@@ -131,6 +132,23 @@ function SortableEducationCard({
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
+            GPA Format
+          </label>
+          <select
+            value={education.gpaFormat || GpaFormat.SCALE_4_0}
+            onChange={e => onUpdate({ ...education, gpaFormat: e.target.value as GpaFormat })}
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+          >
+            {gpaFormats.map(format => (
+              <option key={format} value={format}>
+                {t(`resume.gpaFormats.${format}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             GPA
           </label>
           <input
@@ -138,7 +156,11 @@ function SortableEducationCard({
             value={education.gpa || ''}
             onChange={e => onUpdate({ ...education, gpa: e.target.value })}
             className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
-            placeholder="e.g., 3.8/4.0"
+            placeholder={
+              education.gpaFormat === GpaFormat.SCALE_4_5 ? 'e.g., 4.2/4.5' :
+              education.gpaFormat === GpaFormat.SCALE_100 ? 'e.g., 85/100' :
+              'e.g., 3.8/4.0'
+            }
           />
         </div>
 
@@ -215,6 +237,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
         startDate: '',
         endDate: '',
         gpa: '',
+        gpaFormat: GpaFormat.SCALE_4_0,
         order: educations.length,
         visible: true,
       },
