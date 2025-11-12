@@ -382,19 +382,38 @@ export class ResumeService {
       if (dto.experiences) {
         await tx.experience.deleteMany({ where: { resumeId: resume.id } });
         for (const exp of dto.experiences) {
-          await tx.experience.create({
-            data: {
-              resumeId: resume.id,
-              company: exp.company,
-              startDate: exp.startDate,
-              endDate: exp.endDate || null,
-              isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
-              finalPosition: exp.finalPosition,
-              jobTitle: exp.jobTitle,
-              order: exp.order ?? 0,
-              visible: exp.visible ?? true,
-              projects: {
-                create: exp.projects?.map(project => ({
+          // Log experience data before creating
+          this.logger.debug(`Creating experience: ${JSON.stringify({
+            company: exp.company,
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            isCurrentlyWorking: exp.isCurrentlyWorking,
+            finalPosition: exp.finalPosition,
+            jobTitle: exp.jobTitle,
+            projectsCount: exp.projects?.length || 0,
+          })}`);
+
+          const experienceData = {
+            resumeId: resume.id,
+            company: exp.company,
+            startDate: exp.startDate,
+            endDate: exp.endDate || null,
+            isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
+            finalPosition: exp.finalPosition,
+            jobTitle: exp.jobTitle,
+            order: exp.order ?? 0,
+            visible: exp.visible ?? true,
+            projects: {
+              create: exp.projects?.map(project => {
+                // Log each project
+                this.logger.debug(`Creating project in experience: ${JSON.stringify({
+                  name: project.name,
+                  startDate: project.startDate,
+                  endDate: project.endDate,
+                  achievementsCount: project.achievements?.length || 0,
+                })}`);
+
+                return {
                   name: project.name,
                   startDate: project.startDate,
                   endDate: project.endDate || null,
@@ -407,10 +426,14 @@ export class ResumeService {
                   achievements: project.achievements && project.achievements.length > 0
                     ? { create: this.transformAchievements(project.achievements) }
                     : undefined,
-                })) || [],
-              },
+                };
+              }) || [],
             },
-          });
+          };
+
+          this.logger.debug(`Full experience data: ${JSON.stringify(experienceData, null, 2)}`);
+
+          await tx.experience.create({ data: experienceData });
         }
       }
 
@@ -482,9 +505,15 @@ export class ResumeService {
         throw error;
       }
 
+      // Log complete error details
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : String(error);
-      this.logger.error(`Failed to update resume ${resumeId}: ${errorMessage}`, errorStack);
+
+      // Log the complete error object for debugging
+      this.logger.error(`Failed to update resume ${resumeId}: ${errorMessage}`);
+      this.logger.error(`Full error object: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`);
+      this.logger.error(`Stack trace: ${errorStack}`);
+
       throw new InternalServerErrorException(`Failed to update resume: ${errorMessage}`);
     }
   }
