@@ -13,6 +13,15 @@ export enum MilitaryService {
   NOT_APPLICABLE = 'NOT_APPLICABLE',
 }
 
+export enum DegreeType {
+  HIGH_SCHOOL = 'HIGH_SCHOOL',
+  ASSOCIATE_2 = 'ASSOCIATE_2',
+  ASSOCIATE_3 = 'ASSOCIATE_3',
+  BACHELOR = 'BACHELOR',
+  MASTER = 'MASTER',
+  DOCTORATE = 'DOCTORATE',
+}
+
 export class SkillDescriptionDto {
   @ApiProperty({ example: 'React Hooks와 Context API를 활용한 전역 상태 관리' })
   @IsString()
@@ -269,9 +278,10 @@ export class CreateEducationDto {
   @IsString()
   major!: string;
 
-  @ApiProperty({ example: 'Bachelor' })
-  @IsString()
-  degree!: string;
+  @ApiPropertyOptional({ enum: DegreeType, example: DegreeType.BACHELOR })
+  @IsOptional()
+  @IsEnum(DegreeType)
+  degree?: DegreeType;
 
   @ApiProperty({ example: '2015-03' })
   @IsString()

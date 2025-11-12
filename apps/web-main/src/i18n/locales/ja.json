@@ -70,6 +70,14 @@
       "skills": "技術スキルをカテゴリ別に整理してください",
       "education": "学歴を追加してください",
       "certifications": "保有資格と受賞歴を追加してください"
+    },
+    "degreeTypes": {
+      "HIGH_SCHOOL": "高等学校卒業",
+      "ASSOCIATE_2": "短期大学士 (2年制)",
+      "ASSOCIATE_3": "短期大学士 (3年制)",
+      "BACHELOR": "学士 (4年制)",
+      "MASTER": "修士",
+      "DOCTORATE": "博士"
     }
   }
 }
