@@ -482,6 +482,11 @@ export const setDefaultResume = async (resumeId: string): Promise<Resume> => {
   return response.data;
 };
 
+export const copyResume = async (resumeId: string): Promise<Resume> => {
+  const response = await personalApi.post(`/v1/resume/${resumeId}/copy`);
+  return response.data;
+};
+
 export const updateSectionOrder = async (resumeId: string, data: UpdateSectionOrderDto): Promise<Resume> => {
   const response = await personalApi.patch(`/v1/resume/${resumeId}/sections/order`, data);
   return response.data;

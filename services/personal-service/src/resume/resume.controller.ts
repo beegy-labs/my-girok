@@ -105,6 +105,15 @@ export class ResumeController {
     return this.resumeService.setDefaultResume(resumeId, user.id);
   }
 
+  @Post(':resumeId/copy')
+  @ApiOperation({ summary: 'Copy/duplicate a resume' })
+  @ApiParam({ name: 'resumeId', description: 'Resume ID to copy' })
+  @ApiResponse({ status: 201, description: 'Resume copied successfully' })
+  @ApiResponse({ status: 404, description: 'Resume not found' })
+  async copyResume(@CurrentUser() user: any, @Param('resumeId') resumeId: string) {
+    return this.resumeService.copyResume(resumeId, user.id);
+  }
+
   @Patch(':resumeId/sections/order')
   @ApiOperation({ summary: 'Update section display order' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
