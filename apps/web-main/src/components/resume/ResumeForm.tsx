@@ -13,6 +13,7 @@ import {
 } from '../../api/resume';
 import SectionOrderManager from './SectionOrderManager';
 import ExperienceSection from './ExperienceSection';
+import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
 
 interface ResumeFormProps {
   resume: Resume | null;
@@ -688,27 +689,34 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                             </div>
                           </div>
 
-                          {/* Description */}
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">
-                              활용 경험 / 세부 설명
-                            </label>
-                            <textarea
-                              value={typeof item === 'string' ? '' : item.description || ''}
-                              onChange={e => {
-                                const newSkills = [...(formData.skills || [])];
-                                const newItems = [...(newSkills[skillIndex].items || [])];
-                                newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-                                  ? { name: newItems[itemIndex], description: e.target.value }
-                                  : { ...newItems[itemIndex], description: e.target.value };
-                                newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                                setFormData({ ...formData, skills: newSkills });
-                              }}
-                              rows={2}
-                              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
-                              placeholder="예: 3년 실무 경험, React Hooks와 Context API를 활용한 상태 관리"
-                            />
-                          </div>
+                          {/* Hierarchical Description */}
+                          <HierarchicalDescription
+                            items={(typeof item === 'string' ? [] : item.descriptions || []) as HierarchicalItem[]}
+                            onChange={(descriptions) => {
+                              const newSkills = [...(formData.skills || [])];
+                              const newItems = [...(newSkills[skillIndex].items || [])];
+                              newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
+                                ? { name: newItems[itemIndex], description: '', descriptions }
+                                : { ...newItems[itemIndex], descriptions };
+                              newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                              setFormData({ ...formData, skills: newSkills });
+                            }}
+                            label="활용 경험 / 세부 설명"
+                            placeholder="활용 경험이나 세부 설명을 추가하려면 '+ 추가' 버튼을 클릭하세요"
+                            maxDepth={4}
+                          />
+
+                          {/* Legacy Description (for backward compatibility) */}
+                          {typeof item !== 'string' && item.description && !item.descriptions?.length && (
+                            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <p className="text-xs text-yellow-800 mb-2">
+                                <strong>기존 설명:</strong> {item.description}
+                              </p>
+                              <p className="text-xs text-yellow-700">
+                                위 내용은 기존 텍스트 형식입니다. 새로운 계층 구조로 마이그레이션하려면 위에서 "+ 추가" 버튼을 눌러 새로운 항목을 추가하세요.
+                              </p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -11,9 +11,18 @@ export enum SectionType {
   CERTIFICATE = 'CERTIFICATE',
 }
 
+export interface SkillDescription {
+  id?: string;
+  content: string; // Description text
+  depth: number; // 1-4 (indentation level)
+  order: number;
+  children?: SkillDescription[]; // Hierarchical structure
+}
+
 export interface SkillItem {
   name: string; // 기술명 (e.g., "React", "Node.js")
-  description?: string; // 활용 경험/세부 설명
+  description?: string; // Legacy: 단순 텍스트 설명 (backward compatibility)
+  descriptions?: SkillDescription[]; // 활용 경험/세부 설명 (hierarchical, 4 depth levels)
 }
 
 export interface Skill {
