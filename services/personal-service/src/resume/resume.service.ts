@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
@@ -9,6 +9,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ResumeService {
+  private readonly logger = new Logger(ResumeService.name);
   private readonly authServiceUrl: string;
 
   constructor(
@@ -319,9 +320,11 @@ export class ResumeService {
 
   // Use Prisma transaction for multi-step DB operations (CLAUDE.md policy)
   async update(resumeId: string, userId: string, dto: UpdateResumeDto) {
-    const resume = await this.findByIdAndUserId(resumeId, userId);
+    try {
+      this.logger.log(`Updating resume ${resumeId} for user ${userId}`);
+      const resume = await this.findByIdAndUserId(resumeId, userId);
 
-    return await this.prisma.$transaction(async (tx) => {
+      return await this.prisma.$transaction(async (tx) => {
       // If setting as default, unset all other default resumes
       if (dto.isDefault) {
         await tx.resume.updateMany({
@@ -473,6 +476,12 @@ export class ResumeService {
         },
       });
     });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : String(error);
+      this.logger.error(`Failed to update resume ${resumeId}: ${errorMessage}`, errorStack);
+      throw new InternalServerErrorException(`Failed to update resume: ${errorMessage}`);
+    }
   }
 
   async delete(resumeId: string, userId: string) {
