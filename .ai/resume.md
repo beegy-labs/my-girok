@@ -241,6 +241,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - Use arbitrary values like `w-[123px]`
 - Forget to add translation keys for new text
 - Create nested relations with `createMany` (not supported)
+- Send `id` fields in nested objects to API (DTOs reject them)
 - Skip test coverage updates
 
 ✅ **DO**:
@@ -248,6 +249,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - Use standard spacing (multiples of 0.25rem)
 - Add i18n keys for all user-facing text
 - Use `create` with nested data for relations
+- Strip `id` fields before API calls (handled automatically by `prepareResumeForSubmit`)
 - Update documentation with changes
 
 ## File Locations
@@ -273,7 +275,12 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
-**2025-01-16**: Education degree enum + drag-and-drop
+**2025-01-16 (Part 2)**: Fix achievements save validation error
+- Added `stripIds()` utility to recursively remove `id` fields
+- Updated `createResume()` and `updateResume()` to use `prepareResumeForSubmit()`
+- Fixes: "property id should not exist" validation error
+
+**2025-01-16 (Part 1)**: Education degree enum + drag-and-drop
 - DegreeType enum: HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE
 - i18n: KR (2년제/3년제), JP, EN
 - EducationSection.tsx: drag-and-drop sortable component
