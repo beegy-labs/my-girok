@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resume } from '../../api/resume';
+import '../../styles/resume-print.css';
 
 interface ResumePreviewProps {
   resume: Resume;
@@ -20,20 +21,15 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     ? { width: '21cm', height: '29.7cm' }
     : { width: '21.59cm', height: '27.94cm' };
 
+  const pageClassName = paperSize === 'A4' ? 'resume-page-a4' : 'resume-page-letter';
+
   return (
     <div
       id="resume-content"
-      className="mx-auto print:max-w-none space-y-4 print:space-y-0"
+      className="resume-page-container"
     >
-      {/* Page container - shows actual print dimensions */}
-      <div
-        className="mx-auto bg-gray-50 relative shadow-lg print:shadow-none"
-        style={{
-          width: paperDimensions.width,
-          minHeight: paperDimensions.height,
-          padding: '1.5cm',
-        }}
-      >
+      {/* Page 1 - Header and main content */}
+      <div className={pageClassName}>
         {/* Page size indicator and grayscale toggle (hidden in print) */}
         <div className="print:hidden absolute top-2 right-2 flex items-center gap-2 z-10">
           <button
@@ -196,6 +192,11 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
               return null;
           }
         })}
+
+        {/* Page number (screen only) */}
+        <div className="resume-page-number">
+          Page 1
+        </div>
       </div>
     </div>
   );
