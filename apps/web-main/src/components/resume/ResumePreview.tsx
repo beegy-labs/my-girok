@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resume } from '../../api/resume';
+import '../../styles/resume-print.css';
 
 interface ResumePreviewProps {
   resume: Resume;
@@ -8,6 +10,8 @@ interface ResumePreviewProps {
 
 export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePreviewProps) {
   const { t, i18n } = useTranslation();
+  const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
+
   const visibleSections = resume.sections
     .filter(s => s.visible)
     .sort((a, b) => a.order - b.order);
@@ -17,23 +21,31 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     ? { width: '21cm', height: '29.7cm' }
     : { width: '21.59cm', height: '27.94cm' };
 
+  const pageClassName = paperSize === 'A4' ? 'resume-page-a4' : 'resume-page-letter';
+
   return (
     <div
       id="resume-content"
-      className="mx-auto bg-white shadow-lg print:shadow-none print:max-w-none"
-      style={{ maxWidth: paperDimensions.width }}
+      className="resume-page-container"
     >
-      {/* Page container - shows actual print dimensions */}
-      <div
-        className="p-[2cm] print:p-[1.5cm] bg-gray-50 relative"
-        style={{
-          width: paperDimensions.width,
-          minHeight: paperDimensions.height,
-        }}
-      >
-        {/* Page size indicator (hidden in print) */}
-        <div className="print:hidden absolute top-2 right-2 bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800 z-10">
-          📄 {paperSize} ({paperDimensions.width} × {paperDimensions.height})
+      {/* Page 1 - Header and main content */}
+      <div className={pageClassName}>
+        {/* Page size indicator and grayscale toggle (hidden in print) */}
+        <div className="print:hidden absolute top-2 right-2 flex items-center gap-2 z-10">
+          <button
+            onClick={() => setIsGrayscaleMode(!isGrayscaleMode)}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
+              isGrayscaleMode
+                ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
+                : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+            }`}
+            title={isGrayscaleMode ? '컬러 모드로 전환' : '흑백 모드로 전환'}
+          >
+            {isGrayscaleMode ? '🖤 흑백 모드' : '🎨 컬러 모드'}
+          </button>
+          <div className="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800">
+            📄 {paperSize} ({paperDimensions.width} × {paperDimensions.height})
+          </div>
         </div>
         {/* Header - Grayscale design for print compatibility */}
         <div className="border-b-2 border-gray-800 pb-6 mb-6">
@@ -44,7 +56,9 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 <img
                   src={resume.profileImage}
                   alt={resume.name}
-                  className="w-32 h-40 object-cover rounded-lg border-2 border-gray-300 filter grayscale"
+                  className={`w-32 h-40 object-cover rounded-lg border-2 border-gray-300 transition-all ${
+                    isGrayscaleMode ? 'filter grayscale' : ''
+                  }`}
                 />
               </div>
             )}
@@ -178,6 +192,11 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
               return null;
           }
         })}
+
+        {/* Page number (screen only) */}
+        <div className="resume-page-number">
+          Page 1
+        </div>
       </div>
     </div>
   );

@@ -76,15 +76,24 @@ All color combinations meet WCAG 2.1 AA standards:
 
 ### Special Case: Resume Preview & Print (Print-Optimized)
 
-**Important**: Only the resume preview component and PDF output use grayscale design for optimal printing. The resume editing UI follows standard brand colors.
+**Important**: Only the resume preview component and PDF output use high-contrast grayscale design for optimal printing and readability. The resume editing UI follows standard brand colors.
 
-#### Print-Only Grayscale Palette
+#### Design Philosophy
+
+**Goal**: Create a professional, print-ready resume with maximum readability
+- **Not pure black & white**: Use grayscale range (gray-50 ~ gray-900)
+- **High contrast**: Ensure excellent readability for both screen and print
+- **Print-optimized**: Reduce printing costs, ATS-friendly
+- **Separate concerns**: Editing interface maintains brand identity
+
+#### Print-Optimized Grayscale Palette
 ```css
 /* Grayscale only for ResumePreview component and PDF export */
---resume-primary: #111827;    /* gray-900 - Headers */
---resume-secondary: #374151;  /* gray-700 - Body text */
+--resume-primary: #111827;    /* gray-900 - Headers, strong emphasis */
+--resume-secondary: #374151;  /* gray-700 - Body text, readable */
+--resume-tertiary: #4B5563;   /* gray-600 - Secondary text */
 --resume-border: #9CA3AF;     /* gray-400 - Section dividers */
---resume-light: #F3F4F6;      /* gray-100 - Backgrounds */
+--resume-light: #F3F4F6;      /* gray-100 - Light backgrounds */
 --resume-bg: #F9FAFB;         /* gray-50 - Page background */
 ```
 
@@ -104,11 +113,12 @@ All color combinations meet WCAG 2.1 AA standards:
 #### Resume Preview Component Rules
 Applied ONLY to the `ResumePreview` component:
 
-1. **No Brand Colors**: Do NOT use amber/brown colors in resume content
-2. **Grayscale Only**: Use gray-50 through gray-900
+1. **High-Contrast Grayscale**: Use gray-50 through gray-900 (NOT pure black/white)
+2. **No Brand Colors**: Do NOT use amber/brown colors in resume content
 3. **Print First**: Design for black & white printing
-4. **High Contrast**: Ensure 7:1 contrast minimum for text
+4. **Readability Focus**: Ensure 7:1 contrast minimum for text
 5. **Grayscale Images**: Apply `filter: grayscale(100%)` to profile photos
+6. **Clean Layout**: Minimal decoration, focus on content hierarchy
 
 #### Resume Preview Component Examples
 

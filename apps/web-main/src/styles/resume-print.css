@@ -1,0 +1,133 @@
+/* Resume Print Styles - Multi-page Layout (A4 and Letter) */
+
+/* Base page styles */
+.resume-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin: 0 auto;
+}
+
+@media print {
+  .resume-page-container {
+    gap: 0;
+  }
+}
+
+/* A4 size: 210mm × 297mm */
+.resume-page-a4 {
+  width: 21cm;
+  min-height: 29.7cm;
+  padding: 1.5cm;
+  margin: 0 auto;
+  background: #F9FAFB; /* gray-50 */
+  position: relative;
+}
+
+@media screen {
+  .resume-page-a4 {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+  }
+
+  .resume-page-a4:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media print {
+  .resume-page-a4 {
+    width: 21cm;
+    height: 29.7cm;
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .resume-page-a4:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
+
+/* Letter size: 8.5" × 11" = 21.59cm × 27.94cm */
+.resume-page-letter {
+  width: 21.59cm;
+  min-height: 27.94cm;
+  padding: 1.5cm;
+  margin: 0 auto;
+  background: #F9FAFB; /* gray-50 */
+  position: relative;
+}
+
+@media screen {
+  .resume-page-letter {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+  }
+
+  .resume-page-letter:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media print {
+  .resume-page-letter {
+    width: 21.59cm;
+    height: 27.94cm;
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .resume-page-letter:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
+
+/* Page number indicator (screen only) */
+.resume-page-number {
+  position: absolute;
+  bottom: 0.5cm;
+  right: 1.5cm;
+  font-size: 10px;
+  color: #9CA3AF; /* gray-400 */
+  font-weight: 600;
+}
+
+@media print {
+  .resume-page-number {
+    display: none;
+  }
+}
+
+/* Print optimizations */
+@media print {
+  /* Ensure sections don't break awkwardly */
+  .resume-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .resume-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Prevent orphans and widows */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Keep headings with their content */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
