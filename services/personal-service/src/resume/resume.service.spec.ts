@@ -45,6 +45,7 @@ describe('ResumeService', () => {
       update: jest.fn(),
     },
     skill: {
+      create: jest.fn(),
       createMany: jest.fn(),
       deleteMany: jest.fn(),
     },
@@ -341,7 +342,7 @@ describe('ResumeService', () => {
       mockPrismaService.resume.update.mockResolvedValue(updatedResume);
       mockPrismaService.resume.findUnique.mockResolvedValue(updatedResume);
       mockPrismaService.skill.deleteMany.mockResolvedValue({ count: 0 });
-      mockPrismaService.skill.createMany.mockResolvedValue({ count: 1 });
+      mockPrismaService.skill.create.mockResolvedValue({ id: 'skill-1', resumeId, ...updateDto.skills[0] });
 
       // Act
       const result = await service.update(resumeId, userId, updateDto);
