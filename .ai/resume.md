@@ -289,6 +289,13 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
+**2025-11-12 (Part 7)**: Fix missing isCurrentlyWorking field and empty string handling
+- Fixed 500 error when creating/updating resumes with missing `isCurrentlyWorking` field
+- Added proper handling for empty string values (`""` → `null`) in `endDate` fields
+- Added default values for optional fields: `order` (0), `visible` (true)
+- Applied fixes to both `create()` and `update()` methods for Experience and ExperienceProject
+- Prevents database insertion errors when frontend sends empty strings or missing optional fields
+
 **2025-11-12 (Part 6)**: Fix 500 error in resume create/update operations
 - Fixed 500 Internal Server Error when creating or updating resumes
 - Extended hierarchical achievements fetch pattern to `create()` and `update()` return values
