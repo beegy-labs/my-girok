@@ -289,12 +289,20 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
+**2025-11-12 (Part 6)**: Fix 500 error in resume create/update operations
+- Fixed 500 Internal Server Error when creating or updating resumes
+- Extended hierarchical achievements fetch pattern to `create()` and `update()` return values
+- Both methods now properly return hierarchical achievements with `where: { parentId: null }`
+- Includes 4-level deep children with proper ordering
+- Ensures consistency across all resume CRUD operations (POST, PUT, GET)
+- Resolves issue where flat achievement structures were causing response processing errors
+
 **2025-11-12 (Part 5)**: Resume copy/duplicate feature + Nested achievements retrieval fix
 - Added resume copy endpoint: `POST /v1/resume/:id/copy`
 - Copies all nested data: sections, skills, experiences with projects/achievements (4 depth), education, certificates
 - Copied resume title gets " (Copy)" suffix and is never set as default
 - Fixed 500 error when retrieving resumes with nested achievements
-- Updated `findByIdAndUserId()` to properly fetch hierarchical achievements with `where: { parentId: null }`
+- Updated `findByIdAndUserId()`, `findAllByUserId()`, and `getDefaultResume()` to properly fetch hierarchical achievements with `where: { parentId: null }`
 - Added `copyAchievements()` helper for recursive copying
 - Frontend API: `copyResume(resumeId)`
 
