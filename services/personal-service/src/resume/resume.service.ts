@@ -580,19 +580,10 @@ export class ResumeService {
       let originalUrl: string | null = null;
       let isProcessed = false;
 
-      // For profile photos, convert to grayscale (company standard)
-      if (type === AttachmentType.PROFILE_PHOTO) {
-        const result = await this.storageService.uploadWithGrayscale(file, userId, resumeId);
-        fileUrl = result.grayscaleUrl; // Use grayscale as main
-        fileKey = result.grayscaleKey;
-        originalUrl = result.originalUrl; // Keep original for backup
-        isProcessed = true;
-      } else {
-        // For other files, upload normally
-        const result = await this.storageService.uploadFile(file, userId, resumeId);
-        fileUrl = result.fileUrl;
-        fileKey = result.fileKey;
-      }
+      // Upload all files normally (no grayscale conversion)
+      const result = await this.storageService.uploadFile(file, userId, resumeId);
+      fileUrl = result.fileUrl;
+      fileKey = result.fileKey;
 
       // Get current max order for this type
       const maxOrder = await tx.resumeAttachment.findFirst({
