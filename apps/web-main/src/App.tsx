@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import PrivateRoute from './components/PrivateRoute';
 import ResumeEditPage from './pages/resume/ResumeEditPage';
 import ResumePreviewPage from './pages/resume/ResumePreviewPage';
@@ -20,6 +21,14 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/change-password"
+            element={
+              <PrivateRoute>
+                <ChangePasswordPage />
+              </PrivateRoute>
+            }
+          />
 
           {/* Resume routes with /resume prefix */}
           <Route

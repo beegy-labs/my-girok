@@ -85,7 +85,7 @@ authApi.interceptors.response.use(
   },
 );
 
-import type { RegisterDto as IRegisterDto, LoginDto as ILoginDto } from '@my-girok/types';
+import type { RegisterDto as IRegisterDto, LoginDto as ILoginDto, ChangePasswordDto as IChangePasswordDto } from '@my-girok/types';
 
 export const register = async (data: IRegisterDto) => {
   const response = await authApi.post('/v1/auth/register', data);
@@ -105,5 +105,10 @@ export const logout = async () => {
 
 export const getCurrentUser = async () => {
   const response = await authApi.get('/v1/users/me');
+  return response.data;
+};
+
+export const changePassword = async (data: IChangePasswordDto) => {
+  const response = await authApi.post('/v1/users/me/change-password', data);
   return response.data;
 };
