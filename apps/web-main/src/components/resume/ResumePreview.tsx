@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Resume } from '../../api/resume';
+import { Resume, calculateExperienceDuration } from '../../api/resume';
 import '../../styles/resume-print.css';
 
 interface ResumePreviewProps {
@@ -394,9 +394,23 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
         <div key={idx} className="mb-5">
           {/* Company Header */}
           <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
+            <div>
+              <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
+              {exp.startDate && (
+                <p className="text-xs text-gray-600 mt-1">
+                  {(() => {
+                    const duration = calculateExperienceDuration(
+                      exp.startDate,
+                      exp.endDate,
+                      exp.isCurrentlyWorking
+                    );
+                    return t('resume.experience.duration', { years: duration.years, months: duration.months });
+                  })()}
+                </p>
+              )}
+            </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
-              {exp.startDate} - {exp.endDate || 'Present'}
+              {exp.startDate} - {exp.isCurrentlyWorking ? t('resume.experience.currentlyWorking') : (exp.endDate || t('resume.experience.currentlyWorking'))}
             </span>
           </div>
 

@@ -75,6 +75,7 @@ export interface Experience {
   company: string;
   startDate: string; // YYYY-MM format
   endDate?: string;
+  isCurrentlyWorking?: boolean; // 재직중
   finalPosition: string; // 최종 직책 (e.g., "Backend Team Lead")
   jobTitle: string; // 직급 (e.g., "Senior Developer")
   projects: ExperienceProject[]; // Projects at this company
@@ -228,6 +229,46 @@ export interface CreateResumeDto {
 }
 
 // ========== Utility Functions ==========
+
+/**
+ * Calculate duration between two dates in months
+ */
+function calculateMonths(startDate: string, endDate?: string): number {
+  const start = new Date(startDate + '-01');
+  const end = endDate ? new Date(endDate + '-01') : new Date();
+
+  const years = end.getFullYear() - start.getFullYear();
+  const months = end.getMonth() - start.getMonth();
+
+  return years * 12 + months;
+}
+
+/**
+ * Calculate total work experience duration from experiences
+ */
+export function calculateTotalExperience(experiences: Experience[]): { years: number; months: number } {
+  const totalMonths = experiences.reduce((total, exp) => {
+    const months = calculateMonths(exp.startDate, exp.isCurrentlyWorking ? undefined : exp.endDate);
+    return total + months;
+  }, 0);
+
+  return {
+    years: Math.floor(totalMonths / 12),
+    months: totalMonths % 12,
+  };
+}
+
+/**
+ * Calculate single experience duration
+ */
+export function calculateExperienceDuration(startDate: string, endDate?: string, isCurrentlyWorking?: boolean): { years: number; months: number } {
+  const totalMonths = calculateMonths(startDate, isCurrentlyWorking ? undefined : endDate);
+
+  return {
+    years: Math.floor(totalMonths / 12),
+    months: totalMonths % 12,
+  };
+}
 
 /**
  * Recursively strips 'id' fields from nested objects

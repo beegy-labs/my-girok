@@ -26,8 +26,11 @@ Resume
 
 ```
 Company
+├── startDate/endDate - Company period
+├── isCurrentlyWorking (boolean) - 재직중 flag
 ├── finalPosition (required) - "Backend Team Lead" (최종 직책)
 ├── jobTitle (required) - "Senior Developer" (직급)
+├── Auto-calculated: Duration (e.g., "6년 8개월")
 └── Projects (unlimited)
     ├── name (required) - "E-Commerce Platform Rebuild"
     ├── role (optional) - "Lead Backend Developer"
@@ -41,6 +44,8 @@ Company
         ├── Depth 3 (▪): Details
         └── Depth 4 (▫): Specific items
 ```
+
+**Duration Calculation**: Auto-calculated from startDate and endDate (or current date if isCurrentlyWorking=true)
 
 **Key Change**: Work Experience and Projects are now unified. Each company has ONE final position/job title, and unlimited projects with hierarchical achievements (replacing the old Role → Tasks structure).
 
@@ -275,11 +280,18 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
-**2025-01-16 (Part 3)**: Career goals → Application reason + Tech Stack positioning
+**2025-01-16 (Part 4)**: Experience duration auto-calculation + Currently working flag
+- Added `isCurrentlyWorking` (재직중) checkbox for Experience
+- Auto-calculate experience duration (e.g., "6년 8개월")
+- Display duration under company name in preview
+- i18n: KR (재직중), JP (在職中), EN (Currently Working)
+- Utility: `calculateExperienceDuration()` and `calculateTotalExperience()`
+
+**2025-01-16 (Part 3)**: Career goals → Application reason + Tech Stack + GPA format
 - Changed `careerGoals` to `applicationReason` (지원 동기)
-- Updated wording to be more resume-appropriate
-- Moved Tech Stack display after Description in preview (before achievements)
-- Updated schema, types, DTOs, UI components
+- Moved Tech Stack after Description in preview
+- Added GPA format field: SCALE_4_0, SCALE_4_5, SCALE_100
+- Country-specific formats: US (4.0), KR (4.5), JP (100)
 
 **2025-01-16 (Part 2)**: Fix achievements save validation error
 - Added `stripIds()` utility to recursively remove `id` fields

@@ -194,6 +194,11 @@ export class CreateExperienceDto {
   @IsString()
   endDate?: string;
 
+  @ApiPropertyOptional({ default: false, description: 'Currently working at this company' })
+  @IsOptional()
+  @IsBoolean()
+  isCurrentlyWorking?: boolean;
+
   @ApiProperty({ example: 'Backend Team Lead' })
   @IsString()
   finalPosition!: string;

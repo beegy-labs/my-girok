@@ -200,7 +200,8 @@ model Experience {
 
   company   String
   startDate String  @map("start_date") // "2023-01" format
-  endDate   String? @map("end_date") // null = current
+  endDate   String? @map("end_date") // null or empty if currently working
+  isCurrentlyWorking Boolean @default(false) @map("is_currently_working") // 재직중
 
   // Final position and job title at this company
   finalPosition String  @map("final_position") // 최종 직책 (e.g., "Backend Team Lead")

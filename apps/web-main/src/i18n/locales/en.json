@@ -95,6 +95,13 @@
       "SCALE_4_0": "4.0/4.0",
       "SCALE_4_5": "4.5/4.5",
       "SCALE_100": "100/100"
+    },
+    "experience": {
+      "currentlyWorking": "Currently Working",
+      "totalExperience": "Total Experience",
+      "years": "years",
+      "months": "months",
+      "duration": "{{years}} years {{months}} months"
     }
   }
 }
