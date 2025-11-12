@@ -1437,7 +1437,7 @@ The resume feature follows the My-Girok design system with a library/book theme.
   - **Implementation Status**: Already implemented correctly, documentation-only update
   - **Changelog**: `docs/changelogs/2025-01-15-resume-preview-design-clarification.md`
 
-- **2025-01-15 (Part 1)**: Added hierarchical descriptions to Skills section (4 depth levels)
+- **2025-01-15**: Added hierarchical descriptions to Skills section (4 depth levels)
   - **Hierarchical Skill Descriptions**:
     - Added `SkillDescription` interface with recursive structure (4 depth levels)
     - Added `descriptions` field to `SkillItem` (hierarchical)
