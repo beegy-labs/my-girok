@@ -477,6 +477,11 @@ export class ResumeService {
       });
     });
     } catch (error) {
+      // Re-throw NotFoundException and other HTTP exceptions as-is
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : String(error);
       this.logger.error(`Failed to update resume ${resumeId}: ${errorMessage}`, errorStack);
