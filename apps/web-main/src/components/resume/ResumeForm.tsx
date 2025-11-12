@@ -648,7 +648,43 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       {skill.items.map((item: any, itemIndex: number) => (
                         <div key={itemIndex} className="border border-gray-200 rounded-lg p-4 bg-white">
                           <div className="flex justify-between items-start mb-3">
-                            <span className="text-sm font-semibold text-gray-600">기술 #{itemIndex + 1}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex flex-col gap-1">
+                                {itemIndex > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newSkills = [...(formData.skills || [])];
+                                      const newItems = [...(newSkills[skillIndex].items || [])];
+                                      [newItems[itemIndex - 1], newItems[itemIndex]] = [newItems[itemIndex], newItems[itemIndex - 1]];
+                                      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                                      setFormData({ ...formData, skills: newSkills });
+                                    }}
+                                    className="text-amber-600 hover:text-amber-800 text-xs font-semibold"
+                                    title="위로 이동"
+                                  >
+                                    ▲
+                                  </button>
+                                )}
+                                {itemIndex < skill.items.length - 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newSkills = [...(formData.skills || [])];
+                                      const newItems = [...(newSkills[skillIndex].items || [])];
+                                      [newItems[itemIndex], newItems[itemIndex + 1]] = [newItems[itemIndex + 1], newItems[itemIndex]];
+                                      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                                      setFormData({ ...formData, skills: newSkills });
+                                    }}
+                                    className="text-amber-600 hover:text-amber-800 text-xs font-semibold"
+                                    title="아래로 이동"
+                                  >
+                                    ▼
+                                  </button>
+                                )}
+                              </div>
+                              <span className="text-sm font-semibold text-gray-600">기술 #{itemIndex + 1}</span>
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
