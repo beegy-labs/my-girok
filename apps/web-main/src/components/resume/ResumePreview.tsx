@@ -188,6 +188,47 @@ function SkillsSection({ skills }: { skills: any[] }) {
   const { t } = useTranslation();
   if (skills.length === 0) return null;
 
+  // Standard indentation: 1.5em per depth level (approximately 6 spaces)
+  const getIndentation = (depth: number) => {
+    return `${(depth - 1) * 1.5}em`;
+  };
+
+  // Bullet style based on depth following standard document formatting
+  const getBulletStyle = (depth: number) => {
+    switch (depth) {
+      case 1:
+        return '• '; // Filled circle
+      case 2:
+        return '◦ '; // Open circle
+      case 3:
+        return '▪ '; // Filled square
+      case 4:
+        return '▫ '; // Open square
+      default:
+        return '• ';
+    }
+  };
+
+  // Render hierarchical descriptions recursively
+  const renderDescriptions = (descriptions: any[]) => {
+    if (!descriptions || descriptions.length === 0) return null;
+    return descriptions.sort((a: any, b: any) => a.order - b.order).map((desc: any, idx: number) => (
+      <div key={idx}>
+        <div
+          className="flex items-start break-words"
+          style={{
+            marginLeft: getIndentation(desc.depth),
+            marginBottom: '0.25rem'
+          }}
+        >
+          <span className="mr-1 select-none flex-shrink-0">{getBulletStyle(desc.depth)}</span>
+          <span className="flex-1 break-words overflow-wrap-anywhere">{desc.content}</span>
+        </div>
+        {desc.children && desc.children.length > 0 && renderDescriptions(desc.children)}
+      </div>
+    ));
+  };
+
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
@@ -211,11 +252,20 @@ function SkillsSection({ skills }: { skills: any[] }) {
                 return (
                   <div key={itemIdx} className="text-sm">
                     <div className="flex items-start gap-2">
-                      <span className="text-gray-700">•</span>
-                      <div className="flex-1">
-                        <span className="font-semibold text-gray-900">{item.name}</span>
-                        {item.description && (
-                          <p className="text-gray-700 mt-1 ml-0">
+                      <span className="text-gray-700 flex-shrink-0">•</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-gray-900 break-words">{item.name}</span>
+
+                        {/* Hierarchical Descriptions (new format) */}
+                        {item.descriptions && item.descriptions.length > 0 && (
+                          <div className="mt-2 text-gray-700">
+                            {renderDescriptions(item.descriptions)}
+                          </div>
+                        )}
+
+                        {/* Legacy Description (backward compatibility) */}
+                        {item.description && !item.descriptions?.length && (
+                          <p className="text-gray-700 mt-1 ml-0 break-words">
                             {item.description}
                           </p>
                         )}

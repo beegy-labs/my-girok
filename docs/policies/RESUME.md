@@ -696,12 +696,33 @@ All resume sections support unlimited entries, allowing users to create comprehe
 
 ##### 3. Skills (기술 스택)
 - **Unlimited Categories**: Organize skills by category
-- **Fields Per Entry**:
+- **Fields Per Category**:
   - Category name (e.g., "Languages", "Frameworks", "Tools")
-  - Items (array of skill names)
+  - Items (array of skill objects)
   - Order (for drag-and-drop)
   - Visibility toggle
-- **Add/Remove**: Dynamic buttons to manage categories
+- **Fields Per Skill Item**:
+  - Skill name (required) - e.g., "React", "Node.js"
+  - **Hierarchical Descriptions** (optional, 4 depth levels) - 활용 경험/세부 설명
+    - **Depth 1** (•): Main usage experience
+    - **Depth 2** (◦): Sub-details
+    - **Depth 3** (▪): Further breakdown
+    - **Depth 4** (▫): Most detailed level
+    - **Indentation**: Standard 1.5em per level (approximately 6 spaces)
+    - **Bullet Styles**: Follows standard document formatting conventions
+      - Level 1: Filled circle (•)
+      - Level 2: Open circle (◦)
+      - Level 3: Filled square (▪)
+      - Level 4: Open square (▫)
+    - **Recursive Structure**: Descriptions can have children for nested structure
+  - Legacy description (optional, backward compatibility) - Simple text
+- **UI Features**:
+  - Drag-and-drop reordering for skill items
+  - Hierarchical description editor with "+ 추가" and "+ 하위" buttons
+  - Visual depth indicators in form editor
+  - Collapse/expand for hierarchical descriptions
+  - Library theme with amber colors
+- **Add/Remove**: Dynamic buttons to manage categories and skills
 - **Common Categories**:
   - Programming Languages
   - Frontend Frameworks
@@ -711,6 +732,11 @@ All resume sections support unlimited entries, allowing users to create comprehe
   - Tools & Methodologies
   - Cloud Platforms
   - Mobile Development
+- **Use Cases**:
+  - Detailed skill usage explanations
+  - Progressive detail from high-level to specific implementations
+  - Structured presentation of complex skill experiences
+  - Professional resume formatting
 
 ##### 4. Education (학력)
 - **Unlimited Entries**: Add all degrees and certifications
@@ -1357,6 +1383,49 @@ The resume feature follows the My-Girok design system with a library/book theme.
 - Use rounded-2xl for cards, rounded-lg for inputs/buttons
 
 ## Change Log
+
+- **2025-01-15**: Added hierarchical descriptions to Skills section (4 depth levels)
+  - **Hierarchical Skill Descriptions**:
+    - Added `SkillDescription` interface with recursive structure (4 depth levels)
+    - Added `descriptions` field to `SkillItem` (hierarchical)
+    - Created reusable `HierarchicalDescription` component
+    - Supports unlimited nested descriptions with proper indentation
+    - Bullet progression: • (1) → ◦ (2) → ▪ (3) → ▫ (4)
+  - **UI Components**:
+    - `HierarchicalDescription.tsx` - Generic hierarchical input component
+    - Drag & drop reordering at root level (@dnd-kit)
+    - "+ 추가" button to add descriptions
+    - "+ 하위" button to add sub-items (up to depth 4)
+    - Collapse/expand functionality for children
+    - Visual depth indicators in form editor
+  - **ResumeForm Updates**:
+    - Replaced textarea with hierarchical component
+    - Legacy description display with migration notice (yellow banner)
+    - Maintains backward compatibility with old text descriptions
+  - **ResumePreview Updates**:
+    - Added `renderDescriptions()` function (similar to achievements)
+    - Proper indentation (1.5em per level)
+    - Professional bullet styles based on depth
+    - Print-optimized layout
+  - **Overflow Fixes**:
+    - Applied `maxWidth: calc(100% - ${depth * 1.5}rem)`
+    - Added `word-break: break-word`, `overflow-wrap: anywhere`
+    - Added `min-w-0`, `flex-shrink-0` to flex items
+    - Prevents horizontal overflow at all depth levels
+    - Applied to both Skills and Experience hierarchical components
+  - **Backend DTOs**:
+    - Added `SkillDescriptionDto` with recursive children
+    - Updated `SkillItemDto` to include optional `descriptions` field
+    - No database schema changes (Skills already use Json type)
+  - **Benefits**:
+    - Structured skill experience presentation
+    - Progressive detail from high-level to specific
+    - Consistent formatting with Work Experience achievements
+    - Professional resume appearance
+  - **Backward Compatibility**:
+    - Legacy `description` field retained for existing data
+    - Both formats coexist peacefully
+    - Migration guidance displayed for old descriptions
 
 - **2025-01-13 (Part 3)**: Removed military branch field and improved date input UX
   - **Military Branch Removal**:
