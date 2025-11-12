@@ -20,6 +20,20 @@ export class ResumeService {
     this.authServiceUrl = this.configService.get('AUTH_SERVICE_URL') || 'http://auth-service:4001';
   }
 
+  /**
+   * Recursively transform achievement DTOs to Prisma nested create format
+   */
+  private transformAchievements(achievements: any[]): any[] {
+    return achievements.map(achievement => ({
+      content: achievement.content,
+      depth: achievement.depth,
+      order: achievement.order,
+      children: achievement.children && achievement.children.length > 0
+        ? { create: this.transformAchievements(achievement.children) }
+        : undefined,
+    }));
+  }
+
   async create(userId: string, dto: CreateResumeDto) {
     // Use Prisma transaction for multi-step DB operations (CLAUDE.md policy)
     return await this.prisma.$transaction(async (tx) => {
@@ -83,13 +97,9 @@ export class ResumeService {
                 url: project.url,
                 githubUrl: project.githubUrl,
                 order: project.order,
-                achievements: {
-                  create: project.achievements?.map(achievement => ({
-                    content: achievement.content,
-                    depth: achievement.depth,
-                    order: achievement.order,
-                  })) || [],
-                },
+                achievements: project.achievements && project.achievements.length > 0
+                  ? { create: this.transformAchievements(project.achievements) }
+                  : undefined,
               })) || [],
             },
           })),
@@ -325,13 +335,9 @@ export class ResumeService {
                   url: project.url,
                   githubUrl: project.githubUrl,
                   order: project.order,
-                  achievements: {
-                    create: project.achievements?.map(achievement => ({
-                      content: achievement.content,
-                      depth: achievement.depth,
-                      order: achievement.order,
-                    })) || [],
-                  },
+                  achievements: project.achievements && project.achievements.length > 0
+                    ? { create: this.transformAchievements(project.achievements) }
+                    : undefined,
                 })) || [],
               },
             },
