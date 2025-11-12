@@ -22,6 +22,12 @@ export enum DegreeType {
   DOCTORATE = 'DOCTORATE',
 }
 
+export enum GpaFormat {
+  SCALE_4_0 = 'SCALE_4_0',   // 4.0 scale (US: 3.8/4.0)
+  SCALE_4_5 = 'SCALE_4_5',   // 4.5 scale (KR: 4.2/4.5)
+  SCALE_100 = 'SCALE_100',   // 100-point scale (JP: 85/100)
+}
+
 export class SkillDescriptionDto {
   @ApiProperty({ example: 'React Hooks와 Context API를 활용한 전역 상태 관리' })
   @IsString()
@@ -188,6 +194,11 @@ export class CreateExperienceDto {
   @IsString()
   endDate?: string;
 
+  @ApiPropertyOptional({ default: false, description: 'Currently working at this company' })
+  @IsOptional()
+  @IsBoolean()
+  isCurrentlyWorking?: boolean;
+
   @ApiProperty({ example: 'Backend Team Lead' })
   @IsString()
   finalPosition!: string;
@@ -296,6 +307,11 @@ export class CreateEducationDto {
   @IsOptional()
   @IsString()
   gpa?: string;
+
+  @ApiPropertyOptional({ enum: GpaFormat, example: GpaFormat.SCALE_4_0 })
+  @IsOptional()
+  @IsEnum(GpaFormat)
+  gpaFormat?: GpaFormat;
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
@@ -452,10 +468,10 @@ export class CreateResumeDto {
   @IsString()
   coverLetter?: string;
 
-  @ApiPropertyOptional({ example: '입사 후에는 팀의 기술 리더로서...', description: 'Career goals after joining (Korean-specific)' })
+  @ApiPropertyOptional({ example: '귀사의 비전과 저의 기술 역량이 잘 맞을 것으로 판단하여 지원하게 되었습니다...', description: 'Application reason (Korean-specific)' })
   @IsOptional()
   @IsString()
-  careerGoals?: string;
+  applicationReason?: string;
 
   @ApiPropertyOptional({ type: [CreateSkillDto] })
   @IsOptional()

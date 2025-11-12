@@ -78,6 +78,18 @@
       "BACHELOR": "学士 (4年制)",
       "MASTER": "修士",
       "DOCTORATE": "博士"
+    },
+    "gpaFormats": {
+      "SCALE_4_0": "4.0/4.0",
+      "SCALE_4_5": "4.5/4.5",
+      "SCALE_100": "100/100"
+    },
+    "experience": {
+      "currentlyWorking": "在職中",
+      "totalExperience": "総職歴",
+      "years": "年",
+      "months": "ヶ月",
+      "duration": "{{years}}年{{months}}ヶ月"
     }
   }
 }
