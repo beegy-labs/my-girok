@@ -15,9 +15,9 @@ Resume
 ├── Basic Info (name, email, phone, etc.)
 ├── Korean Fields (military service, cover letter, career goals)
 └── Dynamic Sections (reorderable)
-    ├── Skills
-    ├── Experience (Company → Roles → Tasks)
-    ├── Projects
+    ├── Skills (Category → Items → Hierarchical Descriptions)
+    ├── Experience (Company → Projects → Achievements)
+    ├── Projects (Standalone, deprecated)
     ├── Education
     └── Certificates
 ```
@@ -44,7 +44,35 @@ Company
 
 **Key Change**: Work Experience and Projects are now unified. Each company has ONE final position/job title, and unlimited projects with hierarchical achievements (replacing the old Role → Tasks structure).
 
-### 3. Design Theme - Library Concept
+### 3. Skills Structure (with Hierarchical Descriptions)
+
+```
+Skill Category (e.g., "Frontend")
+└── Skill Items[]
+    ├── name (required) - "React"
+    ├── description (legacy, optional) - "3년 경험"
+    └── descriptions[] (hierarchical, 4 depth levels)
+        ├── Depth 1 (•): Main usage experience
+        ├── Depth 2 (◦): Sub-details
+        ├── Depth 3 (▪): Further breakdown
+        └── Depth 4 (▫): Specific items
+```
+
+**Example**:
+```
+• React
+  • React Hooks와 Context API를 활용한 전역 상태 관리
+    ◦ useState, useEffect, useContext 활용
+      ▪ useMemo, useCallback으로 성능 최적화
+        ▫ 렌더링 횟수 40% 감소
+```
+
+**Components**:
+- `HierarchicalDescription.tsx` - Reusable hierarchical input component
+- Supports drag & drop, collapse/expand, recursive structure
+- Same UX as Work Experience achievements
+
+### 4. Design Theme - Library Concept
 
 **Concept**: "나의 기록" (My Records) - Personal library for documenting life and career
 
@@ -186,12 +214,23 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - **Service**: `services/personal-service/src/resume/resume.service.ts`
 - **Form UI**: `apps/web-main/src/components/resume/ResumeForm.tsx`
 - **Experience Component**: `apps/web-main/src/components/resume/ExperienceSection.tsx` (new unified component with drag-and-drop)
+- **Hierarchical Component**: `apps/web-main/src/components/resume/HierarchicalDescription.tsx` (reusable for any hierarchical input)
 - **Preview**: `apps/web-main/src/components/resume/ResumePreview.tsx`
 
 ## Quick Reference
 
 **Indentation**: 1.5em per level (standard document formatting)
 **Bullet Styles**: • → ◦ → ▪ → ▫
+**Max Depth**: 4 levels (achievements, skill descriptions)
+
+## Recent Updates
+
+**2025-01-15**: Skills section now supports hierarchical descriptions (4 depth levels)
+- Added `SkillDescription` interface (recursive)
+- Created `HierarchicalDescription.tsx` component (reusable)
+- Updated `ResumeForm.tsx` and `ResumePreview.tsx`
+- Backward compatible with legacy text descriptions
+- No database changes (Skills already use Json type)
 **Colors**: Amber theme (see DESIGN_SYSTEM.md)
 **i18n**: Korean default, English fallback
 **Tests**: Jest (backend), Vitest (frontend)

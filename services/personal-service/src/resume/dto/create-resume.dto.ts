@@ -13,6 +13,30 @@ export enum MilitaryService {
   NOT_APPLICABLE = 'NOT_APPLICABLE',
 }
 
+export class SkillDescriptionDto {
+  @ApiProperty({ example: 'React Hooks와 Context API를 활용한 전역 상태 관리' })
+  @IsString()
+  content!: string;
+
+  @ApiProperty({ example: 1, description: 'Indentation depth (1-4)' })
+  @IsInt()
+  @Min(1)
+  depth!: number;
+
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  order?: number;
+
+  @ApiPropertyOptional({ type: [SkillDescriptionDto], description: 'Child descriptions (recursive structure)' })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SkillDescriptionDto)
+  children?: SkillDescriptionDto[];
+}
+
 export class SkillItemDto {
   @ApiProperty({ example: 'React' })
   @IsString()
@@ -21,7 +45,20 @@ export class SkillItemDto {
   @ApiPropertyOptional({ example: '3년 실무 경험, React Hooks와 Context API를 활용한 상태 관리' })
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string; // Legacy: 단순 텍스트 (backward compatibility)
+
+  @ApiPropertyOptional({
+    example: [
+      { content: 'React Hooks와 Context API를 활용한 전역 상태 관리', depth: 1, order: 0, children: [] }
+    ],
+    type: [SkillDescriptionDto],
+    description: 'Hierarchical descriptions (4 depth levels)'
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SkillDescriptionDto)
+  descriptions?: SkillDescriptionDto[]; // 활용 경험/세부 설명 (hierarchical)
 }
 
 export class CreateSkillDto {

@@ -630,9 +630,12 @@ function HierarchicalAchievement({
     <div className="space-y-2">
       <div
         className="flex items-start gap-2 bg-amber-50/30 rounded-lg p-2 border border-amber-100"
-        style={{ marginLeft: `${(depth - 1) * 1.5}rem` }}
+        style={{
+          marginLeft: `${(depth - 1) * 1.5}rem`,
+          maxWidth: `calc(100% - ${(depth - 1) * 1.5}rem)`
+        }}
       >
-        <div className="flex items-center gap-1 min-w-[60px]">
+        <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
           <span className="text-gray-600 font-bold text-sm select-none">
             {getBulletSymbol(depth)}
           </span>
@@ -643,7 +646,8 @@ function HierarchicalAchievement({
           type="text"
           value={achievement.content}
           onChange={e => onUpdate({ ...achievement, content: e.target.value })}
-          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900"
+          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 min-w-0"
+          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
           placeholder="Achievement description..."
         />
 
