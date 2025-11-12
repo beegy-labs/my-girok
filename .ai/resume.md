@@ -182,13 +182,15 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Resume Preview Design
 
-**Concept**: Print-optimized, high-contrast grayscale design for readability
+**Concept**: Print-optimized, high-contrast design with user control
 
-- **Preview Component**: Uses grayscale (gray-50 ~ gray-900), NOT amber theme
+- **Content**: Uses grayscale (gray-50 ~ gray-900) for text and layout
+- **Profile Photos**: Show in color by default, optional grayscale toggle
+- **Grayscale Toggle**: 🎨/🖤 button lets users switch to full B&W mode
 - **Editing UI**: Uses amber brand colors (form inputs, buttons, navigation)
-- **Why Grayscale**: Print-friendly, cost-effective, professional, ATS-compatible
-- **Not Pure B&W**: Uses gray range for better visual hierarchy
-- **Profile Photos**: Auto-convert to grayscale with `filter: grayscale(100%)`
+- **Multi-Page**: Supports both A4 (21cm × 29.7cm) and Letter (21.59cm × 27.94cm)
+- **Page Separation**: Visual shadows between pages, page numbers on screen
+- **Print-Friendly**: Automatic page breaks, cost-effective, ATS-compatible
 
 ## Common Mistakes to Avoid
 

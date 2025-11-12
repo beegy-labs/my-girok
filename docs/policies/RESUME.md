@@ -1394,6 +1394,30 @@ The resume feature follows the My-Girok design system with a library/book theme.
 
 ## Change Log
 
+- **2025-01-15 (Part 3)**: Added grayscale toggle and multi-page layout to resume preview
+  - **Grayscale Mode Toggle**:
+    - Added user-controlled toggle button (🎨 컬러 모드 / 🖤 흑백 모드)
+    - Profile photos show in color by default
+    - Users can switch to full grayscale mode for print preview
+    - Button located in top-right corner next to paper size indicator
+    - Smooth transition effects when toggling
+  - **Multi-Page Layout**:
+    - Created `resume-print.css` with page-specific styles
+    - Support for both A4 (21cm × 29.7cm) and Letter (21.59cm × 27.94cm)
+    - Visual page separation with shadows in screen view
+    - Page numbers displayed on each page (screen only, hidden in print)
+    - Proper print styles with `page-break-after` for automatic pagination
+    - Print optimizations: avoid breaking sections, control orphans/widows
+  - **Benefits**:
+    - Users control when to view in grayscale
+    - Accurate multi-page preview showing content flow
+    - Professional page separation
+    - Print-ready with automatic page breaks
+  - **Files**:
+    - Modified: `apps/web-main/src/components/resume/ResumePreview.tsx`
+    - Created: `apps/web-main/src/styles/resume-print.css`
+  - **Changelog**: `docs/changelogs/2025-01-15-resume-preview-improvements.md`
+
 - **2025-01-15 (Part 2)**: Clarified resume preview design philosophy (documentation update)
   - **Design Clarification**:
     - Emphasized that resume preview uses **high-contrast grayscale** (gray-50 ~ gray-900)
