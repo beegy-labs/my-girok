@@ -220,6 +220,44 @@ export interface CreateResumeDto {
   certificates?: Omit<Certificate, 'id'>[];
 }
 
+// ========== Utility Functions ==========
+
+/**
+ * Recursively strips 'id' fields from nested objects
+ * This is needed because DTOs don't accept id fields for nested relations
+ */
+function stripIds<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => stripIds(item)) as T;
+  }
+
+  if (typeof obj === 'object') {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip 'id' field
+      if (key === 'id') {
+        continue;
+      }
+      // Recursively process nested objects and arrays
+      result[key] = stripIds(value);
+    }
+    return result;
+  }
+
+  return obj;
+}
+
+/**
+ * Prepares resume data for API submission by removing all id fields
+ */
+function prepareResumeForSubmit<T extends CreateResumeDto | UpdateResumeDto>(data: T): T {
+  return stripIds(data);
+}
+
 export interface UpdateResumeDto extends Partial<CreateResumeDto> {}
 
 export interface UpdateSectionOrderDto {
@@ -358,7 +396,8 @@ personalApi.interceptors.response.use(
 // ========== Resume APIs ==========
 
 export const createResume = async (data: CreateResumeDto): Promise<Resume> => {
-  const response = await personalApi.post('/v1/resume', data);
+  const cleanData = prepareResumeForSubmit(data);
+  const response = await personalApi.post('/v1/resume', cleanData);
   return response.data;
 };
 
@@ -378,7 +417,8 @@ export const getResume = async (resumeId: string): Promise<Resume> => {
 };
 
 export const updateResume = async (resumeId: string, data: UpdateResumeDto): Promise<Resume> => {
-  const response = await personalApi.put(`/v1/resume/${resumeId}`, data);
+  const cleanData = prepareResumeForSubmit(data);
+  const response = await personalApi.put(`/v1/resume/${resumeId}`, cleanData);
   return response.data;
 };
 
