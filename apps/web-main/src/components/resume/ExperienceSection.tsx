@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -333,6 +333,14 @@ function SortableProject({
   onRemoveAchievement: (index: number) => void;
   onAchievementDragEnd: (event: DragEndEvent) => void;
 }) {
+  // Local state for tech stack input to allow free-form typing
+  const [techStackInput, setTechStackInput] = useState(project.techStack.join(', '));
+
+  // Update local state when project changes externally
+  useEffect(() => {
+    setTechStackInput(project.techStack.join(', '));
+  }, [project.techStack]);
+
   const {
     attributes,
     listeners,
@@ -476,8 +484,13 @@ function SortableProject({
               </label>
               <input
                 type="text"
-                value={project.techStack.join(', ')}
-                onChange={e => onUpdate({ ...project, techStack: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                value={techStackInput}
+                onChange={e => setTechStackInput(e.target.value)}
+                onBlur={e => {
+                  const parsed = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                  onUpdate({ ...project, techStack: parsed });
+                  setTechStackInput(parsed.join(', '));
+                }}
                 className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
                 placeholder="e.g., NestJS, React, PostgreSQL"
               />

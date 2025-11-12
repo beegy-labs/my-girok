@@ -11,6 +11,7 @@ interface ResumePreviewProps {
 export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePreviewProps) {
   const { t, i18n } = useTranslation();
   const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('continuous'); // Default: continuous view
 
   const visibleSections = resume.sections
     .filter(s => s.visible)
@@ -24,29 +25,63 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
   const pageClassName = paperSize === 'A4' ? 'resume-page-a4' : 'resume-page-letter';
 
   return (
-    <div
-      id="resume-content"
-      className="resume-page-container"
-    >
-      {/* Page 1 - Header and main content */}
-      <div className={pageClassName}>
-        {/* Page size indicator and grayscale toggle (hidden in print) */}
-        <div className="print:hidden absolute top-2 right-2 flex items-center gap-2 z-10">
-          <button
-            onClick={() => setIsGrayscaleMode(!isGrayscaleMode)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
-              isGrayscaleMode
-                ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
-                : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-            }`}
-            title={isGrayscaleMode ? '컬러 모드로 전환' : '흑백 모드로 전환'}
-          >
-            {isGrayscaleMode ? '🖤 흑백 모드' : '🎨 컬러 모드'}
-          </button>
-          <div className="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800">
-            📄 {paperSize} ({paperDimensions.width} × {paperDimensions.height})
+    <div className="relative">
+      {/* Fixed Toolbar (hidden in print) */}
+      <div className="print:hidden sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm mb-6">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800">
+              📄 {paperSize} ({paperDimensions.width} × {paperDimensions.height})
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('continuous')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded transition-all ${
+                  viewMode === 'continuous'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="연속 보기"
+              >
+                📜 연속 보기
+              </button>
+              <button
+                onClick={() => setViewMode('paginated')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded transition-all ${
+                  viewMode === 'paginated'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="페이지 보기"
+              >
+                📄 페이지 보기
+              </button>
+            </div>
+            {/* Grayscale Toggle */}
+            <button
+              onClick={() => setIsGrayscaleMode(!isGrayscaleMode)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
+                isGrayscaleMode
+                  ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+              }`}
+              title={isGrayscaleMode ? '컬러 모드로 전환' : '흑백 모드로 전환'}
+            >
+              {isGrayscaleMode ? '🖤 흑백 모드' : '🎨 컬러 모드'}
+            </button>
           </div>
         </div>
+      </div>
+
+      {/* Resume Content */}
+      <div
+        id="resume-content"
+        className={viewMode === 'paginated' ? 'resume-page-container' : ''}
+      >
+        <div className={viewMode === 'paginated' ? pageClassName : 'max-w-4xl mx-auto bg-gray-50 p-8 shadow-lg'}>
         {/* Header - Grayscale design for print compatibility */}
         <div className="border-b-2 border-gray-800 pb-6 mb-6">
           <div className="flex items-start gap-6">
@@ -193,11 +228,14 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
           }
         })}
 
-        {/* Page number (screen only) */}
-        <div className="resume-page-number">
-          Page 1
-        </div>
+        {/* Page number (only in paginated mode) */}
+        {viewMode === 'paginated' && (
+          <div className="resume-page-number">
+            Page 1
+          </div>
+        )}
       </div>
+    </div>
     </div>
   );
 }
