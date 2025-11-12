@@ -152,11 +152,12 @@ export class CreateExperienceProjectDto {
   @IsString()
   role?: string;
 
-  @ApiProperty({ type: [CreateProjectAchievementDto], description: 'Hierarchical achievements (4 depth levels)' })
+  @ApiPropertyOptional({ type: [CreateProjectAchievementDto], description: 'Hierarchical achievements (4 depth levels)' })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateProjectAchievementDto)
-  achievements!: CreateProjectAchievementDto[];
+  achievements?: CreateProjectAchievementDto[];
 
   @ApiProperty({ example: ['NestJS', 'React', 'PostgreSQL'] })
   @IsArray()
