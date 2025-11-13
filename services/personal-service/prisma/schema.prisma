@@ -62,9 +62,6 @@ model Resume {
   // Experiences
   experiences Experience[]
 
-  // Projects
-  projects Project[]
-
   // Education
   educations Education[]
 
@@ -271,33 +268,7 @@ model ProjectAchievement {
   @@map("project_achievements")
 }
 
-// Projects
-model Project {
-  id       String @id @default(uuid())
-  resumeId String @map("resume_id")
-  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  name        String
-  startDate   String   @map("start_date") // "2023-01" format
-  endDate     String?  @map("end_date") // null = ongoing
-  description String
-
-  role         String?  // Your role in project
-  achievements String[] // Key achievements
-  techStack    String[] @map("tech_stack") // Technologies used
-
-  url       String? // Project URL
-  githubUrl String? @map("github_url") // GitHub repository
-
-  order   Int     @default(0)
-  visible Boolean @default(true)
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  @@index([resumeId, order])
-  @@map("projects")
-}
+// NOTE: Independent Project model removed - projects are now only handled as ExperienceProject within experiences
 
 // Education
 model Education {
