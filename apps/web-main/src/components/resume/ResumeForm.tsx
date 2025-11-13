@@ -132,19 +132,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       order: e.order,
       visible: e.visible,
     })) || [],
-    projects: resume?.projects?.map(p => ({
-      name: p.name,
-      startDate: p.startDate,
-      endDate: p.endDate,
-      description: p.description,
-      role: p.role,
-      achievements: p.achievements,
-      techStack: p.techStack,
-      url: p.url,
-      githubUrl: p.githubUrl,
-      order: p.order,
-      visible: p.visible,
-    })) || [],
+    // NOTE: Independent projects field removed - projects are now only handled as nested ExperienceProject within experiences
     educations: resume?.educations?.map(e => ({
       school: e.school,
       major: e.major,
