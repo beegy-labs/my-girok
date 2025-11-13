@@ -89,20 +89,26 @@ export class ResumeService {
             order: exp.order ?? 0,
             visible: exp.visible ?? true,
             projects: {
-              create: exp.projects?.map(project => ({
-                name: project.name,
-                startDate: project.startDate,
-                endDate: project.endDate || null,
-                description: project.description,
-                role: project.role,
-                techStack: project.techStack,
-                url: project.url,
-                githubUrl: project.githubUrl,
-                order: project.order ?? 0,
-                achievements: project.achievements && project.achievements.length > 0
-                  ? { create: this.transformAchievements(project.achievements) }
-                  : undefined,
-              })) || [],
+              create: exp.projects?.map(project => {
+                const projectData: any = {
+                  name: project.name,
+                  startDate: project.startDate,
+                  endDate: project.endDate || null,
+                  description: project.description,
+                  role: project.role,
+                  techStack: project.techStack,
+                  url: project.url,
+                  githubUrl: project.githubUrl,
+                  order: project.order ?? 0,
+                };
+
+                // Only add achievements if they exist
+                if (project.achievements && project.achievements.length > 0) {
+                  projectData.achievements = { create: this.transformAchievements(project.achievements) };
+                }
+
+                return projectData;
+              }) || [],
             },
           })),
         } : undefined,
@@ -413,7 +419,7 @@ export class ResumeService {
                   achievementsCount: project.achievements?.length || 0,
                 })}`);
 
-                return {
+                const projectData: any = {
                   name: project.name,
                   startDate: project.startDate,
                   endDate: project.endDate || null,
@@ -423,10 +429,14 @@ export class ResumeService {
                   url: project.url,
                   githubUrl: project.githubUrl,
                   order: project.order ?? 0,
-                  achievements: project.achievements && project.achievements.length > 0
-                    ? { create: this.transformAchievements(project.achievements) }
-                    : undefined,
                 };
+
+                // Only add achievements if they exist
+                if (project.achievements && project.achievements.length > 0) {
+                  projectData.achievements = { create: this.transformAchievements(project.achievements) };
+                }
+
+                return projectData;
               }) || [],
             },
           };
