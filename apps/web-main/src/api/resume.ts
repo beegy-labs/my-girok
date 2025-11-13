@@ -245,12 +245,82 @@ function calculateMonths(startDate: string, endDate?: string): number {
 }
 
 /**
- * Calculate total work experience duration from experiences
+ * Calculate total work experience duration from experiences (deprecated - doesn't handle overlaps)
+ * @deprecated Use calculateTotalExperienceWithOverlap instead to properly handle overlapping periods
  */
 export function calculateTotalExperience(experiences: Experience[]): { years: number; months: number } {
   const totalMonths = experiences.reduce((total, exp) => {
     const months = calculateMonths(exp.startDate, exp.isCurrentlyWorking ? undefined : exp.endDate);
     return total + months;
+  }, 0);
+
+  return {
+    years: Math.floor(totalMonths / 12),
+    months: totalMonths % 12,
+  };
+}
+
+/**
+ * Calculate total work experience duration with overlap handling
+ * Merges overlapping date ranges to avoid double-counting
+ *
+ * Example:
+ * - Company A: 2020-01 ~ 2022-06
+ * - Company B: 2022-03 ~ 2025-11 (current)
+ * - Overlap: 2022-03 ~ 2022-06 (4 months)
+ * - Total: 2020-01 ~ 2025-11 = 5 years 11 months (not 6 years 3 months)
+ */
+export function calculateTotalExperienceWithOverlap(experiences: Experience[]): { years: number; months: number } {
+  if (experiences.length === 0) {
+    return { years: 0, months: 0 };
+  }
+
+  // Convert experiences to date intervals
+  interface DateInterval {
+    start: Date;
+    end: Date;
+  }
+
+  const intervals: DateInterval[] = experiences.map(exp => {
+    const start = new Date(exp.startDate + '-01');
+    const end = exp.isCurrentlyWorking || !exp.endDate
+      ? new Date()
+      : new Date(exp.endDate + '-01');
+    return { start, end };
+  });
+
+  // Sort intervals by start date
+  intervals.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+  // Merge overlapping intervals
+  const merged: DateInterval[] = [];
+  let current = intervals[0];
+
+  for (let i = 1; i < intervals.length; i++) {
+    const next = intervals[i];
+
+    // Check if current and next overlap or are adjacent
+    if (next.start <= current.end) {
+      // Merge: extend current end to the later of the two ends
+      current = {
+        start: current.start,
+        end: new Date(Math.max(current.end.getTime(), next.end.getTime()))
+      };
+    } else {
+      // No overlap: save current and move to next
+      merged.push(current);
+      current = next;
+    }
+  }
+
+  // Don't forget the last interval
+  merged.push(current);
+
+  // Calculate total months from merged intervals
+  const totalMonths = merged.reduce((total, interval) => {
+    const years = interval.end.getFullYear() - interval.start.getFullYear();
+    const months = interval.end.getMonth() - interval.start.getMonth();
+    return total + (years * 12 + months);
   }, 0);
 
   return {

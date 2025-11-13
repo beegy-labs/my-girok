@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Resume, calculateExperienceDuration } from '../../api/resume';
+import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
 import '../../styles/resume-print.css';
 
 interface ResumePreviewProps {
@@ -385,10 +385,16 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
     ));
   };
 
+  // Calculate total career duration with overlap handling
+  const totalDuration = calculateTotalExperienceWithOverlap(experiences);
+  const durationText = totalDuration.years > 0 || totalDuration.months > 0
+    ? ` (${t('resume.experience.duration', { years: totalDuration.years, months: totalDuration.months })})`
+    : '';
+
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-        {t('resume.sections.experience')}
+        {t('resume.sections.experience')}{durationText}
       </h2>
       {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
         <div key={idx} className="mb-5">

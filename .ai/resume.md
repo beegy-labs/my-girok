@@ -289,6 +289,17 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
+**2025-11-13**: Total career duration with overlap handling
+- Added `calculateTotalExperienceWithOverlap()` utility function to handle overlapping work periods
+- Merges overlapping date ranges using interval merging algorithm to avoid double-counting
+- Example: Company A (2020-01~2022-06) + Company B (2022-03~2025-11) = 5y 11m (not 6y 3m)
+- Display total career duration in Experience section title: "경력 (5년 11개월)"
+- Handles currently working experiences (isCurrentlyWorking flag)
+- Added comprehensive test suite with 15 test cases (100% pass rate)
+- Frontend test file: `apps/web-main/src/api/resume.test.ts`
+- Updated vitest configuration for proper jsdom support
+- Deprecated old `calculateTotalExperience()` function (simple sum without overlap handling)
+
 **2025-11-12 (Part 7)**: Fix missing isCurrentlyWorking field and empty string handling
 - Fixed 500 error when creating/updating resumes with missing `isCurrentlyWorking` field
 - Added proper handling for empty string values (`""` → `null`) in `endDate` fields
