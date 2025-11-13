@@ -88,7 +88,7 @@ export default function ResumePreviewPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Action Bar - Hidden when printing */}
-      <div className="bg-amber-50/30 border-b border-amber-100 print:hidden fixed top-0 left-0 right-0 z-10 shadow-sm backdrop-blur-sm bg-amber-50/95">
+      <div className="bg-amber-50/30 border-b border-amber-100 print:hidden shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -168,7 +168,7 @@ export default function ResumePreviewPage() {
       </div>
 
       {/* Resume Preview */}
-      <div className="pt-[360px] pb-8 print:py-0">
+      <div className="py-8 print:py-0">
         <ResumePreview resume={resume} paperSize={paperSize} />
       </div>
 
