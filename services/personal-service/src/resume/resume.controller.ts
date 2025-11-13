@@ -5,7 +5,6 @@ import {
   Put,
   Delete,
   Body,
-  UseGuards,
   Patch,
   Param,
   HttpCode,
@@ -20,8 +19,8 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam, ApiConsume
 import { ResumeService } from './resume.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
 import { AttachmentType } from '../storage/dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('resume')
 @Controller('resume')
@@ -29,6 +28,7 @@ export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 
   // Public endpoint - Get user's default resume by username
+  @Public()
   @Get('public/:username')
   @ApiOperation({ summary: 'Get user default resume by username (public access)' })
   @ApiParam({ name: 'username', description: 'User username' })
@@ -39,9 +39,8 @@ export class ResumeController {
     return this.resumeService.getPublicResumeByUsername(username);
   }
 
-  // Protected endpoints below
+  // Protected endpoints below - JwtAuthGuard is applied globally
   @Post()
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new resume' })
   @ApiResponse({ status: 201, description: 'Resume created successfully' })
@@ -50,7 +49,6 @@ export class ResumeController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all my resumes' })
   @ApiResponse({ status: 200, description: 'Resumes found', isArray: true })
@@ -59,7 +57,6 @@ export class ResumeController {
   }
 
   @Get('default')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get my default resume (or first resume)' })
   @ApiResponse({ status: 200, description: 'Default resume found' })
@@ -69,7 +66,6 @@ export class ResumeController {
   }
 
   @Get(':resumeId')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get specific resume by ID' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -80,7 +76,6 @@ export class ResumeController {
   }
 
   @Put(':resumeId')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update specific resume' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -95,7 +90,6 @@ export class ResumeController {
   }
 
   @Delete(':resumeId')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete specific resume' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -106,7 +100,6 @@ export class ResumeController {
   }
 
   @Patch(':resumeId/default')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Set resume as default' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -117,7 +110,6 @@ export class ResumeController {
   }
 
   @Post(':resumeId/copy')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Copy/duplicate a resume' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID to copy' })
@@ -128,7 +120,6 @@ export class ResumeController {
   }
 
   @Patch(':resumeId/sections/order')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update section display order' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -142,7 +133,6 @@ export class ResumeController {
   }
 
   @Patch(':resumeId/sections/visibility')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Toggle section visibility' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -158,7 +148,6 @@ export class ResumeController {
   // ========== File Attachment Endpoints ==========
 
   @Post(':resumeId/attachments')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
@@ -210,7 +199,6 @@ export class ResumeController {
   }
 
   @Get(':resumeId/attachments')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all attachments for a resume' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -234,7 +222,6 @@ export class ResumeController {
   }
 
   @Patch(':resumeId/attachments/:attachmentId')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update attachment metadata' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -253,7 +240,6 @@ export class ResumeController {
   }
 
   @Delete(':resumeId/attachments/:attachmentId')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete attachment' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
@@ -269,7 +255,6 @@ export class ResumeController {
   }
 
   @Patch(':resumeId/attachments/reorder')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Reorder attachments of a specific type' })
   @ApiParam({ name: 'resumeId', description: 'Resume ID' })
