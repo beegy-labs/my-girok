@@ -79,38 +79,46 @@ export class ResumeService {
           })),
         } : undefined,
         experiences: dto.experiences ? {
-          create: dto.experiences.map(exp => ({
-            company: exp.company,
-            startDate: exp.startDate,
-            endDate: exp.endDate || null,
-            isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
-            finalPosition: exp.finalPosition,
-            jobTitle: exp.jobTitle,
-            order: exp.order ?? 0,
-            visible: exp.visible ?? true,
-            projects: {
-              create: exp.projects?.map(project => {
-                const projectData: any = {
-                  name: project.name,
-                  startDate: project.startDate,
-                  endDate: project.endDate || null,
-                  description: project.description,
-                  role: project.role,
-                  techStack: project.techStack,
-                  url: project.url,
-                  githubUrl: project.githubUrl,
-                  order: project.order ?? 0,
-                };
+          create: dto.experiences.map(exp => {
+            const expData: any = {
+              company: exp.company,
+              startDate: exp.startDate,
+              endDate: exp.endDate || null,
+              isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
+              finalPosition: exp.finalPosition,
+              jobTitle: exp.jobTitle,
+              order: exp.order ?? 0,
+              visible: exp.visible ?? true,
+            };
 
-                // Only add achievements if they exist
-                if (project.achievements && project.achievements.length > 0) {
-                  projectData.achievements = { create: this.transformAchievements(project.achievements) };
-                }
+            // Only add projects if they exist
+            if (exp.projects && exp.projects.length > 0) {
+              expData.projects = {
+                create: exp.projects.map(project => {
+                  const projectData: any = {
+                    name: project.name,
+                    startDate: project.startDate,
+                    endDate: project.endDate || null,
+                    description: project.description,
+                    role: project.role,
+                    techStack: project.techStack,
+                    url: project.url,
+                    githubUrl: project.githubUrl,
+                    order: project.order ?? 0,
+                  };
 
-                return projectData;
-              }) || [],
-            },
-          })),
+                  // Only add achievements if they exist
+                  if (project.achievements && project.achievements.length > 0) {
+                    projectData.achievements = { create: this.transformAchievements(project.achievements) };
+                  }
+
+                  return projectData;
+                }),
+              };
+            }
+
+            return expData;
+          }),
         } : undefined,
         projects: dto.projects ? {
           create: dto.projects,
@@ -399,7 +407,7 @@ export class ResumeService {
             projectsCount: exp.projects?.length || 0,
           })}`);
 
-          const experienceData = {
+          const experienceData: any = {
             resumeId: resume.id,
             company: exp.company,
             startDate: exp.startDate,
@@ -409,8 +417,12 @@ export class ResumeService {
             jobTitle: exp.jobTitle,
             order: exp.order ?? 0,
             visible: exp.visible ?? true,
-            projects: {
-              create: exp.projects?.map(project => {
+          };
+
+          // Only add projects if they exist
+          if (exp.projects && exp.projects.length > 0) {
+            experienceData.projects = {
+              create: exp.projects.map(project => {
                 // Log each project
                 this.logger.debug(`Creating project in experience: ${JSON.stringify({
                   name: project.name,
@@ -437,9 +449,9 @@ export class ResumeService {
                 }
 
                 return projectData;
-              }) || [],
-            },
-          };
+              }),
+            };
+          }
 
           this.logger.debug(`Full experience data: ${JSON.stringify(experienceData, null, 2)}`);
 
@@ -639,35 +651,39 @@ export class ResumeService {
       // Copy experiences with projects and achievements
       if (original.experiences && original.experiences.length > 0) {
         for (const exp of original.experiences) {
-          await tx.experience.create({
-            data: {
-              resumeId: copy.id,
-              company: exp.company,
-              startDate: exp.startDate,
-              endDate: exp.endDate,
-              isCurrentlyWorking: exp.isCurrentlyWorking,
-              finalPosition: exp.finalPosition,
-              jobTitle: exp.jobTitle,
-              order: exp.order,
-              visible: exp.visible,
-              projects: {
-                create: exp.projects?.map(project => ({
-                  name: project.name,
-                  startDate: project.startDate,
-                  endDate: project.endDate,
-                  description: project.description,
-                  role: project.role,
-                  techStack: project.techStack,
-                  url: project.url,
-                  githubUrl: project.githubUrl,
-                  order: project.order,
-                  achievements: project.achievements && project.achievements.length > 0
-                    ? { create: this.copyAchievements(project.achievements) }
-                    : undefined,
-                })) || [],
-              },
-            },
-          });
+          const expData: any = {
+            resumeId: copy.id,
+            company: exp.company,
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            isCurrentlyWorking: exp.isCurrentlyWorking,
+            finalPosition: exp.finalPosition,
+            jobTitle: exp.jobTitle,
+            order: exp.order,
+            visible: exp.visible,
+          };
+
+          // Only add projects if they exist
+          if (exp.projects && exp.projects.length > 0) {
+            expData.projects = {
+              create: exp.projects.map(project => ({
+                name: project.name,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                description: project.description,
+                role: project.role,
+                techStack: project.techStack,
+                url: project.url,
+                githubUrl: project.githubUrl,
+                order: project.order,
+                achievements: project.achievements && project.achievements.length > 0
+                  ? { create: this.copyAchievements(project.achievements) }
+                  : undefined,
+              })),
+            };
+          }
+
+          await tx.experience.create({ data: expData });
         }
       }
 
