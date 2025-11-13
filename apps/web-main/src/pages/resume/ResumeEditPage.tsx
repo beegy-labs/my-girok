@@ -77,7 +77,7 @@ export default function ResumeEditPage() {
       ],
       skills: (data.skills || []).map((s, i) => ({ ...s, id: `skill-${i}` })),
       experiences: (data.experiences || []).map((e, i) => ({ ...e, id: `exp-${i}` })),
-      projects: (data.projects || []).map((p, i) => ({ ...p, id: `proj-${i}` })),
+      projects: [], // NOTE: Independent projects field removed - projects are now only handled as nested ExperienceProject within experiences
       educations: (data.educations || []).map((e, i) => ({ ...e, id: `edu-${i}` })),
       certificates: (data.certificates || []).map((c, i) => ({ ...c, id: `cert-${i}` })),
       createdAt: new Date().toISOString(),

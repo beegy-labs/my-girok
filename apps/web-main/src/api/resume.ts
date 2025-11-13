@@ -188,6 +188,7 @@ export interface Resume {
   sections: ResumeSection[];
   skills: Skill[];
   experiences: Experience[];
+  /** @deprecated Projects are now handled as nested ExperienceProject within experiences. This field exists only for backward compatibility with old data. */
   projects: Project[];
   educations: Education[];
   certificates: Certificate[];
@@ -223,7 +224,7 @@ export interface CreateResumeDto {
   applicationReason?: string;
   skills?: Omit<Skill, 'id'>[];
   experiences?: Omit<Experience, 'id'>[];
-  projects?: Omit<Project, 'id'>[];
+  // NOTE: projects field removed - projects are now only handled as nested ExperienceProject within experiences
   educations?: Omit<Education, 'id'>[];
   certificates?: Omit<Certificate, 'id'>[];
 }
