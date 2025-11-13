@@ -149,15 +149,16 @@ describe('ResumeService', () => {
       });
       mockPrismaService.resume.updateMany.mockResolvedValue({ count: 0 });
       mockPrismaService.resume.create.mockResolvedValue(mockResume);
+      mockPrismaService.resume.findUnique.mockResolvedValue(mockResume);
 
       // Act
       const result = await service.create(userId, createDto);
 
       // Assert
       expect(result).toBeDefined();
-      expect(result.userId).toBe(userId);
-      expect(result.title).toBe(createDto.title);
-      expect(result.name).toBe(createDto.name);
+      expect(result!.userId).toBe(userId);
+      expect(result!.title).toBe(createDto.title);
+      expect(result!.name).toBe(createDto.name);
       expect(mockPrismaService.$transaction).toHaveBeenCalled();
     });
 
