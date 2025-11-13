@@ -218,7 +218,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             case 'EXPERIENCE':
               return <ExperienceSection key={section.id} experiences={resume.experiences.filter(e => e.visible)} />;
             case 'PROJECT':
-              return <ProjectsSection key={section.id} projects={resume.projects.filter(p => p.visible)} />;
+              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible)} />;
             case 'EDUCATION':
               return <EducationSection key={section.id} educations={resume.educations.filter(e => e.visible)} />;
             case 'CERTIFICATE':

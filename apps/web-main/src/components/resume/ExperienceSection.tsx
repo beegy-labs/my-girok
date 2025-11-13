@@ -53,6 +53,9 @@ function SortableExperienceCard({
 
   const [expandedProjects, setExpandedProjects] = useState<{ [key: number]: boolean }>({});
 
+  // Ensure projects is always an array (handle undefined from API)
+  const projects = experience.projects || [];
+
   const toggleProject = (projectIndex: number) => {
     setExpandedProjects(prev => ({
       ...prev,
@@ -64,11 +67,11 @@ function SortableExperienceCard({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = experience.projects.findIndex(p => (p.id || `proj-${experience.projects.indexOf(p)}`) === active.id);
-    const newIndex = experience.projects.findIndex(p => (p.id || `proj-${experience.projects.indexOf(p)}`) === over.id);
+    const oldIndex = projects.findIndex(p => (p.id || `proj-${projects.indexOf(p)}`) === active.id);
+    const newIndex = projects.findIndex(p => (p.id || `proj-${projects.indexOf(p)}`) === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
-      const newProjects = arrayMove(experience.projects, oldIndex, newIndex).map((p, idx) => ({
+      const newProjects = arrayMove(projects, oldIndex, newIndex).map((p, idx) => ({
         ...p,
         order: idx,
       }));
@@ -80,7 +83,7 @@ function SortableExperienceCard({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const project = experience.projects[projectIndex];
+    const project = projects[projectIndex];
     const oldIndex = project.achievements.findIndex(a => (a.id || `ach-${project.achievements.indexOf(a)}`) === active.id);
     const newIndex = project.achievements.findIndex(a => (a.id || `ach-${project.achievements.indexOf(a)}`) === over.id);
 
@@ -90,7 +93,7 @@ function SortableExperienceCard({
         order: idx,
       }));
 
-      const newProjects = [...experience.projects];
+      const newProjects = [...projects];
       newProjects[projectIndex] = { ...project, achievements: newAchievements };
       onUpdate({ ...experience, projects: newProjects });
     }
@@ -105,25 +108,25 @@ function SortableExperienceCard({
       role: '',
       achievements: [],
       techStack: [],
-      order: experience.projects.length,
+      order: projects.length,
     };
-    onUpdate({ ...experience, projects: [...experience.projects, newProject] });
-    setExpandedProjects(prev => ({ ...prev, [experience.projects.length]: true }));
+    onUpdate({ ...experience, projects: [...projects, newProject] });
+    setExpandedProjects(prev => ({ ...prev, [projects.length]: true }));
   };
 
   const updateProject = (projectIndex: number, project: ExperienceProject) => {
-    const newProjects = [...experience.projects];
+    const newProjects = [...projects];
     newProjects[projectIndex] = project;
     onUpdate({ ...experience, projects: newProjects });
   };
 
   const removeProject = (projectIndex: number) => {
-    const newProjects = experience.projects.filter((_, i) => i !== projectIndex);
+    const newProjects = projects.filter((_, i) => i !== projectIndex);
     onUpdate({ ...experience, projects: newProjects });
   };
 
   const addAchievement = (projectIndex: number) => {
-    const project = experience.projects[projectIndex];
+    const project = projects[projectIndex];
     const newAchievement: ProjectAchievement = {
       content: '',
       depth: 1,
@@ -136,14 +139,14 @@ function SortableExperienceCard({
   };
 
   const updateAchievement = (projectIndex: number, achievementIndex: number, achievement: ProjectAchievement) => {
-    const project = experience.projects[projectIndex];
+    const project = projects[projectIndex];
     const newAchievements = [...project.achievements];
     newAchievements[achievementIndex] = achievement;
     updateProject(projectIndex, { ...project, achievements: newAchievements });
   };
 
   const removeAchievement = (projectIndex: number, achievementIndex: number) => {
-    const project = experience.projects[projectIndex];
+    const project = projects[projectIndex];
     const newAchievements = project.achievements.filter((_, i) => i !== achievementIndex);
     updateProject(projectIndex, { ...project, achievements: newAchievements });
   };
@@ -294,18 +297,18 @@ function SortableExperienceCard({
               </button>
             </div>
 
-            {experience.projects && experience.projects.length > 0 ? (
+            {projects && projects.length > 0 ? (
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleProjectDragEnd}
               >
                 <SortableContext
-                  items={experience.projects.map((p, i) => p.id || `proj-${i}`)}
+                  items={projects.map((p, i) => p.id || `proj-${i}`)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-3">
-                    {experience.projects.map((project, projectIndex) => (
+                    {projects.map((project, projectIndex) => (
                       <SortableProject
                         key={project.id || `proj-${projectIndex}`}
                         project={project}
