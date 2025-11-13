@@ -169,7 +169,7 @@ export class ResumeService {
               },
             },
           },
-          projects: { orderBy: { order: 'asc' } },
+          // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
           educations: { orderBy: { order: 'asc' } },
           certificates: { orderBy: { order: 'asc' } },
         },
@@ -215,7 +215,7 @@ export class ResumeService {
             },
           },
         },
-        projects: { orderBy: { order: 'asc' } },
+        // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
         educations: { orderBy: { order: 'asc' } },
         certificates: { orderBy: { order: 'asc' } },
       },
@@ -264,7 +264,7 @@ export class ResumeService {
             },
           },
         },
-        projects: { orderBy: { order: 'asc' } },
+        // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
         educations: { orderBy: { order: 'asc' } },
         certificates: { orderBy: { order: 'asc' } },
       },
@@ -317,7 +317,7 @@ export class ResumeService {
             },
           },
         },
-        projects: { orderBy: { order: 'asc' } },
+        // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
         educations: { orderBy: { order: 'asc' } },
         certificates: { orderBy: { order: 'asc' } },
       },
@@ -509,7 +509,7 @@ export class ResumeService {
               },
             },
           },
-          projects: { orderBy: { order: 'asc' } },
+          // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
           educations: { orderBy: { order: 'asc' } },
           certificates: { orderBy: { order: 'asc' } },
         },
@@ -754,7 +754,7 @@ export class ResumeService {
               },
             },
           },
-          projects: { orderBy: { order: 'asc' } },
+          // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
           educations: { orderBy: { order: 'asc' } },
           certificates: { orderBy: { order: 'asc' } },
         },
@@ -806,7 +806,7 @@ export class ResumeService {
               },
             },
           },
-          projects: { orderBy: { order: 'asc' } },
+          // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
           educations: { orderBy: { order: 'asc' } },
           certificates: { orderBy: { order: 'asc' } },
         },
