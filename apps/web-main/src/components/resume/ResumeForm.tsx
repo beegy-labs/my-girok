@@ -181,7 +181,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     if (savedDraft && !resume) {
       try {
         const parsedDraft = JSON.parse(savedDraft);
-        setFormData(parsedDraft);
+        // Remove projects field if it exists in old drafts
+        const { projects, ...cleanDraft } = parsedDraft;
+        setFormData(cleanDraft);
       } catch (error) {
         console.error('Failed to load draft:', error);
       }
@@ -297,7 +299,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     e.preventDefault();
     setSubmitting(true);
     try {
-      await onSubmit(formData);
+      // Remove projects field before submitting (no longer supported by API)
+      const { projects, ...dataToSubmit } = formData as any;
+      await onSubmit(dataToSubmit);
       // Clear draft after successful submission
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);
