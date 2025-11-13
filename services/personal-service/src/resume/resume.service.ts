@@ -120,9 +120,7 @@ export class ResumeService {
             return expData;
           }),
         } : undefined,
-        projects: dto.projects ? {
-          create: dto.projects,
-        } : undefined,
+        // NOTE: Projects are now handled within experiences (ExperienceProject model)
         educations: dto.educations ? {
           create: dto.educations,
         } : undefined,
