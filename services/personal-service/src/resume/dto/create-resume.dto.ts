@@ -226,60 +226,8 @@ export class CreateExperienceDto {
   visible?: boolean;
 }
 
-export class CreateProjectDto {
-  @ApiProperty({ example: 'My-Girok Platform' })
-  @IsString()
-  name!: string;
-
-  @ApiProperty({ example: '2024-01' })
-  @IsString()
-  startDate!: string;
-
-  @ApiPropertyOptional({ example: '2024-12' })
-  @IsOptional()
-  @IsString()
-  endDate?: string;
-
-  @ApiProperty({ example: 'Personal productivity platform with microservices' })
-  @IsString()
-  description!: string;
-
-  @ApiPropertyOptional({ example: 'Full-stack Developer' })
-  @IsOptional()
-  @IsString()
-  role?: string;
-
-  @ApiProperty({ example: ['Built 3 microservices', 'Deployed on Kubernetes'] })
-  @IsArray()
-  @IsString({ each: true })
-  achievements!: string[];
-
-  @ApiProperty({ example: ['NestJS', 'React', 'PostgreSQL'] })
-  @IsArray()
-  @IsString({ each: true })
-  techStack!: string[];
-
-  @ApiPropertyOptional({ example: 'https://mygirok.dev' })
-  @IsOptional()
-  @IsString()
-  url?: string;
-
-  @ApiPropertyOptional({ example: 'https://github.com/user/project' })
-  @IsOptional()
-  @IsString()
-  githubUrl?: string;
-
-  @ApiPropertyOptional({ default: 0 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  order?: number;
-
-  @ApiPropertyOptional({ default: true })
-  @IsOptional()
-  @IsBoolean()
-  visible?: boolean;
-}
+// NOTE: CreateProjectDto was removed. Projects are now only handled as ExperienceProject within Experience.
+// See CreateExperienceProjectDto above for the current structure.
 
 export class CreateEducationDto {
   @ApiProperty({ example: 'Seoul National University' })
@@ -488,12 +436,7 @@ export class CreateResumeDto {
   @Type(() => CreateExperienceDto)
   experiences?: CreateExperienceDto[];
 
-  @ApiPropertyOptional({ type: [CreateProjectDto] })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateProjectDto)
-  projects?: CreateProjectDto[];
+  // NOTE: projects field removed - projects are now only handled as nested ExperienceProject within experiences
 
   @ApiPropertyOptional({ type: [CreateEducationDto] })
   @IsOptional()
