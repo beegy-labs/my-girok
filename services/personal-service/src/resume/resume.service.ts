@@ -459,12 +459,8 @@ export class ResumeService {
         }
       }
 
-      if (dto.projects) {
-        await tx.project.deleteMany({ where: { resumeId: resume.id } });
-        await tx.project.createMany({
-          data: dto.projects.map(proj => ({ ...proj, resumeId: resume.id })),
-        });
-      }
+      // NOTE: Projects are now handled within experiences (ExperienceProject model)
+      // Independent Project model is no longer used for resume projects
 
       if (dto.educations) {
         await tx.education.deleteMany({ where: { resumeId: resume.id } });
@@ -687,25 +683,8 @@ export class ResumeService {
         }
       }
 
-      // Copy projects (standalone)
-      if (original.projects && original.projects.length > 0) {
-        await tx.project.createMany({
-          data: original.projects.map(project => ({
-            resumeId: copy.id,
-            name: project.name,
-            startDate: project.startDate,
-            endDate: project.endDate,
-            description: project.description,
-            role: project.role,
-            achievements: project.achievements,
-            techStack: project.techStack,
-            url: project.url,
-            githubUrl: project.githubUrl,
-            order: project.order,
-            visible: project.visible,
-          })),
-        });
-      }
+      // NOTE: Independent projects are no longer used.
+      // All projects are now handled within experiences (ExperienceProject model)
 
       // Copy educations
       if (original.educations && original.educations.length > 0) {
