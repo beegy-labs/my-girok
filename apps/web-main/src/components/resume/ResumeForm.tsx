@@ -36,20 +36,20 @@ function CollapsibleHeader({ title, icon, isCollapsed, onToggle, count }: Collap
     <button
       type="button"
       onClick={onToggle}
-      className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
+      className="w-full flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-4 hover:opacity-80 transition-opacity"
     >
-      <div className="flex items-center gap-2">
-        <h2 className="text-xl font-bold text-amber-900">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0 flex-1">
+        <h2 className="text-xl font-bold text-amber-900 break-words">
           {icon} {title}
         </h2>
         {count !== undefined && count > 0 && (
-          <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
+          <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full flex-shrink-0">
             {count}
           </span>
         )}
       </div>
       <svg
-        className={`w-5 h-5 text-amber-900 transform transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
+        className={`w-5 h-5 text-amber-900 transform transition-transform flex-shrink-0 ${isCollapsed ? 'rotate-180' : ''}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -313,8 +313,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Resume Settings */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">⚙️ {t('resume.sections.settings')}</h2>
+      <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
+        <h2 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2 flex-wrap">
+          <span>⚙️ {t('resume.sections.settings')}</span>
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -325,7 +327,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               required
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
               placeholder="e.g., For Tech Companies, For Startups"
             />
           </div>
@@ -336,7 +338,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <select
               value={formData.paperSize}
               onChange={e => setFormData({ ...formData, paperSize: e.target.value as PaperSize })}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+              className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
             >
               <option value="A4">A4 (210 × 297 mm)</option>
               <option value="LETTER">Letter (8.5 × 11 in)</option>
@@ -351,7 +353,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             type="text"
             value={formData.description || ''}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
             placeholder="Brief description of this resume"
           />
         </div>
@@ -618,7 +620,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       />
 
       {/* Skills Section */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+      <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
         <CollapsibleHeader
           title={t('resume.sections.skills')}
           icon="⚡"
@@ -719,7 +721,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   {Array.isArray(skill.items) && skill.items.length > 0 ? (
                     <div className="space-y-3">
                       {skill.items.map((item: any, itemIndex: number) => (
-                        <div key={itemIndex} className="border border-gray-200 rounded-lg p-4 bg-white">
+                        <div key={itemIndex} className="border border-amber-200 rounded-lg p-4 bg-amber-50/20">
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-2">
                               <div className="flex flex-col gap-1">
@@ -792,7 +794,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                   newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
                                   setFormData({ ...formData, skills: newSkills });
                                 }}
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
+                                className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 text-sm"
                                 placeholder="예: React, Node.js, PostgreSQL"
                               />
                             </div>
@@ -855,7 +857,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       />
 
       {/* Certificates Section */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+      <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
         <CollapsibleHeader
           title={t('resume.sections.certifications')}
           icon="🏆"
@@ -898,9 +900,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         {formData.certificates && formData.certificates.length > 0 ? (
           <div className="space-y-4">
             {formData.certificates.map((cert, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Certificate #{index + 1}</h3>
+              <div key={index} className="border border-amber-200 rounded-lg p-4 bg-amber-50/20">
+                <div className="flex flex-wrap justify-between items-start gap-x-3 gap-y-2 mb-4">
+                  <h3 className="text-lg font-semibold text-amber-900">Certificate #{index + 1}</h3>
                   <button
                     type="button"
                     onClick={() => {
@@ -926,7 +928,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         newCertificates[index] = { ...newCertificates[index], name: e.target.value };
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                       placeholder="e.g., AWS Certified Solutions Architect"
                     />
                   </div>
@@ -943,7 +945,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         newCertificates[index] = { ...newCertificates[index], issuer: e.target.value };
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                       placeholder="e.g., Amazon Web Services"
                     />
                   </div>
@@ -960,7 +962,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         newCertificates[index] = { ...newCertificates[index], issueDate: e.target.value };
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                     />
                   </div>
 
@@ -976,7 +978,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         newCertificates[index] = { ...newCertificates[index], expiryDate: e.target.value };
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                       placeholder="Leave empty if no expiry"
                     />
                   </div>
@@ -993,7 +995,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         newCertificates[index] = { ...newCertificates[index], credentialId: e.target.value };
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                       placeholder="Credential ID"
                     />
                   </div>
@@ -1010,7 +1012,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         newCertificates[index] = { ...newCertificates[index], credentialUrl: e.target.value };
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
                       placeholder="https://verify.example.com"
                     />
                   </div>
@@ -1028,8 +1030,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </div>
 
       {/* Attachments Section */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">📎 Attachments</h2>
+      <div className="bg-white border border-amber-200 rounded-2xl shadow-sm p-6">
+        <h2 className="text-xl font-bold text-amber-900 mb-2 flex items-center gap-2 flex-wrap">
+          <span>📎 Attachments</span>
+        </h2>
         <p className="text-sm text-gray-600 mb-4">
           Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.
         </p>

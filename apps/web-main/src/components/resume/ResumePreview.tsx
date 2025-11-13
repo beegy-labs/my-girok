@@ -388,20 +388,23 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
   // Calculate total career duration with overlap handling
   const totalDuration = calculateTotalExperienceWithOverlap(experiences);
   const durationText = totalDuration.years > 0 || totalDuration.months > 0
-    ? ` (${t('resume.experience.duration', { years: totalDuration.years, months: totalDuration.months })})`
+    ? t('resume.experience.duration', { years: totalDuration.years, months: totalDuration.months })
     : '';
 
   return (
     <div className="mb-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-        {t('resume.sections.experience')}{durationText}
+      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1 flex flex-wrap items-baseline gap-x-2">
+        <span>{t('resume.sections.experience')}</span>
+        {durationText && (
+          <span className="text-sm font-normal text-gray-600">({durationText})</span>
+        )}
       </h2>
       {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
         <div key={idx} className="mb-5">
           {/* Company Header */}
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
+          <div className="flex flex-wrap justify-between items-start gap-x-4 gap-y-1 mb-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-gray-900 text-lg break-words">{exp.company}</h3>
               {exp.startDate && (
                 <p className="text-xs text-gray-600 mt-1">
                   {(() => {
@@ -415,7 +418,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                 </p>
               )}
             </div>
-            <span className="text-sm text-gray-700 whitespace-nowrap">
+            <span className="text-sm text-gray-700 whitespace-nowrap flex-shrink-0">
               {exp.startDate} - {exp.isCurrentlyWorking ? t('resume.experience.currentlyWorking') : (exp.endDate || t('resume.experience.currentlyWorking'))}
             </span>
           </div>
