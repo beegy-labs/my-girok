@@ -22,17 +22,37 @@ export class ResumeService {
   }
 
   /**
-   * Recursively transform achievement DTOs to Prisma nested create format
+   * Recursively create achievements with proper parent-child relationships.
+   * Prisma doesn't support nested creates for self-referencing relations,
+   * so we create them level by level using the parentId field.
    */
-  private transformAchievements(achievements: any[]): any[] {
-    return achievements.map(achievement => ({
-      content: achievement.content,
-      depth: achievement.depth,
-      order: achievement.order,
-      children: achievement.children && achievement.children.length > 0
-        ? { create: this.transformAchievements(achievement.children) }
-        : undefined,
-    }));
+  private async createAchievements(
+    achievements: any[],
+    projectId: string,
+    parentId: string | null,
+    tx: any,
+  ): Promise<void> {
+    for (const achievement of achievements) {
+      const created = await tx.projectAchievement.create({
+        data: {
+          projectId,
+          content: achievement.content,
+          depth: achievement.depth,
+          order: achievement.order ?? 0,
+          parentId,
+        },
+      });
+
+      // Recursively create children with this achievement as parent
+      if (achievement.children && achievement.children.length > 0) {
+        await this.createAchievements(
+          achievement.children,
+          projectId,
+          created.id, // Use created achievement's ID as parentId
+          tx,
+        );
+      }
+    }
   }
 
   async create(userId: string, dto: CreateResumeDto) {
@@ -46,7 +66,10 @@ export class ResumeService {
         });
       }
 
-      // Create resume with all nested data
+      // Store project achievements to create after projects are created
+      const projectAchievementsMap = new Map<number, any[]>();
+
+      // Create resume with all nested data (except achievements)
       const resume = await tx.resume.create({
         data: {
           userId: userId,
@@ -79,7 +102,7 @@ export class ResumeService {
           })),
         } : undefined,
         experiences: dto.experiences ? {
-          create: dto.experiences.map(exp => {
+          create: dto.experiences.map((exp, expIdx) => {
             const expData: any = {
               company: exp.company,
               startDate: exp.startDate,
@@ -91,11 +114,18 @@ export class ResumeService {
               visible: exp.visible ?? true,
             };
 
-            // Only add projects if they exist
+            // Only add projects if they exist (without achievements)
             if (exp.projects && exp.projects.length > 0) {
               expData.projects = {
-                create: exp.projects.map(project => {
-                  const projectData: any = {
+                create: exp.projects.map((project, projIdx) => {
+                  // Store achievements for later creation
+                  if (project.achievements && project.achievements.length > 0) {
+                    const key = expIdx * 1000 + projIdx; // Create unique key
+                    projectAchievementsMap.set(key, project.achievements);
+                  }
+
+                  // Create project without achievements
+                  return {
                     name: project.name,
                     startDate: project.startDate,
                     endDate: project.endDate || null,
@@ -106,13 +136,6 @@ export class ResumeService {
                     githubUrl: project.githubUrl,
                     order: project.order ?? 0,
                   };
-
-                  // Only add achievements if they exist
-                  if (project.achievements && project.achievements.length > 0) {
-                    projectData.achievements = { create: this.transformAchievements(project.achievements) };
-                  }
-
-                  return projectData;
                 }),
               };
             }
@@ -137,6 +160,38 @@ export class ResumeService {
             ],
           },
         },
+        include: {
+          experiences: {
+            orderBy: { order: 'asc' },
+            include: {
+              projects: {
+                orderBy: { order: 'asc' },
+              },
+            },
+          },
+        },
+      });
+
+      // Create achievements for each project
+      if (dto.experiences) {
+        for (let expIdx = 0; expIdx < dto.experiences.length; expIdx++) {
+          const exp = dto.experiences[expIdx];
+          if (exp.projects) {
+            for (let projIdx = 0; projIdx < exp.projects.length; projIdx++) {
+              const key = expIdx * 1000 + projIdx;
+              const achievements = projectAchievementsMap.get(key);
+              if (achievements) {
+                const projectId = resume.experiences[expIdx].projects[projIdx].id;
+                await this.createAchievements(achievements, projectId, null, tx);
+              }
+            }
+          }
+        }
+      }
+
+      // Return with full nested structure including hierarchical achievements
+      return await tx.resume.findUnique({
+        where: { id: resume.id },
         include: {
           sections: { orderBy: { order: 'asc' } },
           skills: { orderBy: { order: 'asc' } },
@@ -174,8 +229,6 @@ export class ResumeService {
           certificates: { orderBy: { order: 'asc' } },
         },
       });
-
-      return resume;
     });
   }
 
@@ -393,6 +446,7 @@ export class ResumeService {
 
       if (dto.experiences) {
         await tx.experience.deleteMany({ where: { resumeId: resume.id } });
+
         for (const exp of dto.experiences) {
           // Log experience data before creating
           this.logger.debug(`Creating experience: ${JSON.stringify({
@@ -417,10 +471,13 @@ export class ResumeService {
             visible: exp.visible ?? true,
           };
 
-          // Only add projects if they exist
+          // Store project achievements for later creation
+          const projectAchievements: Array<{ projectIdx: number; achievements: any[] }> = [];
+
+          // Only add projects if they exist (without achievements)
           if (exp.projects && exp.projects.length > 0) {
             experienceData.projects = {
-              create: exp.projects.map(project => {
+              create: exp.projects.map((project, projIdx) => {
                 // Log each project
                 this.logger.debug(`Creating project in experience: ${JSON.stringify({
                   name: project.name,
@@ -429,7 +486,16 @@ export class ResumeService {
                   achievementsCount: project.achievements?.length || 0,
                 })}`);
 
-                const projectData: any = {
+                // Store achievements for later
+                if (project.achievements && project.achievements.length > 0) {
+                  projectAchievements.push({
+                    projectIdx: projIdx,
+                    achievements: project.achievements,
+                  });
+                }
+
+                // Create project without achievements
+                return {
                   name: project.name,
                   startDate: project.startDate,
                   endDate: project.endDate || null,
@@ -440,20 +506,23 @@ export class ResumeService {
                   githubUrl: project.githubUrl,
                   order: project.order ?? 0,
                 };
-
-                // Only add achievements if they exist
-                if (project.achievements && project.achievements.length > 0) {
-                  projectData.achievements = { create: this.transformAchievements(project.achievements) };
-                }
-
-                return projectData;
               }),
             };
           }
 
           this.logger.debug(`Full experience data: ${JSON.stringify(experienceData, null, 2)}`);
 
-          await tx.experience.create({ data: experienceData });
+          // Create experience with projects
+          const createdExperience = await tx.experience.create({
+            data: experienceData,
+            include: { projects: { orderBy: { order: 'asc' } } },
+          });
+
+          // Create achievements for each project
+          for (const { projectIdx, achievements } of projectAchievements) {
+            const projectId = createdExperience.projects[projectIdx].id;
+            await this.createAchievements(achievements, projectId, null, tx);
+          }
         }
       }
 
