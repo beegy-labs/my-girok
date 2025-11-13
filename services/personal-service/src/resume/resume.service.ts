@@ -575,7 +575,6 @@ export class ResumeService {
             },
           },
         },
-        projects: true,
         educations: true,
         certificates: true,
       },
@@ -867,10 +866,6 @@ export class ResumeService {
           where: { visible: true },
           orderBy: { order: 'asc' },
         },
-        projects: {
-          where: { visible: true },
-          orderBy: { order: 'asc' },
-        },
         educations: {
           where: { visible: true },
           orderBy: { order: 'asc' },
@@ -915,10 +910,6 @@ export class ResumeService {
           orderBy: { order: 'asc' },
         },
         experiences: {
-          where: { visible: true },
-          orderBy: { order: 'asc' },
-        },
-        projects: {
           where: { visible: true },
           orderBy: { order: 'asc' },
         },
