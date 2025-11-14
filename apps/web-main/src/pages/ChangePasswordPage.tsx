@@ -93,7 +93,7 @@ export default function ChangePasswordPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
                 placeholder="Enter your current password"
               />
             </div>
@@ -108,7 +108,7 @@ export default function ChangePasswordPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
                 placeholder="Enter new password (min. 8 characters)"
               />
             </div>
@@ -123,7 +123,7 @@ export default function ChangePasswordPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
                 placeholder="Confirm new password"
               />
             </div>
