@@ -387,6 +387,85 @@ it('should match snapshot', () => {
 - [ ] Keep tests focused and independent
 - [ ] Clean up resources in afterEach/afterAll
 
+## Mobile Browser Testing
+
+### Cross-Browser Testing Requirements
+
+**All public-facing features MUST be tested on mobile browsers.**
+
+#### Required Test Browsers
+- ✅ iOS Safari (latest 2 versions) - Primary concern due to stricter security
+- ✅ Android Chrome (latest 2 versions)
+- ✅ Desktop Chrome, Firefox, Safari
+
+#### Mobile-Specific Test Cases
+
+```typescript
+// E2E test example for mobile browsers (Playwright)
+describe('Shared Resume Link (Mobile)', () => {
+  it('should load shared resume on mobile Safari', async () => {
+    // Create share link
+    const shareLink = await createShareLink(resumeId);
+
+    // Test on mobile user-agent
+    await page.setUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'
+    );
+    await page.goto(shareLink.url);
+
+    // Verify resume loads without auth
+    await expect(page.locator('.resume-preview')).toBeVisible();
+    expect(await page.url()).not.toContain('/login');
+  });
+
+  it('should not send auth headers for public endpoints', async () => {
+    const requests = [];
+    page.on('request', req => requests.push(req));
+
+    await page.goto('/shared/token123');
+
+    const publicApiRequest = requests.find(r =>
+      r.url().includes('/share/public/')
+    );
+
+    expect(publicApiRequest.headers().authorization).toBeUndefined();
+  });
+});
+```
+
+### Playwright Mobile Configuration
+
+```typescript
+// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  projects: [
+    {
+      name: 'Desktop Chrome',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 7'] },
+    },
+  ],
+});
+```
+
+### Manual Testing Checklist for Mobile
+
+- [ ] Test on real iOS device (Safari)
+- [ ] Test on real Android device (Chrome)
+- [ ] Verify public links work without authentication
+- [ ] Check that error pages don't redirect to login
+- [ ] Test in both portrait and landscape orientations
+- [ ] Verify touch interactions work properly
+
 ## Common Testing Patterns
 
 ### Testing Guards
@@ -432,6 +511,69 @@ describe('TransformInterceptor', () => {
       data: { id: 1, name: 'Test' },
       statusCode: 200,
     });
+  });
+});
+```
+
+### Testing Public Endpoints
+
+**Public endpoints must work without authentication.**
+
+```typescript
+describe('Public Endpoints', () => {
+  it('should work without authentication', async () => {
+    // ✅ No auth headers
+    const response = await request(app.getHttpServer())
+      .get('/v1/share/public/token123')
+      .expect(200);
+
+    expect(response.body).toHaveProperty('resume');
+  });
+
+  it('should return 404 for invalid token (not 401)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/share/public/invalid-token')
+      .expect(404);
+
+    // Should return error, not redirect to login or return 401
+    expect(response.body.message).toContain('not found');
+    expect(response.status).not.toBe(401);
+  });
+
+  it('should not require Authorization header', async () => {
+    // Public endpoint should work without auth
+    await request(app.getHttpServer())
+      .get('/v1/share/public/token123')
+      .set('Authorization', '') // Explicitly no auth
+      .expect(200);
+  });
+});
+
+// Frontend: Testing axios interceptor for public endpoints
+describe('API Interceptor - Public Endpoints', () => {
+  it('should skip auth for public endpoints', async () => {
+    const mockConfig = {
+      url: '/v1/share/public/token123',
+      headers: {},
+    };
+
+    const result = await requestInterceptor(mockConfig);
+
+    // Should not have Authorization header
+    expect(result.headers.Authorization).toBeUndefined();
+  });
+
+  it('should not retry 401 for public endpoints', async () => {
+    const mockError = {
+      response: { status: 401 },
+      config: { url: '/v1/share/public/token123' },
+    };
+
+    await expect(responseInterceptor(mockError)).rejects.toThrow();
+
+    // Should not trigger token refresh or login redirect
+    expect(mockAuthService.refreshToken).not.toHaveBeenCalled();
+    expect(mockRouter.navigate).not.toHaveBeenCalledWith('/login');
   });
 });
 ```
