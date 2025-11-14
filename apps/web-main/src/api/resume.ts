@@ -250,22 +250,6 @@ function calculateMonths(startDate: string, endDate?: string): number {
 }
 
 /**
- * Calculate total work experience duration from experiences (deprecated - doesn't handle overlaps)
- * @deprecated Use calculateTotalExperienceWithOverlap instead to properly handle overlapping periods
- */
-export function calculateTotalExperience(experiences: Experience[]): { years: number; months: number } {
-  const totalMonths = experiences.reduce((total, exp) => {
-    const months = calculateMonths(exp.startDate, exp.isCurrentlyWorking ? undefined : exp.endDate);
-    return total + months;
-  }, 0);
-
-  return {
-    years: Math.floor(totalMonths / 12),
-    months: totalMonths % 12,
-  };
-}
-
-/**
  * Calculate total work experience duration with overlap handling
  * Merges overlapping date ranges to avoid double-counting
  *
