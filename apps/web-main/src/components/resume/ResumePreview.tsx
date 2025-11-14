@@ -82,7 +82,14 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         id="resume-content"
         className={viewMode === 'paginated' ? 'resume-page-container' : ''}
       >
-        <div className={viewMode === 'paginated' ? pageClassName : 'max-w-4xl mx-auto bg-gray-50 p-8 shadow-lg'}>
+        <div
+          className={viewMode === 'paginated' ? pageClassName : 'bg-gray-50 p-8 shadow-lg'}
+          style={viewMode === 'continuous' ? {
+            width: paperDimensions.width,
+            minWidth: paperDimensions.width,
+            margin: '0 auto'
+          } : undefined}
+        >
         {/* Header - Grayscale design for print compatibility */}
         <div className="border-b-2 border-gray-800 pb-6 mb-6">
           <div className="flex items-start gap-6">
