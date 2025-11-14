@@ -12,6 +12,7 @@ export default function ResumeEditPage() {
   const [error, setError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<Resume | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [navigateToPreview, setNavigateToPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (resumeId) {
@@ -21,6 +22,14 @@ export default function ResumeEditPage() {
       setLoading(false);
     }
   }, [resumeId]);
+
+  // Handle navigation in useEffect for React 19 compatibility
+  useEffect(() => {
+    if (navigateToPreview) {
+      navigate(navigateToPreview);
+      setNavigateToPreview(null);
+    }
+  }, [navigateToPreview, navigate]);
 
   const loadResume = async () => {
     if (!resumeId) return;
@@ -93,13 +102,15 @@ export default function ResumeEditPage() {
         const updated = await updateResume(resumeId, data);
         setResume(updated);
         setPreviewData(updated);
-        navigate(`/resume/preview/${updated.id}`);
+        // Trigger navigation via state for React 19 compatibility
+        setNavigateToPreview(`/resume/preview/${updated.id}`);
       } else {
         // Create new resume
         const created = await createResume(data);
         setResume(created);
         setPreviewData(created);
-        navigate(`/resume/preview/${created.id}`);
+        // Trigger navigation via state for React 19 compatibility
+        setNavigateToPreview(`/resume/preview/${created.id}`);
       }
     } catch (err) {
       setError('Failed to save resume');
