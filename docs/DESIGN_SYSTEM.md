@@ -833,6 +833,398 @@ The resume editing UI follows dark mode theme, but the preview component itself 
 - Keep microcopy concise and helpful
 - Example: "나만의 기록장을 만드세요" instead of "Register"
 
+## Characters & Mascots
+
+### Brand Characters
+
+My-Girok features **theme-aware animated characters** that enhance user experience and reinforce the library/study room concept. Characters automatically switch based on the current theme.
+
+#### 🐿️ Squirrel (Light Mode)
+
+**Character Concept**: "Busy record collector during the day"
+
+**Personality**:
+- Energetic and enthusiastic
+- Diligent and hard-working
+- Cheerful and optimistic
+- Always collecting and organizing (like gathering acorns)
+
+**Visual Design**:
+```css
+/* Primary color - warm brown */
+--squirrel-body: #D97706;      /* amber-600 */
+--squirrel-belly: #FEF3C7;     /* amber-50 */
+--squirrel-accent: #B45309;    /* amber-700 */
+--squirrel-dark: #92400E;      /* amber-800 */
+```
+
+**Key Features**:
+- Large fluffy tail
+- Round body with lighter belly
+- Pointed ears with inner detail
+- Holding an acorn (when idle/loading)
+- Whiskers for expressiveness
+
+**Animations**:
+- **Idle**: Subtle breathing, slight tail movement
+- **Loading**: Vigorous tail wagging, acorn bouncing
+- **Sad**: Droopy ears, downward mouth
+- **Confused**: Tilted head, question mark floating
+- **Sleeping**: Closed eyes, floating Z's
+
+#### 🦉 Owl (Dark Mode)
+
+**Character Concept**: "Silent library guardian at night"
+
+**Personality**:
+- Wise and knowledgeable
+- Calm and mysterious
+- Patient and observant
+- Reading books under moonlight
+
+**Visual Design**:
+```css
+/* Primary colors - cool gray tones */
+--owl-body: #52575F;           /* dark-border-default */
+--owl-belly: #6B7078;          /* dark-border-strong */
+--owl-dark: #3A3D45;           /* dark-border-subtle */
+--owl-eyes: #FBBF24;           /* amber-400 - glowing */
+--owl-beak: #FCD34D;           /* amber-300 */
+```
+
+**Key Features**:
+- Large round head with facial discs
+- Prominent ear tufts
+- Glowing amber eyes (signature feature)
+- Holding/reading a book
+- Crescent moon in background (idle state)
+
+**Animations**:
+- **Idle**: Slow blinking, subtle eye glow, moon pulsing
+- **Loading**: Wing flapping, eyes glowing brighter, pulsing aura
+- **Sad**: Sad eyebrows, dimmed eyes
+- **Confused**: One eyebrow raised, tilted head
+- **Sleeping**: Closed eyes, floating Z's
+
+### Character States
+
+All characters support **5 emotional states** to cover different UI scenarios:
+
+| State | Use Case | Visual Indicators |
+|-------|----------|-------------------|
+| `idle` | Default, calm | Subtle animations, relaxed pose |
+| `loading` | Data fetching, processing | Active movement (tail wag/wing flap) |
+| `sad` | Errors, deleted content | Droopy features, sad mouth |
+| `confused` | 404, not found, unclear | Tilted head, question mark |
+| `sleeping` | Expired, maintenance, inactive | Closed eyes, Z's floating up |
+
+### Usage Guidelines
+
+#### When to Use Characters
+
+**Do use characters for:**
+- ✅ Loading states (data fetching)
+- ✅ Empty states (no content)
+- ✅ Error messages (system errors)
+- ✅ 404 pages (not found)
+- ✅ Expired/deleted content messages
+- ✅ Permission denied messages
+- ✅ Maintenance mode
+- ✅ Success confirmations (celebratory)
+
+**Don't use characters for:**
+- ❌ Navigation elements
+- ❌ Form labels
+- ❌ Inline validation messages
+- ❌ Tooltips
+- ❌ Small UI components
+- ❌ Every single page (overuse reduces impact)
+
+#### Character Size Guidelines
+
+```jsx
+/* Small - Inline messages */
+<CharacterLoader size={80} />
+
+/* Medium - Default size */
+<CharacterLoader size={120} />
+
+/* Large - Full page states */
+<CharacterLoader size={150} />
+
+/* Extra Large - Hero sections */
+<CharacterLoader size={200} />
+```
+
+**Minimum Size**: 60px (below this, details become unclear)
+**Maximum Size**: 240px (above this, animation performance may degrade)
+
+#### Message Pairing
+
+Each character state should be paired with contextual messages:
+
+**Light Mode (Squirrel) - Energetic Tone**:
+```jsx
+loading: "기록을 부지런히 찾고 있어요!"
+not-found: "기록을 찾을 수 없어요"
+error: "앗, 문제가 생겼어요"
+expired: "공유 기간이 만료되었어요"
+```
+
+**Dark Mode (Owl) - Calm Tone**:
+```jsx
+loading: "고요한 밤에 기록을 찾는 중이에요..."
+not-found: "이 기록은 밤의 도서관에 없어요"
+error: "달빛이 흐려졌어요"
+expired: "밤이 깊어 잠들었어요"
+```
+
+### Character Components
+
+#### CharacterLoader
+
+Theme-aware character that automatically switches between Squirrel and Owl.
+
+```jsx
+import { CharacterLoader } from './components/characters';
+
+// Basic usage
+<CharacterLoader state="loading" />
+
+// Custom size
+<CharacterLoader state="idle" size={150} />
+
+// With all states
+<CharacterLoader state="idle" />
+<CharacterLoader state="loading" />
+<CharacterLoader state="sad" />
+<CharacterLoader state="confused" />
+<CharacterLoader state="sleeping" />
+```
+
+#### CharacterMessage
+
+Complete message component with character, title, message, and action button.
+
+```jsx
+import { CharacterMessage } from './components/characters';
+
+// Predefined message types
+<CharacterMessage type="loading" />
+<CharacterMessage type="not-found" />
+<CharacterMessage type="error" />
+<CharacterMessage type="expired" />
+<CharacterMessage type="deleted" />
+<CharacterMessage type="no-permission" />
+<CharacterMessage type="maintenance" />
+
+// With custom action
+<CharacterMessage
+  type="not-found"
+  action={
+    <Link to="/">
+      <Button>홈으로 돌아가기</Button>
+    </Link>
+  }
+/>
+
+// Override default messages
+<CharacterMessage
+  type="error"
+  title="커스텀 제목"
+  message="커스텀 메시지"
+/>
+```
+
+#### LoadingSpinner
+
+Reusable loading component with theme-aware character.
+
+```jsx
+import LoadingSpinner from './components/LoadingSpinner';
+
+// Inline loading
+<LoadingSpinner />
+
+// Full screen overlay
+<LoadingSpinner fullScreen />
+
+// Custom message
+<LoadingSpinner message="이력서를 불러오는 중..." />
+```
+
+### Message Type Reference
+
+| Type | State | Squirrel Message | Owl Message |
+|------|-------|------------------|-------------|
+| `loading` | loading | "기록을 부지런히 찾고 있어요!" | "고요한 밤에 기록을 찾는 중이에요..." |
+| `not-found` | confused | "기록을 찾을 수 없어요" | "이 기록은 밤의 도서관에 없어요" |
+| `error` | sad | "앗, 문제가 생겼어요" | "달빛이 흐려졌어요" |
+| `expired` | sleeping | "공유 기간이 만료되었어요" | "밤이 깊어 잠들었어요" |
+| `deleted` | sad | "삭제된 기록이에요" | "어둠 속으로 사라진 기록이에요" |
+| `no-permission` | confused | "접근 권한이 없어요" | "이 서재는 잠겨있어요" |
+| `maintenance` | sleeping | "잠시 휴식 중이에요" | "도서관이 밤의 정비 중이에요" |
+
+### Animation Performance
+
+All character animations are optimized for performance:
+
+**CSS Animations** (preferred):
+```css
+/* Smooth, GPU-accelerated */
+animation: tail-wag 1s ease-in-out infinite;
+transform-origin: 30px 40px;
+```
+
+**Animation Timing**:
+- Idle animations: 2-4 seconds per cycle
+- Loading animations: 0.5-2 seconds per cycle
+- Blinking: 3-4 seconds interval
+- Floating elements: 2-3 seconds
+
+**Performance Guidelines**:
+- Use `transform` over `left/top` for movement
+- Limit simultaneous animations to 3-4 elements
+- Use `will-change` sparingly for critical animations
+- Pause animations when component is off-screen
+
+### Accessibility
+
+**Screen Reader Support**:
+```jsx
+<div role="status" aria-live="polite">
+  <CharacterLoader state="loading" />
+  <p>기록을 찾고 있어요...</p>
+</div>
+```
+
+**Reduced Motion**:
+```css
+@media (prefers-reduced-motion: reduce) {
+  .character-animation {
+    animation: none;
+  }
+}
+```
+
+**Focus Management**:
+- Character itself is decorative (aria-hidden="true")
+- Ensure accompanying text is screen-reader accessible
+- Action buttons must be keyboard accessible
+
+### Character File Locations
+
+```
+apps/web-main/src/
+├── components/
+│   ├── characters/
+│   │   ├── Squirrel.tsx          # Light mode character
+│   │   ├── Owl.tsx                # Dark mode character
+│   │   ├── CharacterLoader.tsx   # Theme-aware switcher
+│   │   ├── CharacterMessage.tsx  # Complete message UI
+│   │   ├── index.ts               # Exports
+│   │   └── README.md              # Full documentation
+│   ├── LoadingSpinner.tsx         # Loading component
+│   └── ErrorBoundary.tsx          # Error boundary
+└── pages/
+    └── NotFoundPage.tsx            # 404 page
+```
+
+### Implementation Examples
+
+#### Example 1: Shared Resume Link States
+
+```jsx
+export default function SharedResumePage() {
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [errorType, setErrorType] = useState<string | null>(null);
+
+  if (status === 'loading') {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  if (status === 'error') {
+    // Map backend errors to character message types
+    const messageType = {
+      'EXPIRED': 'expired',
+      'DELETED': 'deleted',
+      'NO_PERMISSION': 'no-permission',
+      'NOT_FOUND': 'not-found',
+    }[errorType] || 'error';
+
+    return (
+      <CharacterMessage
+        type={messageType}
+        action={
+          <Link to="/">
+            <Button>홈으로 돌아가기</Button>
+          </Link>
+        }
+      />
+    );
+  }
+
+  return <div>{/* Resume content */}</div>;
+}
+```
+
+#### Example 2: 404 Page
+
+```jsx
+export default function NotFoundPage() {
+  return (
+    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+      <CharacterMessage
+        type="not-found"
+        size={150}
+        action={
+          <Link to="/">
+            <Button>홈으로 돌아가기</Button>
+          </Link>
+        }
+      />
+    </div>
+  );
+}
+```
+
+#### Example 3: Loading with Custom Message
+
+```jsx
+export default function ResumeEditPage() {
+  const [loading, setLoading] = useState(true);
+
+  if (loading) {
+    return (
+      <LoadingSpinner
+        message="이력서를 불러오는 중입니다..."
+        size={140}
+      />
+    );
+  }
+
+  return <div>{/* Resume editor */}</div>;
+}
+```
+
+### Character Design Principles
+
+1. **Consistency**: Always use theme-appropriate character
+2. **Meaningful**: Match character state to UI context
+3. **Delightful**: Add personality without overwhelming
+4. **Accessible**: Provide text alternatives
+5. **Performant**: Optimize animations for all devices
+
+### Future Character Extensions
+
+Potential future additions to the character system:
+
+- **Seasonal variations** (Spring flowers, Winter snow)
+- **Achievement celebrations** (Party hat, confetti)
+- **Micro-interactions** (React to user actions)
+- **Additional emotions** (Happy, surprised, thinking)
+- **Multiple poses** (Sitting, standing, flying)
+
 ## Implementation Guidelines
 
 ### Do's ✅
