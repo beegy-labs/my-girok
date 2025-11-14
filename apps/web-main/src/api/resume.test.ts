@@ -10,7 +10,8 @@ describe('Resume Utility Functions', () => {
   describe('calculateExperienceDuration', () => {
     it('should calculate duration for completed experience', () => {
       const result = calculateExperienceDuration('2020-01', '2022-06');
-      expect(result).toEqual({ years: 2, months: 5 });
+      // 2020-01 to 2022-06 inclusive = 30 months = 2 years 6 months
+      expect(result).toEqual({ years: 2, months: 6 });
     });
 
     it('should calculate duration for currently working experience', () => {
@@ -22,12 +23,14 @@ describe('Resume Utility Functions', () => {
 
     it('should handle same start and end month', () => {
       const result = calculateExperienceDuration('2020-01', '2020-01');
-      expect(result).toEqual({ years: 0, months: 0 });
+      // Same month = 1 month of work
+      expect(result).toEqual({ years: 0, months: 1 });
     });
 
     it('should handle experience spanning exactly one year', () => {
       const result = calculateExperienceDuration('2020-01', '2021-01');
-      expect(result).toEqual({ years: 1, months: 0 });
+      // 2020-01 to 2021-01 inclusive = 13 months = 1 year 1 month
+      expect(result).toEqual({ years: 1, months: 1 });
     });
   });
 
@@ -57,8 +60,8 @@ describe('Resume Utility Functions', () => {
       ];
 
       const result = calculateTotalExperience(experiences);
-      // Company A: 2y 5m, Company B: 1y 9m = 4y 2m (without overlap handling)
-      expect(result).toEqual({ years: 4, months: 2 });
+      // Company A: 2y 6m, Company B: 1y 10m = 4y 4m (without overlap handling)
+      expect(result).toEqual({ years: 4, months: 4 });
     });
 
     it('should handle empty experiences', () => {
@@ -93,8 +96,8 @@ describe('Resume Utility Functions', () => {
       ];
 
       const result = calculateTotalExperienceWithOverlap(experiences);
-      // 2020-01 to 2021-12 (1y 11m) + 2022-01 to 2023-12 (1y 11m) = 3y 10m
-      expect(result).toEqual({ years: 3, months: 10 });
+      // 2020-01 to 2021-12 (2y 0m) + 2022-01 to 2023-12 (2y 0m) = 4y 0m
+      expect(result).toEqual({ years: 4, months: 0 });
     });
 
     it('should merge completely overlapping experiences', () => {
@@ -122,8 +125,8 @@ describe('Resume Utility Functions', () => {
       ];
 
       const result = calculateTotalExperienceWithOverlap(experiences);
-      // Merged: 2020-01 to 2023-12 = 3y 11m
-      expect(result).toEqual({ years: 3, months: 11 });
+      // Merged: 2020-01 to 2023-12 = 4y 0m
+      expect(result).toEqual({ years: 4, months: 0 });
     });
 
     it('should merge partially overlapping experiences', () => {
@@ -152,8 +155,8 @@ describe('Resume Utility Functions', () => {
 
       const result = calculateTotalExperienceWithOverlap(experiences);
       // Overlap: 2022-03 to 2022-06 (4 months)
-      // Merged: 2020-01 to 2023-12 = 3y 11m
-      expect(result).toEqual({ years: 3, months: 11 });
+      // Merged: 2020-01 to 2023-12 = 4y 0m
+      expect(result).toEqual({ years: 4, months: 0 });
     });
 
     it('should handle currently working experiences', () => {
@@ -250,8 +253,8 @@ describe('Resume Utility Functions', () => {
       ];
 
       const result = calculateTotalExperienceWithOverlap(experiences);
-      // Merged: 2020-01 to 2024-12 = 4y 11m
-      expect(result).toEqual({ years: 4, months: 11 });
+      // Merged: 2020-01 to 2024-12 = 5y 0m
+      expect(result).toEqual({ years: 5, months: 0 });
     });
 
     it('should handle experiences in random order', () => {
@@ -290,8 +293,8 @@ describe('Resume Utility Functions', () => {
 
       const result = calculateTotalExperienceWithOverlap(experiences);
       // 2020-01 to 2021-12, 2022-01 to 2022-12, 2023-01 to 2024-12
-      // = 1y 11m + 11m + 1y 11m = 4y 9m
-      expect(result).toEqual({ years: 4, months: 9 });
+      // = 2y 0m + 1y 0m + 2y 0m = 5y 0m
+      expect(result).toEqual({ years: 5, months: 0 });
     });
 
     it('should handle empty experiences', () => {
@@ -314,7 +317,8 @@ describe('Resume Utility Functions', () => {
       ];
 
       const result = calculateTotalExperienceWithOverlap(experiences);
-      expect(result).toEqual({ years: 2, months: 5 });
+      // 2020-01 to 2022-06 inclusive = 30 months = 2y 6m
+      expect(result).toEqual({ years: 2, months: 6 });
     });
   });
 });
