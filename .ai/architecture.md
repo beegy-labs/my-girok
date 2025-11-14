@@ -30,23 +30,30 @@
 ```
 my-girok/
 ├── apps/                   # Clients
-│   ├── web/
-│   │   ├── main/          # Next.js 15
-│   │   └── admin/         # Next.js 15
-│   └── mobile/
-│       ├── ios/           # Swift/SwiftUI
-│       └── android/       # Kotlin
+│   ├── web-main/          # Next.js 15 (Main app)
+│   ├── web-admin/         # Next.js 15 (Admin)
+│   ├── ios/               # Swift/SwiftUI
+│   └── android/           # Kotlin
 ├── services/
 │   ├── gateway/
 │   │   ├── api-gateway/   # Optional shared gateway
 │   │   ├── web-bff/       # REST + GraphQL
 │   │   └── mobile-bff/    # REST + GraphQL
 │   ├── auth-service/      # REST + GraphQL
-│   ├── content-api/       # REST + GraphQL
+│   ├── personal-service/  # REST + GraphQL (Resume, etc.)
 │   └── llm-api/           # REST only (Python)
-└── packages/              # Shared code
+└── packages/              # Shared code (ALWAYS use these!)
     ├── types/             # TypeScript types
-    └── ui/                # React components
+    ├── nest-common/       # ✨ NestJS utilities (NEW)
+    │   ├── decorators/    # @Public, @CurrentUser
+    │   ├── guards/        # JwtAuthGuard
+    │   ├── filters/       # HttpExceptionFilter
+    │   ├── strategies/    # JwtStrategy
+    │   ├── bootstrap/     # configureApp()
+    │   └── database/      # BasePrismaService
+    └── ui-components/     # ✨ React components & hooks (NEW)
+        ├── components/    # TextInput, Button, Alert, SortableList, etc.
+        └── hooks/         # useAsyncOperation, etc.
 ```
 
 ## Layer Responsibilities
@@ -245,6 +252,104 @@ async getUser(id: string) {
 7. Gateway/BFF validates token before routing
 ```
 
+## Shared Packages Usage
+
+### Backend Services (@my-girok/nest-common)
+
+**Before (Every service ~100 lines boilerplate):**
+```typescript
+// main.ts
+const app = await NestFactory.create(AppModule);
+app.setGlobalPrefix('api/v1');
+app.useGlobalPipes(new ValidationPipe());
+app.useGlobalFilters(new HttpExceptionFilter());
+// ... 90+ more lines
+```
+
+**After (~20 lines):**
+```typescript
+// main.ts
+import { configureApp } from '@my-girok/nest-common';
+
+const app = await NestFactory.create(AppModule);
+await configureApp(app, {
+  serviceName: 'Auth Service',
+  description: 'Authentication and authorization service',
+  defaultPort: 3001,
+});
+```
+
+**Controller example:**
+```typescript
+import { Public, CurrentUser } from '@my-girok/nest-common';
+
+@Controller('auth')
+export class AuthController {
+  @Public()  // Skip JWT auth
+  @Post('login')
+  login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
+  }
+
+  @Get('me')  // Requires JWT
+  getProfile(@CurrentUser() user: User) {
+    return this.authService.getProfile(user.id);
+  }
+}
+```
+
+### Frontend Apps (@my-girok/ui-components)
+
+**Before (Every form ~60 lines):**
+```tsx
+const [email, setEmail] = useState('');
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState('');
+
+const handleSubmit = async () => {
+  setLoading(true);
+  setError('');
+  try {
+    await login(email);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+return (
+  <div>
+    <label className="...">Email</label>
+    <input className="..." value={email} onChange={...} />
+    {error && <p className="...">{error}</p>}
+    <button disabled={loading} className="...">
+      {loading ? 'Loading...' : 'Submit'}
+    </button>
+  </div>
+);
+```
+
+**After (~15 lines):**
+```tsx
+import { TextInput, Button, Alert, useAsyncOperation } from '@my-girok/ui-components';
+
+const [email, setEmail] = useState('');
+const { execute, loading, error } = useAsyncOperation({
+  onSuccess: () => navigate('/dashboard'),
+});
+
+return (
+  <div>
+    {error && <Alert variant="error">{error}</Alert>}
+    <TextInput label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+    <Button loading={loading} onClick={() => execute(() => login(email))}>
+      Submit
+    </Button>
+  </div>
+);
+```
+
 ## Service Independence
 
 **Each service:**
@@ -253,6 +358,7 @@ async getUser(id: string) {
 - Can be deployed independently
 - Chooses own protocols (REST/GraphQL)
 - Has own health check endpoint
+- **Uses shared packages** (`@my-girok/nest-common`, `@my-girok/types`)
 
 ## Client Flexibility
 
