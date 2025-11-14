@@ -434,6 +434,14 @@ let isRefreshingPersonal = false;
 // Copy request interceptor from authApi to add JWT token and check for proactive refresh
 personalApi.interceptors.request.use(
   async (config) => {
+    // Skip auth for public endpoints (no authentication required)
+    const isPublicEndpoint = config.url?.includes('/share/public/') ||
+                             config.url?.includes('/resume/public/');
+
+    if (isPublicEndpoint) {
+      return config;
+    }
+
     const { accessToken, needsProactiveRefresh, refreshToken } = useAuthStore.getState();
 
     // Add access token to headers
@@ -473,6 +481,14 @@ personalApi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Skip auth retry for public endpoints
+    const isPublicEndpoint = originalRequest.url?.includes('/share/public/') ||
+                             originalRequest.url?.includes('/resume/public/');
+
+    if (isPublicEndpoint) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
