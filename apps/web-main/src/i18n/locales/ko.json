@@ -102,6 +102,34 @@
       "years": "년",
       "months": "개월",
       "duration": "{{years}}년 {{months}}개월"
+    },
+    "list": {
+      "title": "내 이력서 목록",
+      "createNew": "새 이력서 만들기",
+      "noResumes": "아직 이력서가 없습니다.",
+      "createFirst": "첫 이력서 만들기",
+      "edit": "편집",
+      "preview": "미리보기",
+      "copy": "복사",
+      "setDefault": "기본 설정",
+      "delete": "삭제",
+      "defaultBadge": "기본 이력서",
+      "updatedAt": "수정",
+      "confirmDelete": "이 이력서를 삭제하시겠습니까?",
+      "confirmCopy": "\"{{title}}\" 이력서를 복사하시겠습니까?",
+      "copySuccess": "이력서가 성공적으로 복사되었습니다.",
+      "copyFailed": "이력서 복사에 실패했습니다",
+      "deleteFailed": "이력서 삭제에 실패했습니다",
+      "setDefaultFailed": "기본 이력서 설정에 실패했습니다",
+      "loadFailed": "이력서 로딩에 실패했습니다",
+      "loading": "로딩중...",
+      "stats": {
+        "skills": "기술스택",
+        "experiences": "경력",
+        "projects": "프로젝트",
+        "education": "학력",
+        "certificates": "자격증"
+      }
     }
   }
 }
