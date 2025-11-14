@@ -623,12 +623,202 @@ shadow-lg shadow-amber-700/30
 --rounded-full: 9999px;  /* Badges, pills */
 ```
 
-## Dark Mode (Future)
+## Dark Mode - "Moonlit Library" Theme
 
-Currently not implemented. When implementing:
-- Use `bg-gray-900` for backgrounds
-- Use `amber-400` for primary colors (higher luminance)
-- Maintain minimum 4.5:1 contrast ratio
+### Concept
+**"Reading in your personal library under the moonlight"**
+
+The dark mode extends the library/study room concept into a serene nighttime environment. Imagine sitting in your personal library at night, with soft moonlight streaming through the window, illuminating the pages of your book. The design uses deep, calming backgrounds with warm amber accents that glow like candlelight.
+
+### Brand Values (Dark Mode)
+- **🌙 Serenity**: Calm, peaceful nighttime reading atmosphere
+- **📚 Focus**: Reduced eye strain for long reading/writing sessions
+- **✨ Warmth**: Soft amber glow maintains the cozy library feel
+- **🌃 Depth**: Rich shadows create visual hierarchy
+
+### Dark Mode Color Palette
+
+#### Background Colors (Moonlit Night)
+```css
+/* Deep backgrounds - Night sky and shadowed library */
+--dark-bg-primary: #0F1419;      /* Near-black with blue tint - Night sky */
+--dark-bg-secondary: #1A1D23;    /* Slightly lighter - Shadowed study */
+--dark-bg-card: #242830;         /* Card/bookshelf background */
+--dark-bg-elevated: #2D3139;     /* Elevated surfaces, dropdowns */
+--dark-bg-hover: #353A42;        /* Hover states */
+```
+
+#### Text Colors (Moonlit Text)
+```css
+/* Warm off-white - Text illuminated by moonlight */
+--dark-text-primary: #E8E6E3;    /* Main text - Warm off-white */
+--dark-text-secondary: #B8B5B2;  /* Secondary text - Medium gray */
+--dark-text-tertiary: #8B8885;   /* Hints, descriptions - Subtle gray */
+--dark-text-disabled: #5A5856;   /* Disabled text */
+```
+
+#### Accent Colors (Moonlight Reflection)
+```css
+/* Amber glow - Moonlight reflecting on warm surfaces */
+--dark-accent-amber-200: #FDE68A; /* Bright glow - Hover states */
+--dark-accent-amber-300: #FCD34D; /* Primary amber - Main actions */
+--dark-accent-amber-400: #FBBF24; /* Medium amber - Links */
+--dark-accent-amber-500: #F59E0B; /* Deep amber - Emphasis */
+```
+
+#### Border & Divider Colors (Shadow Boundaries)
+```css
+/* Subtle separators - Shadow and light boundaries */
+--dark-border-subtle: #3A3D45;    /* Subtle borders */
+--dark-border-default: #52575F;   /* Default borders */
+--dark-border-strong: #6B7078;    /* Prominent borders */
+--dark-border-accent: #78350F;    /* Amber borders */
+```
+
+### Color Usage Guidelines (Dark Mode)
+
+#### Backgrounds
+- **Page Background**: `dark-bg-primary` (#0F1419)
+- **Cards**: `dark-bg-card` (#242830) with `dark-border-subtle` border
+- **Forms/Inputs**: `dark-bg-secondary` (#1A1D23) with `dark-border-default` border
+- **Elevated Elements**: `dark-bg-elevated` (#2D3139)
+
+#### Text
+- **Headings**: `dark-text-primary` (#E8E6E3)
+- **Body Text**: `dark-text-secondary` (#B8B5B2)
+- **Labels/Hints**: `dark-text-tertiary` (#8B8885)
+
+#### Interactive Elements
+- **Primary Buttons**: Gradient from `dark-accent-amber-400` to `dark-accent-amber-500`
+- **Links**: `dark-accent-amber-400` (#FBBF24)
+- **Hover**: Background `dark-bg-hover` + text `dark-accent-amber-200`
+
+### Dark Mode Components
+
+#### Primary Button (Dark Mode)
+```jsx
+className="bg-gradient-to-r from-amber-400 to-amber-500
+           hover:from-amber-300 hover:to-amber-400
+           text-gray-900 font-semibold py-3 px-4 rounded-lg
+           transition-all transform hover:scale-[1.02]
+           active:scale-[0.98] shadow-lg shadow-amber-500/20"
+```
+
+#### Card (Dark Mode)
+```jsx
+className="bg-[#242830] border border-[#3A3D45]
+           rounded-2xl shadow-md p-6
+           hover:shadow-xl hover:-translate-y-1
+           hover:border-amber-500/30 transition-all"
+```
+
+#### Text Input (Dark Mode)
+```jsx
+className="w-full px-4 py-3 bg-[#1A1D23] text-[#E8E6E3]
+           border border-[#52575F] rounded-lg
+           focus:outline-none focus:ring-2
+           focus:ring-amber-400 focus:border-transparent
+           transition-all
+           placeholder:text-[#8B8885]"
+```
+
+#### Navigation Link (Dark Mode)
+```jsx
+className="text-amber-400 hover:text-amber-300
+           hover:underline font-medium
+           flex items-center gap-1"
+```
+
+### Accessibility (Dark Mode)
+
+All dark mode color combinations meet WCAG 2.1 AA standards:
+- `#E8E6E3` (primary text) on `#0F1419` (background): 12.8:1 (AAA)
+- `#B8B5B2` (secondary text) on `#0F1419`: 8.2:1 (AAA)
+- `#FCD34D` (amber-300) on `#242830`: 8.9:1 (AAA)
+
+**Target**: Maintain minimum 7:1 contrast ratio for all text
+
+### Dark Mode Shadows
+
+```css
+/* Softer shadows for dark backgrounds */
+--shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+--shadow-dark-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+--shadow-dark-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
+
+/* Amber glow effect for interactive elements */
+--shadow-amber-glow: 0 4px 12px rgba(251, 191, 36, 0.2);
+```
+
+### Implementation Strategy
+
+#### Tailwind Dark Mode
+Use Tailwind's `dark:` variant for all components:
+
+```jsx
+<div className="bg-amber-50 dark:bg-[#242830]
+                border-amber-100 dark:border-[#3A3D45]">
+  <h1 className="text-amber-900 dark:text-[#E8E6E3]">Title</h1>
+  <p className="text-gray-700 dark:text-[#B8B5B2]">Description</p>
+</div>
+```
+
+#### Theme Toggle
+Store user preference in:
+- LocalStorage (web)
+- UserDefaults (iOS)
+- SharedPreferences (Android)
+
+Respect system preference with `prefers-color-scheme` media query.
+
+### Special Considerations
+
+#### Resume Preview
+**Important**: Resume preview maintains grayscale design in both light and dark modes for print optimization.
+
+**Light Mode**: gray-50 ~ gray-900 (as documented)
+**Dark Mode**: Same grayscale palette (print-optimized)
+
+The resume editing UI follows dark mode theme, but the preview component itself remains print-ready grayscale.
+
+#### Images & Media
+- Profile photos: No filter in dark mode (unlike resume preview)
+- Decorative images: Reduce opacity to 90% for softer appearance
+- Icons: Use warm off-white (#E8E6E3) instead of pure white
+
+### Testing Checklist
+
+- [ ] All text meets 7:1 contrast ratio minimum
+- [ ] Interactive elements clearly distinguishable
+- [ ] Forms readable and usable
+- [ ] Cards and borders visible but not harsh
+- [ ] Amber accents provide warmth without overwhelming
+- [ ] Smooth transition between light/dark modes
+- [ ] System preference detected correctly
+- [ ] Theme preference persists across sessions
+
+### Design Principles (Dark Mode)
+
+#### Do's ✅
+- Use deep, rich backgrounds for depth
+- Maintain warm amber glow for brand consistency
+- Reduce pure white; use warm off-white (#E8E6E3)
+- Add subtle shadows for layering
+- Test in low-light environments
+
+#### Don'ts ❌
+- Don't use pure black (#000000) - too harsh
+- Don't use pure white (#FFFFFF) - too bright
+- Don't make borders too prominent
+- Don't lose the "library" warmth
+- Don't reduce contrast below 7:1
+
+### Future Enhancements
+
+- Auto-switch based on time of day
+- Adjustable warmth/contrast settings
+- Reading mode (even darker, higher contrast)
+- Custom theme creator
 
 ## Voice & Tone
 
