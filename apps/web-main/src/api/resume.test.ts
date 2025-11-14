@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   calculateExperienceDuration,
-  calculateTotalExperience,
   calculateTotalExperienceWithOverlap,
   Experience,
 } from './resume';
@@ -31,42 +30,6 @@ describe('Resume Utility Functions', () => {
       const result = calculateExperienceDuration('2020-01', '2021-01');
       // 2020-01 to 2021-01 inclusive = 13 months = 1 year 1 month
       expect(result).toEqual({ years: 1, months: 1 });
-    });
-  });
-
-  describe('calculateTotalExperience (legacy)', () => {
-    it('should sum up all experience durations without overlap handling', () => {
-      const experiences: Experience[] = [
-        {
-          company: 'Company A',
-          startDate: '2020-01',
-          endDate: '2022-06',
-          finalPosition: 'Developer',
-          jobTitle: 'Senior',
-          projects: [],
-          order: 0,
-          visible: true,
-        },
-        {
-          company: 'Company B',
-          startDate: '2022-03',
-          endDate: '2023-12',
-          finalPosition: 'Lead',
-          jobTitle: 'Staff',
-          projects: [],
-          order: 1,
-          visible: true,
-        },
-      ];
-
-      const result = calculateTotalExperience(experiences);
-      // Company A: 2y 6m, Company B: 1y 10m = 4y 4m (without overlap handling)
-      expect(result).toEqual({ years: 4, months: 4 });
-    });
-
-    it('should handle empty experiences', () => {
-      const result = calculateTotalExperience([]);
-      expect(result).toEqual({ years: 0, months: 0 });
     });
   });
 

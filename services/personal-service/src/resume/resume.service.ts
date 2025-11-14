@@ -12,6 +12,52 @@ export class ResumeService {
   private readonly logger = new Logger(ResumeService.name);
   private readonly authServiceUrl: string;
 
+  /**
+   * Shared Prisma include pattern for hierarchical achievements (4 levels deep)
+   * Used across all resume query operations to maintain consistency
+   */
+  private readonly ACHIEVEMENT_INCLUDE = {
+    where: { parentId: null },
+    orderBy: { order: 'asc' as const },
+    include: {
+      children: {
+        orderBy: { order: 'asc' as const },
+        include: {
+          children: {
+            orderBy: { order: 'asc' as const },
+            include: {
+              children: {
+                orderBy: { order: 'asc' as const },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
+  /**
+   * Full resume include pattern with all nested relations
+   * Used for complete resume queries (create, update, findOne, etc.)
+   */
+  private readonly RESUME_FULL_INCLUDE = {
+    sections: { orderBy: { order: 'asc' as const } },
+    skills: { orderBy: { order: 'asc' as const } },
+    experiences: {
+      orderBy: { order: 'asc' as const },
+      include: {
+        projects: {
+          orderBy: { order: 'asc' as const },
+          include: {
+            achievements: this.ACHIEVEMENT_INCLUDE,
+          },
+        },
+      },
+    },
+    educations: { orderBy: { order: 'asc' as const } },
+    certificates: { orderBy: { order: 'asc' as const } },
+  };
+
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
@@ -192,42 +238,7 @@ export class ResumeService {
       // Return with full nested structure including hierarchical achievements
       return await tx.resume.findUnique({
         where: { id: resume.id },
-        include: {
-          sections: { orderBy: { order: 'asc' } },
-          skills: { orderBy: { order: 'asc' } },
-          experiences: {
-            orderBy: { order: 'asc' },
-            include: {
-              projects: {
-                orderBy: { order: 'asc' },
-                include: {
-                  achievements: {
-                    where: { parentId: null },
-                    orderBy: { order: 'asc' },
-                    include: {
-                      children: {
-                        orderBy: { order: 'asc' },
-                        include: {
-                          children: {
-                            orderBy: { order: 'asc' },
-                            include: {
-                              children: {
-                                orderBy: { order: 'asc' },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
-          educations: { orderBy: { order: 'asc' } },
-          certificates: { orderBy: { order: 'asc' } },
-        },
+        include: this.RESUME_FULL_INCLUDE,
       });
     });
   }
@@ -236,42 +247,7 @@ export class ResumeService {
   async findAllByUserId(userId: string) {
     const resumes = await this.prisma.resume.findMany({
       where: { userId: userId },
-      include: {
-        sections: { orderBy: { order: 'asc' } },
-        skills: { orderBy: { order: 'asc' } },
-        experiences: {
-          orderBy: { order: 'asc' },
-          include: {
-            projects: {
-              orderBy: { order: 'asc' },
-              include: {
-                achievements: {
-                  where: { parentId: null },
-                  orderBy: { order: 'asc' },
-                  include: {
-                    children: {
-                      orderBy: { order: 'asc' },
-                      include: {
-                        children: {
-                          orderBy: { order: 'asc' },
-                          include: {
-                            children: {
-                              orderBy: { order: 'asc' },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
-        educations: { orderBy: { order: 'asc' } },
-        certificates: { orderBy: { order: 'asc' } },
-      },
+      include: this.RESUME_FULL_INCLUDE,
       orderBy: [
         { isDefault: 'desc' }, // Default resume first
         { createdAt: 'desc' }, // Then by creation date
@@ -285,42 +261,7 @@ export class ResumeService {
   async getDefaultResume(userId: string) {
     const resume = await this.prisma.resume.findFirst({
       where: { userId: userId },
-      include: {
-        sections: { orderBy: { order: 'asc' } },
-        skills: { orderBy: { order: 'asc' } },
-        experiences: {
-          orderBy: { order: 'asc' },
-          include: {
-            projects: {
-              orderBy: { order: 'asc' },
-              include: {
-                achievements: {
-                  where: { parentId: null },
-                  orderBy: { order: 'asc' },
-                  include: {
-                    children: {
-                      orderBy: { order: 'asc' },
-                      include: {
-                        children: {
-                          orderBy: { order: 'asc' },
-                          include: {
-                            children: {
-                              orderBy: { order: 'asc' },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
-        educations: { orderBy: { order: 'asc' } },
-        certificates: { orderBy: { order: 'asc' } },
-      },
+      include: this.RESUME_FULL_INCLUDE,
       orderBy: [
         { isDefault: 'desc' },
         { createdAt: 'desc' },
@@ -338,42 +279,7 @@ export class ResumeService {
   async findByIdAndUserId(resumeId: string, userId: string) {
     const resume = await this.prisma.resume.findFirst({
       where: { id: resumeId, userId: userId },
-      include: {
-        sections: { orderBy: { order: 'asc' } },
-        skills: { orderBy: { order: 'asc' } },
-        experiences: {
-          orderBy: { order: 'asc' },
-          include: {
-            projects: {
-              orderBy: { order: 'asc' },
-              include: {
-                achievements: {
-                  where: { parentId: null },
-                  orderBy: { order: 'asc' },
-                  include: {
-                    children: {
-                      orderBy: { order: 'asc' },
-                      include: {
-                        children: {
-                          orderBy: { order: 'asc' },
-                          include: {
-                            children: {
-                              orderBy: { order: 'asc' },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
-        educations: { orderBy: { order: 'asc' } },
-        certificates: { orderBy: { order: 'asc' } },
-      },
+      include: this.RESUME_FULL_INCLUDE,
     });
 
     if (!resume) {
@@ -546,42 +452,7 @@ export class ResumeService {
       // Return updated resume with hierarchical achievements
       return await tx.resume.findUnique({
         where: { id: resume.id },
-        include: {
-          sections: { orderBy: { order: 'asc' } },
-          skills: { orderBy: { order: 'asc' } },
-          experiences: {
-            orderBy: { order: 'asc' },
-            include: {
-              projects: {
-                orderBy: { order: 'asc' },
-                include: {
-                  achievements: {
-                    where: { parentId: null },
-                    orderBy: { order: 'asc' },
-                    include: {
-                      children: {
-                        orderBy: { order: 'asc' },
-                        include: {
-                          children: {
-                            orderBy: { order: 'asc' },
-                            include: {
-                              children: {
-                                orderBy: { order: 'asc' },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
-          educations: { orderBy: { order: 'asc' } },
-          certificates: { orderBy: { order: 'asc' } },
-        },
+        include: this.RESUME_FULL_INCLUDE,
       });
     });
     } catch (error) {
@@ -837,42 +708,7 @@ export class ResumeService {
       // Return the copied resume with all relations
       return await tx.resume.findUnique({
         where: { id: copy.id },
-        include: {
-          sections: { orderBy: { order: 'asc' } },
-          skills: { orderBy: { order: 'asc' } },
-          experiences: {
-            orderBy: { order: 'asc' },
-            include: {
-              projects: {
-                orderBy: { order: 'asc' },
-                include: {
-                  achievements: {
-                    where: { parentId: null },
-                    orderBy: { order: 'asc' },
-                    include: {
-                      children: {
-                        orderBy: { order: 'asc' },
-                        include: {
-                          children: {
-                            orderBy: { order: 'asc' },
-                            include: {
-                              children: {
-                                orderBy: { order: 'asc' },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
-          educations: { orderBy: { order: 'asc' } },
-          certificates: { orderBy: { order: 'asc' } },
-        },
+        include: this.RESUME_FULL_INCLUDE,
       });
     });
   }
