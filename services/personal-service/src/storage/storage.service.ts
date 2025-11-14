@@ -168,6 +168,43 @@ export class StorageService {
   }
 
   /**
+   * Copy file within MinIO bucket
+   * Used for duplicating resume attachments
+   * @param sourceKey - Source file key
+   * @param userId - User ID for organizing files
+   * @param resumeId - Resume ID for organizing files
+   * @returns Object containing new fileKey and fileUrl
+   */
+  async copyFile(
+    sourceKey: string,
+    userId: string,
+    resumeId: string,
+  ): Promise<{ fileKey: string; fileUrl: string }> {
+    try {
+      // Extract file extension from source key
+      const fileExtension = this.getFileExtension(sourceKey);
+      const newFileKey = `resumes/${userId}/${resumeId}/${uuid()}${fileExtension}`;
+
+      // Copy object using MinIO copyObject method
+      const conds = new Minio.CopyConditions();
+      await this.minioClient.copyObject(
+        this.bucketName,
+        newFileKey,
+        `/${this.bucketName}/${sourceKey}`,
+        conds,
+      );
+
+      const fileUrl = `${this.publicUrl}/${this.bucketName}/${newFileKey}`;
+
+      this.logger.log(`File copied successfully: ${sourceKey} -> ${newFileKey}`);
+      return { fileKey: newFileKey, fileUrl };
+    } catch (error: any) {
+      this.logger.error(`Failed to copy file: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to copy file in storage');
+    }
+  }
+
+  /**
    * Delete file from MinIO
    * @param fileKey - MinIO object key
    */

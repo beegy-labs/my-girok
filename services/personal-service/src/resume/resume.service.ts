@@ -646,6 +646,9 @@ export class ResumeService {
         },
         educations: true,
         certificates: true,
+        attachments: {
+          orderBy: [{ type: 'asc' }, { order: 'asc' }],
+        },
       },
     });
 
@@ -785,6 +788,50 @@ export class ResumeService {
             visible: cert.visible,
           })),
         });
+      }
+
+      // Copy attachments (profile photos, portfolios, certificates, etc.)
+      if (original.attachments && original.attachments.length > 0) {
+        for (const attachment of original.attachments) {
+          try {
+            // Copy file in MinIO storage
+            const { fileKey: newFileKey, fileUrl: newFileUrl } = await this.storageService.copyFile(
+              attachment.fileKey,
+              userId,
+              copy.id,
+            );
+
+            // Copy original file if it exists (for grayscale photos)
+            let newOriginalUrl: string | null = null;
+            if (attachment.originalUrl) {
+              const originalKey = attachment.originalUrl.split('/').slice(-4).join('/');
+              const { fileUrl } = await this.storageService.copyFile(originalKey, userId, copy.id);
+              newOriginalUrl = fileUrl;
+            }
+
+            // Create attachment record for copied resume
+            await tx.resumeAttachment.create({
+              data: {
+                resumeId: copy.id,
+                type: attachment.type,
+                fileName: attachment.fileName,
+                fileKey: newFileKey,
+                fileUrl: newFileUrl,
+                fileSize: attachment.fileSize,
+                mimeType: attachment.mimeType,
+                isProcessed: attachment.isProcessed,
+                originalUrl: newOriginalUrl,
+                title: attachment.title,
+                description: attachment.description,
+                order: attachment.order,
+                visible: attachment.visible,
+              },
+            });
+          } catch (error: any) {
+            this.logger.error(`Failed to copy attachment ${attachment.id}: ${error.message}`);
+            // Continue copying other attachments even if one fails
+          }
+        }
       }
 
       // Return the copied resume with all relations
