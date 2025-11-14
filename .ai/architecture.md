@@ -30,10 +30,9 @@
 ```
 my-girok/
 ├── apps/                   # Clients
-│   ├── web-main/          # Next.js 15 (Main app)
+│   ├── web-main/          # React 19 + Vite (Main app)
 │   ├── web-admin/         # Next.js 15 (Admin)
-│   ├── ios/               # Swift/SwiftUI
-│   └── android/           # Kotlin
+│   └── mobile-flutter/    # Flutter (iOS + Android)
 ├── services/
 │   ├── gateway/
 │   │   ├── api-gateway/   # Optional shared gateway
@@ -366,8 +365,7 @@ return (
 |--------|-----------|----------|---------|
 | Web Main | Yes (Web BFF) | GraphQL + REST | Complex UI needs |
 | Admin | Yes (Web BFF) | GraphQL mostly | Needs all fields |
-| iOS | Yes (Mobile BFF) | REST only | Simpler networking |
-| Android | Yes (Mobile BFF) | REST only | Same as iOS |
+| Mobile (Flutter) | Yes (Mobile BFF) | REST only | Simpler networking, cross-platform |
 | Internal | No | Direct to services | Skip layers |
 
 ## Key Takeaways

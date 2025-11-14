@@ -475,46 +475,117 @@ Monitor and alert on:
 - **Database connection pool exhausted**
 - **Redis connection failures**
 
-## Mobile Performance
+## Mobile Performance (Flutter)
 
-### iOS Optimization
+### Image Optimization
 
-```swift
-// Lazy loading images
-import SDWebImage
+```dart
+// Lazy loading images with caching
+import 'package:cached_network_image/cached_network_image.dart';
 
-imageView.sd_setImage(
-    with: URL(string: post.coverImage),
-    placeholderImage: UIImage(named: "placeholder"),
-    options: [.progressiveLoad, .scaleDownLargeImages]
+CachedNetworkImage(
+  imageUrl: post.coverImage,
+  placeholder: (context, url) => CircularProgressIndicator(),
+  errorWidget: (context, url, error) => Icon(Icons.error),
+  fadeInDuration: Duration(milliseconds: 200),
+  memCacheWidth: 800, // Scale down large images
+  maxHeightDiskCache: 1200,
 )
-
-// Background data sync
-func scheduleBackgroundRefresh() {
-    let request = BGAppRefreshTaskRequest(identifier: "dev.mygirok.refresh")
-    request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 min
-    try? BGTaskScheduler.shared.submit(request)
-}
 ```
 
-### Android Optimization
+### Pagination & List Performance
 
-```kotlin
-// Pagination with Paging 3
-val postsFlow = Pager(
-    config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-    pagingSourceFactory = { PostsPagingSource(apiService) }
-).flow.cachedIn(viewModelScope)
-
-// Image loading with Coil
-AsyncImage(
-    model = ImageRequest.Builder(context)
-        .data(post.coverImage)
-        .crossfade(true)
-        .diskCachePolicy(CachePolicy.ENABLED)
-        .build(),
-    contentDescription = post.title
+```dart
+// Infinite scroll with ListView.builder
+ListView.builder(
+  itemCount: posts.length,
+  itemBuilder: (context, index) {
+    if (index >= posts.length - 5) {
+      // Prefetch next page when near end
+      ref.read(postsProvider.notifier).loadNextPage();
+    }
+    return PostCard(post: posts[index]);
+  },
 )
+
+// Or use flutter_pagination package
+```
+
+### Background Sync
+
+```dart
+// Platform-specific background tasks
+// iOS: Use workmanager package with BGTaskScheduler
+// Android: Use workmanager package with WorkManager
+
+import 'package:workmanager/workmanager.dart';
+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    // Sync data in background
+    await syncUserData();
+    return Future.value(true);
+  });
+}
+
+// Schedule periodic sync
+Workmanager().registerPeriodicTask(
+  "1",
+  "syncUserData",
+  frequency: Duration(hours: 1),
+  constraints: Constraints(
+    networkType: NetworkType.connected,
+  ),
+)
+```
+
+### Build Optimization
+
+```dart
+// Use const widgets where possible
+const Text('Static text'); // const constructor
+
+// Avoid expensive rebuilds
+class MyWidget extends StatelessWidget {
+  final String data;
+
+  const MyWidget({super.key, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(data); // Rebuild only when data changes
+  }
+}
+
+// Use RepaintBoundary for complex widgets
+RepaintBoundary(
+  child: ExpensiveWidget(),
+)
+```
+
+### Platform-Specific Optimizations
+
+```dart
+import 'dart:io' show Platform;
+
+// Conditional code for platform-specific features
+if (Platform.isIOS) {
+  // iOS-specific code (e.g., Haptic feedback)
+  HapticFeedback.mediumImpact();
+} else if (Platform.isAndroid) {
+  // Android-specific code
+}
+
+// Platform channels for native performance
+static const platform = MethodChannel('dev.mygirok/native');
+
+Future<void> callNativeMethod() async {
+  try {
+    await platform.invokeMethod('performHeavyTask');
+  } on PlatformException catch (e) {
+    print("Failed: '${e.message}'.");
+  }
+}
 ```
 
 ## Performance Checklist
