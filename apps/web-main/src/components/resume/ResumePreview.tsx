@@ -44,9 +44,9 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
-                title="연속 보기"
+                title={t('resume.preview.continuousView')}
               >
-                📜 연속 보기
+                📜 {t('resume.preview.continuousView')}
               </button>
               <button
                 onClick={() => setViewMode('paginated')}
@@ -55,9 +55,9 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
-                title="페이지 보기"
+                title={t('resume.preview.paginatedView')}
               >
-                📄 페이지 보기
+                📄 {t('resume.preview.paginatedView')}
               </button>
             </div>
             {/* Grayscale Toggle */}
@@ -68,9 +68,9 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                   ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
               }`}
-              title={isGrayscaleMode ? '컬러 모드로 전환' : '흑백 모드로 전환'}
+              title={isGrayscaleMode ? t('resume.preview.switchToColorMode') : t('resume.preview.switchToGrayscaleMode')}
             >
-              {isGrayscaleMode ? '🖤 흑백 모드' : '🎨 컬러 모드'}
+              {isGrayscaleMode ? `🖤 ${t('resume.preview.grayscaleMode')}` : `🎨 ${t('resume.preview.colorMode')}`}
             </button>
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         {resume.coverLetter && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-              Cover Letter
+              {t('resume.preview.coverLetter')}
             </h2>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.coverLetter}</p>
           </div>
@@ -204,7 +204,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         {resume.applicationReason && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-              Application Reason
+              {t('resume.preview.applicationReason')}
             </h2>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.applicationReason}</p>
           </div>
@@ -231,7 +231,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         {/* Page number (only in paginated mode) */}
         {viewMode === 'paginated' && (
           <div className="resume-page-number">
-            Page 1
+            {t('resume.preview.page')} 1
           </div>
         )}
       </div>
@@ -436,7 +436,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                     <div className="flex justify-between items-start">
                       <h5 className="font-semibold text-gray-900">{project.name}</h5>
                       <span className="text-xs text-gray-600 whitespace-nowrap ml-2">
-                        {project.startDate} - {project.endDate || 'Ongoing'}
+                        {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
                       </span>
                     </div>
                     {project.role && (
@@ -452,7 +452,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                   {/* Tech Stack */}
                   {project.techStack && project.techStack.length > 0 && (
                     <p className="text-xs text-gray-600 mb-2">
-                      <span className="font-semibold">Tech:</span> {project.techStack.join(', ')}
+                      <span className="font-semibold">{t('resume.preview.tech')}:</span> {project.techStack.join(', ')}
                     </p>
                   )}
 
@@ -468,12 +468,12 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                     <div className="text-xs text-gray-900 flex flex-col gap-0.5">
                       {project.url && (
                         <div>
-                          <span className="font-semibold">Demo:</span> {project.url}
+                          <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
                         </div>
                       )}
                       {project.githubUrl && (
                         <div>
-                          <span className="font-semibold">GitHub:</span> {project.githubUrl}
+                          <span className="font-semibold">{t('resume.preview.github')}:</span> {project.githubUrl}
                         </div>
                       )}
                     </div>
@@ -506,7 +506,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
               {project.role && <p className="text-sm text-gray-700">{project.role}</p>}
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
-              {project.startDate} - {project.endDate || 'Ongoing'}
+              {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
             </span>
           </div>
           <p className="text-sm text-gray-700 mb-2">{project.description}</p>
@@ -519,19 +519,19 @@ function ProjectsSection({ projects }: { projects: any[] }) {
           )}
           {project.techStack.length > 0 && (
             <p className="text-sm text-gray-700 mt-2">
-              <span className="font-semibold">Tech:</span> {project.techStack.join(', ')}
+              <span className="font-semibold">{t('resume.preview.tech')}:</span> {project.techStack.join(', ')}
             </p>
           )}
           {(project.url || project.githubUrl) && (
             <div className="flex flex-col gap-1 mt-2 text-sm text-gray-900">
               {project.url && (
                 <div>
-                  <span className="font-semibold">Demo:</span> {project.url}
+                  <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
                 </div>
               )}
               {project.githubUrl && (
                 <div>
-                  <span className="font-semibold">GitHub:</span> {project.githubUrl}
+                  <span className="font-semibold">{t('resume.preview.github')}:</span> {project.githubUrl}
                 </div>
               )}
             </div>
@@ -558,12 +558,12 @@ function EducationSection({ educations }: { educations: any[] }) {
             <div>
               <h3 className="font-semibold text-gray-900">{edu.school}</h3>
               <p className="text-gray-700">
-                {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : 'Degree'} in {edu.major}
+                {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : t('resume.preview.degree')} {t('resume.preview.in')} {edu.major}
               </p>
               {edu.gpa && <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>}
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
-              {edu.startDate} - {edu.endDate || 'Present'}
+              {edu.startDate} - {edu.endDate || t('resume.preview.present')}
             </span>
           </div>
         </div>
@@ -590,7 +590,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
               <p className="text-gray-700">{cert.issuer}</p>
               {cert.credentialUrl && (
                 <div className="mt-1 text-sm text-gray-900">
-                  <span className="font-semibold">Verify:</span> {cert.credentialUrl}
+                  <span className="font-semibold">{t('resume.preview.verify')}:</span> {cert.credentialUrl}
                 </div>
               )}
             </div>

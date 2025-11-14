@@ -130,6 +130,25 @@
         "education": "Education",
         "certificates": "Certificates"
       }
+    },
+    "preview": {
+      "continuousView": "Continuous View",
+      "paginatedView": "Paginated View",
+      "colorMode": "Color Mode",
+      "grayscaleMode": "Grayscale Mode",
+      "switchToColorMode": "Switch to color mode",
+      "switchToGrayscaleMode": "Switch to grayscale mode",
+      "coverLetter": "Cover Letter",
+      "applicationReason": "Application Reason",
+      "page": "Page",
+      "ongoing": "Ongoing",
+      "present": "Present",
+      "tech": "Tech",
+      "demo": "Demo",
+      "github": "GitHub",
+      "verify": "Verify",
+      "degree": "Degree",
+      "in": "in"
     }
   }
 }
