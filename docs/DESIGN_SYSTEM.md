@@ -223,6 +223,61 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
 
 ## Components
 
+### Navigation Bar (Navbar)
+
+#### Structure
+```jsx
+<nav className="bg-white border-b border-amber-100">
+  <div className="container mx-auto px-4 sm:px-6">
+    <div className="flex justify-between items-center h-14 sm:h-16">
+      {/* Logo */}
+      <Link className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+        <span className="text-xl sm:text-2xl">📚</span>
+        <span className="text-lg sm:text-2xl font-bold text-amber-900">
+          My-Girok
+        </span>
+      </Link>
+
+      {/* Right menu items */}
+      <div className="flex items-center space-x-2 sm:space-x-4">
+        {/* User dropdown, language switcher, etc. */}
+      </div>
+    </div>
+  </div>
+</nav>
+```
+
+#### User Dropdown Menu
+```jsx
+<div className="relative">
+  <button className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2
+                     rounded-lg hover:bg-amber-50 transition-colors">
+    <p className="text-xs sm:text-sm font-semibold text-gray-700">
+      {user?.name}
+    </p>
+    {/* Only show role for ADMIN */}
+    {user?.role === 'ADMIN' && (
+      <p className="text-xs text-amber-600 font-medium">ADMIN</p>
+    )}
+  </button>
+
+  {/* Dropdown menu */}
+  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg
+                  shadow-lg border border-amber-100 py-1 z-50">
+    <Link className="block px-4 py-2 text-sm text-gray-700
+                     hover:bg-amber-50 transition-colors">
+      Menu Item
+    </Link>
+  </div>
+</div>
+```
+
+**Mobile Responsiveness**:
+- Use `sm:` breakpoint for desktop sizes
+- Reduce font sizes and spacing for mobile (`text-xs` → `text-sm`, `space-x-1` → `space-x-2`)
+- Reduce navbar height for mobile (`h-14` → `h-16`)
+- Use `flex-shrink-0` on logo to prevent squashing
+
 ### Buttons
 
 #### Primary Button
@@ -262,12 +317,15 @@ className="bg-amber-50/30 border border-amber-100
 
 #### Text Input
 ```jsx
-className="w-full px-4 py-3 bg-white
+className="w-full px-4 py-3 bg-white text-gray-900
            border border-amber-200 rounded-lg
            focus:outline-none focus:ring-2
            focus:ring-amber-400 focus:border-transparent
-           transition-all"
+           transition-all
+           placeholder:text-gray-400"
 ```
+
+**Important**: All input fields MUST include `text-gray-900` for proper text visibility and readability.
 
 #### Label
 ```jsx
@@ -445,9 +503,9 @@ Currently not implemented. When implementing:
     </label>
     <input
       type="email"
-      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg
+      className="w-full px-4 py-3 bg-white text-gray-900 border border-amber-200 rounded-lg
                  focus:outline-none focus:ring-2 focus:ring-amber-400
-                 focus:border-transparent transition-all"
+                 focus:border-transparent transition-all placeholder:text-gray-400"
       placeholder="your@email.com"
     />
   </div>

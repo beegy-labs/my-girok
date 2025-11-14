@@ -2,7 +2,8 @@
   "nav": {
     "login": "Login",
     "register": "Register",
-    "logout": "Logout"
+    "logout": "Logout",
+    "changePassword": "Change Password"
   },
   "home": {
     "title": "Welcome to My-Girok",
