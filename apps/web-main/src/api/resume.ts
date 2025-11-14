@@ -232,7 +232,11 @@ export interface CreateResumeDto {
 // ========== Utility Functions ==========
 
 /**
- * Calculate duration between two dates in months
+ * Calculate duration between two dates in months (inclusive of both start and end months)
+ *
+ * Example: 2021-10 ~ 2022-05
+ * - Includes: Oct, Nov, Dec (2021) + Jan, Feb, Mar, Apr, May (2022) = 8 months
+ * - Not 7 months (which would exclude the end month)
  */
 function calculateMonths(startDate: string, endDate?: string): number {
   const start = new Date(startDate + '-01');
@@ -241,7 +245,8 @@ function calculateMonths(startDate: string, endDate?: string): number {
   const years = end.getFullYear() - start.getFullYear();
   const months = end.getMonth() - start.getMonth();
 
-  return years * 12 + months;
+  // Add 1 to include the end month in the calculation
+  return years * 12 + months + 1;
 }
 
 /**
@@ -316,11 +321,12 @@ export function calculateTotalExperienceWithOverlap(experiences: Experience[]): 
   // Don't forget the last interval
   merged.push(current);
 
-  // Calculate total months from merged intervals
+  // Calculate total months from merged intervals (inclusive of both start and end months)
   const totalMonths = merged.reduce((total, interval) => {
     const years = interval.end.getFullYear() - interval.start.getFullYear();
     const months = interval.end.getMonth() - interval.start.getMonth();
-    return total + (years * 12 + months);
+    // Add 1 to include the end month in the calculation
+    return total + (years * 12 + months + 1);
   }, 0);
 
   return {

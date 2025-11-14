@@ -289,6 +289,14 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
+**2025-11-14 (Part 2)**: Fix experience duration calculation to include end month
+- Fixed `calculateMonths()` to include both start and end months in duration calculation
+- Example: 2021-10 ~ 2022-05 now correctly calculates as 8 months (not 7)
+  - Includes: Oct, Nov, Dec (2021) + Jan, Feb, Mar, Apr, May (2022) = 8 months
+- Also fixed `calculateTotalExperienceWithOverlap()` merged interval calculation
+- Updated all test expectations to match the corrected calculation
+- All 15 tests passing
+
 **2025-11-14**: Resume list UI improvements with i18n and amber theme
 - Added resume copy button to ResumeList component
 - Refactored ResumeList.tsx to use i18n for all user-facing text (policy compliance)
