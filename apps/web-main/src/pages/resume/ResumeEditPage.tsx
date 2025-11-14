@@ -108,35 +108,35 @@ export default function ResumeEditPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">Loading resume...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 dark:border-amber-400 mx-auto"></div>
+          <p className="mt-4 text-gray-700 dark:text-dark-text-secondary font-medium">Loading resume...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary py-4 sm:py-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 mb-4 sm:mb-6 transition-colors duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3">
               <span className="text-2xl sm:text-3xl">✍️</span>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">
                   {resumeId ? 'Edit Resume' : 'Create New Resume'}
                 </h1>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-700">
+                <p className="text-xs sm:text-sm lg:text-base text-gray-700 dark:text-dark-text-secondary">
                   {resumeId ? 'Update your resume information' : 'Fill in your information to create a new resume'}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className="lg:hidden px-4 py-2 bg-amber-700 text-white text-sm font-semibold rounded-lg hover:bg-amber-800 transition-all whitespace-nowrap"
+              className="lg:hidden px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-sm font-semibold rounded-lg transition-all shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 whitespace-nowrap"
             >
               {showPreview ? 'Show Form' : 'Show Preview'}
             </button>
@@ -144,7 +144,7 @@ export default function ResumeEditPage() {
         </div>
 
         {error && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm sm:text-base">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm sm:text-base">
             <strong>Error:</strong> {error}
           </div>
         )}
@@ -163,23 +163,23 @@ export default function ResumeEditPage() {
           {/* Live Preview Section */}
           <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-4 sm:top-8">
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-4 sm:p-6 mb-3 sm:mb-4">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 mb-3 sm:mb-4 transition-colors duration-200">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-2 flex items-center gap-2">
                   <span>👁️</span>
                   Live Preview
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary">
                   This is how your resume will look. Changes appear instantly.
                 </p>
               </div>
 
-              <div className="max-h-[calc(100vh-200px)] overflow-y-auto border border-gray-200 rounded-lg shadow-inner">
+              <div className="max-h-[calc(100vh-200px)] overflow-y-auto border-2 border-gray-300 dark:border-dark-border-default rounded-lg shadow-inner dark:shadow-dark-inner bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 transition-colors duration-200">
                 {previewData ? (
-                  <div className="transform scale-75 origin-top-left" style={{ width: '133.33%' }}>
+                  <div className="transform scale-75 origin-top-left bg-white rounded shadow-lg" style={{ width: '133.33%' }}>
                     <ResumePreview resume={previewData} paperSize={previewData.paperSize} />
                   </div>
                 ) : (
-                  <div className="p-6 sm:p-8 text-center text-gray-500 text-sm sm:text-base">
+                  <div className="p-6 sm:p-8 text-center text-gray-500 dark:text-dark-text-tertiary text-sm sm:text-base">
                     <p>Start filling the form to see your resume preview</p>
                   </div>
                 )}
