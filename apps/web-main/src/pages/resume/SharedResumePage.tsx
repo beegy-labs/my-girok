@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getPublicResume, Resume } from '../../api/resume';
 import ResumePreview from '../../components/resume/ResumePreview';
 
 export default function SharedResumePage() {
   const { token } = useParams<{ token: string }>();
+  const { t } = useTranslation();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,13 +23,13 @@ export default function SharedResumePage() {
       setResume(data);
     } catch (err: any) {
       if (err.response?.status === 404) {
-        setError('Share link not found');
+        setError(t('resume.shared.notFound'));
       } else if (err.response?.status === 410) {
-        setError('This share link has expired');
+        setError(t('resume.shared.expired'));
       } else if (err.response?.status === 403) {
-        setError('This share link is no longer active');
+        setError(t('resume.shared.inactive'));
       } else {
-        setError('Failed to load resume');
+        setError(t('resume.shared.failed'));
       }
     } finally {
       setLoading(false);
@@ -43,28 +45,34 @@ export default function SharedResumePage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">Loading resume...</p>
+          <p className="mt-4 text-gray-700 font-medium">{t('resume.shared.loading')}</p>
         </div>
       </div>
     );
   }
 
   if (error) {
+    const isExpired = error === t('resume.shared.expired');
+    const isInactive = error === t('resume.shared.inactive');
+    const titleKey = isExpired
+      ? 'resume.shared.linkExpired'
+      : isInactive
+      ? 'resume.shared.linkInactive'
+      : 'resume.shared.notFoundTitle';
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-lg p-8 text-center max-w-md">
           <div className="text-6xl mb-4">🔗</div>
           <h1 className="text-2xl font-bold text-amber-900 mb-2">
-            {error === 'This share link has expired' ? 'Link Expired' :
-             error === 'This share link is no longer active' ? 'Link Inactive' :
-             'Not Found'}
+            {t(titleKey)}
           </h1>
           <p className="text-gray-700 mb-4">{error}</p>
-          {error.includes('expired') || error.includes('inactive') ? (
+          {(isExpired || isInactive) && (
             <p className="text-sm text-gray-600">
-              Please contact the resume owner for a new link.
+              {t('resume.shared.contactOwner')}
             </p>
-          ) : null}
+          )}
         </div>
       </div>
     );
@@ -82,11 +90,11 @@ export default function SharedResumePage() {
           <div className="flex justify-between items-start mb-3">
             <div>
               <h1 className="text-2xl font-bold text-amber-900">
-                📄 {resume.name}'s Resume
+                📄 {t('resume.shared.resumeTitle', { name: resume.name })}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
-                  🔗 Shared Link
+                  🔗 {t('resume.shared.badge')}
                 </span>
               </div>
             </div>
@@ -94,7 +102,7 @@ export default function SharedResumePage() {
               onClick={handlePrint}
               className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
             >
-              🖨️ Print
+              🖨️ {t('resume.shared.print')}
             </button>
           </div>
         </div>

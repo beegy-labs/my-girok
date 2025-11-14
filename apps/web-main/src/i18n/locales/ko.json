@@ -150,6 +150,20 @@
       "verify": "인증",
       "degree": "학위",
       "in": "전공"
+    },
+    "shared": {
+      "loading": "이력서 로딩 중...",
+      "notFound": "공유 링크를 찾을 수 없습니다",
+      "expired": "이 공유 링크가 만료되었습니다",
+      "inactive": "이 공유 링크가 비활성화되었습니다",
+      "failed": "이력서 로딩에 실패했습니다",
+      "linkExpired": "링크 만료",
+      "linkInactive": "링크 비활성",
+      "notFoundTitle": "찾을 수 없음",
+      "contactOwner": "이력서 소유자에게 새 링크를 요청하세요.",
+      "badge": "공유 링크",
+      "print": "인쇄",
+      "resumeTitle": "{{name}}님의 이력서"
     }
   }
 }

@@ -138,6 +138,20 @@
       "verify": "認証",
       "degree": "学位",
       "in": "専攻"
+    },
+    "shared": {
+      "loading": "履歴書を読み込み中...",
+      "notFound": "共有リンクが見つかりません",
+      "expired": "この共有リンクは期限切れです",
+      "inactive": "この共有リンクは無効になっています",
+      "failed": "履歴書の読み込みに失敗しました",
+      "linkExpired": "リンク期限切れ",
+      "linkInactive": "リンク無効",
+      "notFoundTitle": "見つかりません",
+      "contactOwner": "履歴書の所有者に新しいリンクをリクエストしてください。",
+      "badge": "共有リンク",
+      "print": "印刷",
+      "resumeTitle": "{{name}}さんの履歴書"
     }
   }
 }

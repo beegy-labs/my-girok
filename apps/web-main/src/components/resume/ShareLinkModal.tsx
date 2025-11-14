@@ -122,7 +122,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                   <select
                     value={duration}
                     onChange={(e) => setDuration(e.target.value as ShareDuration)}
-                    className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-white text-gray-900 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
                   >
                     <option value={ShareDuration.ONE_WEEK}>⏱️ 1 Week</option>
                     <option value={ShareDuration.ONE_MONTH}>📅 1 Month</option>
@@ -141,7 +141,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                       value={customDate}
                       onChange={(e) => setCustomDate(e.target.value)}
                       min={new Date().toISOString().slice(0, 16)}
-                      className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 bg-white text-gray-900 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
                     />
                   </div>
                 )}
