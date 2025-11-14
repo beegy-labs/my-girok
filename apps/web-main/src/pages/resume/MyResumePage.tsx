@@ -21,6 +21,8 @@ export default function MyResumePage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [shareDuration, setShareDuration] = useState<ShareDuration>(ShareDuration.ONE_MONTH);
+  const [expandedResumeId, setExpandedResumeId] = useState<string | null>(null);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -90,6 +92,12 @@ export default function MyResumePage() {
   };
 
   const openShareModal = (resumeId: string) => {
+    const activeLinks = getResumeShareStatus(resumeId);
+    if (activeLinks.length >= 3) {
+      setError('이력서당 최대 3개의 활성 공유 링크만 생성할 수 있습니다.');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
     setSelectedResumeId(resumeId);
     setShowShareModal(true);
   };
@@ -99,6 +107,21 @@ export default function MyResumePage() {
       (link) => link.resourceId === resumeId && link.isActive
     );
     return activeLinks;
+  };
+
+  const copyToClipboard = async (text: string, linkId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedLinkId(linkId);
+      setTimeout(() => setCopiedLinkId(null), 2000);
+    } catch (err) {
+      setError('링크 복사에 실패했습니다');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  const toggleShareLinks = (resumeId: string) => {
+    setExpandedResumeId(expandedResumeId === resumeId ? null : resumeId);
   };
 
   if (loading) {
@@ -164,85 +187,152 @@ export default function MyResumePage() {
               {resumes.map((resume) => {
                 const activeShares = getResumeShareStatus(resume.id);
                 const hasActiveShare = activeShares.length > 0;
-                const nearestExpiry = activeShares.reduce((nearest, link) => {
-                  if (!link.expiresAt) return nearest;
-                  if (!nearest || new Date(link.expiresAt) < new Date(nearest)) {
-                    return link.expiresAt;
-                  }
-                  return nearest;
-                }, null as string | null);
 
                 return (
                   <div
                     key={resume.id}
-                    className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-4 sm:p-6 hover:shadow-xl hover:border-amber-300 transition-all"
+                    className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md hover:shadow-xl hover:border-amber-300 transition-all overflow-hidden"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <h3 className="text-lg sm:text-xl font-bold text-amber-900">{resume.title}</h3>
-                          {resume.isDefault && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
-                              기본
-                            </span>
+                    <div className="p-4 sm:p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <h3 className="text-lg sm:text-xl font-bold text-amber-900">{resume.title}</h3>
+                            {resume.isDefault && (
+                              <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
+                                기본
+                              </span>
+                            )}
+                            {hasActiveShare && (
+                              <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                                공유 중 ({activeShares.length}/3)
+                              </span>
+                            )}
+                          </div>
+                          {resume.description && (
+                            <p className="text-gray-600 text-sm mb-3">{resume.description}</p>
                           )}
-                          {hasActiveShare && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
-                              공유 중
+                          <div className="flex flex-col gap-1 text-xs text-gray-500">
+                            <span>
+                              마지막 수정: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
                             </span>
-                          )}
+                          </div>
                         </div>
-                        {resume.description && (
-                          <p className="text-gray-600 text-sm mb-3">{resume.description}</p>
-                        )}
-                        <div className="flex flex-col gap-1 text-xs text-gray-500">
-                          <span>
-                            마지막 수정: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
-                          </span>
-                          {hasActiveShare && nearestExpiry && (
-                            <span className="text-green-700">
-                              공유 만료일: {new Date(nearestExpiry).toLocaleDateString('ko-KR')}
-                            </span>
-                          )}
-                          {hasActiveShare && !nearestExpiry && (
-                            <span className="text-green-700">공유 기간: 영구</span>
-                          )}
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
-                        <button
-                          onClick={() => navigate(`/resume/preview/${resume.id}`)}
-                          className="px-2 sm:px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 transition-all whitespace-nowrap"
-                        >
-                          👁️ 미리보기
-                        </button>
-                        <button
-                          onClick={() => navigate(`/resume/edit/${resume.id}`)}
-                          className="px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 whitespace-nowrap"
-                        >
-                          ✍️ 수정
-                        </button>
-                        <button
-                          onClick={() => handleCopyResume(resume.id, resume.title)}
-                          className="px-2 sm:px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs sm:text-sm font-semibold rounded-lg border border-amber-200 transition-all whitespace-nowrap"
-                        >
-                          📋 복사
-                        </button>
-                        <button
-                          onClick={() => openShareModal(resume.id)}
-                          className="px-2 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 transition-all whitespace-nowrap"
-                        >
-                          🔗 공유
-                        </button>
-                        <button
-                          onClick={() => handleDeleteResume(resume.id)}
-                          className="px-2 sm:px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs sm:text-sm font-semibold rounded-lg border border-red-200 transition-all whitespace-nowrap col-span-2 sm:col-span-1"
-                        >
-                          🗑️ 삭제
-                        </button>
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
+                          <button
+                            onClick={() => navigate(`/resume/preview/${resume.id}`)}
+                            className="px-2 sm:px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 transition-all whitespace-nowrap"
+                          >
+                            👁️ 미리보기
+                          </button>
+                          <button
+                            onClick={() => navigate(`/resume/edit/${resume.id}`)}
+                            className="px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 whitespace-nowrap"
+                          >
+                            ✍️ 수정
+                          </button>
+                          <button
+                            onClick={() => handleCopyResume(resume.id, resume.title)}
+                            className="px-2 sm:px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs sm:text-sm font-semibold rounded-lg border border-amber-200 transition-all whitespace-nowrap"
+                          >
+                            📋 복사
+                          </button>
+                          <button
+                            onClick={() => openShareModal(resume.id)}
+                            className="px-2 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 transition-all whitespace-nowrap"
+                          >
+                            🔗 공유
+                          </button>
+                          <button
+                            onClick={() => handleDeleteResume(resume.id)}
+                            className="px-2 sm:px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs sm:text-sm font-semibold rounded-lg border border-red-200 transition-all whitespace-nowrap col-span-2 sm:col-span-1"
+                          >
+                            🗑️ 삭제
+                          </button>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Share Links for this resume */}
+                    {hasActiveShare && (
+                      <div className="border-t border-amber-200 bg-amber-50/50">
+                        <button
+                          onClick={() => toggleShareLinks(resume.id)}
+                          className="w-full px-4 sm:px-6 py-3 flex items-center justify-between text-sm font-semibold text-amber-900 hover:bg-amber-100/50 transition-all"
+                        >
+                          <span className="flex items-center gap-2">
+                            <span>🔗</span>
+                            <span>공유 링크 ({activeShares.length}개)</span>
+                          </span>
+                          <span className="text-lg">
+                            {expandedResumeId === resume.id ? '▼' : '▶'}
+                          </span>
+                        </button>
+
+                        {expandedResumeId === resume.id && (
+                          <div className="px-4 sm:px-6 pb-4 space-y-3">
+                            {activeShares.map((link) => (
+                              <div
+                                key={link.id}
+                                className="bg-white border border-amber-200 rounded-lg p-3 sm:p-4"
+                              >
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-xs font-semibold text-gray-700">
+                                        공유 링크
+                                      </span>
+                                      <span
+                                        className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                                          link.isActive
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-gray-100 text-gray-800'
+                                        }`}
+                                      >
+                                        {link.isActive ? '활성' : '비활성'}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="text"
+                                        value={link.shareUrl}
+                                        readOnly
+                                        className="flex-1 text-xs sm:text-sm text-gray-700 font-mono bg-gray-50 px-2 sm:px-3 py-1.5 rounded border border-gray-200 focus:outline-none"
+                                      />
+                                      <button
+                                        onClick={() => copyToClipboard(link.shareUrl, link.id)}
+                                        className="px-2 sm:px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold rounded border border-amber-300 transition-all whitespace-nowrap"
+                                      >
+                                        {copiedLinkId === link.id ? '✓ 복사됨' : '📋 복사'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                                  <div className="flex flex-wrap gap-3">
+                                    <span>조회수: {link.viewCount}회</span>
+                                    {link.expiresAt ? (
+                                      <span className="text-green-700">
+                                        만료: {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
+                                      </span>
+                                    ) : (
+                                      <span className="text-green-700">영구</span>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => handleDeleteShare(link.id)}
+                                    className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded border border-red-200 transition-all"
+                                  >
+                                    삭제
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -250,57 +340,6 @@ export default function MyResumePage() {
           )}
         </div>
 
-        {/* Share Links */}
-        {shareLinks.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold text-amber-900 mb-4 flex items-center gap-2">
-              <span>🔗</span>
-              공유 링크
-            </h2>
-            <div className="space-y-4">
-              {shareLinks.map((link) => (
-                <div
-                  key={link.id}
-                  className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-4 sm:p-6"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="text-sm sm:text-base font-semibold text-gray-700">공유 링크</p>
-                        <span
-                          className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                            link.isActive
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {link.isActive ? '활성' : '비활성'}
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-2 font-mono bg-white px-2 sm:px-3 py-2 rounded border border-gray-200 break-all">
-                        {link.shareUrl}
-                      </p>
-                      <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-gray-500">
-                        <span>조회수: {link.viewCount}</span>
-                        {link.expiresAt && (
-                          <span>
-                            만료일: {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteShare(link.id)}
-                      className="px-3 sm:px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs sm:text-sm font-semibold rounded-lg border border-red-200 transition-all whitespace-nowrap"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Share Modal */}
         {showShareModal && (
