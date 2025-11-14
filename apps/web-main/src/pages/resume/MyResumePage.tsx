@@ -116,18 +116,18 @@ export default function MyResumePage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
-        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-lg p-8 mb-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-lg p-4 sm:p-8 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-3xl">📄</span>
-                <h1 className="text-3xl font-bold text-amber-900">나의 이력서</h1>
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <span className="text-2xl sm:text-3xl">📄</span>
+                <h1 className="text-2xl sm:text-3xl font-bold text-amber-900">나의 이력서</h1>
               </div>
-              <p className="text-gray-700 ml-12">이력서를 관리하고 공유하세요</p>
+              <p className="text-sm sm:text-base text-gray-700 ml-8 sm:ml-12">이력서를 관리하고 공유하세요</p>
             </div>
             <button
               onClick={() => navigate('/resume/edit')}
-              className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap"
             >
               ✍️ 새 이력서 만들기
             </button>
@@ -148,13 +148,13 @@ export default function MyResumePage() {
           </h2>
 
           {resumes.length === 0 ? (
-            <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-8 text-center">
-              <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-bold text-amber-900 mb-2">아직 이력서가 없습니다</h3>
-              <p className="text-gray-600 mb-4">첫 이력서를 만들어보세요</p>
+            <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6 sm:p-8 text-center">
+              <div className="text-5xl sm:text-6xl mb-4">📝</div>
+              <h3 className="text-lg sm:text-xl font-bold text-amber-900 mb-2">아직 이력서가 없습니다</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">첫 이력서를 만들어보세요</p>
               <button
                 onClick={() => navigate('/resume/edit')}
-                className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 이력서 만들기
               </button>
@@ -175,12 +175,12 @@ export default function MyResumePage() {
                 return (
                   <div
                     key={resume.id}
-                    className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6 hover:shadow-xl hover:border-amber-300 transition-all"
+                    className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-4 sm:p-6 hover:shadow-xl hover:border-amber-300 transition-all"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl font-bold text-amber-900">{resume.title}</h3>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <h3 className="text-lg sm:text-xl font-bold text-amber-900">{resume.title}</h3>
                           {resume.isDefault && (
                             <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
                               기본
@@ -210,34 +210,34 @@ export default function MyResumePage() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
                         <button
                           onClick={() => navigate(`/resume/preview/${resume.id}`)}
-                          className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
+                          className="px-2 sm:px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 transition-all whitespace-nowrap"
                         >
                           👁️ 미리보기
                         </button>
                         <button
                           onClick={() => navigate(`/resume/edit/${resume.id}`)}
-                          className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30"
+                          className="px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 whitespace-nowrap"
                         >
                           ✍️ 수정
                         </button>
                         <button
                           onClick={() => handleCopyResume(resume.id, resume.title)}
-                          className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold rounded-lg border border-amber-200 transition-all"
+                          className="px-2 sm:px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs sm:text-sm font-semibold rounded-lg border border-amber-200 transition-all whitespace-nowrap"
                         >
                           📋 복사
                         </button>
                         <button
                           onClick={() => openShareModal(resume.id)}
-                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
+                          className="px-2 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 transition-all whitespace-nowrap"
                         >
                           🔗 공유
                         </button>
                         <button
                           onClick={() => handleDeleteResume(resume.id)}
-                          className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-semibold rounded-lg border border-red-200 transition-all"
+                          className="px-2 sm:px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs sm:text-sm font-semibold rounded-lg border border-red-200 transition-all whitespace-nowrap col-span-2 sm:col-span-1"
                         >
                           🗑️ 삭제
                         </button>
@@ -261,12 +261,12 @@ export default function MyResumePage() {
               {shareLinks.map((link) => (
                 <div
                   key={link.id}
-                  className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6"
+                  className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-4 sm:p-6"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <p className="font-semibold text-gray-700">공유 링크</p>
+                        <p className="text-sm sm:text-base font-semibold text-gray-700">공유 링크</p>
                         <span
                           className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                             link.isActive
@@ -277,10 +277,10 @@ export default function MyResumePage() {
                           {link.isActive ? '활성' : '비활성'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2 font-mono bg-white px-3 py-2 rounded border border-gray-200 break-all">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2 font-mono bg-white px-2 sm:px-3 py-2 rounded border border-gray-200 break-all">
                         {link.shareUrl}
                       </p>
-                      <div className="flex gap-4 text-xs text-gray-500">
+                      <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-gray-500">
                         <span>조회수: {link.viewCount}</span>
                         {link.expiresAt && (
                           <span>
@@ -291,7 +291,7 @@ export default function MyResumePage() {
                     </div>
                     <button
                       onClick={() => handleDeleteShare(link.id)}
-                      className="ml-4 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-semibold rounded-lg border border-red-200 transition-all"
+                      className="px-3 sm:px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs sm:text-sm font-semibold rounded-lg border border-red-200 transition-all whitespace-nowrap"
                     >
                       삭제
                     </button>
@@ -304,9 +304,9 @@ export default function MyResumePage() {
 
         {/* Share Modal */}
         {showShareModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
-              <h2 className="text-2xl font-bold text-amber-900 mb-4">공유 링크 만들기</h2>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-md w-full">
+              <h2 className="text-xl sm:text-2xl font-bold text-amber-900 mb-4">공유 링크 만들기</h2>
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   공유 기간
@@ -314,7 +314,7 @@ export default function MyResumePage() {
                 <select
                   value={shareDuration}
                   onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-sm sm:text-base text-gray-900"
                 >
                   <option value={ShareDuration.ONE_WEEK}>1주일</option>
                   <option value={ShareDuration.ONE_MONTH}>1개월</option>
@@ -328,13 +328,13 @@ export default function MyResumePage() {
                     setShowShareModal(false);
                     setSelectedResumeId(null);
                   }}
-                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
+                  className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm sm:text-base font-semibold rounded-lg border border-gray-300 transition-all"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleCreateShare}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30"
+                  className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white text-sm sm:text-base font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30"
                 >
                   생성
                 </button>

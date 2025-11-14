@@ -118,25 +118,25 @@ export default function ResumeEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">✍️</span>
+        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-2xl sm:text-3xl">✍️</span>
               <div>
-                <h1 className="text-3xl font-bold text-amber-900">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900">
                   {resumeId ? 'Edit Resume' : 'Create New Resume'}
                 </h1>
-                <p className="text-gray-700">
+                <p className="text-xs sm:text-sm lg:text-base text-gray-700">
                   {resumeId ? 'Update your resume information' : 'Fill in your information to create a new resume'}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className="lg:hidden px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all"
+              className="lg:hidden px-4 py-2 bg-amber-700 text-white text-sm font-semibold rounded-lg hover:bg-amber-800 transition-all whitespace-nowrap"
             >
               {showPreview ? 'Show Form' : 'Show Preview'}
             </button>
@@ -144,13 +144,13 @@ export default function ResumeEditPage() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm sm:text-base">
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {/* Side-by-side layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Form Section */}
           <div className={`${showPreview ? 'hidden lg:block' : 'block'}`}>
             <ResumeForm
@@ -162,13 +162,13 @@ export default function ResumeEditPage() {
 
           {/* Live Preview Section */}
           <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
-            <div className="sticky top-8">
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 mb-4">
-                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="sticky top-4 sm:top-8">
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-4 sm:p-6 mb-3 sm:mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
                   <span>👁️</span>
                   Live Preview
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   This is how your resume will look. Changes appear instantly.
                 </p>
               </div>
@@ -179,7 +179,7 @@ export default function ResumeEditPage() {
                     <ResumePreview resume={previewData} paperSize={previewData.paperSize} />
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-gray-500">
+                  <div className="p-6 sm:p-8 text-center text-gray-500 text-sm sm:text-base">
                     <p>Start filling the form to see your resume preview</p>
                   </div>
                 )}
