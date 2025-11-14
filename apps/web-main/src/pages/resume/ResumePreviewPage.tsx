@@ -17,8 +17,13 @@ export default function ResumePreviewPage() {
   const [paperSize, setPaperSize] = useState<PaperSize>('A4');
   const [exporting, setExporting] = useState(false);
 
+  // Reset state when resumeId changes (React 19 compatibility)
   useEffect(() => {
-    loadResume();
+    setResume(null);
+    setLoading(true);
+    setError(null);
+    setShowShareModal(false);
+    setExporting(false);
   }, [resumeId]);
 
   const loadResume = async () => {
@@ -48,6 +53,12 @@ export default function ResumePreviewPage() {
       setLoading(false);
     }
   };
+
+  // Load resume when resumeId changes (React 19 compatibility)
+  useEffect(() => {
+    loadResume();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeId]);
 
   const handlePaperSizeChange = async (newSize: PaperSize) => {
     setPaperSize(newSize);
