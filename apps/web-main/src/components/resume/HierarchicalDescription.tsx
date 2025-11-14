@@ -82,24 +82,24 @@ function HierarchicalItemComponent({
   return (
     <div className="space-y-2">
       <div
-        className="flex items-start gap-2 bg-amber-50/30 rounded-lg p-2 border border-amber-100"
+        className="flex items-start gap-2 bg-amber-50/30 dark:bg-dark-bg-card rounded-lg p-2 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200"
         style={{
           marginLeft: `${(depth - 1) * 1.5}rem`,
           maxWidth: `calc(100% - ${(depth - 1) * 1.5}rem)`
         }}
       >
         <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
-          <span className="text-gray-600 font-bold text-sm select-none">
+          <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none">
             {getBulletSymbol(depth)}
           </span>
-          <span className="text-xs text-gray-500">({depth})</span>
+          <span className="text-xs text-gray-500 dark:text-dark-text-tertiary">({depth})</span>
         </div>
 
         <input
           type="text"
           value={item.content}
           onChange={e => onUpdate({ ...item, content: e.target.value })}
-          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 min-w-0"
+          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
           style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
           placeholder="설명을 입력하세요..."
         />
@@ -120,7 +120,7 @@ function HierarchicalItemComponent({
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="px-2 py-1 text-xs text-gray-600 hover:text-gray-800"
+              className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
               title={isExpanded ? "Collapse" : "Expand"}
             >
               {isExpanded ? '▼' : '▶'}
@@ -130,7 +130,7 @@ function HierarchicalItemComponent({
           <button
             type="button"
             onClick={onRemove}
-            className="text-red-600 hover:text-red-700 text-xs font-semibold"
+            className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
             title="Remove"
           >
             ✕
@@ -191,12 +191,12 @@ function SortableHierarchicalItem({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
-      <div className="flex items-start gap-2 bg-white rounded-lg p-2 border border-amber-200">
+      <div className="flex items-start gap-2 bg-white dark:bg-dark-bg-elevated rounded-lg p-2 border border-amber-200 dark:border-dark-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-1 cursor-move text-gray-400 hover:text-amber-600 transition-colors flex-shrink-0"
+          className="mt-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
           title="Drag to reorder"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,16 +272,16 @@ export default function HierarchicalDescription({
   };
 
   return (
-    <div className="border-t border-amber-200 pt-4">
+    <div className="border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
       <div className="flex items-center justify-between mb-3">
-        <label className="text-sm font-bold text-amber-900 flex items-center gap-2">
+        <label className="text-sm font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
           ⭐ {label}
-          <span className="text-xs text-gray-500 font-normal">(최대 {maxDepth}단계)</span>
+          <span className="text-xs text-gray-500 dark:text-dark-text-tertiary font-normal">(최대 {maxDepth}단계)</span>
         </label>
         <button
           type="button"
           onClick={addItem}
-          className="px-2 py-1 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 transition-all"
+          className="px-2 py-1 bg-amber-600 dark:bg-amber-500 text-white text-xs rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-all transition-colors duration-200"
         >
           + 추가
         </button>
@@ -324,7 +324,7 @@ export default function HierarchicalDescription({
           </SortableContext>
         </DndContext>
       ) : (
-        <p className="text-xs text-gray-500 italic">{placeholder}</p>
+        <p className="text-xs text-gray-500 dark:text-dark-text-tertiary italic">{placeholder}</p>
       )}
     </div>
   );

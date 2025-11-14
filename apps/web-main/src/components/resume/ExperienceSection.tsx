@@ -160,14 +160,14 @@ function SortableExperienceCard({
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border border-amber-200 rounded-xl p-6 bg-amber-50/30">
+    <div ref={setNodeRef} style={style} className="border border-amber-200 dark:border-dark-border-default rounded-xl p-6 bg-amber-50/30 dark:bg-dark-bg-card transition-colors duration-200">
       {/* Company Header with Drag Handle */}
       <div className="flex items-start gap-4 mb-4">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-2 cursor-move text-gray-400 hover:text-amber-600 transition-colors"
+          className="mt-2 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200"
           title="Drag to reorder"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,11 +177,11 @@ function SortableExperienceCard({
 
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-amber-900">📚 Company #{index + 1}</h3>
+            <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200">📚 Company #{index + 1}</h3>
             <button
               type="button"
               onClick={onRemove}
-              className="text-red-600 hover:text-red-800 text-sm font-semibold"
+              className="text-red-600 hover:text-red-800 text-sm font-semibold transition-colors duration-200"
             >
               Remove Company
             </button>
@@ -190,32 +190,32 @@ function SortableExperienceCard({
           {/* Company Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 Company <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={experience.company}
                 onChange={e => onUpdate({ ...experience, company: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900"
+                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 placeholder="Company name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 Start Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="month"
                 value={experience.startDate}
                 onChange={e => onUpdate({ ...experience, startDate: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900"
+                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 End Date
               </label>
               <input
@@ -223,10 +223,10 @@ function SortableExperienceCard({
                 value={experience.endDate || ''}
                 onChange={e => onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })}
                 disabled={experience.isCurrentlyWorking}
-                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary disabled:bg-gray-100 dark:disabled:bg-dark-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
                 placeholder="Leave empty if current"
               />
-              <label className="flex items-center mt-2 text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center mt-2 text-sm text-gray-700 dark:text-dark-text-secondary cursor-pointer transition-colors duration-200">
                 <input
                   type="checkbox"
                   checked={experience.isCurrentlyWorking || false}
@@ -240,8 +240,8 @@ function SortableExperienceCard({
 
           {/* Experience Duration */}
           {experience.startDate && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <span className="text-sm font-semibold text-amber-900">
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-dark-bg-card border border-amber-200 dark:border-dark-border-default rounded-lg transition-colors duration-200">
+              <span className="text-sm font-semibold text-amber-900 dark:text-amber-300 transition-colors duration-200">
                 경력 기간: {(() => {
                   const duration = calculateExperienceDuration(
                     experience.startDate,
@@ -257,42 +257,42 @@ function SortableExperienceCard({
           {/* Final Position and Job Title */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 직책 / Position <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={experience.finalPosition}
                 onChange={e => onUpdate({ ...experience, finalPosition: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900"
+                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 placeholder="e.g., Backend Team Lead"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 직급 / Job Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={experience.jobTitle}
                 onChange={e => onUpdate({ ...experience, jobTitle: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900"
+                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 placeholder="e.g., Senior Developer"
               />
             </div>
           </div>
 
           {/* Projects Section */}
-          <div className="mt-6 border-t border-amber-200 pt-4">
+          <div className="mt-6 border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-md font-bold text-amber-900 flex items-center gap-2">
+              <h4 className="text-md font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
                 📁 Projects at this company
               </h4>
               <button
                 type="button"
                 onClick={addProject}
-                className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-all font-semibold"
+                className="px-3 py-1.5 bg-amber-600 dark:bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors duration-200 font-semibold"
               >
                 + Add Project
               </button>
@@ -328,7 +328,7 @@ function SortableExperienceCard({
                 </SortableContext>
               </DndContext>
             ) : (
-              <div className="text-center py-6 text-gray-500 text-sm bg-white rounded-lg border border-dashed border-amber-200">
+              <div className="text-center py-6 text-gray-500 dark:text-dark-text-tertiary text-sm bg-white dark:bg-dark-bg-elevated rounded-lg border border-dashed border-amber-200 dark:border-dark-border-default transition-colors duration-200">
                 <p>No projects added yet. Click "Add Project" to add projects at this company.</p>
               </div>
             )}
@@ -394,14 +394,14 @@ function SortableProject({
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border border-amber-300 rounded-lg bg-white">
+    <div ref={setNodeRef} style={style} className="border border-amber-300 dark:border-dark-border-strong rounded-lg bg-white dark:bg-dark-bg-elevated transition-colors duration-200">
       {/* Project Header */}
-      <div className="flex items-center gap-3 p-4 bg-amber-50/50">
+      <div className="flex items-center gap-3 p-4 bg-amber-50/50 dark:bg-dark-bg-card transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="cursor-move text-gray-400 hover:text-amber-600 transition-colors"
+          className="cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200"
           title="Drag to reorder"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,14 +412,14 @@ function SortableProject({
         <button
           type="button"
           onClick={onToggle}
-          className="flex-1 flex items-center justify-between text-left"
+          className="flex-1 flex items-center justify-between text-left transition-colors duration-200"
         >
-          <span className="font-semibold text-amber-900 flex items-center gap-2">
+          <span className="font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
             📖 Project #{projectIndex + 1}
-            {project.name && <span className="font-normal text-gray-700">- {project.name}</span>}
+            {project.name && <span className="font-normal text-gray-700 dark:text-dark-text-secondary transition-colors duration-200">- {project.name}</span>}
           </span>
           <svg
-            className={`w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            className={`w-5 h-5 text-gray-500 dark:text-dark-text-tertiary transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -431,7 +431,7 @@ function SortableProject({
         <button
           type="button"
           onClick={onRemove}
-          className="text-red-600 hover:text-red-800 text-xs font-semibold"
+          className="text-red-600 hover:text-red-800 text-xs font-semibold transition-colors duration-200"
         >
           Remove
         </button>
@@ -443,73 +443,73 @@ function SortableProject({
           {/* Project Basic Info */}
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 Project Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={project.name}
                 onChange={e => onUpdate({ ...project, name: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 placeholder="e.g., E-Commerce Platform Rebuild"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                   Start Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="month"
                   value={project.startDate}
                   onChange={e => onUpdate({ ...project, startDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                   End Date
                 </label>
                 <input
                   type="month"
                   value={project.endDate || ''}
                   onChange={e => onUpdate({ ...project, endDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                   placeholder="Leave empty if ongoing"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 Description <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={project.description}
                 onChange={e => onUpdate({ ...project, description: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 placeholder="Brief project description..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 Your Role
               </label>
               <input
                 type="text"
                 value={project.role || ''}
                 onChange={e => onUpdate({ ...project, role: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 placeholder="e.g., Lead Backend Developer"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                 Tech Stack (comma-separated)
               </label>
               <input
@@ -521,34 +521,34 @@ function SortableProject({
                   onUpdate({ ...project, techStack: parsed });
                   setTechStackInput(parsed.join(', '));
                 }}
-                className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                 placeholder="e.g., NestJS, React, PostgreSQL"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                   Project URL
                 </label>
                 <input
                   type="url"
                   value={project.url || ''}
                   onChange={e => onUpdate({ ...project, url: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                   placeholder="https://..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
                   GitHub URL
                 </label>
                 <input
                   type="url"
                   value={project.githubUrl || ''}
                   onChange={e => onUpdate({ ...project, githubUrl: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900"
+                  className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
                   placeholder="https://github.com/..."
                 />
               </div>
@@ -556,16 +556,16 @@ function SortableProject({
           </div>
 
           {/* Key Achievements */}
-          <div className="border-t border-amber-200 pt-4">
+          <div className="border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-bold text-amber-900 flex items-center gap-2">
+              <label className="text-sm font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
                 ⭐ Key Achievements
-                <span className="text-xs text-gray-500 font-normal">(4 depth levels)</span>
+                <span className="text-xs text-gray-500 dark:text-dark-text-tertiary font-normal transition-colors duration-200">(4 depth levels)</span>
               </label>
               <button
                 type="button"
                 onClick={onAddAchievement}
-                className="px-2 py-1 bg-amber-600 text-white text-xs rounded-lg hover:bg-amber-700 transition-all"
+                className="px-2 py-1 bg-amber-600 dark:bg-amber-500 text-white text-xs rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors duration-200"
               >
                 + Add Achievement
               </button>
@@ -608,7 +608,7 @@ function SortableProject({
                 </SortableContext>
               </DndContext>
             ) : (
-              <p className="text-xs text-gray-500 italic">No achievements yet. Click "Add Achievement" to add.</p>
+              <p className="text-xs text-gray-500 dark:text-dark-text-tertiary italic transition-colors duration-200">No achievements yet. Click "Add Achievement" to add.</p>
             )}
           </div>
         </div>
@@ -662,24 +662,24 @@ function HierarchicalAchievement({
   return (
     <div className="space-y-2">
       <div
-        className="flex items-start gap-2 bg-amber-50/30 rounded-lg p-2 border border-amber-100"
+        className="flex items-start gap-2 bg-amber-50/30 dark:bg-dark-bg-card rounded-lg p-2 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200"
         style={{
           marginLeft: `${(depth - 1) * 1.5}rem`,
           maxWidth: `calc(100% - ${(depth - 1) * 1.5}rem)`
         }}
       >
         <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
-          <span className="text-gray-600 font-bold text-sm select-none">
+          <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none transition-colors duration-200">
             {getBulletSymbol(depth)}
           </span>
-          <span className="text-xs text-gray-500">({depth})</span>
+          <span className="text-xs text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">({depth})</span>
         </div>
 
         <input
           type="text"
           value={achievement.content}
           onChange={e => onUpdate({ ...achievement, content: e.target.value })}
-          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 min-w-0"
+          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
           style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
           placeholder="Achievement description..."
         />
@@ -689,7 +689,7 @@ function HierarchicalAchievement({
             <button
               type="button"
               onClick={onAddChild}
-              className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-all font-semibold whitespace-nowrap"
+              className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-colors duration-200 font-semibold whitespace-nowrap"
               title="Add sub-item"
             >
               + 하위
@@ -700,7 +700,7 @@ function HierarchicalAchievement({
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="px-2 py-1 text-xs text-gray-600 hover:text-gray-800"
+              className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
               title={isExpanded ? "Collapse" : "Expand"}
             >
               {isExpanded ? '▼' : '▶'}
@@ -710,7 +710,7 @@ function HierarchicalAchievement({
           <button
             type="button"
             onClick={onRemove}
-            className="text-red-600 hover:text-red-700 text-xs font-semibold"
+            className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
             title="Remove"
           >
             ✕
@@ -768,12 +768,12 @@ function SortableAchievement({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
-      <div className="flex items-start gap-2 bg-white rounded-lg p-2 border border-amber-200">
+      <div className="flex items-start gap-2 bg-white dark:bg-dark-bg-elevated rounded-lg p-2 border border-amber-200 dark:border-dark-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-1 cursor-move text-gray-400 hover:text-amber-600 transition-colors flex-shrink-0"
+          className="mt-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
           title="Drag to reorder"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -846,18 +846,18 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-sm p-6 transition-colors duration-200">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2 transition-colors duration-200">
             💼 {t('resume.sections.experience')}
           </h2>
-          <p className="text-sm text-gray-600 mt-1">{t('resume.descriptions.experience')}</p>
+          <p className="text-sm text-gray-600 dark:text-dark-text-secondary mt-1 transition-colors duration-200">{t('resume.descriptions.experience')}</p>
         </div>
         <button
           type="button"
           onClick={addExperience}
-          className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          className="px-4 py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors duration-200 font-semibold"
         >
           + Add Experience
         </button>
@@ -887,7 +887,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">
           <p>No work experience added yet. Click "Add Experience" to get started.</p>
         </div>
       )}
