@@ -26,18 +26,10 @@ export default function ResumeEditPage() {
   // Handle navigation in useEffect for React 19 compatibility
   useEffect(() => {
     if (navigateToPreview) {
-      // Clear current page state before navigation
-      setResume(null);
-      setPreviewData(null);
-      setShowPreview(false);
-
-      // Use setTimeout to ensure state updates are flushed
-      const timer = setTimeout(() => {
-        navigate(navigateToPreview, { replace: false });
-        setNavigateToPreview(null);
-      }, 0);
-
-      return () => clearTimeout(timer);
+      // Navigate immediately without clearing state
+      // The preview page will handle its own state initialization
+      navigate(navigateToPreview, { replace: false });
+      setNavigateToPreview(null);
     }
   }, [navigateToPreview, navigate]);
 
