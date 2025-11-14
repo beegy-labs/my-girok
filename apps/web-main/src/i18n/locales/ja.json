@@ -2,7 +2,8 @@
   "nav": {
     "login": "ログイン",
     "register": "新規登録",
-    "logout": "ログアウト"
+    "logout": "ログアウト",
+    "changePassword": "パスワード変更"
   },
   "home": {
     "title": "My-Girokへようこそ",
