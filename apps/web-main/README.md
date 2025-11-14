@@ -21,7 +21,7 @@ React 19.2 + Vite + TypeScript application for My-Girok main features (blog, fin
 - **React Router v6** - Routing
 - **Zustand** - State management
 - **Axios** - HTTP client
-- **Tailwind CSS 4.1** - Styling
+- **Tailwind CSS 3.4** - Styling
 - **Vitest** - Unit testing
 - **Playwright** - E2E testing
 

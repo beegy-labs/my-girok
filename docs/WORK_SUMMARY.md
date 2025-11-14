@@ -85,7 +85,7 @@ OAuthProviderConfig {
 #### Technology Stack
 - React 19.2 with Vite 7.2
 - TypeScript 5.7
-- Tailwind CSS 4.1
+- Tailwind CSS 3.4
 - React Router 6
 - Zustand (state management with localStorage persistence)
 - Axios (with automatic token refresh interceptor)
@@ -246,7 +246,7 @@ Token-optimized, concise instructions:
 - **Framework**: React 19.2
 - **Build Tool**: Vite 7.2
 - **Language**: TypeScript 5.7
-- **Styling**: Tailwind CSS 4.1
+- **Styling**: Tailwind CSS 3.4
 - **Router**: React Router 6.28.0
 - **State**: Zustand 5.0.2
 - **HTTP**: Axios 1.7.9
