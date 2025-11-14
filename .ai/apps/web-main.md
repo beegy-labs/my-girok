@@ -4,12 +4,13 @@
 
 ## Tech Stack
 
-- **Framework**: React 19 + Vite
+- **Framework**: React 19.2 + Vite 7.2
 - **Router**: React Router v6
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State**: Zustand + React Query
-- **API**: Axios wrapper
+- **Language**: TypeScript 5.7
+- **Styling**: Tailwind CSS 4.1
+- **State**: Zustand 5.0
+- **API**: Axios 1.7
+- **Testing**: Vitest 2.1 + Playwright 1.56
 
 ## Structure
 

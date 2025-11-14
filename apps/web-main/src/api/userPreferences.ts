@@ -1,4 +1,4 @@
-import api from './axios';
+import { personalApi } from './resume';
 
 export enum Theme {
   LIGHT = 'LIGHT',
@@ -43,8 +43,8 @@ export interface UpdateUserPreferencesDto {
  * Creates default if not exists
  */
 export const getUserPreferences = async (): Promise<UserPreferences> => {
-  const response = await api.get<UserPreferences>(
-    '/personal/v1/user-preferences',
+  const response = await personalApi.get<UserPreferences>(
+    '/v1/user-preferences',
   );
   return response.data;
 };
@@ -55,8 +55,8 @@ export const getUserPreferences = async (): Promise<UserPreferences> => {
 export const upsertUserPreferences = async (
   dto: CreateUserPreferencesDto,
 ): Promise<UserPreferences> => {
-  const response = await api.post<UserPreferences>(
-    '/personal/v1/user-preferences',
+  const response = await personalApi.post<UserPreferences>(
+    '/v1/user-preferences',
     dto,
   );
   return response.data;
@@ -68,8 +68,8 @@ export const upsertUserPreferences = async (
 export const updateUserPreferences = async (
   dto: UpdateUserPreferencesDto,
 ): Promise<UserPreferences> => {
-  const response = await api.put<UserPreferences>(
-    '/personal/v1/user-preferences',
+  const response = await personalApi.put<UserPreferences>(
+    '/v1/user-preferences',
     dto,
   );
   return response.data;
@@ -79,5 +79,5 @@ export const updateUserPreferences = async (
  * Delete user preferences (reset to default)
  */
 export const deleteUserPreferences = async (): Promise<void> => {
-  await api.delete('/personal/v1/user-preferences');
+  await personalApi.delete('/v1/user-preferences');
 };

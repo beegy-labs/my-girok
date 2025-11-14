@@ -4,9 +4,7 @@ import {
   SectionOrderItem,
   UserPreferences,
   getUserPreferences,
-  upsertUserPreferences,
   updateUserPreferences as updateUserPreferencesAPI,
-  CreateUserPreferencesDto,
   UpdateUserPreferencesDto,
 } from '../api/userPreferences';
 import {
