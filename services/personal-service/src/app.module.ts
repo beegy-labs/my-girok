@@ -13,6 +13,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResumeModule } from './resume/resume.module';
 import { ShareModule } from './share/share.module';
 import { HealthModule } from './health/health.module';
+import { UserPreferencesModule } from './user-preferences/user-preferences.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { HealthModule } from './health/health.module';
     ResumeModule,
     ShareModule,
     HealthModule,
+    UserPreferencesModule,
   ],
   providers: [
     PrismaService,
