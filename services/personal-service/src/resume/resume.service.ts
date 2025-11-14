@@ -587,7 +587,7 @@ export class ResumeService {
             visible: exp.visible,
           };
 
-          // Only add projects if they exist
+          // Only add projects if they exist (without achievements)
           if (exp.projects && exp.projects.length > 0) {
             expData.projects = {
               create: exp.projects.map(project => ({
@@ -600,14 +600,26 @@ export class ResumeService {
                 url: project.url,
                 githubUrl: project.githubUrl,
                 order: project.order,
-                achievements: project.achievements && project.achievements.length > 0
-                  ? { create: this.copyAchievements(project.achievements) }
-                  : undefined,
               })),
             };
           }
 
-          await tx.experience.create({ data: expData });
+          // Create experience with projects
+          const createdExperience = await tx.experience.create({
+            data: expData,
+            include: { projects: { orderBy: { order: 'asc' } } },
+          });
+
+          // Copy achievements for each project using the same method as create()
+          if (exp.projects && exp.projects.length > 0) {
+            for (let i = 0; i < exp.projects.length; i++) {
+              const project = exp.projects[i];
+              if (project.achievements && project.achievements.length > 0) {
+                const projectId = createdExperience.projects[i].id;
+                await this.createAchievements(project.achievements, projectId, null, tx);
+              }
+            }
+          }
         }
       }
 
@@ -701,19 +713,6 @@ export class ResumeService {
     });
   }
 
-  /**
-   * Recursively copy achievements with their children
-   */
-  private copyAchievements(achievements: any[]): any[] {
-    return achievements.map(achievement => ({
-      content: achievement.content,
-      depth: achievement.depth,
-      order: achievement.order,
-      children: achievement.children && achievement.children.length > 0
-        ? { create: this.copyAchievements(achievement.children) }
-        : undefined,
-    }));
-  }
 
   async setDefaultResume(resumeId: string, userId: string) {
     await this.findByIdAndUserId(resumeId, userId);
