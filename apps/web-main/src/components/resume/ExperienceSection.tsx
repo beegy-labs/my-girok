@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Experience, ExperienceProject, ProjectAchievement, calculateExperienceDuration } from '../../api/resume';
+import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -631,16 +632,6 @@ function HierarchicalAchievement({
   onAddChild: () => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
-
-  const getBulletSymbol = (d: number) => {
-    switch (d) {
-      case 1: return '•';
-      case 2: return '◦';
-      case 3: return '▪';
-      case 4: return '▫';
-      default: return '•';
-    }
-  };
 
   const handleUpdateChild = (childIndex: number, updatedChild: ProjectAchievement) => {
     const newChildren = [...(achievement.children || [])];

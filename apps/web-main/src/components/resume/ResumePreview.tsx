@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
+import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
 import '../../styles/resume-print.css';
 
 interface ResumePreviewProps {
@@ -245,31 +246,10 @@ function SkillsSection({ skills }: { skills: any[] }) {
   const { t } = useTranslation();
   if (skills.length === 0) return null;
 
-  // Standard indentation: 1.5em per depth level (approximately 6 spaces)
-  const getIndentation = (depth: number) => {
-    return `${(depth - 1) * 1.5}em`;
-  };
-
-  // Bullet style based on depth following standard document formatting
-  const getBulletStyle = (depth: number) => {
-    switch (depth) {
-      case 1:
-        return '• '; // Filled circle
-      case 2:
-        return '◦ '; // Open circle
-      case 3:
-        return '▪ '; // Filled square
-      case 4:
-        return '▫ '; // Open square
-      default:
-        return '• ';
-    }
-  };
-
   // Render hierarchical descriptions recursively
   const renderDescriptions = (descriptions: any[]) => {
     if (!descriptions || descriptions.length === 0) return null;
-    return descriptions.sort((a: any, b: any) => a.order - b.order).map((desc: any, idx: number) => (
+    return sortByOrder(descriptions).map((desc: any, idx: number) => (
       <div key={idx}>
         <div
           className="flex items-start break-words"
@@ -344,31 +324,10 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
   const { t } = useTranslation();
   if (experiences.length === 0) return null;
 
-  // Standard indentation: 1.5em per depth level (approximately 6 spaces)
-  const getIndentation = (depth: number) => {
-    return `${(depth - 1) * 1.5}em`;
-  };
-
-  // Bullet style based on depth following standard document formatting
-  const getBulletStyle = (depth: number) => {
-    switch (depth) {
-      case 1:
-        return '• '; // Filled circle
-      case 2:
-        return '◦ '; // Open circle
-      case 3:
-        return '▪ '; // Filled square
-      case 4:
-        return '▫ '; // Open square
-      default:
-        return '• ';
-    }
-  };
-
   // Render hierarchical achievements recursively
   const renderAchievements = (achievements: any[]) => {
     if (!achievements || achievements.length === 0) return null;
-    return achievements.sort((a: any, b: any) => a.order - b.order).map((achievement: any, idx: number) => (
+    return sortByOrder(achievements).map((achievement: any, idx: number) => (
       <div key={idx}>
         <div
           className="flex items-start"
