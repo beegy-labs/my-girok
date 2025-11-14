@@ -33,10 +33,9 @@
 - **[services/llm-api.md](services/llm-api.md)** - AI/LLM service (Python)
 
 ### Frontend Apps
-- **[apps/web-main.md](apps/web-main.md)** - Main web application (Next.js)
-- **[apps/web-admin.md](apps/web-admin.md)** - Admin dashboard
-- **[apps/ios.md](apps/ios.md)** - iOS app (Swift/SwiftUI)
-- **[apps/android.md](apps/android.md)** - Android app (Kotlin)
+- **[apps/web-main.md](apps/web-main.md)** - Main web application (React + Vite)
+- **[apps/web-admin.md](apps/web-admin.md)** - Admin dashboard (Next.js)
+- **[apps/mobile-flutter.md](apps/mobile-flutter.md)** - Mobile app (Flutter - iOS & Android)
 
 ## Task-Based Navigation
 
@@ -52,8 +51,8 @@
 **"I need to update the web frontend..."**
 → Read: `rules.md` + `apps/web-main.md`
 
-**"I need to work on mobile apps..."**
-→ Read: `rules.md` + `apps/ios.md` or `apps/android.md`
+**"I need to work on mobile app..."**
+→ Read: `rules.md` + `apps/mobile-flutter.md`
 
 **"I need to set up the project..."**
 → Read: `project-setup.md`

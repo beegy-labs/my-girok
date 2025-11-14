@@ -377,8 +377,9 @@ const shouldRefreshToken = (token: string): boolean => {
 
 ### Token Storage
 - **Web**: HttpOnly cookies (refresh token) + localStorage (access token)
-- **iOS**: Keychain with `kSecAttrAccessibleWhenUnlocked`
-- **Android**: EncryptedSharedPreferences with AES-256
+- **Mobile (Flutter)**: flutter_secure_storage package
+  - **iOS**: Keychain with `kSecAttrAccessibleWhenUnlocked`
+  - **Android**: EncryptedSharedPreferences with AES-256-GCM
 
 ### Password Policy
 - Minimum 8 characters

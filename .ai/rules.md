@@ -253,8 +253,8 @@ import {
 
 ## Stack Reference
 
-- **Web**: Next.js 15, React 19, TypeScript, Tailwind
-- **Mobile**: iOS (Swift), Android (Kotlin)
+- **Web**: React 19 + Vite, Next.js 15, TypeScript, Tailwind
+- **Mobile**: Flutter 3.24+ (Dart 3.5+) - iOS & Android
 - **Backend**: Node.js 20, NestJS 10
 - **Database**: PostgreSQL 16 + Prisma 5 + Redis
 - **AI**: Python 3.11, FastAPI
