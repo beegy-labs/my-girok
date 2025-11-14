@@ -289,6 +289,14 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
+**2025-11-14 (Part 3)**: Add i18n support to ResumePreview component
+- Applied i18n to all hardcoded text in ResumePreview.tsx
+- Added `resume.preview.*` translation keys to ko.json, en.json, ja.json
+- Translated UI elements: view modes (continuous/paginated), color/grayscale mode toggles
+- Translated section headers and labels: coverLetter, applicationReason, page, ongoing, present, tech, demo, github, verify, degree, in
+- All resume preview content now fully localized for Korean, English, and Japanese
+- Files changed: `ResumePreview.tsx`, `ko.json`, `en.json`, `ja.json`
+
 **2025-11-14 (Part 2)**: Fix experience duration calculation to include end month
 - Fixed `calculateMonths()` to include both start and end months in duration calculation
 - Example: 2021-10 ~ 2022-05 now correctly calculates as 8 months (not 7)

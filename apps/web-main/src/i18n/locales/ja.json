@@ -118,6 +118,25 @@
         "education": "学歴",
         "certificates": "資格"
       }
+    },
+    "preview": {
+      "continuousView": "連続表示",
+      "paginatedView": "ページ表示",
+      "colorMode": "カラーモード",
+      "grayscaleMode": "グレースケールモード",
+      "switchToColorMode": "カラーモードに切り替え",
+      "switchToGrayscaleMode": "グレースケールモードに切り替え",
+      "coverLetter": "カバーレター",
+      "applicationReason": "志望動機",
+      "page": "ページ",
+      "ongoing": "進行中",
+      "present": "現在",
+      "tech": "技術",
+      "demo": "デモ",
+      "github": "GitHub",
+      "verify": "認証",
+      "degree": "学位",
+      "in": "専攻"
     }
   }
 }
