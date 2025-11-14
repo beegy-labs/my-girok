@@ -88,7 +88,7 @@ A comprehensive personal management platform that helps you organize and showcas
 ### Web Application
 
 - ✅ React 19.2 + Vite 7.2 + TypeScript 5.7
-- ✅ Responsive design with Tailwind CSS 4.1
+- ✅ Responsive design with Tailwind CSS 3.4
 - ✅ Library/book theme with amber colors
 - ✅ Automatic token refresh
 - ✅ Protected and public routes
@@ -122,7 +122,7 @@ A comprehensive personal management platform that helps you organize and showcas
 - **Framework**: React 19.2
 - **Build Tool**: Vite 7.2
 - **Language**: TypeScript 5.7
-- **Styling**: Tailwind CSS 4.1
+- **Styling**: Tailwind CSS 3.4
 - **State**: Zustand 5.0
 - **Router**: React Router 6
 - **Testing**: Vitest 2.1 + Playwright 1.56
