@@ -19,9 +19,9 @@ Personal data management microservice for My-Girok platform.
 
 ## Tech Stack
 
-- NestJS 10
-- TypeScript
-- PostgreSQL 16 + Prisma 5
+- NestJS 11
+- TypeScript 5.7
+- PostgreSQL 16 + Prisma 6
 - Passport JWT
 
 ## Setup

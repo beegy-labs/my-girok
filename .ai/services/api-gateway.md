@@ -8,7 +8,7 @@ Provides single entry point for all clients, handles cross-cutting concerns like
 
 ## Tech Stack
 
-- **Framework**: NestJS 10 + TypeScript
+- **Framework**: NestJS 11 + TypeScript 5.7
 - **Proxy**: http-proxy-middleware
 - **Rate Limiting**: @nestjs/throttler
 - **Monitoring**: Prometheus, Winston

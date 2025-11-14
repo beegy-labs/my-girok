@@ -9,8 +9,8 @@ Internal admin dashboard for managing users, content, and system settings. Restr
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui
+- **Language**: TypeScript 5.7
+- **Styling**: Tailwind CSS 4.1 + shadcn/ui
 - **Tables**: TanStack Table
 - **Charts**: Recharts
 

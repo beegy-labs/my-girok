@@ -30,7 +30,7 @@
 ```
 my-girok/
 ├── apps/                   # Clients
-│   ├── web-main/          # React 19 + Vite (Main app)
+│   ├── web-main/          # React 19.2 + Vite (Main app)
 │   ├── web-admin/         # Next.js 15 (Admin)
 │   └── mobile-flutter/    # Flutter (iOS + Android)
 ├── services/

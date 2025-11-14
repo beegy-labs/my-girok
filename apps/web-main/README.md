@@ -1,6 +1,6 @@
 # My-Girok Web Main Application
 
-React 18 + Vite + TypeScript application for My-Girok main features (blog, finance tracker, resume).
+React 19.2 + Vite + TypeScript application for My-Girok main features (blog, finance tracker, resume).
 
 ## Features
 
@@ -15,13 +15,13 @@ React 18 + Vite + TypeScript application for My-Girok main features (blog, finan
 
 ## Tech Stack
 
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool
+- **React 19.2** - UI library
+- **TypeScript 5.7** - Type safety
+- **Vite 7.2** - Build tool
 - **React Router v6** - Routing
 - **Zustand** - State management
 - **Axios** - HTTP client
-- **Tailwind CSS** - Styling
+- **Tailwind CSS 4.1** - Styling
 - **Vitest** - Unit testing
 - **Playwright** - E2E testing
 
