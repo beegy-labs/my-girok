@@ -14,9 +14,9 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
     super({
       authorizationURL: 'https://nid.naver.com/oauth2.0/authorize',
       tokenURL: 'https://nid.naver.com/oauth2.0/token',
-      clientID: configService.get('NAVER_CLIENT_ID'),
-      clientSecret: configService.get('NAVER_CLIENT_SECRET'),
-      callbackURL: configService.get('NAVER_CALLBACK_URL'),
+      clientID: configService.get('NAVER_CLIENT_ID')!,
+      clientSecret: configService.get('NAVER_CLIENT_SECRET')!,
+      callbackURL: configService.get('NAVER_CALLBACK_URL')!,
       scope: ['email', 'nickname', 'profile_image'],
     });
   }
