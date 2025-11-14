@@ -6,6 +6,7 @@ import {
   createResumeShare,
   deleteShareLink,
   deleteResume,
+  copyResume,
   Resume,
   ShareLink,
   ShareDuration,
@@ -73,6 +74,18 @@ export default function MyResumePage() {
       await loadData();
     } catch (err) {
       setError('이력서 삭제에 실패했습니다');
+    }
+  };
+
+  const handleCopyResume = async (resumeId: string, resumeTitle: string) => {
+    if (!confirm(`"${resumeTitle}" 이력서를 복사하시겠습니까?\n복사본이 생성됩니다.`)) return;
+
+    try {
+      await copyResume(resumeId);
+      await loadData();
+      alert('이력서가 성공적으로 복사되었습니다.');
+    } catch (err) {
+      setError('이력서 복사에 실패했습니다');
     }
   };
 
@@ -209,6 +222,12 @@ export default function MyResumePage() {
                           className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30"
                         >
                           ✍️ 수정
+                        </button>
+                        <button
+                          onClick={() => handleCopyResume(resume.id, resume.title)}
+                          className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold rounded-lg border border-amber-200 transition-all"
+                        >
+                          📋 복사
                         </button>
                         <button
                           onClick={() => openShareModal(resume.id)}
