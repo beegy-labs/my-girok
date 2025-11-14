@@ -452,7 +452,7 @@ pnpm test:cov
 
 **DO NOT** open public issues for security vulnerabilities.
 
-Email: **security@example.com**
+Email: **beegy.net@gmail.com**
 
 ## 🤝 Contributing
 
@@ -553,8 +553,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - 📖 Documentation: See `docs/` and `.ai/` directories
-- 🐛 Issues: [GitHub Issues](https://github.com/your-org/my-girok/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/your-org/my-girok/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/beegy-labs/my-girok/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/beegy-labs/my-girok/discussions)
 
 ---
 
