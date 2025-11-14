@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllResumes, deleteResume, setDefaultResume, copyResume, Resume } from '../../api/resume';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
 export default function ResumeList() {

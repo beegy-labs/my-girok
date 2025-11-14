@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { getResume, Resume, updateResume, PaperSize } from '../../api/resume';
 import ResumePreview from '../../components/resume/ResumePreview';
 import ShareLinkModal from '../../components/resume/ShareLinkModal';
