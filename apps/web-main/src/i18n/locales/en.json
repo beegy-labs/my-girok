@@ -150,6 +150,20 @@
       "verify": "Verify",
       "degree": "Degree",
       "in": "in"
+    },
+    "shared": {
+      "loading": "Loading resume...",
+      "notFound": "Share link not found",
+      "expired": "This share link has expired",
+      "inactive": "This share link is no longer active",
+      "failed": "Failed to load resume",
+      "linkExpired": "Link Expired",
+      "linkInactive": "Link Inactive",
+      "notFoundTitle": "Not Found",
+      "contactOwner": "Please contact the resume owner for a new link.",
+      "badge": "Shared Link",
+      "print": "Print",
+      "resumeTitle": "{{name}}'s Resume"
     }
   }
 }
