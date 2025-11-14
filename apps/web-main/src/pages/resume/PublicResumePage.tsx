@@ -56,11 +56,11 @@ export default function PublicResumePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-lg p-8 text-center max-w-md">
-          <div className="text-6xl mb-4">🔍</div>
-          <h1 className="text-2xl font-bold text-amber-900 mb-2">Not Found</h1>
-          <p className="text-gray-700">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-lg p-6 sm:p-8 text-center max-w-md w-full">
+          <div className="text-5xl sm:text-6xl mb-4">🔍</div>
+          <h1 className="text-xl sm:text-2xl font-bold text-amber-900 mb-2">Not Found</h1>
+          <p className="text-sm sm:text-base text-gray-700">{error}</p>
         </div>
       </div>
     );
@@ -74,14 +74,14 @@ export default function PublicResumePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Action Bar - Hidden when printing */}
       <div className="bg-amber-50/30 border-b border-amber-100 print:hidden sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <h1 className="text-2xl font-bold text-amber-900">
+        <div className="max-w-5xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+            <div className="flex-1">
+              <h1 className="text-lg sm:text-2xl font-bold text-amber-900">
                 📄 {resume.name}'s Resume
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-sm text-gray-600">@{username}</p>
+                <p className="text-xs sm:text-sm text-gray-600">@{username}</p>
                 {isOwnProfile && (
                   <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
                     Your Profile
@@ -89,18 +89,18 @@ export default function PublicResumePage() {
                 )}
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               {isOwnProfile && (
                 <button
                   onClick={handleEdit}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-amber-700/30"
+                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-amber-700/30 whitespace-nowrap"
                 >
                   ✍️ Edit Resume
                 </button>
               )}
               <button
                 onClick={handlePrint}
-                className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
+                className="px-3 sm:px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 transition-all whitespace-nowrap"
               >
                 🖨️ Print
               </button>
@@ -110,7 +110,7 @@ export default function PublicResumePage() {
       </div>
 
       {/* Resume Preview */}
-      <div className="py-8 print:py-0">
+      <div className="py-6 sm:py-8 print:py-0">
         <ResumePreview resume={resume} />
       </div>
     </div>
