@@ -4,8 +4,8 @@ Shared UI components for my-girok frontend applications.
 
 ## Overview
 
-This package provides reusable React components with consistent styling across all my-girok frontend apps to:
-- Reduce code duplication (~900 lines saved)
+This package provides reusable React components and hooks with consistent styling across all my-girok frontend apps to:
+- Reduce code duplication (~1,200+ lines saved)
 - Standardize UI patterns across web and mobile
 - Speed up development with ready-to-use components
 - Ensure consistency in user experience
@@ -20,12 +20,26 @@ This package provides reusable React components with consistent styling across a
 - `Button` - Multi-variant buttons with loading states
 - `Alert` - Success, error, warning, info notifications
 
+### 🔄 Drag & Drop Components
+- `SortableList` - Sortable list container with @dnd-kit
+- `SortableItem` - Sortable item wrapper
+- `DragHandle` - Default drag handle component
+
+### 🪝 Custom Hooks
+- `useAsyncOperation` - Handle async operations with loading/error states
+
 ## Installation
 
 This package is automatically available in the monorepo workspace:
 
 ```bash
 pnpm install
+```
+
+**Note**: For drag-and-drop components, you need to install `@dnd-kit` peer dependencies:
+
+```bash
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
 
 ## Usage
@@ -189,6 +203,127 @@ function Messages() {
 - `title?: string` - Alert title
 - `onClose?: () => void` - Close button callback
 - `children: ReactNode` - Alert content
+
+### SortableList & SortableItem
+
+```tsx
+import { SortableList, SortableItem, DragHandle } from '@my-girok/ui-components';
+
+function EducationList() {
+  const [educations, setEducations] = useState([
+    { id: '1', school: 'MIT', major: 'CS' },
+    { id: '2', school: 'Stanford', major: 'AI' },
+  ]);
+
+  return (
+    <SortableList
+      items={educations}
+      onReorder={setEducations}
+      getItemId={(edu) => edu.id}
+      renderItem={(edu, index) => (
+        <SortableItem
+          key={edu.id}
+          id={edu.id}
+          useDragHandle
+          renderDragHandle={(listeners, attributes) => (
+            <DragHandle listeners={listeners} attributes={attributes} />
+          )}
+          className="border rounded-lg p-4 bg-white mb-2"
+        >
+          <h3>{edu.school}</h3>
+          <p>{edu.major}</p>
+        </SortableItem>
+      )}
+      strategy="vertical"
+      className="space-y-2"
+    />
+  );
+}
+```
+
+**SortableList Props:**
+- `items: T[]` - Array of items
+- `onReorder: (items: T[]) => void` - Reorder callback
+- `getItemId: (item: T, index: number) => string` - Extract ID from item
+- `renderItem: (item: T, index: number) => ReactNode` - Render function
+- `strategy?: 'vertical' | 'horizontal'` - Sort strategy (default: 'vertical')
+- `className?: string` - Container CSS class
+
+**SortableItem Props:**
+- `id: string` - Unique ID
+- `children: ReactNode` - Content
+- `className?: string` - Wrapper CSS class
+- `dragOpacity?: number` - Opacity when dragging (default: 0.5)
+- `useDragHandle?: boolean` - Use drag handle (default: false)
+- `renderDragHandle?: (listeners, attributes) => ReactNode` - Custom handle
+
+### useAsyncOperation
+
+```tsx
+import { useAsyncOperation, Button, Alert } from '@my-girok/ui-components';
+
+function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const { execute, loading, error } = useAsyncOperation({
+    onSuccess: (user) => {
+      console.log('Login successful', user);
+      navigate('/dashboard');
+    },
+    defaultErrorMessage: 'Login failed. Please try again.',
+  });
+
+  const handleLogin = async () => {
+    await execute(async () => {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      return response.json();
+    });
+  };
+
+  return (
+    <div>
+      {error && <Alert variant="error">{error}</Alert>}
+
+      <TextInput
+        label="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <TextInput
+        label="Password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <Button loading={loading} onClick={handleLogin}>
+        Login
+      </Button>
+    </div>
+  );
+}
+```
+
+**useAsyncOperation Returns:**
+- `execute: (operation: () => Promise<T>) => Promise<T>` - Execute async operation
+- `loading: boolean` - Loading state
+- `error: string | null` - Error message
+- `data: T | null` - Result data
+- `reset: () => void` - Reset all states
+- `setLoading: (loading: boolean) => void` - Manually set loading
+- `setError: (error: string | null) => void` - Manually set error
+- `setData: (data: T | null) => void` - Manually set data
+
+**useAsyncOperation Options:**
+- `onSuccess?: (data: any) => void` - Success callback
+- `onError?: (error: any) => void` - Error callback
+- `onFinally?: () => void` - Finally callback
+- `defaultErrorMessage?: string` - Default error message
 
 ## Design System
 
