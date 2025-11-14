@@ -373,12 +373,206 @@ className="max-w-7xl mx-auto"
 ### Responsive Breakpoints
 ```css
 /* Mobile First Approach */
-sm: 640px;   /* @media (min-width: 640px) */
-md: 768px;   /* @media (min-width: 768px) */
-lg: 1024px;  /* @media (min-width: 1024px) */
-xl: 1280px;  /* @media (min-width: 1280px) */
-2xl: 1536px; /* @media (min-width: 1536px) */
+sm: 640px;   /* @media (min-width: 640px) - Tablet */
+md: 768px;   /* @media (min-width: 768px) - Tablet Landscape */
+lg: 1024px;  /* @media (min-width: 1024px) - Desktop */
+xl: 1280px;  /* @media (min-width: 1280px) - Large Desktop */
+2xl: 1536px; /* @media (min-width: 1536px) - Extra Large */
 ```
+
+### Mobile-First Responsive Design Patterns
+
+**Philosophy**: Design for mobile first, then enhance for larger screens using `sm:`, `md:`, `lg:` prefixes.
+
+#### Pattern 1: Responsive Text Sizing
+Scale text sizes appropriately for different screen sizes:
+```jsx
+/* Headers - Scale from mobile to desktop */
+className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900"
+
+/* Body text - Subtle scaling */
+className="text-sm sm:text-base text-gray-700"
+
+/* Button text - Ensure readability */
+className="text-xs sm:text-sm font-semibold"
+```
+
+#### Pattern 2: Responsive Spacing
+Reduce spacing on mobile to maximize screen real estate:
+```jsx
+/* Padding - Smaller on mobile */
+className="p-4 sm:p-6 lg:p-8"
+
+/* Gaps - Proportional spacing */
+className="gap-2 sm:gap-3 lg:gap-4"
+
+/* Margins - Vertical rhythm */
+className="mb-2 sm:mb-3 lg:mb-4"
+```
+
+#### Pattern 3: Flexible Layouts
+Transform layouts from stacked (mobile) to horizontal (desktop):
+```jsx
+/* Stack vertically on mobile, horizontal on tablet+ */
+className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+
+/* Header with button - Stack on mobile */
+className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+```
+
+#### Pattern 4: Responsive Grids
+Adjust grid columns based on screen size:
+```jsx
+/* 1 column (mobile) → 2 columns (tablet) → 3 columns (desktop) */
+className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+
+/* Action buttons - 2 columns on mobile, flex on tablet */
+className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2"
+```
+
+#### Pattern 5: Conditional Visibility
+Show/hide elements based on screen size:
+```jsx
+/* Show on large screens only */
+className="hidden lg:block"
+
+/* Show on mobile only */
+className="lg:hidden"
+
+/* Toggle button for mobile preview */
+className="lg:hidden px-4 py-2 bg-amber-700 text-white rounded-lg"
+```
+
+#### Pattern 6: Touch-Friendly Buttons
+Ensure minimum touch target size (44x44px) on mobile:
+```jsx
+/* Responsive button padding */
+className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg
+           whitespace-nowrap"
+
+/* Full-width on mobile, auto on desktop */
+className="w-full sm:w-auto px-4 py-2"
+```
+
+#### Pattern 7: Responsive Modal/Dialog
+Ensure modals work well on small screens:
+```jsx
+/* Fixed position with mobile padding */
+className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+
+/* Modal content - responsive sizing */
+className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-md w-full"
+```
+
+#### Pattern 8: Wrapping and Overflow
+Prevent horizontal scroll and text overflow:
+```jsx
+/* Allow text wrapping on mobile */
+className="break-words"
+
+/* Flex wrap for buttons */
+className="flex flex-wrap gap-2 sm:gap-3"
+
+/* Prevent button text wrapping */
+className="whitespace-nowrap"
+
+/* Truncate long text */
+className="truncate"
+```
+
+#### Common Responsive Components
+
+**Page Header (Mobile-First)**
+```jsx
+<div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="flex items-center gap-2 sm:gap-3 mb-2">
+        <span className="text-2xl sm:text-3xl">📚</span>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900">
+          Page Title
+        </h1>
+      </div>
+      <p className="text-sm sm:text-base text-gray-700 ml-8 sm:ml-12">
+        Subtitle text
+      </p>
+    </div>
+    <button className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-amber-700 to-amber-600
+                       text-white text-sm sm:text-base font-semibold rounded-lg
+                       whitespace-nowrap">
+      Action Button
+    </button>
+  </div>
+</div>
+```
+
+**Card with Action Buttons**
+```jsx
+<div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-4 sm:p-6">
+  <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+    <div className="flex-1">
+      <h3 className="text-lg sm:text-xl font-bold text-amber-900 mb-2">
+        Card Title
+      </h3>
+      <p className="text-sm text-gray-600">Card description</p>
+    </div>
+    {/* Buttons: 2-col grid on mobile, flex on tablet */}
+    <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
+      <button className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold
+                         rounded-lg whitespace-nowrap">
+        Action 1
+      </button>
+      <button className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold
+                         rounded-lg whitespace-nowrap">
+        Action 2
+      </button>
+    </div>
+  </div>
+</div>
+```
+
+**Hero Section (Landing Page)**
+```jsx
+<div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-xl
+                p-6 sm:p-8 lg:p-12 text-center">
+  <span className="text-5xl sm:text-6xl">📚</span>
+  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 mb-3 sm:mb-4">
+    My-Girok
+  </h1>
+  <p className="text-base sm:text-lg lg:text-xl text-gray-700 mb-6 sm:mb-8">
+    Description text
+  </p>
+  {/* Stack buttons vertically on mobile */}
+  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+    <button className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg">
+      Primary Action
+    </button>
+    <button className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg">
+      Secondary Action
+    </button>
+  </div>
+</div>
+```
+
+#### Mobile-First Development Checklist
+
+When implementing responsive designs:
+
+- [ ] Design for mobile first (320px - 375px width)
+- [ ] Use `sm:` prefix for tablet breakpoint (≥640px)
+- [ ] Use `lg:` prefix for desktop breakpoint (≥1024px)
+- [ ] Test on actual mobile devices or DevTools
+- [ ] Ensure all text is readable (minimum 14px/0.875rem)
+- [ ] Ensure touch targets are at least 44x44px
+- [ ] Use `flex-col` on mobile, `sm:flex-row` on larger screens
+- [ ] Reduce padding/spacing on mobile (`p-4 sm:p-6 lg:p-8`)
+- [ ] Make buttons full-width on mobile when appropriate
+- [ ] Use 2-column grid on mobile for action buttons
+- [ ] Prevent horizontal scrolling with `break-words`, `flex-wrap`
+- [ ] Use `whitespace-nowrap` for button text
+- [ ] Hide non-essential elements on mobile with `lg:hidden`
+- [ ] Test modals/dialogs with mobile padding (`p-4`)
+- [ ] Ensure navbar is usable on small screens
 
 ## Animation & Transitions
 
@@ -526,4 +720,5 @@ Currently not implemented. When implementing:
 
 ## Version History
 
+- v1.1.0 (2025-01-15): Added comprehensive mobile-first responsive design patterns and guidelines
 - v1.0.0 (2025-01-09): Initial design system with library theme
