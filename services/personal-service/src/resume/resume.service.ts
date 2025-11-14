@@ -498,19 +498,7 @@ export class ResumeService {
           include: {
             projects: {
               include: {
-                achievements: {
-                  include: {
-                    children: {
-                      include: {
-                        children: {
-                          include: {
-                            children: true, // Up to 4 levels
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
+                achievements: this.ACHIEVEMENT_INCLUDE,
               },
             },
           },
