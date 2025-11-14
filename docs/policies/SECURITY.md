@@ -101,6 +101,81 @@ app.enableCors({
 });
 ```
 
+**Mobile Browser Considerations:**
+- Mobile browsers (especially iOS Safari) enforce CORS more strictly
+- Ensure public endpoints don't require Authorization header
+- Test CORS preflight (OPTIONS) requests on mobile devices
+- Consider adding specific origin patterns for mobile deep links
+
+### Public Endpoint Security
+
+**Public endpoints (marked with @Public() decorator) must NOT require authentication.**
+
+#### Backend Setup
+
+```typescript
+// ✅ DO: Use @Public() decorator for endpoints that don't require auth
+@Get('public/:token')
+@Public()
+@ApiOperation({ summary: 'Get public resume by share token (no auth)' })
+async getPublicResume(@Param('token') token: string) {
+  return this.shareService.getPublicResume(token);
+}
+```
+
+#### Frontend HTTP Client Configuration
+
+**CRITICAL: HTTP interceptors must skip auth for public endpoints**
+
+```typescript
+// ✅ DO: Skip auth headers for public endpoints
+api.interceptors.request.use(async (config) => {
+  // Detect public endpoints
+  const isPublicEndpoint = config.url?.includes('/share/public/') ||
+                           config.url?.includes('/resume/public/');
+
+  if (isPublicEndpoint) {
+    return config; // Skip auth header injection
+  }
+
+  // Add auth for non-public endpoints
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+
+// ✅ DO: Skip auth retry for public endpoints
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const isPublicEndpoint = error.config.url?.includes('/public/');
+
+    if (isPublicEndpoint) {
+      return Promise.reject(error); // Don't trigger login redirect
+    }
+
+    // Handle 401 for authenticated endpoints
+    if (error.response?.status === 401) {
+      // Refresh token logic...
+    }
+
+    return Promise.reject(error);
+  }
+);
+```
+
+**Why this matters:**
+- Mobile browsers (especially Safari) are more strict about unnecessary auth headers
+- Sending auth headers to public endpoints can cause CORS preflight failures
+- 401 errors on public endpoints should not trigger login redirects
+
+**Testing Requirements:**
+- Test public endpoints on iOS Safari, Android Chrome, and desktop browsers
+- Verify no Authorization headers are sent for public endpoints
+- Ensure 404/403 errors don't redirect to login page
+
 ## Secrets Management
 
 ### NEVER:
