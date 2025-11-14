@@ -1,8 +1,8 @@
 # My-Girok
 
-> Modern Authentication & User Management System with Multi-Provider OAuth
+> Personal Information Management Platform - Organize Your Career, Budget, and More
 
-A production-ready authentication service built with TypeScript, NestJS, Prisma, and React. Features include local authentication, OAuth integration (Google, Kakao, Naver), role-based access control, and secure JWT token management.
+A comprehensive personal management platform that helps you organize and showcase your professional profile. Create multiple resumes tailored for different purposes, manage your budget, and share your information securely with time-limited links. Built with modern technologies including TypeScript, NestJS, Prisma, and React.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-22.x-green.svg)
@@ -12,7 +12,58 @@ A production-ready authentication service built with TypeScript, NestJS, Prisma,
 
 ## ✨ Features
 
-### Authentication & Authorization
+### Resume Management
+
+- ✅ **Multiple Resume Support**
+  - Create unlimited resumes for different purposes (corporate, freelance, startup, etc.)
+  - Set default resume for public profile
+  - Korean-specific features (military service, Korean degree types, GPA formats)
+
+- ✅ **Comprehensive Profile**
+  - Basic information (name, contact, social links)
+  - Professional summary
+  - Profile photo with automatic grayscale conversion
+  - Cover letter and application reason
+
+- ✅ **Career Management**
+  - Work experiences with company details
+  - Projects within each experience
+  - Hierarchical achievements (up to 4 levels)
+  - Technology stack tracking
+  - Current employment status
+
+- ✅ **Skills & Education**
+  - Categorized skills (Frontend, Backend, DevOps, etc.)
+  - Education history with degree types
+  - Multiple GPA format support (4.0, 4.5, 100-point scale)
+  - Certificates and awards
+
+- ✅ **File Attachments**
+  - Profile photos
+  - Portfolio documents (PDF, images)
+  - Certificates
+  - Automatic image processing
+
+- ✅ **Sharing & Privacy**
+  - Public resume view (username-based URLs)
+  - Time-limited share links
+  - Share analytics (view count, last viewed)
+  - Private resume management
+
+- ✅ **Customization**
+  - Section visibility toggles
+  - Custom section ordering
+  - Multiple paper size support (A4, Letter)
+  - Print-optimized preview
+
+### Budget Management (Planned)
+
+- 📋 Income and expense tracking
+- 📋 Category-based budgeting
+- 📋 Monthly and yearly budget planning
+- 📋 Transaction history
+
+### Authentication & Security
 
 - ✅ **Multi-Provider Authentication**
   - Local (Email + Password)
@@ -34,26 +85,21 @@ A production-ready authentication service built with TypeScript, NestJS, Prisma,
   - `MANAGER` - Moderator privileges
   - `MASTER` - Full administrative access
 
-- ✅ **OAuth Provider Management**
-  - Enable/disable OAuth providers via API
-  - Database-driven configuration
-  - Admin-only access with audit trail
+### Web Application
 
-### Web Test Application
-
-- ✅ React 18 + Vite + TypeScript
+- ✅ React 19 + Vite + TypeScript
+- ✅ Responsive design with Tailwind CSS
+- ✅ Library/book theme with amber colors
 - ✅ Automatic token refresh
-- ✅ Protected routes
-- ✅ Public and private pages
-- ✅ Tailwind CSS styling
+- ✅ Protected and public routes
 
-### API Documentation
+### API & Documentation
 
 - ✅ OpenAPI/Swagger documentation
 - ✅ Interactive API testing
-- ✅ JWT authentication support
+- ✅ REST and GraphQL support
 
-### Testing
+### Testing & Quality
 
 - ✅ Unit tests (Jest)
 - ✅ Integration tests
@@ -155,8 +201,11 @@ pnpm dev
 6. **Access applications**
 
 - Web App: http://localhost:3000
-- Auth API: http://localhost:3001
-- API Docs: http://localhost:3001/api/docs
+- Auth Service: http://localhost:3001
+- Personal Service: http://localhost:3002
+- API Docs:
+  - Auth: http://localhost:3001/api/docs
+  - Personal: http://localhost:3002/api/docs
 
 ## 📖 Documentation
 
@@ -181,30 +230,48 @@ pnpm dev
 ```
 my-girok/
 ├── apps/
-│   └── web-main/              # React test application
+│   └── web-main/                  # React web application
 │       ├── src/
-│       ├── e2e/              # Playwright E2E tests
+│       │   ├── pages/
+│       │   │   └── resume/       # Resume management pages
+│       │   ├── components/
+│       │   │   └── resume/       # Resume components
+│       │   └── api/              # API clients
+│       ├── e2e/                  # Playwright E2E tests
 │       └── Dockerfile
 ├── services/
-│   └── auth-service/          # Authentication service
-│       ├── src/
-│       │   ├── auth/         # Auth module (login, register, OAuth)
-│       │   ├── users/        # User management
-│       │   ├── oauth-config/ # OAuth provider configuration
-│       │   ├── common/       # Shared utilities
-│       │   └── database/     # Prisma client
-│       ├── prisma/           # Database schema
-│       ├── helm/             # Kubernetes Helm chart
-│       └── Dockerfile
+│   ├── auth-service/              # Authentication & user management
+│   │   ├── src/
+│   │   │   ├── auth/             # Auth module (login, register, OAuth)
+│   │   │   ├── users/            # User management
+│   │   │   ├── oauth-config/     # OAuth provider configuration
+│   │   │   └── database/         # Prisma client
+│   │   ├── prisma/               # Database schema
+│   │   ├── helm/                 # Kubernetes Helm chart
+│   │   └── Dockerfile
+│   ├── personal-service/          # Personal information management
+│   │   ├── src/
+│   │   │   ├── resume/           # Resume management
+│   │   │   ├── budget/           # Budget tracking (planned)
+│   │   │   ├── share/            # Share links
+│   │   │   └── database/         # Prisma client
+│   │   ├── prisma/               # Database schema
+│   │   ├── helm/                 # Kubernetes Helm chart
+│   │   └── Dockerfile
+│   └── gateway/
+│       ├── web-bff/              # Web Backend-for-Frontend
+│       └── mobile-bff/           # Mobile Backend-for-Frontend (planned)
 ├── packages/
-│   └── types/                 # Shared TypeScript types
+│   └── types/                     # Shared TypeScript types
 │       └── src/
 │           ├── auth/
-│           └── user/
-├── docs/                      # Documentation
-├── .ai/                       # LLM-optimized docs
-├── docker-compose.yml         # Docker orchestration
-└── CONTRIBUTING.md            # Contribution guidelines
+│           ├── user/
+│           ├── resume/
+│           └── budget/
+├── docs/                          # Documentation
+├── .ai/                           # LLM-optimized docs
+├── docker-compose.yml             # Docker orchestration
+└── CONTRIBUTING.md                # Contribution guidelines
 ```
 
 ### Development Commands
@@ -418,12 +485,28 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 
 ### Completed ✅
 
+**Resume Management:**
+- [x] Multiple resume support with metadata
+- [x] Comprehensive profile information
+- [x] Work experience and projects
+- [x] Hierarchical achievements (4 levels)
+- [x] Skills categorization
+- [x] Education with degree types
+- [x] Certificates and awards
+- [x] File attachments (profile photos, portfolios, certificates)
+- [x] Public resume view (username-based URLs)
+- [x] Time-limited share links with analytics
+- [x] Section visibility and ordering
+- [x] Korean-specific features (military service, GPA formats)
+- [x] Copy resume functionality with i18n support
+
+**Authentication & Infrastructure:**
 - [x] Multi-provider authentication (Local, Google, Kakao, Naver)
 - [x] JWT token management (Access + Refresh)
 - [x] Role-based access control (RBAC)
 - [x] OAuth provider management API
 - [x] OpenAPI/Swagger documentation
-- [x] React test web application
+- [x] React web application with resume UI
 - [x] Docker Compose deployment
 - [x] Kubernetes Helm chart
 - [x] Unit tests (80%+ coverage)
@@ -432,20 +515,28 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 
 ### In Progress 🚧
 
-- [ ] OAuth provider configuration UI
-- [ ] User profile management
-- [ ] Email verification
-- [ ] Password reset flow
-- [ ] Two-factor authentication (2FA)
+- [ ] Resume print optimization
+- [ ] PDF export functionality
+- [ ] Profile image processing (grayscale conversion)
+- [ ] Resume templates
 
 ### Planned 📋
 
+**Budget Management:**
+- [ ] Income and expense tracking
+- [ ] Category-based budgeting
+- [ ] Monthly/yearly budget planning
+- [ ] Budget analytics and reports
+- [ ] Share budget summaries
+
+**Additional Features:**
 - [ ] Admin dashboard (Next.js)
 - [ ] Mobile apps (iOS, Android)
-- [ ] Rate limiting per user
+- [ ] Email verification
+- [ ] Password reset flow
+- [ ] Two-factor authentication (2FA)
 - [ ] Audit logging
-- [ ] GraphQL API
-- [ ] BFF layer (Backend for Frontend)
+- [ ] Resume AI suggestions
 
 ## 📝 License
 
@@ -467,4 +558,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for secure authentication and user management**
+**Built with ❤️ for organizing and showcasing your professional journey**
