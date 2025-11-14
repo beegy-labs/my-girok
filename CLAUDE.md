@@ -40,11 +40,8 @@
 **Working on admin dashboard?**
 → Read: `.ai/rules.md` + `.ai/apps/web-admin.md`
 
-**Working on iOS app?**
-→ Read: `.ai/rules.md` + `.ai/apps/ios.md`
-
-**Working on Android app?**
-→ Read: `.ai/rules.md` + `.ai/apps/android.md`
+**Working on mobile app (Flutter)?**
+→ Read: `.ai/rules.md` + `.ai/apps/mobile-flutter.md`
 
 ## Documentation Structure
 
@@ -67,8 +64,7 @@ my-girok/
 │   └── apps/                 # Frontend app guides
 │       ├── web-main.md
 │       ├── web-admin.md
-│       ├── ios.md
-│       └── android.md
+│       └── mobile-flutter.md
 │
 └── docs/                     # 📚 Human-readable docs (~73K tokens)
     ├── policies/             # Detailed policies
