@@ -14,6 +14,12 @@
 
 ### NEVER
 - ❌ Duplicate types → Use `packages/types`
+- ❌ Duplicate NestJS utilities → Use `@my-girok/nest-common`
+- ❌ Duplicate UI components → Use `@my-girok/ui-components`
+- ❌ Implement inline forms without validation → Use shared components
+- ❌ Implement drag-and-drop from scratch → Use `SortableList`
+- ❌ Duplicate async/loading patterns → Use `useAsyncOperation`
+- ❌ Return inconsistent error formats → Use `HttpExceptionFilter`
 - ❌ Prisma in Controllers → Use Services
 - ❌ Hardcode secrets → Use ConfigService
 - ❌ Make sync service-to-service calls → Use HTTP
@@ -28,6 +34,10 @@
 
 ### ALWAYS
 - ✅ Define types first in `packages/types`
+- ✅ Use `@my-girok/nest-common` for backend services (decorators, guards, filters)
+- ✅ Use `@my-girok/ui-components` for frontend UI (TextInput, Button, Alert, etc.)
+- ✅ Use standard error format (`ApiErrorResponse` / `ApiSuccessResponse`)
+- ✅ Use `configureApp()` factory for NestJS bootstrapping
 - ✅ Use DTO validation (class-validator)
 - ✅ Apply `@Transactional()` for multi-step DB ops
 - ✅ Use Guards for protected endpoints
@@ -167,17 +177,79 @@ Never remove, applies to all environments.
 - Cache frequently accessed data (Redis)
 - Use SELECT only needed fields
 
+## Common Packages
+
+### Backend: @my-girok/nest-common
+
+**Use for all NestJS services:**
+```typescript
+// Bootstrap with standard configuration
+import { configureApp } from '@my-girok/nest-common';
+
+const app = await NestFactory.create(AppModule);
+await configureApp(app, {
+  serviceName: 'My Service',
+  description: 'Service description',
+  defaultPort: 4000,
+});
+```
+
+**Available utilities:**
+- `@Public()` - Mark endpoints as public (skip JWT auth)
+- `@CurrentUser()` - Extract user from request
+- `JwtAuthGuard` - JWT authentication with @Public() support
+- `HttpExceptionFilter` - Standard error format
+- `configureApp()` - Bootstrap factory (reduces main.ts from ~100 to ~20 lines)
+- `BasePrismaService` - Prisma service with lifecycle hooks
+- `ApiErrorResponse` / `ApiSuccessResponse` - Standard response types
+
+### Frontend: @my-girok/ui-components
+
+**Use for all React applications:**
+```typescript
+import {
+  TextInput,
+  SelectInput,
+  Button,
+  Alert,
+  SortableList,
+  SortableItem,
+  useAsyncOperation,
+} from '@my-girok/ui-components';
+```
+
+**Form components:**
+- `TextInput` - Text/email/password with validation
+- `SelectInput` - Dropdown with options
+- `Button` - Multi-variant (primary/secondary/danger/ghost) with loading
+- `Alert` - Notifications (success/error/warning/info)
+
+**Drag & Drop:**
+- `SortableList` - Sortable container (@dnd-kit wrapper)
+- `SortableItem` - Sortable item with drag handle support
+
+**Hooks:**
+- `useAsyncOperation` - Async operations with loading/error states
+
 ## Common Patterns
 
-**New Feature Workflow:**
-1. Define types in `packages/types`
-2. Update Prisma schema → migrate
-3. Create Repository (extends BaseRepository)
-4. Create Service (use `@Transactional()`)
-5. Create Controller (add validation)
-6. Frontend API call with shared types
+**New Backend Service:**
+1. Use `@my-girok/nest-common` for bootstrap
+2. Define types in `packages/types`
+3. Update Prisma schema → migrate
+4. Create Repository (extends BaseRepository)
+5. Create Service (use `@Transactional()`)
+6. Create Controller (use `@Public()`, `@CurrentUser()`)
 7. Write tests (80% coverage)
 8. Create PR
+
+**New Frontend Feature:**
+1. Use `@my-girok/ui-components` for UI
+2. Use shared types from `packages/types`
+3. Use `useAsyncOperation` for API calls
+4. Use `SortableList` for drag-and-drop
+5. Write tests (80% coverage)
+6. Create PR
 
 ## Stack Reference
 
