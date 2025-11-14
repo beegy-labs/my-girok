@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { changePassword } from '../api/auth';
 
@@ -9,8 +9,19 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [changeSuccess, setChangeSuccess] = useState(false);
 
   const navigate = useNavigate();
+
+  // Handle navigation after successful password change (React 19 compatibility)
+  useEffect(() => {
+    if (changeSuccess) {
+      const timer = setTimeout(() => {
+        navigate('/');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [changeSuccess, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,11 +47,7 @@ export default function ChangePasswordPage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-
-      // Redirect to home page after 2 seconds
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      setChangeSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to change password. Please check your current password.');
     } finally {

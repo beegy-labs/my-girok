@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(true);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
@@ -27,6 +28,13 @@ export default function LoginPage() {
       setRememberEmail(true);
     }
   }, []);
+
+  // Handle navigation after successful login (React 19 compatibility)
+  useEffect(() => {
+    if (loginSuccess) {
+      navigate('/');
+    }
+  }, [loginSuccess, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +51,7 @@ export default function LoginPage() {
 
       const response = await login({ email, password });
       setAuth(response.user, response.accessToken, response.refreshToken);
-      navigate('/');
+      setLoginSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { register } from '../api/auth';
@@ -12,9 +12,17 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
+
+  // Handle navigation after successful registration (React 19 compatibility)
+  useEffect(() => {
+    if (registerSuccess) {
+      navigate('/');
+    }
+  }, [registerSuccess, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +32,7 @@ export default function RegisterPage() {
     try {
       const response = await register({ email, username, password, name });
       setAuth(response.user, response.accessToken, response.refreshToken);
-      navigate('/'); // Redirect to home page after registration
+      setRegisterSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
