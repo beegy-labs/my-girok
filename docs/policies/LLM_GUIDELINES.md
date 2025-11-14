@@ -61,11 +61,11 @@ kubectl apply -k k8s/overlays/production
 
 ## Stack
 
-**Web:** React 19 + Vite, Next.js 15, TypeScript, Tailwind CSS
+**Web:** React 19.2 + Vite 7.2, Next.js 15, TypeScript 5.7, Tailwind CSS 4.1
 **Mobile:** Flutter 3.24+ (Dart 3.5+) - iOS & Android
-**Backend:** Node.js 20, NestJS 10 (API Gateway Pattern)
-**Database:** PostgreSQL 16 + Prisma 5 + Redis
-**AI:** Python 3.11, FastAPI
+**Backend:** Node.js 22, NestJS 11 (API Gateway Pattern)
+**Database:** PostgreSQL 16 + Prisma 6 + Redis
+**AI:** Python 3.13, FastAPI
 **Tools:** pnpm, Turborepo
 
 ## Architecture Overview

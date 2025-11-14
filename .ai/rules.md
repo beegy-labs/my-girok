@@ -253,10 +253,10 @@ import {
 
 ## Stack Reference
 
-- **Web**: React 19 + Vite, Next.js 15, TypeScript, Tailwind
+- **Web**: React 19.2 + Vite 7.2, Next.js 15, TypeScript 5.7, Tailwind 4.1
 - **Mobile**: Flutter 3.24+ (Dart 3.5+) - iOS & Android
-- **Backend**: Node.js 20, NestJS 10
-- **Database**: PostgreSQL 16 + Prisma 5 + Redis
+- **Backend**: Node.js 22, NestJS 11
+- **Database**: PostgreSQL 16 + Prisma 6 + Redis
 - **AI**: Python 3.11, FastAPI
 - **Tools**: pnpm, Turborepo
 - **Deploy**: Kubernetes, Kustomize, Sealed Secrets

@@ -8,8 +8,8 @@ Handles user authentication, session management, and access control.
 
 ## Tech Stack
 
-- **Framework**: NestJS 10 + TypeScript
-- **Database**: PostgreSQL 16 + Prisma 5
+- **Framework**: NestJS 11 + TypeScript 5.7
+- **Database**: PostgreSQL 16 + Prisma 6
 - **Auth**: Passport.js + JWT
 - **Protocols**: REST + GraphQL (both available)
 

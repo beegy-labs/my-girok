@@ -80,12 +80,12 @@ OAuthProviderConfig {
 }
 ```
 
-### 2. Web Test Application (React 18)
+### 2. Web Test Application (React 19.2)
 
 #### Technology Stack
-- React 18.3.1 with Vite 6
+- React 19.2 with Vite 7.2
 - TypeScript 5.7
-- Tailwind CSS
+- Tailwind CSS 4.1
 - React Router 6
 - Zustand (state management with localStorage persistence)
 - Axios (with automatic token refresh interceptor)
@@ -232,10 +232,10 @@ Token-optimized, concise instructions:
 ## Technical Stack
 
 ### Backend
-- **Runtime**: Node.js 22.11.0 LTS
-- **Framework**: NestJS 10.4.15
-- **Language**: TypeScript 5.7.2
-- **ORM**: Prisma 6.2.1
+- **Runtime**: Node.js 22 LTS
+- **Framework**: NestJS 11.x
+- **Language**: TypeScript 5.7
+- **ORM**: Prisma 6
 - **Database**: PostgreSQL 16
 - **Cache**: Redis 7 (optional)
 - **Authentication**: Passport.js + JWT
@@ -243,10 +243,10 @@ Token-optimized, concise instructions:
 - **Testing**: Jest
 
 ### Frontend
-- **Framework**: React 18.3.1
-- **Build Tool**: Vite 6.0.3
-- **Language**: TypeScript 5.7.2
-- **Styling**: Tailwind CSS 3.4.17
+- **Framework**: React 19.2
+- **Build Tool**: Vite 7.2
+- **Language**: TypeScript 5.7
+- **Styling**: Tailwind CSS 4.1
 - **Router**: React Router 6.28.0
 - **State**: Zustand 5.0.2
 - **HTTP**: Axios 1.7.9

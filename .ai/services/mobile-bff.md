@@ -8,7 +8,7 @@ Provides lightweight REST API optimized for mobile apps (iOS/Android). Minimizes
 
 ## Tech Stack
 
-- **Framework**: NestJS 10 + TypeScript
+- **Framework**: NestJS 11 + TypeScript 5.7
 - **Protocol**: REST (primary), GraphQL (optional)
 - **Cache**: Redis for mobile-optimized responses
 
