@@ -289,6 +289,17 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Recent Updates
 
+**2025-11-14**: Resume list UI improvements with i18n and amber theme
+- Added resume copy button to ResumeList component
+- Refactored ResumeList.tsx to use i18n for all user-facing text (policy compliance)
+- Changed color scheme from blue/green to amber theme (policy compliance)
+- Added translation keys to en.json, ko.json, ja.json: `resume.list.*`
+- Translation keys support: title, createNew, edit, preview, copy, setDefault, delete, confirmations, error messages, stats
+- UI buttons now follow amber library theme: `bg-amber-50 text-amber-700`, gradient CTAs
+- Delete button remains red (appropriate for destructive action)
+- Copy feature: Uses existing backend API `POST /v1/resume/:id/copy`
+- Files changed: `ResumeList.tsx`, `en.json`, `ko.json`, `ja.json`
+
 **2025-11-13**: Total career duration with overlap handling
 - Added `calculateTotalExperienceWithOverlap()` utility function to handle overlapping work periods
 - Merges overlapping date ranges using interval merging algorithm to avoid double-counting

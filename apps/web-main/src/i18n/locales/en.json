@@ -102,6 +102,34 @@
       "years": "years",
       "months": "months",
       "duration": "{{years}} years {{months}} months"
+    },
+    "list": {
+      "title": "My Resumes",
+      "createNew": "Create New Resume",
+      "noResumes": "No resumes yet.",
+      "createFirst": "Create Your First Resume",
+      "edit": "Edit",
+      "preview": "Preview",
+      "copy": "Copy",
+      "setDefault": "Set as Default",
+      "delete": "Delete",
+      "defaultBadge": "Default Resume",
+      "updatedAt": "Updated",
+      "confirmDelete": "Are you sure you want to delete this resume?",
+      "confirmCopy": "Do you want to copy \"{{title}}\" resume?",
+      "copySuccess": "Resume copied successfully.",
+      "copyFailed": "Failed to copy resume",
+      "deleteFailed": "Failed to delete resume",
+      "setDefaultFailed": "Failed to set default resume",
+      "loadFailed": "Failed to load resumes",
+      "loading": "Loading...",
+      "stats": {
+        "skills": "Skills",
+        "experiences": "Experiences",
+        "projects": "Projects",
+        "education": "Education",
+        "certificates": "Certificates"
+      }
     }
   }
 }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { getAllResumes, deleteResume, setDefaultResume, Resume } from '../../api/resume';
+import { getAllResumes, deleteResume, setDefaultResume, copyResume, Resume } from '../../api/resume';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function ResumeList() {
+  const { t } = useTranslation();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,20 +20,20 @@ export default function ResumeList() {
       const data = await getAllResumes();
       setResumes(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load resumes');
+      setError(err.response?.data?.message || t('resume.list.loadFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (resumeId: string) => {
-    if (!confirm('이 이력서를 삭제하시겠습니까?')) return;
+    if (!confirm(t('resume.list.confirmDelete'))) return;
 
     try {
       await deleteResume(resumeId);
       await loadResumes();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete resume');
+      alert(err.response?.data?.message || t('resume.list.deleteFailed'));
     }
   };
 
@@ -40,14 +42,26 @@ export default function ResumeList() {
       await setDefaultResume(resumeId);
       await loadResumes();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to set default resume');
+      alert(err.response?.data?.message || t('resume.list.setDefaultFailed'));
+    }
+  };
+
+  const handleCopy = async (resumeId: string, resumeTitle: string) => {
+    if (!confirm(t('resume.list.confirmCopy', { title: resumeTitle }))) return;
+
+    try {
+      await copyResume(resumeId);
+      await loadResumes();
+      alert(t('resume.list.copySuccess'));
+    } catch (err: any) {
+      alert(err.response?.data?.message || t('resume.list.copyFailed'));
     }
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-gray-600">로딩중...</div>
+        <div className="text-gray-600">{t('resume.list.loading')}</div>
       </div>
     );
   }
@@ -63,23 +77,23 @@ export default function ResumeList() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">내 이력서 목록</h1>
+        <h1 className="text-3xl font-bold text-amber-900">{t('resume.list.title')}</h1>
         <Link
           to="/resume/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 text-white rounded-lg hover:from-amber-800 hover:to-amber-700 transition"
         >
-          새 이력서 만들기
+          {t('resume.list.createNew')}
         </Link>
       </div>
 
       {resumes.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 mb-4">아직 이력서가 없습니다.</p>
+          <p className="text-gray-600 mb-4">{t('resume.list.noResumes')}</p>
           <Link
             to="/resume/new"
-            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 text-white rounded-lg hover:from-amber-800 hover:to-amber-700 transition"
           >
-            첫 이력서 만들기
+            {t('resume.list.createFirst')}
           </Link>
         </div>
       ) : (
@@ -87,17 +101,17 @@ export default function ResumeList() {
           {resumes.map((resume) => (
             <div
               key={resume.id}
-              className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition"
+              className="bg-white border border-amber-200 rounded-lg p-6 hover:shadow-lg transition"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-xl font-semibold text-amber-900">
                       {resume.title}
                     </h2>
                     {resume.isDefault && (
-                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                        기본 이력서
+                      <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+                        {t('resume.list.defaultBadge')}
                       </span>
                     )}
                   </div>
@@ -108,46 +122,52 @@ export default function ResumeList() {
                     {resume.name} · {resume.email}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    수정: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
+                    {t('resume.list.updatedAt')}: {new Date(resume.updatedAt).toLocaleDateString()}
                   </p>
                 </div>
 
                 <div className="flex gap-2">
                   <Link
                     to={`/resume/edit/${resume.id}`}
-                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                    className="px-4 py-2 text-sm bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition"
                   >
-                    편집
+                    {t('resume.list.edit')}
                   </Link>
                   <Link
                     to={`/resume/preview/${resume.id}`}
-                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                    className="px-4 py-2 text-sm bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition"
                   >
-                    미리보기
+                    {t('resume.list.preview')}
                   </Link>
+                  <button
+                    onClick={() => handleCopy(resume.id, resume.title)}
+                    className="px-4 py-2 text-sm bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition"
+                  >
+                    {t('resume.list.copy')}
+                  </button>
                   {!resume.isDefault && (
                     <button
                       onClick={() => handleSetDefault(resume.id)}
-                      className="px-4 py-2 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition"
+                      className="px-4 py-2 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition"
                     >
-                      기본 설정
+                      {t('resume.list.setDefault')}
                     </button>
                   )}
                   <button
                     onClick={() => handleDelete(resume.id)}
                     className="px-4 py-2 text-sm bg-red-50 text-red-700 rounded hover:bg-red-100 transition"
                   >
-                    삭제
+                    {t('resume.list.delete')}
                   </button>
                 </div>
               </div>
 
               <div className="flex gap-6 text-sm text-gray-600">
-                <div>기술스택: {resume.skills.length}개</div>
-                <div>경력: {resume.experiences.length}개</div>
-                <div>프로젝트: {resume.projects.length}개</div>
-                <div>학력: {resume.educations.length}개</div>
-                <div>자격증: {resume.certificates.length}개</div>
+                <div>{t('resume.list.stats.skills')}: {resume.skills.length}</div>
+                <div>{t('resume.list.stats.experiences')}: {resume.experiences.length}</div>
+                <div>{t('resume.list.stats.projects')}: {resume.projects.length}</div>
+                <div>{t('resume.list.stats.education')}: {resume.educations.length}</div>
+                <div>{t('resume.list.stats.certificates')}: {resume.certificates.length}</div>
               </div>
             </div>
           ))}

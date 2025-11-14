@@ -90,6 +90,34 @@
       "years": "年",
       "months": "ヶ月",
       "duration": "{{years}}年{{months}}ヶ月"
+    },
+    "list": {
+      "title": "履歴書リスト",
+      "createNew": "新しい履歴書を作成",
+      "noResumes": "まだ履歴書がありません。",
+      "createFirst": "最初の履歴書を作成",
+      "edit": "編集",
+      "preview": "プレビュー",
+      "copy": "コピー",
+      "setDefault": "デフォルトに設定",
+      "delete": "削除",
+      "defaultBadge": "デフォルト履歴書",
+      "updatedAt": "更新",
+      "confirmDelete": "この履歴書を削除してもよろしいですか？",
+      "confirmCopy": "「{{title}}」履歴書をコピーしますか？",
+      "copySuccess": "履歴書が正常にコピーされました。",
+      "copyFailed": "履歴書のコピーに失敗しました",
+      "deleteFailed": "履歴書の削除に失敗しました",
+      "setDefaultFailed": "デフォルト履歴書の設定に失敗しました",
+      "loadFailed": "履歴書の読み込みに失敗しました",
+      "loading": "読み込み中...",
+      "stats": {
+        "skills": "スキル",
+        "experiences": "経歴",
+        "projects": "プロジェクト",
+        "education": "学歴",
+        "certificates": "資格"
+      }
     }
   }
 }
