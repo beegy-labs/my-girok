@@ -17,15 +17,7 @@ export default function ResumePreviewPage() {
   const [paperSize, setPaperSize] = useState<PaperSize>('A4');
   const [exporting, setExporting] = useState(false);
 
-  // Reset state when resumeId changes (React 19 compatibility)
-  useEffect(() => {
-    setResume(null);
-    setLoading(true);
-    setError(null);
-    setShowShareModal(false);
-    setExporting(false);
-  }, [resumeId]);
-
+  // Define loadResume function to be reused (for initial load and retry)
   const loadResume = async () => {
     if (!resumeId) {
       setError('NO_ID');
@@ -34,10 +26,17 @@ export default function ResumePreviewPage() {
     }
 
     try {
+      // Reset state
+      setResume(null);
       setLoading(true);
       setError(null);
+      setShowShareModal(false);
+      setExporting(false);
+
+      // Load resume data
       const data = await getResume(resumeId);
       setResume(data);
+
       // Set paper size from resume if available
       if (data.paperSize) {
         setPaperSize(data.paperSize);
