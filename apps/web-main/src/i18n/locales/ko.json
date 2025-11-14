@@ -130,6 +130,25 @@
         "education": "학력",
         "certificates": "자격증"
       }
+    },
+    "preview": {
+      "continuousView": "연속 보기",
+      "paginatedView": "페이지 보기",
+      "colorMode": "컬러 모드",
+      "grayscaleMode": "흑백 모드",
+      "switchToColorMode": "컬러 모드로 전환",
+      "switchToGrayscaleMode": "흑백 모드로 전환",
+      "coverLetter": "자기소개서",
+      "applicationReason": "지원 동기",
+      "page": "페이지",
+      "ongoing": "진행중",
+      "present": "현재",
+      "tech": "기술",
+      "demo": "데모",
+      "github": "GitHub",
+      "verify": "인증",
+      "degree": "학위",
+      "in": "전공"
     }
   }
 }
