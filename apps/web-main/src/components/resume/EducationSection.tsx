@@ -59,7 +59,7 @@ function SortableEducationCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-gray-200 rounded-lg p-4 bg-white"
+      className="border border-gray-200 dark:border-dark-border-subtle rounded-lg p-4 bg-white dark:bg-dark-bg-elevated transition-colors duration-200"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -67,19 +67,19 @@ function SortableEducationCard({
             type="button"
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+            className="cursor-grab active:cursor-grabbing text-gray-400 dark:text-dark-text-tertiary hover:text-gray-600 dark:hover:text-dark-text-secondary transition-colors duration-200"
             title="Drag to reorder"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
             </svg>
           </button>
-          <h3 className="text-lg font-semibold text-gray-900">🎓 Education #{index + 1}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 Education #{index + 1}</h3>
         </div>
         <button
           type="button"
           onClick={onRemove}
-          className="text-red-600 hover:text-red-800 text-sm font-semibold"
+          className="text-red-600 hover:text-red-800 text-sm font-semibold transition-colors duration-200"
         >
           Remove
         </button>
@@ -87,39 +87,39 @@ function SortableEducationCard({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
             School <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={education.school}
             onChange={e => onUpdate({ ...education, school: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             placeholder="University name"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
             Major <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={education.major}
             onChange={e => onUpdate({ ...education, major: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             placeholder="e.g., Computer Science"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
             Degree
           </label>
           <select
             value={education.degree || ''}
             onChange={e => onUpdate({ ...education, degree: e.target.value as DegreeType || undefined })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
           >
             <option value="">Select degree</option>
             {degreeTypes.map(degreeType => (
@@ -131,13 +131,13 @@ function SortableEducationCard({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
             GPA Format
           </label>
           <select
             value={education.gpaFormat || GpaFormat.SCALE_4_0}
             onChange={e => onUpdate({ ...education, gpaFormat: e.target.value as GpaFormat })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
           >
             {gpaFormats.map(format => (
               <option key={format} value={format}>
@@ -148,14 +148,14 @@ function SortableEducationCard({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
             GPA
           </label>
           <input
             type="text"
             value={education.gpa || ''}
             onChange={e => onUpdate({ ...education, gpa: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             placeholder={
               education.gpaFormat === GpaFormat.SCALE_4_5 ? 'e.g., 4.2/4.5' :
               education.gpaFormat === GpaFormat.SCALE_100 ? 'e.g., 85/100' :
@@ -165,26 +165,26 @@ function SortableEducationCard({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
             Start Date <span className="text-red-500">*</span>
           </label>
           <input
             type="month"
             value={education.startDate}
             onChange={e => onUpdate({ ...education, startDate: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
             End Date
           </label>
           <input
             type="month"
             value={education.endDate || ''}
             onChange={e => onUpdate({ ...education, endDate: e.target.value })}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900"
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             placeholder="Leave empty if current"
           />
         </div>
@@ -245,16 +245,16 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-sm p-6 transition-colors duration-200">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">🎓 {t('resume.sections.education')}</h2>
-          <p className="text-sm text-gray-600">{t('resume.descriptions.education')}</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
+          <p className="text-sm text-gray-600 dark:text-dark-text-secondary transition-colors duration-200">{t('resume.descriptions.education')}</p>
         </div>
         <button
           type="button"
           onClick={handleAdd}
-          className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-all font-semibold"
+          className="px-4 py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-lg hover:bg-amber-800 dark:hover:bg-amber-500 transition-all font-semibold"
         >
           + Add Education
         </button>
@@ -278,7 +278,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">
           No education entries yet. Click "+ Add Education" to add one.
         </div>
       )}

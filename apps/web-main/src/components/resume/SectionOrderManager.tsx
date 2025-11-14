@@ -65,22 +65,22 @@ function SortableSection({ section }: { section: ResumeSection }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:border-amber-400 transition-colors"
+      className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-lg p-4 flex items-center justify-between hover:border-amber-400 transition-colors duration-200"
     >
       <div className="flex items-center gap-3">
         <button
           {...listeners}
           {...attributes}
-          className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded transition-colors"
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-dark-bg-hover rounded transition-colors duration-200"
           title="Drag to reorder"
         >
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-400 dark:text-dark-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </button>
-        <span className="font-medium text-gray-900">{getSectionLabel(section.type)}</span>
+        <span className="font-medium text-gray-900 dark:text-dark-text-primary">{getSectionLabel(section.type)}</span>
       </div>
-      <span className="text-sm text-gray-500">#{section.order + 1}</span>
+      <span className="text-sm text-gray-500 dark:text-dark-text-tertiary">#{section.order + 1}</span>
     </div>
   );
 }
@@ -113,13 +113,13 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
   };
 
   return (
-    <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-md p-6">
+    <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md p-6 transition-colors duration-200">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-amber-900 mb-2 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
           <span>↕️</span>
           Section Order
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
           Drag and drop to reorder sections. Fixed sections (Header, Summary, Cover Letter, Career Goals) cannot be reordered.
         </p>
       </div>

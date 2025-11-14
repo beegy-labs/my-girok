@@ -733,7 +733,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                       newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
                                       setFormData({ ...formData, skills: newSkills });
                                     }}
-                                    className="text-amber-600 hover:text-amber-800 text-xs font-semibold"
+                                    className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-xs font-semibold"
                                     title="위로 이동"
                                   >
                                     ▲
@@ -749,7 +749,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                       newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
                                       setFormData({ ...formData, skills: newSkills });
                                     }}
-                                    className="text-amber-600 hover:text-amber-800 text-xs font-semibold"
+                                    className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-xs font-semibold"
                                     title="아래로 이동"
                                   >
                                     ▼
