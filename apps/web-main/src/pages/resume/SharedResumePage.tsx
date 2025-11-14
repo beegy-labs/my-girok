@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getPublicResume, Resume } from '../../api/resume';
 import ResumePreview from '../../components/resume/ResumePreview';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { CharacterMessage } from '../../components/characters';
 
 export default function SharedResumePage() {
   const { token } = useParams<{ token: string }>();
@@ -41,39 +43,32 @@ export default function SharedResumePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">{t('resume.shared.loading')}</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen message={t('resume.shared.loading')} />;
   }
 
   if (error) {
     const isExpired = error === t('resume.shared.expired');
     const isInactive = error === t('resume.shared.inactive');
-    const titleKey = isExpired
-      ? 'resume.shared.linkExpired'
-      : isInactive
-      ? 'resume.shared.linkInactive'
-      : 'resume.shared.notFoundTitle';
+    const isNotFound = error === t('resume.shared.notFound');
+
+    let messageType: 'expired' | 'no-permission' | 'not-found' | 'error' = 'error';
+    if (isExpired) messageType = 'expired';
+    else if (isInactive) messageType = 'no-permission';
+    else if (isNotFound) messageType = 'not-found';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-amber-50/30 border border-amber-100 rounded-2xl shadow-lg p-8 text-center max-w-md">
-          <div className="text-6xl mb-4">🔗</div>
-          <h1 className="text-2xl font-bold text-amber-900 mb-2">
-            {t(titleKey)}
-          </h1>
-          <p className="text-gray-700 mb-4">{error}</p>
-          {(isExpired || isInactive) && (
-            <p className="text-sm text-gray-600">
-              {t('resume.shared.contactOwner')}
-            </p>
-          )}
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary px-4 transition-colors duration-200">
+        <CharacterMessage
+          type={messageType}
+          message={error}
+          action={
+            (isExpired || isInactive) && (
+              <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                {t('resume.shared.contactOwner')}
+              </p>
+            )
+          }
+        />
       </div>
     );
   }
@@ -83,24 +78,24 @@ export default function SharedResumePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
       {/* Action Bar - Hidden when printing */}
-      <div className="bg-amber-50/30 border-b border-amber-100 print:hidden sticky top-0 z-10 shadow-sm">
+      <div className="bg-amber-50/30 dark:bg-dark-bg-card border-b border-amber-100 dark:border-dark-border-subtle print:hidden sticky top-0 z-10 shadow-sm dark:shadow-dark-sm transition-colors duration-200">
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex justify-between items-start mb-3">
             <div>
-              <h1 className="text-2xl font-bold text-amber-900">
+              <h1 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary">
                 📄 {t('resume.shared.resumeTitle', { name: resume.name })}
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
                   🔗 {t('resume.shared.badge')}
                 </span>
               </div>
             </div>
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all"
+              className="px-4 py-2 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all"
             >
               🖨️ {t('resume.shared.print')}
             </button>
@@ -109,8 +104,12 @@ export default function SharedResumePage() {
       </div>
 
       {/* Resume Preview */}
-      <div className="py-8 print:py-0">
-        <ResumePreview resume={resume} />
+      <div className="py-6 sm:py-8 print:py-0 flex justify-center">
+        <div className="bg-gray-100 dark:bg-dark-bg-secondary/50 p-8 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
+          <div className="bg-white rounded shadow-lg">
+            <ResumePreview resume={resume} />
+          </div>
+        </div>
       </div>
     </div>
   );
