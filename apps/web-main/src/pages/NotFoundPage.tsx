@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { CharacterMessage } from '../components/characters';
 
 export default function NotFoundPage() {

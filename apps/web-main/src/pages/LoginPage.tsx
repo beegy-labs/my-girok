@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
 import { login } from '../api/auth';

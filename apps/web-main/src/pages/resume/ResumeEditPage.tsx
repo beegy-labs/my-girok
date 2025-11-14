@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreview from '../../components/resume/ResumePreview';
