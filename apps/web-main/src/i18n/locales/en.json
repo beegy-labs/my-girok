@@ -1,4 +1,21 @@
 {
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "copy": "Copy",
+    "share": "Share",
+    "preview": "Preview",
+    "loading": "Loading...",
+    "backToHome": "Back to Home",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Are you sure?",
+    "default": "Default",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
   "nav": {
     "login": "Login",
     "register": "Register",
@@ -22,7 +39,19 @@
       "title": "Budget",
       "description": "Track your income and expenses"
     },
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "recordType": "Record Types",
+    "recordStart": "Start your recording journey",
+    "recordGoTo": "Go to Record →",
+    "comingSoon": "Coming Soon",
+    "quickLinks": "Quick Links",
+    "viewPublicProfile": "View Public Profile",
+    "settings": "Settings",
+    "recordBook": "'s Record Book",
+    "startToday": "Start recording about yourself today",
+    "allInOne": "Resume, blog, and budget all in one place",
+    "createRecordBook": "Create Record Book",
+    "recordingTypes": "What You Can Record"
   },
   "auth": {
     "loginTitle": "Login",
@@ -164,6 +193,253 @@
       "badge": "Shared Link",
       "print": "Print",
       "resumeTitle": "{{name}}'s Resume"
+    },
+    "myResumes": "My Resumes",
+    "manageResumes": "Manage and share your resumes",
+    "createNewResume": "✍️ Create New Resume",
+    "noResumesYet": "No resumes yet",
+    "createFirstResume": "Create Your First Resume",
+    "lastModified": "Last Modified",
+    "sharing": "Sharing",
+    "shareLink": "Share Link",
+    "shareLinkCreate": "Create Share Link",
+    "shareDuration": "Share Duration",
+    "oneWeek": "1 Week",
+    "oneMonth": "1 Month",
+    "threeMonths": "3 Months",
+    "permanent": "Permanent",
+    "viewCount": "View Count",
+    "expires": "Expires",
+    "linkCopied": "Copied",
+    "copyLink": "Copy",
+    "maxShareLinks": "Maximum 3 active share links per resume.",
+    "errors": {
+      "loadFailed": "Failed to load data",
+      "shareFailed": "Failed to create share link",
+      "deleteShareFailed": "Failed to delete share link",
+      "deleteFailed": "Failed to delete resume",
+      "copyFailed": "Failed to copy resume",
+      "copyLinkFailed": "Failed to copy link",
+      "saveFailed": "Failed to save resume",
+      "resumeNotFound": "Resume not found"
+    },
+    "confirm": {
+      "deleteShare": "Delete this share link?",
+      "deleteResume": "Delete this resume? This cannot be undone.",
+      "copyResume": "Copy this resume?"
+    },
+    "success": {
+      "copied": "Resume copied successfully",
+      "saved": "Saved",
+      "deleteDraft": "Draft deleted"
+    },
+    "form": {
+      "resumeTitle": "Resume Title",
+      "paperSize": "Paper Size",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief description of this resume",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "github": "GitHub",
+      "blog": "Blog",
+      "linkedin": "LinkedIn",
+      "profilePhoto": "Profile Photo URL",
+      "militaryService": "Military Service",
+      "selectStatus": "Select status",
+      "summary": "Summary",
+      "summaryPlaceholder": "Brief introduction about yourself...",
+      "koreanSections": "Korean Resume Sections",
+      "coverLetter": "Cover Letter",
+      "coverLetterPlaceholder": "Write about your background, strengths, and why you're a good fit for this position...",
+      "coverLetterHint": "Describe your background, experiences, and what makes you unique",
+      "applicationReason": "Application Reason",
+      "applicationReasonPlaceholder": "Write why you want to join this company...",
+      "applicationReasonHint": "Write about company vision, job appeal, and connection to your strengths",
+      "addCategory": "Add Category",
+      "categoryName": "Category Name",
+      "skillName": "Skill Name",
+      "addSkill": "Add Skill",
+      "moveUp": "Move Up",
+      "moveDown": "Move Down",
+      "experience": "Experience / Details",
+      "addCertificate": "Add Certificate",
+      "certificateName": "Certificate Name",
+      "issuer": "Issuer",
+      "issueDate": "Issue Date",
+      "expiryDate": "Expiry Date",
+      "credentialId": "Credential ID",
+      "credentialUrl": "Credential URL",
+      "remove": "Remove",
+      "noCertificates": "No certifications added yet. Click \"Add Certificate\" to get started.",
+      "attachments": "Attachments",
+      "attachmentsDesc": "Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.",
+      "saveFirst": "Please save your resume first to enable file uploads.",
+      "uploadError": "Failed to upload file",
+      "profilePhotoSection": "Profile Photo",
+      "profilePhotoDesc": "Professional photo (automatically converted to grayscale)",
+      "portfolioSection": "Portfolio",
+      "portfolioDesc": "Upload your project screenshots, designs, or PDF documents",
+      "certificatesSection": "Certificates",
+      "certificatesDesc": "Upload your certification or award documents",
+      "uploading": "Uploading...",
+      "clickToUpload": "Click to upload",
+      "clickToUploadPhoto": "Click to upload profile photo",
+      "clickToUploadPortfolio": "Click to upload portfolio file",
+      "clickToUploadCertificate": "Click to upload certificate",
+      "deleteDraft": "Delete Draft",
+      "saveAndPreview": "💾 Save & Preview",
+      "saving": "💾 Saving..."
+    },
+    "experienceForm": {
+      "company": "Company",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "leaveEmpty": "Leave empty if current",
+      "position": "Position",
+      "jobTitle": "Job Title",
+      "companyName": "Company name",
+      "removeCompany": "Remove Company",
+      "experiencePeriod": "Experience Period:",
+      "projects": "📁 Projects at this company",
+      "addProject": "+ Add Project",
+      "noProjects": "No projects added yet. Click \"Add Project\" to add projects at this company.",
+      "projectName": "Project Name",
+      "yourRole": "Your Role",
+      "techStack": "Tech Stack (comma-separated)",
+      "projectUrl": "Project URL",
+      "githubUrl": "GitHub URL",
+      "keyAchievements": "Key Achievements",
+      "depthLevels": "(4 depth levels)",
+      "addAchievement": "+ Add Achievement",
+      "noAchievements": "No achievements yet. Click \"Add Achievement\" to add.",
+      "achievementPlaceholder": "Achievement description...",
+      "addSubItem": "+ Sub-item",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "addExperience": "+ Add Experience",
+      "noExperience": "No work experience added yet. Click \"Add Experience\" to get started.",
+      "dragToReorder": "Drag to reorder",
+      "ongoingProject": "Leave empty if ongoing",
+      "projectDescription": "Brief project description...",
+      "positionPlaceholder": "e.g., Backend Team Lead",
+      "jobTitlePlaceholder": "Senior Developer"
+    },
+    "militaryRanks": {
+      "sergeant": "Sergeant",
+      "corporal": "Corporal",
+      "pfc": "Private First Class",
+      "private": "Private"
+    },
+    "dischargeTypes": {
+      "honorable": "Honorable Discharge",
+      "medical": "Medical Discharge"
     }
+  },
+  "settings": {
+    "title": "⚙️ Settings",
+    "description": "Configure user preferences",
+    "backButton": "← Back",
+    "darkMode": "Dark Mode",
+    "themeDescription": "Set screen theme",
+    "sectionOrder": "Home Section Order",
+    "sectionOrderDescription": "Set the order and visibility of sections on the home screen",
+    "visibility": "Visibility",
+    "saved": "Settings saved successfully",
+    "saveFailed": "Failed to save settings",
+    "sections": {
+      "skills": "Skills",
+      "experience": "Experience",
+      "projects": "Projects",
+      "education": "Education",
+      "certifications": "Certifications"
+    }
+  },
+  "changePassword": {
+    "title": "Change Password",
+    "description": "Update your account password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPasswordPlaceholder": "Enter new password (min. 8 characters)",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "changeButton": "Change Password",
+    "changing": "Changing Password...",
+    "backToHome": "Back to Home",
+    "errors": {
+      "tooShort": "New password must be at least 8 characters long",
+      "noMatch": "New passwords do not match",
+      "failed": "Failed to change password. Please check your current password."
+    },
+    "success": "Password changed successfully!"
+  },
+  "character": {
+    "loading": {
+      "light": "Searching for records",
+      "dark": "Searching for records in the quiet night",
+      "messageLight": "Please wait...",
+      "messageDark": "Looking through books under the moonlight..."
+    },
+    "notFound": {
+      "light": "Record not found",
+      "dark": "This record is not in the night library",
+      "messageLight": "The requested page could not be found",
+      "messageDark": "Cannot find this record even in the darkness"
+    },
+    "error": {
+      "light": "Oops, something went wrong",
+      "dark": "The moonlight has dimmed",
+      "messageLight": "A temporary error occurred. Please try again later",
+      "messageDark": "Clouds have covered the night sky. Please try again later"
+    },
+    "expired": {
+      "light": "Share period has expired",
+      "dark": "Deep night has fallen asleep",
+      "messageLight": "This share link is no longer valid",
+      "messageDark": "The moon has set and the link has fallen asleep"
+    },
+    "deleted": {
+      "light": "Deleted record",
+      "dark": "Record disappeared into the darkness",
+      "messageLight": "This record has been deleted by the owner",
+      "messageDark": "Record disappeared into the night fog"
+    },
+    "noPermission": {
+      "light": "No access permission",
+      "dark": "This library is locked",
+      "messageLight": "You don't have permission to view this record",
+      "messageDark": "A secret library that even moonlight cannot illuminate"
+    },
+    "maintenance": {
+      "light": "Taking a break",
+      "dark": "Library is under night maintenance",
+      "messageLight": "System under maintenance. Please wait",
+      "messageDark": "Organizing the library under the starlight"
+    }
+  },
+  "errors": {
+    "loginFailed": "Login failed. Please check your credentials.",
+    "registrationFailed": "Registration failed. Please try again.",
+    "loadingResume": "Loading resume...",
+    "startFilling": "Start filling the form to see your resume preview"
+  },
+  "placeholders": {
+    "email": "you@example.com",
+    "password": "••••••••",
+    "namePlaceholder": "John Doe",
+    "usernamePlaceholder": "johndoe",
+    "emailPlaceholder": "your@email.com"
+  },
+  "edit": {
+    "editResume": "Edit Resume",
+    "createNewResume": "Create New Resume",
+    "updateInfo": "Update your resume information",
+    "fillInfo": "Fill in your information to create a new resume",
+    "showForm": "Show Form",
+    "showPreview": "Show Preview",
+    "livePreview": "Live Preview",
+    "previewDescription": "This is how your resume will look. Changes appear instantly.",
+    "error": "Error:"
   }
 }
