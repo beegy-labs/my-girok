@@ -26,6 +26,9 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@my-girok/types$': '<rootDir>/../../../packages/types/src',
+    // Mock ESM-only modules
+    '^uuid$': '<rootDir>/../test/mocks/uuid.ts',
+    '^@paralleldrive/cuid2$': '<rootDir>/../test/mocks/cuid2.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/../test/setup.ts'],
 
