@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
 import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
@@ -13,6 +13,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
   const { t, i18n } = useTranslation();
   const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
   const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('continuous'); // Default: continuous view
+  const [scale, setScale] = useState(1);
 
   const visibleSections = resume.sections
     .filter(s => s.visible)
@@ -24,6 +25,25 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     : { width: '21.59cm', height: '27.94cm' };
 
   const pageClassName = paperSize === 'A4' ? 'resume-page-a4' : 'resume-page-letter';
+
+  // Calculate scale to fit viewport width (for mobile)
+  useEffect(() => {
+    const calculateScale = () => {
+      const viewportWidth = window.innerWidth;
+      // Convert cm to pixels (1cm ≈ 37.8px at 96 DPI)
+      const paperWidthPx = paperSize === 'A4' ? 794 : 816; // 21cm = 794px, 21.59cm = 816px
+      const padding = 32; // Account for padding (1rem on each side)
+      const availableWidth = viewportWidth - padding;
+
+      // Calculate scale to fit, but don't scale up beyond 100%
+      const newScale = Math.min(1, availableWidth / paperWidthPx);
+      setScale(newScale);
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, [paperSize]);
 
   return (
     <div className="relative">
@@ -77,10 +97,15 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         </div>
       </div>
 
-      {/* Resume Content */}
+      {/* Resume Content - Auto-scaled to fit viewport (mobile responsive) */}
       <div
         id="resume-content"
         className={viewMode === 'paginated' ? 'resume-page-container' : ''}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'top center',
+          marginBottom: scale < 1 ? `${(1 - scale) * -200}px` : 0, // Adjust bottom spacing when scaled
+        }}
       >
         <div
           className={viewMode === 'paginated' ? pageClassName : 'bg-gray-50 p-8 shadow-lg'}
