@@ -11,21 +11,14 @@ export default function Navbar() {
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [logoutSuccess, setLogoutSuccess] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { effectiveTheme, toggleTheme } = useTheme();
-
-  // Handle navigation after successful logout (React 19 compatibility)
-  useEffect(() => {
-    if (logoutSuccess) {
-      navigate('/login');
-    }
-  }, [logoutSuccess, navigate]);
 
   const handleLogout = async () => {
     try {
       await logout();
-      setLogoutSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
+      // Direct navigation - React Router v7 supports this without issues
+      navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
     }
