@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { changePassword } from '../api/auth';
 
 export default function ChangePasswordPage() {
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -30,12 +32,12 @@ export default function ChangePasswordPage() {
 
     // Validate new password
     if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters long');
+      setError(t('changePassword.errors.tooShort'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match');
+      setError(t('changePassword.errors.noMatch'));
       return;
     }
 
@@ -43,13 +45,13 @@ export default function ChangePasswordPage() {
 
     try {
       await changePassword({ currentPassword, newPassword });
-      setSuccess('Password changed successfully!');
+      setSuccess(t('changePassword.success'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setChangeSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to change password. Please check your current password.');
+      setError(err.response?.data?.message || t('changePassword.errors.failed'));
     } finally {
       setLoading(false);
     }
@@ -63,10 +65,10 @@ export default function ChangePasswordPage() {
           <div className="flex items-center justify-center mb-3">
             <span className="text-3xl mr-2">🔒</span>
             <h1 className="text-3xl font-bold text-amber-900">
-              Change Password
+              {t('changePassword.title')}
             </h1>
           </div>
-          <p className="text-gray-600 text-sm">Update your account password</p>
+          <p className="text-gray-600 text-sm">{t('changePassword.description')}</p>
         </div>
 
         {/* Change Password Form */}
@@ -92,7 +94,7 @@ export default function ChangePasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Current Password
+                {t('changePassword.currentPassword')}
               </label>
               <input
                 type="password"
@@ -101,13 +103,13 @@ export default function ChangePasswordPage() {
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
                 className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-                placeholder="Enter your current password"
+                placeholder={t('changePassword.currentPasswordPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                New Password
+                {t('changePassword.newPassword')}
               </label>
               <input
                 type="password"
@@ -116,13 +118,13 @@ export default function ChangePasswordPage() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-                placeholder="Enter new password (min. 8 characters)"
+                placeholder={t('changePassword.newPasswordPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm New Password
+                {t('changePassword.confirmPassword')}
               </label>
               <input
                 type="password"
@@ -131,7 +133,7 @@ export default function ChangePasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-                placeholder="Confirm new password"
+                placeholder={t('changePassword.confirmPasswordPlaceholder')}
               />
             </div>
 
@@ -140,7 +142,7 @@ export default function ChangePasswordPage() {
               disabled={loading}
               className="w-full bg-gradient-to-r from-amber-700 to-amber-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-amber-800 hover:to-amber-700 focus:ring-4 focus:ring-amber-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Changing Password...' : 'Change Password'}
+              {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
             </button>
           </form>
 
@@ -149,7 +151,7 @@ export default function ChangePasswordPage() {
               onClick={() => navigate('/')}
               className="text-sm text-amber-700 hover:text-amber-800 font-medium transition"
             >
-              Back to Home
+              {t('changePassword.backToHome')}
             </button>
           </div>
         </div>

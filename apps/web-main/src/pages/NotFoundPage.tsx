@@ -1,7 +1,10 @@
 import { Link } from 'react-router';
 import { CharacterMessage } from '../components/characters';
+import { useTranslation } from 'react-i18next';
 
 export default function NotFoundPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
       <CharacterMessage
@@ -16,7 +19,7 @@ export default function NotFoundPage() {
                        shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20
                        transform hover:scale-105 transition-all"
           >
-            홈으로 돌아가기
+            {t('common.backToHome')}
           </Link>
         }
       />

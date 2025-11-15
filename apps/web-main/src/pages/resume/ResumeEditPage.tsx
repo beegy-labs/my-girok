@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreview from '../../components/resume/ResumePreview';
 
 export default function ResumeEditPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { resumeId } = useParams<{ resumeId: string }>();
   const [resume, setResume] = useState<Resume | null>(null);
@@ -43,9 +45,9 @@ export default function ResumeEditPage() {
       setPreviewData(data);
     } catch (err: any) {
       if (err.response?.status === 404) {
-        setError('Resume not found');
+        setError(t('resume.errors.resumeNotFound'));
       } else {
-        setError('Failed to load resume');
+        setError(t('resume.errors.loadFailed'));
       }
     } finally {
       setLoading(false);
@@ -115,7 +117,7 @@ export default function ResumeEditPage() {
         setNavigateToPreview(`/resume/preview/${created.id}`);
       }
     } catch (err) {
-      setError('Failed to save resume');
+      setError(t('resume.errors.saveFailed'));
     }
   };
 
@@ -124,7 +126,7 @@ export default function ResumeEditPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 dark:border-amber-400 mx-auto"></div>
-          <p className="mt-4 text-gray-700 dark:text-dark-text-secondary font-medium">Loading resume...</p>
+          <p className="mt-4 text-gray-700 dark:text-dark-text-secondary font-medium">{t('errors.loadingResume')}</p>
         </div>
       </div>
     );
@@ -140,10 +142,10 @@ export default function ResumeEditPage() {
               <span className="text-2xl sm:text-3xl">✍️</span>
               <div>
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">
-                  {resumeId ? 'Edit Resume' : 'Create New Resume'}
+                  {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
                 </h1>
                 <p className="text-xs sm:text-sm lg:text-base text-gray-700 dark:text-dark-text-secondary">
-                  {resumeId ? 'Update your resume information' : 'Fill in your information to create a new resume'}
+                  {resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
                 </p>
               </div>
             </div>
@@ -151,14 +153,14 @@ export default function ResumeEditPage() {
               onClick={() => setShowPreview(!showPreview)}
               className="lg:hidden px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-sm font-semibold rounded-lg transition-all shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 whitespace-nowrap"
             >
-              {showPreview ? 'Show Form' : 'Show Preview'}
+              {showPreview ? t('edit.showForm') : t('edit.showPreview')}
             </button>
           </div>
         </div>
 
         {error && (
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm sm:text-base">
-            <strong>Error:</strong> {error}
+            <strong>{t('edit.error')}</strong> {error}
           </div>
         )}
 
@@ -179,10 +181,10 @@ export default function ResumeEditPage() {
               <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 mb-3 sm:mb-4 transition-colors duration-200">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-2 flex items-center gap-2">
                   <span>👁️</span>
-                  Live Preview
+                  {t('edit.livePreview')}
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary">
-                  This is how your resume will look. Changes appear instantly.
+                  {t('edit.previewDescription')}
                 </p>
               </div>
 
@@ -193,7 +195,7 @@ export default function ResumeEditPage() {
                   </div>
                 ) : (
                   <div className="p-6 sm:p-8 text-center text-gray-500 dark:text-dark-text-tertiary text-sm sm:text-base">
-                    <p>Start filling the form to see your resume preview</p>
+                    <p>{t('errors.startFilling')}</p>
                   </div>
                 )}
               </div>

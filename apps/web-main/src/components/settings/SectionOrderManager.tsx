@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SectionOrderItem, SectionType } from '../../api/userPreferences';
 import { useUserPreferencesStore } from '../../stores/userPreferencesStore';
 
@@ -10,21 +11,25 @@ const DEFAULT_SECTION_ORDER: SectionOrderItem[] = [
   { type: SectionType.CERTIFICATE, order: 4, visible: true },
 ];
 
-const SECTION_LABELS: Record<SectionType, string> = {
-  [SectionType.SKILLS]: '기술 스택',
-  [SectionType.EXPERIENCE]: '경력',
-  [SectionType.PROJECT]: '프로젝트',
-  [SectionType.EDUCATION]: '학력',
-  [SectionType.CERTIFICATE]: '자격증',
-};
-
 export default function SectionOrderManager() {
+  const { t } = useTranslation();
   const { preferences, loadPreferences, setSectionOrder } =
     useUserPreferencesStore();
 
   const [sections, setSections] = useState<SectionOrderItem[]>(
     DEFAULT_SECTION_ORDER,
   );
+
+  const getSectionLabel = (type: SectionType): string => {
+    const keyMap: Record<SectionType, string> = {
+      [SectionType.SKILLS]: 'skills',
+      [SectionType.EXPERIENCE]: 'experience',
+      [SectionType.PROJECT]: 'projects',
+      [SectionType.EDUCATION]: 'education',
+      [SectionType.CERTIFICATE]: 'certifications',
+    };
+    return t(`settings.sections.${keyMap[type]}`);
+  };
 
   useEffect(() => {
     loadPreferences();
@@ -74,10 +79,10 @@ export default function SectionOrderManager() {
   const handleSave = async () => {
     try {
       await setSectionOrder(sections);
-      alert('설정이 저장되었습니다');
+      alert(t('settings.saved'));
     } catch (error) {
       console.error('Failed to save section order:', error);
-      alert('설정 저장에 실패했습니다');
+      alert(t('settings.saveFailed'));
     }
   };
 
@@ -85,10 +90,10 @@ export default function SectionOrderManager() {
     <div className="space-y-4">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          홈 기록 순서 관리
+          {t('settings.sectionOrder')}
         </h3>
         <p className="text-sm text-gray-600 mb-4">
-          홈 화면에 표시될 기록 종류의 순서와 노출 여부를 설정합니다
+          {t('settings.sectionOrderDescription')}
         </p>
       </div>
 
@@ -118,12 +123,12 @@ export default function SectionOrderManager() {
                 </button>
               </div>
               <span className="text-gray-700 font-medium">
-                {SECTION_LABELS[section.type]}
+                {getSectionLabel(section.type)}
               </span>
             </div>
 
             <label className="flex items-center space-x-2 cursor-pointer">
-              <span className="text-sm text-gray-600">노출</span>
+              <span className="text-sm text-gray-600">{t('settings.visibility')}</span>
               <input
                 type="checkbox"
                 checked={section.visible}
@@ -139,7 +144,7 @@ export default function SectionOrderManager() {
         onClick={handleSave}
         className="w-full bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] transition-all"
       >
-        저장
+        {t('common.save')}
       </button>
     </div>
   );
