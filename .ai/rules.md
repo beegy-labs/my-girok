@@ -120,12 +120,37 @@ const posts = await prisma.post.findMany({
 - Validate file uploads (type, size)
 - Sanitize HTML (DOMPurify)
 
+**CORS for Mobile Browsers:**
+```typescript
+// ✅ REQUIRED: iOS Safari compatibility
+app.enableCors({
+  origin: [...],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 3600, // CRITICAL: Cache preflight for 1 hour
+  optionsSuccessStatus: 204,
+});
+```
+- iOS Safari requires explicit headers (no wildcards)
+- `maxAge` prevents duplicate OPTIONS requests
+- Without `maxAge`, Safari sends OPTIONS on every request (50% overhead)
+
 ## Testing
 
 **Coverage Requirements:**
 - Unit tests: 80% minimum
 - Integration tests: All critical flows
 - E2E tests: Main user journeys
+
+**Mobile Browser Testing:**
+- ✅ Test authenticated endpoints on iOS Safari (real device)
+- ✅ Test authenticated endpoints on Android Chrome (real device)
+- ✅ Verify CORS preflight caching with Network Inspector
+- ✅ Test in Private Browsing mode (iOS Safari)
+- ✅ Check for QuotaExceededError in console
+- Use Safari Web Inspector or Chrome Remote Debugging
 
 ## Git Commit Format
 

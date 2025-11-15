@@ -338,6 +338,17 @@ personalApi.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Enhanced error logging for mobile debugging
+    if (!error.response) {
+      console.error('[API Error] Network or CORS error:', {
+        message: error.message,
+        url: originalRequest?.url,
+        method: originalRequest?.method,
+        // This helps debug iOS Safari CORS issues
+        userAgent: navigator.userAgent,
+      });
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -359,6 +370,7 @@ personalApi.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return personalApi(originalRequest);
       } catch (refreshError) {
+        console.error('[API Error] Token refresh failed:', refreshError);
         useAuthStore.getState().clearAuth();
         window.location.href = '/login';
         return Promise.reject(refreshError);

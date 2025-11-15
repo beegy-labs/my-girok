@@ -42,7 +42,7 @@ async function bootstrap() {
     }),
   );
 
-  // CORS Policy
+  // CORS Policy - Enhanced for iOS Safari compatibility
   app.enableCors({
     origin:
       nodeEnv === 'production'
@@ -53,8 +53,11 @@ async function bootstrap() {
             'https://my-dev.girok.dev',
           ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Length', 'Content-Type'],
+    maxAge: 3600, // Cache preflight for 1 hour (iOS Safari compatibility)
+    optionsSuccessStatus: 204, // Some legacy browsers (IE11) choke on 204
   });
 
   // Swagger API Documentation
