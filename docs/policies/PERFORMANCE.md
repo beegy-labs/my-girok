@@ -296,6 +296,134 @@ const cacheKey = `post:${id}:v${post.updatedAt.getTime()}`;
 
 ## Frontend Optimization
 
+### React Rendering Optimization
+
+**CRITICAL**: Always optimize component re-renders to maintain 60fps performance.
+
+#### useCallback for Event Handlers
+
+```typescript
+// ❌ DON'T: Inline functions in list items
+resumes.map((resume) => (
+  <button onClick={() => navigate(`/resume/edit/${resume.id}`)}>Edit</button>
+));
+
+// ✅ DO: Memoize handlers
+const navigateToEdit = useCallback((id: string) => {
+  navigate(`/resume/edit/${id}`);
+}, [navigate]);
+
+resumes.map((resume) => (
+  <button onClick={() => navigateToEdit(resume.id)}>Edit</button>
+));
+```
+
+**Rules**:
+- Memoize ALL event handlers passed to child components
+- Memoize handlers used in map() or repetitive renders
+- Include only stable dependencies (navigate, t, etc.)
+- Use arrow function in onClick when calling with parameters
+
+#### useMemo for Expensive Calculations
+
+```typescript
+// ❌ DON'T: Recreate arrays/objects on every render
+const defaultSections = [
+  { id: '1', type: 'SKILLS', order: 1, visible: true },
+  { id: '2', type: 'EXPERIENCE', order: 2, visible: true },
+  // ...
+];
+
+// ✅ DO: Memoize constant values
+const defaultSections = useMemo(() => [
+  { id: '1', type: 'SKILLS', order: 1, visible: true },
+  { id: '2', type: 'EXPERIENCE', order: 2, visible: true },
+  // ...
+], []);
+```
+
+#### React.memo for Component Optimization
+
+```typescript
+// ❌ DON'T: Re-render all cards when parent updates
+function ResumeCard({ resume, onEdit, onDelete }) {
+  return <div>...</div>;
+}
+
+// ✅ DO: Memoize repeated components
+const ResumeCard = React.memo(({ resume, onEdit, onDelete }) => {
+  return <div>...</div>;
+});
+```
+
+**When to use React.memo**:
+- Components rendered in lists (map)
+- Components with expensive render logic
+- Components that rarely change
+- Leaf components with primitive props
+
+#### Preventing useEffect Infinite Loops
+
+```typescript
+// ❌ DON'T: Include functions in dependencies
+const handleChange = (data) => { /* ... */ };
+
+useEffect(() => {
+  if (onChange) onChange(formData);
+}, [formData, onChange]); // onChange changes every render!
+
+// ✅ DO: Parent memoizes onChange, exclude from deps
+const handleChange = useCallback((data) => { /* ... */ }, []);
+
+useEffect(() => {
+  if (onChange) onChange(formData);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [formData]); // Only depend on data
+```
+
+#### Navigation Pattern (React Router v7)
+
+```typescript
+// ❌ DON'T: State-based navigation (anti-pattern)
+const [navigateTo, setNavigateTo] = useState<string | null>(null);
+
+useEffect(() => {
+  if (navigateTo) navigate(navigateTo);
+}, [navigateTo]);
+
+const handleSubmit = () => {
+  setNavigateTo('/resume/preview');
+};
+
+// ✅ DO: Direct navigation
+const handleSubmit = async () => {
+  await saveData();
+  navigate('/resume/preview'); // Direct call
+};
+```
+
+**React Router v7** fully supports direct navigate() calls in event handlers and async functions.
+
+#### Performance Checklist
+
+**Before Every PR**:
+- [ ] All event handlers in lists use useCallback
+- [ ] Constant objects/arrays use useMemo
+- [ ] Repeated components use React.memo
+- [ ] No inline functions in map() iterations
+- [ ] useEffect dependencies minimized
+- [ ] No potential infinite loops
+- [ ] Parent components pass stable callbacks
+
+**Measuring Performance**:
+```typescript
+// Use React DevTools Profiler
+// 1. Record interaction
+// 2. Check "Ranked" view
+// 3. Identify components with long render times
+// 4. Optimize components with >16ms renders
+```
+
 ### Next.js Optimization
 
 ```typescript
