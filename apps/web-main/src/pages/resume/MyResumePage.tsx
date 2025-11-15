@@ -81,7 +81,7 @@ export default function MyResumePage() {
     }
   };
 
-  const handleCopyResume = async (resumeId: string, resumeTitle: string) => {
+  const handleCopyResume = async (resumeId: string) => {
     if (!confirm(t('resume.confirm.copyResume'))) return;
 
     try {
@@ -235,7 +235,7 @@ export default function MyResumePage() {
                             ✍️ {t('common.edit')}
                           </button>
                           <button
-                            onClick={() => handleCopyResume(resume.id, resume.title)}
+                            onClick={() => handleCopyResume(resume.id)}
                             className="px-2 sm:px-4 py-2 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs sm:text-sm font-semibold rounded-lg border border-amber-200 dark:border-amber-800 transition-all whitespace-nowrap"
                           >
                             📋 {t('common.copy')}
