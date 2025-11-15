@@ -1,48 +1,50 @@
 import { useAuthStore } from '../stores/authStore';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 interface AppCard {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   icon: string;
   route: string;
   color: string;
   status: 'active' | 'coming-soon';
 }
 
-const apps: AppCard[] = [
-  {
-    id: 'resume',
-    name: '이력서',
-    description: '나의 커리어를 기록하고 관리하세요',
-    icon: '📄',
-    route: '/resume/my',
-    color: 'bg-amber-700',
-    status: 'active',
-  },
-  {
-    id: 'blog',
-    name: '블로그',
-    description: '나의 생각과 글을 기록하세요',
-    icon: '✍️',
-    route: '/apps/blog',
-    color: 'bg-amber-600',
-    status: 'coming-soon',
-  },
-  {
-    id: 'budget',
-    name: '가계부',
-    description: '나의 소비 내역을 기록하세요',
-    icon: '💰',
-    route: '/apps/budget',
-    color: 'bg-amber-800',
-    status: 'coming-soon',
-  },
-];
-
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
+  const { t } = useTranslation();
+
+  const apps: AppCard[] = [
+    {
+      id: 'resume',
+      nameKey: 'home.resume.title',
+      descriptionKey: 'home.resume.description',
+      icon: '📄',
+      route: '/resume/my',
+      color: 'bg-amber-700',
+      status: 'active',
+    },
+    {
+      id: 'blog',
+      nameKey: 'home.blog.title',
+      descriptionKey: 'home.blog.description',
+      icon: '✍️',
+      route: '/apps/blog',
+      color: 'bg-amber-600',
+      status: 'coming-soon',
+    },
+    {
+      id: 'budget',
+      nameKey: 'home.budget.title',
+      descriptionKey: 'home.budget.description',
+      icon: '💰',
+      route: '/apps/budget',
+      color: 'bg-amber-800',
+      status: 'coming-soon',
+    },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -53,11 +55,11 @@ export default function HomePage() {
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
               <span className="text-2xl sm:text-3xl">📚</span>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 dark:text-dark-text-primary break-words">
-                {user?.name || user?.username}님의 기록장
+                {user?.name || user?.username}{t('home.recordBook')}
               </h1>
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary ml-8 sm:ml-10 lg:ml-12">
-              오늘도 나에 대한 기록을 시작해보세요
+              {t('home.startToday')}
             </p>
           </div>
 
@@ -65,7 +67,7 @@ export default function HomePage() {
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
               <span>📖</span>
-              기록 종류
+              {t('home.recordType')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {apps.map((app) => (
@@ -85,15 +87,15 @@ export default function HomePage() {
                     </div>
                     {app.status === 'coming-soon' && (
                       <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 sm:px-3 py-1 rounded-full font-medium whitespace-nowrap">
-                        준비중
+                        {t('home.comingSoon')}
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{app.name}</h3>
-                  <p className="text-gray-600 dark:text-dark-text-secondary text-xs sm:text-sm">{app.description}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
+                  <p className="text-gray-600 dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
                   {app.status === 'active' && (
                     <div className="mt-3 sm:mt-4 text-amber-700 dark:text-amber-400 font-semibold text-xs sm:text-sm flex items-center gap-1">
-                      기록하러 가기 →
+                      {t('home.recordGoTo')}
                     </div>
                   )}
                 </Link>
@@ -103,21 +105,21 @@ export default function HomePage() {
 
           {/* Quick Links */}
           <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 transition-colors duration-200">
-            <h2 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-3 sm:mb-4">빠른 링크</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-3 sm:mb-4">{t('home.quickLinks')}</h2>
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <Link
                 to={`/${user?.username}`}
                 className="text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:underline font-medium text-sm sm:text-base flex items-center gap-1"
               >
                 <span>🔗</span>
-                내 공개 프로필 보기
+                {t('home.viewPublicProfile')}
               </Link>
               <Link
                 to="/settings"
                 className="text-gray-600 dark:text-dark-text-secondary hover:text-gray-700 dark:hover:text-dark-text-primary hover:underline font-medium text-sm sm:text-base flex items-center gap-1"
               >
                 <span>⚙️</span>
-                설정
+                {t('home.settings')}
               </Link>
             </div>
           </div>
@@ -133,21 +135,21 @@ export default function HomePage() {
               My-Girok
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-gray-700 dark:text-dark-text-secondary mb-6 sm:mb-8">
-              나에 대한 모든 것을 기록하세요<br />
-              <span className="text-gray-600 dark:text-dark-text-tertiary text-sm sm:text-base">이력서, 블로그, 가계부를 한 곳에서</span>
+              {t('home.title')}<br />
+              <span className="text-gray-600 dark:text-dark-text-tertiary text-sm sm:text-base">{t('home.allInOne')}</span>
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link
                 to="/register"
                 className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-105 transition-all"
               >
-                기록장 만들기
+                {t('home.createRecordBook')}
               </Link>
               <Link
                 to="/login"
                 className="bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold border border-gray-300 dark:border-dark-border-default transform hover:scale-105 transition-all"
               >
-                로그인
+                {t('nav.login')}
               </Link>
             </div>
           </div>
@@ -156,17 +158,17 @@ export default function HomePage() {
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-amber-900 dark:text-dark-text-primary mb-4 sm:mb-6 text-center flex items-center justify-center gap-2">
               <span>📖</span>
-              기록할 수 있는 것들
+              {t('home.recordingTypes')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {apps.map((app) => (
                 <div key={app.id} className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 transition-colors duration-200">
                   <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{app.icon}</div>
-                  <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{app.name}</h3>
-                  <p className="text-gray-600 dark:text-dark-text-secondary text-xs sm:text-sm">{app.description}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
+                  <p className="text-gray-600 dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
                   {app.status === 'coming-soon' && (
                     <span className="inline-block mt-2 sm:mt-3 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 sm:px-3 py-1 rounded-full font-medium">
-                      준비중
+                      {t('home.comingSoon')}
                     </span>
                   )}
                 </div>

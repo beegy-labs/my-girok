@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { CharacterMessage } from './characters';
+import i18n from '../i18n/config';
 
 interface Props {
   children: ReactNode;
@@ -58,7 +59,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                            shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20
                            transform hover:scale-105 transition-all"
               >
-                홈으로 돌아가기
+                {i18n.t('common.backToHome')}
               </button>
             }
           />

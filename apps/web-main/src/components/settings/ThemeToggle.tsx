@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Theme } from '../../api/userPreferences';
 import { useUserPreferencesStore } from '../../stores/userPreferencesStore';
 
 export default function ThemeToggle() {
+  const { t } = useTranslation();
   const { preferences, loadPreferences, setTheme } =
     useUserPreferencesStore();
 
@@ -26,10 +28,10 @@ export default function ThemeToggle() {
     <div className="flex items-center justify-between">
       <div>
         <h3 className="text-lg font-semibold text-gray-900">
-          다크 모드
+          {t('settings.darkMode')}
         </h3>
         <p className="text-sm text-gray-600">
-          화면 테마를 설정합니다
+          {t('settings.themeDescription')}
         </p>
       </div>
       <button
