@@ -216,11 +216,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   }, [formData]);
 
   // Trigger onChange when formData or sections change
+  // Note: onChange is excluded from dependencies to prevent infinite loop
+  // Parent component should memoize onChange with useCallback
   useEffect(() => {
     if (onChange) {
       onChange(formData);
     }
-  }, [formData, sections, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, sections]);
 
   // Load attachments if resume exists
   useEffect(() => {
