@@ -1,4 +1,21 @@
 {
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "copy": "コピー",
+    "share": "共有",
+    "preview": "プレビュー",
+    "loading": "読み込み中...",
+    "backToHome": "ホームに戻る",
+    "error": "エラー",
+    "success": "成功",
+    "confirm": "よろしいですか？",
+    "default": "デフォルト",
+    "active": "有効",
+    "inactive": "無効"
+  },
   "nav": {
     "login": "ログイン",
     "register": "新規登録",
@@ -22,7 +39,19 @@
       "title": "予算管理",
       "description": "収入と支出を追跡"
     },
-    "getStarted": "始める"
+    "getStarted": "始める",
+    "recordType": "記録の種類",
+    "recordStart": "記録を始めましょう",
+    "recordGoTo": "記録する →",
+    "comingSoon": "準備中",
+    "quickLinks": "クイックリンク",
+    "viewPublicProfile": "公開プロフィールを表示",
+    "settings": "設定",
+    "recordBook": "さんの記録帳",
+    "startToday": "今日も自分について記録しましょう",
+    "allInOne": "履歴書、ブログ、家計簿を一箇所で",
+    "createRecordBook": "記録帳を作成",
+    "recordingTypes": "記録できること"
   },
   "auth": {
     "loginTitle": "ログイン",
@@ -45,15 +74,17 @@
     "loginHere": "ログイン",
     "startRecording": "記録を始めましょう",
     "createYourSpace": "あなただけの記録帳を作成してください",
-    "termsAgreement": "登録することで、利用規約とプライバシーポリシーに同意したことになります"
+    "termsAgreement": "登録することで、利用規約とプライバシーポリシーに同意したことになります",
+    "rememberEmail": "メールアドレスを記憶する"
   },
   "resume": {
     "edit": "履歴書編集",
     "preview": "プレビュー",
     "viewPublic": "公開プロフィール表示",
+    "address": "住所",
     "contactInfo": {
-      "email": "Email",
-      "phone": "Phone",
+      "email": "メール",
+      "phone": "電話",
       "address": "住所"
     },
     "sections": {
@@ -71,6 +102,16 @@
       "skills": "技術スキルをカテゴリ別に整理してください",
       "education": "学歴を追加してください",
       "certifications": "保有資格と受賞歴を追加してください"
+    },
+    "militaryService": {
+      "title": "兵役",
+      "completed": "履行済み",
+      "exempted": "免除",
+      "notApplicable": "該当なし",
+      "branch": "兵種",
+      "rank": "階級",
+      "dischargeType": "除隊区分",
+      "servicePeriod": "服務期間"
     },
     "degreeTypes": {
       "HIGH_SCHOOL": "高等学校卒業",
@@ -152,6 +193,253 @@
       "badge": "共有リンク",
       "print": "印刷",
       "resumeTitle": "{{name}}さんの履歴書"
+    },
+    "myResumes": "履歴書リスト",
+    "manageResumes": "履歴書を管理・共有する",
+    "createNewResume": "✍️ 新しい履歴書を作成",
+    "noResumesYet": "まだ履歴書がありません",
+    "createFirstResume": "最初の履歴書を作成しましょう",
+    "lastModified": "最終更新",
+    "sharing": "共有中",
+    "shareLink": "共有リンク",
+    "shareLinkCreate": "共有リンク作成",
+    "shareDuration": "共有期間",
+    "oneWeek": "1週間",
+    "oneMonth": "1ヶ月",
+    "threeMonths": "3ヶ月",
+    "permanent": "永久",
+    "viewCount": "閲覧数",
+    "expires": "期限",
+    "linkCopied": "コピー済み",
+    "copyLink": "コピー",
+    "maxShareLinks": "履歴書ごとに最大3つの有効な共有リンクを作成できます。",
+    "errors": {
+      "loadFailed": "データの読み込みに失敗しました",
+      "shareFailed": "共有リンクの作成に失敗しました",
+      "deleteShareFailed": "共有リンクの削除に失敗しました",
+      "deleteFailed": "履歴書の削除に失敗しました",
+      "copyFailed": "履歴書のコピーに失敗しました",
+      "copyLinkFailed": "リンクのコピーに失敗しました",
+      "saveFailed": "履歴書の保存に失敗しました",
+      "resumeNotFound": "履歴書が見つかりません"
+    },
+    "confirm": {
+      "deleteShare": "この共有リンクを削除しますか？",
+      "deleteResume": "この履歴書を削除しますか？この操作は元に戻せません。",
+      "copyResume": "この履歴書をコピーしますか？"
+    },
+    "success": {
+      "copied": "履歴書が正常にコピーされました",
+      "saved": "保存済み",
+      "deleteDraft": "下書きが削除されました"
+    },
+    "form": {
+      "resumeTitle": "履歴書タイトル",
+      "paperSize": "用紙サイズ",
+      "description": "説明",
+      "descriptionPlaceholder": "この履歴書の簡単な説明",
+      "name": "名前",
+      "email": "メール",
+      "phone": "電話",
+      "github": "GitHub",
+      "blog": "ブログ",
+      "linkedin": "LinkedIn",
+      "profilePhoto": "プロフィール写真URL",
+      "militaryService": "兵役",
+      "selectStatus": "選択",
+      "summary": "概要",
+      "summaryPlaceholder": "自己紹介を簡潔に...",
+      "koreanSections": "韓国式履歴書セクション",
+      "coverLetter": "カバーレター",
+      "coverLetterPlaceholder": "あなたの背景、強み、なぜこのポジションに適しているかを書いてください...",
+      "coverLetterHint": "あなたの背景、経験、ユニークな点を説明してください",
+      "applicationReason": "志望動機",
+      "applicationReasonPlaceholder": "なぜこの会社に入りたいのか書いてください...",
+      "applicationReasonHint": "会社のビジョン、仕事の魅力、あなたの強みとの関連性を書いてください",
+      "addCategory": "カテゴリ追加",
+      "categoryName": "カテゴリ名",
+      "skillName": "スキル名",
+      "addSkill": "スキル追加",
+      "moveUp": "上に移動",
+      "moveDown": "下に移動",
+      "experience": "経験 / 詳細",
+      "addCertificate": "資格追加",
+      "certificateName": "資格名",
+      "issuer": "発行者",
+      "issueDate": "発行日",
+      "expiryDate": "有効期限",
+      "credentialId": "認証ID",
+      "credentialUrl": "認証URL",
+      "remove": "削除",
+      "noCertificates": "まだ資格が追加されていません。「資格追加」をクリックして始めましょう。",
+      "attachments": "添付ファイル",
+      "attachmentsDesc": "プロフィール写真（グレースケール）、ポートフォリオ、資格証明書をアップロード。最大サイズ：ファイルあたり10MB。",
+      "saveFirst": "ファイルアップロードを有効にするには、まず履歴書を保存してください。",
+      "uploadError": "ファイルのアップロードに失敗しました",
+      "profilePhotoSection": "プロフィール写真",
+      "profilePhotoDesc": "プロフェッショナルな写真（自動的にグレースケールに変換されます）",
+      "portfolioSection": "ポートフォリオ",
+      "portfolioDesc": "プロジェクトのスクリーンショット、デザイン、PDFドキュメントをアップロード",
+      "certificatesSection": "資格証明書",
+      "certificatesDesc": "資格証明書や賞状をアップロード",
+      "uploading": "アップロード中...",
+      "clickToUpload": "クリックしてアップロード",
+      "clickToUploadPhoto": "クリックしてプロフィール写真をアップロード",
+      "clickToUploadPortfolio": "クリックしてポートフォリオファイルをアップロード",
+      "clickToUploadCertificate": "クリックして資格証明書をアップロード",
+      "deleteDraft": "下書きを削除",
+      "saveAndPreview": "💾 保存してプレビュー",
+      "saving": "💾 保存中..."
+    },
+    "experienceForm": {
+      "company": "会社",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "leaveEmpty": "現在の場合は空欄のまま",
+      "position": "役職",
+      "jobTitle": "職位",
+      "companyName": "会社名",
+      "removeCompany": "会社を削除",
+      "experiencePeriod": "勤務期間：",
+      "projects": "📁 この会社でのプロジェクト",
+      "addProject": "+ プロジェクト追加",
+      "noProjects": "まだプロジェクトが追加されていません。「プロジェクト追加」をクリックして始めましょう。",
+      "projectName": "プロジェクト名",
+      "yourRole": "あなたの役割",
+      "techStack": "技術スタック（カンマ区切り）",
+      "projectUrl": "プロジェクトURL",
+      "githubUrl": "GitHub URL",
+      "keyAchievements": "主な成果",
+      "depthLevels": "（4階層まで）",
+      "addAchievement": "+ 成果追加",
+      "noAchievements": "まだ成果が追加されていません。「成果追加」をクリックして始めましょう。",
+      "achievementPlaceholder": "成果の説明...",
+      "addSubItem": "+ サブ項目",
+      "collapse": "折りたたむ",
+      "expand": "展開",
+      "addExperience": "+ 経歴追加",
+      "noExperience": "まだ職務経歴が追加されていません。「経歴追加」をクリックして始めましょう。",
+      "dragToReorder": "ドラッグして並べ替え",
+      "ongoingProject": "進行中の場合は空欄のまま",
+      "projectDescription": "プロジェクトの簡単な説明...",
+      "positionPlaceholder": "例：バックエンドチームリーダー",
+      "jobTitlePlaceholder": "シニアデベロッパー"
+    },
+    "militaryRanks": {
+      "sergeant": "軍曹",
+      "corporal": "伍長",
+      "pfc": "上等兵",
+      "private": "二等兵"
+    },
+    "dischargeTypes": {
+      "honorable": "満期除隊",
+      "medical": "医療除隊"
     }
+  },
+  "settings": {
+    "title": "⚙️ 設定",
+    "description": "ユーザー環境を設定します",
+    "backButton": "← 戻る",
+    "darkMode": "ダークモード",
+    "themeDescription": "画面テーマを設定します",
+    "sectionOrder": "ホームセクション順序",
+    "sectionOrderDescription": "ホーム画面に表示されるセクションの順序と表示設定",
+    "visibility": "表示",
+    "saved": "設定が保存されました",
+    "saveFailed": "設定の保存に失敗しました",
+    "sections": {
+      "skills": "スキル",
+      "experience": "経歴",
+      "projects": "プロジェクト",
+      "education": "学歴",
+      "certifications": "資格"
+    }
+  },
+  "changePassword": {
+    "title": "パスワード変更",
+    "description": "アカウントパスワードを更新",
+    "currentPassword": "現在のパスワード",
+    "newPassword": "新しいパスワード",
+    "confirmPassword": "新しいパスワードの確認",
+    "currentPasswordPlaceholder": "現在のパスワードを入力",
+    "newPasswordPlaceholder": "新しいパスワードを入力（最低8文字）",
+    "confirmPasswordPlaceholder": "新しいパスワードを再入力",
+    "changeButton": "パスワード変更",
+    "changing": "パスワード変更中...",
+    "backToHome": "ホームに戻る",
+    "errors": {
+      "tooShort": "新しいパスワードは最低8文字以上である必要があります",
+      "noMatch": "新しいパスワードが一致しません",
+      "failed": "パスワードの変更に失敗しました。現在のパスワードを確認してください。"
+    },
+    "success": "パスワードが正常に変更されました！"
+  },
+  "character": {
+    "loading": {
+      "light": "記録を探しています",
+      "dark": "静かな夜に記録を探しています",
+      "messageLight": "お待ちください...",
+      "messageDark": "月明かりの下で本をめくっています..."
+    },
+    "notFound": {
+      "light": "記録が見つかりません",
+      "dark": "この記録は夜の書斎にありません",
+      "messageLight": "リクエストされたページが見つかりませんでした",
+      "messageDark": "闇の中でも見つからない記録です"
+    },
+    "error": {
+      "light": "あっ、問題が発生しました",
+      "dark": "月明かりが薄れました",
+      "messageLight": "一時的なエラーが発生しました。後でもう一度お試しください",
+      "messageDark": "雲が夜空を覆いました。後でもう一度お試しください"
+    },
+    "expired": {
+      "light": "共有期間が終了しました",
+      "dark": "深い夜が眠りにつきました",
+      "messageLight": "この共有リンクはもう有効ではありません",
+      "messageDark": "月が沈み、リンクも眠りにつきました"
+    },
+    "deleted": {
+      "light": "削除された記録",
+      "dark": "闇に消えた記録",
+      "messageLight": "この記録は所有者によって削除されました",
+      "messageDark": "夜霧の中に消えた記録です"
+    },
+    "noPermission": {
+      "light": "アクセス権限がありません",
+      "dark": "この書斎は施錠されています",
+      "messageLight": "この記録を見る権限がありません",
+      "messageDark": "月明かりでも照らせない秘密の書斎"
+    },
+    "maintenance": {
+      "light": "しばらく休憩中",
+      "dark": "夜の書斎整理中",
+      "messageLight": "システムメンテナンス中です。しばらくお待ちください",
+      "messageDark": "星明かりの下で書斎を整頓しています"
+    }
+  },
+  "errors": {
+    "loginFailed": "ログインに失敗しました。認証情報を確認してください。",
+    "registrationFailed": "登録に失敗しました。もう一度お試しください。",
+    "loadingResume": "履歴書を読み込んでいます...",
+    "startFilling": "フォームに入力を開始すると、履歴書のプレビューが表示されます"
+  },
+  "placeholders": {
+    "email": "you@example.com",
+    "password": "••••••••",
+    "namePlaceholder": "山田太郎",
+    "usernamePlaceholder": "yamadataro",
+    "emailPlaceholder": "your@email.com"
+  },
+  "edit": {
+    "editResume": "履歴書編集",
+    "createNewResume": "新規履歴書作成",
+    "updateInfo": "履歴書情報を更新",
+    "fillInfo": "情報を入力して新しい履歴書を作成",
+    "showForm": "フォームを表示",
+    "showPreview": "プレビューを表示",
+    "livePreview": "ライブプレビュー",
+    "previewDescription": "履歴書の表示イメージです。変更は即座に反映されます。",
+    "error": "エラー:"
   }
 }
