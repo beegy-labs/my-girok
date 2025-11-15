@@ -105,19 +105,84 @@ updateResume(id, dto)     // Update existing
 
 ```typescript
 // api/resume.ts
-import { authApi } from './auth';
+import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
 
 const PERSONAL_API_URL = import.meta.env.VITE_PERSONAL_API_URL;
 
-export const personalApi = authApi.create({
-  baseURL: `${PERSONAL_API_URL}/v1`,
+export const personalApi = axios.create({
+  baseURL: PERSONAL_API_URL,
+  headers: { 'Content-Type': 'application/json' },
 });
 
+// Request interceptor: Add JWT token
+personalApi.interceptors.request.use(async (config) => {
+  // Skip auth for public endpoints
+  const isPublicEndpoint = config.url?.includes('/share/public/') ||
+                           config.url?.includes('/resume/public/');
+
+  if (isPublicEndpoint) {
+    return config; // No Authorization header
+  }
+
+  const { accessToken } = useAuthStore.getState();
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+
+// Response interceptor: Handle 401 and refresh token
+personalApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Enhanced error logging for mobile debugging
+    if (!error.response) {
+      console.error('[API Error] Network or CORS error:', {
+        message: error.message,
+        url: error.config?.url,
+        userAgent: navigator.userAgent, // iOS Safari debugging
+      });
+    }
+
+    // Handle 401 with token refresh
+    if (error.response?.status === 401 && !error.config._retry) {
+      error.config._retry = true;
+
+      try {
+        const { refreshToken } = useAuthStore.getState();
+        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
+          refreshToken,
+        });
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        useAuthStore.getState().updateTokens(accessToken, newRefreshToken);
+
+        error.config.headers.Authorization = `Bearer ${accessToken}`;
+        return personalApi(error.config);
+      } catch (refreshError) {
+        useAuthStore.getState().clearAuth();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export const getDefaultResume = async (): Promise<Resume> => {
-  const response = await personalApi.get('/resume/default');
+  const response = await personalApi.get('/v1/resume/default');
   return response.data;
 };
 ```
+
+**Key Points**:
+- Skip `Authorization` header for public endpoints (iOS Safari compatibility)
+- Enhanced error logging includes `userAgent` for mobile debugging
+- Auto-retry with token refresh on 401 errors
+- Network errors logged separately (helps debug CORS issues)
 
 ## Auth Pattern
 
