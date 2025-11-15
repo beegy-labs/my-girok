@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
 import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
@@ -14,6 +14,8 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
   const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
   const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('continuous'); // Default: continuous view
   const [scale, setScale] = useState(1);
+  const rafRef = useRef<number | null>(null);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const visibleSections = resume.sections
     .filter(s => s.visible)
@@ -26,9 +28,15 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
   const pageClassName = paperSize === 'A4' ? 'resume-page-a4' : 'resume-page-letter';
 
-  // Calculate scale to fit viewport width (for mobile)
-  useEffect(() => {
-    const calculateScale = () => {
+  // Optimized scale calculation with RAF and debouncing
+  const calculateScale = useCallback(() => {
+    // Cancel any pending RAF
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
+    // Use RAF for smooth rendering
+    rafRef.current = requestAnimationFrame(() => {
       const viewportWidth = window.innerWidth;
       // Convert cm to pixels (1cm ≈ 37.8px at 96 DPI)
       const paperWidthPx = paperSize === 'A4' ? 794 : 816; // 21cm = 794px, 21.59cm = 816px
@@ -37,13 +45,46 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
       // Calculate scale to fit, but don't scale up beyond 100%
       const newScale = Math.min(1, availableWidth / paperWidthPx);
-      setScale(newScale);
+
+      // Round to 2 decimal places to avoid unnecessary re-renders
+      const roundedScale = Math.round(newScale * 100) / 100;
+
+      // Only update if scale actually changed
+      setScale(prevScale => {
+        const roundedPrevScale = Math.round(prevScale * 100) / 100;
+        return roundedPrevScale !== roundedScale ? roundedScale : prevScale;
+      });
+    });
+  }, [paperSize]);
+
+  // Calculate scale to fit viewport width (for mobile) - optimized with debouncing
+  useEffect(() => {
+    // Initial calculation
+    calculateScale();
+
+    // Debounced resize handler (150ms delay)
+    const handleResize = () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+
+      resizeTimeoutRef.current = setTimeout(() => {
+        calculateScale();
+      }, 150);
     };
 
-    calculateScale();
-    window.addEventListener('resize', calculateScale);
-    return () => window.removeEventListener('resize', calculateScale);
-  }, [paperSize]);
+    window.addEventListener('resize', handleResize, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [calculateScale]);
 
   return (
     <div className="relative">
@@ -102,9 +143,11 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         id="resume-content"
         className={viewMode === 'paginated' ? 'resume-page-container' : ''}
         style={{
-          transform: `scale(${scale})`,
+          transform: `scale(${scale}) translate3d(0, 0, 0)`, // GPU acceleration with translate3d
           transformOrigin: 'top center',
           marginBottom: scale < 1 ? `${(1 - scale) * -200}px` : 0, // Adjust bottom spacing when scaled
+          willChange: 'transform', // Hint to browser for optimization
+          transition: 'transform 0.15s ease-out', // Smooth scale transitions
         }}
       >
         <div

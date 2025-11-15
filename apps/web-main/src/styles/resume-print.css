@@ -8,11 +8,13 @@
   margin: 0 auto;
 }
 
-/* Remove scaling in print mode */
+/* Remove scaling and optimization hints in print mode */
 @media print {
   #resume-content {
     transform: none !important;
     margin-bottom: 0 !important;
+    will-change: auto !important;
+    transition: none !important;
   }
 
   .resume-page-container {
