@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -46,7 +46,21 @@ export default function MyResumePage() {
     }
   };
 
-  const handleCreateShare = async () => {
+  // Memoize navigation handlers
+  const navigateToEdit = useCallback(() => {
+    navigate('/resume/edit');
+  }, [navigate]);
+
+  const navigateToPreview = useCallback((resumeId: string) => {
+    navigate(`/resume/preview/${resumeId}`);
+  }, [navigate]);
+
+  const navigateToEditResume = useCallback((resumeId: string) => {
+    navigate(`/resume/edit/${resumeId}`);
+  }, [navigate]);
+
+  // Memoize other handlers
+  const handleCreateShare = useCallback(async () => {
     if (!selectedResumeId) return;
 
     try {
@@ -57,9 +71,9 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.shareFailed'));
     }
-  };
+  }, [selectedResumeId, shareDuration, t]);
 
-  const handleDeleteShare = async (shareId: string) => {
+  const handleDeleteShare = useCallback(async (shareId: string) => {
     if (!confirm(t('resume.confirm.deleteShare'))) return;
 
     try {
@@ -68,9 +82,9 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.deleteShareFailed'));
     }
-  };
+  }, [t]);
 
-  const handleDeleteResume = async (resumeId: string) => {
+  const handleDeleteResume = useCallback(async (resumeId: string) => {
     if (!confirm(t('resume.confirm.deleteResume'))) return;
 
     try {
@@ -79,9 +93,9 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.deleteFailed'));
     }
-  };
+  }, [t]);
 
-  const handleCopyResume = async (resumeId: string) => {
+  const handleCopyResume = useCallback(async (resumeId: string) => {
     if (!confirm(t('resume.confirm.copyResume'))) return;
 
     try {
@@ -91,10 +105,12 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.copyFailed'));
     }
-  };
+  }, [t]);
 
-  const openShareModal = (resumeId: string) => {
-    const activeLinks = getResumeShareStatus(resumeId);
+  const openShareModal = useCallback((resumeId: string) => {
+    const activeLinks = shareLinks.filter(
+      (link) => link.resourceId === resumeId && link.isActive
+    );
     if (activeLinks.length >= 3) {
       setError(t('resume.maxShareLinks'));
       setTimeout(() => setError(null), 3000);
@@ -102,16 +118,16 @@ export default function MyResumePage() {
     }
     setSelectedResumeId(resumeId);
     setShowShareModal(true);
-  };
+  }, [shareLinks, t]);
 
-  const getResumeShareStatus = (resumeId: string) => {
+  const getResumeShareStatus = useCallback((resumeId: string) => {
     const activeLinks = shareLinks.filter(
       (link) => link.resourceId === resumeId && link.isActive
     );
     return activeLinks;
-  };
+  }, [shareLinks]);
 
-  const copyToClipboard = async (text: string, linkId: string) => {
+  const copyToClipboard = useCallback(async (text: string, linkId: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedLinkId(linkId);
@@ -120,11 +136,11 @@ export default function MyResumePage() {
       setError(t('resume.errors.copyLinkFailed'));
       setTimeout(() => setError(null), 3000);
     }
-  };
+  }, [t]);
 
-  const toggleShareLinks = (resumeId: string) => {
-    setExpandedResumeId(expandedResumeId === resumeId ? null : resumeId);
-  };
+  const toggleShareLinks = useCallback((resumeId: string) => {
+    setExpandedResumeId(prev => prev === resumeId ? null : resumeId);
+  }, []);
 
   if (loading) {
     return (
@@ -151,7 +167,7 @@ export default function MyResumePage() {
               <p className="text-sm sm:text-base text-gray-700 dark:text-dark-text-secondary ml-8 sm:ml-12">{t('resume.manageResumes')}</p>
             </div>
             <button
-              onClick={() => navigate('/resume/edit')}
+              onClick={navigateToEdit}
               className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap"
             >
               {t('resume.createNewResume')}
@@ -178,7 +194,7 @@ export default function MyResumePage() {
               <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t('resume.list.noResumes')}</h3>
               <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary mb-4">{t('resume.list.createFirst')}</p>
               <button
-                onClick={() => navigate('/resume/edit')}
+                onClick={navigateToEdit}
                 className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 {t('resume.list.createNew')}
@@ -223,13 +239,13 @@ export default function MyResumePage() {
 
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
                           <button
-                            onClick={() => navigate(`/resume/preview/${resume.id}`)}
+                            onClick={() => navigateToPreview(resume.id)}
                             className="px-2 sm:px-4 py-2 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all whitespace-nowrap"
                           >
                             👁️ {t('common.preview')}
                           </button>
                           <button
-                            onClick={() => navigate(`/resume/edit/${resume.id}`)}
+                            onClick={() => navigateToEditResume(resume.id)}
                             className="px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-xs sm:text-sm font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 whitespace-nowrap"
                           >
                             ✍️ {t('common.edit')}

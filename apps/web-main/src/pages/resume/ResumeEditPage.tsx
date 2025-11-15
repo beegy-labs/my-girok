@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
@@ -14,7 +14,6 @@ export default function ResumeEditPage() {
   const [error, setError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<Resume | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [navigateToPreview, setNavigateToPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (resumeId) {
@@ -24,16 +23,6 @@ export default function ResumeEditPage() {
       setLoading(false);
     }
   }, [resumeId]);
-
-  // Handle navigation in useEffect for React 19 compatibility
-  useEffect(() => {
-    if (navigateToPreview) {
-      // Navigate immediately without clearing state
-      // The preview page will handle its own state initialization
-      navigate(navigateToPreview, { replace: false });
-      setNavigateToPreview(null);
-    }
-  }, [navigateToPreview, navigate]);
 
   const loadResume = async () => {
     if (!resumeId) return;
@@ -54,7 +43,17 @@ export default function ResumeEditPage() {
     }
   };
 
-  const handleFormChange = (data: CreateResumeDto) => {
+  // Memoize default sections to avoid recreating on every render
+  const defaultSections = useMemo(() => [
+    { id: '1', type: SectionType.SKILLS, order: 1, visible: true },
+    { id: '2', type: SectionType.EXPERIENCE, order: 2, visible: true },
+    { id: '3', type: SectionType.PROJECT, order: 3, visible: true },
+    { id: '4', type: SectionType.EDUCATION, order: 4, visible: true },
+    { id: '5', type: SectionType.CERTIFICATE, order: 5, visible: true },
+  ], []);
+
+  // Optimize handleFormChange with useCallback to prevent unnecessary re-renders
+  const handleFormChange = useCallback((data: CreateResumeDto) => {
     // Update preview with current form data
     const mockResume: Resume = {
       id: resume?.id || 'preview',
@@ -81,13 +80,7 @@ export default function ResumeEditPage() {
       militaryServiceEndDate: data.militaryServiceEndDate,
       coverLetter: data.coverLetter,
       applicationReason: data.applicationReason,
-      sections: resume?.sections || [
-        { id: '1', type: SectionType.SKILLS, order: 1, visible: true },
-        { id: '2', type: SectionType.EXPERIENCE, order: 2, visible: true },
-        { id: '3', type: SectionType.PROJECT, order: 3, visible: true },
-        { id: '4', type: SectionType.EDUCATION, order: 4, visible: true },
-        { id: '5', type: SectionType.CERTIFICATE, order: 5, visible: true },
-      ],
+      sections: resume?.sections || defaultSections,
       skills: (data.skills || []).map((s, i) => ({ ...s, id: `skill-${i}` })),
       experiences: (data.experiences || []).map((e, i) => ({ ...e, id: `exp-${i}` })),
       projects: [], // NOTE: Independent projects field removed - projects are now only handled as nested ExperienceProject within experiences
@@ -97,7 +90,7 @@ export default function ResumeEditPage() {
       updatedAt: new Date().toISOString(),
     };
     setPreviewData(mockResume);
-  };
+  }, [resume?.id, resume?.userId, resume?.sections, defaultSections]);
 
   const handleSubmit = async (data: CreateResumeDto) => {
     try {
@@ -106,15 +99,15 @@ export default function ResumeEditPage() {
         const updated = await updateResume(resumeId, data);
         setResume(updated);
         setPreviewData(updated);
-        // Trigger navigation via state for React 19 compatibility
-        setNavigateToPreview(`/resume/preview/${updated.id}`);
+        // Direct navigation - React Router v7 supports this without issues
+        navigate(`/resume/preview/${updated.id}`);
       } else {
         // Create new resume
         const created = await createResume(data);
         setResume(created);
         setPreviewData(created);
-        // Trigger navigation via state for React 19 compatibility
-        setNavigateToPreview(`/resume/preview/${created.id}`);
+        // Direct navigation - React Router v7 supports this without issues
+        navigate(`/resume/preview/${created.id}`);
       }
     } catch (err) {
       setError(t('resume.errors.saveFailed'));
