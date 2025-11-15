@@ -732,6 +732,10 @@ main:
 10. Commit secrets to git (use Sealed Secrets for Kubernetes)
 11. Log sensitive data (passwords, tokens)
 12. Store plain text Kubernetes Secrets in Git
+13. Use inline functions in map() iterations → Use useCallback
+14. Create objects/arrays inside render → Use useMemo
+15. Use state for navigation → Call navigate() directly (React Router v7)
+16. Include functions in useEffect dependencies → Memoize parent functions
 
 **ALWAYS:**
 1. Define types first in `packages/types`
@@ -748,6 +752,10 @@ main:
 12. Write tests for new features (80% coverage minimum)
 13. Follow git commit conventions
 14. Create PRs for code review
+15. Memoize event handlers with useCallback
+16. Memoize constants/arrays/objects with useMemo
+17. Use React.memo for repeated components
+18. Optimize re-renders (target <16ms per component)
 
 ## Common Mistakes
 
