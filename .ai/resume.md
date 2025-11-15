@@ -238,7 +238,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Resume Preview Design
 
-**Concept**: Print-optimized, high-contrast design with user control
+**Concept**: Print-optimized, high-contrast design with responsive scaling
 
 - **Content**: Uses grayscale (gray-50 ~ gray-900) for text and layout
 - **Profile Photos**: Show in color by default, optional grayscale toggle
@@ -247,6 +247,12 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - **Multi-Page**: Supports both A4 (21cm × 29.7cm) and Letter (21.59cm × 27.94cm)
 - **Page Separation**: Visual shadows between pages, page numbers on screen
 - **Print-Friendly**: Automatic page breaks, cost-effective, ATS-compatible
+- **Responsive Scaling**:
+  - Desktop (>794px): 100% original size
+  - Tablet (~768px): Auto-scaled to ~93%
+  - Mobile (~375px): Auto-scaled to ~43%
+  - Browser zoom remains functional
+- **Performance**: Debounced resize (150ms), RAF, GPU acceleration, smart updates
 
 ## Common Mistakes to Avoid
 
