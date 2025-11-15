@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import {
   getAllResumes,
   getMyShareLinks,
@@ -13,6 +14,7 @@ import {
 } from '../../api/resume';
 
 export default function MyResumePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
@@ -38,7 +40,7 @@ export default function MyResumePage() {
       setResumes(resumesData);
       setShareLinks(shareLinksData);
     } catch (err: any) {
-      setError('데이터를 불러오는데 실패했습니다');
+      setError(t('resume.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -53,48 +55,48 @@ export default function MyResumePage() {
       setShowShareModal(false);
       setSelectedResumeId(null);
     } catch (err) {
-      setError('공유 링크 생성에 실패했습니다');
+      setError(t('resume.errors.shareFailed'));
     }
   };
 
   const handleDeleteShare = async (shareId: string) => {
-    if (!confirm('이 공유 링크를 삭제하시겠습니까?')) return;
+    if (!confirm(t('resume.confirm.deleteShare'))) return;
 
     try {
       await deleteShareLink(shareId);
       await loadData();
     } catch (err) {
-      setError('공유 링크 삭제에 실패했습니다');
+      setError(t('resume.errors.deleteShareFailed'));
     }
   };
 
   const handleDeleteResume = async (resumeId: string) => {
-    if (!confirm('이 이력서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    if (!confirm(t('resume.confirm.deleteResume'))) return;
 
     try {
       await deleteResume(resumeId);
       await loadData();
     } catch (err) {
-      setError('이력서 삭제에 실패했습니다');
+      setError(t('resume.errors.deleteFailed'));
     }
   };
 
   const handleCopyResume = async (resumeId: string, resumeTitle: string) => {
-    if (!confirm(`"${resumeTitle}" 이력서를 복사하시겠습니까?\n복사본이 생성됩니다.`)) return;
+    if (!confirm(t('resume.confirm.copyResume'))) return;
 
     try {
       await copyResume(resumeId);
       await loadData();
-      alert('이력서가 성공적으로 복사되었습니다.');
+      alert(t('resume.success.copied'));
     } catch (err) {
-      setError('이력서 복사에 실패했습니다');
+      setError(t('resume.errors.copyFailed'));
     }
   };
 
   const openShareModal = (resumeId: string) => {
     const activeLinks = getResumeShareStatus(resumeId);
     if (activeLinks.length >= 3) {
-      setError('이력서당 최대 3개의 활성 공유 링크만 생성할 수 있습니다.');
+      setError(t('resume.maxShareLinks'));
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -115,7 +117,7 @@ export default function MyResumePage() {
       setCopiedLinkId(linkId);
       setTimeout(() => setCopiedLinkId(null), 2000);
     } catch (err) {
-      setError('링크 복사에 실패했습니다');
+      setError(t('resume.errors.copyLinkFailed'));
       setTimeout(() => setError(null), 3000);
     }
   };
@@ -129,7 +131,7 @@ export default function MyResumePage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 dark:border-amber-400 mx-auto"></div>
-          <p className="mt-4 text-gray-700 dark:text-dark-text-secondary font-medium">이력서를 불러오는 중...</p>
+          <p className="mt-4 text-gray-700 dark:text-dark-text-secondary font-medium">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -144,15 +146,15 @@ export default function MyResumePage() {
             <div>
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <span className="text-2xl sm:text-3xl">📄</span>
-                <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">나의 이력서</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">{t('resume.myResumes')}</h1>
               </div>
-              <p className="text-sm sm:text-base text-gray-700 dark:text-dark-text-secondary ml-8 sm:ml-12">이력서를 관리하고 공유하세요</p>
+              <p className="text-sm sm:text-base text-gray-700 dark:text-dark-text-secondary ml-8 sm:ml-12">{t('resume.manageResumes')}</p>
             </div>
             <button
               onClick={() => navigate('/resume/edit')}
               className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap"
             >
-              ✍️ 새 이력서 만들기
+              {t('resume.createNewResume')}
             </button>
           </div>
         </div>
@@ -167,19 +169,19 @@ export default function MyResumePage() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
             <span>📋</span>
-            이력서 목록
+            {t('resume.list.title')}
           </h2>
 
           {resumes.length === 0 ? (
             <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-6 sm:p-8 text-center transition-colors duration-200">
               <div className="text-5xl sm:text-6xl mb-4">📝</div>
-              <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">아직 이력서가 없습니다</h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary mb-4">첫 이력서를 만들어보세요</p>
+              <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t('resume.list.noResumes')}</h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary mb-4">{t('resume.list.createFirst')}</p>
               <button
                 onClick={() => navigate('/resume/edit')}
                 className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                이력서 만들기
+                {t('resume.list.createNew')}
               </button>
             </div>
           ) : (
@@ -200,12 +202,12 @@ export default function MyResumePage() {
                             <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary">{resume.title}</h3>
                             {resume.isDefault && (
                               <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full">
-                                기본
+                                {t('common.default')}
                               </span>
                             )}
                             {hasActiveShare && (
                               <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
-                                공유 중 ({activeShares.length}/3)
+                                {t('resume.sharing')} ({activeShares.length}/3)
                               </span>
                             )}
                           </div>
@@ -214,7 +216,7 @@ export default function MyResumePage() {
                           )}
                           <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-dark-text-tertiary">
                             <span>
-                              마지막 수정: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
+                              {t('resume.lastModified')}: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
                             </span>
                           </div>
                         </div>
@@ -224,31 +226,31 @@ export default function MyResumePage() {
                             onClick={() => navigate(`/resume/preview/${resume.id}`)}
                             className="px-2 sm:px-4 py-2 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all whitespace-nowrap"
                           >
-                            👁️ 미리보기
+                            👁️ {t('common.preview')}
                           </button>
                           <button
                             onClick={() => navigate(`/resume/edit/${resume.id}`)}
                             className="px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-xs sm:text-sm font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 whitespace-nowrap"
                           >
-                            ✍️ 수정
+                            ✍️ {t('common.edit')}
                           </button>
                           <button
                             onClick={() => handleCopyResume(resume.id, resume.title)}
                             className="px-2 sm:px-4 py-2 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs sm:text-sm font-semibold rounded-lg border border-amber-200 dark:border-amber-800 transition-all whitespace-nowrap"
                           >
-                            📋 복사
+                            📋 {t('common.copy')}
                           </button>
                           <button
                             onClick={() => openShareModal(resume.id)}
                             className="px-2 sm:px-4 py-2 bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all whitespace-nowrap"
                           >
-                            🔗 공유
+                            🔗 {t('common.share')}
                           </button>
                           <button
                             onClick={() => handleDeleteResume(resume.id)}
                             className="px-2 sm:px-4 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400 text-xs sm:text-sm font-semibold rounded-lg border border-red-200 dark:border-red-800 transition-all whitespace-nowrap col-span-2 sm:col-span-1"
                           >
-                            🗑️ 삭제
+                            🗑️ {t('common.delete')}
                           </button>
                         </div>
                       </div>
@@ -263,7 +265,7 @@ export default function MyResumePage() {
                         >
                           <span className="flex items-center gap-2">
                             <span>🔗</span>
-                            <span>공유 링크 ({activeShares.length}개)</span>
+                            <span>{t('resume.shareLink')} ({activeShares.length})</span>
                           </span>
                           <span className="text-lg">
                             {expandedResumeId === resume.id ? '▼' : '▶'}
@@ -281,7 +283,7 @@ export default function MyResumePage() {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className="text-xs font-semibold text-gray-700 dark:text-dark-text-secondary">
-                                        공유 링크
+                                        {t('resume.shareLink')}
                                       </span>
                                       <span
                                         className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
@@ -290,7 +292,7 @@ export default function MyResumePage() {
                                             : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
                                         }`}
                                       >
-                                        {link.isActive ? '활성' : '비활성'}
+                                        {link.isActive ? t('common.active') : t('common.inactive')}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -304,27 +306,27 @@ export default function MyResumePage() {
                                         onClick={() => copyToClipboard(link.shareUrl, link.id)}
                                         className="px-2 sm:px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-300 text-xs font-semibold rounded border border-amber-300 dark:border-amber-800 transition-all whitespace-nowrap"
                                       >
-                                        {copiedLinkId === link.id ? '✓ 복사됨' : '📋 복사'}
+                                        {copiedLinkId === link.id ? `✓ ${t('resume.linkCopied')}` : `📋 ${t('resume.copyLink')}`}
                                       </button>
                                     </div>
                                   </div>
                                 </div>
                                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-dark-text-tertiary">
                                   <div className="flex flex-wrap gap-3">
-                                    <span>조회수: {link.viewCount}회</span>
+                                    <span>{t('resume.viewCount')}: {link.viewCount}</span>
                                     {link.expiresAt ? (
                                       <span className="text-green-700 dark:text-green-400">
-                                        만료: {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
+                                        {t('resume.expires')}: {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
                                       </span>
                                     ) : (
-                                      <span className="text-green-700 dark:text-green-400">영구</span>
+                                      <span className="text-green-700 dark:text-green-400">{t('resume.permanent')}</span>
                                     )}
                                   </div>
                                   <button
                                     onClick={() => handleDeleteShare(link.id)}
                                     className="px-2 py-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded border border-red-200 dark:border-red-800 transition-all"
                                   >
-                                    삭제
+                                    {t('common.delete')}
                                   </button>
                                 </div>
                               </div>
@@ -345,20 +347,20 @@ export default function MyResumePage() {
         {showShareModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-dark-bg-card rounded-2xl shadow-xl dark:shadow-dark-lg p-6 sm:p-8 max-w-md w-full transition-colors duration-200">
-              <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4">공유 링크 만들기</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                  공유 기간
+                  {t('resume.shareDuration')}
                 </label>
                 <select
                   value={shareDuration}
                   onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-sm sm:text-base text-gray-900 dark:text-dark-text-primary"
                 >
-                  <option value={ShareDuration.ONE_WEEK}>1주일</option>
-                  <option value={ShareDuration.ONE_MONTH}>1개월</option>
-                  <option value={ShareDuration.THREE_MONTHS}>3개월</option>
-                  <option value={ShareDuration.PERMANENT}>영구</option>
+                  <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
+                  <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
+                  <option value={ShareDuration.THREE_MONTHS}>{t('resume.threeMonths')}</option>
+                  <option value={ShareDuration.PERMANENT}>{t('resume.permanent')}</option>
                 </select>
               </div>
               <div className="flex gap-3">
@@ -369,13 +371,13 @@ export default function MyResumePage() {
                   }}
                   className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary text-sm sm:text-base font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all"
                 >
-                  취소
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleCreateShare}
                   className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-sm sm:text-base font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
                 >
-                  생성
+                  {t('common.save')}
                 </button>
               </div>
             </div>
