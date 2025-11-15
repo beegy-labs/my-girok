@@ -31,6 +31,10 @@
 - ❌ Commit secrets to git
 - ❌ Log sensitive data (passwords, tokens)
 - ❌ Store plain text K8s Secrets in Git
+- ❌ **Inline functions in map()** → Use useCallback
+- ❌ **Objects/arrays inside render** → Use useMemo
+- ❌ **State for navigation** → Call navigate() directly
+- ❌ **Functions in useEffect deps** → Memoize parent
 
 ### ALWAYS
 - ✅ Define types first in `packages/types`
@@ -48,6 +52,10 @@
 - ✅ Follow git commit conventions
 - ✅ Create PRs for code review
 - ✅ Use Sealed Secrets for K8s
+- ✅ **Memoize handlers** with useCallback
+- ✅ **Memoize constants** with useMemo
+- ✅ **Use React.memo** for list items
+- ✅ **Target <16ms** render time
 
 ## Transaction Pattern
 
@@ -171,11 +179,28 @@ Never remove, applies to all environments.
 - Complex queries: < 500ms
 - Mutations: < 300ms
 
-**Always:**
+**Backend:**
 - Index foreign keys
 - Use cursor pagination for large datasets
 - Cache frequently accessed data (Redis)
 - Use SELECT only needed fields
+
+**Frontend (React):**
+```typescript
+// ❌ DON'T: Inline in map
+{items.map(item => <button onClick={() => handle(item.id)}>X</button>)}
+
+// ✅ DO: Memoize
+const handleClick = useCallback((id) => handle(id), []);
+{items.map(item => <button onClick={() => handleClick(item.id)}>X</button>)}
+
+// ❌ DON'T: State for nav
+const [nav, setNav] = useState(null);
+useEffect(() => { if(nav) navigate(nav) }, [nav]);
+
+// ✅ DO: Direct call
+navigate('/path'); // Works in React Router v7
+```
 
 ## Common Packages
 
