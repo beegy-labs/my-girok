@@ -1,4 +1,21 @@
 {
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "편집",
+    "copy": "복사",
+    "share": "공유",
+    "preview": "미리보기",
+    "loading": "로딩중...",
+    "backToHome": "홈으로 돌아가기",
+    "error": "오류",
+    "success": "성공",
+    "confirm": "확인하시겠습니까?",
+    "default": "기본",
+    "active": "활성",
+    "inactive": "비활성"
+  },
   "nav": {
     "login": "로그인",
     "register": "회원가입",
@@ -22,7 +39,19 @@
       "title": "예산 관리",
       "description": "수입과 지출을 추적하세요"
     },
-    "getStarted": "시작하기"
+    "getStarted": "시작하기",
+    "recordType": "기록 종류",
+    "recordStart": "기록을 시작해보세요",
+    "recordGoTo": "기록하러 가기 →",
+    "comingSoon": "준비중",
+    "quickLinks": "빠른 링크",
+    "viewPublicProfile": "내 공개 프로필 보기",
+    "settings": "설정",
+    "recordBook": "님의 기록장",
+    "startToday": "오늘도 나에 대한 기록을 시작해보세요",
+    "allInOne": "이력서, 블로그, 가계부를 한 곳에서",
+    "createRecordBook": "기록장 만들기",
+    "recordingTypes": "기록할 수 있는 것들"
   },
   "auth": {
     "loginTitle": "로그인",
@@ -164,6 +193,253 @@
       "badge": "공유 링크",
       "print": "인쇄",
       "resumeTitle": "{{name}}님의 이력서"
+    },
+    "myResumes": "나의 이력서",
+    "manageResumes": "이력서를 관리하고 공유하세요",
+    "createNewResume": "✍️ 새 이력서 만들기",
+    "noResumesYet": "아직 이력서가 없습니다",
+    "createFirstResume": "첫 이력서를 만들어보세요",
+    "lastModified": "마지막 수정",
+    "sharing": "공유 중",
+    "shareLink": "공유 링크",
+    "shareLinkCreate": "공유 링크 만들기",
+    "shareDuration": "공유 기간",
+    "oneWeek": "1주일",
+    "oneMonth": "1개월",
+    "threeMonths": "3개월",
+    "permanent": "영구",
+    "viewCount": "조회수",
+    "expires": "만료",
+    "linkCopied": "복사됨",
+    "copyLink": "복사",
+    "maxShareLinks": "이력서당 최대 3개의 활성 공유 링크만 생성할 수 있습니다.",
+    "errors": {
+      "loadFailed": "데이터를 불러오는데 실패했습니다",
+      "shareFailed": "공유 링크 생성에 실패했습니다",
+      "deleteShareFailed": "공유 링크 삭제에 실패했습니다",
+      "deleteFailed": "이력서 삭제에 실패했습니다",
+      "copyFailed": "이력서 복사에 실패했습니다",
+      "copyLinkFailed": "링크 복사에 실패했습니다",
+      "saveFailed": "이력서 저장에 실패했습니다",
+      "resumeNotFound": "이력서를 찾을 수 없습니다"
+    },
+    "confirm": {
+      "deleteShare": "이 공유 링크를 삭제하시겠습니까?",
+      "deleteResume": "이 이력서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "copyResume": "이력서를 복사하시겠습니까?"
+    },
+    "success": {
+      "copied": "이력서가 성공적으로 복사되었습니다.",
+      "saved": "저장됨",
+      "deleteDraft": "저장 내용이 삭제되었습니다."
+    },
+    "form": {
+      "resumeTitle": "Resume Title",
+      "paperSize": "Paper Size",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief description of this resume",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "github": "GitHub",
+      "blog": "Blog",
+      "linkedin": "LinkedIn",
+      "profilePhoto": "Profile Photo URL",
+      "militaryService": "Military Service",
+      "selectStatus": "선택",
+      "summary": "Summary",
+      "summaryPlaceholder": "Brief introduction about yourself...",
+      "koreanSections": "Korean Resume Sections",
+      "coverLetter": "Cover Letter (자기소개서)",
+      "coverLetterPlaceholder": "귀하의 배경, 강점, 그리고 이 직무에 적합한 이유를 작성해주세요...",
+      "coverLetterHint": "본인의 배경, 경험, 그리고 차별화된 점을 설명",
+      "applicationReason": "Application Reason (지원 동기)",
+      "applicationReasonPlaceholder": "귀사에 지원하게 된 동기와 이유를 작성해주세요...",
+      "applicationReasonHint": "회사의 비전, 직무의 매력, 본인의 강점과의 연결성 등을 작성",
+      "addCategory": "카테고리 추가",
+      "categoryName": "카테고리명",
+      "skillName": "기술명",
+      "addSkill": "기술 추가",
+      "moveUp": "위로 이동",
+      "moveDown": "아래로 이동",
+      "experience": "활용 경험 / 세부 설명",
+      "addCertificate": "Add Certificate",
+      "certificateName": "Certificate Name",
+      "issuer": "Issuer",
+      "issueDate": "Issue Date",
+      "expiryDate": "Expiry Date",
+      "credentialId": "Credential ID",
+      "credentialUrl": "Credential URL",
+      "remove": "Remove",
+      "noCertificates": "No certifications added yet. Click \"Add Certificate\" to get started.",
+      "attachments": "Attachments",
+      "attachmentsDesc": "Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.",
+      "saveFirst": "Please save your resume first to enable file uploads.",
+      "uploadError": "Failed to upload file",
+      "profilePhotoSection": "Profile Photo",
+      "profilePhotoDesc": "Professional photo (automatically converted to grayscale)",
+      "portfolioSection": "Portfolio",
+      "portfolioDesc": "Upload your project screenshots, designs, or PDF documents",
+      "certificatesSection": "Certificates",
+      "certificatesDesc": "Upload your certification or award documents",
+      "uploading": "Uploading...",
+      "clickToUpload": "Click to upload",
+      "clickToUploadPhoto": "Click to upload profile photo",
+      "clickToUploadPortfolio": "Click to upload portfolio file",
+      "clickToUploadCertificate": "Click to upload certificate",
+      "deleteDraft": "저장 내용 삭제",
+      "saveAndPreview": "💾 저장 및 미리보기",
+      "saving": "💾 저장 중..."
+    },
+    "experienceForm": {
+      "company": "Company",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "leaveEmpty": "Leave empty if current",
+      "position": "직책 / Position",
+      "jobTitle": "직급 / Job Title",
+      "companyName": "Company name",
+      "removeCompany": "Remove Company",
+      "experiencePeriod": "경력 기간:",
+      "projects": "📁 Projects at this company",
+      "addProject": "+ Add Project",
+      "noProjects": "No projects added yet. Click \"Add Project\" to add projects at this company.",
+      "projectName": "Project Name",
+      "yourRole": "Your Role",
+      "techStack": "Tech Stack (comma-separated)",
+      "projectUrl": "Project URL",
+      "githubUrl": "GitHub URL",
+      "keyAchievements": "Key Achievements",
+      "depthLevels": "(4 depth levels)",
+      "addAchievement": "+ Add Achievement",
+      "noAchievements": "No achievements yet. Click \"Add Achievement\" to add.",
+      "achievementPlaceholder": "Achievement description...",
+      "addSubItem": "+ 하위",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "addExperience": "+ Add Experience",
+      "noExperience": "No work experience added yet. Click \"Add Experience\" to get started.",
+      "dragToReorder": "Drag to reorder",
+      "ongoingProject": "Leave empty if ongoing",
+      "projectDescription": "Brief project description...",
+      "positionPlaceholder": "e.g., Backend Team Lead",
+      "jobTitlePlaceholder": "Senior Developer"
+    },
+    "militaryRanks": {
+      "sergeant": "병장 (Sergeant)",
+      "corporal": "상병 (Corporal)",
+      "pfc": "일병 (Private First Class)",
+      "private": "이병 (Private)"
+    },
+    "dischargeTypes": {
+      "honorable": "만기전역 (Honorable Discharge)",
+      "medical": "의병전역 (Medical Discharge)"
     }
+  },
+  "settings": {
+    "title": "⚙️ 설정",
+    "description": "사용자 환경을 설정합니다",
+    "backButton": "← 돌아가기",
+    "darkMode": "다크 모드",
+    "themeDescription": "화면 테마를 설정합니다",
+    "sectionOrder": "홈 기록 순서 관리",
+    "sectionOrderDescription": "홈 화면에 표시될 기록 종류의 순서와 노출 여부를 설정합니다",
+    "visibility": "노출",
+    "saved": "설정이 저장되었습니다",
+    "saveFailed": "설정 저장에 실패했습니다",
+    "sections": {
+      "skills": "기술 스택",
+      "experience": "경력",
+      "projects": "프로젝트",
+      "education": "학력",
+      "certifications": "자격증"
+    }
+  },
+  "changePassword": {
+    "title": "Change Password",
+    "description": "Update your account password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPasswordPlaceholder": "Enter new password (min. 8 characters)",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "changeButton": "Change Password",
+    "changing": "Changing Password...",
+    "backToHome": "Back to Home",
+    "errors": {
+      "tooShort": "New password must be at least 8 characters long",
+      "noMatch": "New passwords do not match",
+      "failed": "Failed to change password. Please check your current password."
+    },
+    "success": "Password changed successfully!"
+  },
+  "character": {
+    "loading": {
+      "light": "기록을 찾고 있어요",
+      "dark": "고요한 밤에 기록을 찾고 있어요",
+      "messageLight": "잠시만 기다려주세요...",
+      "messageDark": "달빛 아래 책장을 넘기며..."
+    },
+    "notFound": {
+      "light": "기록을 찾을 수 없어요",
+      "dark": "이 기록은 밤의 서재에 없어요",
+      "messageLight": "요청하신 페이지를 찾을 수 없습니다",
+      "messageDark": "어둠 속에서도 찾을 수 없는 기록이네요"
+    },
+    "error": {
+      "light": "앗, 문제가 생겼어요",
+      "dark": "달빛이 흐려졌어요",
+      "messageLight": "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요",
+      "messageDark": "구름이 밤하늘을 덮었어요. 잠시 후 다시 시도해주세요"
+    },
+    "expired": {
+      "light": "공유 기간이 만료되었어요",
+      "dark": "깊은 밤이 잠들었어요",
+      "messageLight": "이 공유 링크는 더 이상 유효하지 않습니다",
+      "messageDark": "달이 지고 링크도 잠들었어요"
+    },
+    "deleted": {
+      "light": "삭제된 기록이에요",
+      "dark": "어둠 속으로 사라진 기록",
+      "messageLight": "이 기록은 주인에 의해 삭제되었습니다",
+      "messageDark": "밤안개 속으로 사라진 기록이에요"
+    },
+    "noPermission": {
+      "light": "접근 권한이 없어요",
+      "dark": "이 서재는 잠겨있어요",
+      "messageLight": "이 기록을 볼 권한이 없습니다",
+      "messageDark": "달빛도 비출 수 없는 비밀의 서재"
+    },
+    "maintenance": {
+      "light": "잠시 휴식 중이에요",
+      "dark": "밤의 서재 정리 중",
+      "messageLight": "시스템 점검 중입니다. 잠시만 기다려주세요",
+      "messageDark": "별빛 아래 서재를 정돈하고 있어요"
+    }
+  },
+  "errors": {
+    "loginFailed": "Login failed. Please check your credentials.",
+    "registrationFailed": "Registration failed. Please try again.",
+    "loadingResume": "Loading resume...",
+    "startFilling": "Start filling the form to see your resume preview"
+  },
+  "placeholders": {
+    "email": "you@example.com",
+    "password": "••••••••",
+    "namePlaceholder": "홍길동",
+    "usernamePlaceholder": "hongkildong",
+    "emailPlaceholder": "your@email.com"
+  },
+  "edit": {
+    "editResume": "Edit Resume",
+    "createNewResume": "Create New Resume",
+    "updateInfo": "Update your resume information",
+    "fillInfo": "Fill in your information to create a new resume",
+    "showForm": "Show Form",
+    "showPreview": "Show Preview",
+    "livePreview": "Live Preview",
+    "previewDescription": "This is how your resume will look. Changes appear instantly.",
+    "error": "Error:"
   }
 }
