@@ -219,12 +219,10 @@ export default function ResumePreviewPage() {
         </div>
       </div>
 
-      {/* Resume Preview - Scrollable container for mobile */}
-      <div className="py-8 print:py-0 flex justify-center">
-        <div className="w-full max-w-[100vw] overflow-auto bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 md:p-8 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
-          <div className="bg-white rounded shadow-lg min-w-fit">
-            <ResumePreview resume={resume} paperSize={paperSize} />
-          </div>
+      {/* Resume Preview - Auto-scaled to fit viewport */}
+      <div className="py-8 print:py-0 flex justify-center overflow-hidden">
+        <div className="w-full flex justify-center bg-gray-100 dark:bg-dark-bg-secondary/50 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
+          <ResumePreview resume={resume} paperSize={paperSize} />
         </div>
       </div>
 
