@@ -40,7 +40,9 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       const viewportWidth = window.innerWidth;
       // Convert cm to pixels (1cm ≈ 37.8px at 96 DPI)
       const paperWidthPx = paperSize === 'A4' ? 794 : 816; // 21cm = 794px, 21.59cm = 816px
-      const padding = 32; // Account for padding (1rem on each side)
+
+      // Responsive padding: mobile (16px) vs desktop (32px)
+      const padding = viewportWidth < 768 ? 32 : 64; // Add more padding for better spacing
       const availableWidth = viewportWidth - padding;
 
       // Calculate scale to fit, but don't scale up beyond 100%
