@@ -17,6 +17,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
 
+    // Exclude e2e tests (run separately with Playwright)
+    exclude: [
+      'node_modules/**',
+      'dist/**',
+      'e2e/**',
+      '**/*.spec.ts',
+    ],
+
     // Coverage configuration
     coverage: {
       provider: 'v8',
@@ -24,6 +32,7 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'src/test/',
+        'e2e/',
         '**/*.spec.ts',
         '**/*.test.ts',
       ],

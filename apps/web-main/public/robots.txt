@@ -4,21 +4,20 @@
 # Global rules for all robots
 User-agent: *
 
-# Allow public pages and resume profiles (critical for SEO)
-Allow: /
-Allow: /resume/*
+# Allow only homepage (public landing page)
+Allow: /$
 
-# Disallow authentication pages (no SEO value)
+# Disallow authentication pages
 Disallow: /login
 Disallow: /register
 Disallow: /change-password
 
-# Disallow private user areas
-Disallow: /resume/my
-Disallow: /resume/edit
-Disallow: /resume/preview
+# Disallow ALL resume routes (resumes are private, only shared via token)
+# No public resume pages - resumes should NEVER appear in search engines
+Disallow: /resume/
 
-# Disallow temporary share links (token-based, no SEO value)
+# Disallow temporary share links (token-based, private sharing only)
+# These are intentionally excluded from search indexing
 Disallow: /shared/
 
 # Disallow API endpoints

@@ -6,11 +6,15 @@ This guide outlines the SEO (Search Engine Optimization) strategy and implementa
 
 ## SEO Strategy
 
+### Core Policy: Privacy-First Resume Management
+
+**CRITICAL**: My-Girok does NOT have public resume pages. All resumes are private and only shared via secure token-based links.
+
 ### Goals
-1. **Maximize visibility** of public resume pages (`/resume/:username`)
-2. **Improve search rankings** for career and resume-related keywords
-3. **Prevent indexing** of private/auth pages
-4. **Enhance social sharing** with proper Open Graph and Twitter Card meta tags
+1. **Maximize visibility** of the homepage and platform features
+2. **Protect user privacy** - ensure resumes NEVER appear in search engines
+3. **Prevent indexing** of all resume and user data pages
+4. **Enable controlled sharing** via token-based links (`/shared/:token`)
 
 ## Implementation
 
@@ -19,17 +23,22 @@ This guide outlines the SEO (Search Engine Optimization) strategy and implementa
 Location: `apps/web-main/public/robots.txt`
 
 **Allowed URLs** (for search engine crawling):
-- `/` - Homepage
-- `/resume/:username` - Public resume pages
+- `/` - Homepage only
 
 **Disallowed URLs** (blocked from search engines):
 - `/login`, `/register` - Authentication pages
 - `/change-password` - User settings
-- `/resume/my` - Private resume list
-- `/resume/edit/*` - Resume editing pages
-- `/resume/preview/*` - Preview pages
-- `/shared/*` - Temporary share links (token-based)
+- `/resume/*` - **ALL resume routes (resumes are NEVER public)**
+- `/shared/*` - Token-based share links (private sharing only)
 - `/api/*` - API endpoints
+
+**Resume Privacy Policy**:
+- No public resume pages exist (`/resume/:username` is NOT for SEO)
+- Resumes can only be accessed by:
+  1. Authenticated owner (`/resume/my`, `/resume/edit`)
+  2. Token-based sharing (`/shared/:token`)
+- All resume routes are blocked in robots.txt
+- Resumes should NEVER appear in search engine results
 
 ### 2. Sitemap.xml
 
@@ -37,14 +46,20 @@ Location: `apps/web-main/public/sitemap.xml`
 
 Current implementation includes:
 - Homepage (priority 1.0)
-- Static pages (priority 0.5)
-- Placeholder for dynamic resume URLs (priority 0.8)
 
-**Future Enhancement**: Generate dynamic sitemap from database
-```bash
-# Example: Backend service to generate sitemap
-GET /api/sitemap.xml
-# Returns XML with all public resume URLs
+**Note**: Resume pages are intentionally excluded from sitemap.
+
+**Future Enhancement**: Add static marketing pages when available
+```xml
+<!-- Example: Future marketing pages -->
+<url>
+  <loc>https://www.mygirok.com/about</loc>
+  <priority>0.7</priority>
+</url>
+<url>
+  <loc>https://www.mygirok.com/features</loc>
+  <priority>0.7</priority>
+</url>
 ```
 
 ### 3. Meta Tags Implementation
@@ -89,26 +104,17 @@ Location: `apps/web-main/src/utils/structuredData.ts`
 
 **Implemented Schemas**:
 
-#### Person Schema
-Used on public resume pages to provide rich search results.
-
-```typescript
-generatePersonSchema({
-  name: "John Doe",
-  jobTitle: "Software Engineer",
-  email: "john@example.com",
-  url: "https://www.mygirok.com/resume/johndoe",
-  alumniOf: ["MIT", "Stanford"],
-  worksFor: [{ name: "Google", url: "https://google.com" }]
-})
-```
-
 #### WebSite Schema
-Used on homepage for site-wide search.
+Used on homepage for site-wide search and platform visibility.
 
 ```typescript
 generateWebsiteSchema()
 ```
+
+Features:
+- Site name and description
+- Search action configuration
+- Platform metadata
 
 #### Organization Schema
 Defines My-Girok as an organization.
@@ -117,48 +123,52 @@ Defines My-Girok as an organization.
 generateOrganizationSchema()
 ```
 
-#### ProfilePage Schema
-Marks resume pages as profile pages.
+Features:
+- Company information
+- Social media links
+- Brand identity
 
-```typescript
-generateProfilePageSchema(username, name, description)
-```
+**Note**: Person and ProfilePage schemas are available but NOT used, as resumes are not indexed.
 
 ### 5. Page-Specific SEO
 
 #### HomePage (`/`)
 - Default meta tags for the platform
 - WebSite structured data
-- Keywords: resume builder, cv creator, career management
-- Priority: 1.0 in sitemap
+- Organization structured data
+- Keywords: resume builder, cv creator, career management, private resume sharing
+- Priority: 1.0 in sitemap (only page in sitemap)
+- Open Graph and Twitter Card for social sharing
 
-#### PublicResumePage (`/resume/:username`)
-- Dynamic title: "{Name} - Professional Resume"
-- Dynamic description from resume summary
-- Person structured data
-- Keywords: user's name, position, skills
-- Priority: 0.8 in sitemap
-- Canonical URL to prevent duplicates
-- Open Graph image (profile picture)
-
-#### Private Pages
-- `noindex, nofollow` in robots meta tag
-- Not included in sitemap
+#### Private Pages (ALL resume routes)
+- NO SEO implementation
 - Blocked in robots.txt
+- Not included in sitemap
+- Access controlled by:
+  - Authentication (owner only)
+  - Token-based sharing (temporary access)
 
 ## URL Policy Summary
 
-| Route Pattern | Public | SEO Allowed | Sitemap | robots.txt |
-|---------------|--------|-------------|---------|------------|
-| `/` | Yes | Yes | Yes | Allow |
-| `/resume/:username` | Yes | Yes | Yes | Allow |
-| `/login` | Yes | No | No | Disallow |
-| `/register` | Yes | No | No | Disallow |
-| `/change-password` | No | No | No | Disallow |
-| `/resume/my` | No | No | No | Disallow |
-| `/resume/edit/*` | No | No | No | Disallow |
-| `/resume/preview/*` | No | No | No | Disallow |
-| `/shared/*` | Public | No | No | Disallow |
+| Route Pattern | Access | SEO Allowed | Sitemap | robots.txt | Purpose |
+|---------------|--------|-------------|---------|------------|---------|
+| `/` | Public | Yes | Yes | Allow | Homepage/landing |
+| `/login` | Public | No | No | Disallow | Authentication |
+| `/register` | Public | No | No | Disallow | User registration |
+| `/change-password` | Private | No | No | Disallow | User settings |
+| `/resume/*` | **ALL BLOCKED** | **NO** | **NO** | **Disallow** | **Privacy protection** |
+| `/resume/my` | Private (auth) | No | No | Disallow | User's resume list |
+| `/resume/edit/*` | Private (auth) | No | No | Disallow | Resume editing |
+| `/resume/preview/*` | Private (auth) | No | No | Disallow | Print preview |
+| `/resume/:username` | Protected | No | No | Disallow | Resume viewing (not public) |
+| `/shared/:token` | Token-based | No | No | Disallow | Temporary sharing |
+
+**Key Policy Notes**:
+- Only homepage (`/`) is indexed by search engines
+- ALL resume routes (`/resume/*`) are blocked, including `/resume/:username`
+- Resumes are NEVER publicly accessible or indexed
+- Sharing is only via secure token links (`/shared/:token`)
+- Token links are also excluded from search indexing
 
 ## Best Practices
 
@@ -193,33 +203,34 @@ generateProfilePageSchema(username, name, description)
 
 ### Manual Testing
 ```bash
-# Check robots.txt
+# Check robots.txt (verify resume routes are blocked)
 curl https://www.mygirok.com/robots.txt
 
-# Check sitemap.xml
+# Check sitemap.xml (should only contain homepage)
 curl https://www.mygirok.com/sitemap.xml
 
-# View page source and verify meta tags
-curl https://www.mygirok.com/resume/username | grep "meta"
+# View homepage source and verify meta tags
+curl https://www.mygirok.com/ | grep "meta"
+
+# Verify resume routes are not indexed
+# Expected: robots.txt should disallow /resume/*
+grep "Disallow: /resume/" robots.txt
 ```
 
 ## Future Enhancements
 
-### Dynamic Sitemap Generation
-Create a backend endpoint to generate sitemap from database:
-```typescript
-// services/personal-service/src/sitemap/sitemap.controller.ts
-@Get('sitemap.xml')
-async getSitemap() {
-  const users = await this.userService.findAllPublicUsers();
-  return generateSitemapXML(users);
-}
-```
+### Marketing Pages
+Add static marketing pages to sitemap when available:
+- `/about` - About My-Girok
+- `/features` - Platform features
+- `/pricing` - Pricing information
+- `/blog` - Content marketing
 
 ### Image Optimization
-1. Generate OpenGraph images for resume pages
+1. Generate OpenGraph images for homepage and marketing pages
 2. Use CDN for image delivery
 3. Implement lazy loading for images
+4. Add proper alt text for accessibility
 
 ### Internationalization (i18n)
 1. Add hreflang tags for multi-language support
@@ -227,9 +238,10 @@ async getSitemap() {
 3. Implement geo-targeting in Search Console
 
 ### Performance Optimization
-1. Implement Server-Side Rendering (SSR) for critical pages
-2. Use prerendering for static resume pages
+1. Implement Server-Side Rendering (SSR) for homepage
+2. Use prerendering for marketing pages
 3. Implement service workers for offline support
+4. Optimize Core Web Vitals
 
 ## Monitoring
 
