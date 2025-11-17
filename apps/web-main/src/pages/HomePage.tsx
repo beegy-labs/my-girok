@@ -1,6 +1,8 @@
 import { useAuthStore } from '../stores/authStore';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { SEO } from '../components/SEO';
+import { generateWebsiteSchema } from '../utils/structuredData';
 
 interface AppCard {
   id: string;
@@ -47,8 +49,25 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {isAuthenticated ? (
+    <>
+      <SEO
+        title={isAuthenticated ? `${user?.name || user?.username}'s Record Book` : undefined}
+        description="Create, manage, and share your professional resume with My-Girok. Build your career profile, track your achievements, and share your professional story with the world."
+        keywords={[
+          'resume builder',
+          'cv creator',
+          'professional profile',
+          'career management',
+          'job search tools',
+          'online portfolio',
+          'career tracking',
+        ]}
+        url="https://www.mygirok.com"
+        type="website"
+        structuredData={generateWebsiteSchema()}
+      />
+      <div className="max-w-7xl mx-auto">
+        {isAuthenticated ? (
         <div className="space-y-6 sm:space-y-8">
           {/* Welcome Section */}
           <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-lg dark:shadow-dark-lg p-4 sm:p-6 lg:p-8 transition-colors duration-200">
@@ -177,6 +196,7 @@ export default function HomePage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

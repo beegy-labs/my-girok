@@ -5,6 +5,8 @@ import { useAuthStore } from '../../stores/authStore';
 import ResumePreview from '../../components/resume/ResumePreview';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CharacterMessage } from '../../components/characters';
+import { SEO } from '../../components/SEO';
+import { generatePersonSchema } from '../../utils/structuredData';
 
 export default function PublicResumePage() {
   const { username } = useParams<{ username: string }>();
@@ -75,8 +77,75 @@ export default function PublicResumePage() {
     return null;
   }
 
+  // Generate SEO data from resume
+  const generateSEOData = () => {
+    if (!resume || !username) return null;
+
+    // Get current position from most recent experience
+    const currentPosition =
+      resume.experiences?.[0]?.finalPosition || 'Professional';
+
+    const title = `${resume.name} - Professional Resume`;
+    const description =
+      resume.summary ||
+      `View ${resume.name}'s professional resume and career profile on My-Girok. ${resume.name} is ${currentPosition}.`;
+
+    // Extract data for Person schema
+    const schools =
+      resume.educations?.map((edu) => edu.school).filter(Boolean) || [];
+    const companies =
+      resume.experiences
+        ?.map((exp) => ({
+          name: exp.company,
+          url: undefined, // URL not available in Experience type
+        }))
+        .filter((c) => c.name) || [];
+
+    const personSchema = generatePersonSchema({
+      name: resume.name,
+      jobTitle: currentPosition || undefined,
+      email: resume.email || undefined,
+      telephone: resume.phone || undefined,
+      url: `https://www.mygirok.com/resume/${username}`,
+      description: resume.summary || undefined,
+      alumniOf: schools,
+      worksFor: companies,
+    });
+
+    return {
+      title,
+      description,
+      personSchema,
+      currentPosition,
+    };
+  };
+
+  const seoData = generateSEOData();
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+    <>
+      {seoData && (
+        <SEO
+          title={seoData.title}
+          description={seoData.description}
+          keywords={[
+            resume?.name || '',
+            seoData.currentPosition || '',
+            'resume',
+            'cv',
+            'professional profile',
+            'career',
+            ...(resume?.skills?.flatMap((s) => s.items.map((item) => item.name)) ||
+              []),
+          ].filter(Boolean)}
+          url={`https://www.mygirok.com/resume/${username}`}
+          type="profile"
+          twitterCard="summary_large_image"
+          canonicalUrl={`https://www.mygirok.com/resume/${username}`}
+          structuredData={seoData.personSchema}
+        />
+      )}
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
       {/* Action Bar - Hidden when printing */}
       <div className="bg-amber-50/30 dark:bg-dark-bg-card border-b border-amber-100 dark:border-dark-border-subtle print:hidden sticky top-0 z-10 shadow-sm dark:shadow-dark-sm transition-colors duration-200">
         <div className="max-w-5xl mx-auto px-4 py-3 sm:py-4">
@@ -122,6 +191,7 @@ export default function PublicResumePage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,0 +1,28 @@
+{
+  "name": "My-Girok - Professional Resume & Career Management",
+  "short_name": "My-Girok",
+  "description": "Create, manage, and share your professional resume with My-Girok. Build your career profile, track your achievements, and share your professional story.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d97706",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/"
+}
