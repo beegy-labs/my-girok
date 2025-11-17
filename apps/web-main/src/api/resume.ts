@@ -68,6 +68,10 @@ export interface CreateResumeDto {
   militaryDischargeType?: string; // 전역 사유 (e.g., "만기전역", "의병전역")
   militaryServiceStartDate?: string; // 입대일 (YYYY-MM format)
   militaryServiceEndDate?: string; // 전역일 (YYYY-MM format)
+  // Salary information
+  finalSalary?: number; // Desired salary amount
+  salaryUnit?: string; // Salary unit (e.g., "만원", "USD", "EUR", "JPY")
+  showSalary?: boolean; // Whether to show salary in resume
   coverLetter?: string;
   applicationReason?: string;
   skills?: Omit<Skill, 'id'>[];
