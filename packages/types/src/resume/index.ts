@@ -196,6 +196,10 @@ export interface Resume {
   portfolio?: string;
   summary?: string;
   profileImage?: string;
+  // Final salary information (current or last company)
+  finalSalary?: number; // Final salary amount
+  salaryUnit?: string; // e.g., "만원", "USD", "EUR", "JPY"
+  showSalary?: boolean; // Show in preview (default: false)
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
   militaryDischarge?: string; // 병역 상세 (예: "병장 제대", "2020.01 - 2021.10")

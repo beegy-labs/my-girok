@@ -382,6 +382,22 @@ export class CreateResumeDto {
   @IsString()
   profileImage?: string;
 
+  @ApiPropertyOptional({ example: 5000, description: 'Final salary amount (current or last company)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  finalSalary?: number;
+
+  @ApiPropertyOptional({ example: '만원', description: 'Salary unit (e.g., "만원", "USD", "EUR", "JPY")' })
+  @IsOptional()
+  @IsString()
+  salaryUnit?: string;
+
+  @ApiPropertyOptional({ default: false, description: 'Show salary in preview' })
+  @IsOptional()
+  @IsBoolean()
+  showSalary?: boolean;
+
   @ApiPropertyOptional({ enum: MilitaryService, description: 'Military service status (Korean-specific)' })
   @IsOptional()
   @IsEnum(MilitaryService)

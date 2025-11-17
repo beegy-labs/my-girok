@@ -233,6 +233,13 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                   )}
                 </div>
               )}
+              {/* Final Salary Information */}
+              {resume.showSalary && resume.finalSalary && (
+                <div className="text-sm text-gray-700 mb-2">
+                  <span className="font-semibold">Final Salary:</span>{' '}
+                  {resume.finalSalary.toLocaleString()} {resume.salaryUnit || '만원'}
+                </div>
+              )}
               <div className="flex flex-col gap-y-0.5 text-sm text-gray-900">
                 {resume.github && (
                   <div>
