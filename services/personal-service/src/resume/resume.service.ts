@@ -68,6 +68,20 @@ export class ResumeService {
   }
 
   /**
+   * Sanitize salary information from resume if showSalary is false.
+   * This ensures sensitive salary data is not exposed through the API.
+   * @param resume - Resume object to sanitize
+   * @returns Resume with salary info removed if showSalary is false
+   */
+  private sanitizeSalaryInfo(resume: any): any {
+    if (!resume || !resume.showSalary) {
+      const { finalSalary, salaryUnit, showSalary, ...rest } = resume || {};
+      return rest;
+    }
+    return resume;
+  }
+
+  /**
    * Recursively create achievements with proper parent-child relationships.
    * Prisma doesn't support nested creates for self-referencing relations,
    * so we create them level by level using the parentId field.
@@ -867,7 +881,8 @@ export class ResumeService {
       throw new NotFoundException('No resume found for this user');
     }
 
-    return resume;
+    // Sanitize salary info for public access
+    return this.sanitizeSalaryInfo(resume);
   }
 
   // ========== File Attachment Methods ==========
