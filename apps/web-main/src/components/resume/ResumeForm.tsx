@@ -93,6 +93,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     portfolio: resume?.portfolio || '',
     summary: resume?.summary || '',
     profileImage: resume?.profileImage || '',
+    finalSalary: resume?.finalSalary,
+    salaryUnit: resume?.salaryUnit || '만원',
+    showSalary: resume?.showSalary ?? false,
     militaryService: resume?.militaryService,
     militaryDischarge: resume?.militaryDischarge || '',
     militaryRank: resume?.militaryRank || '',
@@ -476,6 +479,54 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             You can also upload a photo in the Attachments section below
           </p>
         </div>
+
+        {/* Final Salary Section */}
+        <div className="mt-4">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
+            Final Salary (최종 연봉)
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <input
+                type="number"
+                value={formData.finalSalary || ''}
+                onChange={e => setFormData({ ...formData, finalSalary: e.target.value ? parseInt(e.target.value) : undefined })}
+                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+                placeholder="5000"
+                min="0"
+              />
+            </div>
+            <div>
+              <select
+                value={formData.salaryUnit || '만원'}
+                onChange={e => setFormData({ ...formData, salaryUnit: e.target.value })}
+                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+              >
+                <option value="만원">만원 (KRW)</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="JPY">JPY</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.showSalary ?? false}
+                onChange={e => setFormData({ ...formData, showSalary: e.target.checked })}
+                className="w-4 h-4 text-amber-600 bg-white dark:bg-dark-bg-elevated border-amber-300 dark:border-dark-border-default rounded focus:ring-amber-500 dark:focus:ring-amber-600 focus:ring-2"
+              />
+              <span className="ml-2 text-sm text-gray-700 dark:text-dark-text-secondary">
+                Show salary in preview (미리보기에 표시)
+              </span>
+            </label>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
+            Current or last company's final salary. Uncheck to hide from preview and public access.
+          </p>
+        </div>
+
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
             Military Service (Korean)
