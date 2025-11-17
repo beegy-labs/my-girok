@@ -208,6 +208,22 @@ export class CreateExperienceDto {
   @IsString()
   jobTitle!: string;
 
+  @ApiPropertyOptional({ example: 5000, description: 'Salary amount at this company' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  salary?: number;
+
+  @ApiPropertyOptional({ example: '만원', description: 'Salary unit (e.g., "만원", "USD", "EUR", "JPY")' })
+  @IsOptional()
+  @IsString()
+  salaryUnit?: string;
+
+  @ApiPropertyOptional({ default: false, description: 'Show salary in preview' })
+  @IsOptional()
+  @IsBoolean()
+  showSalary?: boolean;
+
   @ApiProperty({ type: [CreateExperienceProjectDto], description: 'List of projects at this company' })
   @IsArray()
   @ValidateNested({ each: true })
@@ -381,22 +397,6 @@ export class CreateResumeDto {
   @IsOptional()
   @IsString()
   profileImage?: string;
-
-  @ApiPropertyOptional({ example: 5000, description: 'Final salary amount (current or last company)' })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  finalSalary?: number;
-
-  @ApiPropertyOptional({ example: '만원', description: 'Salary unit (e.g., "만원", "USD", "EUR", "JPY")' })
-  @IsOptional()
-  @IsString()
-  salaryUnit?: string;
-
-  @ApiPropertyOptional({ default: false, description: 'Show salary in preview' })
-  @IsOptional()
-  @IsBoolean()
-  showSalary?: boolean;
 
   @ApiPropertyOptional({ enum: MilitaryService, description: 'Military service status (Korean-specific)' })
   @IsOptional()

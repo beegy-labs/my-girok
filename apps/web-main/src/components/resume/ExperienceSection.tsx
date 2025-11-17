@@ -283,6 +283,53 @@ function SortableExperienceCard({
             </div>
           </div>
 
+          {/* Salary Section */}
+          <div className="mt-4">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
+              연봉 / Salary (Optional)
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <input
+                  type="number"
+                  value={experience.salary || ''}
+                  onChange={e => onUpdate({ ...experience, salary: e.target.value ? parseInt(e.target.value) : undefined })}
+                  className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
+                  placeholder="5000"
+                  min="0"
+                />
+              </div>
+              <div>
+                <select
+                  value={experience.salaryUnit || '만원'}
+                  onChange={e => onUpdate({ ...experience, salaryUnit: e.target.value })}
+                  className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
+                >
+                  <option value="만원">만원 (KRW)</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="JPY">JPY</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-2 flex items-center">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={experience.showSalary ?? false}
+                  onChange={e => onUpdate({ ...experience, showSalary: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 bg-white dark:bg-dark-bg-elevated border-amber-300 dark:border-dark-border-default rounded focus:ring-amber-500 dark:focus:ring-amber-600 focus:ring-2"
+                />
+                <span className="ml-2 text-sm text-gray-700 dark:text-dark-text-secondary">
+                  Show salary in preview (미리보기에 표시)
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
+              Salary at this company. Uncheck to hide from preview and public access.
+            </p>
+          </div>
+
           {/* Projects Section */}
           <div className="mt-6 border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
             <div className="flex items-center justify-between mb-4">
