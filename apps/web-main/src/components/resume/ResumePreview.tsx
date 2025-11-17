@@ -266,13 +266,19 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
           </div>
         )}
 
-        {/* Cover Letter */}
-        {resume.coverLetter && (
+        {/* Key Achievements */}
+        {resume.keyAchievements && resume.keyAchievements.length > 0 && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-              {t('resume.preview.coverLetter')}
+              ⭐ {t('resume.preview.keyAchievements')}
             </h2>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.coverLetter}</p>
+            <ul className="list-disc list-inside space-y-2">
+              {resume.keyAchievements.map((achievement: string, index: number) => (
+                <li key={index} className="text-gray-700 leading-relaxed">
+                  {achievement}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -303,6 +309,16 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
               return null;
           }
         })}
+
+        {/* Cover Letter (at the bottom) */}
+        {resume.coverLetter && (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+              {t('resume.preview.coverLetter')}
+            </h2>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.coverLetter}</p>
+          </div>
+        )}
 
         {/* Page number (only in paginated mode) */}
         {viewMode === 'paginated' && (

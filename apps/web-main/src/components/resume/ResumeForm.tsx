@@ -71,6 +71,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     education: false,
     certificates: false,
     military: false,
+    applicationReason: false,
     coverLetter: false,
   });
 
@@ -92,6 +93,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     linkedin: resume?.linkedin || '',
     portfolio: resume?.portfolio || '',
     summary: resume?.summary || '',
+    keyAchievements: resume?.keyAchievements || [],
     profileImage: resume?.profileImage || '',
     militaryService: resume?.militaryService,
     militaryDischarge: resume?.militaryDischarge || '',
@@ -561,41 +563,67 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             placeholder="Brief introduction about yourself..."
           />
         </div>
+
+        {/* Key Achievements */}
+        <div className="mt-6">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
+            ⭐ Key Achievements (주요 성과)
+          </label>
+          <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mb-3">
+            Highlight 3-5 major accomplishments from your career
+          </p>
+          {(formData.keyAchievements || []).map((achievement, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={achievement}
+                onChange={e => {
+                  const newAchievements = [...(formData.keyAchievements || [])];
+                  newAchievements[index] = e.target.value;
+                  setFormData({ ...formData, keyAchievements: newAchievements });
+                }}
+                className="flex-1 px-4 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+                placeholder={`Achievement #${index + 1}`}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newAchievements = formData.keyAchievements?.filter((_, i) => i !== index);
+                  setFormData({ ...formData, keyAchievements: newAchievements });
+                }}
+                className="px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                ...formData,
+                keyAchievements: [...(formData.keyAchievements || []), '']
+              });
+            }}
+            className="mt-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/30 transition-colors"
+          >
+            + Add Achievement
+          </button>
+        </div>
         </>
         )}
       </div>
 
-      {/* Korean-specific sections */}
+      {/* Application Reason (지원 동기) */}
       <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-6">
         <CollapsibleHeader
-          title="Korean Resume Sections"
-          icon="📝"
-          isCollapsed={collapsedSections.coverLetter}
-          onToggle={() => toggleSection('coverLetter')}
+          title="Application Reason (지원 동기)"
+          icon="💼"
+          isCollapsed={collapsedSections.applicationReason}
+          onToggle={() => toggleSection('applicationReason')}
         />
-        {!collapsedSections.coverLetter && (
+        {!collapsedSections.applicationReason && (
         <>
-
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            Cover Letter (자기소개서)
-          </label>
-          <textarea
-            value={formData.coverLetter || ''}
-            onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}
-            rows={8}
-            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="Write about your background, strengths, and why you're a good fit for this position..."
-          />
-          <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            Describe your background, experiences, and what makes you unique
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            Application Reason (지원 동기)
-          </label>
           <textarea
             value={formData.applicationReason || ''}
             onChange={e => setFormData({ ...formData, applicationReason: e.target.value })}
@@ -606,7 +634,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
             회사의 비전, 직무의 매력, 본인의 강점과의 연결성 등을 작성
           </p>
-        </div>
         </>
         )}
       </div>
@@ -1193,6 +1220,30 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           }}
         />
       )}
+
+      {/* Cover Letter (자기소개서) - At the bottom */}
+      <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-6">
+        <CollapsibleHeader
+          title="Cover Letter (자기소개서)"
+          icon="📝"
+          isCollapsed={collapsedSections.coverLetter}
+          onToggle={() => toggleSection('coverLetter')}
+        />
+        {!collapsedSections.coverLetter && (
+        <>
+          <textarea
+            value={formData.coverLetter || ''}
+            onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}
+            rows={8}
+            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+            placeholder="Write about your background, strengths, and why you're a good fit for this position..."
+          />
+          <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
+            Describe your background, experiences, and what makes you unique
+          </p>
+        </>
+        )}
+      </div>
 
       {/* Submit Buttons */}
       {/* Auto-save indicator */}

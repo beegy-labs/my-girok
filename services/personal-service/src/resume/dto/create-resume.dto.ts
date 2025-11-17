@@ -393,6 +393,15 @@ export class CreateResumeDto {
   @IsString()
   summary?: string;
 
+  @ApiPropertyOptional({
+    example: ['API 응답 속도 40% 개선 (평균 500ms → 300ms)', 'MAU 200만 달성, 전월 대비 30% 성장'],
+    description: 'Key achievements (3-5 major accomplishments)'
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  keyAchievements?: string[];
+
   @ApiPropertyOptional({ example: 'https://cdn.example.com/profile.jpg' })
   @IsOptional()
   @IsString()
