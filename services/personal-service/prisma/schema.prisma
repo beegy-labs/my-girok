@@ -39,11 +39,6 @@ model Resume {
   // Profile Image (URL to MinIO)
   profileImage String? @map("profile_image")
 
-  // Final salary information (current or last company)
-  finalSalary Int?     @map("final_salary") // Final salary amount
-  salaryUnit  String?  @map("salary_unit") // e.g., "만원", "USD", "EUR", "JPY"
-  showSalary  Boolean? @default(false) @map("show_salary") // Show in preview
-
   // Korean-specific fields
   militaryService           MilitaryService? @map("military_service") // 병역 여부
   militaryDischarge         String?          @map("military_discharge") // 예: "병장 제대", "2020.01 - 2021.10"
@@ -208,6 +203,11 @@ model Experience {
   // Final position and job title at this company
   finalPosition String  @map("final_position") // 최종 직책 (e.g., "Backend Team Lead")
   jobTitle      String  @map("job_title")      // 직급 (e.g., "Senior Developer")
+
+  // Salary information (optional, per company)
+  salary     Int?     // Salary amount at this company
+  salaryUnit String?  @map("salary_unit") // e.g., "만원", "USD", "EUR", "JPY"
+  showSalary Boolean? @default(false) @map("show_salary") // Show in preview
 
   // Projects at this company
   projects ExperienceProject[]

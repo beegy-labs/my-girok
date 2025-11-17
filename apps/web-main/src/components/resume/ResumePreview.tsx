@@ -233,13 +233,6 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                   )}
                 </div>
               )}
-              {/* Final Salary Information */}
-              {resume.showSalary && resume.finalSalary && (
-                <div className="text-sm text-gray-700 mb-2">
-                  <span className="font-semibold">Final Salary:</span>{' '}
-                  {resume.finalSalary.toLocaleString()} {resume.salaryUnit || '만원'}
-                </div>
-              )}
               <div className="flex flex-col gap-y-0.5 text-sm text-gray-900">
                 {resume.github && (
                   <div>
@@ -465,6 +458,12 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
           <div className="mb-3">
             <h4 className="font-semibold text-gray-900">{exp.finalPosition}</h4>
             <p className="text-sm text-gray-700 italic">{exp.jobTitle}</p>
+            {/* Salary Information */}
+            {exp.showSalary && exp.salary && (
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-semibold">Salary:</span> {exp.salary.toLocaleString()} {exp.salaryUnit || '만원'}
+              </p>
+            )}
           </div>
 
           {/* Projects */}

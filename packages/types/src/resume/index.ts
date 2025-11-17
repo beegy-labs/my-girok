@@ -92,6 +92,9 @@ export interface Experience {
   isCurrentlyWorking?: boolean; // 재직중
   finalPosition: string; // 최종 직책 (e.g., "Backend Team Lead")
   jobTitle: string; // 직급 (e.g., "Senior Developer")
+  salary?: number; // Salary amount at this company
+  salaryUnit?: string; // e.g., "만원", "USD", "EUR", "JPY"
+  showSalary?: boolean; // Show in preview
   projects: ExperienceProject[]; // Projects at this company
   order: number;
   visible: boolean;
@@ -196,10 +199,6 @@ export interface Resume {
   portfolio?: string;
   summary?: string;
   profileImage?: string;
-  // Final salary information (current or last company)
-  finalSalary?: number; // Final salary amount
-  salaryUnit?: string; // e.g., "만원", "USD", "EUR", "JPY"
-  showSalary?: boolean; // Show in preview (default: false)
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
   militaryDischarge?: string; // 병역 상세 (예: "병장 제대", "2020.01 - 2021.10")
