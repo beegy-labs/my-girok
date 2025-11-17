@@ -36,6 +36,9 @@ model Resume {
   // Summary
   summary String?
 
+  // Key Achievements (주요 성과)
+  keyAchievements String[] @default([]) @map("key_achievements") // 3-5 major accomplishments
+
   // Profile Image (URL to MinIO)
   profileImage String? @map("profile_image")
 

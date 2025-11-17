@@ -198,6 +198,7 @@ export interface Resume {
   linkedin?: string;
   portfolio?: string;
   summary?: string;
+  keyAchievements?: string[]; // 주요 성과 (3-5 major accomplishments)
   profileImage?: string;
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
