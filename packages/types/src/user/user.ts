@@ -1,4 +1,4 @@
-import { AuthProvider, Role } from '../auth/enums';
+import { AuthProvider, Role } from '../auth/enums.js';
 
 /**
  * User entity
