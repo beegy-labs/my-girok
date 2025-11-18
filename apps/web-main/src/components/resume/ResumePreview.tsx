@@ -86,6 +86,35 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     };
   }, [calculateScale]);
 
+  // Inject dynamic @page style based on paperSize
+  useEffect(() => {
+    const styleId = 'resume-page-size-style';
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      document.head.appendChild(styleElement);
+    }
+
+    const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
+    styleElement.textContent = `
+      @media print {
+        @page {
+          size: ${pageSize};
+          margin: 0;
+        }
+      }
+    `;
+
+    return () => {
+      const element = document.getElementById(styleId);
+      if (element) {
+        element.remove();
+      }
+    };
+  }, [paperSize]);
+
   return (
     <div className="relative">
       {/* Fixed Toolbar (hidden in print) */}

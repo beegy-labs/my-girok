@@ -465,17 +465,37 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </div>
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            Profile Photo URL
+            Profile Photo
           </label>
+          {/* Display current photo if exists */}
+          {formData.profileImage && (
+            <div className="mb-3 flex items-center gap-3">
+              <img
+                src={formData.profileImage}
+                alt="Profile"
+                className="w-24 h-24 object-cover rounded-full border-2 border-amber-300"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23e5e7eb"/><text x="50%" y="50%" font-size="14" text-anchor="middle" dy=".3em" fill="%239ca3af">No Image</text></svg>';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, profileImage: '' })}
+                className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/30"
+              >
+                Remove Photo
+              </button>
+            </div>
+          )}
           <input
             type="url"
             value={formData.profileImage || ''}
             onChange={e => setFormData({ ...formData, profileImage: e.target.value })}
             className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="https://example.com/photo.jpg (or upload below)"
+            placeholder="https://example.com/photo.jpg"
           />
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            You can also upload a photo in the Attachments section below
+            Enter a photo URL or upload a file in the Attachments section below
           </p>
         </div>
 
