@@ -18,16 +18,16 @@ export class ResumeService {
    */
   private readonly ACHIEVEMENT_INCLUDE = {
     where: { parentId: null },
-    orderBy: { order: 'asc' as const },
+    orderBy: [{ order: 'asc' as const }],
     include: {
       children: {
-        orderBy: { order: 'asc' as const },
+        orderBy: [{ order: 'asc' as const }],
         include: {
           children: {
-            orderBy: { order: 'asc' as const },
+            orderBy: [{ order: 'asc' as const }],
             include: {
               children: {
-                orderBy: { order: 'asc' as const },
+                orderBy: [{ order: 'asc' as const }],
               },
             },
           },
@@ -41,21 +41,21 @@ export class ResumeService {
    * Used for complete resume queries (create, update, findOne, etc.)
    */
   private readonly RESUME_FULL_INCLUDE = {
-    sections: { orderBy: { order: 'asc' as const } },
-    skills: { orderBy: { order: 'asc' as const } },
+    sections: { orderBy: [{ order: 'asc' as const }] },
+    skills: { orderBy: [{ order: 'asc' as const }] },
     experiences: {
-      orderBy: { order: 'asc' as const },
+      orderBy: [{ order: 'asc' as const }],
       include: {
         projects: {
-          orderBy: { order: 'asc' as const },
+          orderBy: [{ order: 'asc' as const }],
           include: {
             achievements: this.ACHIEVEMENT_INCLUDE,
           },
         },
       },
     },
-    educations: { orderBy: { order: 'asc' as const } },
-    certificates: { orderBy: { order: 'asc' as const } },
+    educations: { orderBy: [{ order: 'asc' as const }] },
+    certificates: { orderBy: [{ order: 'asc' as const }] },
   };
 
   constructor(
@@ -222,10 +222,10 @@ export class ResumeService {
         },
         include: {
           experiences: {
-            orderBy: { order: 'asc' },
+            orderBy: [{ order: 'asc' }],
             include: {
               projects: {
-                orderBy: { order: 'asc' },
+                orderBy: [{ order: 'asc' }],
               },
             },
           },
@@ -435,7 +435,7 @@ export class ResumeService {
           // Create experience with projects
           const createdExperience = await tx.experience.create({
             data: experienceData,
-            include: { projects: { orderBy: { order: 'asc' } } },
+            include: { projects: { orderBy: [{ order: 'asc' }] } },
           });
 
           // Create achievements for each project
@@ -621,7 +621,7 @@ export class ResumeService {
           // Create experience with projects
           const createdExperience = await tx.experience.create({
             data: expData,
-            include: { projects: { orderBy: { order: 'asc' } } },
+            include: { projects: { orderBy: [{ order: 'asc' }] } },
           });
 
           // Copy achievements for each project using the same method as create()
@@ -743,24 +743,24 @@ export class ResumeService {
         where: { id: resumeId },
         data: { isDefault: true },
         include: {
-          sections: { orderBy: { order: 'asc' } },
-          skills: { orderBy: { order: 'asc' } },
+          sections: { orderBy: [{ order: 'asc' }] },
+          skills: { orderBy: [{ order: 'asc' }] },
           experiences: {
-            orderBy: { order: 'asc' },
+            orderBy: [{ order: 'asc' }],
             include: {
               projects: {
-                orderBy: { order: 'asc' },
+                orderBy: [{ order: 'asc' }],
                 include: {
                   achievements: {
-                    orderBy: { order: 'asc' },
+                    orderBy: [{ order: 'asc' }],
                   },
                 },
               },
             },
           },
           // NOTE: Independent projects field removed - projects are now only handled as ExperienceProject within experiences
-          educations: { orderBy: { order: 'asc' } },
-          certificates: { orderBy: { order: 'asc' } },
+          educations: { orderBy: [{ order: 'asc' }] },
+          certificates: { orderBy: [{ order: 'asc' }] },
         },
       });
     });
@@ -809,23 +809,23 @@ export class ResumeService {
       include: {
         sections: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
         skills: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
         experiences: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
         educations: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
         certificates: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
       },
     });
@@ -860,19 +860,19 @@ export class ResumeService {
       include: {
         skills: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
         experiences: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
         educations: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
         certificates: {
           where: { visible: true },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }],
         },
       },
     });
@@ -917,7 +917,7 @@ export class ResumeService {
       // Get current max order for this type
       const maxOrder = await tx.resumeAttachment.findFirst({
         where: { resumeId, type },
-        orderBy: { order: 'desc' },
+        orderBy: [{ order: 'desc' }],
         select: { order: true },
       });
 
@@ -964,7 +964,7 @@ export class ResumeService {
 
     return await this.prisma.resumeAttachment.findMany({
       where: { resumeId, type },
-      orderBy: { order: 'asc' },
+      orderBy: [{ order: 'asc' }],
     });
   }
 
