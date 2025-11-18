@@ -1,11 +1,8 @@
 /* Print Styles for Resume - Optimized for Black & White Printing */
 
 @media print {
-  /* Page Setup - Supports both A4 and Letter sizes */
-  @page {
-    size: A4; /* Default to A4, can be changed via print dialog */
-    margin: 0;
-  }
+  /* Page Setup - Dynamically set by ResumePreview component */
+  /* @page size is now injected dynamically based on paperSize prop */
 
   /* Reset body */
   body {
@@ -174,13 +171,5 @@
       font-size: 10pt;
       color: #6b7280;
     }
-  }
-}
-
-/* Letter size specific adjustments */
-@media print and (width: 8.5in) and (height: 11in) {
-  @page {
-    size: letter;
-    margin: 0;
   }
 }
