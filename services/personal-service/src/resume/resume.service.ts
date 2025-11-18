@@ -838,6 +838,14 @@ export class ResumeService {
         experiences: {
           where: { visible: true },
           orderBy: [{ order: 'asc' }],
+          include: {
+            projects: {
+              orderBy: [{ order: 'asc' }],
+              include: {
+                achievements: this.ACHIEVEMENT_INCLUDE,
+              },
+            },
+          },
         },
         educations: {
           where: { visible: true },
@@ -878,6 +886,10 @@ export class ResumeService {
         { createdAt: 'desc' },  // Otherwise, most recent
       ],
       include: {
+        sections: {
+          where: { visible: true },
+          orderBy: [{ order: 'asc' }],
+        },
         skills: {
           where: { visible: true },
           orderBy: [{ order: 'asc' }],
@@ -885,6 +897,14 @@ export class ResumeService {
         experiences: {
           where: { visible: true },
           orderBy: [{ order: 'asc' }],
+          include: {
+            projects: {
+              orderBy: [{ order: 'asc' }],
+              include: {
+                achievements: this.ACHIEVEMENT_INCLUDE,
+              },
+            },
+          },
         },
         educations: {
           where: { visible: true },
