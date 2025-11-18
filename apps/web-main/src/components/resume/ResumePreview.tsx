@@ -272,7 +272,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               ⭐ {t('resume.preview.keyAchievements')}
             </h2>
-            <ul className="list-disc list-inside space-y-2">
+            <ul className="list-disc list-outside pl-5 space-y-2">
               {resume.keyAchievements.map((achievement: string, index: number) => (
                 <li key={index} className="text-gray-700 leading-relaxed">
                   {achievement}

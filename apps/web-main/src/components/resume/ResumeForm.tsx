@@ -573,28 +573,30 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             Highlight 3-5 major accomplishments from your career
           </p>
           {(formData.keyAchievements || []).map((achievement, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={achievement}
-                onChange={e => {
-                  const newAchievements = [...(formData.keyAchievements || [])];
-                  newAchievements[index] = e.target.value;
-                  setFormData({ ...formData, keyAchievements: newAchievements });
-                }}
-                className="flex-1 px-4 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                placeholder={`Achievement #${index + 1}`}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const newAchievements = formData.keyAchievements?.filter((_, i) => i !== index);
-                  setFormData({ ...formData, keyAchievements: newAchievements });
-                }}
-                className="px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors"
-              >
-                Remove
-              </button>
+            <div key={index} className="mb-3">
+              <div className="flex items-start gap-2">
+                <textarea
+                  value={achievement}
+                  onChange={e => {
+                    const newAchievements = [...(formData.keyAchievements || [])];
+                    newAchievements[index] = e.target.value;
+                    setFormData({ ...formData, keyAchievements: newAchievements });
+                  }}
+                  rows={3}
+                  className="flex-1 px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary resize-y"
+                  placeholder={`Achievement #${index + 1} - Example: "RDB → Redis 리팩토링으로 Latency 48% 개선 및 대규모 트래픽 안정화"`}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAchievements = formData.keyAchievements?.filter((_, i) => i !== index);
+                    setFormData({ ...formData, keyAchievements: newAchievements });
+                  }}
+                  className="px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors whitespace-nowrap"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           ))}
           <button
