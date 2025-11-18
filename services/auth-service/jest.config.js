@@ -29,6 +29,8 @@ module.exports = {
     // Mock ESM-only modules
     '^uuid$': '<rootDir>/../test/mocks/uuid.ts',
     '^@paralleldrive/cuid2$': '<rootDir>/../test/mocks/cuid2.ts',
+    // Strip .js extensions from imports (Node.js ESM compatibility)
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   setupFilesAfterEnv: ['<rootDir>/../test/setup.ts'],
 
