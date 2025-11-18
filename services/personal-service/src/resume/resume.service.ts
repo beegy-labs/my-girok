@@ -80,7 +80,7 @@ export class ResumeService {
     if (resume.experiences && Array.isArray(resume.experiences)) {
       resume.experiences = resume.experiences.map((exp: any) => {
         if (!exp.showSalary) {
-          const { salary, salaryUnit, showSalary, ...rest } = exp;
+          const { salary: _salary, salaryUnit: _salaryUnit, showSalary: _showSalary, ...rest } = exp;
           return rest;
         }
         return exp;
