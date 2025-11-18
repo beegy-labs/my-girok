@@ -1,11 +1,11 @@
 // Auth types
-export * from './auth';
+export * from './auth/index.js';
 
 // User types
-export * from './user';
+export * from './user/index.js';
 
 // Common types
-export * from './common';
+export * from './common/index.js';
 
 // Resume types
-export * from './resume';
+export * from './resume/index.js';
