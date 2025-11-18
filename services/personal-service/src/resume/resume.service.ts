@@ -68,16 +68,25 @@ export class ResumeService {
   }
 
   /**
-   * Sanitize salary information from resume if showSalary is false.
+   * Sanitize salary information from resume experiences if showSalary is false.
    * This ensures sensitive salary data is not exposed through the API.
    * @param resume - Resume object to sanitize
-   * @returns Resume with salary info removed if showSalary is false
+   * @returns Resume with salary info removed from experiences where showSalary is false
    */
   private sanitizeSalaryInfo(resume: any): any {
-    if (!resume || !resume.showSalary) {
-      const { finalSalary, salaryUnit, showSalary, ...rest } = resume || {};
-      return rest;
+    if (!resume) return resume;
+
+    // Sanitize salary info in each experience
+    if (resume.experiences && Array.isArray(resume.experiences)) {
+      resume.experiences = resume.experiences.map((exp: any) => {
+        if (!exp.showSalary) {
+          const { salary, salaryUnit, showSalary, ...rest } = exp;
+          return rest;
+        }
+        return exp;
+      });
     }
+
     return resume;
   }
 
@@ -170,6 +179,9 @@ export class ResumeService {
               isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
               finalPosition: exp.finalPosition,
               jobTitle: exp.jobTitle,
+              salary: exp.salary,
+              salaryUnit: exp.salaryUnit,
+              showSalary: exp.showSalary ?? false,
               order: exp.order ?? 0,
               visible: exp.visible ?? true,
             };
@@ -387,6 +399,9 @@ export class ResumeService {
             isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
             finalPosition: exp.finalPosition,
             jobTitle: exp.jobTitle,
+            salary: exp.salary,
+            salaryUnit: exp.salaryUnit,
+            showSalary: exp.showSalary ?? false,
             order: exp.order ?? 0,
             visible: exp.visible ?? true,
           };
@@ -597,6 +612,9 @@ export class ResumeService {
             isCurrentlyWorking: exp.isCurrentlyWorking,
             finalPosition: exp.finalPosition,
             jobTitle: exp.jobTitle,
+            salary: exp.salary,
+            salaryUnit: exp.salaryUnit,
+            showSalary: exp.showSalary,
             order: exp.order,
             visible: exp.visible,
           };
