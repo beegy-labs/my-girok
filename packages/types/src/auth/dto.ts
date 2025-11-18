@@ -1,4 +1,4 @@
-import { AuthProvider, Role } from './enums';
+import { AuthProvider, Role } from './enums.js';
 
 /**
  * Registration data transfer object
