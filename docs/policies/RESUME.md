@@ -704,6 +704,9 @@ All resume sections support unlimited entries, allowing users to create comprehe
   - End date (optional - leave empty for "Present")
   - **Final Position** (required) - 최종 직책, e.g., "Backend Team Lead"
   - **Job Title** (required) - 직급, e.g., "Senior Developer"
+  - **Salary** (optional) - Salary amount at this company, e.g., 5000
+  - **Salary Unit** (optional) - Salary unit, e.g., "만원" (KRW), "USD", "EUR", "JPY"
+  - **Show Salary** (optional, default: false) - Toggle to show/hide salary in preview and public access
   - Order (for drag-and-drop)
   - Visibility toggle
 
