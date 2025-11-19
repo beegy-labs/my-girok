@@ -16,11 +16,16 @@ export class PdfGeneratorService {
     try {
       this.browser = await puppeteer.launch({
         headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
+          '--disable-software-rasterizer',
+          '--disable-crash-reporter',
+          '--no-zygote',
+          '--single-process',
         ],
       });
       this.logger.log('Puppeteer browser initialized');
@@ -53,11 +58,16 @@ export class PdfGeneratorService {
       if (!this.browser) {
         this.browser = await puppeteer.launch({
           headless: true,
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-crash-reporter',
+            '--no-zygote',
+            '--single-process',
           ],
         });
       }
