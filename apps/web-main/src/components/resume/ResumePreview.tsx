@@ -271,7 +271,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             width: paperDimensions.width,
             minWidth: paperDimensions.width,
             margin: '0 auto',
-            padding: '2cm',
+            padding: '1cm', /* Optimized resume margin: 1cm for maximum content space */
             boxSizing: 'border-box',
           } : {
             /* For paginated view (Paged.js source): remove padding since @page margin handles it */
