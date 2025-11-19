@@ -25,11 +25,12 @@
 /* A4 size: 210mm × 297mm */
 .resume-page-a4 {
   width: 21cm;
-  min-height: 29.7cm;
+  min-height: 29.7cm; /* Minimum height to match A4 */
   padding: 1.5cm;
   margin: 0 auto;
   background: white;
   position: relative;
+  box-sizing: border-box;
 }
 
 @media screen {
@@ -49,6 +50,7 @@
     height: 29.7cm;
     box-shadow: none;
     margin: 0;
+    overflow: visible; /* Show all content when printing */
     page-break-after: always;
     break-after: page;
   }
@@ -62,11 +64,12 @@
 /* Letter size: 8.5" × 11" = 21.59cm × 27.94cm */
 .resume-page-letter {
   width: 21.59cm;
-  min-height: 27.94cm;
+  min-height: 27.94cm; /* Minimum height to match Letter */
   padding: 1.5cm;
   margin: 0 auto;
   background: white;
   position: relative;
+  box-sizing: border-box;
 }
 
 @media screen {
@@ -86,6 +89,7 @@
     height: 27.94cm;
     box-shadow: none;
     margin: 0;
+    overflow: visible; /* Show all content when printing */
     page-break-after: always;
     break-after: page;
   }
