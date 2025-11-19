@@ -26,11 +26,7 @@ export default function MyResumePage() {
   const [expandedResumeId, setExpandedResumeId] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [resumesData, shareLinksData] = await Promise.all([
@@ -44,7 +40,11 @@ export default function MyResumePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Memoize navigation handlers
   const navigateToEdit = useCallback(() => {
@@ -71,7 +71,7 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.shareFailed'));
     }
-  }, [selectedResumeId, shareDuration, t]);
+  }, [selectedResumeId, shareDuration, loadData, t]);
 
   const handleDeleteShare = useCallback(async (shareId: string) => {
     if (!confirm(t('resume.confirm.deleteShare'))) return;
@@ -82,7 +82,7 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.deleteShareFailed'));
     }
-  }, [t]);
+  }, [loadData, t]);
 
   const handleDeleteResume = useCallback(async (resumeId: string) => {
     if (!confirm(t('resume.confirm.deleteResume'))) return;
@@ -93,7 +93,7 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.deleteFailed'));
     }
-  }, [t]);
+  }, [loadData, t]);
 
   const handleCopyResume = useCallback(async (resumeId: string) => {
     if (!confirm(t('resume.confirm.copyResume'))) return;
@@ -105,7 +105,7 @@ export default function MyResumePage() {
     } catch (err) {
       setError(t('resume.errors.copyFailed'));
     }
-  }, [t]);
+  }, [loadData, t]);
 
   const openShareModal = useCallback((resumeId: string) => {
     const activeLinks = shareLinks.filter(
