@@ -42,6 +42,59 @@ export async function exportResumeToPDF(
 }
 
 /**
+ * Convert image URL to base64 data URL
+ */
+async function urlToBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Failed to convert image to base64:', url, error);
+    // Return empty data URL as fallback
+    return 'data:image/png;base64,';
+  }
+}
+
+/**
+ * Convert all external images in element to base64
+ */
+async function convertImagesToBase64(element: HTMLElement): Promise<void> {
+  const images = element.querySelectorAll('img');
+  const conversionPromises: Promise<void>[] = [];
+
+  images.forEach((img) => {
+    if (img.src && (img.src.startsWith('http://') || img.src.startsWith('https://'))) {
+      const promise = urlToBase64(img.src).then((base64) => {
+        img.dataset.originalSrc = img.src;
+        img.src = base64;
+      });
+      conversionPromises.push(promise);
+    }
+  });
+
+  await Promise.all(conversionPromises);
+}
+
+/**
+ * Restore original image URLs
+ */
+function restoreImageUrls(element: HTMLElement): void {
+  const images = element.querySelectorAll('img');
+  images.forEach((img) => {
+    if (img.dataset.originalSrc) {
+      img.src = img.dataset.originalSrc;
+      delete img.dataset.originalSrc;
+    }
+  });
+}
+
+/**
  * Export Paged.js container to PDF (multi-page support)
  */
 async function exportPagedJSToPDF(
@@ -57,43 +110,51 @@ async function exportPagedJSToPDF(
     throw new Error('No pages found in Paged.js container');
   }
 
-  // Create PDF
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: paperSize === 'A4' ? 'a4' : 'letter',
-  });
+  // Convert all external images to base64 before capturing
+  await convertImagesToBase64(container);
 
-  // Capture each page
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i] as HTMLElement;
-
-    // Capture page as canvas
-    const canvas = await html2canvas(page, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      windowWidth: page.scrollWidth,
-      windowHeight: page.scrollHeight,
+  try {
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: paperSize === 'A4' ? 'a4' : 'letter',
     });
 
-    // Add page to PDF
-    if (i > 0) {
-      pdf.addPage();
+    // Capture each page
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i] as HTMLElement;
+
+      // Capture page as canvas
+      const canvas = await html2canvas(page, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: page.scrollWidth,
+        windowHeight: page.scrollHeight,
+      });
+
+      // Add page to PDF
+      if (i > 0) {
+        pdf.addPage();
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgWidth = paperWidth;
+      const imgHeight = (canvas.height * paperWidth) / canvas.width;
+
+      // Center image on page if it's smaller than page height
+      const yOffset = imgHeight < paperHeight ? (paperHeight - imgHeight) / 2 : 0;
+      pdf.addImage(imgData, 'JPEG', 0, yOffset, imgWidth, Math.min(imgHeight, paperHeight));
     }
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const imgWidth = paperWidth;
-    const imgHeight = (canvas.height * paperWidth) / canvas.width;
-
-    // Center image on page if it's smaller than page height
-    const yOffset = imgHeight < paperHeight ? (paperHeight - imgHeight) / 2 : 0;
-    pdf.addImage(imgData, 'JPEG', 0, yOffset, imgWidth, Math.min(imgHeight, paperHeight));
+    // Save PDF
+    pdf.save(fileName);
+  } finally {
+    // Restore original image URLs
+    restoreImageUrls(container);
   }
-
-  // Save PDF
-  pdf.save(fileName);
 }
 
 /**
@@ -105,6 +166,9 @@ async function exportElementToPDF(
   paperHeight: number,
   fileName: string
 ): Promise<void> {
+  // Convert all external images to base64 before capturing
+  await convertImagesToBase64(element);
+
   try {
     // Get paper dimensions
     const { width: paperWidth } = PAPER_DIMENSIONS[paperSize];
@@ -160,6 +224,9 @@ async function exportElementToPDF(
   } catch (error) {
     console.error('Failed to export PDF:', error);
     throw new Error('Failed to export resume to PDF');
+  } finally {
+    // Restore original image URLs
+    restoreImageUrls(element);
   }
 }
 

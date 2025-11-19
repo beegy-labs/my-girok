@@ -617,28 +617,29 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               type="file"
               accept="image/*"
               onChange={handleProfilePhotoChange}
-              disabled={uploading}
+              disabled={uploading || !resume?.id}
               className="block w-full text-sm text-gray-700 dark:text-dark-text-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 dark:file:bg-amber-900/20 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            {profilePhotoFile && resume?.id && (
+            {profilePhotoFile && (
               <button
                 type="button"
                 onClick={handleProfilePhotoUpload}
                 disabled={uploading}
                 className="px-4 py-2 text-sm bg-amber-700 dark:bg-amber-600 text-white dark:text-gray-900 rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
-                {uploading ? 'Uploading...' : 'Upload Now'}
+                {uploading ? 'Uploading...' : 'Upload Photo'}
               </button>
-            )}
-            {profilePhotoFile && !resume?.id && (
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                ✓ Photo selected. It will be uploaded automatically when you save the resume.
-              </p>
             )}
           </div>
 
           {uploadError && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1">{uploadError}</p>
+          )}
+
+          {!resume?.id && (
+            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
+              💡 Please save the resume first before uploading a profile photo
+            </p>
           )}
 
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
