@@ -75,11 +75,9 @@
     text-decoration: none !important;
   }
 
-  /* Show URL after links for printed version */
+  /* Don't show URLs after links in print */
   a[href^="http"]::after {
-    content: " (" attr(href) ")";
-    font-size: 0.85em;
-    color: #4b5563;
+    content: "";
   }
 
   /* Page break control for multi-page resumes */
@@ -164,12 +162,13 @@
     margin-bottom: 1.5rem !important;
   }
 
-  /* Add page number for multi-page resumes */
+  /* Hide browser header/footer (site name, page URL, etc.) */
   @page {
-    @bottom-right {
-      content: counter(page) " / " counter(pages);
-      font-size: 10pt;
-      color: #6b7280;
-    }
+    margin: 0;
+  }
+
+  /* Hide toolbar and all non-resume content */
+  header, nav, footer, .toolbar, .print\:hidden {
+    display: none !important;
   }
 }

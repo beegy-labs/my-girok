@@ -50,6 +50,7 @@
     height: 29.7cm;
     box-shadow: none;
     margin: 0;
+    padding: 1.2cm; /* Reduced padding for print to prevent clipping */
     overflow: visible; /* Show all content when printing */
     page-break-after: always;
     break-after: page;
@@ -89,6 +90,7 @@
     height: 27.94cm;
     box-shadow: none;
     margin: 0;
+    padding: 1.2cm; /* Reduced padding for print to prevent clipping */
     overflow: visible; /* Show all content when printing */
     page-break-after: always;
     break-after: page;
