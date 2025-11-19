@@ -139,72 +139,88 @@
 }
 
 @media print {
-  /* Set page size with minimal margins */
+  /*
+   * Paged.js Print Configuration
+   * IMPORTANT: Set browser print settings:
+   * - Margins: None
+   * - Headers and footers: None
+   * - Background graphics: On
+   */
   @page {
-    size: A4 portrait;
-    margin: 0; /* Remove all page margins */
+    margin: 0; /* Paged.js handles all margins */
   }
 
-  /* Hide paginated view in print - use continuous view instead */
-  .pagedjs-container {
+  /* A4 paper size */
+  @page :root {
+    size: A4 portrait;
+  }
+
+  /* Hide continuous view in print - use Paged.js paginated view */
+  #resume-content {
     display: none !important;
   }
 
-  /* Show and optimize continuous view for print */
-  #resume-content {
+  /* Show and optimize Paged.js container for print */
+  .pagedjs-container {
     display: block !important;
     transform: none !important;
     margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    padding: 0 !important;
   }
 
-  /* Main resume container */
-  #resume-content > div {
-    width: 100% !important;
-    max-width: 100% !important;
+  /* Paged.js pages - remove screen-only styling */
+  .pagedjs_page {
+    box-shadow: none !important;
     margin: 0 !important;
-    padding: 0.5cm !important; /* Minimal padding for printer safe area */
-    box-sizing: border-box !important;
-    overflow: visible !important; /* Critical: allow content to flow naturally */
-    box-shadow: none !important;
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Paged.js page content area */
+  .pagedjs_page_content {
+    overflow: visible !important;
     background: white !important;
   }
 
-  /* Reset all backgrounds and shadows */
+  /* Reset all backgrounds and shadows for print */
   * {
-    background: white !important;
     box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Prevent text overflow with proper word breaking */
+  /* Ensure proper text rendering */
   * {
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
-    max-width: 100% !important;
   }
 
-  /* Ensure sections don't break awkwardly */
+  /* Prevent awkward page breaks */
   .resume-section {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .resume-item {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* Keep headings with content */
   h1, h2, h3, h4, h5, h6 {
-    page-break-after: avoid;
-    break-after: avoid;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   /* Prevent orphans and widows */
   p, li {
     orphans: 3;
     widows: 3;
+  }
+
+  /* Hide page number indicators */
+  .resume-page-number {
+    display: none !important;
   }
 }
 
