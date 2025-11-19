@@ -26,7 +26,7 @@
 .resume-page-a4 {
   width: 21cm;
   min-height: 29.7cm;
-  padding: 1.5cm;
+  padding: 2cm; /* Increased from 1.5cm for safer print margins */
   margin: 0 auto;
   background: white;
   position: relative;
@@ -37,15 +37,16 @@
   .resume-page-a4 {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
-    /* Show page boundaries with repeating background */
+    /* Show page boundaries with repeating background
+       Page height: 29.7cm, Content area per page: 29.7cm - 4cm (2cm top + 2cm bottom padding) = 25.7cm */
     background-image:
       repeating-linear-gradient(
         to bottom,
-        white 0,
-        white 29.7cm,
-        #e5e7eb 29.7cm,
-        #e5e7eb calc(29.7cm + 2rem),
-        white calc(29.7cm + 2rem)
+        transparent 0,
+        transparent 25.7cm, /* Content area height */
+        #e5e7eb 25.7cm, /* Page break line */
+        #e5e7eb calc(25.7cm + 4cm), /* Line + padding for next page */
+        transparent calc(25.7cm + 4cm)
       );
   }
 
@@ -57,26 +58,23 @@
 @media print {
   .resume-page-a4 {
     width: 21cm;
-    height: 29.7cm;
+    min-height: 29.7cm; /* Changed from fixed height to min-height to allow content flow */
     box-shadow: none;
     margin: 0;
-    padding: 1.2cm; /* Reduced padding for print to prevent clipping */
+    padding: 2cm; /* Increased to 2cm for proper print margins on all sides */
     overflow: visible; /* Show all content when printing */
-    page-break-after: always;
-    break-after: page;
+    page-break-inside: auto; /* Allow natural page breaks */
+    break-inside: auto;
   }
 
-  .resume-page-a4:last-child {
-    page-break-after: auto;
-    break-after: auto;
-  }
+  /* Remove page-break-after since we're using single container with natural breaks */
 }
 
 /* Letter size: 8.5" × 11" = 21.59cm × 27.94cm */
 .resume-page-letter {
   width: 21.59cm;
   min-height: 27.94cm;
-  padding: 1.5cm;
+  padding: 2cm; /* Increased from 1.5cm for safer print margins */
   margin: 0 auto;
   background: white;
   position: relative;
@@ -87,15 +85,16 @@
   .resume-page-letter {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
-    /* Show page boundaries with repeating background */
+    /* Show page boundaries with repeating background
+       Page height: 27.94cm, Content area per page: 27.94cm - 4cm (2cm top + 2cm bottom padding) = 23.94cm */
     background-image:
       repeating-linear-gradient(
         to bottom,
-        white 0,
-        white 27.94cm,
-        #e5e7eb 27.94cm,
-        #e5e7eb calc(27.94cm + 2rem),
-        white calc(27.94cm + 2rem)
+        transparent 0,
+        transparent 23.94cm, /* Content area height */
+        #e5e7eb 23.94cm, /* Page break line */
+        #e5e7eb calc(23.94cm + 4cm), /* Line + padding for next page */
+        transparent calc(23.94cm + 4cm)
       );
   }
 
@@ -107,19 +106,16 @@
 @media print {
   .resume-page-letter {
     width: 21.59cm;
-    height: 27.94cm;
+    min-height: 27.94cm; /* Changed from fixed height to min-height to allow content flow */
     box-shadow: none;
     margin: 0;
-    padding: 1.2cm; /* Reduced padding for print to prevent clipping */
+    padding: 2cm; /* Increased to 2cm for proper print margins on all sides */
     overflow: visible; /* Show all content when printing */
-    page-break-after: always;
-    break-after: page;
+    page-break-inside: auto; /* Allow natural page breaks */
+    break-inside: auto;
   }
 
-  .resume-page-letter:last-child {
-    page-break-after: auto;
-    break-after: auto;
-  }
+  /* Remove page-break-after since we're using single container with natural breaks */
 }
 
 /* Page number indicator (screen only) */
