@@ -163,6 +163,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
 
   // Section ordering
   const [sections, setSections] = useState(
@@ -239,6 +240,12 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     try {
       const data = await getAttachments(resume.id);
       setAttachments(data);
+
+      // Automatically set profile photo if exists
+      const profilePhoto = data.find(a => a.type === AttachmentType.PROFILE_PHOTO);
+      if (profilePhoto) {
+        setFormData(prev => ({ ...prev, profileImage: profilePhoto.fileUrl }));
+      }
     } catch (error) {
       console.error('Failed to load attachments:', error);
     }
@@ -297,6 +304,90 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);
       alert('저장 내용이 삭제되었습니다.');
+    }
+  };
+
+  // Handle profile photo file selection
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setUploadError('Please select an image file (JPG, PNG, WEBP)');
+        return;
+      }
+
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError('Image size must be less than 10MB');
+        return;
+      }
+
+      setProfilePhotoFile(file);
+      setUploadError(null);
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setFormData(prev => ({ ...prev, profileImage: previewUrl }));
+    }
+  };
+
+  // Upload profile photo
+  const handleProfilePhotoUpload = async () => {
+    if (!profilePhotoFile || !resume?.id) {
+      setUploadError('Please save the resume first before uploading photos');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const attachment = await uploadAttachment(
+        resume.id,
+        profilePhotoFile,
+        AttachmentType.PROFILE_PHOTO,
+        'Profile Photo'
+      );
+
+      setFormData(prev => ({ ...prev, profileImage: attachment.fileUrl }));
+      setProfilePhotoFile(null);
+      await loadAttachments();
+      alert('Profile photo uploaded successfully!');
+    } catch (error: any) {
+      console.error('Failed to upload profile photo:', error);
+      setUploadError(error.response?.data?.message || 'Failed to upload photo. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Delete profile photo
+  const handleProfilePhotoDelete = async () => {
+    if (!resume?.id) return;
+
+    const profilePhoto = attachments.find(a => a.type === AttachmentType.PROFILE_PHOTO);
+    if (!profilePhoto) {
+      // Just clear the URL if no attachment exists
+      setFormData(prev => ({ ...prev, profileImage: '' }));
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this profile photo?')) {
+      return;
+    }
+
+    setUploading(true);
+    try {
+      await deleteAttachment(resume.id, profilePhoto.id);
+      setFormData(prev => ({ ...prev, profileImage: '' }));
+      await loadAttachments();
+      alert('Profile photo deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete profile photo:', error);
+      alert('Failed to delete photo. Please try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -467,35 +558,62 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
             Profile Photo
           </label>
-          {/* Display current photo if exists */}
+
+          {/* Display current or preview photo */}
           {formData.profileImage && (
             <div className="mb-3 flex items-center gap-3">
               <img
                 src={formData.profileImage}
                 alt="Profile"
-                className="w-24 h-24 object-cover rounded-full border-2 border-amber-300"
+                className="w-24 h-24 object-cover rounded-full border-2 border-amber-300 dark:border-amber-600"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23e5e7eb"/><text x="50%" y="50%" font-size="14" text-anchor="middle" dy=".3em" fill="%239ca3af">No Image</text></svg>';
                 }}
               />
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, profileImage: '' })}
-                className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/30"
+                onClick={handleProfilePhotoDelete}
+                disabled={uploading}
+                className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Remove Photo
+                {uploading ? 'Deleting...' : 'Remove Photo'}
               </button>
             </div>
           )}
-          <input
-            type="url"
-            value={formData.profileImage || ''}
-            onChange={e => setFormData({ ...formData, profileImage: e.target.value })}
-            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="https://example.com/photo.jpg"
-          />
+
+          {/* File upload input */}
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePhotoChange}
+              disabled={uploading || !resume?.id}
+              className="block w-full text-sm text-gray-700 dark:text-dark-text-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 dark:file:bg-amber-900/20 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            {profilePhotoFile && (
+              <button
+                type="button"
+                onClick={handleProfilePhotoUpload}
+                disabled={uploading}
+                className="px-4 py-2 text-sm bg-amber-700 dark:bg-amber-600 text-white dark:text-gray-900 rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              >
+                {uploading ? 'Uploading...' : 'Upload Photo'}
+              </button>
+            )}
+          </div>
+
+          {uploadError && (
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{uploadError}</p>
+          )}
+
+          {!resume?.id && (
+            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
+              💡 Please save the resume first before uploading a profile photo
+            </p>
+          )}
+
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            Enter a photo URL or upload a file in the Attachments section below
+            Supported formats: JPG, PNG, WEBP (max 10MB). Photo will be automatically converted to grayscale for professional appearance.
           </p>
         </div>
 
