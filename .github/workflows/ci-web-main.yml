@@ -24,11 +24,10 @@ env:
   IMAGE_NAME: my-girok/web-main
 
 jobs:
-  test:
-    name: Run Tests
+  lint:
+    name: Lint
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 10
-
+    timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,28 +54,127 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Setup node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web-main/node_modules
+            packages/types/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run lint
         run: |
           cd apps/web-main
-          pnpm lint || true
+          pnpm lint
+
+  type-check:
+    name: Type Check
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web-main/node_modules
+            packages/types/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run type check
         run: |
           cd apps/web-main
-          pnpm type-check || true
+          pnpm type-check
 
-      - name: Run E2E tests
+  test:
+    name: Unit Tests
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web-main/node_modules
+            packages/types/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Run unit tests
         run: |
           cd apps/web-main
-          pnpm test:e2e || true
+          pnpm test --run --reporter=verbose
 
   build:
     name: Build and Push Docker Image
     runs-on: [self-hosted, kubernetes, gitops]
-    needs: test
+    needs: [lint, type-check, test]
     if: github.event_name == 'push'
     timeout-minutes: 10
 
