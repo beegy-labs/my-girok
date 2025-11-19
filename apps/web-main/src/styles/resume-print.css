@@ -172,14 +172,34 @@
   .pagedjs_page {
     box-shadow: none !important;
     margin: 0 !important;
+    padding: 0 !important;
     page-break-after: always !important;
     page-break-inside: avoid !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Paged.js page content area */
   .pagedjs_page_content {
     overflow: visible !important;
     background: white !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Paged.js page box */
+  .pagedjs_pagebox {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* All content inside pages */
+  .pagedjs_page_content * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Reset all backgrounds and shadows for print */
@@ -189,21 +209,37 @@
     print-color-adjust: exact !important;
   }
 
-  /* Ensure proper text rendering */
+  /* Ensure proper text rendering and prevent overflow */
   * {
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
+    word-break: break-word !important;
+  }
+
+  /* Prevent long URLs and text from overflowing */
+  a, span, p, div, li {
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    hyphens: auto !important;
+  }
+
+  /* Images and media */
+  img, video, svg {
+    max-width: 100% !important;
+    height: auto !important;
   }
 
   /* Prevent awkward page breaks */
   .resume-section {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    max-width: 100% !important;
   }
 
   .resume-item {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    max-width: 100% !important;
   }
 
   /* Keep headings with content */
