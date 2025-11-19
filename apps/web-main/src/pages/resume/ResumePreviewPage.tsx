@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { getResume, Resume, updateResume, PaperSize } from '../../api/resume';
-import ResumePreview from '../../components/resume/ResumePreview';
+import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 import ShareLinkModal from '../../components/resume/ShareLinkModal';
 import { exportResumeToPDF, printResume } from '../../utils/pdf';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -221,11 +221,12 @@ export default function ResumePreviewPage() {
 
       {/* Resume Preview - Scrollable container for mobile */}
       <div className="py-8 print:py-0 flex justify-center">
-        <div className="w-full max-w-[100vw] overflow-auto bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 md:p-8 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
-          <div className="bg-white rounded shadow-lg min-w-fit">
-            <ResumePreview resume={resume} paperSize={paperSize} />
-          </div>
-        </div>
+        <ResumePreviewContainer
+          resume={resume}
+          paperSize={paperSize}
+          responsivePadding={true}
+          enableHorizontalScroll={true}
+        />
       </div>
 
       {/* Share Modal */}

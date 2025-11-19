@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { getUserResume, Resume } from '../../api/resume';
 import { useAuthStore } from '../../stores/authStore';
-import ResumePreview from '../../components/resume/ResumePreview';
+import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CharacterMessage } from '../../components/characters';
 
@@ -116,11 +116,7 @@ export default function PublicResumePage() {
 
       {/* Resume Preview */}
       <div className="py-6 sm:py-8 print:py-0 flex justify-center">
-        <div className="bg-gray-100 dark:bg-dark-bg-secondary/50 p-8 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
-          <div className="bg-white rounded shadow-lg">
-            <ResumePreview resume={resume} />
-          </div>
-        </div>
+        <ResumePreviewContainer resume={resume} />
       </div>
     </div>
   );
