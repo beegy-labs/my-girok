@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
-import ResumePreview from '../../components/resume/ResumePreview';
+import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 
 export default function ResumeEditPage() {
   const { t } = useTranslation();
@@ -181,17 +181,20 @@ export default function ResumeEditPage() {
                 </p>
               </div>
 
-              <div className="max-h-[calc(100vh-200px)] overflow-y-auto border-2 border-gray-300 dark:border-dark-border-default rounded-lg shadow-inner dark:shadow-dark-inner bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 transition-colors duration-200">
-                {previewData ? (
-                  <div className="transform scale-75 origin-top-left bg-white rounded shadow-lg" style={{ width: '133.33%' }}>
-                    <ResumePreview resume={previewData} paperSize={previewData.paperSize} />
-                  </div>
-                ) : (
+              {previewData ? (
+                <ResumePreviewContainer
+                  resume={previewData}
+                  scale={0.75}
+                  maxHeight="calc(100vh - 200px)"
+                  containerClassName="border-2 border-gray-300 dark:border-dark-border-default p-4"
+                />
+              ) : (
+                <div className="bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
                   <div className="p-6 sm:p-8 text-center text-gray-500 dark:text-dark-text-tertiary text-sm sm:text-base">
                     <p>{t('errors.startFilling')}</p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
