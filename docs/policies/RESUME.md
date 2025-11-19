@@ -921,14 +921,20 @@ Typical section order and emphasis:
   - Consistent across all view modes
 - **Minimum Safe Margin**: 0.5cm for printer compatibility
 - **Indicator**: Shows current paper size in preview (hidden in print)
-- **Print Strategy**: Uses continuous view with CSS @page for natural page breaks
-  - Paged.js container hidden during print
-  - Continuous view shown with overflow: visible
-  - Natural page breaks via CSS page-break-inside: avoid
+- **Print Strategy**: Uses Paged.js paginated view for proper page breaks
+  - Continuous view hidden during print
+  - Paged.js container shown with optimized print styles
+  - @page margin set to 0 (Paged.js handles all spacing)
+  - **Required Print Settings**:
+    - Margins: **None**
+    - Headers and footers: **None**
+    - Background graphics: **On**
 - **PDF Export**: Uses paginated view (Paged.js) for multi-page PDF with proper page boundaries
-- **Overflow Handling**:
-  - Print: overflow: visible for natural content flow
-  - Screen: overflow: hidden to prevent visual issues
+- **Page Break Handling**:
+  - `page-break-inside: avoid` for sections and items
+  - `page-break-after: avoid` for headings
+  - Orphans: 3, Widows: 3
+  - Print color adjustment: exact
   - Word-break and overflow-wrap applied to all text elements
 
 ##### Print Styling & Preview Design
