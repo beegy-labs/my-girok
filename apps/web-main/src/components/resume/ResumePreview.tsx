@@ -12,7 +12,7 @@ interface ResumePreviewProps {
 export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePreviewProps) {
   const { t, i18n } = useTranslation();
   const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
-  const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('continuous'); // Default: continuous view
+  const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('paginated'); // Default: paginated view
   const [scale, setScale] = useState(1);
   const rafRef = useRef<number | null>(null);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);

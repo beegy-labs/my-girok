@@ -34,72 +34,39 @@
 }
 
 @media screen {
-  .resume-page-a4 {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-    /* Show page boundaries with repeating background
-       Page height: 29.7cm, Content area per page: 29.7cm - 4cm (2cm top + 2cm bottom padding) = 25.7cm */
-    background-image:
-      repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent 25.7cm, /* Content area height */
-        #e5e7eb 25.7cm, /* Page break line */
-        #e5e7eb calc(25.7cm + 4cm), /* Line + padding for next page */
-        transparent calc(25.7cm + 4cm)
-      );
+  .resume-page-container {
+    background-color: #f3f4f6; /* gray-100 */
+    padding: 2rem 0;
+    gap: 0;
   }
 
-  .resume-page-a4:last-child {
-    margin-bottom: 0;
-  }
-}
-
-@media print {
-  .resume-page-a4 {
-    width: 21cm;
-    min-height: 29.7cm; /* Changed from fixed height to min-height to allow content flow */
-    box-shadow: none;
-    margin: 0;
-    padding: 2cm; /* Increased to 2cm for proper print margins on all sides */
-    overflow: visible; /* Show all content when printing */
-    page-break-inside: auto; /* Allow natural page breaks */
-    break-inside: auto;
-  }
-
-  /* Remove page-break-after since we're using single container with natural breaks */
-}
-
-/* Letter size: 8.5" × 11" = 21.59cm × 27.94cm */
-.resume-page-letter {
-  width: 21.59cm;
-  min-height: 27.94cm;
-  padding: 2cm; /* Increased from 1.5cm for safer print margins */
-  margin: 0 auto;
-  background: white;
-  position: relative;
-  box-sizing: border-box;
-}
-
-@media screen {
+  .resume-page-a4,
   .resume-page-letter {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-    /* Show page boundaries with repeating background
-       Page height: 27.94cm, Content area per page: 27.94cm - 4cm (2cm top + 2cm bottom padding) = 23.94cm */
-    background-image:
-      repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent 23.94cm, /* Content area height */
-        #e5e7eb 23.94cm, /* Page break line */
-        #e5e7eb calc(23.94cm + 4cm), /* Line + padding for next page */
-        transparent calc(23.94cm + 4cm)
-      );
+    margin: 0 auto;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
   }
 
-  .resume-page-letter:last-child {
-    margin-bottom: 0;
+  .resume-page-a4 {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(29.7cm - 1px),
+      #d1d5db calc(29.7cm - 1px), /* gray-300 */
+      #d1d5db 29.7cm
+    );
+    background-size: 100% 29.7cm;
+  }
+
+  .resume-page-letter {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(27.94cm - 1px),
+      #d1d5db calc(27.94cm - 1px), /* gray-300 */
+      #d1d5db 27.94cm
+    );
+    background-size: 100% 27.94cm;
   }
 }
 
