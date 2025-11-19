@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+// @ts-ignore - pagedjs doesn't have type definitions
+import { Previewer } from 'pagedjs';
 import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
 import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
 import '../../styles/resume-print.css';
@@ -16,6 +18,8 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
   const [scale, setScale] = useState(1);
   const rafRef = useRef<number | null>(null);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pagedContainerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const visibleSections = resume.sections
     .filter(s => s.visible)
@@ -115,6 +119,30 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     };
   }, [paperSize]);
 
+  // Paged.js integration for paginated view
+  useEffect(() => {
+    if (viewMode === 'paginated' && contentRef.current && pagedContainerRef.current) {
+      const paged = new Previewer();
+
+      // Clear previous paged content
+      pagedContainerRef.current.innerHTML = '';
+
+      // Clone the content to avoid React DOM conflicts
+      const contentClone = contentRef.current.cloneNode(true) as HTMLElement;
+
+      // Preview with Paged.js
+      paged.preview(
+        contentClone.innerHTML,
+        [],
+        pagedContainerRef.current
+      ).then((flow: any) => {
+        console.log('Paged.js rendered', flow.total, 'pages');
+      }).catch((error: any) => {
+        console.error('Paged.js error:', error);
+      });
+    }
+  }, [viewMode, resume, paperSize, isGrayscaleMode]);
+
   return (
     <div className="relative">
       {/* Fixed Toolbar (hidden in print) */}
@@ -167,11 +195,13 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         </div>
       </div>
 
-      {/* Resume Content - Auto-scaled to fit viewport (mobile responsive) */}
+      {/* Resume Content - Original (for Paged.js to process or for continuous view) */}
       <div
+        ref={contentRef}
         id="resume-content"
         className={viewMode === 'paginated' ? 'resume-page-container' : ''}
         style={{
+          display: viewMode === 'paginated' ? 'none' : 'block', // Hide when using Paged.js
           transform: `scale(${scale}) translate3d(0, 0, 0)`, // GPU acceleration with translate3d
           transformOrigin: 'top center',
           marginBottom: scale < 1 ? `${(1 - scale) * -200}px` : 0, // Adjust bottom spacing when scaled
@@ -365,6 +395,20 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         )}
       </div>
     </div>
+
+      {/* Paged.js Output - Shown in paginated view */}
+      <div
+        ref={pagedContainerRef}
+        className="pagedjs-container"
+        style={{
+          display: viewMode === 'paginated' ? 'block' : 'none',
+          transform: `scale(${scale}) translate3d(0, 0, 0)`,
+          transformOrigin: 'top center',
+          marginBottom: scale < 1 ? `${(1 - scale) * -200}px` : 0,
+          willChange: 'transform',
+          transition: 'transform 0.15s ease-out',
+        }}
+      />
     </div>
   );
 }

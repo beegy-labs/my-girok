@@ -1,5 +1,34 @@
 /* Resume Print Styles - Multi-page Layout (A4 and Letter) */
 
+/* Paged.js Container Styles */
+.pagedjs-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Paged.js Page Styles - Each page is a separate div */
+.pagedjs_page {
+  margin: 0 auto 2rem auto !important; /* Add gap between pages */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
+  background: white !important;
+}
+
+/* Paged.js @page rules for page size and margins */
+@page {
+  size: A4;
+  margin: 2cm; /* Top, right, bottom, left margins */
+}
+
+@page:first {
+  margin-top: 2cm;
+}
+
+/* Page area - the actual content area */
+.pagedjs_page_content {
+  width: 100%;
+  height: 100%;
+}
+
 /* Base page styles - Use block to avoid flex interfering with page breaks */
 .resume-page-container {
   display: block;
