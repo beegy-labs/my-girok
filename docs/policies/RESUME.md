@@ -914,8 +914,9 @@ Typical section order and emphasis:
 ##### Paper Size Support
 - **A4**: 210mm × 297mm (default for Korea, Europe)
 - **Letter**: 215.9mm × 279.4mm (USA)
-- **Margins**: 1.5cm all sides for print
+- **Margins**: 2cm all sides (same for both continuous and paginated views)
 - **Indicator**: Shows current paper size in preview (hidden in print)
+- **Overflow Prevention**: Content automatically wraps and clips to prevent page boundary overflow
 
 ##### Print Styling & Preview Design
 
