@@ -180,11 +180,12 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         }}
       >
         <div
-          className={viewMode === 'paginated' ? pageClassName : 'bg-gray-50 p-8 shadow-lg'}
+          className={viewMode === 'paginated' ? pageClassName : 'bg-white p-12 shadow-lg'}
           style={viewMode === 'continuous' ? {
             width: paperDimensions.width,
             minWidth: paperDimensions.width,
-            margin: '0 auto'
+            margin: '0 auto',
+            boxSizing: 'border-box',
           } : undefined}
         >
         {/* Header - Grayscale design for print compatibility */}
@@ -387,7 +388,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
   };
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 resume-section">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.skills')}
       </h2>
@@ -471,12 +472,12 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
     : '';
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 resume-section">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.experience')}{durationText}
       </h2>
       {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
-        <div key={idx} className="mb-5">
+        <div key={idx} className="mb-5 resume-item">
           {/* Company Header */}
           <div className="flex justify-between items-start mb-2">
             <div>
@@ -579,7 +580,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
   if (projects.length === 0) return null;
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 resume-section">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.projects')}
       </h2>
@@ -633,7 +634,7 @@ function EducationSection({ educations }: { educations: any[] }) {
   if (educations.length === 0) return null;
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 resume-section">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.education')}
       </h2>
@@ -663,7 +664,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
   if (certificates.length === 0) return null;
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 resume-section">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.certifications')}
       </h2>
