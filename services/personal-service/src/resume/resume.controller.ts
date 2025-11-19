@@ -13,19 +13,27 @@ import {
   UploadedFile,
   Query,
   ParseEnumPipe,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
 import { ResumeService } from './resume.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
 import { AttachmentType } from '../storage/dto';
 import { CurrentUser } from '../common/decorators';
 import { Public } from '../common/decorators/public.decorator';
+import { PdfGeneratorService } from './pdf-generator.service';
+import { ResumeTemplateService } from './resume-template.service';
 
 @ApiTags('resume')
 @Controller('resume')
 export class ResumeController {
-  constructor(private readonly resumeService: ResumeService) {}
+  constructor(
+    private readonly resumeService: ResumeService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
+    private readonly resumeTemplateService: ResumeTemplateService,
+  ) {}
 
   // Public endpoint - Get user's default resume by username
   @Public()
@@ -267,5 +275,66 @@ export class ResumeController {
     @Body('attachmentIds') attachmentIds: string[],
   ) {
     return this.resumeService.reorderAttachments(resumeId, user.id, type, attachmentIds);
+  }
+
+  // ========== PDF Export Endpoint ==========
+
+  @Get(':resumeId/export/pdf')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Export resume as PDF (server-side generated)',
+    description: 'Generate and download resume as PDF with selectable text and embedded images',
+  })
+  @ApiParam({ name: 'resumeId', description: 'Resume ID' })
+  @ApiQuery({
+    name: 'paperSize',
+    required: false,
+    enum: ['A4', 'Letter'],
+    description: 'Paper size (default: A4)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF generated successfully',
+    content: {
+      'application/pdf': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Resume not found' })
+  async exportPDF(
+    @CurrentUser() user: any,
+    @Param('resumeId') resumeId: string,
+    @Query('paperSize') paperSize: 'A4' | 'Letter' = 'A4',
+    @Res({ passthrough: false }) res: Response,
+  ) {
+    // Get resume data with all nested relations
+    const resume = await this.resumeService.findByIdAndUserId(resumeId, user.id);
+
+    // Generate HTML template
+    const htmlContent = this.resumeTemplateService.generateHTML({
+      resume,
+      paperSize,
+    });
+
+    // Generate PDF from HTML
+    const pdfBuffer = await this.pdfGeneratorService.generatePDF(htmlContent, {
+      format: paperSize,
+      printBackground: true,
+    });
+
+    // Set response headers
+    const fileName = `${resume.name.replace(/\s+/g, '_')}_Resume.pdf`;
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    // Send PDF
+    res.end(pdfBuffer);
   }
 }

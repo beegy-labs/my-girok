@@ -32,8 +32,19 @@ RUN pnpm build
 # Production stage
 FROM node:22-alpine AS production
 
-# Install security updates
-RUN apk upgrade --no-cache
+# Install security updates and Puppeteer dependencies
+RUN apk upgrade --no-cache && \
+    apk add --no-cache \
+      chromium \
+      nss \
+      freetype \
+      harfbuzz \
+      ca-certificates \
+      ttf-freefont
+
+# Set Puppeteer to use installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 WORKDIR /app
 
