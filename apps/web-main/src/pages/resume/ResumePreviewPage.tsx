@@ -211,9 +211,12 @@ export default function ResumePreviewPage() {
 
           {/* Print Notice */}
           <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg transition-colors duration-200">
-            <p className="text-sm text-gray-700 dark:text-amber-200">
+            <p className="text-sm text-gray-700 dark:text-amber-200 mb-2">
               💡 <strong>Tip:</strong> For best results, use "Download PDF" for digital distribution.
-              Use "Print" for direct printing with optimized black & white settings.
+            </p>
+            <p className="text-sm text-gray-700 dark:text-amber-200">
+              🖨️ <strong>Print Settings:</strong> When printing, set Margins to <strong>None</strong>,
+              Headers and footers to <strong>None</strong>, and enable <strong>Background graphics</strong> for optimal output.
             </p>
           </div>
         </div>

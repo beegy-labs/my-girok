@@ -148,10 +148,10 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         /* Include all existing styles */
         ${stylesheets}
 
-        /* Page configuration */
+        /* Page configuration for Paged.js */
         @page {
           size: ${pageSize};
-          margin: 0; /* No margin - content padding is handled by .pagedjs_page_content */
+          margin: 0; /* Paged.js handles margins via .pagedjs_page_content padding */
         }
 
         /* Base styles for paged content */
@@ -169,15 +169,34 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         }
         ` : ''}
 
-        /* Ensure sections don't break */
-        .resume-section {
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
+        /* Print-specific styles */
+        @media print {
+          @page {
+            size: ${pageSize};
+            margin: 0;
+          }
 
-        .resume-item {
-          break-inside: avoid;
-          page-break-inside: avoid;
+          /* Ensure proper page breaks */
+          .resume-section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .resume-item {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          h1, h2, h3, h4, h5, h6 {
+            break-after: avoid;
+            page-break-after: avoid;
+          }
+
+          /* Print color accurately */
+          * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
         }
 
         /* Hide page number from original content */
