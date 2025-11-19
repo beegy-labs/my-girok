@@ -200,6 +200,12 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                   className={`w-32 h-40 object-cover rounded-lg border-2 border-gray-300 transition-all ${
                     isGrayscaleMode ? 'filter grayscale' : ''
                   }`}
+                  onError={(e) => {
+                    // Fallback to placeholder on error
+                    const target = e.currentTarget;
+                    target.onerror = null; // Prevent infinite loop
+                    target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160"%3E%3Crect width="128" height="160" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%239ca3af"%3ENo Image%3C/text%3E%3C/svg%3E';
+                  }}
                 />
               </div>
             )}
