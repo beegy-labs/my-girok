@@ -81,9 +81,10 @@ export default function ResumePreviewPage() {
     setExporting(true);
     try {
       const fileName = `${resume.name.replace(/\s+/g, '_')}_Resume_${paperSize}.pdf`;
-      await exportResumeToPDF('resume-content', {
+      await exportResumeToPDF({
         paperSize,
         fileName,
+        resumeId: resume.id,
       });
     } catch (error) {
       console.error('PDF export failed:', error);
