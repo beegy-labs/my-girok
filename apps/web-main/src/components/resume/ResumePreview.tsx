@@ -130,13 +130,38 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       // Clone the content to avoid React DOM conflicts
       const contentClone = contentRef.current.cloneNode(true) as HTMLElement;
 
+      // Create dynamic CSS for page size based on paperSize prop
+      const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
+      const dynamicCSS = `
+        @page {
+          size: ${pageSize};
+          margin: 2cm;
+        }
+
+        @page:first {
+          margin-top: 2cm;
+        }
+
+        /* Ensure content fits within page */
+        body {
+          font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        /* Apply grayscale filter if enabled */
+        ${isGrayscaleMode ? `
+        img, .profile-image {
+          filter: grayscale(100%);
+        }
+        ` : ''}
+      `;
+
       // Preview with Paged.js
       paged.preview(
         contentClone.innerHTML,
-        [],
+        [dynamicCSS],
         pagedContainerRef.current
       ).then((flow: any) => {
-        console.log('Paged.js rendered', flow.total, 'pages');
+        console.log('Paged.js rendered', flow.total, 'pages with', pageSize, 'size');
       }).catch((error: any) => {
         console.error('Paged.js error:', error);
       });
