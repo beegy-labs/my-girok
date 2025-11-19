@@ -25,7 +25,7 @@
 /* A4 size: 210mm × 297mm */
 .resume-page-a4 {
   width: 21cm;
-  min-height: 29.7cm; /* Minimum height to match A4 */
+  min-height: 29.7cm;
   padding: 1.5cm;
   margin: 0 auto;
   background: white;
@@ -37,6 +37,16 @@
   .resume-page-a4 {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
+    /* Show page boundaries with repeating background */
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        white 0,
+        white 29.7cm,
+        #e5e7eb 29.7cm,
+        #e5e7eb calc(29.7cm + 2rem),
+        white calc(29.7cm + 2rem)
+      );
   }
 
   .resume-page-a4:last-child {
@@ -65,7 +75,7 @@
 /* Letter size: 8.5" × 11" = 21.59cm × 27.94cm */
 .resume-page-letter {
   width: 21.59cm;
-  min-height: 27.94cm; /* Minimum height to match Letter */
+  min-height: 27.94cm;
   padding: 1.5cm;
   margin: 0 auto;
   background: white;
@@ -77,6 +87,16 @@
   .resume-page-letter {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
+    /* Show page boundaries with repeating background */
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        white 0,
+        white 27.94cm,
+        #e5e7eb 27.94cm,
+        #e5e7eb calc(27.94cm + 2rem),
+        white calc(27.94cm + 2rem)
+      );
   }
 
   .resume-page-letter:last-child {
