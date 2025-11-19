@@ -12,8 +12,9 @@ Resume management system for creating, editing, and sharing professional resumes
 
 ```
 Resume
-├── Basic Info (name, email, phone, etc.)
-├── Korean Fields (military service, cover letter, career goals)
+├── Basic Info (name, email, phone, profileImage, etc.)
+├── Korean Fields (military service, cover letter, application reason)
+├── Key Achievements (keyAchievements: string[]) - Career highlights
 └── Dynamic Sections (reorderable)
     ├── Skills (Category → Items → Hierarchical Descriptions)
     ├── Experience (Company → Projects → Achievements)
@@ -147,6 +148,38 @@ for (const skill of skills) {
 5. Update UI: Add to ExperienceSection component with library theme
 6. Update preview: Add to ResumePreview ExperienceSection function
 
+### Profile Photo Handling
+
+**Display in Form** (ResumeForm.tsx):
+```jsx
+{formData.profileImage && (
+  <div className="mb-3 flex items-center gap-3">
+    <img
+      src={formData.profileImage}
+      alt="Profile"
+      className="w-24 h-24 object-cover rounded-full border-2 border-amber-300"
+      onError={(e) => {
+        // Fallback to placeholder SVG on error
+        (e.target as HTMLImageElement).src = 'data:image/svg+xml,...';
+      }}
+    />
+    <button
+      type="button"
+      onClick={() => setFormData({ ...formData, profileImage: '' })}
+      className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+    >
+      Remove Photo
+    </button>
+  </div>
+)}
+```
+
+**Key Points**:
+- Image preview: 96x96px (`w-24 h-24`) circular with amber border
+- Error handling: Fallback to SVG placeholder if URL fails to load
+- Remove button: Clears profileImage field (destructive action, red color)
+- Input field: Text input for image URL (file upload not implemented)
+
 ### Library Theme Styling
 
 **Project Cards**:
@@ -235,6 +268,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 3. **Responsibilities** (`responsibilities`): 담당업무
 4. **Cover Letter** (`coverLetter`): 자기소개서
 5. **Application Reason** (`applicationReason`): 지원 동기
+6. **Key Achievements** (`keyAchievements: string[]`): 주요 성과 - Career highlights displayed as bullet list
 
 ## Resume Preview Design
 
@@ -253,6 +287,52 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
   - Mobile (~375px): Auto-scaled to ~43%
   - Browser zoom remains functional
 - **Performance**: Debounced resize (150ms), RAF, GPU acceleration, smart updates
+
+## Print & PDF Output
+
+**Paper Size**: Dynamic @page injection based on paperSize prop
+
+```typescript
+// ResumePreview.tsx - Dynamic @page style injection
+useEffect(() => {
+  const styleId = 'resume-page-size-style';
+  let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = styleId;
+    document.head.appendChild(styleElement);
+  }
+
+  const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
+  styleElement.textContent = `
+    @media print {
+      @page {
+        size: ${pageSize};
+        margin: 0;
+      }
+    }
+  `;
+
+  return () => {
+    const element = document.getElementById(styleId);
+    if (element) element.remove();
+  };
+}, [paperSize]);
+```
+
+**Print Styles**:
+- `print.css`: Global print styles (black & white optimizations, page breaks)
+- `resume-print.css`: Resume-specific page layouts (A4/Letter dimensions)
+- **Background**: White (`background: white`) for cost-effective printing
+- **Colors**: High contrast grayscale for readability
+- **Page Breaks**: Controlled with `page-break-inside: avoid` for sections/items
+
+**CRITICAL**:
+- ❌ Don't use hardcoded `@page { size: A4 }` in CSS files
+- ✅ Use dynamic style injection in component based on props
+- ❌ Don't use colored backgrounds (gray, etc.) for print
+- ✅ Use white background for cost-effective printing
 
 ## Performance Optimization (CRITICAL)
 
@@ -328,6 +408,39 @@ const handleSubmit = async (data) => {
 **Max Depth**: 4 levels (achievements, skill descriptions)
 
 ## Recent Updates
+
+**2025-11-18 (Part 4)**: PDF/Print output and profile photo preview improvements (#102)
+- Fixed PDF/print background color: Changed from gray (#F9FAFB) to white for cost-effective printing
+- Implemented dynamic @page size injection based on paperSize prop (A4 vs Letter)
+- Added useEffect hook in ResumePreview to dynamically inject `@page { size: ... }` style
+- Removed hardcoded @page size from print.css to support dynamic paper size switching
+- Added profile photo preview functionality in ResumeForm
+- Preview shows 96x96px circular thumbnail with error handling (fallback SVG on load failure)
+- Added "Remove Photo" button for clearing profile image
+- Files changed: `resume-print.css`, `print.css`, `ResumePreview.tsx`, `ResumeForm.tsx`
+
+**2025-11-18 (Part 3)**: Fix missing experience data in shared/public resume pages (#101)
+- Fixed shared (`/shared/:token`) and public (`/:username`) resume pages missing all experience data
+- Added nested includes for experiences → projects → achievements (4-level hierarchy) in `findById()` and `getPublicResumeByUsername()`
+- Added `sections` include to public resume endpoint for proper section visibility
+- Shared and public pages now display complete experience data with projects and hierarchical achievements
+- Files changed: `resume.service.ts`
+
+**2025-11-18 (Part 2)**: Key Achievements UI improvements (#100)
+- Fixed text wrapping issues when Key Achievements contain long multi-line text
+- Changed bullet list from `list-inside` to `list-outside` with `pl-5` padding
+- Changed input type from single-line `<input>` to multi-line `<textarea>` with `rows={3}` and `resize-y`
+- Better visual alignment with Application Reason section
+- Improved placeholder text with example achievement
+- Files changed: `ResumePreview.tsx`, `ResumeForm.tsx`
+
+**2025-11-18 (Part 1)**: Key Achievements storage and display (#98, #99)
+- Added Key Achievements (주요 성과) field to resume schema and backend service
+- Added `keyAchievements: string[]` to Resume model for storing career highlights
+- Updated `create()` and `update()` methods in resume.service.ts to handle keyAchievements
+- Fixed ESLint errors in sanitizeSalaryInfo: Renamed unused destructured variables with underscore prefix (`_salary`, `_salaryUnit`, `_showSalary`)
+- Key Achievements now save to database and display in preview correctly
+- Files changed: `resume.service.ts`
 
 **2025-11-15**: React rendering optimization (#82)
 - Memoized all event handlers in MyResumePage, ResumeEditPage
