@@ -914,9 +914,22 @@ Typical section order and emphasis:
 ##### Paper Size Support
 - **A4**: 210mm × 297mm (default for Korea, Europe)
 - **Letter**: 215.9mm × 279.4mm (USA)
-- **Margins**: 2cm all sides (same for both continuous and paginated views)
+- **Margins**: 0.5cm all sides (minimal padding for maximum content space)
+  - Screen view (continuous): 0.5cm padding on all sides
+  - Screen view (paginated): 0.5cm padding via Paged.js
+  - Print view: 0cm @page margin + 0.5cm content padding = 0.5cm total
+  - Consistent across all view modes
+- **Minimum Safe Margin**: 0.5cm for printer compatibility
 - **Indicator**: Shows current paper size in preview (hidden in print)
-- **Overflow Prevention**: Content automatically wraps and clips to prevent page boundary overflow
+- **Print Strategy**: Uses continuous view with CSS @page for natural page breaks
+  - Paged.js container hidden during print
+  - Continuous view shown with overflow: visible
+  - Natural page breaks via CSS page-break-inside: avoid
+- **PDF Export**: Uses paginated view (Paged.js) for multi-page PDF with proper page boundaries
+- **Overflow Handling**:
+  - Print: overflow: visible for natural content flow
+  - Screen: overflow: hidden to prevent visual issues
+  - Word-break and overflow-wrap applied to all text elements
 
 ##### Print Styling & Preview Design
 

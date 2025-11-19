@@ -16,21 +16,98 @@ const PAPER_DIMENSIONS = {
 /**
  * Export resume HTML element to PDF
  * Optimized for print with high quality rendering
+ * IMPORTANT: Resume export prioritizes paginated view (Paged.js) for print-optimized output
  */
 export async function exportResumeToPDF(
   elementId: string,
   options: PDFExportOptions
 ): Promise<void> {
   const { paperSize, fileName = 'resume.pdf' } = options;
-  const element = document.getElementById(elementId);
 
+  // PRIORITY: Use paginated view (Paged.js) for PDF export as it's optimized for print
+  const pagedContainer = document.querySelector('.pagedjs-container') as HTMLElement;
+  if (pagedContainer && window.getComputedStyle(pagedContainer).display !== 'none') {
+    // Export paginated view (each .pagedjs_page is a separate page)
+    await exportPagedJSToPDF(pagedContainer, paperSize, fileName);
+    return;
+  }
+
+  // Fallback: Use continuous view if paginated view is not available
+  const element = document.getElementById(elementId);
   if (!element) {
     throw new Error(`Element with id "${elementId}" not found`);
   }
 
+  await exportElementToPDF(element, paperSize, PAPER_DIMENSIONS[paperSize].height, fileName);
+}
+
+/**
+ * Export Paged.js container to PDF (multi-page support)
+ */
+async function exportPagedJSToPDF(
+  container: HTMLElement,
+  paperSize: PaperSize,
+  fileName: string
+): Promise<void> {
+  const { width: paperWidth, height: paperHeight } = PAPER_DIMENSIONS[paperSize];
+
+  // Get all pages from Paged.js
+  const pages = container.querySelectorAll('.pagedjs_page');
+  if (pages.length === 0) {
+    throw new Error('No pages found in Paged.js container');
+  }
+
+  // Create PDF
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: paperSize === 'A4' ? 'a4' : 'letter',
+  });
+
+  // Capture each page
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i] as HTMLElement;
+
+    // Capture page as canvas
+    const canvas = await html2canvas(page, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      windowWidth: page.scrollWidth,
+      windowHeight: page.scrollHeight,
+    });
+
+    // Add page to PDF
+    if (i > 0) {
+      pdf.addPage();
+    }
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const imgWidth = paperWidth;
+    const imgHeight = (canvas.height * paperWidth) / canvas.width;
+
+    // Center image on page if it's smaller than page height
+    const yOffset = imgHeight < paperHeight ? (paperHeight - imgHeight) / 2 : 0;
+    pdf.addImage(imgData, 'JPEG', 0, yOffset, imgWidth, Math.min(imgHeight, paperHeight));
+  }
+
+  // Save PDF
+  pdf.save(fileName);
+}
+
+/**
+ * Internal function to export an element to PDF
+ */
+async function exportElementToPDF(
+  element: HTMLElement,
+  paperSize: PaperSize,
+  paperHeight: number,
+  fileName: string
+): Promise<void> {
   try {
     // Get paper dimensions
-    const { width: paperWidth, height: paperHeight } = PAPER_DIMENSIONS[paperSize];
+    const { width: paperWidth } = PAPER_DIMENSIONS[paperSize];
 
     // Capture element as canvas with high quality
     // Using scale 2 for better quality (adjust if needed for performance)
