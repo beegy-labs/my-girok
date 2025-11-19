@@ -13,20 +13,21 @@
   background: white !important;
 }
 
-/* Paged.js @page rules for page size and margins */
-@page {
-  size: A4;
-  margin: 2cm; /* Top, right, bottom, left margins */
-}
-
-@page:first {
-  margin-top: 2cm;
-}
-
 /* Page area - the actual content area */
 .pagedjs_page_content {
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
+}
+
+/* Paged.js area - where content is placed */
+.pagedjs_pagebox {
+  box-sizing: border-box;
+}
+
+/* Paged.js margin boxes */
+.pagedjs_margin {
+  box-sizing: border-box;
 }
 
 /* Base page styles - Use block to avoid flex interfering with page breaks */
