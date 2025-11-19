@@ -290,13 +290,105 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Print & PDF Output
 
-**Paper Size**: Dynamic @page injection based on paperSize prop
+**Current Strategy (2025-11-19)**:
+- **Print**: Uses Paged.js paginated view (📄 페이지 보기)
+- **PDF Export**: Uses Paged.js with multi-page support
+- **Margins**: 0.5cm on all sides (minimal padding for maximum content)
+- **@page margin**: 0 (Paged.js handles all spacing)
+
+**Required Print Settings**:
+- Margins: **None**
+- Headers and footers: **None**
+- Background graphics: **On**
+
+**Paper Size**: Dynamic based on paperSize prop (A4 or Letter)
+
+### Paged.js Integration
 
 ```typescript
-// ResumePreview.tsx - Dynamic @page style injection
+// ResumePreview.tsx - Paged.js integration with CSS injection
 useEffect(() => {
-  const styleId = 'resume-page-size-style';
-  let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+  if (viewMode === 'paginated' && contentRef.current && pagedContainerRef.current) {
+    const paged = new Previewer();
+    const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
+
+    const dynamicCSS = `
+      @page {
+        size: ${pageSize};
+        margin: 0; /* Paged.js handles margins */
+      }
+
+      @media print {
+        .resume-section {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+        * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    `;
+
+    paged.preview(contentClone.innerHTML, [dynamicCSS], pagedContainerRef.current);
+  }
+}, [viewMode, resume, paperSize]);
+```
+
+### Print CSS Configuration
+
+```css
+@media print {
+  /* Hide continuous view, show Paged.js */
+  #resume-content { display: none !important; }
+  .pagedjs-container { display: block !important; }
+
+  /* Page constraints */
+  .pagedjs_page,
+  .pagedjs_page_content,
+  .pagedjs_pagebox {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* All content inside pages */
+  .pagedjs_page_content * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Text overflow prevention */
+  a, span, p, div, li {
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    hyphens: auto !important;
+  }
+
+  /* Media constraints */
+  img, video, svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+```
+
+### PDF Export with Paged.js
+
+```typescript
+// pdf.ts - Multi-page PDF export
+export async function exportResumeToPDF(
+  elementId: string,
+  options: PDFExportOptions
+): Promise<void> {
+  // PRIORITY: Use Paged.js for PDF export
+  const pagedContainer = document.querySelector('.pagedjs-container');
+  if (pagedContainer && isVisible) {
+    await exportPagedJSToPDF(pagedContainer, paperSize, fileName);
+    return;
+  }
+  // Fallback: continuous view
+}
 
   if (!styleElement) {
     styleElement = document.createElement('style');
@@ -409,6 +501,43 @@ const handleSubmit = async (data) => {
 
 ## Recent Updates
 
+**2025-11-19 (Part 3)**: Print content overflow and clipping fix (#116)
+- Fixed print button content clipping and overflow issues
+- Added max-width: 100% constraints to all Paged.js elements (.pagedjs_page, .pagedjs_page_content, .pagedjs_pagebox)
+- Applied box-sizing: border-box to prevent size overflow from padding/borders
+- Enhanced text overflow handling: word-break, overflow-wrap: anywhere, hyphens: auto
+- Added media element constraints: img/video/svg max-width: 100%, height: auto
+- Added max-width to resume sections and items
+- Result: Content no longer overflows page boundaries, long URLs wrap properly, images scale to fit
+
+**2025-11-19 (Part 2)**: Paged.js print integration and optimization (#115)
+- Changed print strategy from continuous view to Paged.js paginated view
+- Print now uses page view (📄 페이지 보기) instead of continuous view
+- Added print settings guidance in ResumePreviewPage: Margins=None, Headers/footers=None, Background graphics=On
+- Optimized CSS @page rules: margin: 0 (Paged.js handles all spacing)
+- Added @media print rules in Paged.js CSS for proper page breaks
+- Added print-color-adjust: exact for accurate color rendering
+- Based on official Paged.js documentation best practices
+- Files: `resume-print.css`, `ResumePreview.tsx`, `ResumePreviewPage.tsx`, `RESUME.md`
+
+**2025-11-19 (Part 1)**: Resume margin optimization and print/PDF strategy (#114)
+- Optimized margins from 2cm to 0.5cm for maximum content space
+- PDF export: Uses Paged.js for multi-page PDF with proper page boundaries
+- Print view: Uses Paged.js with @page margin: 0.5cm
+- Screen view: 0.5cm padding on both continuous and paginated views
+- Minimum safe margin: 0.5cm for printer compatibility
+- Updated policy documentation with new print strategy
+- Files: `resume-print.css`, `ResumePreview.tsx`, `pdf.ts`, `RESUME.md`
+
+**2025-11-19**: CI workflow optimization for faster test execution (#114 CI commit)
+- Split single test job into 3 parallel jobs (lint, type-check, test)
+- Added node_modules caching for 80% faster dependency installation
+- Used --prefer-offline flag for pnpm install
+- Replaced E2E tests with faster unit tests
+- Reduced timeout from 10min to 5min per job
+- Total time improvement: ~10min → ~3-5min (2-3x faster)
+- Files: `.github/workflows/ci-web-main.yml`
+
 **2025-01-19 (Part 2)**: Shared resume preview container component (#107)
 - Extracted duplicate preview container code into `ResumePreviewContainer` component
 - Consolidates identical wrapper logic across 4 pages: ResumeEditPage, ResumePreviewPage, SharedResumePage, PublicResumePage
@@ -418,7 +547,7 @@ const handleSubmit = async (data) => {
 - Files: `ResumePreviewContainer.tsx` (new), `ResumeEditPage.tsx`, `ResumePreviewPage.tsx`, `SharedResumePage.tsx`, `PublicResumePage.tsx`
 
 **2025-01-19 (Part 1)**: A4 print margins and page boundaries fix (#106)
-- Fixed content clipping at page edges by increasing print margins from 1.2-1.5cm to **2cm** on all sides
+- Fixed content clipping at page edges by increasing print margins from 1.2-1.5cm to **2cm** on all sides (later optimized to 0.5cm in #114)
 - Updated `@page { size: A4; margin: 0; }` in print.css for proper page setup
 - Updated paginated view to show accurate page boundaries accounting for padding
 - A4 content area: 25.7cm (29.7cm page - 4cm padding)
