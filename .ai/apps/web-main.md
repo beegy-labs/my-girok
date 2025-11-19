@@ -30,7 +30,8 @@ apps/web-main/src/
 │   ├── PrivateRoute.tsx
 │   └── resume/
 │       ├── ResumeForm.tsx
-│       └── ResumePreview.tsx
+│       ├── ResumePreview.tsx
+│       └── ResumePreviewContainer.tsx  # Shared preview wrapper
 ├── api/                # API clients
 │   ├── auth.ts
 │   └── resume.ts
@@ -278,6 +279,70 @@ pnpm preview
 ```
 
 **Deploy**: Docker container to Kubernetes
+
+## Resume Print & Preview
+
+### Print Margins (Updated 2025-01-19)
+**Problem**: Content was being clipped at page edges due to insufficient margins.
+
+**Solution**: Updated print margins from 1.2-1.5cm to **2cm** on all sides (top, bottom, left, right).
+
+**Files Modified**:
+- `apps/web-main/src/print.css` - Set `@page { size: A4; margin: 0; }`
+- `apps/web-main/src/styles/resume-print.css` - Increased padding to 2cm
+
+**Page Boundaries**:
+- A4: Content area is 25.7cm (29.7cm - 4cm padding)
+- Letter: Content area is 23.94cm (27.94cm - 4cm padding)
+- Visual page boundaries shown with gray separator lines in paginated view
+
+### ResumePreviewContainer Component (Added 2025-01-19)
+**Purpose**: Shared wrapper component for all resume preview displays.
+
+**Location**: `apps/web-main/src/components/resume/ResumePreviewContainer.tsx`
+
+**Features**:
+- Customizable scale factor (for live preview)
+- Optional maxHeight with overflow scrolling
+- Responsive padding (mobile vs desktop)
+- Horizontal scroll support (for mobile)
+- Full dark mode support
+- Flexible className overrides
+
+**Usage Examples**:
+
+```typescript
+// Live Preview (75% scale)
+<ResumePreviewContainer
+  resume={previewData}
+  scale={0.75}
+  maxHeight="calc(100vh - 200px)"
+  containerClassName="border-2 border-gray-300"
+/>
+
+// Full Preview (responsive)
+<ResumePreviewContainer
+  resume={resume}
+  paperSize={paperSize}
+  responsivePadding={true}
+  enableHorizontalScroll={true}
+/>
+
+// Simple Preview
+<ResumePreviewContainer resume={resume} />
+```
+
+**Used In**:
+- `ResumeEditPage` - Live preview with 0.75 scale
+- `ResumePreviewPage` - Full preview with responsive padding
+- `SharedResumePage` - Public shared resume view
+- `PublicResumePage` - Public profile resume view
+
+**Benefits**:
+- Eliminates code duplication across 4 pages
+- Ensures consistent preview styling
+- Single source of truth for preview wrapper logic
+- Easier maintenance and updates
 
 ## References
 
