@@ -162,8 +162,9 @@
     margin-bottom: 1.5rem !important;
   }
 
-  /* Hide browser header/footer (site name, page URL, etc.) */
+  /* Page setup with proper A4 size and no browser margins */
   @page {
+    size: A4;
     margin: 0;
   }
 

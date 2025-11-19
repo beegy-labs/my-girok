@@ -180,11 +180,12 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         }}
       >
         <div
-          className={viewMode === 'paginated' ? pageClassName : 'bg-white p-12 shadow-lg'}
+          className={viewMode === 'paginated' ? pageClassName : 'bg-white shadow-lg'}
           style={viewMode === 'continuous' ? {
             width: paperDimensions.width,
             minWidth: paperDimensions.width,
             margin: '0 auto',
+            padding: '2cm', /* Match paginated view padding for consistency */
             boxSizing: 'border-box',
           } : undefined}
         >
