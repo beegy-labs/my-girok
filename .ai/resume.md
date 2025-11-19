@@ -409,6 +409,25 @@ const handleSubmit = async (data) => {
 
 ## Recent Updates
 
+**2025-01-19 (Part 2)**: Shared resume preview container component (#107)
+- Extracted duplicate preview container code into `ResumePreviewContainer` component
+- Consolidates identical wrapper logic across 4 pages: ResumeEditPage, ResumePreviewPage, SharedResumePage, PublicResumePage
+- Features: customizable scale, maxHeight, responsive padding, horizontal scroll, dark mode support
+- Usage: `<ResumePreviewContainer resume={resume} scale={0.75} />` for live preview
+- Benefits: Single source of truth, eliminates 27 lines of duplicate code, easier maintenance
+- Files: `ResumePreviewContainer.tsx` (new), `ResumeEditPage.tsx`, `ResumePreviewPage.tsx`, `SharedResumePage.tsx`, `PublicResumePage.tsx`
+
+**2025-01-19 (Part 1)**: A4 print margins and page boundaries fix (#106)
+- Fixed content clipping at page edges by increasing print margins from 1.2-1.5cm to **2cm** on all sides
+- Updated `@page { size: A4; margin: 0; }` in print.css for proper page setup
+- Updated paginated view to show accurate page boundaries accounting for padding
+- A4 content area: 25.7cm (29.7cm page - 4cm padding)
+- Letter content area: 23.94cm (27.94cm page - 4cm padding)
+- Visual page boundaries shown with gray separator lines in screen view
+- Changed from fixed `height` to `min-height` for natural content flow
+- Removed forced `page-break-after` rules for browser-native page breaks
+- Files: `print.css`, `resume-print.css`, `ResumePreview.tsx`
+
 **2025-11-18 (Part 4)**: PDF/Print output and profile photo preview improvements (#102)
 - Fixed PDF/print background color: Changed from gray (#F9FAFB) to white for cost-effective printing
 - Implemented dynamic @page size injection based on paperSize prop (A4 vs Letter)
