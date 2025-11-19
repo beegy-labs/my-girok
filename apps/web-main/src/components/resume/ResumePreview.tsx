@@ -30,8 +30,6 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     ? { width: '21cm', height: '29.7cm' }
     : { width: '21.59cm', height: '27.94cm' };
 
-  const pageClassName = paperSize === 'A4' ? 'resume-page-a4' : 'resume-page-letter';
-
   // Optimized scale calculation with RAF and debouncing
   const calculateScale = useCallback(() => {
     // Cancel any pending RAF
@@ -130,29 +128,62 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       // Clone the content to avoid React DOM conflicts
       const contentClone = contentRef.current.cloneNode(true) as HTMLElement;
 
+      // Extract all stylesheets from the document
+      const stylesheets = Array.from(document.styleSheets)
+        .map(sheet => {
+          try {
+            return Array.from(sheet.cssRules)
+              .map(rule => rule.cssText)
+              .join('\n');
+          } catch (e) {
+            // Cross-origin stylesheets cannot be accessed
+            return '';
+          }
+        })
+        .join('\n');
+
       // Create dynamic CSS for page size based on paperSize prop
       const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
       const dynamicCSS = `
+        /* Include all existing styles */
+        ${stylesheets}
+
+        /* Page configuration */
         @page {
           size: ${pageSize};
-          margin: 2cm;
+          margin: 0; /* No margin - content padding is handled by .pagedjs_page_content */
         }
 
-        @page:first {
-          margin-top: 2cm;
-        }
-
-        /* Ensure content fits within page */
-        body {
-          font-family: system-ui, -apple-system, sans-serif;
+        /* Base styles for paged content */
+        html, body {
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          font-size: 14px;
+          line-height: 1.5;
+          color: #1f2937;
         }
 
         /* Apply grayscale filter if enabled */
         ${isGrayscaleMode ? `
-        img, .profile-image {
-          filter: grayscale(100%);
+        img {
+          filter: grayscale(100%) !important;
         }
         ` : ''}
+
+        /* Ensure sections don't break */
+        .resume-section {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .resume-item {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        /* Hide page number from original content */
+        .resume-page-number {
+          display: none !important;
+        }
       `;
 
       // Preview with Paged.js
@@ -235,14 +266,19 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         }}
       >
         <div
-          className={viewMode === 'paginated' ? pageClassName : 'bg-white shadow-lg'}
+          className={viewMode === 'paginated' ? '' : 'bg-white shadow-lg'}
           style={viewMode === 'continuous' ? {
             width: paperDimensions.width,
             minWidth: paperDimensions.width,
             margin: '0 auto',
-            padding: '2cm', /* Match paginated view padding for consistency */
+            padding: '2cm',
             boxSizing: 'border-box',
-          } : undefined}
+          } : {
+            /* For paginated view (Paged.js source): remove padding since @page margin handles it */
+            padding: 0,
+            margin: 0,
+            boxSizing: 'border-box',
+          }}
         >
         {/* Header - Grayscale design for print compatibility */}
         <div className="border-b-2 border-gray-800 pb-6 mb-6">
