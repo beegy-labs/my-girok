@@ -1,10 +1,8 @@
 /* Resume Print Styles - Multi-page Layout (A4 and Letter) */
 
-/* Base page styles */
+/* Base page styles - Use block to avoid flex interfering with page breaks */
 .resume-page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  display: block;
   margin: 0 auto;
 }
 
@@ -18,7 +16,7 @@
   }
 
   .resume-page-container {
-    gap: 0;
+    display: block;
   }
 }
 
@@ -33,56 +31,83 @@
   box-sizing: border-box;
 }
 
+/* Letter size: 215.9mm × 279.4mm */
+.resume-page-letter {
+  width: 21.59cm;
+  min-height: 27.94cm;
+  padding: 2cm;
+  margin: 0 auto;
+  background: white;
+  position: relative;
+  box-sizing: border-box;
+}
+
 @media screen {
   .resume-page-container {
     background-color: #f3f4f6; /* gray-100 */
     padding: 2rem 0;
-    gap: 0;
   }
 
   .resume-page-a4,
   .resume-page-letter {
-    margin: 0 auto;
+    margin: 0 auto 2rem auto; /* Add bottom margin to simulate page gap */
     background-color: white;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
   }
 
+  /* Visual page break indicators for A4 */
   .resume-page-a4 {
     background-image: repeating-linear-gradient(
       to bottom,
       transparent,
-      transparent calc(29.7cm - 1px),
-      #d1d5db calc(29.7cm - 1px), /* gray-300 */
-      #d1d5db 29.7cm
+      transparent calc(29.7cm - 2px),
+      #ef4444 calc(29.7cm - 2px), /* red-500 for clear visibility */
+      #ef4444 calc(29.7cm - 1px),
+      #f3f4f6 calc(29.7cm - 1px), /* gray-100 for page gap */
+      #f3f4f6 calc(29.7cm + 2rem - 1px), /* 2rem gap between pages */
+      transparent calc(29.7cm + 2rem)
     );
-    background-size: 100% 29.7cm;
+    background-size: 100% calc(29.7cm + 2rem);
   }
 
+  /* Visual page break indicators for Letter */
   .resume-page-letter {
     background-image: repeating-linear-gradient(
       to bottom,
       transparent,
-      transparent calc(27.94cm - 1px),
-      #d1d5db calc(27.94cm - 1px), /* gray-300 */
-      #d1d5db 27.94cm
+      transparent calc(27.94cm - 2px),
+      #ef4444 calc(27.94cm - 2px), /* red-500 for clear visibility */
+      #ef4444 calc(27.94cm - 1px),
+      #f3f4f6 calc(27.94cm - 1px), /* gray-100 for page gap */
+      #f3f4f6 calc(27.94cm + 2rem - 1px), /* 2rem gap between pages */
+      transparent calc(27.94cm + 2rem)
     );
-    background-size: 100% 27.94cm;
+    background-size: 100% calc(27.94cm + 2rem);
   }
 }
 
 @media print {
+  /* Reset all page styles for print */
+  .resume-page-a4,
   .resume-page-letter {
-    width: 21.59cm;
-    min-height: 27.94cm; /* Changed from fixed height to min-height to allow content flow */
     box-shadow: none;
     margin: 0;
-    padding: 2cm; /* Increased to 2cm for proper print margins on all sides */
-    overflow: visible; /* Show all content when printing */
-    page-break-inside: auto; /* Allow natural page breaks */
+    padding: 2cm;
+    overflow: visible;
+    background-image: none !important; /* Remove visual indicators */
+    page-break-inside: auto;
     break-inside: auto;
   }
 
-  /* Remove page-break-after since we're using single container with natural breaks */
+  .resume-page-a4 {
+    width: 21cm;
+    min-height: 29.7cm;
+  }
+
+  .resume-page-letter {
+    width: 21.59cm;
+    min-height: 27.94cm;
+  }
 }
 
 /* Page number indicator (screen only) */
@@ -107,11 +132,13 @@
   .resume-section {
     page-break-inside: avoid;
     break-inside: avoid;
+    margin-bottom: 1.5rem;
   }
 
   .resume-item {
     page-break-inside: avoid;
     break-inside: avoid;
+    margin-bottom: 1rem;
   }
 
   /* Prevent orphans and widows */
@@ -124,6 +151,36 @@
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
     break-after: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure profile image doesn't break */
+  img {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Override flex layouts that interfere with page breaks */
+  /* Keep essential flex for header and small components, but override for large containers */
+  .resume-section .flex,
+  .resume-item .flex {
+    display: block !important;
+  }
+
+  /* Specific overrides for resume header - keep flex for better layout */
+  .border-b-2.border-gray-800 .flex {
+    display: flex !important;
+  }
+
+  /* Ensure list items stay together when possible */
+  li {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Better handling of tables and structured content */
+  table, tr, td, th {
     page-break-inside: avoid;
     break-inside: avoid;
   }
