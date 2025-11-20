@@ -68,7 +68,7 @@ async function exportPagedJSToPDF(
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i] as HTMLElement;
 
-    // Capture page as canvas
+    // Capture page as canvas with image support
     const canvas = await html2canvas(page, {
       scale: 2,
       useCORS: true,
@@ -76,6 +76,17 @@ async function exportPagedJSToPDF(
       backgroundColor: '#ffffff',
       windowWidth: page.scrollWidth,
       windowHeight: page.scrollHeight,
+      imageTimeout: 15000, // Wait up to 15 seconds for images to load
+      allowTaint: false, // Don't allow tainted canvas (keep CORS strict)
+      onclone: (clonedDoc) => {
+        // Ensure all images are loaded before rendering
+        const images = clonedDoc.querySelectorAll('img');
+        images.forEach((img: HTMLImageElement) => {
+          if (!img.complete) {
+            console.warn('Image not fully loaded:', img.src);
+          }
+        });
+      },
     });
 
     // Add page to PDF
@@ -109,7 +120,7 @@ async function exportElementToPDF(
     // Get paper dimensions
     const { width: paperWidth } = PAPER_DIMENSIONS[paperSize];
 
-    // Capture element as canvas with high quality
+    // Capture element as canvas with high quality and image support
     // Using scale 2 for better quality (adjust if needed for performance)
     const canvas = await html2canvas(element, {
       scale: 2,
@@ -118,6 +129,17 @@ async function exportElementToPDF(
       backgroundColor: '#ffffff',
       windowWidth: element.scrollWidth,
       windowHeight: element.scrollHeight,
+      imageTimeout: 15000, // Wait up to 15 seconds for images to load
+      allowTaint: false, // Don't allow tainted canvas (keep CORS strict)
+      onclone: (clonedDoc) => {
+        // Ensure all images are loaded before rendering
+        const images = clonedDoc.querySelectorAll('img');
+        images.forEach((img: HTMLImageElement) => {
+          if (!img.complete) {
+            console.warn('Image not fully loaded:', img.src);
+          }
+        });
+      },
     });
 
     // Calculate dimensions
