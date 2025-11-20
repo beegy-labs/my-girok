@@ -81,19 +81,8 @@ export class StorageService {
    */
   private async configureCORS(): Promise<void> {
     try {
-      const corsConfig = {
-        CORSRules: [
-          {
-            AllowedOrigins: ['*'], // Allow all origins for development; restrict in production
-            AllowedMethods: ['GET', 'HEAD'],
-            AllowedHeaders: ['*'],
-            ExposeHeaders: ['ETag', 'Content-Length'],
-            MaxAgeSeconds: 3600,
-          },
-        ],
-      };
-
-      // MinIO uses AWS S3 API, so we can use XML-based CORS configuration
+      // CORS configuration XML for reference
+      // In production, configure CORS via MinIO admin console or kubectl
       const corsXML = `<?xml version="1.0" encoding="UTF-8"?>
 <CORSConfiguration>
   <CORSRule>
@@ -107,26 +96,26 @@ export class StorageService {
   </CORSRule>
 </CORSConfiguration>`;
 
-      // MinIO client doesn't have setBucketCors, so we need to use the underlying request
-      // For now, we'll use the MinIO admin API via HTTP request
-      await this.setCorsViaHTTP(corsXML);
+      // Log CORS setup instructions
+      await this.logCorsSetupInstructions(corsXML);
 
-      this.logger.log(`CORS configured for bucket ${this.bucketName}`);
+      this.logger.log(`CORS configuration instructions logged for bucket ${this.bucketName}`);
     } catch (error: any) {
-      this.logger.warn(`Failed to configure CORS (non-critical): ${error.message}`);
+      this.logger.warn(`Failed to log CORS configuration (non-critical): ${error.message}`);
       // Don't throw - CORS is important but not critical for basic functionality
     }
   }
 
   /**
-   * Set CORS via HTTP request to MinIO admin API
+   * Log CORS setup instructions for MinIO admin
    */
-  private async setCorsViaHTTP(corsXML: string): Promise<void> {
+  private async logCorsSetupInstructions(_corsXML: string): Promise<void> {
     // This is a simplified implementation
     // In production, you might want to use MinIO admin client or configure CORS via kubectl/helm
     this.logger.log('CORS configuration should be set via MinIO admin console or kubectl for production');
     this.logger.log('For local development, use: mc anonymous set-json public myminio/my-girok-resumes');
     this.logger.log('And configure CORS in MinIO console under Buckets > my-girok-resumes > Access Rules');
+    this.logger.log('See scripts/configure-minio-cors.sh for automated CORS setup');
   }
 
   /**
