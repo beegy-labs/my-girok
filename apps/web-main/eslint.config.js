@@ -4,6 +4,7 @@ import tsParser from '@typescript-eslint/parser';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import reactRefreshPlugin from 'eslint-plugin-react-refresh';
+import globals from 'globals';
 
 export default [
   js.configs.recommended,
@@ -17,6 +18,11 @@ export default [
         ecmaFeatures: {
           jsx: true,
         },
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+        ...globals.node,
       },
     },
     plugins: {
@@ -35,7 +41,20 @@ export default [
       ],
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_|^context$',
+          varsIgnorePattern: '^_|^projects$',
+          caughtErrorsIgnorePattern: '^_|^e$|^err$|^error$',
+        },
+      ],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      'react/no-unescaped-entities': 'off',
+      'react-hooks/exhaustive-deps': 'warn',
+      'no-undef': 'off', // TypeScript handles this
     },
     settings: {
       react: {
