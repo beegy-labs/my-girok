@@ -173,7 +173,8 @@
     box-shadow: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    page-break-after: always !important;
+    /* Removed page-break-after: always to prevent blank pages after each page */
+    /* Paged.js automatically handles page breaks - no manual intervention needed */
     page-break-inside: avoid !important;
     width: 100% !important;
     max-width: 100% !important;
