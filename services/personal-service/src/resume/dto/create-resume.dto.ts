@@ -7,6 +7,12 @@ export enum PaperSize {
   LETTER = 'LETTER',
 }
 
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER',
+}
+
 export enum MilitaryService {
   COMPLETED = 'COMPLETED',
   EXEMPTED = 'EXEMPTED',
@@ -406,6 +412,17 @@ export class CreateResumeDto {
   @IsOptional()
   @IsString()
   profileImage?: string;
+
+  @ApiPropertyOptional({ example: 1994, description: 'Birth year (e.g., 1994)' })
+  @IsOptional()
+  @IsInt()
+  @Min(1900)
+  birthYear?: number;
+
+  @ApiPropertyOptional({ enum: Gender, description: 'Gender (MALE, FEMALE, OTHER)' })
+  @IsOptional()
+  @IsEnum(Gender)
+  gender?: Gender;
 
   @ApiPropertyOptional({ enum: MilitaryService, description: 'Military service status (Korean-specific)' })
   @IsOptional()

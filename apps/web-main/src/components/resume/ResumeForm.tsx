@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Resume,
@@ -10,6 +10,7 @@ import {
   getAttachments,
   deleteAttachment,
   SectionType,
+  Gender,
 } from '../../api/resume';
 import SectionOrderManager from './SectionOrderManager';
 import ExperienceSection from './ExperienceSection';
@@ -95,6 +96,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     summary: resume?.summary || '',
     keyAchievements: resume?.keyAchievements || [],
     profileImage: resume?.profileImage || '',
+    birthYear: resume?.birthYear,
+    gender: resume?.gender,
     militaryService: resume?.militaryService,
     militaryDischarge: resume?.militaryDischarge || '',
     militaryRank: resume?.militaryRank || '',
@@ -391,6 +394,23 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   };
 
+  // Birth year and gender change handlers
+  const handleBirthYearChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      birthYear: value ? parseInt(value) : undefined
+    }));
+  }, []);
+
+  const handleGenderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      gender: value as Gender || undefined
+    }));
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -554,6 +574,43 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             />
           </div>
         </div>
+
+        {/* Birth Year and Gender */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
+              {t('resume.birthYear')}
+            </label>
+            <input
+              type="number"
+              value={formData.birthYear || ''}
+              onChange={handleBirthYearChange}
+              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+              placeholder={t('resume.birthYearPlaceholder')}
+              min="1900"
+              max={new Date().getFullYear()}
+            />
+            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
+              {t('resume.birthYearHint')}
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
+              {t('resume.gender')}
+            </label>
+            <select
+              value={formData.gender || ''}
+              onChange={handleGenderChange}
+              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+            >
+              <option value="">{t('resume.genderPlaceholder')}</option>
+              <option value="MALE">{t('resume.genderOptions.MALE')}</option>
+              <option value="FEMALE">{t('resume.genderOptions.FEMALE')}</option>
+              <option value="OTHER">{t('resume.genderOptions.OTHER')}</option>
+            </select>
+          </div>
+        </div>
+
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
             Profile Photo

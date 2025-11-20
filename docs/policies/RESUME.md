@@ -99,6 +99,10 @@ interface Resume {
   summary?: string;
   profileImage?: string;
 
+  // Birth Year and Gender
+  birthYear?: number;            // 출생 연도 (e.g., 1994)
+  gender?: Gender;               // 성별: MALE | FEMALE | OTHER
+
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
   militaryDischarge?: string;    // Legacy field (backward compatibility)

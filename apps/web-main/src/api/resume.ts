@@ -6,6 +6,7 @@ import {
   DegreeType,
   GpaFormat,
   AttachmentType,
+  Gender,
   type PaperSize,
   // Interfaces
   type SkillDescription,
@@ -28,6 +29,7 @@ export {
   DegreeType,
   GpaFormat,
   AttachmentType,
+  Gender,
 };
 export type {
   PaperSize,
@@ -61,6 +63,9 @@ export interface CreateResumeDto {
   summary?: string;
   keyAchievements?: string[]; // 주요 성과 (3-5 major accomplishments)
   profileImage?: string;
+  // Birth Year and Gender
+  birthYear?: number; // 출생 연도 (e.g., 1994)
+  gender?: Gender; // 성별
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
   militaryDischarge?: string;
