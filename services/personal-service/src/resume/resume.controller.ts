@@ -14,7 +14,6 @@ import {
   Query,
   ParseEnumPipe,
   Res,
-  StreamableFile,
   Header,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -305,7 +304,7 @@ export class ResumeController {
       res.setHeader('Content-Length', size);
 
       stream.pipe(res);
-    } catch (error) {
+    } catch (_error) {
       return res.status(404).json({ message: 'Image not found' });
     }
   }
