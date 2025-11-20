@@ -32,10 +32,16 @@ export function getProxyImageUrl(imageUrl: string | null | undefined): string | 
     const fileKey = parts.slice(1).join('/');
 
     // Get API URL from environment or use current origin
-    const apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
+    let apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
+
+    // Remove /auth suffix if present (VITE_API_URL might be https://my-api-dev.girok.dev/auth)
+    // We need base URL for /personal route
+    apiUrl = apiUrl.replace(/\/auth$/, '');
 
     // Return proxy URL
-    return `${apiUrl}/api/resume/image-proxy?key=${encodeURIComponent(fileKey)}`;
+    // Note: API Gateway routes /personal/* to personal-service
+    // Backend service endpoint is /v1/resume/image-proxy
+    return `${apiUrl}/personal/v1/resume/image-proxy?key=${encodeURIComponent(fileKey)}`;
   } catch (error) {
     console.warn('Failed to parse image URL for proxy:', imageUrl, error);
     // Return original URL as fallback
