@@ -213,7 +213,6 @@
   * {
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
-    word-break: break-word !important;
   }
 
   /* Prevent long URLs and text from overflowing */
@@ -229,29 +228,40 @@
     height: auto !important;
   }
 
-  /* Prevent awkward page breaks */
+  /* Allow sections to break across pages - only protect individual items */
   .resume-section {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
     max-width: 100% !important;
+    /* Allow sections to flow naturally across pages */
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 
+  /* Protect individual resume items from breaking */
   .resume-item {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     max-width: 100% !important;
   }
 
-  /* Keep headings with content */
+  /* Keep section headings with their first item */
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid !important;
-    break-after: avoid !important;
+    break-after: avoid-page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  /* Prevent orphans and widows */
+  /* Prevent orphans and widows - More aggressive */
   p, li {
-    orphans: 3;
-    widows: 3;
+    orphans: 4;
+    widows: 4;
+  }
+
+  /* Header section - keep together */
+  .border-b-2 {
+    page-break-inside: avoid !important;
+    break-inside: avoid-page !important;
+    page-break-after: auto !important;
   }
 
   /* Hide page number indicators */
@@ -278,11 +288,19 @@
 
 /* Print optimizations */
 @media print {
-  /* Ensure sections don't break awkwardly */
+  /* Root container optimizations */
+  body, html {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Allow sections to break naturally across pages */
   .resume-section {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    page-break-inside: auto;
+    break-inside: auto;
     margin-bottom: 1.5rem;
+    page-break-before: auto;
+    break-before: auto;
   }
 
   .resume-item {
@@ -300,15 +318,33 @@
   /* Keep headings with their content */
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
-    break-after: avoid;
+    break-after: avoid-page;
     page-break-inside: avoid;
     break-inside: avoid;
+    orphans: 2;
+    widows: 2;
   }
 
   /* Ensure profile image doesn't break */
   img {
     page-break-inside: avoid;
     break-inside: avoid;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Header section - keep together */
+  .border-b-2 {
+    page-break-inside: avoid;
+    break-inside: avoid-page;
+    page-break-after: auto;
+  }
+
+  /* Header with border - main resume header */
+  .border-b-2.border-gray-800 {
+    page-break-inside: avoid;
+    break-inside: avoid-page;
+    page-break-after: auto;
   }
 
   /* Override flex layouts that interfere with page breaks */
@@ -333,5 +369,29 @@
   table, tr, td, th {
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+
+  /* Prevent widows/orphans in list items */
+  ul, ol {
+    orphans: 2;
+    widows: 2;
+  }
+
+  /* Space-y classes - ensure proper spacing */
+  .space-y-2 > * + * {
+    margin-top: 0.5rem !important;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  /* Margin bottom classes */
+  .mb-6 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .mb-5 {
+    margin-bottom: 1.25rem !important;
   }
 }
