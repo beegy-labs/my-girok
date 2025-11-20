@@ -292,9 +292,10 @@ export class ResumeController {
   @Header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
   @Header('Access-Control-Allow-Headers', '*')
   @Header('Cache-Control', 'public, max-age=31536000')
-  async proxyImage(@Query('key') fileKey: string, @Res() res: Response) {
+  async proxyImage(@Query('key') fileKey: string, @Res() res: Response): Promise<void> {
     if (!fileKey) {
-      return res.status(400).json({ message: 'File key is required' });
+      res.status(400).json({ message: 'File key is required' });
+      return;
     }
 
     try {
@@ -305,7 +306,7 @@ export class ResumeController {
 
       stream.pipe(res);
     } catch (_error) {
-      return res.status(404).json({ message: 'Image not found' });
+      res.status(404).json({ message: 'Image not found' });
     }
   }
 }
