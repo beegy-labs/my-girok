@@ -195,7 +195,22 @@
       "github": "GitHub",
       "verify": "Verify",
       "degree": "Degree",
-      "in": "in"
+      "in": "in",
+      "title": "{{name}}'s Resume",
+      "badge": "Preview",
+      "edit": "Edit",
+      "print": "Print",
+      "downloadPdf": "Download PDF",
+      "shareLink": "Share Link",
+      "exporting": "Exporting...",
+      "exportFailed": "Failed to export PDF. Please try again.",
+      "loading": "Loading resume...",
+      "notFoundTitle": "Resume Not Found",
+      "notFoundMessage": "The requested resume does not exist or has been deleted.",
+      "backToMyResumes": "Back to My Resumes",
+      "errorTitle": "Cannot Load Resume",
+      "errorMessage": "An error occurred while loading the resume.",
+      "retry": "Retry"
     },
     "shared": {
       "loading": "Loading resume...",
