@@ -400,7 +400,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     const value = e.target.value;
     setFormData(prev => ({
       ...prev,
-      birthDate: value || '',
+      birthDate: value || undefined,
       // Auto-populate birthYear for backward compatibility
       birthYear: value ? new Date(value).getFullYear() : undefined
     }));
@@ -420,7 +420,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     try {
       // Remove projects field before submitting (no longer supported by API)
       const { projects, ...dataToSubmit } = formData as any;
-      await onSubmit(dataToSubmit);
+
+      // Remove empty string fields to avoid validation errors
+      const cleanedData: any = {};
+      for (const [key, value] of Object.entries(dataToSubmit)) {
+        cleanedData[key] = value === '' ? undefined : value;
+      }
+
+      await onSubmit(cleanedData);
       // Clear draft after successful submission
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);
