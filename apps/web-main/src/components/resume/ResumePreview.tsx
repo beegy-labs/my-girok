@@ -2,16 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 // @ts-ignore - pagedjs doesn't have type definitions
 import { Previewer } from 'pagedjs';
-import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap, Gender } from '../../api/resume';
+import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap, Gender, getAge } from '../../api/resume';
 import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
 import { getProxyImageUrl } from '../../utils/imageProxy';
 import '../../styles/resume-print.css';
-
-// Calculate age from birth year
-function calculateAge(birthYear: number): number {
-  const currentYear = new Date().getFullYear();
-  return currentYear - birthYear;
-}
 
 // Get i18n key for gender label with type safety
 function getGenderLabelKey(gender: Gender): string {
@@ -343,16 +337,26 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {resume.name}
-                {/* Gender, Birth Year, and Age */}
-                {(resume.gender || resume.birthYear) && (
+                {/* Gender, Birth Date/Year, and Age */}
+                {(resume.gender || resume.birthDate || resume.birthYear) && (
                   <span className="ml-3 text-lg font-normal text-gray-600">
                     {resume.gender && <span>{t(getGenderLabelKey(resume.gender))}</span>}
-                    {resume.gender && resume.birthYear && <span>, </span>}
-                    {resume.birthYear && (
-                      <span>
-                        {resume.birthYear} ({t('resume.age', { age: calculateAge(resume.birthYear) })})
-                      </span>
-                    )}
+                    {resume.gender && (resume.birthDate || resume.birthYear) && <span>, </span>}
+                    {(() => {
+                      const age = getAge(resume);
+                      if (!age) return null;
+
+                      // Display birth date if available, otherwise birth year
+                      const displayDate = resume.birthDate
+                        ? new Date(resume.birthDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+                        : resume.birthYear?.toString();
+
+                      return (
+                        <span>
+                          {displayDate} ({t('resume.age', { age })})
+                        </span>
+                      );
+                    })()}
                   </span>
                 )}
               </h1>

@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsArray, ValidateNested, IsBoolean, IsInt, Min, IsEnum } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsArray, ValidateNested, IsBoolean, IsInt, Min, IsEnum, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -413,11 +413,16 @@ export class CreateResumeDto {
   @IsString()
   profileImage?: string;
 
-  @ApiPropertyOptional({ example: 1994, description: 'Birth year (e.g., 1994)' })
+  @ApiPropertyOptional({ example: 1994, description: 'Birth year (e.g., 1994) - deprecated, use birthDate' })
   @IsOptional()
   @IsInt()
   @Min(1900)
   birthYear?: number;
+
+  @ApiPropertyOptional({ example: '1994-03-15', description: 'Birth date (YYYY-MM-DD format) for accurate age calculation' })
+  @IsOptional()
+  @IsDateString()
+  birthDate?: string;
 
   @ApiPropertyOptional({ enum: Gender, description: 'Gender (MALE, FEMALE, OTHER)' })
   @IsOptional()
