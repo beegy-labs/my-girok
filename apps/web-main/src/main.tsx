@@ -8,6 +8,7 @@ import './index.css';
 import './print.css';
 import './i18n/config';
 
+// Web Main Application Entry Point
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HelmetProvider>
