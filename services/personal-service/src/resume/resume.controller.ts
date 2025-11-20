@@ -46,6 +46,45 @@ export class ResumeController {
     return this.resumeService.getPublicResumeByUsername(username);
   }
 
+  // ========== Image Proxy Endpoint (for PDF export) ==========
+  // IMPORTANT: Must be defined BEFORE dynamic routes like /:resumeId to prevent route conflicts
+
+  @Public()
+  @Get('image-proxy')
+  @ApiOperation({
+    summary: 'Proxy images from MinIO with CORS headers',
+    description: 'Serves images from MinIO with proper CORS headers for PDF export via html2canvas'
+  })
+  @ApiQuery({ name: 'key', description: 'MinIO file key (e.g., resumes/userId/resumeId/filename.jpg)' })
+  @ApiResponse({ status: 200, description: 'Image retrieved successfully' })
+  @ApiResponse({ status: 400, description: 'Missing or invalid file key' })
+  @ApiResponse({ status: 404, description: 'Image not found' })
+  @Header('Access-Control-Allow-Origin', '*')
+  @Header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+  @Header('Access-Control-Allow-Headers', '*')
+  @Header('Cache-Control', 'public, max-age=31536000')
+  async proxyImage(@Query('key') fileKey: string, @Res() res: Response): Promise<void> {
+    if (!fileKey) {
+      res.status(400).json({ message: 'File key is required' });
+      return;
+    }
+
+    // Log the requested file key for debugging
+    console.log(`[ImageProxy] Requested fileKey: ${fileKey}`);
+
+    try {
+      const { stream, contentType, size } = await this.storageService.getFileStream(fileKey);
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', size);
+
+      stream.pipe(res);
+    } catch (error) {
+      console.error(`[ImageProxy] Failed to get file: ${fileKey}`, error);
+      res.status(404).json({ message: 'Image not found' });
+    }
+  }
+
   // Protected endpoints below - JwtAuthGuard is applied globally
   @Post()
   @ApiBearerAuth('JWT-auth')
@@ -274,39 +313,5 @@ export class ResumeController {
     @Body('attachmentIds') attachmentIds: string[],
   ) {
     return this.resumeService.reorderAttachments(resumeId, user.id, type, attachmentIds);
-  }
-
-  // ========== Image Proxy Endpoint (for PDF export) ==========
-
-  @Public()
-  @Get('image-proxy')
-  @ApiOperation({
-    summary: 'Proxy images from MinIO with CORS headers',
-    description: 'Serves images from MinIO with proper CORS headers for PDF export via html2canvas'
-  })
-  @ApiQuery({ name: 'key', description: 'MinIO file key (e.g., resumes/userId/resumeId/filename.jpg)' })
-  @ApiResponse({ status: 200, description: 'Image retrieved successfully' })
-  @ApiResponse({ status: 400, description: 'Missing or invalid file key' })
-  @ApiResponse({ status: 404, description: 'Image not found' })
-  @Header('Access-Control-Allow-Origin', '*')
-  @Header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-  @Header('Access-Control-Allow-Headers', '*')
-  @Header('Cache-Control', 'public, max-age=31536000')
-  async proxyImage(@Query('key') fileKey: string, @Res() res: Response): Promise<void> {
-    if (!fileKey) {
-      res.status(400).json({ message: 'File key is required' });
-      return;
-    }
-
-    try {
-      const { stream, contentType, size } = await this.storageService.getFileStream(fileKey);
-
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Length', size);
-
-      stream.pipe(res);
-    } catch (_error) {
-      res.status(404).json({ message: 'Image not found' });
-    }
   }
 }
