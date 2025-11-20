@@ -194,8 +194,10 @@ export function calculateExperienceDuration(startDate: string, endDate?: string,
 }
 
 /**
- * Recursively strips database-specific fields from nested objects
- * This is needed because DTOs don't accept database-generated fields for nested relations
+ * Recursively strips database-specific fields and empty values from nested objects
+ * This is needed because:
+ * 1. DTOs don't accept database-generated fields for nested relations
+ * 2. Backend validators reject empty strings (e.g., @IsDateString() on optional fields)
  */
 function stripIds<T>(obj: T): T {
   if (obj === null || obj === undefined) {
@@ -216,6 +218,12 @@ function stripIds<T>(obj: T): T {
       if (dbFields.includes(key)) {
         continue;
       }
+
+      // Skip empty strings and undefined values to avoid validation errors
+      if (value === '' || value === undefined) {
+        continue;
+      }
+
       // Recursively process nested objects and arrays
       result[key] = stripIds(value);
     }
