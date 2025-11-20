@@ -72,6 +72,8 @@ export default function ResumeEditPage() {
       portfolio: data.portfolio,
       summary: data.summary,
       profileImage: data.profileImage,
+      birthYear: data.birthYear,
+      gender: data.gender,
       militaryService: data.militaryService,
       militaryDischarge: data.militaryDischarge,
       militaryRank: data.militaryRank,

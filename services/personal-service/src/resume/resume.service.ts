@@ -281,7 +281,8 @@ export class ResumeService {
       ],
     });
 
-    return resumes;
+    // Sanitize salary info for all resumes (remove salary fields where showSalary is false)
+    return resumes.map(resume => this.sanitizeSalaryInfo(resume));
   }
 
   // Get default resume or first resume for a user
@@ -299,7 +300,8 @@ export class ResumeService {
       throw new NotFoundException('No resume found for user');
     }
 
-    return resume;
+    // Sanitize salary info before returning
+    return this.sanitizeSalaryInfo(resume);
   }
 
   // Get specific resume by ID (with ownership check)
