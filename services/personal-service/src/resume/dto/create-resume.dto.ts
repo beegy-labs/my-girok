@@ -422,8 +422,7 @@ export class CreateResumeDto {
   @ApiPropertyOptional({ example: '1994-03-15', description: 'Birth date (YYYY-MM-DD format) for accurate age calculation' })
   @IsOptional()
   @IsDateString()
-  @Type(() => Date)
-  birthDate?: Date;
+  birthDate?: string;
 
   @ApiPropertyOptional({ enum: Gender, description: 'Gender (MALE, FEMALE, OTHER)' })
   @IsOptional()
