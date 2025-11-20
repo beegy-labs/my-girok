@@ -32,18 +32,19 @@ jobs:
     steps:
       - name: Send Discord notification - Start
         if: always()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'started'
-          title: '🚀 CI Started - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Event:** ${{ github.event_name }}
-            **Commit:** ${{ github.event.head_commit.message }}
-          color: 0x3498db
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "username": "GitHub Actions",
+              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+              "embeds": [{
+                "title": "🚀 CI Started - Web Main",
+                "description": "**Branch:** ${{ github.ref_name }}\n**Event:** ${{ github.event_name }}\n**Commit:** ${{ github.event.head_commit.message }}",
+                "color": 3447003,
+                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+              }]
+            }'
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -131,17 +132,19 @@ jobs:
     steps:
       - name: Send Discord notification - Build Start
         if: always()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'started'
-          title: '🔨 Build Started - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Building Docker image...**
-          color: 0x3498db
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "username": "GitHub Actions",
+              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+              "embeds": [{
+                "title": "🔨 Build Started - Web Main",
+                "description": "**Branch:** ${{ github.ref_name }}\n**Building Docker image...**",
+                "color": 3447003,
+                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+              }]
+            }'
 
       - name: Checkout code
         uses: actions/checkout@v4
