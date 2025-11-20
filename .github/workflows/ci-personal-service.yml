@@ -30,6 +30,21 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Send Discord notification - Start
+        if: always()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'started'
+          title: '🚀 CI Started - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **Event:** ${{ github.event_name }}
+            **Commit:** ${{ github.event.head_commit.message }}
+          color: 0x3498db
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -69,7 +84,35 @@ jobs:
       - name: Run linter
         run: |
           cd services/personal-service
-          pnpm lint || true
+          pnpm lint
+
+      - name: Send Discord notification - Success
+        if: success()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'success'
+          title: '✅ CI Success - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **All tests passed!**
+          color: 0x2ecc71
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+
+      - name: Send Discord notification - Failure
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'failure'
+          title: '❌ CI Failed - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **Tests failed. Check logs for details.**
+          color: 0xe74c3c
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
 
   build:
     name: Build and Push Docker Image
@@ -79,6 +122,20 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Send Discord notification - Build Start
+        if: always()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'started'
+          title: '🔨 Build Started - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **Building Docker image...**
+          color: 0x3498db
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -141,6 +198,34 @@ jobs:
         run: |
           echo "Image pushed with tags: ${{ steps.meta.outputs.tags }}"
           echo "Version: ${{ steps.meta.outputs.version }}"
+
+      - name: Send Discord notification - Build Success
+        if: success()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'success'
+          title: '✅ Build Success - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **Version:** ${{ steps.meta.outputs.version }}
+          color: 0x2ecc71
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+
+      - name: Send Discord notification - Build Failure
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'failure'
+          title: '❌ Build Failed - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **Build failed. Check logs for details.**
+          color: 0xe74c3c
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
 
   update-gitops:
     name: Update GitOps Repository
@@ -232,3 +317,32 @@ jobs:
             git push
             echo "Successfully updated GitOps repository for ${ENVIRONMENT}"
           fi
+
+      - name: Send Discord notification - Deploy Success
+        if: success()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'success'
+          title: '🚀 Deploy Success - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **Version:** ${{ steps.image.outputs.tag }}
+            **Deployment completed!**
+          color: 0x2ecc71
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+
+      - name: Send Discord notification - Deploy Failure
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'failure'
+          title: '❌ Deploy Failed - Personal Service'
+          description: |
+            **Branch:** ${{ github.ref_name }}
+            **GitOps update failed. Check logs for details.**
+          color: 0xe74c3c
+          username: GitHub Actions
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png

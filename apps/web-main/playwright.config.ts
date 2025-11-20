@@ -5,13 +5,18 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  // Improved: Use 50% of CPU cores for parallel execution (per TESTING.md policy)
+  workers: process.env.CI ? Math.max(2, Math.floor(require('os').cpus().length * 0.5)) : undefined,
+  reporter: process.env.CI ? [['html'], ['github']] : 'html',
+
+  // Individual test timeout: 30 seconds
+  timeout: 30000,
 
   use: {
     baseURL: 'http://localhost:3002',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [
