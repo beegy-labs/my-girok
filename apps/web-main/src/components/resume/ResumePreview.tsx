@@ -308,7 +308,6 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 <img
                   src={resume.profileImage}
                   alt={resume.name}
-                  crossOrigin="anonymous"
                   className={`w-32 h-40 object-cover rounded-lg border-2 border-gray-300 transition-all ${
                     isGrayscaleMode ? 'filter grayscale' : ''
                   }`}

@@ -71,13 +71,13 @@ async function exportPagedJSToPDF(
     // Capture page as canvas with image support
     const canvas = await html2canvas(page, {
       scale: 2,
-      useCORS: true,
+      useCORS: false, // Disable CORS for same-origin images
+      allowTaint: true, // Allow tainted canvas to capture images without CORS
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: page.scrollWidth,
       windowHeight: page.scrollHeight,
       imageTimeout: 15000, // Wait up to 15 seconds for images to load
-      allowTaint: false, // Don't allow tainted canvas (keep CORS strict)
       onclone: (clonedDoc) => {
         // Ensure all images are loaded before rendering
         const images = clonedDoc.querySelectorAll('img');
@@ -124,13 +124,13 @@ async function exportElementToPDF(
     // Using scale 2 for better quality (adjust if needed for performance)
     const canvas = await html2canvas(element, {
       scale: 2,
-      useCORS: true,
+      useCORS: false, // Disable CORS for same-origin images
+      allowTaint: true, // Allow tainted canvas to capture images without CORS
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: element.scrollWidth,
       windowHeight: element.scrollHeight,
       imageTimeout: 15000, // Wait up to 15 seconds for images to load
-      allowTaint: false, // Don't allow tainted canvas (keep CORS strict)
       onclone: (clonedDoc) => {
         // Ensure all images are loaded before rendering
         const images = clonedDoc.querySelectorAll('img');
