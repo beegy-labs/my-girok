@@ -229,10 +229,9 @@
     height: auto !important;
   }
 
-  /* Allow sections to break across pages - only protect individual items */
+  /* Allow sections to break across pages naturally */
   .resume-section {
     max-width: 100% !important;
-    /* Allow sections to flow naturally across pages */
     page-break-inside: auto !important;
     break-inside: auto !important;
   }
