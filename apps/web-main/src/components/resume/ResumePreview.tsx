@@ -193,8 +193,15 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             page-break-inside: auto;
           }
 
-          /* Keep individual items together on same page */
+          /* Allow long items to break across pages if needed */
           .resume-item {
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+
+          /* Keep short elements together */
+          .resume-item > h3,
+          .resume-item > p:only-child {
             break-inside: avoid;
             page-break-inside: avoid;
           }

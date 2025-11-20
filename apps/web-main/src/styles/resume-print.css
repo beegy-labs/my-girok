@@ -236,11 +236,18 @@
     break-inside: auto !important;
   }
 
-  /* Protect individual resume items from breaking */
+  /* Allow long resume items to break across pages if needed */
   .resume-item {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Keep short items together (headings, single paragraphs) */
+  .resume-item > h3,
+  .resume-item > p:only-child {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    max-width: 100% !important;
   }
 
   /* Keep section headings with their first item */
