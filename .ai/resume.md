@@ -510,7 +510,7 @@ const handleSubmit = async (data) => {
 - Added `birthDate` field to Resume model, CreateResumeDto
 - Changed input type from `<input type="number">` to `<input type="date">` in ResumeForm
 - Added utility functions in types package: `calculateKoreanAge()`, `calculateAgeFromYear()`, `getAge()`
-- Preview displays full birth date (e.g., "1994년 3월 15일") with accurate age
+- Preview display format: "1994 (30세)" - shows birth year with accurate age (만 나이)
 - **Backward Compatibility**: `birthYear` field kept for old data, auto-populated from `birthDate`
 - Updated i18n: `resume.birthDate`, `resume.birthDatePlaceholder`, `resume.birthDateHint` (ko, en, ja)
 - Fixed: resume/edit live preview now shows birth date and gender
