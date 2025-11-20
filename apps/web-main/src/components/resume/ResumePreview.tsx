@@ -187,17 +187,19 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             margin: 0;
           }
 
-          /* Ensure proper page breaks */
+          /* Allow sections to break across pages naturally */
           .resume-section {
-            break-inside: avoid;
-            page-break-inside: avoid;
+            break-inside: auto;
+            page-break-inside: auto;
           }
 
+          /* Keep individual items together on same page */
           .resume-item {
             break-inside: avoid;
             page-break-inside: avoid;
           }
 
+          /* Keep headings with their content */
           h1, h2, h3, h4, h5, h6 {
             break-after: avoid;
             page-break-after: avoid;
