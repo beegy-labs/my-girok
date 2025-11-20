@@ -13,6 +13,16 @@ function calculateAge(birthYear: number): number {
   return currentYear - birthYear;
 }
 
+// Get i18n key for gender label with type safety
+function getGenderLabelKey(gender: Gender): string {
+  const keyMap: Record<Gender, string> = {
+    [Gender.MALE]: 'resume.genderLabels.MALE',
+    [Gender.FEMALE]: 'resume.genderLabels.FEMALE',
+    [Gender.OTHER]: 'resume.genderLabels.OTHER',
+  };
+  return keyMap[gender];
+}
+
 interface ResumePreviewProps {
   resume: Resume;
   paperSize?: 'A4' | 'LETTER';
@@ -336,7 +346,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 {/* Gender, Birth Year, and Age */}
                 {(resume.gender || resume.birthYear) && (
                   <span className="ml-3 text-lg font-normal text-gray-600">
-                    {resume.gender && <span>{t(`resume.genderLabels.${resume.gender}`)}</span>}
+                    {resume.gender && <span>{t(getGenderLabelKey(resume.gender))}</span>}
                     {resume.gender && resume.birthYear && <span>, </span>}
                     {resume.birthYear && (
                       <span>

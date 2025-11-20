@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Resume,
@@ -394,6 +394,23 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   };
 
+  // Birth year and gender change handlers
+  const handleBirthYearChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      birthYear: value ? parseInt(value) : undefined
+    }));
+  }, []);
+
+  const handleGenderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      gender: value as Gender || undefined
+    }));
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -567,7 +584,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <input
               type="number"
               value={formData.birthYear || ''}
-              onChange={e => setFormData({ ...formData, birthYear: e.target.value ? parseInt(e.target.value) : undefined })}
+              onChange={handleBirthYearChange}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
               placeholder={t('resume.birthYearPlaceholder')}
               min="1900"
@@ -583,7 +600,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             </label>
             <select
               value={formData.gender || ''}
-              onChange={e => setFormData({ ...formData, gender: e.target.value as Gender || undefined })}
+              onChange={handleGenderChange}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             >
               <option value="">{t('resume.genderPlaceholder')}</option>
