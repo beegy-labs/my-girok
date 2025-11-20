@@ -410,14 +410,14 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
         {/* Summary */}
         {resume.summary && (
-          <div className="mb-6">
+          <div className="mb-6 resume-section">
             <p className="text-gray-700 leading-relaxed">{resume.summary}</p>
           </div>
         )}
 
         {/* Key Achievements */}
         {resume.keyAchievements && resume.keyAchievements.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6 resume-section">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               ⭐ {t('resume.preview.keyAchievements')}
             </h2>
@@ -433,7 +433,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
         {/* Application Reason */}
         {resume.applicationReason && (
-          <div className="mb-6">
+          <div className="mb-6 resume-section">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               {t('resume.preview.applicationReason')}
             </h2>
@@ -461,7 +461,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
         {/* Cover Letter (at the bottom) */}
         {resume.coverLetter && (
-          <div className="mb-6">
+          <div className="mb-6 resume-section">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               {t('resume.preview.coverLetter')}
             </h2>
