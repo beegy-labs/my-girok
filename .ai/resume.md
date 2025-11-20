@@ -263,12 +263,14 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Korean Market Features
 
-1. **Military Service** (`militaryService`): COMPLETED | EXEMPTED | NOT_APPLICABLE
-2. **Position** (`position`): 직급 (e.g., "Senior Developer")
-3. **Responsibilities** (`responsibilities`): 담당업무
-4. **Cover Letter** (`coverLetter`): 자기소개서
-5. **Application Reason** (`applicationReason`): 지원 동기
-6. **Key Achievements** (`keyAchievements: string[]`): 주요 성과 - Career highlights displayed as bullet list
+1. **Birth Year** (`birthYear: number`): 출생 연도 (e.g., 1994)
+2. **Gender** (`gender: Gender`): 성별 - MALE | FEMALE | OTHER
+3. **Military Service** (`militaryService`): COMPLETED | EXEMPTED | NOT_APPLICABLE
+4. **Position** (`position`): 직급 (e.g., "Senior Developer")
+5. **Responsibilities** (`responsibilities`): 담당업무
+6. **Cover Letter** (`coverLetter`): 자기소개서
+7. **Application Reason** (`applicationReason`): 지원 동기
+8. **Key Achievements** (`keyAchievements: string[]`): 주요 성과 - Career highlights displayed as bullet list
 
 ## Resume Preview Design
 
@@ -500,6 +502,14 @@ const handleSubmit = async (data) => {
 **Max Depth**: 4 levels (achievements, skill descriptions)
 
 ## Recent Updates
+
+**2025-11-20**: Birth year and gender fields (#117)
+- Added `birthYear` (number) and `gender` (Gender enum: MALE | FEMALE | OTHER) to Resume model
+- Added input fields in ResumeForm for birth year and gender selection
+- Display format in preview: "남, 1994 (30세)" next to name in header
+- Age automatically calculated from birth year
+- Updated schema.prisma, types package, CreateResumeDto, and documentation
+- Files changed: `schema.prisma`, `packages/types/src/resume/index.ts`, `resume.ts`, `ResumeForm.tsx`, `ResumePreview.tsx`, `RESUME.md`, `.ai/resume.md`
 
 **2025-11-19 (Part 3)**: Print content overflow and clipping fix (#116)
 - Fixed print button content clipping and overflow issues
