@@ -99,8 +99,9 @@ interface Resume {
   summary?: string;
   profileImage?: string;
 
-  // Birth Year and Gender
-  birthYear?: number;            // 출생 연도 (e.g., 1994)
+  // Birth Date and Gender
+  birthYear?: number;            // 출생 연도 (e.g., 1994) - deprecated, use birthDate
+  birthDate?: string;            // 생년월일 (YYYY-MM-DD format) for accurate Korean age (만 나이) calculation
   gender?: Gender;               // 성별: MALE | FEMALE | OTHER
 
   // Korean-specific fields

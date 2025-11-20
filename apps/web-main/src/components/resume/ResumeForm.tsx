@@ -96,7 +96,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     summary: resume?.summary || '',
     keyAchievements: resume?.keyAchievements || [],
     profileImage: resume?.profileImage || '',
-    birthYear: resume?.birthYear,
+    birthYear: resume?.birthYear, // deprecated - kept for backward compatibility
+    birthDate: resume?.birthDate || '',
     gender: resume?.gender,
     militaryService: resume?.militaryService,
     militaryDischarge: resume?.militaryDischarge || '',
@@ -394,12 +395,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   };
 
-  // Birth year and gender change handlers
-  const handleBirthYearChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  // Birth date and gender change handlers
+  const handleBirthDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFormData(prev => ({
       ...prev,
-      birthYear: value ? parseInt(value) : undefined
+      birthDate: value || '',
+      // Auto-populate birthYear for backward compatibility
+      birthYear: value ? new Date(value).getFullYear() : undefined
     }));
   }, []);
 
@@ -575,23 +578,23 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </div>
         </div>
 
-        {/* Birth Year and Gender */}
+        {/* Birth Date and Gender */}
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.birthYear')}
+              {t('resume.birthDate')}
             </label>
             <input
-              type="number"
-              value={formData.birthYear || ''}
-              onChange={handleBirthYearChange}
+              type="date"
+              value={formData.birthDate || ''}
+              onChange={handleBirthDateChange}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.birthYearPlaceholder')}
-              min="1900"
-              max={new Date().getFullYear()}
+              placeholder={t('resume.birthDatePlaceholder')}
+              min="1900-01-01"
+              max={new Date().toISOString().split('T')[0]}
             />
             <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-              {t('resume.birthYearHint')}
+              {t('resume.birthDateHint')}
             </p>
           </div>
           <div>

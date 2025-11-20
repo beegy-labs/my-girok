@@ -263,7 +263,8 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 
 ## Korean Market Features
 
-1. **Birth Year** (`birthYear: number`): 출생 연도 (e.g., 1994)
+1. **Birth Date** (`birthDate: string`): 생년월일 (YYYY-MM-DD format) for accurate Korean age (만 나이) calculation
+   - **Deprecated**: `birthYear: number` (kept for backward compatibility)
 2. **Gender** (`gender: Gender`): 성별 - MALE | FEMALE | OTHER
 3. **Military Service** (`militaryService`): COMPLETED | EXEMPTED | NOT_APPLICABLE
 4. **Position** (`position`): 직급 (e.g., "Senior Developer")
@@ -503,7 +504,20 @@ const handleSubmit = async (data) => {
 
 ## Recent Updates
 
-**2025-11-20**: Birth year and gender fields (#117)
+**2025-11-20 (Part 2)**: Birth date field upgrade for accurate age calculation (#TBD)
+- **Breaking Change**: Upgraded `birthYear` (number) to `birthDate` (string, YYYY-MM-DD format)
+- **Reason**: Accurate Korean age (만 나이) calculation requires full birth date
+- Added `birthDate` field to Resume model, CreateResumeDto
+- Changed input type from `<input type="number">` to `<input type="date">` in ResumeForm
+- Added utility functions in types package: `calculateKoreanAge()`, `calculateAgeFromYear()`, `getAge()`
+- Preview display format: "1994 (30세)" - shows birth year with accurate age (만 나이)
+- **Backward Compatibility**: `birthYear` field kept for old data, auto-populated from `birthDate`
+- Updated i18n: `resume.birthDate`, `resume.birthDatePlaceholder`, `resume.birthDateHint` (ko, en, ja)
+- Fixed: resume/edit live preview now shows birth date and gender
+- Fixed: Added `sanitizeSalaryInfo()` to `findAllByUserId()` and `getDefaultResume()` for security
+- Files changed: `schema.prisma`, `packages/types/src/resume/index.ts`, `create-resume.dto.ts`, `ResumeForm.tsx`, `ResumePreview.tsx`, `ResumeEditPage.tsx`, `resume.ts`, `ko.json`, `en.json`, `ja.json`, `RESUME.md`, `.ai/resume.md`
+
+**2025-11-20 (Part 1)**: Birth year and gender fields (#125)
 - Added `birthYear` (number) and `gender` (Gender enum: MALE | FEMALE | OTHER) to Resume model
 - Added input fields in ResumeForm for birth year and gender selection
 - Display format in preview: "남, 1994 (30세)" next to name in header

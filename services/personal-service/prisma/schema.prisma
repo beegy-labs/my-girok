@@ -42,9 +42,10 @@ model Resume {
   // Profile Image (URL to MinIO)
   profileImage String? @map("profile_image")
 
-  // Birth Year and Gender
-  birthYear Int?     @map("birth_year") // Birth year (e.g., 1994)
-  gender    Gender?  // Gender (MALE, FEMALE, OTHER)
+  // Birth Date and Gender
+  birthYear Int?      @map("birth_year") // Birth year (e.g., 1994) - deprecated, use birthDate
+  birthDate DateTime? @map("birth_date") @db.Date // Full birth date (YYYY-MM-DD) for accurate age calculation
+  gender    Gender?   // Gender (MALE, FEMALE, OTHER)
 
   // Korean-specific fields
   militaryService           MilitaryService? @map("military_service") // Military service status

@@ -90,6 +90,9 @@
     "birthYear": "生年",
     "birthYearPlaceholder": "例: 1994",
     "birthYearHint": "年のみ (例: 1994)",
+    "birthDate": "生年月日",
+    "birthDatePlaceholder": "例: 1994-03-15",
+    "birthDateHint": "正確な年齢計算のため生年月日を入力してください",
     "gender": "性別",
     "genderPlaceholder": "選択",
     "genderOptions": {

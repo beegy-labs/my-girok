@@ -21,6 +21,10 @@ import {
   type ResumeSection,
   type ResumeAttachmentBase,
   type Resume,
+  // Utility functions
+  getAge,
+  calculateKoreanAge,
+  calculateAgeFromYear,
 } from '@my-girok/types';
 
 // Re-export for backward compatibility
@@ -30,6 +34,9 @@ export {
   GpaFormat,
   AttachmentType,
   Gender,
+  getAge,
+  calculateKoreanAge,
+  calculateAgeFromYear,
 };
 export type {
   PaperSize,
@@ -63,8 +70,9 @@ export interface CreateResumeDto {
   summary?: string;
   keyAchievements?: string[]; // 주요 성과 (3-5 major accomplishments)
   profileImage?: string;
-  // Birth Year and Gender
-  birthYear?: number; // 출생 연도 (e.g., 1994)
+  // Birth Date and Gender
+  birthYear?: number; // 출생 연도 (e.g., 1994) - deprecated, use birthDate
+  birthDate?: string; // 생년월일 (YYYY-MM-DD format) for accurate age calculation
   gender?: Gender; // 성별
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
