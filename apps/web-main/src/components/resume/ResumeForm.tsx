@@ -171,7 +171,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
   // Section ordering
   const [sections, setSections] = useState(
-    resume?.sections?.sort((a, b) => a.order - b.order) || [
+    resume?.sections?.sort((a: any, b: any) => a.order - b.order) || [
       { id: '1', type: SectionType.SKILLS, order: 0, visible: true },
       { id: '2', type: SectionType.EXPERIENCE, order: 1, visible: true },
       { id: '3', type: SectionType.PROJECT, order: 2, visible: true },

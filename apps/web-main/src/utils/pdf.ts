@@ -38,7 +38,7 @@ export async function exportResumeToPDF(
     throw new Error(`Element with id "${elementId}" not found`);
   }
 
-  await exportElementToPDF(element, paperSize, PAPER_DIMENSIONS[paperSize].height, fileName);
+  await exportElementToPDF(element, paperSize, (PAPER_DIMENSIONS as Record<PaperSize, { width: number; height: number }>)[paperSize].height, fileName);
 }
 
 /**
@@ -49,7 +49,7 @@ async function exportPagedJSToPDF(
   paperSize: PaperSize,
   fileName: string
 ): Promise<void> {
-  const { width: paperWidth, height: paperHeight } = PAPER_DIMENSIONS[paperSize];
+  const { width: paperWidth, height: paperHeight } = (PAPER_DIMENSIONS as Record<PaperSize, { width: number; height: number }>)[paperSize];
 
   // Get all pages from Paged.js
   const pages = container.querySelectorAll('.pagedjs_page');
@@ -118,7 +118,7 @@ async function exportElementToPDF(
 ): Promise<void> {
   try {
     // Get paper dimensions
-    const { width: paperWidth } = PAPER_DIMENSIONS[paperSize];
+    const { width: paperWidth } = (PAPER_DIMENSIONS as Record<PaperSize, { width: number; height: number }>)[paperSize];
 
     // Capture element as canvas with high quality and image support via proxy
     // Using scale 2 for better quality (adjust if needed for performance)

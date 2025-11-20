@@ -33,8 +33,8 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
   const contentRef = useRef<HTMLDivElement>(null);
 
   const visibleSections = resume.sections
-    .filter(s => s.visible)
-    .sort((a, b) => a.order - b.order);
+    .filter((s: any) => s.visible)
+    .sort((a: any, b: any) => a.order - b.order);
 
   // A4: 210mm x 297mm, Letter: 215.9mm x 279.4mm
   const paperDimensions = paperSize === 'A4'
@@ -476,18 +476,18 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         )}
 
         {/* Dynamic Sections based on visibility and order */}
-        {visibleSections.map(section => {
+        {visibleSections.map((section: any) => {
           switch (section.type) {
             case 'SKILLS':
-              return <SkillsSection key={section.id} skills={resume.skills.filter(s => s.visible)} />;
+              return <SkillsSection key={section.id} skills={resume.skills.filter((s: any) => s.visible)} />;
             case 'EXPERIENCE':
-              return <ExperienceSection key={section.id} experiences={resume.experiences.filter(e => e.visible)} />;
+              return <ExperienceSection key={section.id} experiences={resume.experiences.filter((e: any) => e.visible)} />;
             case 'PROJECT':
-              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible)} />;
+              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter((p: any) => p.visible)} />;
             case 'EDUCATION':
-              return <EducationSection key={section.id} educations={resume.educations.filter(e => e.visible)} />;
+              return <EducationSection key={section.id} educations={resume.educations.filter((e: any) => e.visible)} />;
             case 'CERTIFICATE':
-              return <CertificatesSection key={section.id} certificates={resume.certificates.filter(c => c.visible)} />;
+              return <CertificatesSection key={section.id} certificates={resume.certificates.filter((c: any) => c.visible)} />;
             default:
               return null;
           }
