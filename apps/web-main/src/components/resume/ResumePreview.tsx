@@ -346,14 +346,14 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                       const age = getAge(resume);
                       if (!age) return null;
 
-                      // Display birth date if available, otherwise birth year
-                      const displayDate = resume.birthDate
-                        ? new Date(resume.birthDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
-                        : resume.birthYear?.toString();
+                      // Display only birth year (extract from birthDate or use birthYear)
+                      const birthYear = resume.birthDate
+                        ? new Date(resume.birthDate).getFullYear()
+                        : resume.birthYear;
 
                       return (
                         <span>
-                          {displayDate} ({t('resume.age', { age })})
+                          {birthYear} ({t('resume.age', { age })})
                         </span>
                       );
                     })()}
