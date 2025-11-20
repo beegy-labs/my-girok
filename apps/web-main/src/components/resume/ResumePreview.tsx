@@ -2,10 +2,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 // @ts-ignore - pagedjs doesn't have type definitions
 import { Previewer } from 'pagedjs';
-import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
+import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap, Gender } from '../../api/resume';
 import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
 import { getProxyImageUrl } from '../../utils/imageProxy';
 import '../../styles/resume-print.css';
+
+// Calculate age from birth year
+function calculateAge(birthYear: number): number {
+  const currentYear = new Date().getFullYear();
+  return currentYear - birthYear;
+}
 
 interface ResumePreviewProps {
   resume: Resume;
@@ -325,7 +331,21 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
             {/* Name and Contact Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{resume.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {resume.name}
+                {/* Gender, Birth Year, and Age */}
+                {(resume.gender || resume.birthYear) && (
+                  <span className="ml-3 text-lg font-normal text-gray-600">
+                    {resume.gender && <span>{t(`resume.genderLabels.${resume.gender}`)}</span>}
+                    {resume.gender && resume.birthYear && <span>, </span>}
+                    {resume.birthYear && (
+                      <span>
+                        {resume.birthYear} ({t('resume.age', { age: calculateAge(resume.birthYear) })})
+                      </span>
+                    )}
+                  </span>
+                )}
+              </h1>
               <div className="flex flex-col gap-y-0.5 text-sm text-gray-700 mb-2">
                 <div>
                   <span className="font-semibold">{t('resume.contactInfo.email')}:</span> {resume.email}

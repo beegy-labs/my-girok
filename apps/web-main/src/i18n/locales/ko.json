@@ -87,6 +87,22 @@
       "phone": "Phone",
       "address": "주소"
     },
+    "birthYear": "출생 연도",
+    "birthYearPlaceholder": "예: 1994",
+    "birthYearHint": "연도만 입력 (예: 1994)",
+    "gender": "성별",
+    "genderPlaceholder": "선택",
+    "genderOptions": {
+      "MALE": "남성",
+      "FEMALE": "여성",
+      "OTHER": "기타"
+    },
+    "genderLabels": {
+      "MALE": "남",
+      "FEMALE": "여",
+      "OTHER": "기타"
+    },
+    "age": "{{age}}세",
     "sections": {
       "settings": "이력서 설정",
       "basicInfo": "기본 정보",

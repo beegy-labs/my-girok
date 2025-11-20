@@ -42,6 +42,10 @@ model Resume {
   // Profile Image (URL to MinIO)
   profileImage String? @map("profile_image")
 
+  // Birth Year and Gender
+  birthYear Int?     @map("birth_year") // 출생 연도 (e.g., 1994)
+  gender    Gender?  // 성별
+
   // Korean-specific fields
   militaryService           MilitaryService? @map("military_service") // 병역 여부
   militaryDischarge         String?          @map("military_discharge") // 예: "병장 제대", "2020.01 - 2021.10"
@@ -111,6 +115,12 @@ enum SectionType {
 enum PaperSize {
   A4
   LETTER
+}
+
+enum Gender {
+  MALE    // 남성
+  FEMALE  // 여성
+  OTHER   // 기타
 }
 
 enum MilitaryService {

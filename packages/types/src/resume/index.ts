@@ -32,6 +32,12 @@ export enum AttachmentType {
   OTHER = 'OTHER',
 }
 
+export enum Gender {
+  MALE = 'MALE',     // 남성
+  FEMALE = 'FEMALE', // 여성
+  OTHER = 'OTHER',   // 기타
+}
+
 export type PaperSize = 'A4' | 'LETTER';
 
 // ========== Hierarchical Structures ==========
@@ -200,6 +206,9 @@ export interface Resume {
   summary?: string;
   keyAchievements?: string[]; // 주요 성과 (3-5 major accomplishments)
   profileImage?: string;
+  // Birth Year and Gender
+  birthYear?: number; // 출생 연도 (e.g., 1994)
+  gender?: Gender; // 성별
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
   militaryDischarge?: string; // 병역 상세 (예: "병장 제대", "2020.01 - 2021.10")
