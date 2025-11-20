@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { getResume, Resume, updateResume, PaperSize } from '../../api/resume';
+import { useTranslation } from 'react-i18next';
+import { getResume, Resume } from '../../api/resume';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 import ShareLinkModal from '../../components/resume/ShareLinkModal';
-import { exportResumeToPDF, printResume } from '../../utils/pdf';
+import { exportResumeToPDF } from '../../utils/pdf';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CharacterMessage } from '../../components/characters';
 
 export default function ResumePreviewPage() {
   const navigate = useNavigate();
   const { resumeId } = useParams<{ resumeId: string }>();
+  const { t } = useTranslation();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [paperSize, setPaperSize] = useState<PaperSize>('A4');
   const [exporting, setExporting] = useState(false);
 
   // Define loadResume function to be reused (for initial load and retry)
@@ -36,11 +37,6 @@ export default function ResumePreviewPage() {
       // Load resume data
       const data = await getResume(resumeId);
       setResume(data);
-
-      // Set paper size from resume if available
-      if (data.paperSize) {
-        setPaperSize(data.paperSize);
-      }
     } catch (err: any) {
       console.error('Failed to load resume', err);
       if (err.response?.status === 404) {
@@ -59,20 +55,8 @@ export default function ResumePreviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeId]);
 
-  const handlePaperSizeChange = async (newSize: PaperSize) => {
-    setPaperSize(newSize);
-    // Save to backend
-    if (resume) {
-      try {
-        await updateResume(resume.id, { paperSize: newSize });
-      } catch (err) {
-        console.error('Failed to save paper size preference', err);
-      }
-    }
-  };
-
   const handlePrint = () => {
-    printResume();
+    window.print();
   };
 
   const handleExportPDF = async () => {
@@ -80,6 +64,7 @@ export default function ResumePreviewPage() {
 
     setExporting(true);
     try {
+      const paperSize = resume.paperSize || 'A4';
       const fileName = `${resume.name.replace(/\s+/g, '_')}_Resume_${paperSize}.pdf`;
       await exportResumeToPDF('resume-content', {
         paperSize,
@@ -87,28 +72,28 @@ export default function ResumePreviewPage() {
       });
     } catch (error) {
       console.error('PDF export failed:', error);
-      alert('Failed to export PDF. Please try again.');
+      alert(t('resume.preview.exportFailed'));
     } finally {
       setExporting(false);
     }
   };
 
   if (loading) {
-    return <LoadingSpinner fullScreen message="이력서를 불러오는 중..." />;
+    return <LoadingSpinner fullScreen message={t('resume.preview.loading')} />;
   }
 
   if (error === 'NOT_FOUND') {
     return (
       <CharacterMessage
         type="not-found"
-        title="이력서를 찾을 수 없습니다"
-        message="요청하신 이력서가 존재하지 않거나 삭제되었습니다."
+        title={t('resume.preview.notFoundTitle')}
+        message={t('resume.preview.notFoundMessage')}
         action={
           <button
             onClick={() => navigate('/resume/my')}
             className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold rounded-lg transition-all shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
           >
-            내 이력서로 돌아가기
+            {t('resume.preview.backToMyResumes')}
           </button>
         }
       />
@@ -119,14 +104,14 @@ export default function ResumePreviewPage() {
     return (
       <CharacterMessage
         type="error"
-        title="이력서를 불러올 수 없습니다"
-        message="이력서를 불러오는 중 오류가 발생했습니다."
+        title={t('resume.preview.errorTitle')}
+        message={t('resume.preview.errorMessage')}
         action={
           <button
             onClick={() => loadResume()}
             className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold rounded-lg transition-all shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
           >
-            다시 시도
+            {t('resume.preview.retry')}
           </button>
         }
       />
@@ -140,50 +125,25 @@ export default function ResumePreviewPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
       {/* Action Bar - Hidden when printing */}
-      <div className="bg-amber-50/30 dark:bg-dark-bg-card border-b border-amber-100 dark:border-dark-border-subtle print:hidden shadow-sm dark:shadow-dark-sm transition-colors duration-200">
+      <div className="bg-amber-50/30 dark:bg-dark-bg-card border-b border-amber-100 dark:border-dark-border-subtle print:hidden sticky top-0 z-10 shadow-sm dark:shadow-dark-sm transition-colors duration-200">
         <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-3">
             <div>
-              <h1 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary">📄 Resume Preview</h1>
-              <p className="text-sm text-gray-600 dark:text-dark-text-secondary mt-1">
-                Preview and export your resume
-              </p>
+              <h1 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary">
+                📄 {t('resume.preview.title', { name: resume.name })}
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
+                  👁️ {t('resume.preview.badge')}
+                </span>
+              </div>
             </div>
             <button
               onClick={() => navigate(`/resume/edit/${resumeId}`)}
-              className="px-4 py-2 bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary rounded-lg font-medium border border-gray-300 dark:border-dark-border-default transition-all"
+              className="px-4 py-2 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all"
             >
-              ✍️ Edit
+              ✍️ {t('resume.preview.edit')}
             </button>
-          </div>
-
-          {/* Paper Size Selector */}
-          <div className="flex items-center gap-6 mb-4">
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-semibold text-gray-700 dark:text-dark-text-secondary">Paper Size:</label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePaperSizeChange('A4')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    paperSize === 'A4'
-                      ? 'bg-amber-700 dark:bg-amber-600 text-white dark:text-gray-900 shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20'
-                      : 'bg-white dark:bg-dark-bg-elevated text-gray-700 dark:text-dark-text-primary border border-gray-300 dark:border-dark-border-default hover:bg-gray-50 dark:hover:bg-dark-bg-hover'
-                  }`}
-                >
-                  A4 (210×297mm)
-                </button>
-                <button
-                  onClick={() => handlePaperSizeChange('LETTER')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    paperSize === 'LETTER'
-                      ? 'bg-amber-700 dark:bg-amber-600 text-white dark:text-gray-900 shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20'
-                      : 'bg-white dark:bg-dark-bg-elevated text-gray-700 dark:text-dark-text-primary border border-gray-300 dark:border-dark-border-default hover:bg-gray-50 dark:hover:bg-dark-bg-hover'
-                  }`}
-                >
-                  Letter (216×279mm)
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -193,43 +153,27 @@ export default function ResumePreviewPage() {
               disabled={exporting}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {exporting ? '📥 Exporting...' : '📥 Download PDF'}
+              {exporting ? t('resume.preview.exporting') : t('resume.preview.downloadPdf')}
             </button>
             <button
               onClick={handlePrint}
               className="flex-1 px-6 py-3 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all"
             >
-              🖨️ Print
+              🖨️ {t('resume.preview.print')}
             </button>
             <button
               onClick={() => setShowShareModal(true)}
               className="flex-1 px-6 py-3 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-amber-700 dark:text-amber-400 font-semibold rounded-lg border border-amber-300 dark:border-amber-600 transition-all"
             >
-              🔗 Share Link
+              🔗 {t('resume.preview.shareLink')}
             </button>
-          </div>
-
-          {/* Print Notice */}
-          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg transition-colors duration-200">
-            <p className="text-sm text-gray-700 dark:text-amber-200 mb-2">
-              💡 <strong>Tip:</strong> For best results, use "Download PDF" for digital distribution.
-            </p>
-            <p className="text-sm text-gray-700 dark:text-amber-200">
-              🖨️ <strong>Print Settings:</strong> When printing, set Margins to <strong>None</strong>,
-              Headers and footers to <strong>None</strong>, and enable <strong>Background graphics</strong> for optimal output.
-            </p>
           </div>
         </div>
       </div>
 
-      {/* Resume Preview - Scrollable container for mobile */}
-      <div className="py-8 print:py-0 flex justify-center">
-        <ResumePreviewContainer
-          resume={resume}
-          paperSize={paperSize}
-          responsivePadding={true}
-          enableHorizontalScroll={true}
-        />
+      {/* Resume Preview */}
+      <div className="py-6 sm:py-8 print:py-0 flex justify-center">
+        <ResumePreviewContainer resume={resume} />
       </div>
 
       {/* Share Modal */}

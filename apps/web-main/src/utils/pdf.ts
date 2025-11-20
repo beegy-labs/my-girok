@@ -185,9 +185,3 @@ async function exportElementToPDF(
   }
 }
 
-/**
- * Print resume directly using browser print dialog
- */
-export function printResume(): void {
-  window.print();
-}
