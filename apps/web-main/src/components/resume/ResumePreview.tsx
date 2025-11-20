@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Previewer } from 'pagedjs';
 import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
 import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
+import { getProxyImageUrl } from '../../utils/imageProxy';
 import '../../styles/resume-print.css';
 
 interface ResumePreviewProps {
@@ -306,8 +307,9 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
             {resume.profileImage && (
               <div className="flex-shrink-0">
                 <img
-                  src={resume.profileImage}
+                  src={getProxyImageUrl(resume.profileImage) || resume.profileImage}
                   alt={resume.name}
+                  crossOrigin="anonymous"
                   className={`w-32 h-40 object-cover rounded-lg border-2 border-gray-300 transition-all ${
                     isGrayscaleMode ? 'filter grayscale' : ''
                   }`}

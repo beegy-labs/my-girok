@@ -13,7 +13,11 @@ import {
   UploadedFile,
   Query,
   ParseEnumPipe,
+  Res,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { ResumeService } from './resume.service';
@@ -21,11 +25,15 @@ import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionV
 import { AttachmentType } from '../storage/dto';
 import { CurrentUser } from '../common/decorators';
 import { Public } from '../common/decorators/public.decorator';
+import { StorageService } from '../storage/storage.service';
 
 @ApiTags('resume')
 @Controller('resume')
 export class ResumeController {
-  constructor(private readonly resumeService: ResumeService) {}
+  constructor(
+    private readonly resumeService: ResumeService,
+    private readonly storageService: StorageService,
+  ) {}
 
   // Public endpoint - Get user's default resume by username
   @Public()
@@ -267,5 +275,38 @@ export class ResumeController {
     @Body('attachmentIds') attachmentIds: string[],
   ) {
     return this.resumeService.reorderAttachments(resumeId, user.id, type, attachmentIds);
+  }
+
+  // ========== Image Proxy Endpoint (for PDF export) ==========
+
+  @Public()
+  @Get('image-proxy')
+  @ApiOperation({
+    summary: 'Proxy images from MinIO with CORS headers',
+    description: 'Serves images from MinIO with proper CORS headers for PDF export via html2canvas'
+  })
+  @ApiQuery({ name: 'key', description: 'MinIO file key (e.g., resumes/userId/resumeId/filename.jpg)' })
+  @ApiResponse({ status: 200, description: 'Image retrieved successfully' })
+  @ApiResponse({ status: 400, description: 'Missing or invalid file key' })
+  @ApiResponse({ status: 404, description: 'Image not found' })
+  @Header('Access-Control-Allow-Origin', '*')
+  @Header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+  @Header('Access-Control-Allow-Headers', '*')
+  @Header('Cache-Control', 'public, max-age=31536000')
+  async proxyImage(@Query('key') fileKey: string, @Res() res: Response) {
+    if (!fileKey) {
+      return res.status(400).json({ message: 'File key is required' });
+    }
+
+    try {
+      const { stream, contentType, size } = await this.storageService.getFileStream(fileKey);
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', size);
+
+      stream.pipe(res);
+    } catch (error) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
   }
 }

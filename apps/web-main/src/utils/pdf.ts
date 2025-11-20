@@ -68,11 +68,11 @@ async function exportPagedJSToPDF(
   for (let i = 0; i < pages.length; i++) {
     const page = pages[i] as HTMLElement;
 
-    // Capture page as canvas with image support
+    // Capture page as canvas with image support via proxy
     const canvas = await html2canvas(page, {
       scale: 2,
-      useCORS: false, // Disable CORS for same-origin images
-      allowTaint: true, // Allow tainted canvas to capture images without CORS
+      useCORS: true, // Enable CORS for proxy images
+      allowTaint: false, // Keep canvas untainted for toDataURL()
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: page.scrollWidth,
@@ -120,12 +120,12 @@ async function exportElementToPDF(
     // Get paper dimensions
     const { width: paperWidth } = PAPER_DIMENSIONS[paperSize];
 
-    // Capture element as canvas with high quality and image support
+    // Capture element as canvas with high quality and image support via proxy
     // Using scale 2 for better quality (adjust if needed for performance)
     const canvas = await html2canvas(element, {
       scale: 2,
-      useCORS: false, // Disable CORS for same-origin images
-      allowTaint: true, // Allow tainted canvas to capture images without CORS
+      useCORS: true, // Enable CORS for proxy images
+      allowTaint: false, // Keep canvas untainted for toDataURL()
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: element.scrollWidth,

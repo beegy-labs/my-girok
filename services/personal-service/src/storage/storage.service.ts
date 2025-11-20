@@ -265,6 +265,32 @@ export class StorageService {
   }
 
   /**
+   * Get file stream from MinIO
+   * Used for image proxy to serve images with CORS headers
+   * @param fileKey - MinIO object key
+   * @returns Object with stream and metadata
+   */
+  async getFileStream(fileKey: string): Promise<{ stream: any; contentType: string; size: number }> {
+    try {
+      // Get object metadata
+      const stat = await this.minioClient.statObject(this.bucketName, fileKey);
+
+      // Get object stream
+      const stream = await this.minioClient.getObject(this.bucketName, fileKey);
+
+      this.logger.log(`File stream retrieved: ${fileKey}`);
+      return {
+        stream,
+        contentType: stat.metaData['content-type'] || 'application/octet-stream',
+        size: stat.size,
+      };
+    } catch (error: any) {
+      this.logger.error(`Failed to get file stream: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to retrieve file from storage');
+    }
+  }
+
+  /**
    * Get presigned URL for temporary access (not used for public bucket)
    * @param fileKey - MinIO object key
    * @param expiry - Expiry time in seconds (default: 24 hours)
