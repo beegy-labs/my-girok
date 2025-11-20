@@ -206,8 +206,9 @@ export interface Resume {
   summary?: string;
   keyAchievements?: string[]; // 주요 성과 (3-5 major accomplishments)
   profileImage?: string;
-  // Birth Year and Gender
-  birthYear?: number; // 출생 연도 (e.g., 1994)
+  // Birth Date and Gender
+  birthYear?: number; // 출생 연도 (e.g., 1994) - deprecated, use birthDate
+  birthDate?: string; // 생년월일 (YYYY-MM-DD format) for accurate age calculation
   gender?: Gender; // 성별
   // Korean-specific fields
   militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE'; // 병역 여부
@@ -229,4 +230,51 @@ export interface Resume {
   attachments?: ResumeAttachmentBase[]; // Optional for backwards compatibility
   createdAt: string;
   updatedAt: string;
+}
+
+// ========== Utility Functions ==========
+
+/**
+ * Calculate Korean age (만 나이) from birth date
+ * @param birthDate - Birth date in YYYY-MM-DD format or Date object
+ * @returns Age in years
+ */
+export function calculateKoreanAge(birthDate: string | Date): number {
+  const birth = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
+  const today = new Date();
+
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  // If birthday hasn't occurred this year yet, subtract 1
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age;
+}
+
+/**
+ * Calculate age from birth year (approximate, for backward compatibility)
+ * @param birthYear - Birth year (e.g., 1994)
+ * @returns Approximate age in years
+ */
+export function calculateAgeFromYear(birthYear: number): number {
+  const currentYear = new Date().getFullYear();
+  return currentYear - birthYear;
+}
+
+/**
+ * Get age from Resume object (uses birthDate if available, falls back to birthYear)
+ * @param resume - Resume object
+ * @returns Age in years, or undefined if no birth info available
+ */
+export function getAge(resume: Pick<Resume, 'birthDate' | 'birthYear'>): number | undefined {
+  if (resume.birthDate) {
+    return calculateKoreanAge(resume.birthDate);
+  }
+  if (resume.birthYear) {
+    return calculateAgeFromYear(resume.birthYear);
+  }
+  return undefined;
 }
