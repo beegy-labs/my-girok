@@ -33,18 +33,20 @@ jobs:
       - name: Send Discord notification - Start
         if: always()
         run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          COMMIT_MSG=$(echo '${{ github.event.head_commit.message }}' | head -n 1 | sed 's/"/\\"/g')
           curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "username": "GitHub Actions",
-              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-              "embeds": [{
-                "title": "🚀 CI Started - Web Main",
-                "description": "**Branch:** ${{ github.ref_name }}\n**Event:** ${{ github.event_name }}\n**Commit:** ${{ github.event.head_commit.message }}",
-                "color": 3447003,
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"🚀 CI Started - Web Main\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Event:** ${{ github.event_name }}\\n**Commit:** ${COMMIT_MSG}\",
+                \"color\": 3447003,
+                \"timestamp\": \"${TIMESTAMP}\"
               }]
-            }'
+            }"
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -133,18 +135,19 @@ jobs:
       - name: Send Discord notification - Build Start
         if: always()
         run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
           curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "username": "GitHub Actions",
-              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-              "embeds": [{
-                "title": "🔨 Build Started - Web Main",
-                "description": "**Branch:** ${{ github.ref_name }}\n**Building Docker image...**",
-                "color": 3447003,
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"🔨 Build Started - Web Main\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Building Docker image...**\",
+                \"color\": 3447003,
+                \"timestamp\": \"${TIMESTAMP}\"
               }]
-            }'
+            }"
 
       - name: Checkout code
         uses: actions/checkout@v4
