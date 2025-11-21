@@ -189,9 +189,8 @@ export default function ResumeEditPage() {
               {previewData ? (
                 <ResumePreviewContainer
                   resume={previewData}
-                  scale={0.75}
                   maxHeight="calc(100vh - 200px)"
-                  containerClassName="border-2 border-gray-300 dark:border-dark-border-default p-4"
+                  containerClassName="border-2 border-gray-300 dark:border-dark-border-default"
                 />
               ) : (
                 <div className="bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
