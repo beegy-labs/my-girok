@@ -34,7 +34,7 @@ export default function RegisterPage() {
       setAuth(response.user, response.accessToken, response.refreshToken);
       setRegisterSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || t('errors.registrationFailed'));
     } finally {
       setLoading(false);
     }
