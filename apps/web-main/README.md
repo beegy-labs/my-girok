@@ -164,4 +164,20 @@ VITE_API_URL=http://localhost:3001
 
 ## Deployment
 
-See Kubernetes Helm Chart documentation for production deployment.
+### CI/CD Pipeline
+
+The application uses GitHub Actions for automated CI/CD:
+
+1. **Build & Test** - Runs lint, type-check, and E2E tests
+2. **Docker Build** - Builds and pushes image to Harbor registry
+3. **GitOps Update** - Updates image tag in platform-gitops repository
+4. **ArgoCD Sync** - Automatically triggers ArgoCD refresh and sync
+
+### Environments
+
+- **Development**: Auto-deployed on push to `develop` branch
+- **Staging**: Auto-deployed on push to `release/*` branches
+- **Production**: Auto-deployed on push to `main` branch
+
+See Kubernetes Helm Chart documentation for infrastructure details.
+# ArgoCD Integration Test - Fri Nov 21 12:28:21 PM UTC 2025
