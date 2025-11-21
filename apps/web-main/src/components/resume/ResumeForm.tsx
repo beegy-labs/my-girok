@@ -870,19 +870,16 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
                 {/* Category Name */}
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                    {t('resume.form.categoryName')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
+                  <TextInput
+                    label={t('resume.form.categoryName')}
                     value={skill.category}
-                    onChange={e => {
+                    onChange={value => {
                       const newSkills = [...(formData.skills || [])];
-                      newSkills[skillIndex] = { ...newSkills[skillIndex], category: e.target.value };
+                      newSkills[skillIndex] = { ...newSkills[skillIndex], category: value };
                       setFormData({ ...formData, skills: newSkills });
                     }}
-                    className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary"
                     placeholder={t('resume.form.categoryPlaceholder')}
+                    required
                   />
                 </div>
 
@@ -890,8 +887,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-semibold text-gray-700 dark:text-dark-text-secondary">{t('resume.form.skillStack')}</label>
-                    <button
-                      type="button"
+                    <SecondaryButton
                       onClick={() => {
                         const newSkills = [...(formData.skills || [])];
                         const currentItems = Array.isArray(newSkills[skillIndex].items)
@@ -906,10 +902,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         };
                         setFormData({ ...formData, skills: newSkills });
                       }}
-                      className="px-3 py-1 text-sm bg-white dark:bg-dark-bg-elevated border border-amber-600 dark:border-amber-500 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-50 dark:hover:bg-dark-bg-hover transition-all font-semibold"
+                      size="sm"
                     >
                       {t('resume.form.addSkillButton')}
-                    </button>
+                    </SecondaryButton>
                   </div>
 
                   {Array.isArray(skill.items) && skill.items.length > 0 ? (
@@ -954,8 +950,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                               </div>
                               <span className="text-sm font-semibold text-gray-600 dark:text-dark-text-secondary">{t('resume.form.skillNumber', { index: itemIndex + 1 })}</span>
                             </div>
-                            <button
-                              type="button"
+                            <DestructiveButton
                               onClick={() => {
                                 const newSkills = [...(formData.skills || [])];
                                 const newItems = Array.isArray(newSkills[skillIndex].items)
@@ -964,34 +959,29 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                 newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
                                 setFormData({ ...formData, skills: newSkills });
                               }}
-                              className="text-red-600 hover:text-red-800 text-xs font-semibold"
+                              size="sm"
                             >
                               {t('common.delete')}
-                            </button>
+                            </DestructiveButton>
                           </div>
 
                           <div className="mb-3">
                             {/* Skill Name */}
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 dark:text-dark-text-secondary mb-1">
-                                {t('resume.form.skillName')} <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={typeof item === 'string' ? item : item.name || ''}
-                                onChange={e => {
-                                  const newSkills = [...(formData.skills || [])];
-                                  const newItems = [...(newSkills[skillIndex].items || [])];
-                                  newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-                                    ? { name: e.target.value, description: '' }
-                                    : { ...newItems[itemIndex], name: e.target.value };
-                                  newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                                  setFormData({ ...formData, skills: newSkills });
-                                }}
-                                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary text-sm"
-                                placeholder={t('resume.form.skillPlaceholder')}
-                              />
-                            </div>
+                            <TextInput
+                              label={t('resume.form.skillName')}
+                              value={typeof item === 'string' ? item : item.name || ''}
+                              onChange={value => {
+                                const newSkills = [...(formData.skills || [])];
+                                const newItems = [...(newSkills[skillIndex].items || [])];
+                                newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
+                                  ? { name: value, description: '' }
+                                  : { ...newItems[itemIndex], name: value };
+                                newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+                                setFormData({ ...formData, skills: newSkills });
+                              }}
+                              placeholder={t('resume.form.skillPlaceholder')}
+                              required
+                            />
                           </div>
 
                           {/* Hierarchical Description */}
@@ -1095,119 +1085,88 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               <div key={index} className="border border-gray-200 dark:border-dark-border-default rounded-lg p-4 bg-white dark:bg-dark-bg-elevated transition-colors duration-200">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary">{t('resume.form.certificateNumber', { index: index + 1 })}</h3>
-                  <button
-                    type="button"
+                  <DestructiveButton
                     onClick={() => {
                       const newCertificates = formData.certificates?.filter((_, i) => i !== index);
                       setFormData({ ...formData, certificates: newCertificates });
                     }}
-                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                    size="sm"
                   >
                     {t('resume.form.remove')}
-                  </button>
+                  </DestructiveButton>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      {t('resume.form.certificateName')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={cert.name}
-                      onChange={e => {
-                        const newCertificates = [...(formData.certificates || [])];
-                        newCertificates[index] = { ...newCertificates[index], name: e.target.value };
-                        setFormData({ ...formData, certificates: newCertificates });
-                      }}
-                      className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder={t('resume.form.certificatePlaceholder')}
-                    />
-                  </div>
+                  <TextInput
+                    label={t('resume.form.certificateName')}
+                    value={cert.name}
+                    onChange={value => {
+                      const newCertificates = [...(formData.certificates || [])];
+                      newCertificates[index] = { ...newCertificates[index], name: value };
+                      setFormData({ ...formData, certificates: newCertificates });
+                    }}
+                    placeholder={t('resume.form.certificatePlaceholder')}
+                    required
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      {t('resume.form.issuer')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={cert.issuer}
-                      onChange={e => {
-                        const newCertificates = [...(formData.certificates || [])];
-                        newCertificates[index] = { ...newCertificates[index], issuer: e.target.value };
-                        setFormData({ ...formData, certificates: newCertificates });
-                      }}
-                      className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder={t('resume.form.issuerPlaceholder')}
-                    />
-                  </div>
+                  <TextInput
+                    label={t('resume.form.issuer')}
+                    value={cert.issuer}
+                    onChange={value => {
+                      const newCertificates = [...(formData.certificates || [])];
+                      newCertificates[index] = { ...newCertificates[index], issuer: value };
+                      setFormData({ ...formData, certificates: newCertificates });
+                    }}
+                    placeholder={t('resume.form.issuerPlaceholder')}
+                    required
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      {t('resume.form.issueDate')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="month"
-                      value={cert.issueDate}
-                      onChange={e => {
-                        const newCertificates = [...(formData.certificates || [])];
-                        newCertificates[index] = { ...newCertificates[index], issueDate: e.target.value };
-                        setFormData({ ...formData, certificates: newCertificates });
-                      }}
-                      className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                    />
-                  </div>
+                  <TextInput
+                    label={t('resume.form.issueDate')}
+                    type="month"
+                    value={cert.issueDate}
+                    onChange={value => {
+                      const newCertificates = [...(formData.certificates || [])];
+                      newCertificates[index] = { ...newCertificates[index], issueDate: value };
+                      setFormData({ ...formData, certificates: newCertificates });
+                    }}
+                    required
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      {t('resume.form.expiryDate')}
-                    </label>
-                    <input
-                      type="month"
-                      value={cert.expiryDate || ''}
-                      onChange={e => {
-                        const newCertificates = [...(formData.certificates || [])];
-                        newCertificates[index] = { ...newCertificates[index], expiryDate: e.target.value };
-                        setFormData({ ...formData, certificates: newCertificates });
-                      }}
-                      className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder={t('resume.form.expiryEmpty')}
-                    />
-                  </div>
+                  <TextInput
+                    label={t('resume.form.expiryDate')}
+                    type="month"
+                    value={cert.expiryDate || ''}
+                    onChange={value => {
+                      const newCertificates = [...(formData.certificates || [])];
+                      newCertificates[index] = { ...newCertificates[index], expiryDate: value };
+                      setFormData({ ...formData, certificates: newCertificates });
+                    }}
+                    placeholder={t('resume.form.expiryEmpty')}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      {t('resume.form.credentialIdLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      value={cert.credentialId || ''}
-                      onChange={e => {
-                        const newCertificates = [...(formData.certificates || [])];
-                        newCertificates[index] = { ...newCertificates[index], credentialId: e.target.value };
-                        setFormData({ ...formData, certificates: newCertificates });
-                      }}
-                      className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder={t('resume.form.credentialId')}
-                    />
-                  </div>
+                  <TextInput
+                    label={t('resume.form.credentialIdLabel')}
+                    value={cert.credentialId || ''}
+                    onChange={value => {
+                      const newCertificates = [...(formData.certificates || [])];
+                      newCertificates[index] = { ...newCertificates[index], credentialId: value };
+                      setFormData({ ...formData, certificates: newCertificates });
+                    }}
+                    placeholder={t('resume.form.credentialId')}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      {t('resume.form.credentialUrl')}
-                    </label>
-                    <input
-                      type="url"
-                      value={cert.credentialUrl || ''}
-                      onChange={e => {
-                        const newCertificates = [...(formData.certificates || [])];
-                        newCertificates[index] = { ...newCertificates[index], credentialUrl: e.target.value };
-                        setFormData({ ...formData, certificates: newCertificates });
-                      }}
-                      className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder={t('resume.form.credentialUrlPlaceholder')}
-                    />
-                  </div>
+                  <TextInput
+                    label={t('resume.form.credentialUrl')}
+                    type="url"
+                    value={cert.credentialUrl || ''}
+                    onChange={value => {
+                      const newCertificates = [...(formData.certificates || [])];
+                      newCertificates[index] = { ...newCertificates[index], credentialUrl: value };
+                      setFormData({ ...formData, certificates: newCertificates });
+                    }}
+                    placeholder={t('resume.form.credentialUrlPlaceholder')}
+                  />
                 </div>
               </div>
             ))}
