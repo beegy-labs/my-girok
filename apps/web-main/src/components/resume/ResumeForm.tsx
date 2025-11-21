@@ -16,6 +16,7 @@ import SectionOrderManager from './SectionOrderManager';
 import ExperienceSection from './ExperienceSection';
 import EducationSection from './EducationSection';
 import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
+import { TextInput, Select, Card } from '../ui';
 
 interface ResumeFormProps {
   resume: Resume | null;
@@ -439,49 +440,39 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Resume Settings */}
-      <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-sm dark:shadow-dark-sm transition-colors duration-200 p-6">
+      <Card variant="secondary" padding="md" className="shadow-sm">
         <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-4">⚙️ {t('resume.sections.settings')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.resumeTitle')} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.form.resumeTitlePlaceholder')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.paperSize')} <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.paperSize}
-              onChange={e => setFormData({ ...formData, paperSize: e.target.value as PaperSize })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            >
-              <option value="A4">{t('resume.form.paperSizeA4')}</option>
-              <option value="LETTER">{t('resume.form.paperSizeLetter')}</option>
-            </select>
-          </div>
-        </div>
-        <div className="mt-4">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            {t('resume.form.description')}
-          </label>
-          <input
-            type="text"
-            value={formData.description || ''}
-            onChange={e => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder={t('resume.form.descriptionPlaceholder')}
+          <TextInput
+            label={t('resume.form.resumeTitle')}
+            value={formData.title}
+            onChange={(value) => setFormData({ ...formData, title: value })}
+            required
+            placeholder={t('resume.form.resumeTitlePlaceholder')}
+            className="mb-0"
+          />
+          <Select
+            label={t('resume.form.paperSize')}
+            value={formData.paperSize || 'A4'}
+            onChange={(value) => setFormData({ ...formData, paperSize: value as PaperSize })}
+            options={[
+              { value: 'A4', label: t('resume.form.paperSizeA4') },
+              { value: 'LETTER', label: t('resume.form.paperSizeLetter') }
+            ]}
+            required
+            className="mb-0"
           />
         </div>
-      </div>
+        <div className="mt-4">
+          <TextInput
+            label={t('resume.form.description')}
+            value={formData.description || ''}
+            onChange={(value) => setFormData({ ...formData, description: value })}
+            placeholder={t('resume.form.descriptionPlaceholder')}
+            className="mb-0"
+          />
+        </div>
+      </Card>
 
       {/* Basic Info */}
       <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-6">
@@ -494,95 +485,63 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         {!collapsedSections.basicInfo && (
         <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.name')} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.form.namePlaceholder')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.email')} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.form.emailPlaceholder')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.phone')}
-            </label>
-            <input
-              type="tel"
-              value={formData.phone || ''}
-              onChange={e => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.form.phonePlaceholder')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.address')}
-            </label>
-            <input
-              type="text"
-              value={formData.address || ''}
-              onChange={e => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="서울특별시 강남구"
-            />
-            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-              {t('resume.form.addressHint')}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.github')}
-            </label>
-            <input
-              type="url"
-              value={formData.github || ''}
-              onChange={e => setFormData({ ...formData, github: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.form.githubPlaceholder')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.blog')}
-            </label>
-            <input
-              type="url"
-              value={formData.blog || ''}
-              onChange={e => setFormData({ ...formData, blog: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.form.blogPlaceholder')}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              {t('resume.form.linkedin')}
-            </label>
-            <input
-              type="url"
-              value={formData.linkedin || ''}
-              onChange={e => setFormData({ ...formData, linkedin: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder={t('resume.form.linkedinPlaceholder')}
-            />
-          </div>
+          <TextInput
+            label={t('resume.form.name')}
+            value={formData.name}
+            onChange={(value) => setFormData({ ...formData, name: value })}
+            required
+            placeholder={t('resume.form.namePlaceholder')}
+            className="mb-0"
+          />
+          <TextInput
+            label={t('resume.form.email')}
+            type="email"
+            value={formData.email}
+            onChange={(value) => setFormData({ ...formData, email: value })}
+            required
+            placeholder={t('resume.form.emailPlaceholder')}
+            className="mb-0"
+          />
+          <TextInput
+            label={t('resume.form.phone')}
+            type="tel"
+            value={formData.phone || ''}
+            onChange={(value) => setFormData({ ...formData, phone: value })}
+            placeholder={t('resume.form.phonePlaceholder')}
+            className="mb-0"
+          />
+          <TextInput
+            label={t('resume.address')}
+            value={formData.address || ''}
+            onChange={(value) => setFormData({ ...formData, address: value })}
+            placeholder="서울특별시 강남구"
+            hint={t('resume.form.addressHint')}
+            className="mb-0"
+          />
+          <TextInput
+            label={t('resume.form.github')}
+            type="url"
+            value={formData.github || ''}
+            onChange={(value) => setFormData({ ...formData, github: value })}
+            placeholder={t('resume.form.githubPlaceholder')}
+            className="mb-0"
+          />
+          <TextInput
+            label={t('resume.form.blog')}
+            type="url"
+            value={formData.blog || ''}
+            onChange={(value) => setFormData({ ...formData, blog: value })}
+            placeholder={t('resume.form.blogPlaceholder')}
+            className="mb-0"
+          />
+          <TextInput
+            label={t('resume.form.linkedin')}
+            type="url"
+            value={formData.linkedin || ''}
+            onChange={(value) => setFormData({ ...formData, linkedin: value })}
+            placeholder={t('resume.form.linkedinPlaceholder')}
+            className="mb-0"
+          />
         </div>
 
         {/* Birth Date and Gender */}
