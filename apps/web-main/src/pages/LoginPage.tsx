@@ -53,7 +53,7 @@ export default function LoginPage() {
       setAuth(response.user, response.accessToken, response.refreshToken);
       setLoginSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(err.response?.data?.message || t('errors.loginFailed'));
     } finally {
       setLoading(false);
     }

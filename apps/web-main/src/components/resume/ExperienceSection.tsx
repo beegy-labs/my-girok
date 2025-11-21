@@ -31,11 +31,13 @@ function SortableExperienceCard({
   index,
   onUpdate,
   onRemove,
+  t,
 }: {
   experience: Experience;
   index: number;
   onUpdate: (exp: Experience) => void;
   onRemove: () => void;
+  t: (key: string, params?: any) => string;
 }) {
   const {
     attributes,
@@ -168,7 +170,7 @@ function SortableExperienceCard({
           {...attributes}
           {...listeners}
           className="mt-2 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200"
-          title="Drag to reorder"
+          title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
@@ -177,13 +179,13 @@ function SortableExperienceCard({
 
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200">📚 Company #{index + 1}</h3>
+            <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200">📚 {t('resume.experienceForm.company')} #{index + 1}</h3>
             <button
               type="button"
               onClick={onRemove}
               className="text-red-600 hover:text-red-800 text-sm font-semibold transition-colors duration-200"
             >
-              Remove Company
+              {t('resume.experienceForm.removeCompany')}
             </button>
           </div>
 
@@ -191,20 +193,20 @@ function SortableExperienceCard({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                Company <span className="text-red-500">*</span>
+                {t('resume.experienceForm.company')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={experience.company}
                 onChange={e => onUpdate({ ...experience, company: e.target.value })}
                 className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder="Company name"
+                placeholder={t('resume.experienceForm.companyName')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                Start Date <span className="text-red-500">*</span>
+                {t('resume.experienceForm.startDate')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="month"
@@ -216,7 +218,7 @@ function SortableExperienceCard({
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                End Date
+                {t('resume.experienceForm.endDate')}
               </label>
               <input
                 type="month"
@@ -224,7 +226,7 @@ function SortableExperienceCard({
                 onChange={e => onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })}
                 disabled={experience.isCurrentlyWorking}
                 className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary disabled:bg-gray-100 dark:disabled:bg-dark-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
-                placeholder="Leave empty if current"
+                placeholder={t('resume.experienceForm.leaveEmpty')}
               />
               <label className="flex items-center mt-2 text-sm text-gray-700 dark:text-dark-text-secondary cursor-pointer transition-colors duration-200">
                 <input
@@ -233,7 +235,7 @@ function SortableExperienceCard({
                   onChange={e => onUpdate({ ...experience, isCurrentlyWorking: e.target.checked, endDate: e.target.checked ? '' : experience.endDate })}
                   className="mr-2 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-400"
                 />
-                재직중 (Currently Working)
+                {t('resume.experience.currentlyWorking')}
               </label>
             </div>
           </div>
@@ -242,13 +244,13 @@ function SortableExperienceCard({
           {experience.startDate && (
             <div className="mb-4 p-3 bg-amber-50 dark:bg-dark-bg-card border border-amber-200 dark:border-dark-border-default rounded-lg transition-colors duration-200">
               <span className="text-sm font-semibold text-amber-900 dark:text-amber-300 transition-colors duration-200">
-                경력 기간: {(() => {
+                {t('resume.experienceForm.experiencePeriod')} {(() => {
                   const duration = calculateExperienceDuration(
                     experience.startDate,
                     experience.endDate,
                     experience.isCurrentlyWorking
                   );
-                  return `${duration.years}년 ${duration.months}개월`;
+                  return t('resume.experience.duration', { years: duration.years, months: duration.months });
                 })()}
               </span>
             </div>
@@ -258,27 +260,27 @@ function SortableExperienceCard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                직책 / Position <span className="text-red-500">*</span>
+                {t('resume.experienceForm.position')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={experience.finalPosition}
                 onChange={e => onUpdate({ ...experience, finalPosition: e.target.value })}
                 className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder="e.g., Backend Team Lead"
+                placeholder={t('resume.experienceForm.positionPlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                직급 / Job Title <span className="text-red-500">*</span>
+                {t('resume.experienceForm.jobTitle')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={experience.jobTitle}
                 onChange={e => onUpdate({ ...experience, jobTitle: e.target.value })}
                 className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder="e.g., Senior Developer"
+                placeholder={t('resume.experienceForm.jobTitlePlaceholder')}
               />
             </div>
           </div>
@@ -928,6 +930,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
                   index={index}
                   onUpdate={(e) => updateExperience(index, e)}
                   onRemove={() => removeExperience(index)}
+                  t={t}
                 />
               ))}
             </div>
