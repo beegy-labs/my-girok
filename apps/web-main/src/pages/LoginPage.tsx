@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
 import { login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
+import { TextInput, PrimaryButton, Card } from '../components/ui';
 
 const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
 const COOKIE_EXPIRY_DAYS = 30;
@@ -74,7 +75,7 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <div className="bg-amber-50/30 dark:bg-dark-bg-card rounded-2xl shadow-xl dark:shadow-dark-lg p-8 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200">
+        <Card variant="primary" padding="lg" className="shadow-xl">
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6 flex items-start">
               <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -85,35 +86,27 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                {t('auth.emailAddress')}
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary"
-                placeholder="you@example.com"
-              />
-            </div>
+            <TextInput
+              id="email"
+              label={t('auth.emailAddress')}
+              type="email"
+              value={email}
+              onChange={setEmail}
+              required
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                {t('auth.password')}
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary"
-                placeholder="••••••••"
-              />
-            </div>
+            <TextInput
+              id="password"
+              label={t('auth.password')}
+              type="password"
+              value={password}
+              onChange={setPassword}
+              required
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
 
             <div className="flex items-center">
               <input
@@ -128,23 +121,14 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <button
+            <PrimaryButton
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
+              loading={loading}
+              fullWidth
             >
-              {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white dark:text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {t('auth.loginButton')}
-                </span>
-              ) : (
-                t('auth.loginButton')
-              )}
-            </button>
+              {t('auth.loginButton')}
+            </PrimaryButton>
           </form>
 
           {/* Divider */}
@@ -159,7 +143,7 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-        </div>
+        </Card>
 
         {/* Footer Note */}
         <p className="text-center text-xs text-gray-500 dark:text-dark-text-tertiary mt-6">

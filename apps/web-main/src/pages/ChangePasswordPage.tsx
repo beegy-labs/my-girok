@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { changePassword } from '../api/auth';
+import { TextInput, PrimaryButton, Card, Alert } from '../components/ui';
 
 export default function ChangePasswordPage() {
   const { t } = useTranslation();
@@ -72,78 +73,52 @@ export default function ChangePasswordPage() {
         </div>
 
         {/* Change Password Form */}
-        <div className="bg-amber-50/30 rounded-2xl shadow-xl p-8 border border-amber-100">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-start">
-              <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-start">
-              <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm">{success}</span>
-            </div>
-          )}
+        <Card variant="primary" padding="lg" className="shadow-xl">
+          {error && <Alert type="error" message={error} />}
+          {success && <Alert type="success" message={success} />}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('changePassword.currentPassword')}
-              </label>
-              <input
-                type="password"
-                id="currentPassword"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-                placeholder={t('changePassword.currentPasswordPlaceholder')}
-              />
-            </div>
+            <TextInput
+              id="currentPassword"
+              label={t('changePassword.currentPassword')}
+              type="password"
+              value={currentPassword}
+              onChange={setCurrentPassword}
+              required
+              placeholder={t('changePassword.currentPasswordPlaceholder')}
+              autoComplete="current-password"
+            />
 
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('changePassword.newPassword')}
-              </label>
-              <input
-                type="password"
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-                placeholder={t('changePassword.newPasswordPlaceholder')}
-              />
-            </div>
+            <TextInput
+              id="newPassword"
+              label={t('changePassword.newPassword')}
+              type="password"
+              value={newPassword}
+              onChange={setNewPassword}
+              required
+              placeholder={t('changePassword.newPasswordPlaceholder')}
+              autoComplete="new-password"
+            />
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('changePassword.confirmPassword')}
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-amber-200 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-                placeholder={t('changePassword.confirmPasswordPlaceholder')}
-              />
-            </div>
+            <TextInput
+              id="confirmPassword"
+              label={t('changePassword.confirmPassword')}
+              type="password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              required
+              placeholder={t('changePassword.confirmPasswordPlaceholder')}
+              autoComplete="new-password"
+            />
 
-            <button
+            <PrimaryButton
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-700 to-amber-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-amber-800 hover:to-amber-700 focus:ring-4 focus:ring-amber-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              loading={loading}
+              fullWidth
             >
               {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
-            </button>
+            </PrimaryButton>
           </form>
 
           <div className="mt-6 text-center">
@@ -154,7 +129,7 @@ export default function ChangePasswordPage() {
               {t('changePassword.backToHome')}
             </button>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
