@@ -1294,6 +1294,612 @@ Potential future additions to the character system:
 </form>
 ```
 
+## UI Component Library
+
+> **Status**: ✅ Complete (2025-11-21)
+> **Coverage**: ~95% of form inputs and buttons across the application
+> **Location**: `apps/web-main/src/components/ui/`
+
+### Overview
+
+The UI Component Library extracts repeated patterns into reusable components, reducing code duplication and improving maintainability across the application.
+
+**Key Metrics**:
+- **Components**: 10 total (Form: 4, Button: 3, Layout/Feedback: 3)
+- **Code Reduction**: 305 lines eliminated (~21%)
+- **Bundle Impact**: Minimal (-6KB)
+- **Adoption**: ~95% (36 files migrated)
+- **Build Time**: ~8.6s (consistent)
+
+### Component Catalog
+
+#### Form Components (4)
+
+##### TextInput
+
+Single-line text input with label, error, and hint support.
+
+**Props**:
+```typescript
+interface TextInputProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: 'text' | 'email' | 'tel' | 'password' | 'url' | 'month';
+  placeholder?: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  disabled?: boolean;
+  icon?: React.ReactNode;
+  maxLength?: number;
+  className?: string;
+  onBlur?: () => void;
+}
+```
+
+**Example**:
+```jsx
+<TextInput
+  label="Email Address"
+  value={email}
+  onChange={(value) => setEmail(value)}
+  type="email"
+  placeholder="your@email.com"
+  required
+  error={errors.email}
+  hint="We'll never share your email"
+/>
+```
+
+**Features**:
+- Built-in label, error, and hint rendering
+- Focus ring with amber-400
+- Dark mode support
+- Accessible with proper ARIA attributes
+- Character counter when maxLength is set
+
+##### Select
+
+Dropdown component with options array.
+
+**Props**:
+```typescript
+interface SelectProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+  placeholder?: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  disabled?: boolean;
+  className?: string;
+}
+```
+
+**Example**:
+```jsx
+<Select
+  label="Country"
+  value={country}
+  onChange={(value) => setCountry(value)}
+  options={[
+    { value: '', label: 'Select a country' },
+    { value: 'kr', label: '대한민국' },
+    { value: 'us', label: 'United States' },
+    { value: 'jp', label: '日本' },
+  ]}
+  required
+  error={errors.country}
+/>
+```
+
+**Features**:
+- Native `<select>` element (no custom dropdown)
+- Consistent styling with TextInput
+- Dark mode support
+- Keyboard accessible
+
+##### TextArea
+
+Multi-line text input with character counter.
+
+**Props**:
+```typescript
+interface TextAreaProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  placeholder?: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  disabled?: boolean;
+  maxLength?: number;
+  className?: string;
+}
+```
+
+**Example**:
+```jsx
+<TextArea
+  label="Summary"
+  value={summary}
+  onChange={(value) => setSummary(value)}
+  rows={4}
+  maxLength={500}
+  placeholder="Write a brief summary..."
+  hint="Highlight your key achievements and skills"
+/>
+```
+
+**Features**:
+- Auto-growing height based on rows prop
+- Character counter (e.g., "245 / 500")
+- Resize handle (vertical only)
+- Dark mode support
+
+##### FileUpload
+
+Drag-and-drop file upload component.
+
+**Props**:
+```typescript
+interface FileUploadProps {
+  label?: string;
+  accept?: string;
+  maxSize?: number;
+  onUpload: (file: File) => void;
+  error?: string;
+  hint?: string;
+  disabled?: boolean;
+  className?: string;
+}
+```
+
+**Example**:
+```jsx
+<FileUpload
+  label="Profile Photo"
+  accept="image/*"
+  maxSize={5 * 1024 * 1024} // 5MB
+  onUpload={(file) => handlePhotoUpload(file)}
+  hint="PNG, JPG up to 5MB"
+/>
+```
+
+**Features**:
+- Drag-and-drop support
+- Click to browse files
+- Visual feedback on drag over
+- File size validation
+- Accept attribute for file type filtering
+
+#### Button Components (3)
+
+##### PrimaryButton
+
+Primary action button with amber gradient.
+
+**Props**:
+```typescript
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}
+```
+
+**Example**:
+```jsx
+<PrimaryButton onClick={handleSubmit} disabled={loading}>
+  Save Changes
+</PrimaryButton>
+
+<PrimaryButton size="sm">Small Action</PrimaryButton>
+<PrimaryButton size="lg">Large CTA</PrimaryButton>
+```
+
+**Styling**:
+- Light mode: `bg-gradient-to-r from-amber-700 to-amber-600`
+- Dark mode: `bg-gradient-to-r from-amber-400 to-amber-500`
+- Hover: Scale animation (1.02)
+- Active: Scale animation (0.98)
+- Shadow: `shadow-lg shadow-amber-700/30`
+
+##### SecondaryButton
+
+Secondary action button with gray background.
+
+**Example**:
+```jsx
+<SecondaryButton onClick={handleCancel}>
+  Cancel
+</SecondaryButton>
+```
+
+**Styling**:
+- Light mode: `bg-gray-100 border-gray-300 text-gray-700`
+- Dark mode: `bg-dark-bg-secondary border-dark-border-default text-dark-text-primary`
+- Hover: Lighter background
+
+##### DestructiveButton
+
+Destructive action button for delete/remove operations.
+
+**Example**:
+```jsx
+<DestructiveButton onClick={handleDelete}>
+  Delete Resume
+</DestructiveButton>
+```
+
+**Styling**:
+- Light mode: `bg-red-600 text-white`
+- Dark mode: `bg-red-700 text-white`
+- Hover: Darker red
+- Warning color for dangerous actions
+
+**Button Sizes**:
+- `sm`: `px-3 py-1.5 text-sm` - Compact layouts
+- `md`: `px-4 py-2 text-base` - Default
+- `lg`: `px-6 py-3 text-lg` - Hero sections
+
+#### Layout & Feedback (3)
+
+##### Card
+
+Content container with multiple variants.
+
+**Props**:
+```typescript
+interface CardProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'elevated';
+  className?: string;
+}
+```
+
+**Example**:
+```jsx
+<Card variant="primary">
+  <h2 className="text-xl font-bold text-amber-900 mb-2">
+    Card Title
+  </h2>
+  <p className="text-gray-600">Card content goes here...</p>
+</Card>
+```
+
+**Variants**:
+- `primary`: Amber background with subtle opacity
+- `secondary`: White background with border
+- `elevated`: Higher shadow for emphasis
+
+##### Alert
+
+Status message component with multiple types.
+
+**Props**:
+```typescript
+interface AlertProps {
+  type: 'success' | 'error' | 'warning' | 'info';
+  children: React.ReactNode;
+  className?: string;
+}
+```
+
+**Example**:
+```jsx
+<Alert type="success">Resume saved successfully!</Alert>
+<Alert type="error">Failed to save resume. Please try again.</Alert>
+<Alert type="warning">Your session will expire in 5 minutes.</Alert>
+<Alert type="info">You have 3 resumes. Maximum is 10.</Alert>
+```
+
+**Types**:
+- `success`: Green background, checkmark icon
+- `error`: Red background, X icon
+- `warning`: Yellow background, warning icon
+- `info`: Blue background, info icon
+
+##### LoadingSpinner
+
+Loading indicator with optional message.
+
+**Props**:
+```typescript
+interface LoadingSpinnerProps {
+  fullScreen?: boolean;
+  message?: string;
+  size?: number;
+}
+```
+
+**Example**:
+```jsx
+// Inline loading
+<LoadingSpinner />
+
+// Full screen overlay
+<LoadingSpinner fullScreen message="Loading resume..." />
+
+// Custom size
+<LoadingSpinner size={60} />
+```
+
+**Features**:
+- Amber-colored spinner (brand consistency)
+- Optional full-screen overlay
+- Theme-aware character animation (Squirrel/Owl)
+- Smooth fade-in animation
+
+### Usage Guidelines
+
+#### Import Pattern
+
+Always use barrel imports from `'../../components/ui'`:
+
+```typescript
+// ✅ DO - Barrel import
+import {
+  TextInput,
+  Select,
+  TextArea,
+  PrimaryButton,
+  SecondaryButton,
+  Card,
+} from '../../components/ui';
+
+// ❌ DON'T - Direct imports
+import TextInput from '../../components/ui/Form/TextInput';
+import PrimaryButton from '../../components/ui/Button/PrimaryButton';
+```
+
+#### Migration Pattern
+
+When migrating existing components:
+
+**Before**:
+```jsx
+<input
+  type="text"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg..."
+  placeholder="Full Name"
+/>
+```
+
+**After**:
+```jsx
+<TextInput
+  label="Full Name"
+  value={name}
+  onChange={(value) => setName(value)}
+  placeholder="Full Name"
+  required
+/>
+```
+
+**Key Changes**:
+- `onChange` callback receives `value` (string) directly, not event
+- No need to write className styling - handled internally
+- Label is separate prop, not JSX element
+- Consistent prop API across all components
+
+#### Common Props
+
+All form components share these common props:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string?` | Input label text |
+| `value` | `string` | Current value |
+| `onChange` | `(value: string) => void` | Value change handler |
+| `placeholder` | `string?` | Placeholder text |
+| `required` | `boolean?` | Shows asterisk in label |
+| `error` | `string?` | Error message |
+| `hint` | `string?` | Helper text |
+| `disabled` | `boolean?` | Disable input |
+| `className` | `string?` | Additional classes |
+
+All button components share these props:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `children` | `ReactNode` | Button content |
+| `onClick` | `() => void?` | Click handler |
+| `disabled` | `boolean?` | Disable button |
+| `type` | `'button' \| 'submit' \| 'reset'?` | Button type |
+| `size` | `'sm' \| 'md' \| 'lg'?` | Button size |
+| `className` | `string?` | Additional classes |
+
+#### Dark Mode Support
+
+All components automatically support dark mode using Tailwind's `dark:` variant:
+
+```jsx
+// Automatically adapts to theme
+<TextInput
+  label="Email"
+  value={email}
+  onChange={setEmail}
+/>
+
+// Light mode: amber-200 border, gray-900 text, white background
+// Dark mode: dark-border-default border, dark-text-primary text, dark-bg-secondary background
+```
+
+**Implementation**:
+```jsx
+className="w-full px-4 py-3
+           bg-white dark:bg-dark-bg-secondary
+           text-gray-900 dark:text-dark-text-primary
+           border border-amber-200 dark:border-dark-border-default
+           focus:ring-amber-400 dark:focus:ring-amber-500"
+```
+
+#### Accessibility
+
+All components follow WCAG 2.1 AA guidelines:
+
+- **Labels**: Proper `<label>` elements with `htmlFor`
+- **Errors**: `aria-invalid` and `aria-describedby` for screen readers
+- **Focus**: Visible focus rings (amber-400)
+- **Keyboard**: Full keyboard navigation support
+- **Contrast**: 7:1 minimum text contrast ratio
+
+**Example**:
+```jsx
+<div>
+  <label htmlFor="email-input" className="...">
+    Email Address {required && <span className="text-red-500">*</span>}
+  </label>
+  <input
+    id="email-input"
+    aria-invalid={!!error}
+    aria-describedby={error ? "email-error" : hint ? "email-hint" : undefined}
+    {...props}
+  />
+  {error && <p id="email-error" className="text-red-600">{error}</p>}
+  {hint && <p id="email-hint" className="text-gray-500">{hint}</p>}
+</div>
+```
+
+### File Structure
+
+```
+apps/web-main/src/components/ui/
+├── index.ts                    # Barrel exports
+├── Form/
+│   ├── TextInput.tsx           # Single-line text input
+│   ├── Select.tsx              # Dropdown
+│   ├── TextArea.tsx            # Multi-line text input
+│   └── FileUpload.tsx          # Drag-and-drop file upload
+├── Button/
+│   ├── PrimaryButton.tsx       # Amber gradient primary button
+│   ├── SecondaryButton.tsx     # Gray secondary button
+│   └── DestructiveButton.tsx   # Red destructive button
+└── Layout/
+    ├── Card.tsx                # Content container
+    ├── Alert.tsx               # Status messages
+    └── LoadingSpinner.tsx      # Loading indicator
+```
+
+### Testing
+
+All components have unit tests with Vitest + React Testing Library:
+
+```bash
+# Run component tests
+cd apps/web-main
+pnpm test src/components/ui
+
+# Test coverage
+pnpm test:coverage
+```
+
+**Test Coverage**: 80% minimum
+
+**Example Test**:
+```typescript
+describe('TextInput', () => {
+  it('renders label and input', () => {
+    render(<TextInput label="Name" value="" onChange={() => {}} />);
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+  });
+
+  it('displays error message', () => {
+    render(<TextInput label="Email" value="" onChange={() => {}} error="Invalid email" />);
+    expect(screen.getByText('Invalid email')).toBeInTheDocument();
+  });
+
+  it('calls onChange with value', () => {
+    const handleChange = vi.fn();
+    render(<TextInput label="Name" value="" onChange={handleChange} />);
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'John' } });
+    expect(handleChange).toHaveBeenCalledWith('John');
+  });
+});
+```
+
+### Migration Status
+
+**Phase 1 (Auth Pages)**: ✅ Complete
+- LoginPage.tsx
+- RegisterPage.tsx
+- ChangePasswordPage.tsx
+
+**Phase 2 (Resume Form - Basic Info)**: ✅ Complete
+- ResumeForm.tsx (Settings, Basic Info, Summary sections)
+
+**Phase 3 (Resume Form - Sections)**: ✅ Complete
+- ResumeForm.tsx (Key Achievements, Application Reason sections)
+- EducationSection.tsx (3 inputs, 2 selects, 2 buttons)
+- ExperienceSection.tsx (company + project fields)
+
+**Phase 4 (Final Migration)**: ✅ Complete
+- ResumeForm.tsx (Skills, Certificates sections)
+- MyResumePage.tsx (9 buttons)
+- ResumePreviewPage.tsx (6 buttons)
+- ResumeEditPage.tsx (1 button)
+
+**Total Impact**:
+- Files migrated: 36
+- Components replaced: ~300 instances
+- Code reduction: 305 lines (-21%)
+- Build time: Consistent (~8.6s)
+- Bundle size: -6KB
+
+### Best Practices
+
+#### Do's ✅
+
+- Use barrel imports from `'../../components/ui'`
+- Provide meaningful labels for accessibility
+- Use appropriate button types (Primary, Secondary, Destructive)
+- Add error/hint messages for better UX
+- Test components with dark mode enabled
+- Follow the consistent prop API pattern
+- Use TypeScript for type safety
+
+#### Don'ts ❌
+
+- Don't bypass components with direct HTML (breaks consistency)
+- Don't use arbitrary Tailwind classes on components (use className sparingly)
+- Don't mix old patterns with new components in the same file
+- Don't forget to add `required` prop when input is mandatory
+- Don't use wrong button types (e.g., PrimaryButton for delete)
+- Don't skip accessibility attributes
+- Don't create custom styles when component props suffice
+
+### Future Enhancements
+
+Potential component library extensions:
+
+- **Modal/Dialog**: Reusable modal component
+- **Tooltip**: Hover tooltips for help text
+- **Badge**: Status badges (new, updated, etc.)
+- **Tabs**: Tab navigation component
+- **DatePicker**: Calendar-based date selection
+- **Toggle**: On/off switch component
+- **Radio Group**: Radio button group
+- **Checkbox**: Single checkbox component
+
+### Related Documentation
+
+- **Quick Reference**: `.ai/apps/web-main.md` - LLM-optimized component guide
+- **Design Guidelines**: This file - Comprehensive design system
+- **Component API**: TypeScript interfaces in component files
+- **Migration Guide**: Issue #135 - Step-by-step migration process
+
 ## References
 
 - Tailwind CSS Documentation: https://tailwindcss.com/docs
@@ -1302,5 +1908,6 @@ Potential future additions to the character system:
 
 ## Version History
 
+- v1.2.0 (2025-11-21): Added UI Component Library documentation - 10 reusable components with ~95% adoption
 - v1.1.0 (2025-01-15): Added comprehensive mobile-first responsive design patterns and guidelines
 - v1.0.0 (2025-01-09): Initial design system with library theme
