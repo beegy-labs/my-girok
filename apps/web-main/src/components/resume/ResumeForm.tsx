@@ -257,7 +257,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
   const handleFileUpload = async (file: File, type: AttachmentType) => {
     if (!resume?.id) {
-      setUploadError('Please save the resume first before uploading files');
+      setUploadError(t('resume.form.saveResumeFirstUpload'));
       return;
     }
 
@@ -268,7 +268,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       const attachment = await uploadAttachment(resume.id, file, type);
       setAttachments([...attachments, attachment]);
     } catch (error: any) {
-      setUploadError(error.response?.data?.message || 'Failed to upload file');
+      setUploadError(error.response?.data?.message || t('resume.form.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -304,10 +304,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   };
 
   const handleClearDraft = () => {
-    if (confirm('저장된 내용을 삭제하시겠습니까?')) {
+    if (confirm(t('resume.form.clearDraftConfirm'))) {
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);
-      alert('저장 내용이 삭제되었습니다.');
+      alert(t('resume.form.clearDraftSuccess'));
     }
   };
 
@@ -317,13 +317,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        setUploadError('Please select an image file (JPG, PNG, WEBP)');
+        setUploadError(t('resume.form.selectImageFile'));
         return;
       }
 
       // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
-        setUploadError('Image size must be less than 10MB');
+        setUploadError(t('resume.form.imageSizeTooLarge'));
         return;
       }
 
@@ -339,7 +339,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   // Upload profile photo
   const handleProfilePhotoUpload = async () => {
     if (!profilePhotoFile || !resume?.id) {
-      setUploadError('Please save the resume first before uploading photos');
+      setUploadError(t('resume.form.saveResumeFirstPhoto'));
       return;
     }
 
@@ -351,16 +351,16 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         resume.id,
         profilePhotoFile,
         AttachmentType.PROFILE_PHOTO,
-        'Profile Photo'
+        t('resume.form.profilePhoto')
       );
 
       setFormData(prev => ({ ...prev, profileImage: attachment.fileUrl }));
       setProfilePhotoFile(null);
       await loadAttachments();
-      alert('Profile photo uploaded successfully!');
+      alert(t('resume.form.photoUploadSuccess'));
     } catch (error: any) {
       console.error('Failed to upload profile photo:', error);
-      setUploadError(error.response?.data?.message || 'Failed to upload photo. Please try again.');
+      setUploadError(error.response?.data?.message || t('resume.form.photoUploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -377,7 +377,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       return;
     }
 
-    if (!confirm('Are you sure you want to delete this profile photo?')) {
+    if (!confirm(t('resume.form.confirmDeletePhoto'))) {
       return;
     }
 
@@ -386,10 +386,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       await deleteAttachment(resume.id, profilePhoto.id);
       setFormData(prev => ({ ...prev, profileImage: '' }));
       await loadAttachments();
-      alert('Profile photo deleted successfully');
+      alert(t('resume.form.photoDeleteSuccess'));
     } catch (error) {
       console.error('Failed to delete profile photo:', error);
-      alert('Failed to delete photo. Please try again.');
+      alert(t('resume.form.photoDeleteFailed'));
     } finally {
       setUploading(false);
     }
@@ -444,7 +444,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              Resume Title <span className="text-red-500">*</span>
+              {t('resume.form.resumeTitle')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -452,33 +452,33 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="e.g., For Tech Companies, For Startups"
+              placeholder={t('resume.form.resumeTitlePlaceholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              Paper Size <span className="text-red-500">*</span>
+              {t('resume.form.paperSize')} <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.paperSize}
               onChange={e => setFormData({ ...formData, paperSize: e.target.value as PaperSize })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             >
-              <option value="A4">A4 (210 × 297 mm)</option>
-              <option value="LETTER">Letter (8.5 × 11 in)</option>
+              <option value="A4">{t('resume.form.paperSizeA4')}</option>
+              <option value="LETTER">{t('resume.form.paperSizeLetter')}</option>
             </select>
           </div>
         </div>
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            Description
+            {t('resume.form.description')}
           </label>
           <input
             type="text"
             value={formData.description || ''}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
             className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="Brief description of this resume"
+            placeholder={t('resume.form.descriptionPlaceholder')}
           />
         </div>
       </div>
@@ -496,7 +496,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              Name <span className="text-red-500">*</span>
+              {t('resume.form.name')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -504,12 +504,12 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="Hong Gildong"
+              placeholder={t('resume.form.namePlaceholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              Email <span className="text-red-500">*</span>
+              {t('resume.form.email')} <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
@@ -517,19 +517,19 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               value={formData.email}
               onChange={e => setFormData({ ...formData, email: e.target.value })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="hong@example.com"
+              placeholder={t('resume.form.emailPlaceholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              Phone
+              {t('resume.form.phone')}
             </label>
             <input
               type="tel"
               value={formData.phone || ''}
               onChange={e => setFormData({ ...formData, phone: e.target.value })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="010-1234-5678"
+              placeholder={t('resume.form.phonePlaceholder')}
             />
           </div>
           <div>
@@ -544,43 +544,43 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               placeholder="서울특별시 강남구"
             />
             <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-              City/District level (e.g., "서울특별시 강남구" or "Seoul, Gangnam-gu")
+              {t('resume.form.addressHint')}
             </p>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              GitHub
+              {t('resume.form.github')}
             </label>
             <input
               type="url"
               value={formData.github || ''}
               onChange={e => setFormData({ ...formData, github: e.target.value })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="https://github.com/username"
+              placeholder={t('resume.form.githubPlaceholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              Blog
+              {t('resume.form.blog')}
             </label>
             <input
               type="url"
               value={formData.blog || ''}
               onChange={e => setFormData({ ...formData, blog: e.target.value })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="https://blog.example.com"
+              placeholder={t('resume.form.blogPlaceholder')}
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-              LinkedIn
+              {t('resume.form.linkedin')}
             </label>
             <input
               type="url"
               value={formData.linkedin || ''}
               onChange={e => setFormData({ ...formData, linkedin: e.target.value })}
               className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-              placeholder="https://linkedin.com/in/username"
+              placeholder={t('resume.form.linkedinPlaceholder')}
             />
           </div>
         </div>
@@ -623,7 +623,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            Profile Photo
+            {t('resume.form.profilePhoto')}
           </label>
 
           {/* Display current or preview photo */}
@@ -643,7 +643,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 disabled={uploading}
                 className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {uploading ? 'Deleting...' : 'Remove Photo'}
+                {uploading ? t('resume.form.deletingPhoto') : t('resume.form.deletePhoto')}
               </button>
             </div>
           )}
@@ -664,7 +664,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 disabled={uploading}
                 className="px-4 py-2 text-sm bg-amber-700 dark:bg-amber-600 text-white dark:text-gray-900 rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
-                {uploading ? 'Uploading...' : 'Upload Photo'}
+                {uploading ? t('resume.form.uploadingPhoto') : t('resume.form.uploadPhoto')}
               </button>
             )}
           </div>
@@ -675,28 +675,28 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
           {!resume?.id && (
             <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-              💡 Please save the resume first before uploading a profile photo
+              {t('resume.form.saveFirstPhotoHint')}
             </p>
           )}
 
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            Supported formats: JPG, PNG, WEBP (max 10MB). Photo will be automatically converted to grayscale for professional appearance.
+            {t('resume.form.photoFormats')}
           </p>
         </div>
 
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            Military Service (Korean)
+            {t('resume.form.militaryServiceKorean')}
           </label>
           <select
             value={formData.militaryService || ''}
             onChange={e => setFormData({ ...formData, militaryService: e.target.value as any })}
             className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
           >
-            <option value="">Select status</option>
-            <option value="COMPLETED">Completed (군필)</option>
-            <option value="EXEMPTED">Exempted (면제)</option>
-            <option value="NOT_APPLICABLE">Not Applicable (해당없음)</option>
+            <option value="">{t('resume.form.militaryServiceSelect')}</option>
+            <option value="COMPLETED">{t('resume.form.militaryServiceCompleted')}</option>
+            <option value="EXEMPTED">{t('resume.form.militaryServiceExempted')}</option>
+            <option value="NOT_APPLICABLE">{t('resume.form.militaryServiceNotApplicable')}</option>
           </select>
         </div>
         {formData.militaryService === 'COMPLETED' && (
@@ -710,11 +710,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={e => setFormData({ ...formData, militaryRank: e.target.value })}
                 className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
               >
-                <option value="">선택</option>
-                <option value="병장">병장 (Sergeant)</option>
-                <option value="상병">상병 (Corporal)</option>
-                <option value="일병">일병 (Private First Class)</option>
-                <option value="이병">이병 (Private)</option>
+                <option value="">{t('resume.form.militaryRankSelect')}</option>
+                <option value="병장">{t('resume.militaryRanks.sergeant')}</option>
+                <option value="상병">{t('resume.militaryRanks.corporal')}</option>
+                <option value="일병">{t('resume.militaryRanks.pfc')}</option>
+                <option value="이병">{t('resume.militaryRanks.private')}</option>
               </select>
             </div>
             <div>
@@ -726,9 +726,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={e => setFormData({ ...formData, militaryDischargeType: e.target.value })}
                 className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
               >
-                <option value="">선택</option>
-                <option value="만기전역">만기전역 (Honorable Discharge)</option>
-                <option value="의병전역">의병전역 (Medical Discharge)</option>
+                <option value="">{t('resume.form.militaryDischargeSelect')}</option>
+                <option value="만기전역">{t('resume.dischargeTypes.honorable')}</option>
+                <option value="의병전역">{t('resume.dischargeTypes.medical')}</option>
               </select>
             </div>
             <div className="md:col-span-2">
@@ -751,31 +751,31 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 />
               </div>
               <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-                YYYY-MM format (e.g., 2020-01 ~ 2021-10)
+                {t('resume.form.yyyymmFormat')}
               </p>
             </div>
           </div>
         )}
         <div className="mt-4">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            Summary
+            {t('resume.form.summary')}
           </label>
           <textarea
             value={formData.summary || ''}
             onChange={e => setFormData({ ...formData, summary: e.target.value })}
             rows={4}
             className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="Brief introduction about yourself..."
+            placeholder={t('resume.form.summaryPlaceholder')}
           />
         </div>
 
         {/* Key Achievements */}
         <div className="mt-6">
           <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            ⭐ Key Achievements (주요 성과)
+            {t('resume.form.keyAchievements')}
           </label>
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mb-3">
-            Highlight 3-5 major accomplishments from your career
+            {t('resume.form.keyAchievementsHint')}
           </p>
           {(formData.keyAchievements || []).map((achievement, index) => (
             <div key={index} className="mb-3">
@@ -789,7 +789,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   }}
                   rows={3}
                   className="flex-1 px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary resize-y"
-                  placeholder={`Achievement #${index + 1} - Example: "RDB → Redis 리팩토링으로 Latency 48% 개선 및 대규모 트래픽 안정화"`}
+                  placeholder={t('resume.form.achievementPlaceholder', { index: index + 1 })}
                 />
                 <button
                   type="button"
@@ -799,7 +799,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   }}
                   className="px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors whitespace-nowrap"
                 >
-                  Remove
+                  {t('resume.form.remove')}
                 </button>
               </div>
             </div>
@@ -814,7 +814,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             }}
             className="mt-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/30 transition-colors"
           >
-            + Add Achievement
+            {t('resume.experienceForm.addAchievement')}
           </button>
         </div>
         </>
@@ -824,7 +824,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       {/* Application Reason (지원 동기) */}
       <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-6">
         <CollapsibleHeader
-          title="Application Reason (지원 동기)"
+          title={t('resume.form.applicationReason')}
           icon="💼"
           isCollapsed={collapsedSections.applicationReason}
           onToggle={() => toggleSection('applicationReason')}
@@ -836,10 +836,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             onChange={e => setFormData({ ...formData, applicationReason: e.target.value })}
             rows={6}
             className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="귀사에 지원하게 된 동기와 이유를 작성해주세요..."
+            placeholder={t('resume.form.applicationReasonPlaceholder')}
           />
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            회사의 비전, 직무의 매력, 본인의 강점과의 연결성 등을 작성
+            {t('resume.form.applicationReasonHint')}
           </p>
         </>
         )}
@@ -888,7 +888,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             }}
             className="px-4 py-2 bg-amber-700 dark:bg-amber-600 hover:bg-amber-800 dark:hover:bg-amber-700 text-white dark:text-gray-900 rounded-lg transition-all font-semibold"
           >
-            + 카테고리 추가
+            {t('resume.form.addCategory')}
           </button>
         </div>
 
@@ -897,7 +897,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {formData.skills.map((skill, skillIndex) => (
               <div key={skillIndex} className="border border-amber-200 dark:border-dark-border-default rounded-lg p-5 bg-amber-50/20 dark:bg-dark-bg-elevated transition-colors duration-200">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary">📚 카테고리 #{skillIndex + 1}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary">{t('resume.form.categoryNumber', { index: skillIndex + 1 })}</h3>
                   <button
                     type="button"
                     onClick={() => {
@@ -906,14 +906,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     }}
                     className="text-red-600 hover:text-red-800 text-sm font-semibold"
                   >
-                    삭제
+                    {t('common.delete')}
                   </button>
                 </div>
 
                 {/* Category Name */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                    카테고리명 <span className="text-red-500">*</span>
+                    {t('resume.form.categoryName')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -924,14 +924,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       setFormData({ ...formData, skills: newSkills });
                     }}
                     className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary"
-                    placeholder="예: 프로그래밍 언어, 프레임워크, 데이터베이스, 클라우드"
+                    placeholder={t('resume.form.categoryPlaceholder')}
                   />
                 </div>
 
                 {/* Skill Items */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-gray-700 dark:text-dark-text-secondary">기술 스택</label>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-dark-text-secondary">{t('resume.form.skillStack')}</label>
                     <button
                       type="button"
                       onClick={() => {
@@ -950,7 +950,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       }}
                       className="px-3 py-1 text-sm bg-white dark:bg-dark-bg-elevated border border-amber-600 dark:border-amber-500 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-50 dark:hover:bg-dark-bg-hover transition-all font-semibold"
                     >
-                      + 기술 추가
+                      {t('resume.form.addSkillButton')}
                     </button>
                   </div>
 
@@ -972,7 +972,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                       setFormData({ ...formData, skills: newSkills });
                                     }}
                                     className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-xs font-semibold"
-                                    title="위로 이동"
+                                    title={t('resume.form.moveUpButton')}
                                   >
                                     ▲
                                   </button>
@@ -988,13 +988,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                       setFormData({ ...formData, skills: newSkills });
                                     }}
                                     className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-xs font-semibold"
-                                    title="아래로 이동"
+                                    title={t('resume.form.moveDownButton')}
                                   >
                                     ▼
                                   </button>
                                 )}
                               </div>
-                              <span className="text-sm font-semibold text-gray-600 dark:text-dark-text-secondary">기술 #{itemIndex + 1}</span>
+                              <span className="text-sm font-semibold text-gray-600 dark:text-dark-text-secondary">{t('resume.form.skillNumber', { index: itemIndex + 1 })}</span>
                             </div>
                             <button
                               type="button"
@@ -1008,7 +1008,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                               }}
                               className="text-red-600 hover:text-red-800 text-xs font-semibold"
                             >
-                              삭제
+                              {t('common.delete')}
                             </button>
                           </div>
 
@@ -1016,7 +1016,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                             {/* Skill Name */}
                             <div>
                               <label className="block text-xs font-semibold text-gray-700 dark:text-dark-text-secondary mb-1">
-                                기술명 <span className="text-red-500">*</span>
+                                {t('resume.form.skillName')} <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="text"
@@ -1031,7 +1031,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                                   setFormData({ ...formData, skills: newSkills });
                                 }}
                                 className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary text-sm"
-                                placeholder="예: React, Node.js, PostgreSQL"
+                                placeholder={t('resume.form.skillPlaceholder')}
                               />
                             </div>
                           </div>
@@ -1057,10 +1057,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                           {typeof item !== 'string' && item.description && !item.descriptions?.length && (
                             <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                               <p className="text-xs text-yellow-800 dark:text-yellow-300 mb-2">
-                                <strong>기존 설명:</strong> {item.description}
+                                <strong>{t('resume.form.legacyDescriptionTitle')}</strong> {item.description}
                               </p>
                               <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                                위 내용은 기존 텍스트 형식입니다. 새로운 계층 구조로 마이그레이션하려면 위에서 "+ 추가" 버튼을 눌러 새로운 항목을 추가하세요.
+                                {t('resume.form.legacyDescriptionMigration')}
                               </p>
                             </div>
                           )}
@@ -1069,7 +1069,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     </div>
                   ) : (
                     <div className="text-center py-6 text-gray-500 dark:text-dark-text-tertiary text-sm bg-white dark:bg-dark-bg-elevated rounded-lg border border-dashed border-gray-300 dark:border-dark-border-subtle transition-colors duration-200">
-                      <p>기술을 추가하려면 "+ 기술 추가" 버튼을 클릭하세요</p>
+                      <p>{t('resume.form.clickToAddSkills')}</p>
                     </div>
                   )}
                 </div>
@@ -1078,7 +1078,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500 dark:text-dark-text-tertiary">
-            <p>카테고리를 추가하려면 "+ 카테고리 추가" 버튼을 클릭하세요</p>
+            <p>{t('resume.form.clickToAddCategory')}</p>
           </div>
         )}
         </>
@@ -1129,7 +1129,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             }}
             className="px-4 py-2 bg-amber-700 dark:bg-amber-600 hover:bg-amber-800 dark:hover:bg-amber-700 text-white dark:text-gray-900 rounded-lg transition-all font-semibold"
           >
-            + Add Certificate
+            {t('resume.form.addCertificate')}
           </button>
         </div>
 
@@ -1138,7 +1138,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {formData.certificates.map((cert, index) => (
               <div key={index} className="border border-gray-200 dark:border-dark-border-default rounded-lg p-4 bg-white dark:bg-dark-bg-elevated transition-colors duration-200">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary">Certificate #{index + 1}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary">{t('resume.form.certificateNumber', { index: index + 1 })}</h3>
                   <button
                     type="button"
                     onClick={() => {
@@ -1147,14 +1147,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     }}
                     className="text-red-600 hover:text-red-800 text-sm font-semibold"
                   >
-                    Remove
+                    {t('resume.form.remove')}
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      Certificate Name <span className="text-red-500">*</span>
+                      {t('resume.form.certificateName')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1165,13 +1165,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
                       className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder="e.g., AWS Certified Solutions Architect"
+                      placeholder={t('resume.form.certificatePlaceholder')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      Issuer <span className="text-red-500">*</span>
+                      {t('resume.form.issuer')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1182,13 +1182,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
                       className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder="e.g., Amazon Web Services"
+                      placeholder={t('resume.form.issuerPlaceholder')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      Issue Date <span className="text-red-500">*</span>
+                      {t('resume.form.issueDate')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="month"
@@ -1204,7 +1204,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      Expiry Date
+                      {t('resume.form.expiryDate')}
                     </label>
                     <input
                       type="month"
@@ -1215,13 +1215,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
                       className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder="Leave empty if no expiry"
+                      placeholder={t('resume.form.expiryEmpty')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      Credential ID
+                      {t('resume.form.credentialIdLabel')}
                     </label>
                     <input
                       type="text"
@@ -1232,13 +1232,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
                       className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder="Credential ID"
+                      placeholder={t('resume.form.credentialId')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                      Credential URL
+                      {t('resume.form.credentialUrl')}
                     </label>
                     <input
                       type="url"
@@ -1249,7 +1249,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                         setFormData({ ...formData, certificates: newCertificates });
                       }}
                       className="w-full px-4 py-3 bg-white dark:bg-dark-bg-card border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-                      placeholder="https://verify.example.com"
+                      placeholder={t('resume.form.credentialUrlPlaceholder')}
                     />
                   </div>
                 </div>
@@ -1258,7 +1258,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500 dark:text-dark-text-tertiary">
-            <p>No certifications added yet. Click "Add Certificate" to get started.</p>
+            <p>{t('resume.form.noCertificates')}</p>
           </div>
         )}
         </>
@@ -1329,7 +1329,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               />
               <div className="border-2 border-dashed border-gray-300 dark:border-dark-border-subtle rounded-lg p-4 text-center hover:border-amber-400 dark:hover:border-amber-500 transition-colors">
                 <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
-                  {uploading ? '⏳ Uploading...' : '+ Click to upload profile photo'}
+                  {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPhoto')}
                 </p>
               </div>
             </label>
@@ -1338,9 +1338,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         {/* Portfolio Files */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-3">🎨 Portfolio</h3>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-3">🎨 {t('resume.form.portfolioSection')}</h3>
           <p className="text-sm text-gray-600 dark:text-dark-text-secondary mb-3">
-            Upload your project screenshots, designs, or PDF documents
+            {t('resume.form.portfolioDesc')}
           </p>
           <div className="space-y-3">
             {getAttachmentsByType(AttachmentType.PORTFOLIO).map(attachment => (
@@ -1355,7 +1355,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   onClick={() => handleDeleteAttachment(attachment.id)}
                   className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                 >
-                  Delete
+                  {t('common.delete')}
                 </button>
               </div>
             ))}
@@ -1369,7 +1369,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               />
               <div className="border-2 border-dashed border-gray-300 dark:border-dark-border-subtle rounded-lg p-4 text-center hover:border-amber-400 dark:hover:border-amber-500 transition-colors">
                 <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
-                  {uploading ? '⏳ Uploading...' : '+ Click to upload portfolio file'}
+                  {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPortfolio')}
                 </p>
               </div>
             </label>
@@ -1378,9 +1378,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         {/* Certificate Files */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-3">🏆 Certificates</h3>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text-primary mb-3">🏆 {t('resume.form.certificatesSection')}</h3>
           <p className="text-sm text-gray-600 dark:text-dark-text-secondary mb-3">
-            Upload your certification or award documents
+            {t('resume.form.certificatesDesc')}
           </p>
           <div className="space-y-3">
             {getAttachmentsByType(AttachmentType.CERTIFICATE).map(attachment => (
@@ -1395,7 +1395,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   onClick={() => handleDeleteAttachment(attachment.id)}
                   className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                 >
-                  Delete
+                  {t('common.delete')}
                 </button>
               </div>
             ))}
@@ -1409,7 +1409,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               />
               <div className="border-2 border-dashed border-gray-300 dark:border-dark-border-subtle rounded-lg p-4 text-center hover:border-amber-400 dark:hover:border-amber-500 transition-colors">
                 <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
-                  {uploading ? '⏳ Uploading...' : '+ Click to upload certificate'}
+                  {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadCertificate')}
                 </p>
               </div>
             </label>
@@ -1431,7 +1431,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       {/* Cover Letter (자기소개서) - At the bottom */}
       <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-6">
         <CollapsibleHeader
-          title="Cover Letter (자기소개서)"
+          title={t('resume.form.coverLetter')}
           icon="📝"
           isCollapsed={collapsedSections.coverLetter}
           onToggle={() => toggleSection('coverLetter')}
@@ -1443,10 +1443,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}
             rows={8}
             className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="Write about your background, strengths, and why you're a good fit for this position..."
+            placeholder={t('resume.form.coverLetterPlaceholder')}
           />
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            Describe your background, experiences, and what makes you unique
+            {t('resume.form.coverLetterHint')}
           </p>
         </>
         )}
@@ -1458,7 +1458,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <div className="flex justify-end">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
             <span>✓</span>
-            <span>저장됨</span>
+            <span>{t('resume.success.saved')}</span>
           </div>
         </div>
       )}
@@ -1469,7 +1469,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           onClick={handleClearDraft}
           className="px-4 py-2 text-sm text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary underline transition-all"
         >
-          저장 내용 삭제
+          {t('resume.form.deleteDraft')}
         </button>
 
         <div className="flex gap-4">
@@ -1478,21 +1478,21 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             onClick={() => window.history.back()}
             className="px-6 py-3 bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary rounded-lg font-semibold border border-gray-300 dark:border-dark-border-default transition-all"
           >
-            취소
+            {t('common.cancel')}
           </button>
           <button
             type="button"
             onClick={handleSaveDraft}
             className="px-6 py-3 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-amber-700 dark:text-amber-400 rounded-lg font-semibold border-2 border-amber-700 dark:border-amber-600 transition-all transform hover:scale-[1.02]"
           >
-            📝 저장
+            📝 {t('common.save')}
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? '💾 저장 중...' : '💾 저장 및 미리보기'}
+            {submitting ? t('resume.form.saving') : t('resume.form.saveAndPreview')}
           </button>
         </div>
       </div>
