@@ -7,6 +7,7 @@ import ShareLinkModal from '../../components/resume/ShareLinkModal';
 import { exportResumeToPDF } from '../../utils/pdf';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CharacterMessage } from '../../components/characters';
+import { PrimaryButton, SecondaryButton } from '../../components/ui';
 
 export default function ResumePreviewPage() {
   const navigate = useNavigate();
@@ -89,12 +90,9 @@ export default function ResumePreviewPage() {
         title={t('resume.preview.notFoundTitle')}
         message={t('resume.preview.notFoundMessage')}
         action={
-          <button
-            onClick={() => navigate('/resume/my')}
-            className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold rounded-lg transition-all shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
-          >
+          <PrimaryButton onClick={() => navigate('/resume/my')}>
             {t('resume.preview.backToMyResumes')}
-          </button>
+          </PrimaryButton>
         }
       />
     );
@@ -107,12 +105,9 @@ export default function ResumePreviewPage() {
         title={t('resume.preview.errorTitle')}
         message={t('resume.preview.errorMessage')}
         action={
-          <button
-            onClick={() => loadResume()}
-            className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold rounded-lg transition-all shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
-          >
+          <PrimaryButton onClick={() => loadResume()}>
             {t('resume.preview.retry')}
-          </button>
+          </PrimaryButton>
         }
       />
     );
@@ -138,35 +133,32 @@ export default function ResumePreviewPage() {
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => navigate(`/resume/edit/${resumeId}`)}
-              className="px-4 py-2 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all"
-            >
+            <SecondaryButton onClick={() => navigate(`/resume/edit/${resumeId}`)}>
               ✍️ {t('resume.preview.edit')}
-            </button>
+            </SecondaryButton>
           </div>
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <button
+            <PrimaryButton
               onClick={handleExportPDF}
               disabled={exporting}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1"
             >
               {exporting ? t('resume.preview.exporting') : t('resume.preview.downloadPdf')}
-            </button>
-            <button
+            </PrimaryButton>
+            <SecondaryButton
               onClick={handlePrint}
-              className="flex-1 px-6 py-3 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all"
+              className="flex-1"
             >
               🖨️ {t('resume.preview.print')}
-            </button>
-            <button
+            </SecondaryButton>
+            <SecondaryButton
               onClick={() => setShowShareModal(true)}
-              className="flex-1 px-6 py-3 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-amber-700 dark:text-amber-400 font-semibold rounded-lg border border-amber-300 dark:border-amber-600 transition-all"
+              className="flex-1"
             >
               🔗 {t('resume.preview.shareLink')}
-            </button>
+            </SecondaryButton>
           </div>
         </div>
       </div>
