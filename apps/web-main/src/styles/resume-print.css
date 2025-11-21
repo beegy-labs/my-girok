@@ -18,7 +18,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 0.5cm !important; /* Minimal padding for maximum content space */
+  padding: 0.3cm !important; /* Reduced padding for more content space and less blank areas */
 }
 
 /* Paged.js area - where content is placed */
@@ -38,16 +38,16 @@
 }
 
 .pagedjs_page_content .border-b-2 {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .pagedjs_page_content .mb-6 {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .pagedjs_page_content .resume-section,
 .pagedjs_page_content .resume-item {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 /* Base page styles - Use block to avoid flex interfering with page breaks */
@@ -74,7 +74,7 @@
 .resume-page-a4 {
   width: 21cm;
   min-height: 29.7cm;
-  padding: 0.5cm; /* Minimal padding for maximum content space */
+  padding: 0.3cm; /* Reduced padding for more content space */
   margin: 0 auto;
   background: white;
   position: relative;
@@ -86,7 +86,7 @@
 .resume-page-letter {
   width: 21.59cm;
   min-height: 27.94cm;
-  padding: 0.5cm; /* Minimal padding for maximum content space */
+  padding: 0.3cm; /* Reduced padding for more content space */
   margin: 0 auto;
   background: white;
   position: relative;
@@ -253,21 +253,21 @@
   /* Keep section headings with their first item */
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid !important;
-    break-after: avoid-page !important;
+    break-after: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* Prevent orphans and widows - More aggressive */
+  /* Prevent orphans and widows - Balanced settings */
   p, li {
-    orphans: 4;
-    widows: 4;
+    orphans: 2;
+    widows: 2;
   }
 
-  /* Header section - keep together */
+  /* Header section - allow natural breaks if needed */
   .border-b-2 {
-    page-break-inside: avoid !important;
-    break-inside: avoid-page !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
     page-break-after: auto !important;
   }
 
@@ -305,7 +305,7 @@
   .resume-section {
     page-break-inside: auto;
     break-inside: auto;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
     page-break-before: auto;
     break-before: auto;
   }
@@ -313,7 +313,7 @@
   .resume-item {
     page-break-inside: avoid;
     break-inside: avoid;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
   }
 
   /* Prevent orphans and widows */
@@ -325,11 +325,9 @@
   /* Keep headings with their content */
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
-    break-after: avoid-page;
+    break-after: avoid;
     page-break-inside: avoid;
     break-inside: avoid;
-    orphans: 2;
-    widows: 2;
   }
 
   /* Ensure profile image doesn't break */
@@ -340,17 +338,17 @@
     height: auto;
   }
 
-  /* Header section - keep together */
+  /* Header section - allow natural breaks */
   .border-b-2 {
-    page-break-inside: avoid;
-    break-inside: avoid-page;
+    page-break-inside: auto;
+    break-inside: auto;
     page-break-after: auto;
   }
 
   /* Header with border - main resume header */
   .border-b-2.border-gray-800 {
-    page-break-inside: avoid;
-    break-inside: avoid-page;
+    page-break-inside: auto;
+    break-inside: auto;
     page-break-after: auto;
   }
 
@@ -395,10 +393,10 @@
 
   /* Margin bottom classes */
   .mb-6 {
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 1rem !important;
   }
 
   .mb-5 {
-    margin-bottom: 1.25rem !important;
+    margin-bottom: 0.75rem !important;
   }
 }
