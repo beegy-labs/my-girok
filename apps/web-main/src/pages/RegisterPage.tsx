@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { register } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
+import { TextInput, PrimaryButton, Card } from '../components/ui';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -55,7 +56,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Register Form */}
-        <div className="bg-amber-50/30 dark:bg-dark-bg-card rounded-2xl shadow-xl dark:shadow-dark-lg p-8 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200">
+        <Card variant="primary" padding="lg" className="shadow-xl">
           <h2 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-6">{t('auth.registerTitle')}</h2>
 
           {error && (
@@ -68,94 +69,60 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="name" className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                {t('auth.name')}
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary"
-                placeholder="홍길동"
-              />
-            </div>
+            <TextInput
+              id="name"
+              label={t('auth.name')}
+              type="text"
+              value={name}
+              onChange={setName}
+              required
+              placeholder="홍길동"
+              autoComplete="name"
+            />
 
-            <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                {t('auth.usernameHint')}
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
-                required
-                minLength={3}
-                maxLength={20}
-                pattern="[a-z0-9]+"
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary"
-                placeholder="hongkildong"
-              />
-              <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-2 flex items-center">
-                <span className="mr-1">📖</span>
-                {t('auth.usernameRule')}
-              </p>
-            </div>
+            <TextInput
+              id="username"
+              label={t('auth.usernameHint')}
+              type="text"
+              value={username}
+              onChange={(value) => setUsername(value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+              required
+              placeholder="hongkildong"
+              hint={`📖 ${t('auth.usernameRule')}`}
+              autoComplete="username"
+            />
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                {t('auth.email')}
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary"
-                placeholder="your@email.com"
-              />
-            </div>
+            <TextInput
+              id="email"
+              label={t('auth.email')}
+              type="email"
+              value={email}
+              onChange={setEmail}
+              required
+              placeholder="your@email.com"
+              autoComplete="email"
+            />
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                {t('auth.password')}
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary"
-                placeholder="••••••••"
-              />
-              <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-2">
-                {t('auth.passwordRule')}
-              </p>
-            </div>
+            <TextInput
+              id="password"
+              label={t('auth.password')}
+              type="password"
+              value={password}
+              onChange={setPassword}
+              required
+              placeholder="••••••••"
+              hint={t('auth.passwordRule')}
+              autoComplete="new-password"
+            />
 
-            <button
+            <PrimaryButton
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
+              loading={loading}
+              fullWidth
             >
-              {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white dark:text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {t('auth.registering')}
-                </span>
-              ) : (
-                t('auth.registerButton')
-              )}
-            </button>
+              {loading ? t('auth.registering') : t('auth.registerButton')}
+            </PrimaryButton>
           </form>
 
           {/* Divider */}
@@ -170,7 +137,7 @@ export default function RegisterPage() {
               </Link>
             </p>
           </div>
-        </div>
+        </Card>
 
         {/* Footer Note */}
         <p className="text-center text-xs text-gray-500 dark:text-dark-text-tertiary mt-6">
