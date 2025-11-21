@@ -66,14 +66,22 @@ export default function ResumePreviewContainer({
   const previewWrapperStyle: React.CSSProperties = {};
   if (scale && scale !== 1) {
     previewWrapperStyle.transform = `scale(${scale})`;
-    previewWrapperStyle.transformOrigin = 'top left';
-    previewWrapperStyle.width = `${100 / scale}%`;
+    previewWrapperStyle.transformOrigin = 'top center';
+    // No width adjustment needed - let content determine natural width
   }
 
   return (
     <div className={outerClasses} style={containerStyle}>
       {headerContent}
-      <div className={innerClasses}>
+      <div
+        className={innerClasses}
+        style={{
+          // Ensure container properly wraps scaled content
+          overflow: 'hidden',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
         <div style={previewWrapperStyle}>
           <ResumePreview resume={resume} paperSize={effectivePaperSize} />
         </div>
