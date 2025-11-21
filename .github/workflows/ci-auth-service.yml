@@ -321,6 +321,50 @@ jobs:
             echo "Successfully updated GitOps repository for ${ENVIRONMENT}"
           fi
 
+      - name: Trigger ArgoCD sync
+        run: |
+          # Determine ArgoCD app name based on branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            APP_NAME="my-girok-auth-service-prod"
+            ENVIRONMENT="production"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            APP_NAME="my-girok-auth-service-dev"
+            ENVIRONMENT="development"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            APP_NAME="my-girok-auth-service-staging"
+            ENVIRONMENT="staging"
+          fi
+
+          echo "Triggering ArgoCD refresh and sync for ${APP_NAME} (${ENVIRONMENT})"
+
+          # Install ArgoCD CLI if not already installed
+          if ! command -v argocd &> /dev/null; then
+            echo "Installing ArgoCD CLI..."
+            curl -sSL -o /tmp/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+            chmod +x /tmp/argocd
+            sudo mv /tmp/argocd /usr/local/bin/argocd
+          fi
+
+          # Login to ArgoCD
+          argocd login ${{ secrets.ARGOCD_SERVER }} \
+            --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }} \
+            --grpc-web \
+            --insecure
+
+          # Refresh the app to get latest Git changes
+          echo "Refreshing ArgoCD app: ${APP_NAME}"
+          argocd app refresh ${APP_NAME} --grpc-web
+
+          # Sync the app to deploy changes
+          echo "Syncing ArgoCD app: ${APP_NAME}"
+          argocd app sync ${APP_NAME} --grpc-web --prune
+
+          # Wait for sync to complete
+          echo "Waiting for sync to complete..."
+          argocd app wait ${APP_NAME} --grpc-web --timeout 300
+
+          echo "ArgoCD sync completed successfully for ${APP_NAME}"
+
       - name: Send Discord notification - Deploy Success
         if: success()
         uses: sarisia/actions-status-discord@v1
@@ -331,7 +375,7 @@ jobs:
           description: |
             **Branch:** ${{ github.ref_name }}
             **Version:** ${{ steps.image.outputs.tag }}
-            **Deployment completed!**
+            **ArgoCD sync completed!**
           color: 0x2ecc71
           username: GitHub Actions
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
@@ -345,7 +389,7 @@ jobs:
           title: '❌ Deploy Failed - Auth Service'
           description: |
             **Branch:** ${{ github.ref_name }}
-            **GitOps update failed. Check logs for details.**
+            **GitOps update or ArgoCD sync failed. Check logs for details.**
           color: 0xe74c3c
           username: GitHub Actions
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
