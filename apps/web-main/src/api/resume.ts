@@ -219,8 +219,14 @@ function stripIds<T>(obj: T): T {
         continue;
       }
 
-      // Skip empty strings and undefined values to avoid validation errors
-      if (value === '' || value === undefined) {
+      // Convert empty strings to null (to allow clearing optional fields)
+      if (value === '') {
+        result[key] = null;
+        continue;
+      }
+
+      // Skip undefined values to avoid validation errors
+      if (value === undefined) {
         continue;
       }
 
