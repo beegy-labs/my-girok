@@ -18,6 +18,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Experience, ExperienceProject, ProjectAchievement, calculateExperienceDuration } from '../../api/resume';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
+import { TextInput, SecondaryButton, DestructiveButton } from '../ui';
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -180,29 +181,20 @@ function SortableExperienceCard({
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200">📚 {t('resume.experienceForm.company')} #{index + 1}</h3>
-            <button
-              type="button"
-              onClick={onRemove}
-              className="text-red-600 hover:text-red-800 text-sm font-semibold transition-colors duration-200"
-            >
+            <DestructiveButton onClick={onRemove} size="sm">
               {t('resume.experienceForm.removeCompany')}
-            </button>
+            </DestructiveButton>
           </div>
 
           {/* Company Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                {t('resume.experienceForm.company')} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={experience.company}
-                onChange={e => onUpdate({ ...experience, company: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder={t('resume.experienceForm.companyName')}
-              />
-            </div>
+            <TextInput
+              label={t('resume.experienceForm.company')}
+              value={experience.company}
+              onChange={value => onUpdate({ ...experience, company: value })}
+              placeholder={t('resume.experienceForm.companyName')}
+              required
+            />
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
@@ -258,31 +250,21 @@ function SortableExperienceCard({
 
           {/* Final Position and Job Title */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                {t('resume.experienceForm.position')} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={experience.finalPosition}
-                onChange={e => onUpdate({ ...experience, finalPosition: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder={t('resume.experienceForm.positionPlaceholder')}
-              />
-            </div>
+            <TextInput
+              label={t('resume.experienceForm.position')}
+              value={experience.finalPosition}
+              onChange={value => onUpdate({ ...experience, finalPosition: value })}
+              placeholder={t('resume.experienceForm.positionPlaceholder')}
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                {t('resume.experienceForm.jobTitle')} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={experience.jobTitle}
-                onChange={e => onUpdate({ ...experience, jobTitle: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder={t('resume.experienceForm.jobTitlePlaceholder')}
-              />
-            </div>
+            <TextInput
+              label={t('resume.experienceForm.jobTitle')}
+              value={experience.jobTitle}
+              onChange={value => onUpdate({ ...experience, jobTitle: value })}
+              placeholder={t('resume.experienceForm.jobTitlePlaceholder')}
+              required
+            />
           </div>
 
           {/* Salary Section */}
@@ -338,13 +320,9 @@ function SortableExperienceCard({
               <h4 className="text-md font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
                 📁 Projects at this company
               </h4>
-              <button
-                type="button"
-                onClick={addProject}
-                className="px-3 py-1.5 bg-amber-600 dark:bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors duration-200 font-semibold"
-              >
+              <SecondaryButton onClick={addProject} size="sm">
                 + Add Project
-              </button>
+              </SecondaryButton>
             </div>
 
             {projects && projects.length > 0 ? (
@@ -477,13 +455,9 @@ function SortableProject({
           </svg>
         </button>
 
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-red-600 hover:text-red-800 text-xs font-semibold transition-colors duration-200"
-        >
+        <DestructiveButton onClick={onRemove} size="sm">
           Remove
-        </button>
+        </DestructiveButton>
       </div>
 
       {/* Project Details (Collapsible) */}
@@ -491,18 +465,13 @@ function SortableProject({
         <div className="p-4 space-y-4">
           {/* Project Basic Info */}
           <div className="grid grid-cols-1 gap-3">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                Project Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={project.name}
-                onChange={e => onUpdate({ ...project, name: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder="e.g., E-Commerce Platform Rebuild"
-              />
-            </div>
+            <TextInput
+              label="Project Name"
+              value={project.name}
+              onChange={value => onUpdate({ ...project, name: value })}
+              placeholder="e.g., E-Commerce Platform Rebuild"
+              required
+            />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
