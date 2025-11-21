@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
+import { PrimaryButton } from '../../components/ui';
 
 export default function ResumeEditPage() {
   const { t } = useTranslation();
@@ -145,12 +146,13 @@ export default function ResumeEditPage() {
                 </p>
               </div>
             </div>
-            <button
+            <PrimaryButton
               onClick={() => setShowPreview(!showPreview)}
-              className="lg:hidden px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-sm font-semibold rounded-lg transition-all shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 whitespace-nowrap"
+              size="sm"
+              className="lg:hidden"
             >
               {showPreview ? t('edit.showForm') : t('edit.showPreview')}
-            </button>
+            </PrimaryButton>
           </div>
         </div>
 

@@ -12,6 +12,7 @@ import {
   ShareLink,
   ShareDuration,
 } from '../../api/resume';
+import { PrimaryButton, SecondaryButton, DestructiveButton } from '../../components/ui';
 
 export default function MyResumePage() {
   const { t } = useTranslation();
@@ -244,30 +245,30 @@ export default function MyResumePage() {
                           >
                             👁️ {t('common.preview')}
                           </button>
-                          <button
+                          <PrimaryButton
                             onClick={() => navigateToEditResume(resume.id)}
-                            className="px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-xs sm:text-sm font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 whitespace-nowrap"
+                            size="sm"
                           >
                             ✍️ {t('common.edit')}
-                          </button>
-                          <button
+                          </PrimaryButton>
+                          <SecondaryButton
                             onClick={() => handleCopyResume(resume.id)}
-                            className="px-2 sm:px-4 py-2 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs sm:text-sm font-semibold rounded-lg border border-amber-200 dark:border-amber-800 transition-all whitespace-nowrap"
+                            size="sm"
                           >
                             📋 {t('common.copy')}
-                          </button>
-                          <button
+                          </SecondaryButton>
+                          <SecondaryButton
                             onClick={() => openShareModal(resume.id)}
-                            className="px-2 sm:px-4 py-2 bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all whitespace-nowrap"
+                            size="sm"
                           >
                             🔗 {t('common.share')}
-                          </button>
-                          <button
+                          </SecondaryButton>
+                          <DestructiveButton
                             onClick={() => handleDeleteResume(resume.id)}
-                            className="px-2 sm:px-4 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400 text-xs sm:text-sm font-semibold rounded-lg border border-red-200 dark:border-red-800 transition-all whitespace-nowrap col-span-2 sm:col-span-1"
+                            size="sm"
                           >
                             🗑️ {t('common.delete')}
-                          </button>
+                          </DestructiveButton>
                         </div>
                       </div>
                     </div>
@@ -318,12 +319,12 @@ export default function MyResumePage() {
                                         readOnly
                                         className="flex-1 text-xs sm:text-sm text-gray-700 dark:text-dark-text-primary font-mono bg-gray-50 dark:bg-dark-bg-secondary px-2 sm:px-3 py-1.5 rounded border border-gray-200 dark:border-dark-border-default focus:outline-none"
                                       />
-                                      <button
+                                      <SecondaryButton
                                         onClick={() => copyToClipboard(link.shareUrl, link.id)}
-                                        className="px-2 sm:px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-300 text-xs font-semibold rounded border border-amber-300 dark:border-amber-800 transition-all whitespace-nowrap"
+                                        size="sm"
                                       >
                                         {copiedLinkId === link.id ? `✓ ${t('resume.linkCopied')}` : `📋 ${t('resume.copyLink')}`}
-                                      </button>
+                                      </SecondaryButton>
                                     </div>
                                   </div>
                                 </div>
@@ -338,12 +339,12 @@ export default function MyResumePage() {
                                       <span className="text-green-700 dark:text-green-400">{t('resume.permanent')}</span>
                                     )}
                                   </div>
-                                  <button
+                                  <DestructiveButton
                                     onClick={() => handleDeleteShare(link.id)}
-                                    className="px-2 py-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded border border-red-200 dark:border-red-800 transition-all"
+                                    size="sm"
                                   >
                                     {t('common.delete')}
-                                  </button>
+                                  </DestructiveButton>
                                 </div>
                               </div>
                             ))}
@@ -380,21 +381,21 @@ export default function MyResumePage() {
                 </select>
               </div>
               <div className="flex gap-3">
-                <button
+                <SecondaryButton
                   onClick={() => {
                     setShowShareModal(false);
                     setSelectedResumeId(null);
                   }}
-                  className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary text-sm sm:text-base font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all"
+                  className="flex-1"
                 >
                   {t('common.cancel')}
-                </button>
-                <button
+                </SecondaryButton>
+                <PrimaryButton
                   onClick={handleCreateShare}
-                  className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 text-sm sm:text-base font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20"
+                  className="flex-1"
                 >
                   {t('common.save')}
-                </button>
+                </PrimaryButton>
               </div>
             </div>
           </div>
