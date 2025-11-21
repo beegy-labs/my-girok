@@ -16,7 +16,15 @@ import SectionOrderManager from './SectionOrderManager';
 import ExperienceSection from './ExperienceSection';
 import EducationSection from './EducationSection';
 import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
-import { TextInput, Select, Card } from '../ui';
+import {
+  TextInput,
+  Select,
+  TextArea,
+  PrimaryButton,
+  SecondaryButton,
+  DestructiveButton,
+  Card,
+} from '../ui';
 
 interface ResumeFormProps {
   resume: Resume | null;
@@ -716,14 +724,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </div>
         )}
         <div className="mt-4">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-            {t('resume.form.summary')}
-          </label>
-          <textarea
+          <TextArea
+            label={t('resume.form.summary')}
             value={formData.summary || ''}
-            onChange={e => setFormData({ ...formData, summary: e.target.value })}
+            onChange={value => setFormData({ ...formData, summary: value })}
             rows={4}
-            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             placeholder={t('resume.form.summaryPlaceholder')}
           />
         </div>
@@ -739,42 +744,41 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           {(formData.keyAchievements || []).map((achievement, index) => (
             <div key={index} className="mb-3">
               <div className="flex items-start gap-2">
-                <textarea
-                  value={achievement}
-                  onChange={e => {
-                    const newAchievements = [...(formData.keyAchievements || [])];
-                    newAchievements[index] = e.target.value;
-                    setFormData({ ...formData, keyAchievements: newAchievements });
-                  }}
-                  rows={3}
-                  className="flex-1 px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary resize-y"
-                  placeholder={t('resume.form.achievementPlaceholder', { index: index + 1 })}
-                />
-                <button
-                  type="button"
+                <div className="flex-1">
+                  <TextArea
+                    value={achievement}
+                    onChange={value => {
+                      const newAchievements = [...(formData.keyAchievements || [])];
+                      newAchievements[index] = value;
+                      setFormData({ ...formData, keyAchievements: newAchievements });
+                    }}
+                    rows={3}
+                    placeholder={t('resume.form.achievementPlaceholder', { index: index + 1 })}
+                  />
+                </div>
+                <DestructiveButton
                   onClick={() => {
                     const newAchievements = formData.keyAchievements?.filter((_, i) => i !== index);
                     setFormData({ ...formData, keyAchievements: newAchievements });
                   }}
-                  className="px-3 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors whitespace-nowrap"
+                  size="sm"
                 >
                   {t('resume.form.remove')}
-                </button>
+                </DestructiveButton>
               </div>
             </div>
           ))}
-          <button
-            type="button"
+          <SecondaryButton
             onClick={() => {
               setFormData({
                 ...formData,
                 keyAchievements: [...(formData.keyAchievements || []), '']
               });
             }}
-            className="mt-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/30 transition-colors"
+            size="sm"
           >
             {t('resume.experienceForm.addAchievement')}
-          </button>
+          </SecondaryButton>
         </div>
         </>
         )}
@@ -790,16 +794,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         />
         {!collapsedSections.applicationReason && (
         <>
-          <textarea
+          <TextArea
             value={formData.applicationReason || ''}
-            onChange={e => setFormData({ ...formData, applicationReason: e.target.value })}
+            onChange={value => setFormData({ ...formData, applicationReason: value })}
             rows={6}
-            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
             placeholder={t('resume.form.applicationReasonPlaceholder')}
+            hint={t('resume.form.applicationReasonHint')}
           />
-          <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            {t('resume.form.applicationReasonHint')}
-          </p>
         </>
         )}
       </div>
@@ -829,8 +830,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <div>
             <p className="text-sm text-gray-600 dark:text-dark-text-secondary">{t('resume.descriptions.skills')}</p>
           </div>
-          <button
-            type="button"
+          <PrimaryButton
             onClick={() => {
               setFormData({
                 ...formData,
@@ -845,10 +845,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 ],
               });
             }}
-            className="px-4 py-2 bg-amber-700 dark:bg-amber-600 hover:bg-amber-800 dark:hover:bg-amber-700 text-white dark:text-gray-900 rounded-lg transition-all font-semibold"
           >
             {t('resume.form.addCategory')}
-          </button>
+          </PrimaryButton>
         </div>
 
         {formData.skills && formData.skills.length > 0 ? (
@@ -1066,8 +1065,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <div>
             <p className="text-sm text-gray-600 dark:text-dark-text-secondary">{t('resume.descriptions.certifications')}</p>
           </div>
-          <button
-            type="button"
+          <PrimaryButton
             onClick={() => {
               setFormData({
                 ...formData,
@@ -1086,10 +1084,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 ],
               });
             }}
-            className="px-4 py-2 bg-amber-700 dark:bg-amber-600 hover:bg-amber-800 dark:hover:bg-amber-700 text-white dark:text-gray-900 rounded-lg transition-all font-semibold"
           >
             {t('resume.form.addCertificate')}
-          </button>
+          </PrimaryButton>
         </div>
 
         {formData.certificates && formData.certificates.length > 0 ? (
