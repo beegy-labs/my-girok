@@ -208,6 +208,143 @@ interface AuthState {
 </PrivateRoute>
 ```
 
+## UI Component Library
+
+**Location**: `apps/web-main/src/components/ui/`
+
+### Available Components (10 Total)
+
+**Form Components (4)**:
+```typescript
+import { TextInput, Select, TextArea, FileUpload } from '../../components/ui';
+
+// TextInput - Single-line text input
+<TextInput
+  label="Email"
+  value={email}
+  onChange={(value) => setEmail(value)}
+  type="email"
+  placeholder="your@email.com"
+  required
+  error={errors.email}
+  hint="We'll never share your email"
+/>
+
+// Select - Dropdown
+<Select
+  label="Country"
+  value={country}
+  onChange={(value) => setCountry(value)}
+  options={[
+    { value: 'kr', label: '한국' },
+    { value: 'us', label: 'United States' },
+  ]}
+  required
+/>
+
+// TextArea - Multi-line text
+<TextArea
+  label="Description"
+  value={description}
+  onChange={(value) => setDescription(value)}
+  rows={4}
+  maxLength={500}
+/>
+
+// FileUpload - Drag-and-drop file upload
+<FileUpload
+  label="Profile Photo"
+  accept="image/*"
+  maxSize={5 * 1024 * 1024} // 5MB
+  onUpload={(file) => handleUpload(file)}
+/>
+```
+
+**Button Components (3)**:
+```typescript
+import { PrimaryButton, SecondaryButton, DestructiveButton } from '../../components/ui';
+
+// PrimaryButton - Main actions
+<PrimaryButton onClick={handleSubmit} disabled={loading}>
+  Save Changes
+</PrimaryButton>
+
+// SecondaryButton - Secondary actions
+<SecondaryButton onClick={handleCancel}>
+  Cancel
+</SecondaryButton>
+
+// DestructiveButton - Delete/remove actions
+<DestructiveButton onClick={handleDelete}>
+  Delete Resume
+</DestructiveButton>
+
+// Button sizes
+<PrimaryButton size="sm">Small</PrimaryButton>
+<PrimaryButton>Default</PrimaryButton>
+<PrimaryButton size="lg">Large</PrimaryButton>
+```
+
+**Layout & Feedback (3)**:
+```typescript
+import { Card, Alert, LoadingSpinner } from '../../components/ui';
+
+// Card - Content container
+<Card variant="primary">
+  <h2>Card Title</h2>
+  <p>Card content...</p>
+</Card>
+
+// Alert - Status messages
+<Alert type="success">Resume saved successfully!</Alert>
+<Alert type="error">Failed to save resume</Alert>
+
+// LoadingSpinner - Loading states
+<LoadingSpinner />
+<LoadingSpinner fullScreen message="Loading resume..." />
+```
+
+### Component Structure
+
+```
+apps/web-main/src/components/ui/
+├── index.ts              # Barrel exports
+├── Form/
+│   ├── TextInput.tsx
+│   ├── Select.tsx
+│   ├── TextArea.tsx
+│   └── FileUpload.tsx
+├── Button/
+│   ├── PrimaryButton.tsx
+│   ├── SecondaryButton.tsx
+│   └── DestructiveButton.tsx
+└── Layout/
+    ├── Card.tsx
+    ├── Alert.tsx
+    └── LoadingSpinner.tsx
+```
+
+### Usage Guidelines
+
+**Import Pattern**:
+```typescript
+// ✅ DO - Use barrel imports
+import { TextInput, PrimaryButton, Card } from '../../components/ui';
+
+// ❌ DON'T - Direct imports
+import TextInput from '../../components/ui/Form/TextInput';
+```
+
+**Common Props**:
+- All form inputs: `value`, `onChange`, `error`, `hint`, `disabled`, `required`
+- All buttons: `onClick`, `disabled`, `size`, `className`
+- Consistent API across components
+
+**Dark Mode**:
+- All components have built-in dark mode support
+- Use `dark:` Tailwind variants
+- Automatically adapts to system/user preference
+
 ## Design System
 
 **Color Theme**: Library/book theme with amber colors
@@ -217,7 +354,9 @@ interface AuthState {
 - Primary Button: `bg-gradient-to-r from-amber-700 to-amber-600`
 - Secondary Button: `bg-gray-100 text-gray-700 border-gray-300`
 
-**See**: `/docs/DESIGN_SYSTEM.md` for full guidelines
+**See**:
+- **Component Library** (above) - Ready-to-use UI components
+- `/docs/DESIGN_SYSTEM.md` - Full design guidelines
 
 ## Environment Variables
 
