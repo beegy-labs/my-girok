@@ -4,7 +4,7 @@ export interface TextInputProps {
   label?: string;
   value: string;
   onChange: (value: string) => void;
-  type?: 'text' | 'email' | 'tel' | 'password' | 'url';
+  type?: 'text' | 'email' | 'tel' | 'password' | 'url' | 'month';
   placeholder?: string;
   required?: boolean;
   error?: string;
@@ -16,6 +16,7 @@ export interface TextInputProps {
   autoComplete?: string;
   maxLength?: number;
   className?: string;
+  onBlur?: () => void;
 }
 
 /**
@@ -58,6 +59,7 @@ export default function TextInput({
   autoComplete,
   maxLength,
   className = '',
+  onBlur,
 }: TextInputProps) {
   const inputId = id || name || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
   const hasError = Boolean(error);
@@ -91,6 +93,7 @@ export default function TextInput({
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           required={required}
           disabled={disabled}
           placeholder={placeholder}

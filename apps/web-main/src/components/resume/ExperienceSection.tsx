@@ -18,7 +18,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Experience, ExperienceProject, ProjectAchievement, calculateExperienceDuration } from '../../api/resume';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
-import { TextInput, SecondaryButton, DestructiveButton } from '../ui';
+import { TextInput, TextArea, SecondaryButton, DestructiveButton } from '../ui';
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -500,76 +500,50 @@ function SortableProject({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={project.description}
-                onChange={e => onUpdate({ ...project, description: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder="Brief project description..."
-              />
-            </div>
+            <TextArea
+              label="Description"
+              value={project.description}
+              onChange={value => onUpdate({ ...project, description: value })}
+              rows={3}
+              placeholder="Brief project description..."
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                Your Role
-              </label>
-              <input
-                type="text"
-                value={project.role || ''}
-                onChange={e => onUpdate({ ...project, role: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder="e.g., Lead Backend Developer"
-              />
-            </div>
+            <TextInput
+              label="Your Role"
+              value={project.role || ''}
+              onChange={value => onUpdate({ ...project, role: value })}
+              placeholder="e.g., Lead Backend Developer"
+            />
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                Tech Stack (comma-separated)
-              </label>
-              <input
-                type="text"
-                value={techStackInput}
-                onChange={e => setTechStackInput(e.target.value)}
-                onBlur={e => {
-                  const parsed = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                  onUpdate({ ...project, techStack: parsed });
-                  setTechStackInput(parsed.join(', '));
-                }}
-                className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                placeholder="e.g., NestJS, React, PostgreSQL"
-              />
-            </div>
+            <TextInput
+              label="Tech Stack (comma-separated)"
+              value={techStackInput}
+              onChange={value => setTechStackInput(value)}
+              onBlur={() => {
+                const parsed = techStackInput.split(',').map(s => s.trim()).filter(Boolean);
+                onUpdate({ ...project, techStack: parsed });
+                setTechStackInput(parsed.join(', '));
+              }}
+              placeholder="e.g., NestJS, React, PostgreSQL"
+            />
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                  Project URL
-                </label>
-                <input
-                  type="url"
-                  value={project.url || ''}
-                  onChange={e => onUpdate({ ...project, url: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                  placeholder="https://..."
-                />
-              </div>
+              <TextInput
+                label="Project URL"
+                type="url"
+                value={project.url || ''}
+                onChange={value => onUpdate({ ...project, url: value })}
+                placeholder="https://..."
+              />
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                  GitHub URL
-                </label>
-                <input
-                  type="url"
-                  value={project.githubUrl || ''}
-                  onChange={e => onUpdate({ ...project, githubUrl: e.target.value })}
-                  className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                  placeholder="https://github.com/..."
-                />
-              </div>
+              <TextInput
+                label="GitHub URL"
+                type="url"
+                value={project.githubUrl || ''}
+                onChange={value => onUpdate({ ...project, githubUrl: value })}
+                placeholder="https://github.com/..."
+              />
             </div>
           </div>
 
