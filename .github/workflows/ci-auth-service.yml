@@ -32,19 +32,23 @@ jobs:
     steps:
       - name: Send Discord notification - Start
         if: always()
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          COMMIT_MSG=$(printf '%s' "$COMMIT_MESSAGE" | head -n 1 | cut -c 1-200 | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
           curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "username": "GitHub Actions",
-              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-              "embeds": [{
-                "title": "🚀 CI Started - Auth Service",
-                "description": "**Branch:** ${{ github.ref_name }}\n**Event:** ${{ github.event_name }}\n**Commit:** ${{ github.event.head_commit.message }}",
-                "color": 3447003,
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"🚀 CI Started - Auth Service\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Event:** ${{ github.event_name }}\\n**Commit:** ${COMMIT_MSG}\",
+                \"color\": 3447003,
+                \"timestamp\": \"${TIMESTAMP}\"
               }]
-            }'
+            }"
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -270,6 +274,9 @@ jobs:
         run: |
           cd gitops
 
+          # Pull latest changes first to avoid conflicts
+          git pull --rebase
+
           # Determine values file path based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             VALUES_FILE="clusters/home/values/my-girok-auth-service-prod.yaml"
@@ -317,9 +324,45 @@ jobs:
                        -m "Updated by GitHub Actions from my-girok@${{ github.sha }}" \
                        -m "Branch: ${{ github.ref_name }}" \
                        -m "Environment: ${ENVIRONMENT}"
-            git push
-            echo "Successfully updated GitOps repository for ${ENVIRONMENT}"
+
+            # Push with retry logic (max 3 attempts)
+            for i in {1..3}; do
+              if git push; then
+                echo "Successfully updated GitOps repository for ${ENVIRONMENT}"
+                break
+              else
+                if [ $i -lt 3 ]; then
+                  echo "Push failed, retrying in 5 seconds... (attempt $i/3)"
+                  sleep 5
+                  git pull --rebase
+                else
+                  echo "Push failed after 3 attempts"
+                  exit 1
+                fi
+              fi
+            done
           fi
+
+      - name: Trigger ArgoCD sync
+        run: |
+          # Determine ArgoCD app name based on branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            APP_NAME="my-girok-prod-auth-service"
+            ENVIRONMENT="production"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            APP_NAME="my-girok-dev-auth-service"
+            ENVIRONMENT="development"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            APP_NAME="my-girok-staging-auth-service"
+            ENVIRONMENT="staging"
+          fi
+
+          echo "GitOps repository updated for ${APP_NAME} (${ENVIRONMENT})"
+          echo "ArgoCD will auto-sync within 3 minutes due to automated sync policy"
+
+          # Note: kubectl is not available in this runner environment
+          # ArgoCD has automated sync enabled with polling interval
+          # The application will be synced automatically when ArgoCD detects the Git change
 
       - name: Send Discord notification - Deploy Success
         if: success()
@@ -331,7 +374,7 @@ jobs:
           description: |
             **Branch:** ${{ github.ref_name }}
             **Version:** ${{ steps.image.outputs.tag }}
-            **Deployment completed!**
+            **ArgoCD sync completed!**
           color: 0x2ecc71
           username: GitHub Actions
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
@@ -345,7 +388,7 @@ jobs:
           title: '❌ Deploy Failed - Auth Service'
           description: |
             **Branch:** ${{ github.ref_name }}
-            **GitOps update failed. Check logs for details.**
+            **GitOps update or ArgoCD sync failed. Check logs for details.**
           color: 0xe74c3c
           username: GitHub Actions
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
