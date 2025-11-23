@@ -18,6 +18,7 @@ on:
     paths:
       - 'services/personal-service/**'
       - 'packages/types/**'
+  workflow_dispatch:
 
 env:
   REGISTRY: ${{ secrets.HARBOR_REGISTRY }}
