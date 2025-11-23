@@ -165,26 +165,26 @@ jobs:
 
           # Determine tag based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # Main branch: latest
-            TAG="latest"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            # Main branch: <hash> + latest
+            TAG="${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
             VERSION="${TAG}"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            # Develop branch: develop:<hash> + develop:latest
-            TAG="${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:latest"
-            VERSION="develop:${TAG}"
+            # Develop branch: develop-<hash> + develop
+            TAG="develop-${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
+            VERSION="${TAG}"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            # Release branch: release:<hash> + release:latest
-            TAG="${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:latest"
-            VERSION="release:${TAG}"
+            # Release branch: release-<hash> + release
+            TAG="release-${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
+            VERSION="${TAG}"
           else
-            # Other branches: branch-<hash>
+            # Other branches: <branch>-<hash>
             BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
-            TAG="${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${BRANCH_NAME}:${TAG}"
-            VERSION="${BRANCH_NAME}:${TAG}"
+            TAG="${BRANCH_NAME}-${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            VERSION="${TAG}"
           fi
 
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
