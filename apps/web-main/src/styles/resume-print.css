@@ -6,6 +6,13 @@
   margin: 0 auto;
 }
 
+/* Screen-only: Hide in continuous mode but keep rendered for print */
+@media screen {
+  .screen-hidden {
+    display: none !important;
+  }
+}
+
 /* Paged.js Page Styles - Each page is a separate div */
 .pagedjs_page {
   margin: 0 auto 2rem auto !important; /* Add gap between pages */
@@ -155,30 +162,56 @@
     size: A4 portrait;
   }
 
-  /* Hide continuous view in print - use Paged.js paginated view */
+  /* Hide ALL non-print elements */
+  header, nav, footer, .toolbar,
+  .print\:hidden,
+  [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Hide continuous view content - use Paged.js paginated view */
   #resume-content {
     display: none !important;
+  }
+
+  /* CRITICAL: Remove all transforms and scaling from ALL containers */
+  .pagedjs-container,
+  .pagedjs-container *,
+  [style*="transform"],
+  [style*="scale"] {
+    transform: none !important;
+    margin-bottom: 0 !important;
+    will-change: auto !important;
+    transition: none !important;
   }
 
   /* Show and optimize Paged.js container for print */
   .pagedjs-container {
     display: block !important;
-    transform: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    position: static !important;
   }
 
-  /* Paged.js pages - remove screen-only styling */
+  /* Paged.js pages wrapper */
+  .pagedjs_pages {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Paged.js individual pages - remove screen-only styling */
   .pagedjs_page {
     box-shadow: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    /* Removed page-break-after: always to prevent blank pages after each page */
-    /* Paged.js automatically handles page breaks - no manual intervention needed */
     page-break-inside: avoid !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    position: relative !important;
+    overflow: visible !important;
+    background: white !important;
   }
 
   /* Paged.js page content area */
@@ -188,6 +221,7 @@
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    position: relative !important;
   }
 
   /* Paged.js page box */
@@ -197,10 +231,40 @@
     box-sizing: border-box !important;
   }
 
+  /* Paged.js area */
+  .pagedjs_area {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
   /* All content inside pages */
   .pagedjs_page_content * {
     max-width: 100% !important;
     box-sizing: border-box !important;
+  }
+
+  /* Hide ResumePreviewContainer wrapper styling */
+  .bg-gray-100,
+  [class*="bg-gray-100"] {
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Force print-content (pagedjs-container) to display and reset all transforms */
+  .print-content {
+    display: block !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    position: static !important;
+  }
+
+  /* Ensure inline styles don't override print styles */
+  .print-content[style] {
+    transform: none !important;
+    margin-bottom: 0 !important;
   }
 
   /* Reset all backgrounds and shadows for print */
