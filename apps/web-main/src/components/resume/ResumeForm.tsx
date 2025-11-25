@@ -429,6 +429,28 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields manually before submitting
+    const validationErrors: string[] = [];
+    if (!formData.title?.trim()) {
+      validationErrors.push(t('resume.validation.titleRequired'));
+    }
+    if (!formData.name?.trim()) {
+      validationErrors.push(t('resume.validation.nameRequired'));
+      // Expand basicInfo section if name is missing
+      setCollapsedSections(prev => ({ ...prev, basicInfo: false }));
+    }
+    if (!formData.email?.trim()) {
+      validationErrors.push(t('resume.validation.emailRequired'));
+      // Expand basicInfo section if email is missing
+      setCollapsedSections(prev => ({ ...prev, basicInfo: false }));
+    }
+
+    if (validationErrors.length > 0) {
+      alert(validationErrors.join('\n'));
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Remove projects field before submitting (no longer supported by API)

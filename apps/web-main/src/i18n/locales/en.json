@@ -258,6 +258,11 @@
       "saveFailed": "Failed to save resume",
       "resumeNotFound": "Resume not found"
     },
+    "validation": {
+      "titleRequired": "Please enter a resume title",
+      "nameRequired": "Please enter your name",
+      "emailRequired": "Please enter your email"
+    },
     "confirm": {
       "deleteShare": "Delete this share link?",
       "deleteResume": "Delete this resume? This cannot be undone.",
