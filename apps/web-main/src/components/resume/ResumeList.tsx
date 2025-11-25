@@ -115,7 +115,7 @@ export default function ResumeList() {
                       </span>
                     )}
                   </div>
-                  {resume.description && (
+                  {resume.description?.trim() && (
                     <p className="text-gray-600 mb-2">{resume.description}</p>
                   )}
                   <p className="text-sm text-gray-500">

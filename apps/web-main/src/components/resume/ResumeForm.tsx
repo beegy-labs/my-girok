@@ -454,15 +454,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     setSubmitting(true);
     try {
       // Remove projects field before submitting (no longer supported by API)
+      // Note: Empty string handling is done by stripIds() in resume.ts API layer
+      // which converts empty strings to null for proper database clearing
       const { projects, ...dataToSubmit } = formData as any;
 
-      // Remove empty string fields to avoid validation errors
-      const cleanedData: any = {};
-      for (const [key, value] of Object.entries(dataToSubmit)) {
-        cleanedData[key] = value === '' ? undefined : value;
-      }
-
-      await onSubmit(cleanedData);
+      await onSubmit(dataToSubmit);
       // Clear draft after successful submission
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);

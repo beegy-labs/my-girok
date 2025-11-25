@@ -222,7 +222,7 @@ function stripIds<T>(obj: T): T {
       'description', 'summary', 'coverLetter', 'applicationReason',
       'phone', 'address', 'github', 'blog', 'linkedin', 'portfolio',
       'profileImage', 'credentialId', 'credentialUrl', 'url', 'githubUrl',
-      'role', 'gpa', 'militaryRank', 'militaryDischargeType',
+      'role', 'gpa', 'militaryRank', 'militaryDischargeType', 'salaryUnit',
     ];
 
     for (const [key, value] of Object.entries(obj)) {
