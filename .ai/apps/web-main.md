@@ -5,7 +5,7 @@
 ## Tech Stack
 
 - **Framework**: React 19.2 + Vite 7.2
-- **Router**: React Router v6
+- **Router**: React Router v7
 - **Language**: TypeScript 5.7
 - **Styling**: Tailwind CSS 3.4
 - **State**: Zustand 5.0
@@ -20,11 +20,14 @@ apps/web-main/src/
 │   ├── HomePage.tsx
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
+│   ├── ChangePasswordPage.tsx
+│   ├── NotFoundPage.tsx
 │   └── resume/
 │       ├── MyResumePage.tsx      # Resume management (/resume/my)
 │       ├── PublicResumePage.tsx  # Public view (/resume/:username)
-│       ├── ResumeEditPage.tsx    # Editor (/resume/:username/edit)
-│       └── ResumePreviewPage.tsx # Preview (/resume/:username/preview)
+│       ├── ResumeEditPage.tsx    # Editor (/resume/edit, /resume/edit/:resumeId)
+│       ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
+│       └── SharedResumePage.tsx  # Shared view (/shared/:token)
 ├── components/
 │   ├── Navbar.tsx
 │   ├── PrivateRoute.tsx
@@ -37,7 +40,8 @@ apps/web-main/src/
 │   └── resume.ts
 ├── stores/             # Zustand stores
 │   └── authStore.ts
-└── App.tsx             # Router config
+├── router.tsx          # Router config (createBrowserRouter)
+└── App.tsx             # Root component
 ```
 
 ## Key Routes
@@ -47,11 +51,14 @@ apps/web-main/src/
 - `/login` - LoginPage
 - `/register` - RegisterPage
 - `/resume/:username` - PublicResumePage (public resume view)
+- `/shared/:token` - SharedResumePage (shared resume via token)
 
 ### Protected Routes (PrivateRoute)
+- `/change-password` - ChangePasswordPage
 - `/resume/my` - MyResumePage (resume management dashboard)
-- `/resume/:username/edit` - ResumeEditPage (create/edit)
-- `/resume/:username/preview` - ResumePreviewPage (print preview)
+- `/resume/edit` - ResumeEditPage (create new resume)
+- `/resume/edit/:resumeId` - ResumeEditPage (edit existing resume)
+- `/resume/preview/:resumeId` - ResumePreviewPage (print preview)
 
 ## Resume Feature
 
@@ -87,19 +94,20 @@ deleteResume()            // Delete resume
 getUserResume(username)   // Get public resume by username
 ```
 
-### ResumeEditPage (`/resume/:username/edit`)
+### ResumeEditPage (`/resume/edit` or `/resume/edit/:resumeId`)
 **Purpose**: Create/edit resume (auth required)
 
 **Features**:
-- Full resume editor
+- Full resume editor with live preview
 - Save/update resume
-- Navigate to preview
+- Navigate to preview on save
+- Auto-save draft to localStorage
 
 **APIs Used**:
 ```typescript
-getDefaultResume()        // Load existing
-createResume(dto)         // Create new
-updateResume(id, dto)     // Update existing
+getResume(resumeId)       // Load existing resume by ID
+createResume(dto)         // Create new resume
+updateResume(id, dto)     // Update existing resume
 ```
 
 ## API Client Pattern
