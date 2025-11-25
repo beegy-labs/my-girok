@@ -230,11 +230,12 @@ export class CreateExperienceDto {
   @IsBoolean()
   showSalary?: boolean;
 
-  @ApiProperty({ type: [CreateExperienceProjectDto], description: 'List of projects at this company' })
+  @ApiPropertyOptional({ type: [CreateExperienceProjectDto], description: 'List of projects at this company' })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateExperienceProjectDto)
-  projects!: CreateExperienceProjectDto[];
+  projects?: CreateExperienceProjectDto[];
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
