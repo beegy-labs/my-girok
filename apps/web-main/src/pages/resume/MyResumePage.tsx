@@ -228,7 +228,7 @@ export default function MyResumePage() {
                               </span>
                             )}
                           </div>
-                          {resume.description && (
+                          {resume.description?.trim() && (
                             <p className="text-gray-600 dark:text-dark-text-secondary text-sm mb-3">{resume.description}</p>
                           )}
                           <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-dark-text-tertiary">

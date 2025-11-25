@@ -373,12 +373,12 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 <div>
                   <span className="font-semibold">{t('resume.contactInfo.email')}:</span> {resume.email}
                 </div>
-                {resume.phone && (
+                {resume.phone?.trim() && (
                   <div>
                     <span className="font-semibold">{t('resume.contactInfo.phone')}:</span> {resume.phone}
                   </div>
                 )}
-                {resume.address && (
+                {resume.address?.trim() && (
                   <div>
                     <span className="font-semibold">{t('resume.contactInfo.address')}:</span> {resume.address}
                   </div>
@@ -426,22 +426,22 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
                 </div>
               )}
               <div className="flex flex-col gap-y-0.5 text-sm text-gray-900">
-                {resume.github && (
+                {resume.github?.trim() && (
                   <div>
                     <span className="font-semibold">GitHub:</span> {resume.github}
                   </div>
                 )}
-                {resume.blog && (
+                {resume.blog?.trim() && (
                   <div>
                     <span className="font-semibold">Blog:</span> {resume.blog}
                   </div>
                 )}
-                {resume.linkedin && (
+                {resume.linkedin?.trim() && (
                   <div>
                     <span className="font-semibold">LinkedIn:</span> {resume.linkedin}
                   </div>
                 )}
-                {resume.portfolio && (
+                {resume.portfolio?.trim() && (
                   <div>
                     <span className="font-semibold">Portfolio:</span> {resume.portfolio}
                   </div>
@@ -452,7 +452,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         </div>
 
         {/* Summary */}
-        {resume.summary && (
+        {resume.summary?.trim() && (
           <div className="mb-6 resume-section">
             <p className="text-gray-700 leading-relaxed">{resume.summary}</p>
           </div>
@@ -475,7 +475,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         )}
 
         {/* Application Reason */}
-        {resume.applicationReason && (
+        {resume.applicationReason?.trim() && (
           <div className="mb-6 resume-section">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               {t('resume.preview.applicationReason')}
@@ -503,7 +503,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         })}
 
         {/* Cover Letter (at the bottom) */}
-        {resume.coverLetter && (
+        {resume.coverLetter?.trim() && (
           <div className="mb-6 resume-section">
             <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
               {t('resume.preview.coverLetter')}
@@ -701,13 +701,13 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                         {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
                       </span>
                     </div>
-                    {project.role && (
+                    {project.role?.trim() && (
                       <p className="text-sm text-gray-700 italic">{project.role}</p>
                     )}
                   </div>
 
                   {/* Project Description */}
-                  {project.description && (
+                  {project.description?.trim() && (
                     <p className="text-sm text-gray-700 mb-2">{project.description}</p>
                   )}
 
@@ -726,14 +726,14 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                   )}
 
                   {/* Project Links */}
-                  {(project.url || project.githubUrl) && (
+                  {(project.url?.trim() || project.githubUrl?.trim()) && (
                     <div className="text-xs text-gray-900 flex flex-col gap-0.5">
-                      {project.url && (
+                      {project.url?.trim() && (
                         <div>
                           <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
                         </div>
                       )}
-                      {project.githubUrl && (
+                      {project.githubUrl?.trim() && (
                         <div>
                           <span className="font-semibold">{t('resume.preview.github')}:</span> {project.githubUrl}
                         </div>
@@ -765,7 +765,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
           <div className="flex justify-between items-start mb-1">
             <div>
               <h3 className="font-semibold text-gray-900">{project.name}</h3>
-              {project.role && <p className="text-sm text-gray-700">{project.role}</p>}
+              {project.role?.trim() && <p className="text-sm text-gray-700">{project.role}</p>}
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
               {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
@@ -784,14 +784,14 @@ function ProjectsSection({ projects }: { projects: any[] }) {
               <span className="font-semibold">{t('resume.preview.tech')}:</span> {project.techStack.join(', ')}
             </p>
           )}
-          {(project.url || project.githubUrl) && (
+          {(project.url?.trim() || project.githubUrl?.trim()) && (
             <div className="flex flex-col gap-1 mt-2 text-sm text-gray-900">
-              {project.url && (
+              {project.url?.trim() && (
                 <div>
                   <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
                 </div>
               )}
-              {project.githubUrl && (
+              {project.githubUrl?.trim() && (
                 <div>
                   <span className="font-semibold">{t('resume.preview.github')}:</span> {project.githubUrl}
                 </div>
@@ -822,7 +822,7 @@ function EducationSection({ educations }: { educations: any[] }) {
               <p className="text-gray-700">
                 {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : t('resume.preview.degree')} {t('resume.preview.in')} {edu.major}
               </p>
-              {edu.gpa && <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>}
+              {edu.gpa?.trim() && <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>}
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
               {edu.startDate} - {edu.endDate || t('resume.preview.present')}
@@ -850,7 +850,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
             <div>
               <h3 className="font-semibold text-gray-900">{cert.name}</h3>
               <p className="text-gray-700">{cert.issuer}</p>
-              {cert.credentialUrl && (
+              {cert.credentialUrl?.trim() && (
                 <div className="mt-1 text-sm text-gray-900">
                   <span className="font-semibold">{t('resume.preview.verify')}:</span> {cert.credentialUrl}
                 </div>
