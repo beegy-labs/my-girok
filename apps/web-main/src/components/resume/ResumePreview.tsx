@@ -130,9 +130,6 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
   // Paged.js integration for paginated view
   useEffect(() => {
-    // Track Blob URL for cleanup
-    let cssBlobUrl: string | null = null;
-
     if (viewMode === 'paginated' && contentRef.current && pagedContainerRef.current) {
       const paged = new Previewer();
 
@@ -217,15 +214,16 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         }
       `;
 
-      // Create Blob URL from CSS string
-      // Paged.js preview() expects CSS file URLs, not inline CSS strings
-      const cssBlob = new Blob([dynamicCSS], { type: 'text/css' });
-      cssBlobUrl = URL.createObjectURL(cssBlob);
+      // Embed CSS directly in HTML content as <style> tag
+      // Paged.js preview() second param expects CSS file URLs, not inline strings
+      // Passing CSS as URL (even Blob URL) causes fetch requests that may fail
+      // Embedding CSS in HTML avoids all external requests
+      const htmlWithEmbeddedStyles = `<style>${dynamicCSS}</style>${contentClone.innerHTML}`;
 
-      // Preview with Paged.js using Blob URL
+      // Preview with Paged.js - empty array since CSS is embedded in HTML
       paged.preview(
-        contentClone.innerHTML,
-        [cssBlobUrl],
+        htmlWithEmbeddedStyles,
+        [],
         pagedContainerRef.current
       ).then((flow: any) => {
         console.log('Paged.js rendered', flow.total, 'pages with', pageSize, 'size');
@@ -233,13 +231,6 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         console.error('Paged.js error:', error);
       });
     }
-
-    // Cleanup Blob URL on unmount or dependency change
-    return () => {
-      if (cssBlobUrl) {
-        URL.revokeObjectURL(cssBlobUrl);
-      }
-    };
   }, [viewMode, resume, paperSize, isGrayscaleMode]);
 
   return (
