@@ -18,6 +18,7 @@ on:
     paths:
       - 'apps/web-main/**'
       - 'packages/types/**'
+  workflow_dispatch:
 
 env:
   REGISTRY: gitea.girok.dev
@@ -175,18 +176,18 @@ jobs:
             API_URL="https://my-api.girok.dev/auth"
             PERSONAL_API_URL="https://my-api.girok.dev/personal"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            # Development: develop:<hash> + develop:latest
+            # Development: develop-<hash> + develop
             ENV="development"
-            TAG="${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/develop:latest"
+            TAG="develop-${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
             # Development API URLs
             API_URL="https://my-api-dev.girok.dev/auth"
             PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            # Staging: release:<hash> + release:latest
+            # Staging: release-<hash> + release
             ENV="staging"
-            TAG="${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/release:latest"
+            TAG="release-${SHORT_SHA}"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
             # Staging API URLs
             API_URL="https://my-api-staging.girok.dev/auth"
             PERSONAL_API_URL="https://my-api-staging.girok.dev/personal"
