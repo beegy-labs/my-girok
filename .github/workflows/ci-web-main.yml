@@ -288,11 +288,11 @@ jobs:
           SHORT_SHA=${{ steps.sha.outputs.short_sha }}
 
           # Tag format must match the build job:
-          # - main: latest
+          # - main: <hash>
           # - develop: develop-<hash>
           # - release/*: release-<hash>
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            TAG="latest"
+            TAG="${SHORT_SHA}"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             TAG="develop-${SHORT_SHA}"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
