@@ -72,6 +72,7 @@ export default function ResumeEditPage() {
       linkedin: data.linkedin,
       portfolio: data.portfolio,
       summary: data.summary,
+      keyAchievements: data.keyAchievements,
       profileImage: data.profileImage,
       birthYear: data.birthYear, // deprecated - for backward compatibility
       birthDate: data.birthDate,
@@ -113,8 +114,19 @@ export default function ResumeEditPage() {
         // Direct navigation - React Router v7 supports this without issues
         navigate(`/resume/preview/${created.id}`);
       }
-    } catch (err) {
-      setError(t('resume.errors.saveFailed'));
+    } catch (err: any) {
+      // Log detailed error for debugging
+      console.error('Resume save failed:', err);
+      if (err.response?.data?.message) {
+        console.error('Server error message:', err.response.data.message);
+        // Show specific validation errors if available
+        const serverMessage = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(', ')
+          : err.response.data.message;
+        setError(`${t('resume.errors.saveFailed')}: ${serverMessage}`);
+      } else {
+        setError(t('resume.errors.saveFailed'));
+      }
     }
   };
 

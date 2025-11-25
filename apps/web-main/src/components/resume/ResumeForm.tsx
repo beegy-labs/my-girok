@@ -130,8 +130,12 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       company: e.company,
       startDate: e.startDate,
       endDate: e.endDate,
+      isCurrentlyWorking: e.isCurrentlyWorking,
       finalPosition: e.finalPosition,
       jobTitle: e.jobTitle,
+      salary: e.salary,
+      salaryUnit: e.salaryUnit,
+      showSalary: e.showSalary,
       projects: e.projects?.map(p => ({
         name: p.name,
         startDate: p.startDate,
@@ -809,8 +813,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       <ExperienceSection
         experiences={formData.experiences || []}
         onChange={(experiences) => {
+          // Only update formData - useEffect will call onChange automatically
+          // This prevents double-calling onChange with stale formData
           setFormData({ ...formData, experiences });
-          onChange?.({ ...formData, experiences });
         }}
         t={t}
       />
