@@ -254,12 +254,13 @@ jobs:
         run: |
           SHORT_SHA=${{ steps.sha.outputs.short_sha }}
 
+          # Image tags must match build job format
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            TAG="latest"
+            TAG="${SHORT_SHA}"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            TAG="${SHORT_SHA}"
+            TAG="develop-${SHORT_SHA}"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            TAG="${SHORT_SHA}"
+            TAG="release-${SHORT_SHA}"
           fi
 
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
