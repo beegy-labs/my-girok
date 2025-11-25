@@ -212,6 +212,10 @@ function stripIds<T>(obj: T): T {
     const result: any = {};
     // List of database-generated fields that should be removed before API submission
     const dbFields = ['id', 'projectId', 'resumeId', 'experienceId', 'parentId', 'createdAt', 'updatedAt'];
+    // Optional date fields that should convert empty string to null
+    // Required fields (startDate, name, etc.) should NOT be converted to null
+    const optionalDateFields = ['endDate', 'expiryDate', 'birthDate', 'militaryDischarge',
+      'militaryServiceStartDate', 'militaryServiceEndDate'];
 
     for (const [key, value] of Object.entries(obj)) {
       // Skip database-generated fields
@@ -219,8 +223,9 @@ function stripIds<T>(obj: T): T {
         continue;
       }
 
-      // Convert empty strings to null (to allow clearing optional fields)
-      if (value === '') {
+      // Convert empty strings to null only for optional date fields
+      // Required fields should keep empty strings to trigger validation errors
+      if (value === '' && optionalDateFields.includes(key)) {
         result[key] = null;
         continue;
       }
