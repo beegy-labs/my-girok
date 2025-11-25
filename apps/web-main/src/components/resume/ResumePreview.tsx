@@ -128,9 +128,11 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
     };
   }, [paperSize]);
 
-  // Paged.js integration for paginated view
+
+  // Paged.js integration - ALWAYS render for print readiness
+  // In continuous mode, it's hidden but still rendered for instant print access
   useEffect(() => {
-    if (viewMode === 'paginated' && contentRef.current && pagedContainerRef.current) {
+    if (contentRef.current && pagedContainerRef.current) {
       const paged = new Previewer();
 
       // Clear previous paged content
@@ -231,7 +233,7 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
         console.error('Paged.js error:', error);
       });
     }
-  }, [viewMode, resume, paperSize, isGrayscaleMode]);
+  }, [resume, paperSize, isGrayscaleMode]); // Removed viewMode - always render Paged.js for print readiness
 
   return (
     <div className="relative">
@@ -516,12 +518,13 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       </div>
     </div>
 
-      {/* Paged.js Output - Shown in paginated view */}
+      {/* Paged.js Output - Always rendered, hidden in continuous mode on screen, always shown for print */}
       <div
         ref={pagedContainerRef}
-        className="pagedjs-container"
+        className={`pagedjs-container print-content ${viewMode === 'continuous' ? 'screen-hidden' : ''}`}
         style={{
-          display: viewMode === 'paginated' ? 'block' : 'none',
+          // On screen: hide in continuous mode via CSS class
+          // In print: CSS forces display:block
           transform: `scale(${scale}) translate3d(0, 0, 0)`,
           transformOrigin: 'top center',
           marginBottom: scale < 1 ? `${(1 - scale) * -200}px` : 0,
