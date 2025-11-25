@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional, IsArray, ValidateNested, IsBoolean, IsInt, Min, IsEnum, IsDateString } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsArray, ValidateNested, IsBoolean, IsInt, Min, IsEnum, IsDateString, ValidateIf } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -146,8 +146,9 @@ export class CreateExperienceProjectDto {
 
   @ApiPropertyOptional({ example: '2023-12' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  endDate?: string;
+  endDate?: string | null;
 
   @ApiProperty({ example: 'Built modern e-commerce platform using microservices architecture' })
   @IsString()
@@ -155,8 +156,9 @@ export class CreateExperienceProjectDto {
 
   @ApiPropertyOptional({ example: 'Lead Backend Developer' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  role?: string;
+  role?: string | null;
 
   @ApiPropertyOptional({ type: [CreateProjectAchievementDto], description: 'Hierarchical achievements (4 depth levels)' })
   @IsOptional()
@@ -172,13 +174,15 @@ export class CreateExperienceProjectDto {
 
   @ApiPropertyOptional({ example: 'https://myproject.com' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  url?: string;
+  url?: string | null;
 
   @ApiPropertyOptional({ example: 'https://github.com/user/project' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  githubUrl?: string;
+  githubUrl?: string | null;
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
@@ -198,8 +202,9 @@ export class CreateExperienceDto {
 
   @ApiPropertyOptional({ example: '2024-12' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  endDate?: string;
+  endDate?: string | null;
 
   @ApiPropertyOptional({ default: false, description: 'Currently working at this company' })
   @IsOptional()
@@ -272,13 +277,15 @@ export class CreateEducationDto {
 
   @ApiPropertyOptional({ example: '2019-02' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  endDate?: string;
+  endDate?: string | null;
 
   @ApiPropertyOptional({ example: '3.8/4.0' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  gpa?: string;
+  gpa?: string | null;
 
   @ApiPropertyOptional({ enum: GpaFormat, example: GpaFormat.SCALE_4_0 })
   @IsOptional()
@@ -312,18 +319,21 @@ export class CreateCertificateDto {
 
   @ApiPropertyOptional({ example: '2026-06' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  expiryDate?: string;
+  expiryDate?: string | null;
 
   @ApiPropertyOptional({ example: 'ABC123XYZ' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  credentialId?: string;
+  credentialId?: string | null;
 
   @ApiPropertyOptional({ example: 'https://aws.amazon.com/verify/ABC123' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  credentialUrl?: string;
+  credentialUrl?: string | null;
 
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
@@ -344,8 +354,9 @@ export class CreateResumeDto {
 
   @ApiPropertyOptional({ example: '네이버, 카카오 지원용 이력서', description: 'Brief description of resume purpose' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  description?: string;
+  description?: string | null;
 
   @ApiPropertyOptional({ default: false, description: 'Set as default resume' })
   @IsOptional()
@@ -367,38 +378,45 @@ export class CreateResumeDto {
 
   @ApiPropertyOptional({ example: '010-1234-5678' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  phone?: string;
+  phone?: string | null;
 
   @ApiPropertyOptional({ example: '서울특별시 강남구', description: 'Address (City/District level)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  address?: string;
+  address?: string | null;
 
   @ApiPropertyOptional({ example: 'https://github.com/hong' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  github?: string;
+  github?: string | null;
 
   @ApiPropertyOptional({ example: 'https://hong.dev' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  blog?: string;
+  blog?: string | null;
 
   @ApiPropertyOptional({ example: 'https://linkedin.com/in/hong' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  linkedin?: string;
+  linkedin?: string | null;
 
   @ApiPropertyOptional({ example: 'https://portfolio.hong.dev' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  portfolio?: string;
+  portfolio?: string | null;
 
   @ApiPropertyOptional({ example: 'Experienced backend developer with 5+ years in microservices' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  summary?: string;
+  summary?: string | null;
 
   @ApiPropertyOptional({
     example: ['API 응답 속도 40% 개선 (평균 500ms → 300ms)', 'MAU 200만 달성, 전월 대비 30% 성장'],
@@ -411,8 +429,9 @@ export class CreateResumeDto {
 
   @ApiPropertyOptional({ example: 'https://cdn.example.com/profile.jpg' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  profileImage?: string;
+  profileImage?: string | null;
 
   @ApiPropertyOptional({ example: 1994, description: 'Birth year (e.g., 1994) - deprecated, use birthDate' })
   @IsOptional()
@@ -422,8 +441,9 @@ export class CreateResumeDto {
 
   @ApiPropertyOptional({ example: '1994-03-15', description: 'Birth date (YYYY-MM-DD format) for accurate age calculation' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsDateString()
-  birthDate?: string;
+  birthDate?: string | null;
 
   @ApiPropertyOptional({ enum: Gender, description: 'Gender (MALE, FEMALE, OTHER)' })
   @IsOptional()
@@ -437,38 +457,45 @@ export class CreateResumeDto {
 
   @ApiPropertyOptional({ example: '병장 제대, 2020.01 - 2021.10', description: 'Military service details (Korean-specific)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  militaryDischarge?: string;
+  militaryDischarge?: string | null;
 
   @ApiPropertyOptional({ example: '병장', description: 'Military rank (e.g., 병장, 상병)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  militaryRank?: string;
+  militaryRank?: string | null;
 
   @ApiPropertyOptional({ example: '만기전역', description: 'Discharge type (e.g., 만기전역, 의병전역)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  militaryDischargeType?: string;
+  militaryDischargeType?: string | null;
 
   @ApiPropertyOptional({ example: '2020-01', description: 'Military service start date (YYYY-MM format)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  militaryServiceStartDate?: string;
+  militaryServiceStartDate?: string | null;
 
   @ApiPropertyOptional({ example: '2021-10', description: 'Military service end date (YYYY-MM format)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  militaryServiceEndDate?: string;
+  militaryServiceEndDate?: string | null;
 
   @ApiPropertyOptional({ example: '저는 백엔드 개발자로서...', description: 'Cover letter (Korean-specific)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  coverLetter?: string;
+  coverLetter?: string | null;
 
   @ApiPropertyOptional({ example: '귀사의 비전과 저의 기술 역량이 잘 맞을 것으로 판단하여 지원하게 되었습니다...', description: 'Application reason (Korean-specific)' })
   @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsString()
-  applicationReason?: string;
+  applicationReason?: string | null;
 
   @ApiPropertyOptional({ type: [CreateSkillDto] })
   @IsOptional()
