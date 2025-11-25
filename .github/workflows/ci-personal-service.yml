@@ -394,3 +394,73 @@ jobs:
           color: 0xe74c3c
           username: GitHub Actions
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+
+  cleanup-images:
+    name: Cleanup Old Container Images
+    runs-on: [self-hosted, kubernetes, gitops]
+    needs: update-gitops
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    timeout-minutes: 5
+
+    steps:
+      - name: Determine environment prefix
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            PREFIX=""
+            KEEP_TAGS="latest"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            PREFIX="develop-"
+            KEEP_TAGS="develop"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            PREFIX="release-"
+            KEEP_TAGS="release"
+          fi
+          echo "prefix=${PREFIX}" >> $GITHUB_OUTPUT
+          echo "keep_tags=${KEEP_TAGS}" >> $GITHUB_OUTPUT
+
+      - name: Cleanup old images (keep latest 10)
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          PREFIX="${{ steps.env.outputs.prefix }}"
+          KEEP_TAGS="${{ steps.env.outputs.keep_tags }}"
+          PACKAGE="personal-service"
+          OWNER="beegy-labs"
+          MAX_KEEP=10
+
+          echo "Cleaning up ${PREFIX}* images for ${PACKAGE}, keeping latest ${MAX_KEEP}"
+
+          # Get all versions with the environment prefix
+          VERSIONS=$(curl -s -H "Authorization: token ${GITEA_TOKEN}" \
+            "https://gitea.girok.dev/api/v1/packages/${OWNER}/container/${PACKAGE}" | \
+            jq -r ".[] | select(.version | startswith(\"${PREFIX}\")) | select(.version != \"${KEEP_TAGS}\") | \"\(.created_at)|\(.version)\"" | \
+            sort -r)
+
+          if [ -z "$VERSIONS" ]; then
+            echo "No ${PREFIX}* versions found to cleanup"
+            exit 0
+          fi
+
+          # Count versions
+          TOTAL=$(echo "$VERSIONS" | wc -l)
+          echo "Found ${TOTAL} ${PREFIX}* versions"
+
+          if [ "$TOTAL" -le "$MAX_KEEP" ]; then
+            echo "Total versions (${TOTAL}) <= max keep (${MAX_KEEP}), nothing to delete"
+            exit 0
+          fi
+
+          # Get versions to delete (skip first MAX_KEEP, delete the rest)
+          TO_DELETE=$(echo "$VERSIONS" | tail -n +$((MAX_KEEP + 1)))
+          DELETE_COUNT=$(echo "$TO_DELETE" | wc -l)
+
+          echo "Will delete ${DELETE_COUNT} old versions"
+
+          echo "$TO_DELETE" | while IFS='|' read -r created_at version; do
+            echo "Deleting: ${version} (created: ${created_at})"
+            curl -s -X DELETE -H "Authorization: token ${GITEA_TOKEN}" \
+              "https://gitea.girok.dev/api/v1/packages/${OWNER}/container/${PACKAGE}/${version}" || true
+          done
+
+          echo "Cleanup completed"

@@ -1,13 +1,14 @@
 # CI/CD Pipeline Documentation
 
-Complete guide for the My-Girok CI/CD pipeline using GitHub Actions, Harbor, and ArgoCD.
+Complete guide for the My-Girok CI/CD pipeline using GitHub Actions, Gitea Container Registry, and ArgoCD.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [GitHub Actions CI](#github-actions-ci)
-- [Harbor Registry](#harbor-registry)
+- [Container Registry](#container-registry)
+- [Image Retention Policy](#image-retention-policy)
 - [ArgoCD Deployment](#argocd-deployment)
 - [Setup Guide](#setup-guide)
 - [Troubleshooting](#troubleshooting)
@@ -18,21 +19,22 @@ Complete guide for the My-Girok CI/CD pipeline using GitHub Actions, Harbor, and
 
 - **Source Control**: GitHub
 - **CI**: GitHub Actions
-- **Container Registry**: Harbor (harbor.girok.dev)
+- **Container Registry**: Gitea (gitea.girok.dev)
 - **CD**: ArgoCD
 - **Orchestration**: Kubernetes
 
 ### Workflow
 
 ```
-Developer Push → GitHub Actions → Harbor → ArgoCD → Kubernetes
+Developer Push → GitHub Actions → Gitea Registry → ArgoCD → Kubernetes
 ```
 
 1. Developer pushes code to GitHub
 2. GitHub Actions runs tests and builds Docker images
-3. Images pushed to Harbor registry
-4. ArgoCD detects new images
-5. ArgoCD deploys to Kubernetes cluster
+3. Images pushed to Gitea Container Registry
+4. GitOps repository updated with new image tag
+5. ArgoCD syncs and deploys to Kubernetes cluster
+6. Old container images automatically cleaned up (keep latest 10)
 
 ## Architecture
 
@@ -62,8 +64,14 @@ Developer Push → GitHub Actions → Harbor → ArgoCD → Kubernetes
          │
          ▼
 ┌──────────────────┐
-│  Harbor Registry │
+│  Gitea Registry  │
 │ (Image Storage)  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  GitOps Repo     │
+│ (platform-gitops)│
 └────────┬─────────┘
          │
          ▼
@@ -76,6 +84,12 @@ Developer Push → GitHub Actions → Harbor → ArgoCD → Kubernetes
 ┌──────────────────┐
 │   Kubernetes     │
 │   (Runtime)      │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Image Cleanup   │
+│ (Keep latest 10) │
 └──────────────────┘
 ```
 
@@ -169,9 +183,53 @@ Developer Push → GitHub Actions → Harbor → ArgoCD → Kubernetes
 
 | Branch Pattern | Tag Format | Example | Use Case |
 |---------------|------------|---------|----------|
-| `develop` | `develop:<short-sha>` + `develop:latest` | `develop:a1b2c3d`, `develop:latest` | Development testing |
-| `release/*` | `release:<short-sha>` + `release:latest` | `release:e4f5g6h`, `release:latest` | QA/Staging |
-| `main` | `latest` | `latest` | Production |
+| `develop` | `develop-<short-sha>` + `develop` | `develop-a1b2c3d`, `develop` | Development testing |
+| `release/*` | `release-<short-sha>` + `release` | `release-e4f5g6h`, `release` | QA/Staging |
+| `main` | `<short-sha>` + `latest` | `a1b2c3d`, `latest` | Production |
+
+### Image Retention Policy
+
+Each CI workflow includes a `cleanup-images` job that automatically removes old container images after deployment.
+
+#### Retention Rules
+
+| Environment | Tag Pattern | Max Images | Max Tags | Special Tags (Always Kept) |
+|-------------|-------------|------------|----------|---------------------------|
+| Development | `develop-*` | **10** | **20** | `develop` |
+| Staging | `release-*` | **10** | **20** | `release` |
+| Production | `<hash>` | **10** | **20** | `latest` |
+
+#### How It Works
+
+1. After successful deployment, the `cleanup-images` job runs
+2. Lists all container versions from Gitea Packages API
+3. Filters by environment prefix (e.g., `develop-*`)
+4. Sorts by `created_at` timestamp (newest first)
+5. Keeps the latest 10 images
+6. Deletes older images (oldest first)
+7. Special tags (`develop`, `release`, `latest`) are never deleted
+
+#### Example
+
+```
+Before cleanup (develop branch, 15 images):
+  develop-abc1234 (newest)
+  develop-def5678
+  develop-ghi9012
+  ... (7 more)
+  develop-xyz7890 (10th newest)
+  develop-old1111 ← will be deleted
+  develop-old2222 ← will be deleted
+  develop-old3333 ← will be deleted
+  develop-old4444 ← will be deleted
+  develop-old5555 ← will be deleted (oldest)
+  develop         ← special tag, always kept
+
+After cleanup (10 images + special tag):
+  develop-abc1234 (newest)
+  ... (9 more recent)
+  develop         (special tag)
+```
 
 ### Caching Strategy
 
@@ -192,65 +250,55 @@ Developer Push → GitHub Actions → Harbor → ArgoCD → Kubernetes
 - Location: `harbor.girok.dev/my-girok/<service>:buildcache`
 - Mode: `max` (cache all layers)
 
-## Harbor Registry
+## Container Registry
 
 ### Registry Information
 
-- **URL**: `harbor.girok.dev`
+- **URL**: `gitea.girok.dev`
 - **Protocol**: HTTPS
-- **Project**: `my-girok`
+- **Organization**: `beegy-labs`
 
 ### Repositories
 
 ```
-harbor.girok.dev/my-girok/auth-service
-harbor.girok.dev/my-girok/web-main
+gitea.girok.dev/beegy-labs/auth-service
+gitea.girok.dev/beegy-labs/personal-service
+gitea.girok.dev/beegy-labs/web-main
 ```
 
-### Robot Account
+### Authentication
 
 **Purpose**: Automated CI/CD authentication
 
 **Permissions:**
-- ✅ Push Artifact
-- ✅ Pull Artifact
+- ✅ Push Package
+- ✅ Pull Package
+- ✅ Delete Package (for cleanup)
 
 **Format:**
-- Username: `robot$my-girok+ci-builder`
-- Password: JWT token (from Harbor UI)
+- Username: Gitea username
+- Password: Gitea access token with `write:package` scope
 
-**Creation Steps:**
+**Token Creation:**
 
-1. Login to Harbor UI
-2. Navigate to `my-girok` project
-3. Click "Robot Accounts" tab
-4. Click "New Robot Account"
-5. Set name: `ci-builder`
-6. Set expiration: Never (or as needed)
-7. Check permissions: Push & Pull Artifact
-8. Copy token (shown only once!)
+1. Login to Gitea UI (gitea.girok.dev)
+2. Go to Settings → Applications
+3. Generate New Token
+4. Select scopes: `write:package`, `read:package`, `delete:package`
+5. Copy token (shown only once!)
 
-### Image Retention Policy (Recommended)
+### Image Retention Policy
 
-```yaml
-# Keep only recent images to save storage
-Rules:
-  - Tag pattern: develop-*
-    Retention: 10 most recent
-  - Tag pattern: release-*
-    Retention: 20 most recent
-  - Tag pattern: latest
-    Retention: Always keep
-```
+**Enforced via CI `cleanup-images` job:**
 
-### Vulnerability Scanning
+| Tag Pattern | Max Count | Notes |
+|-------------|-----------|-------|
+| `develop-*` | 10 images | Oldest deleted first |
+| `release-*` | 10 images | Oldest deleted first |
+| `<hash>` (main) | 10 images | Oldest deleted first |
+| `develop`, `release`, `latest` | Always kept | Special tags preserved |
 
-Harbor can automatically scan images:
-
-1. Project Settings → Configuration
-2. Enable "Automatically scan images on push"
-3. Set severity threshold (e.g., Critical, High)
-4. Prevent vulnerable images from deployment
+**Total tags per environment: up to 20** (10 images + special tags + buffer)
 
 ## ArgoCD Deployment
 
