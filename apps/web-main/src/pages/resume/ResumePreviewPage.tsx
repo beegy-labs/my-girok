@@ -3,11 +3,10 @@ import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { getResume, Resume } from '../../api/resume';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
-import ShareLinkModal from '../../components/resume/ShareLinkModal';
-import { exportResumeToPDF } from '../../utils/pdf';
+import ResumeActionBar from '../../components/resume/ResumeActionBar';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CharacterMessage } from '../../components/characters';
-import { PrimaryButton, SecondaryButton } from '../../components/ui';
+import { PrimaryButton } from '../../components/ui';
 
 export default function ResumePreviewPage() {
   const navigate = useNavigate();
@@ -16,8 +15,6 @@ export default function ResumePreviewPage() {
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [exporting, setExporting] = useState(false);
 
   // Define loadResume function to be reused (for initial load and retry)
   const loadResume = async () => {
@@ -32,8 +29,6 @@ export default function ResumePreviewPage() {
       setResume(null);
       setLoading(true);
       setError(null);
-      setShowShareModal(false);
-      setExporting(false);
 
       // Load resume data
       const data = await getResume(resumeId);
@@ -55,29 +50,6 @@ export default function ResumePreviewPage() {
     loadResume();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeId]);
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleExportPDF = async () => {
-    if (!resume) return;
-
-    setExporting(true);
-    try {
-      const paperSize = resume.paperSize || 'A4';
-      const fileName = `${resume.name.replace(/\s+/g, '_')}_Resume_${paperSize}.pdf`;
-      await exportResumeToPDF('resume-content', {
-        paperSize,
-        fileName,
-      });
-    } catch (error) {
-      console.error('PDF export failed:', error);
-      alert(t('resume.preview.exportFailed'));
-    } finally {
-      setExporting(false);
-    }
-  };
 
   if (loading) {
     return <LoadingSpinner fullScreen message={t('resume.preview.loading')} />;
@@ -119,62 +91,13 @@ export default function ResumePreviewPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
-      {/* Action Bar - Hidden when printing */}
-      <div className="bg-amber-50/30 dark:bg-dark-bg-card border-b border-amber-100 dark:border-dark-border-subtle print:hidden sticky top-0 z-10 shadow-sm dark:shadow-dark-sm transition-colors duration-200">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <h1 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary">
-                📄 {t('resume.preview.title', { name: resume.name })}
-              </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
-                  👁️ {t('resume.preview.badge')}
-                </span>
-              </div>
-            </div>
-            <SecondaryButton onClick={() => navigate(`/resume/edit/${resumeId}`)}>
-              ✍️ {t('resume.preview.edit')}
-            </SecondaryButton>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <PrimaryButton
-              onClick={handleExportPDF}
-              disabled={exporting}
-              className="flex-1"
-            >
-              {exporting ? t('resume.preview.exporting') : t('resume.preview.downloadPdf')}
-            </PrimaryButton>
-            <SecondaryButton
-              onClick={handlePrint}
-              className="flex-1"
-            >
-              🖨️ {t('resume.preview.print')}
-            </SecondaryButton>
-            <SecondaryButton
-              onClick={() => setShowShareModal(true)}
-              className="flex-1"
-            >
-              🔗 {t('resume.preview.shareLink')}
-            </SecondaryButton>
-          </div>
-        </div>
-      </div>
+      {/* Action Bar - Common component with owner mode (all actions enabled) */}
+      <ResumeActionBar resume={resume} mode="owner" />
 
       {/* Resume Preview */}
       <div className="py-6 sm:py-8 print:py-0 flex justify-center">
         <ResumePreviewContainer resume={resume} />
       </div>
-
-      {/* Share Modal */}
-      {showShareModal && (
-        <ShareLinkModal
-          onClose={() => setShowShareModal(false)}
-          resumeId={resume.id}
-        />
-      )}
     </div>
   );
 }
