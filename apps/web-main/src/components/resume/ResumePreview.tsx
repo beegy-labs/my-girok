@@ -156,16 +156,13 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       // Create dynamic CSS for page size based on paperSize prop
       const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
       const dynamicCSS = `
-        /* Include all existing styles */
         ${stylesheets}
 
-        /* Page configuration for Paged.js */
         @page {
           size: ${pageSize};
-          margin: 0; /* Paged.js handles margins via .pagedjs_page_content padding */
+          margin: 0;
         }
 
-        /* Base styles for paged content */
         html, body {
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           font-size: 14px;
@@ -173,62 +170,60 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
           color: #1f2937;
         }
 
-        /* Apply grayscale filter if enabled */
         ${isGrayscaleMode ? `
         img {
           filter: grayscale(100%) !important;
         }
         ` : ''}
 
-        /* Print-specific styles */
         @media print {
           @page {
             size: ${pageSize};
             margin: 0;
           }
 
-          /* Allow sections to break across pages naturally */
           .resume-section {
             break-inside: auto;
             page-break-inside: auto;
           }
 
-          /* Allow long items to break across pages if needed */
           .resume-item {
             break-inside: auto;
             page-break-inside: auto;
           }
 
-          /* Keep short elements together */
           .resume-item > h3,
           .resume-item > p:only-child {
             break-inside: avoid;
             page-break-inside: avoid;
           }
 
-          /* Keep headings with their content */
           h1, h2, h3, h4, h5, h6 {
             break-after: avoid;
             page-break-after: avoid;
           }
 
-          /* Print color accurately */
           * {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
         }
 
-        /* Hide page number from original content */
         .resume-page-number {
           display: none !important;
         }
       `;
 
-      // Preview with Paged.js
+      // Embed CSS directly in HTML content as <style> tag
+      // Paged.js preview() second param expects CSS file URLs, not inline strings
+      // Passing CSS as URL (even Blob URL) causes fetch requests that may fail
+      // Embedding CSS in HTML avoids all external requests
+      const htmlWithEmbeddedStyles = `<style>${dynamicCSS}</style>${contentClone.innerHTML}`;
+
+      // Preview with Paged.js - empty array since CSS is embedded in HTML
       paged.preview(
-        contentClone.innerHTML,
-        [dynamicCSS],
+        htmlWithEmbeddedStyles,
+        [],
         pagedContainerRef.current
       ).then((flow: any) => {
         console.log('Paged.js rendered', flow.total, 'pages with', pageSize, 'size');
