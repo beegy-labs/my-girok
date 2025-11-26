@@ -9,6 +9,10 @@ on:
   delete:
   workflow_dispatch:
 
+concurrency:
+  group: sync-to-gitea
+  cancel-in-progress: true
+
 jobs:
   sync:
     name: Mirror to Gitea
