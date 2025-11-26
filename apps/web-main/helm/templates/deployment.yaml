@@ -13,10 +13,11 @@ spec:
       {{- include "web-main.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/nginx-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "web-main.selectorLabels" . | nindent 8 }}
     spec:
@@ -47,11 +48,17 @@ spec:
         - name: RYBBIT_SITE_ID
           value: {{ .Values.app.rybbitSiteId | quote }}
         volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
         - name: nginx-cache
           mountPath: /var/cache/nginx
         - name: nginx-run
           mountPath: /var/run
       volumes:
+      - name: nginx-config
+        configMap:
+          name: {{ include "web-main.fullname" . }}-nginx-config
       - name: nginx-cache
         emptyDir: {}
       - name: nginx-run

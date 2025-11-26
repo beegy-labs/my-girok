@@ -31,26 +31,6 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Send Discord notification - Start
-        if: always()
-        env:
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-        run: |
-          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
-          COMMIT_MSG=$(printf '%s' "$COMMIT_MESSAGE" | head -n 1 | cut -c 1-200 | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"username\": \"GitHub Actions\",
-              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
-              \"embeds\": [{
-                \"title\": \"🚀 CI Started - Web Main\",
-                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Event:** ${{ github.event_name }}\\n**Commit:** ${COMMIT_MSG}\",
-                \"color\": 3447003,
-                \"timestamp\": \"${TIMESTAMP}\"
-              }]
-            }"
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -94,34 +74,6 @@ jobs:
           cd apps/web-main
           pnpm test:e2e || true
 
-      - name: Send Discord notification - Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '✅ CI Success - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **All tests passed!**
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ CI Failed - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Tests failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
   build:
     name: Build and Push Docker Image
     runs-on: [self-hosted, kubernetes, gitops]
@@ -130,23 +82,6 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Send Discord notification - Build Start
-        if: always()
-        run: |
-          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
-          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"username\": \"GitHub Actions\",
-              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
-              \"embeds\": [{
-                \"title\": \"🔨 Build Started - Web Main\",
-                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Building Docker image...**\",
-                \"color\": 3447003,
-                \"timestamp\": \"${TIMESTAMP}\"
-              }]
-            }"
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -238,35 +173,6 @@ jobs:
           echo "Version: ${{ steps.env.outputs.version }}"
           echo "API URL: ${{ steps.env.outputs.api_url }}"
           echo "Personal API URL: ${{ steps.env.outputs.personal_api_url }}"
-
-      - name: Send Discord notification - Build Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '✅ Build Success - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Environment:** ${{ steps.env.outputs.environment }}
-            **Version:** ${{ steps.env.outputs.version }}
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Build Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ Build Failed - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Build failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
 
   update-gitops:
     name: Update GitOps Repository
@@ -401,36 +307,6 @@ jobs:
           # Note: kubectl is not available in this runner environment
           # ArgoCD has automated sync enabled with polling interval
           # The application will be synced automatically when ArgoCD detects the Git change
-
-      - name: Send Discord notification - Deploy Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '🚀 Deploy Success - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Environment:** Updated GitOps repository
-            **Version:** ${{ steps.image.outputs.tag }}
-            **ArgoCD sync completed!**
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Deploy Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ Deploy Failed - Web Main'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **GitOps update or ArgoCD sync failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
 
   cleanup-images:
     name: Cleanup Old Container Images

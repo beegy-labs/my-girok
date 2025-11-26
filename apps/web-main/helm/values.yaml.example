@@ -106,6 +106,44 @@ affinity:
           topologyKey: kubernetes.io/hostname
 
 # ============================================================================
+# Content Security Policy (CSP) Configuration
+# ============================================================================
+# CSP helps prevent XSS attacks by controlling which resources can be loaded
+# Customize these values based on your environment and third-party integrations
+
+csp:
+  # Default fallback for all resource types
+  defaultSrc: "'self'"
+
+  # JavaScript sources
+  # 'unsafe-inline' needed for some React patterns, rybbit for analytics
+  scriptSrc: "'self' 'unsafe-inline' https://rybbit.girok.dev"
+
+  # CSS sources
+  # 'unsafe-inline' needed for styled-components/emotion
+  styleSrc: "'self' 'unsafe-inline'"
+
+  # Image sources
+  # data: for inline images, https: for external images
+  imgSrc: "'self' data: https:"
+
+  # Font sources
+  fontSrc: "'self' data:"
+
+  # API/WebSocket connections
+  # CHANGE THIS: Add your API domains and any analytics/tracking services
+  # Development: https://my-api-dev.girok.dev
+  # Production: https://my-api.girok.dev
+  connectSrc: "'self' https://my-api-dev.girok.dev https://rybbit.girok.dev"
+
+  # Embedding restrictions
+  frameAncestors: "'none'"
+
+  # Additional CSP directives (optional)
+  # Example: ["worker-src 'self'", "object-src 'none'"]
+  extraDirectives: []
+
+# ============================================================================
 # Application Configuration
 # ============================================================================
 
