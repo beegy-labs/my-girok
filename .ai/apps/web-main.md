@@ -501,8 +501,8 @@ Enforce minimum scale thresholds per device type and enable horizontal scroll fo
 
 ```typescript
 // Constants (defined outside component)
-const MIN_SCALE_MOBILE = 0.65; // Minimum 65% for mobile
-const MIN_SCALE_TABLET = 0.85; // Minimum 85% for tablet
+const MIN_SCALE_MOBILE = 1.0; // 100% for mobile - no scaling, use scroll
+const MIN_SCALE_TABLET = 0.9; // Minimum 90% for tablet
 const MOBILE_BREAKPOINT = 640; // Tailwind sm
 const TABLET_BREAKPOINT = 1024; // Tailwind lg
 
@@ -529,8 +529,8 @@ Enable horizontal scroll on mobile to accommodate the larger minimum scale:
 ### Scale Values by Device
 | Device | Viewport | Natural Scale | Enforced Scale |
 |--------|----------|---------------|----------------|
-| Mobile | 375px | 43% | **65%** (min) |
-| Tablet | 768px | 93% | 93% (natural) |
+| Mobile | 375px | 43% | **100%** (no scaling, horizontal scroll) |
+| Tablet | 768px | 93% | **93%** (natural, min 90%) |
 | Desktop | 1024px+ | 100% | 100% |
 
 ## Mobile Edit Patterns (Resume)

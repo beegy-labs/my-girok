@@ -17,9 +17,9 @@ function getGenderLabelKey(gender: Gender): string {
   return keyMap[gender];
 }
 
-// Scale thresholds for mobile/tablet readability (prevent excessive shrinking)
-const MIN_SCALE_MOBILE = 0.65; // Minimum 65% for mobile (allows horizontal scroll)
-const MIN_SCALE_TABLET = 0.85; // Minimum 85% for tablet
+// Scale thresholds for readability - mobile shows at 100% with scroll
+const MIN_SCALE_MOBILE = 1.0; // 100% for mobile - no scaling, use scroll instead
+const MIN_SCALE_TABLET = 0.9; // Minimum 90% for tablet
 const MOBILE_BREAKPOINT = 640; // Tailwind sm breakpoint
 const TABLET_BREAKPOINT = 1024; // Tailwind lg breakpoint
 
