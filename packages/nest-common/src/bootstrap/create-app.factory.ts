@@ -46,6 +46,7 @@ export interface AppConfig {
 
   /**
    * Custom CORS origins (override defaults)
+   * Can be provided via config or CORS_ORIGINS environment variable (comma-separated)
    */
   corsOrigins?: {
     production?: string[];
@@ -114,22 +115,36 @@ export async function configureApp(
   );
 
   // CORS configuration
+  // Priority: CORS_ORIGINS env > config.corsOrigins > defaults
   if (config.enableCors !== false) {
-    const productionOrigins = config.corsOrigins?.production || [
-      'https://mygirok.dev',
-      'https://admin.mygirok.dev',
-    ];
-    const developmentOrigins = config.corsOrigins?.development || [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://my-dev.girok.dev',
-    ];
+    const corsOriginsEnv = configService.get<string>('CORS_ORIGINS');
+
+    let origins: string[];
+
+    if (corsOriginsEnv) {
+      // Use CORS_ORIGINS from environment (comma-separated)
+      origins = corsOriginsEnv.split(',').map((origin) => origin.trim());
+    } else if (nodeEnv === 'production') {
+      origins = config.corsOrigins?.production || [
+        'https://mygirok.dev',
+        'https://admin.mygirok.dev',
+      ];
+    } else {
+      origins = config.corsOrigins?.development || [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'https://my-dev.girok.dev',
+      ];
+    }
 
     app.enableCors({
-      origin: nodeEnv === 'production' ? productionOrigins : developmentOrigins,
+      origin: origins,
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+      exposedHeaders: ['Content-Length', 'Content-Type'],
+      maxAge: 3600, // Cache preflight for 1 hour (iOS Safari compatibility)
+      optionsSuccessStatus: 204,
     });
   }
 
