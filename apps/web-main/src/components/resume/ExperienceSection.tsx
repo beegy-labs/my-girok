@@ -423,12 +423,12 @@ function SortableProject({
   return (
     <div ref={setNodeRef} style={style} className="border border-amber-300 dark:border-dark-border-strong rounded-lg bg-white dark:bg-dark-bg-elevated transition-colors duration-200">
       {/* Project Header */}
-      <div className="flex items-center gap-3 p-4 bg-amber-50/50 dark:bg-dark-bg-card transition-colors duration-200">
+      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-50/50 dark:bg-dark-bg-card transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200"
+          className="cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
           title="Drag to reorder"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,14 +439,16 @@ function SortableProject({
         <button
           type="button"
           onClick={onToggle}
-          className="flex-1 flex items-center justify-between text-left transition-colors duration-200"
+          className="flex-1 flex items-center justify-between text-left transition-colors duration-200 min-w-0 overflow-hidden"
         >
-          <span className="font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
-            📖 Project #{projectIndex + 1}
-            {project.name && <span className="font-normal text-gray-700 dark:text-dark-text-secondary transition-colors duration-200">- {project.name}</span>}
+          <span className="font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-1 sm:gap-2 transition-colors duration-200 min-w-0">
+            <span className="flex-shrink-0">📖</span>
+            <span className="flex-shrink-0 hidden sm:inline">Project</span>
+            <span className="flex-shrink-0">#{projectIndex + 1}</span>
+            {project.name && <span className="font-normal text-gray-700 dark:text-dark-text-secondary transition-colors duration-200 truncate">- {project.name}</span>}
           </span>
           <svg
-            className={`w-5 h-5 text-gray-500 dark:text-dark-text-tertiary transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            className={`w-5 h-5 text-gray-500 dark:text-dark-text-tertiary transition-transform duration-200 flex-shrink-0 ml-1 ${isExpanded ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -455,8 +457,9 @@ function SortableProject({
           </svg>
         </button>
 
-        <DestructiveButton onClick={onRemove} size="sm">
-          Remove
+        <DestructiveButton onClick={onRemove} size="sm" className="flex-shrink-0">
+          <span className="hidden sm:inline">Remove</span>
+          <span className="sm:hidden">✕</span>
         </DestructiveButton>
       </div>
 
@@ -651,62 +654,119 @@ function HierarchicalAchievement({
     onUpdate({ ...achievement, children: newChildren });
   };
 
+  // Calculate margin based on screen size (smaller on mobile)
+  const mobileMargin = (depth - 1) * 0.5; // 0.5rem per depth on mobile
+  const desktopMargin = (depth - 1) * 1.5; // 1.5rem per depth on desktop
+
   return (
     <div className="space-y-2">
       <div
-        className="flex items-start gap-2 bg-amber-50/30 dark:bg-dark-bg-card rounded-lg p-2 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200"
+        className="bg-amber-50/30 dark:bg-dark-bg-card rounded-lg p-2 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200"
         style={{
-          marginLeft: `${(depth - 1) * 1.5}rem`,
-          maxWidth: `calc(100% - ${(depth - 1) * 1.5}rem)`
+          marginLeft: `${mobileMargin}rem`,
+          maxWidth: `calc(100% - ${mobileMargin}rem)`
         }}
       >
-        <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
-          <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none transition-colors duration-200">
-            {getBulletSymbol(depth)}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">({depth})</span>
+        {/* Desktop: horizontal layout */}
+        <div className="hidden sm:flex items-start gap-2" style={{
+          marginLeft: `${desktopMargin - mobileMargin}rem`,
+        }}>
+          <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
+            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none transition-colors duration-200">
+              {getBulletSymbol(depth)}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">({depth})</span>
+          </div>
+
+          <input
+            type="text"
+            value={achievement.content}
+            onChange={e => onUpdate({ ...achievement, content: e.target.value })}
+            className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
+            style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+            placeholder="Achievement description..."
+          />
+
+          <div className="flex items-center gap-1">
+            {depth < 4 && (
+              <button
+                type="button"
+                onClick={onAddChild}
+                className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-colors duration-200 font-semibold whitespace-nowrap"
+                title="Add sub-item"
+              >
+                + 하위
+              </button>
+            )}
+
+            {(achievement.children && achievement.children.length > 0) && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
+                title={isExpanded ? "Collapse" : "Expand"}
+              >
+                {isExpanded ? '▼' : '▶'}
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onRemove}
+              className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
+              title="Remove"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
-        <input
-          type="text"
-          value={achievement.content}
-          onChange={e => onUpdate({ ...achievement, content: e.target.value })}
-          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
-          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
-          placeholder="Achievement description..."
-        />
+        {/* Mobile: vertical layout */}
+        <div className="sm:hidden space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none transition-colors duration-200">
+                {getBulletSymbol(depth)}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">({depth})</span>
+            </div>
+            <input
+              type="text"
+              value={achievement.content}
+              onChange={e => onUpdate({ ...achievement, content: e.target.value })}
+              className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
+              placeholder="Achievement..."
+            />
+          </div>
+          <div className="flex items-center gap-2 pl-6">
+            {depth < 4 && (
+              <button
+                type="button"
+                onClick={onAddChild}
+                className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-colors duration-200 font-semibold"
+              >
+                + 하위
+              </button>
+            )}
 
-        <div className="flex items-center gap-1">
-          {depth < 4 && (
+            {(achievement.children && achievement.children.length > 0) && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
+              >
+                {isExpanded ? '▼ 접기' : '▶ 펼치기'}
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={onAddChild}
-              className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-colors duration-200 font-semibold whitespace-nowrap"
-              title="Add sub-item"
+              onClick={onRemove}
+              className="px-2 py-1 text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
             >
-              + 하위
+              ✕ 삭제
             </button>
-          )}
-
-          {(achievement.children && achievement.children.length > 0) && (
-            <button
-              type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
-              title={isExpanded ? "Collapse" : "Expand"}
-            >
-              {isExpanded ? '▼' : '▶'}
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onRemove}
-            className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
-            title="Remove"
-          >
-            ✕
-          </button>
+          </div>
         </div>
       </div>
 
