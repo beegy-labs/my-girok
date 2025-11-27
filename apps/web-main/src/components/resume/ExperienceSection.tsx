@@ -740,11 +740,10 @@ function HierarchicalAchievement({
         <div className="hidden sm:flex items-start gap-2" style={{
           marginLeft: `${(depth - 1) * 0.75}rem`,
         }}>
-          <div className="flex items-center gap-1 min-w-[50px] flex-shrink-0">
+          <div className="flex items-center gap-1 min-w-[30px] flex-shrink-0">
             <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none">
               {getBulletSymbol(depth)}
             </span>
-            <span className="text-xs text-gray-500 dark:text-dark-text-tertiary">({depth})</span>
           </div>
 
           <input

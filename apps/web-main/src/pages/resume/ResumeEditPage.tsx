@@ -163,7 +163,7 @@ export default function ResumeEditPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-1 sm:px-4 py-2 sm:py-8 pb-24 lg:pb-8">
+      <div className="max-w-7xl mx-auto px-1 sm:px-4 py-2 sm:py-4 pb-24 lg:pb-8">
         {/* Header - Simplified for mobile */}
         <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md p-3 sm:p-6 mb-4 sm:mb-6 transition-colors duration-200">
           <div className="flex items-center gap-2 sm:gap-3">
