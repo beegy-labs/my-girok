@@ -526,7 +526,7 @@ function SortableProject({
 
       {/* Project Details (Collapsible) */}
       {isExpanded && (
-        <div className="p-4 space-y-4">
+        <div className="p-2 sm:p-4 space-y-3 sm:space-y-4">
           {/* Project Basic Info */}
           <div className="grid grid-cols-1 gap-3">
             <TextInput
@@ -960,18 +960,18 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
   };
 
   return (
-    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-sm p-6 transition-colors duration-200">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2 transition-colors duration-200">
+    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-6 transition-colors duration-200">
+      <div className="flex items-center justify-between mb-3 sm:mb-6">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2 transition-colors duration-200">
             💼 {t('resume.sections.experience')}
           </h2>
-          <p className="text-sm text-gray-600 dark:text-dark-text-secondary mt-1 transition-colors duration-200">{t('resume.descriptions.experience')}</p>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary mt-1 transition-colors duration-200 hidden sm:block">{t('resume.descriptions.experience')}</p>
         </div>
         <button
           type="button"
           onClick={addExperience}
-          className="px-4 py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors duration-200 font-semibold"
+          className="px-2 py-1.5 sm:px-4 sm:py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors duration-200 font-semibold text-xs sm:text-sm flex-shrink-0"
         >
           + Add Experience
         </button>
@@ -987,7 +987,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
             items={experiences.map((exp, i) => exp.id || `exp-${i}`)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-6">
               {experiences.map((exp, index) => (
                 <SortableExperienceCard
                   key={exp.id || `exp-${index}`}
@@ -1002,7 +1002,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-12 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">
+        <div className="text-center py-6 sm:py-12 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200 text-sm sm:text-base">
           <p>No work experience added yet. Click "Add Experience" to get started.</p>
         </div>
       )}
