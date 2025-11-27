@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -19,6 +20,14 @@ import { CSS } from '@dnd-kit/utilities';
 import { Experience, ExperienceProject, ProjectAchievement, calculateExperienceDuration } from '../../api/resume';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 import { TextInput, TextArea, SecondaryButton, DestructiveButton } from '../ui';
+
+// Depth colors for visual hierarchy in achievements
+const DEPTH_COLORS = {
+  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
+  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
+  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
+  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+} as const;
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -56,9 +65,15 @@ function SortableExperienceCard({
   };
 
   const [expandedProjects, setExpandedProjects] = useState<{ [key: number]: boolean }>({});
+  // Mobile: collapse company details by default for existing items
+  const [isCompanyExpanded, setIsCompanyExpanded] = useState(true);
 
   // Ensure projects is always an array (handle undefined from API)
   const projects = experience.projects || [];
+
+  const toggleCompanyExpand = useCallback(() => {
+    setIsCompanyExpanded(prev => !prev);
+  }, []);
 
   const toggleProject = (projectIndex: number) => {
     setExpandedProjects(prev => ({
@@ -156,217 +171,257 @@ function SortableExperienceCard({
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border border-amber-200 dark:border-dark-border-default rounded-xl p-4 sm:p-6 bg-amber-50/30 dark:bg-dark-bg-card transition-colors duration-200">
-      {/* Company Header with Drag Handle */}
-      <div className="flex items-start gap-2 sm:gap-4 mb-4">
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          className="mt-1 sm:mt-2 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
-          title={t('resume.experienceForm.dragToReorder')}
-        >
-          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-          </svg>
-        </button>
+    <div ref={setNodeRef} style={style} className="border border-amber-200 dark:border-dark-border-default rounded-xl overflow-hidden bg-amber-50/30 dark:bg-dark-bg-card transition-colors duration-200">
+      {/* Mobile-optimized Company Header */}
+      <div className="bg-gradient-to-r from-amber-100 to-amber-50 dark:from-amber-900/30 dark:to-amber-800/20 p-3 sm:p-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Drag Handle - larger touch target */}
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="p-2 -m-1 cursor-move text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors duration-200 flex-shrink-0 touch-manipulation"
+            title={t('resume.experienceForm.dragToReorder')}
+          >
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+            </svg>
+          </button>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4">
-            <h3 className="text-base sm:text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200 truncate">
-              <span className="hidden sm:inline">📚 {t('resume.experienceForm.company')}</span>
-              <span className="sm:hidden">📚 회사</span>
-              {' '}#{index + 1}
-            </h3>
-            <DestructiveButton onClick={onRemove} size="sm" className="self-start sm:self-auto flex-shrink-0">
-              <span className="hidden sm:inline">{t('resume.experienceForm.removeCompany')}</span>
-              <span className="sm:hidden">✕ 삭제</span>
-            </DestructiveButton>
-          </div>
+          {/* Company Title - clickable on mobile to expand/collapse */}
+          <button
+            type="button"
+            onClick={toggleCompanyExpand}
+            className="flex-1 flex items-center gap-2 text-left min-w-0 sm:cursor-default"
+          >
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm sm:text-lg font-bold text-amber-900 dark:text-amber-300 truncate transition-colors duration-200">
+                📚 {experience.company || t('resume.experienceForm.company')} #{index + 1}
+              </h3>
+              {/* Show summary when collapsed on mobile */}
+              {!isCompanyExpanded && experience.startDate && (
+                <p className="text-xs text-amber-700 dark:text-amber-400 truncate sm:hidden">
+                  {experience.finalPosition} • {experience.startDate} ~ {experience.isCurrentlyWorking ? '현재' : experience.endDate}
+                </p>
+              )}
+            </div>
+            {/* Expand/collapse indicator - mobile only */}
+            <svg
+              className={`w-5 h-5 text-amber-600 dark:text-amber-400 transition-transform duration-200 sm:hidden flex-shrink-0 ${isCompanyExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      </div>
 
-          {/* Company Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <TextInput
-              label={t('resume.experienceForm.company')}
-              value={experience.company}
-              onChange={value => onUpdate({ ...experience, company: value })}
-              placeholder={t('resume.experienceForm.companyName')}
-              required
-            />
+      {/* Company Details - collapsible on mobile */}
+      <div className={`${isCompanyExpanded ? 'block' : 'hidden'} sm:block p-3 sm:p-6`}>
+        {/* Desktop: title bar with delete button */}
+        <div className="hidden sm:flex sm:items-center sm:justify-between gap-4 mb-4">
+          <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200">
+            📚 {t('resume.experienceForm.company')} #{index + 1}
+          </h3>
+          <DestructiveButton onClick={onRemove} size="sm" className="flex-shrink-0">
+            {t('resume.experienceForm.removeCompany')}
+          </DestructiveButton>
+        </div>
 
+        {/* Mobile: Delete button */}
+        <div className="sm:hidden flex justify-end mb-3">
+          <DestructiveButton onClick={onRemove} size="sm" className="text-xs py-1.5 px-3 touch-manipulation">
+            ✕ 삭제
+          </DestructiveButton>
+        </div>
+
+        {/* Company Basic Info - Mobile optimized */}
+        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4 mb-4">
+          <TextInput
+            label={t('resume.experienceForm.company')}
+            value={experience.company}
+            onChange={value => onUpdate({ ...experience, company: value })}
+            placeholder={t('resume.experienceForm.companyName')}
+            required
+          />
+
+          {/* Date fields - side by side on mobile for better UX */}
+          <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-2 sm:gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                {t('resume.experienceForm.startDate')} <span className="text-red-500">*</span>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+                <span className="hidden sm:inline">{t('resume.experienceForm.startDate')}</span>
+                <span className="sm:hidden">시작일</span>
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <input
                 type="month"
                 value={experience.startDate}
                 onChange={e => onUpdate({ ...experience, startDate: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                {t('resume.experienceForm.endDate')}
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+                <span className="hidden sm:inline">{t('resume.experienceForm.endDate')}</span>
+                <span className="sm:hidden">종료일</span>
               </label>
               <input
                 type="month"
                 value={experience.endDate || ''}
                 onChange={e => onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })}
                 disabled={experience.isCurrentlyWorking}
-                className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary disabled:bg-gray-100 dark:disabled:bg-dark-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
-                placeholder={t('resume.experienceForm.leaveEmpty')}
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary disabled:bg-gray-100 dark:disabled:bg-dark-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
               />
-              <label className="flex items-center mt-2 text-sm text-gray-700 dark:text-dark-text-secondary cursor-pointer transition-colors duration-200">
-                <input
-                  type="checkbox"
-                  checked={experience.isCurrentlyWorking || false}
-                  onChange={e => onUpdate({ ...experience, isCurrentlyWorking: e.target.checked, endDate: e.target.checked ? '' : experience.endDate })}
-                  className="mr-2 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-400"
-                />
-                {t('resume.experience.currentlyWorking')}
-              </label>
             </div>
           </div>
+        </div>
 
-          {/* Experience Duration */}
-          {experience.startDate && (
-            <div className="mb-4 p-3 bg-amber-50 dark:bg-dark-bg-card border border-amber-200 dark:border-dark-border-default rounded-lg transition-colors duration-200">
-              <span className="text-sm font-semibold text-amber-900 dark:text-amber-300 transition-colors duration-200">
-                {t('resume.experienceForm.experiencePeriod')} {(() => {
-                  const duration = calculateExperienceDuration(
-                    experience.startDate,
-                    experience.endDate,
-                    experience.isCurrentlyWorking
-                  );
-                  return t('resume.experience.duration', { years: duration.years, months: duration.months });
-                })()}
-              </span>
+        {/* Currently working checkbox - larger touch target */}
+        <label className="flex items-center p-2 -mx-2 mb-3 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/10 cursor-pointer transition-colors duration-200 touch-manipulation">
+          <input
+            type="checkbox"
+            checked={experience.isCurrentlyWorking || false}
+            onChange={e => onUpdate({ ...experience, isCurrentlyWorking: e.target.checked, endDate: e.target.checked ? '' : experience.endDate })}
+            className="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-400"
+          />
+          <span className="ml-3 text-xs sm:text-sm text-gray-700 dark:text-dark-text-secondary">
+            <span className="hidden sm:inline">{t('resume.experience.currentlyWorking')}</span>
+            <span className="sm:hidden">현재 재직 중</span>
+          </span>
+        </label>
+
+        {/* Experience Duration */}
+        {experience.startDate && (
+          <div className="mb-3 p-2 sm:p-3 bg-amber-50 dark:bg-dark-bg-card border border-amber-200 dark:border-dark-border-default rounded-lg transition-colors duration-200">
+            <span className="text-xs sm:text-sm font-semibold text-amber-900 dark:text-amber-300 transition-colors duration-200">
+              {t('resume.experienceForm.experiencePeriod')} {(() => {
+                const duration = calculateExperienceDuration(
+                  experience.startDate,
+                  experience.endDate,
+                  experience.isCurrentlyWorking
+                );
+                return t('resume.experience.duration', { years: duration.years, months: duration.months });
+              })()}
+            </span>
+          </div>
+        )}
+
+        {/* Final Position and Job Title */}
+        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 mb-3">
+          <TextInput
+            label={t('resume.experienceForm.position')}
+            value={experience.finalPosition}
+            onChange={value => onUpdate({ ...experience, finalPosition: value })}
+            placeholder={t('resume.experienceForm.positionPlaceholder')}
+            required
+          />
+
+          <TextInput
+            label={t('resume.experienceForm.jobTitle')}
+            value={experience.jobTitle}
+            onChange={value => onUpdate({ ...experience, jobTitle: value })}
+            placeholder={t('resume.experienceForm.jobTitlePlaceholder')}
+            required
+          />
+        </div>
+
+        {/* Salary Section - Compact on mobile */}
+        <div className="mt-3 sm:mt-4">
+          <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+            <span className="hidden sm:inline">연봉 / Salary (Optional)</span>
+            <span className="sm:hidden">연봉 (선택)</span>
+          </label>
+          <div className="flex gap-2 sm:gap-4">
+            <input
+              type="number"
+              value={experience.salary || ''}
+              onChange={e => onUpdate({ ...experience, salary: e.target.value ? parseInt(e.target.value) : undefined })}
+              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
+              placeholder="5000"
+              min="0"
+            />
+            <select
+              value={experience.salaryUnit || '만원'}
+              onChange={e => onUpdate({ ...experience, salaryUnit: e.target.value })}
+              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
+            >
+              <option value="만원">만원</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="JPY">JPY</option>
+            </select>
+          </div>
+          <label className="flex items-center p-2 -mx-2 mt-1 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/10 cursor-pointer transition-colors duration-200 touch-manipulation">
+            <input
+              type="checkbox"
+              checked={experience.showSalary ?? false}
+              onChange={e => onUpdate({ ...experience, showSalary: e.target.checked })}
+              className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 bg-white dark:bg-dark-bg-elevated border-amber-300 dark:border-dark-border-default rounded focus:ring-amber-500 dark:focus:ring-amber-600 focus:ring-2"
+            />
+            <span className="ml-2 text-xs sm:text-sm text-gray-700 dark:text-dark-text-secondary">
+              <span className="hidden sm:inline">Show salary in preview (미리보기에 표시)</span>
+              <span className="sm:hidden">미리보기에 표시</span>
+            </span>
+          </label>
+        </div>
+
+        {/* Projects Section */}
+        <div className="mt-3 sm:mt-6 border-t border-amber-200 dark:border-dark-border-default pt-3 sm:pt-4 transition-colors duration-200">
+          <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+            <h4 className="text-xs sm:text-md font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200">
+              <span className="hidden sm:inline">📁 Projects at this company</span>
+              <span className="sm:hidden">📁 프로젝트 ({projects.length})</span>
+            </h4>
+            <SecondaryButton onClick={addProject} size="sm" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3 touch-manipulation">
+              <span className="hidden sm:inline">+ Add Project</span>
+              <span className="sm:hidden">+ 추가</span>
+            </SecondaryButton>
+          </div>
+
+          {projects && projects.length > 0 ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleProjectDragEnd}
+            >
+              <SortableContext
+                items={projects.map((p, i) => p.id || `proj-${i}`)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-3">
+                  {projects.map((project, projectIndex) => (
+                    <SortableProject
+                      key={project.id || `proj-${projectIndex}`}
+                      project={project}
+                      projectIndex={projectIndex}
+                      isExpanded={expandedProjects[projectIndex] || false}
+                      onToggle={() => toggleProject(projectIndex)}
+                      onUpdate={(p) => updateProject(projectIndex, p)}
+                      onRemove={() => removeProject(projectIndex)}
+                      onAddAchievement={() => addAchievement(projectIndex)}
+                      onUpdateAchievement={(achIndex, ach) => updateAchievement(projectIndex, achIndex, ach)}
+                      onRemoveAchievement={(achIndex) => removeAchievement(projectIndex, achIndex)}
+                      onAchievementDragEnd={(e) => handleAchievementDragEnd(projectIndex, e)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <div className="text-center py-6 text-gray-500 dark:text-dark-text-tertiary text-sm bg-white dark:bg-dark-bg-elevated rounded-lg border border-dashed border-amber-200 dark:border-dark-border-default transition-colors duration-200">
+              <p className="hidden sm:block">No projects added yet. Click "Add Project" to add projects at this company.</p>
+              <p className="sm:hidden">프로젝트가 없습니다. "+ 추가" 버튼을 눌러 추가하세요.</p>
             </div>
           )}
-
-          {/* Final Position and Job Title */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <TextInput
-              label={t('resume.experienceForm.position')}
-              value={experience.finalPosition}
-              onChange={value => onUpdate({ ...experience, finalPosition: value })}
-              placeholder={t('resume.experienceForm.positionPlaceholder')}
-              required
-            />
-
-            <TextInput
-              label={t('resume.experienceForm.jobTitle')}
-              value={experience.jobTitle}
-              onChange={value => onUpdate({ ...experience, jobTitle: value })}
-              placeholder={t('resume.experienceForm.jobTitlePlaceholder')}
-              required
-            />
-          </div>
-
-          {/* Salary Section */}
-          <div className="mt-4">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-              연봉 / Salary (Optional)
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <input
-                  type="number"
-                  value={experience.salary || ''}
-                  onChange={e => onUpdate({ ...experience, salary: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                  placeholder="5000"
-                  min="0"
-                />
-              </div>
-              <div>
-                <select
-                  value={experience.salaryUnit || '만원'}
-                  onChange={e => onUpdate({ ...experience, salaryUnit: e.target.value })}
-                  className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                >
-                  <option value="만원">만원 (KRW)</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="JPY">JPY</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-2 flex items-center">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={experience.showSalary ?? false}
-                  onChange={e => onUpdate({ ...experience, showSalary: e.target.checked })}
-                  className="w-4 h-4 text-amber-600 bg-white dark:bg-dark-bg-elevated border-amber-300 dark:border-dark-border-default rounded focus:ring-amber-500 dark:focus:ring-amber-600 focus:ring-2"
-                />
-                <span className="ml-2 text-sm text-gray-700 dark:text-dark-text-secondary">
-                  Show salary in preview (미리보기에 표시)
-                </span>
-              </label>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-              Salary at this company. Uncheck to hide from preview and public access.
-            </p>
-          </div>
-
-          {/* Projects Section */}
-          <div className="mt-4 sm:mt-6 border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4">
-              <h4 className="text-sm sm:text-md font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
-                <span className="hidden sm:inline">📁 Projects at this company</span>
-                <span className="sm:hidden">📁 프로젝트</span>
-              </h4>
-              <SecondaryButton onClick={addProject} size="sm" className="self-start sm:self-auto">
-                <span className="hidden sm:inline">+ Add Project</span>
-                <span className="sm:hidden">+ 추가</span>
-              </SecondaryButton>
-            </div>
-
-            {projects && projects.length > 0 ? (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleProjectDragEnd}
-              >
-                <SortableContext
-                  items={projects.map((p, i) => p.id || `proj-${i}`)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-3">
-                    {projects.map((project, projectIndex) => (
-                      <SortableProject
-                        key={project.id || `proj-${projectIndex}`}
-                        project={project}
-                        projectIndex={projectIndex}
-                        isExpanded={expandedProjects[projectIndex] || false}
-                        onToggle={() => toggleProject(projectIndex)}
-                        onUpdate={(p) => updateProject(projectIndex, p)}
-                        onRemove={() => removeProject(projectIndex)}
-                        onAddAchievement={() => addAchievement(projectIndex)}
-                        onUpdateAchievement={(achIndex, ach) => updateAchievement(projectIndex, achIndex, ach)}
-                        onRemoveAchievement={(achIndex) => removeAchievement(projectIndex, achIndex)}
-                        onAchievementDragEnd={(e) => handleAchievementDragEnd(projectIndex, e)}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            ) : (
-              <div className="text-center py-6 text-gray-500 dark:text-dark-text-tertiary text-sm bg-white dark:bg-dark-bg-elevated rounded-lg border border-dashed border-amber-200 dark:border-dark-border-default transition-colors duration-200">
-                <p>No projects added yet. Click "Add Project" to add projects at this company.</p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -421,21 +476,20 @@ function SortableProject({
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   return (
     <div ref={setNodeRef} style={style} className="border border-amber-300 dark:border-dark-border-strong rounded-lg bg-white dark:bg-dark-bg-elevated transition-colors duration-200">
       {/* Project Header */}
-      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-50/50 dark:bg-dark-bg-card transition-colors duration-200">
+      <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-amber-50/50 dark:bg-dark-bg-card transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
+          className="p-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0 touch-manipulation"
           title="Drag to reorder"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -661,14 +715,17 @@ function HierarchicalAchievement({
     onUpdate({ ...achievement, children: newChildren });
   };
 
+  // Get depth color with fallback
+  const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
+
   // Calculate margin based on screen size (smaller on mobile)
-  const mobileMargin = (depth - 1) * 0.5; // 0.5rem per depth on mobile
-  const desktopMargin = (depth - 1) * 1.5; // 1.5rem per depth on desktop
+  const mobileMargin = (depth - 1) * 0.25; // 0.25rem per depth on mobile
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1 sm:space-y-2">
+      {/* Color-coded card by depth */}
       <div
-        className="bg-amber-50/30 dark:bg-dark-bg-card rounded-lg p-2 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200"
+        className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
           maxWidth: `calc(100% - ${mobileMargin}rem)`
@@ -676,13 +733,13 @@ function HierarchicalAchievement({
       >
         {/* Desktop: horizontal layout */}
         <div className="hidden sm:flex items-start gap-2" style={{
-          marginLeft: `${desktopMargin - mobileMargin}rem`,
+          marginLeft: `${(depth - 1) * 0.75}rem`,
         }}>
-          <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
-            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none transition-colors duration-200">
+          <div className="flex items-center gap-1 min-w-[50px] flex-shrink-0">
+            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none">
               {getBulletSymbol(depth)}
             </span>
-            <span className="text-xs text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">({depth})</span>
+            <span className="text-xs text-gray-500 dark:text-dark-text-tertiary">({depth})</span>
           </div>
 
           <input
@@ -728,51 +785,50 @@ function HierarchicalAchievement({
           </div>
         </div>
 
-        {/* Mobile: vertical layout */}
-        <div className="sm:hidden space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none transition-colors duration-200">
-                {getBulletSymbol(depth)}
-              </span>
-              <span className="text-xs text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">({depth})</span>
-            </div>
+        {/* Mobile: compact layout with inline action buttons */}
+        <div className="sm:hidden">
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
+              {getBulletSymbol(depth)}
+            </span>
             <input
               type="text"
               value={achievement.content}
               onChange={e => onUpdate({ ...achievement, content: e.target.value })}
-              className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
-              placeholder="Achievement..."
+              className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
+              placeholder="설명 입력..."
             />
-          </div>
-          <div className="flex items-center gap-2 pl-6">
-            {depth < 4 && (
+            {/* Inline action buttons for mobile */}
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {depth < 4 && (
+                <button
+                  type="button"
+                  onClick={onAddChild}
+                  className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 text-[10px] rounded hover:bg-green-200 transition-colors duration-200 touch-manipulation"
+                  title="Add sub-item"
+                >
+                  +
+                </button>
+              )}
+
+              {(achievement.children && achievement.children.length > 0) && (
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="w-6 h-6 flex items-center justify-center text-[10px] text-gray-600 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors duration-200 touch-manipulation"
+                >
+                  {isExpanded ? '▼' : '▶'}
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={onAddChild}
-                className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-colors duration-200 font-semibold"
+                onClick={onRemove}
+                className="w-6 h-6 flex items-center justify-center text-red-600 hover:bg-red-50 rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
               >
-                + 하위
+                ✕
               </button>
-            )}
-
-            {(achievement.children && achievement.children.length > 0) && (
-              <button
-                type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
-              >
-                {isExpanded ? '▼ 접기' : '▶ 펼치기'}
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={onRemove}
-              className="px-2 py-1 text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
-            >
-              ✕ 삭제
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -857,10 +913,9 @@ function SortableAchievement({
 // Main Experience Section Component
 export default function ExperienceSection({ experiences, onChange, t }: ExperienceSectionProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {

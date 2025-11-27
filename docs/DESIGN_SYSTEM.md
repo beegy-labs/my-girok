@@ -554,6 +554,183 @@ className="truncate"
 </div>
 ```
 
+#### Pattern 9: Depth Colors for Hierarchical Data
+
+Use color-coded left borders for nested/hierarchical items (achievements, descriptions):
+
+```typescript
+// Define depth colors constant
+const DEPTH_COLORS = {
+  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
+  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
+  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
+  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+} as const;
+
+// Usage in component
+const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
+
+<div className={`${depthColor.bg} border-l-4 ${depthColor.border} rounded-lg p-2`}>
+  {/* Nested item content */}
+</div>
+```
+
+**Benefits**:
+- Visual hierarchy without deep indentation (saves horizontal space on mobile)
+- Color coding helps users understand nesting level at a glance
+- Consistent pattern across hierarchical components
+
+#### Pattern 10: Collapsible Cards on Mobile
+
+Cards with detailed content should be collapsible on mobile with summary when collapsed:
+
+```typescript
+const [isExpanded, setIsExpanded] = useState(true);
+
+// Clickable header on mobile
+<button
+  type="button"
+  onClick={() => setIsExpanded(!isExpanded)}
+  className="flex-1 flex items-center gap-2 text-left min-w-0 sm:cursor-default"
+>
+  <div className="flex-1 min-w-0">
+    <h3 className="font-bold truncate">{title}</h3>
+    {/* Summary shown only when collapsed on mobile */}
+    {!isExpanded && (
+      <p className="text-xs text-gray-500 truncate sm:hidden">
+        {summary} • {date}
+      </p>
+    )}
+  </div>
+  {/* Chevron indicator - mobile only */}
+  <svg
+    className={`w-5 h-5 transition-transform sm:hidden ${isExpanded ? 'rotate-180' : ''}`}
+    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+</button>
+
+// Content - collapsible on mobile, always visible on desktop
+<div className={`${isExpanded ? 'block' : 'hidden'} sm:block p-3 sm:p-6`}>
+  {/* Card content */}
+</div>
+```
+
+**Key Points**:
+- Use `sm:cursor-default` to prevent pointer cursor on desktop
+- Show summary (position, date) when collapsed for context
+- Use `truncate` to prevent text overflow
+- Animate chevron rotation for visual feedback
+
+#### Pattern 11: Inline Icon Buttons on Mobile
+
+Replace text buttons with compact icon buttons on mobile:
+
+```jsx
+{/* Desktop: text buttons with labels */}
+<div className="hidden sm:flex items-center gap-2">
+  <button className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded">
+    + Add Sub-item
+  </button>
+  <button className="text-red-600 text-xs font-semibold">
+    Remove
+  </button>
+</div>
+
+{/* Mobile: compact 24x24px icon buttons */}
+<div className="sm:hidden flex items-center gap-0.5">
+  <button className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 text-[10px] rounded touch-manipulation">
+    +
+  </button>
+  <button className="w-6 h-6 flex items-center justify-center text-red-600 hover:bg-red-50 rounded text-[10px] touch-manipulation">
+    ✕
+  </button>
+</div>
+```
+
+**Sizing Guidelines**:
+- Minimum touch target: 24x24px (w-6 h-6) for inline actions
+- Use `text-[10px]` for icon text
+- Add `touch-manipulation` for faster touch response
+- Use `flex items-center justify-center` for centering
+
+#### Pattern 12: Fixed Bottom Navigation Bar
+
+For pages with important actions, use fixed bottom bar on mobile:
+
+```jsx
+{/* Fixed bottom navigation - mobile only */}
+<div className="fixed bottom-0 left-0 right-0 z-50
+                bg-white dark:bg-dark-bg-card
+                border-t border-gray-200 dark:border-dark-border-default
+                p-3 lg:hidden safe-area-bottom">
+  <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+    <SecondaryButton onClick={() => navigate(-1)} size="sm" className="flex-1 py-3 text-sm">
+      ← Back
+    </SecondaryButton>
+    <PrimaryButton onClick={togglePreview} size="sm" className="flex-1 py-3 text-sm">
+      {showPreview ? '📝 Edit' : '👁️ Preview'}
+    </PrimaryButton>
+  </div>
+</div>
+
+{/* Add padding to main content to prevent overlap */}
+<main className="pb-20 lg:pb-0">
+  {/* Page content */}
+</main>
+```
+
+**Key Points**:
+- Use `safe-area-bottom` class for iPhone notch compatibility
+- `z-50` ensures bar stays above other content
+- `lg:hidden` hides on desktop where space is available
+- Add `pb-20` to main content to prevent overlap
+
+#### Pattern 13: TouchSensor for Mobile Drag-and-Drop
+
+When using `@dnd-kit` for drag-and-drop, include TouchSensor for mobile support:
+
+```typescript
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+
+// Configure sensors with activation constraints
+const sensors = useSensors(
+  useSensor(PointerSensor, {
+    activationConstraint: { distance: 8 } // 8px movement before drag starts
+  }),
+  useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 200,      // 200ms hold before drag
+      tolerance: 5     // 5px movement allowed during delay
+    }
+  }),
+  useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates
+  })
+);
+
+// Use in DndContext
+<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+  {/* Sortable content */}
+</DndContext>
+```
+
+**Activation Constraint Explained**:
+- `distance: 8` - PointerSensor requires 8px movement to start drag (prevents accidental drags)
+- `delay: 200` - TouchSensor requires 200ms hold before drag starts (allows scrolling)
+- `tolerance: 5` - User can move 5px during delay without canceling (accounts for finger jitter)
+
+**Without these constraints**: Touch scrolling will trigger drag, making the list unusable on mobile.
+
 #### Mobile-First Development Checklist
 
 When implementing responsive designs:
@@ -563,7 +740,7 @@ When implementing responsive designs:
 - [ ] Use `lg:` prefix for desktop breakpoint (≥1024px)
 - [ ] Test on actual mobile devices or DevTools
 - [ ] Ensure all text is readable (minimum 14px/0.875rem)
-- [ ] Ensure touch targets are at least 44x44px
+- [ ] Ensure touch targets are at least 44x44px (or 24x24px for inline icons)
 - [ ] Use `flex-col` on mobile, `sm:flex-row` on larger screens
 - [ ] Reduce padding/spacing on mobile (`p-4 sm:p-6 lg:p-8`)
 - [ ] Make buttons full-width on mobile when appropriate
@@ -573,6 +750,10 @@ When implementing responsive designs:
 - [ ] Hide non-essential elements on mobile with `lg:hidden`
 - [ ] Test modals/dialogs with mobile padding (`p-4`)
 - [ ] Ensure navbar is usable on small screens
+- [ ] Add `touch-manipulation` to interactive elements
+- [ ] Use collapsible cards for complex forms on mobile
+- [ ] Include TouchSensor for drag-and-drop components
+- [ ] Use depth colors for hierarchical/nested data
 
 ## Animation & Transitions
 
@@ -1908,6 +2089,7 @@ Potential component library extensions:
 
 ## Version History
 
+- v1.3.0 (2025-11-27): Added mobile edit patterns - TouchSensor, depth colors, collapsible cards, inline buttons, fixed bottom nav
 - v1.2.0 (2025-11-21): Added UI Component Library documentation - 10 reusable components with ~95% adoption
 - v1.1.0 (2025-01-15): Added comprehensive mobile-first responsive design patterns and guidelines
 - v1.0.0 (2025-01-09): Initial design system with library theme

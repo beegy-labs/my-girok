@@ -4,6 +4,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -17,6 +18,14 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
+
+// Depth colors for visual hierarchy
+const DEPTH_COLORS = {
+  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
+  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
+  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
+  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+} as const;
 
 // Generic type for hierarchical descriptions
 export interface HierarchicalItem {
@@ -79,62 +88,121 @@ function HierarchicalItemComponent({
     onUpdate({ ...item, children: newChildren });
   };
 
+  // Get depth color with fallback
+  const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
+
+  // Calculate margin based on screen size (smaller on mobile)
+  const mobileMargin = (depth - 1) * 0.25; // 0.25rem per depth on mobile
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-1 sm:space-y-2">
+      {/* Color-coded card by depth */}
       <div
-        className="flex items-start gap-2 bg-amber-50/30 dark:bg-dark-bg-card rounded-lg p-2 border border-amber-100 dark:border-dark-border-subtle transition-colors duration-200"
+        className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
-          marginLeft: `${(depth - 1) * 1.5}rem`,
-          maxWidth: `calc(100% - ${(depth - 1) * 1.5}rem)`
+          marginLeft: `${mobileMargin}rem`,
+          maxWidth: `calc(100% - ${mobileMargin}rem)`
         }}
       >
-        <div className="flex items-center gap-1 min-w-[60px] flex-shrink-0">
-          <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none">
-            {getBulletSymbol(depth)}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-dark-text-tertiary">({depth})</span>
+        {/* Desktop: horizontal layout */}
+        <div className="hidden sm:flex items-start gap-2" style={{
+          marginLeft: `${(depth - 1) * 0.75}rem`,
+        }}>
+          <div className="flex items-center gap-1 min-w-[50px] flex-shrink-0">
+            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none">
+              {getBulletSymbol(depth)}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-dark-text-tertiary">({depth})</span>
+          </div>
+
+          <input
+            type="text"
+            value={item.content}
+            onChange={e => onUpdate({ ...item, content: e.target.value })}
+            className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
+            style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+            placeholder="설명을 입력하세요..."
+          />
+
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {depth < maxDepth && (
+              <button
+                type="button"
+                onClick={onAddChild}
+                className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-all font-semibold whitespace-nowrap touch-manipulation"
+                title="Add sub-item"
+              >
+                + 하위
+              </button>
+            )}
+
+            {(item.children && item.children.length > 0) && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200 touch-manipulation"
+                title={isExpanded ? "Collapse" : "Expand"}
+              >
+                {isExpanded ? '▼' : '▶'}
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onRemove}
+              className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200 touch-manipulation"
+              title="Remove"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
-        <input
-          type="text"
-          value={item.content}
-          onChange={e => onUpdate({ ...item, content: e.target.value })}
-          className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
-          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
-          placeholder="설명을 입력하세요..."
-        />
+        {/* Mobile: compact layout with inline action buttons */}
+        <div className="sm:hidden">
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
+              {getBulletSymbol(depth)}
+            </span>
+            <input
+              type="text"
+              value={item.content}
+              onChange={e => onUpdate({ ...item, content: e.target.value })}
+              className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
+              placeholder="설명 입력..."
+            />
+            {/* Inline action buttons for mobile */}
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {depth < maxDepth && (
+                <button
+                  type="button"
+                  onClick={onAddChild}
+                  className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 text-[10px] rounded hover:bg-green-200 transition-colors duration-200 touch-manipulation"
+                  title="Add sub-item"
+                >
+                  +
+                </button>
+              )}
 
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {depth < maxDepth && (
-            <button
-              type="button"
-              onClick={onAddChild}
-              className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-all font-semibold whitespace-nowrap"
-              title="Add sub-item"
-            >
-              + 하위
-            </button>
-          )}
+              {(item.children && item.children.length > 0) && (
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="w-6 h-6 flex items-center justify-center text-[10px] text-gray-600 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors duration-200 touch-manipulation"
+                >
+                  {isExpanded ? '▼' : '▶'}
+                </button>
+              )}
 
-          {(item.children && item.children.length > 0) && (
-            <button
-              type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
-              title={isExpanded ? "Collapse" : "Expand"}
-            >
-              {isExpanded ? '▼' : '▶'}
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onRemove}
-            className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
-            title="Remove"
-          >
-            ✕
-          </button>
+              <button
+                type="button"
+                onClick={onRemove}
+                className="w-6 h-6 flex items-center justify-center text-red-600 hover:bg-red-50 rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -190,16 +258,16 @@ function SortableHierarchicalItem({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="space-y-2">
-      <div className="flex items-start gap-2 bg-white dark:bg-dark-bg-elevated rounded-lg p-2 border border-amber-200 dark:border-dark-border-default transition-colors duration-200">
+    <div ref={setNodeRef} style={style} className="space-y-1 sm:space-y-2">
+      <div className="flex items-start gap-1.5 sm:gap-2 bg-white dark:bg-dark-bg-elevated rounded-lg p-1.5 sm:p-2 border border-amber-200 dark:border-dark-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
+          className="mt-0.5 sm:mt-1 p-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0 touch-manipulation"
           title="Drag to reorder"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </button>
@@ -228,10 +296,9 @@ export default function HierarchicalDescription({
   maxDepth = 4,
 }: HierarchicalDescriptionProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {

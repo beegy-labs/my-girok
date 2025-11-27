@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
-import { PrimaryButton } from '../../components/ui';
+import { PrimaryButton, SecondaryButton } from '../../components/ui';
 
 export default function ResumeEditPage() {
   const { t } = useTranslation();
@@ -142,26 +142,45 @@ export default function ResumeEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary py-4 sm:py-8 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 mb-4 sm:mb-6 transition-colors duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-2xl sm:text-3xl">✍️</span>
-              <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">
-                  {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
-                </h1>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-700 dark:text-dark-text-secondary">
-                  {resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
-                </p>
-              </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+      {/* Mobile: Fixed bottom navigation bar for preview toggle */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-bg-card border-t border-gray-200 dark:border-dark-border-default p-3 lg:hidden safe-area-bottom">
+        <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+          <SecondaryButton
+            onClick={() => navigate(-1)}
+            size="sm"
+            className="flex-1 py-3 text-sm"
+          >
+            ← {t('common.back')}
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={() => setShowPreview(!showPreview)}
+            size="sm"
+            className="flex-1 py-3 text-sm"
+          >
+            {showPreview ? '📝 ' + t('edit.showForm') : '👁️ ' + t('edit.showPreview')}
+          </PrimaryButton>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-24 lg:pb-8">
+        {/* Header - Simplified for mobile */}
+        <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md p-3 sm:p-6 mb-4 sm:mb-6 transition-colors duration-200">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-xl sm:text-3xl">✍️</span>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-amber-900 dark:text-dark-text-primary truncate">
+                {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-700 dark:text-dark-text-secondary truncate">
+                {resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
+              </p>
             </div>
+            {/* Desktop only preview toggle */}
             <PrimaryButton
               onClick={() => setShowPreview(!showPreview)}
               size="sm"
-              className="lg:hidden"
+              className="hidden lg:flex"
             >
               {showPreview ? t('edit.showForm') : t('edit.showPreview')}
             </PrimaryButton>
@@ -188,8 +207,9 @@ export default function ResumeEditPage() {
           {/* Live Preview Section */}
           <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-4 sm:top-8">
-              <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 mb-3 sm:mb-4 transition-colors duration-200">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-2 flex items-center gap-2">
+              {/* Preview Header - Hidden on mobile since we have bottom bar */}
+              <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md p-3 sm:p-6 mb-3 sm:mb-4 transition-colors duration-200">
+                <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-1 sm:mb-2 flex items-center gap-2">
                   <span>👁️</span>
                   {t('edit.livePreview')}
                 </h2>
@@ -201,11 +221,11 @@ export default function ResumeEditPage() {
               {previewData ? (
                 <ResumePreviewContainer
                   resume={previewData}
-                  maxHeight="calc(100vh - 200px)"
-                  containerClassName="border-2 border-gray-300 dark:border-dark-border-default"
+                  maxHeight="calc(100vh - 280px)"
+                  containerClassName="border-2 border-gray-300 dark:border-dark-border-default rounded-xl"
                 />
               ) : (
-                <div className="bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 rounded-lg shadow-inner dark:shadow-dark-inner transition-colors duration-200">
+                <div className="bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 rounded-xl shadow-inner dark:shadow-dark-inner transition-colors duration-200">
                   <div className="p-6 sm:p-8 text-center text-gray-500 dark:text-dark-text-tertiary text-sm sm:text-base">
                     <p>{t('errors.startFilling')}</p>
                   </div>
