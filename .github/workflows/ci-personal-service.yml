@@ -9,6 +9,7 @@ on:
     paths:
       - 'services/personal-service/**'
       - 'packages/types/**'
+      - 'packages/nest-common/**'
       - '.github/workflows/ci-personal-service.yml'
   pull_request:
     branches:
@@ -18,6 +19,7 @@ on:
     paths:
       - 'services/personal-service/**'
       - 'packages/types/**'
+      - 'packages/nest-common/**'
   workflow_dispatch:
 
 env:
@@ -78,6 +80,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: |
+          pnpm --filter @my-girok/types build
+          pnpm --filter @my-girok/nest-common build
 
       - name: Generate Prisma Client
         run: pnpm --filter @my-girok/personal-service prisma:generate

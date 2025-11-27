@@ -12,10 +12,9 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
+import { Public, CurrentUser, JwtAuthGuard } from '@my-girok/nest-common';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, RefreshTokenDto, GrantDomainAccessDto } from './dto';
-import { Public, CurrentUser } from '../common/decorators';
-import { JwtAuthGuard } from './guards';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')

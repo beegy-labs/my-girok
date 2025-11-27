@@ -11,6 +11,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 
 # Copy package files for dependency resolution
 COPY packages/types/package.json ./packages/types/
+COPY packages/nest-common/package.json ./packages/nest-common/
 COPY services/personal-service/package.json ./services/personal-service/
 
 # Install dependencies
@@ -18,10 +19,13 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY packages/types ./packages/types
+COPY packages/nest-common ./packages/nest-common
 COPY services/personal-service ./services/personal-service
 
-# Build types package first
+# Build shared packages first
 WORKDIR /app/packages/types
+RUN pnpm build
+WORKDIR /app/packages/nest-common
 RUN pnpm build
 
 # Generate Prisma client and build personal service
@@ -46,6 +50,7 @@ COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # Copy package files
 COPY --chown=node:node services/personal-service/package.json ./services/personal-service/
 COPY --chown=node:node packages/types/package.json ./packages/types/
+COPY --chown=node:node packages/nest-common/package.json ./packages/nest-common/
 
 # Copy prisma schema BEFORE installing dependencies so it's available for prisma generate
 COPY --chown=node:node --from=builder /app/services/personal-service/prisma ./services/personal-service/prisma
@@ -53,6 +58,8 @@ COPY --chown=node:node --from=builder /app/services/personal-service/prisma ./se
 # Copy built files
 COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
 COPY --chown=node:node --from=builder /app/packages/types/package.json ./packages/types/package.json
+COPY --chown=node:node --from=builder /app/packages/nest-common/dist ./packages/nest-common/dist
+COPY --chown=node:node --from=builder /app/packages/nest-common/package.json ./packages/nest-common/package.json
 COPY --chown=node:node --from=builder /app/services/personal-service/dist ./services/personal-service/dist
 
 # Install production dependencies (now includes prisma CLI)

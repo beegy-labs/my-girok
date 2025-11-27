@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@apollo/server": "^5.1.0",
+    "@my-girok/nest-common": "workspace:*",
     "@my-girok/types": "workspace:*",
     "@nestjs/apollo": "^13.2.1",
     "@nestjs/common": "^11.1.9",

@@ -14,12 +14,12 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { CurrentUser } from '@my-girok/nest-common';
 import { UserPreferencesService } from './user-preferences.service';
 import {
   CreateUserPreferencesDto,
   UpdateUserPreferencesDto,
 } from './dto';
-import { CurrentUser } from '../common/decorators';
 
 @ApiTags('User Preferences')
 @ApiBearerAuth('JWT-auth')

@@ -18,3 +18,6 @@ export * from './types';
 
 // Bootstrap
 export * from './bootstrap';
+
+// Health & Graceful Shutdown
+export * from './health';

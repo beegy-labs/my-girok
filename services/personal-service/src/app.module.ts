@@ -4,15 +4,16 @@ import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import {
+  JwtAuthGuard,
+  JwtStrategy,
+  HttpExceptionFilter,
+  HealthModule,
+} from '@my-girok/nest-common';
 
 import { PrismaService } from './database/prisma.service';
-import { JwtStrategy } from './common/strategies/jwt.strategy';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-
 import { ResumeModule } from './resume/resume.module';
 import { ShareModule } from './share/share.module';
-import { HealthModule } from './health/health.module';
 import { UserPreferencesModule } from './user-preferences/user-preferences.module';
 
 @Module({

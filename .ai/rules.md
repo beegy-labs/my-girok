@@ -248,10 +248,18 @@ await configureApp(app, {
 - `@Public()` - Mark endpoints as public (skip JWT auth)
 - `@CurrentUser()` - Extract user from request
 - `JwtAuthGuard` - JWT authentication with @Public() support
+- `JwtStrategy` - Passport JWT strategy (use for non-auth services)
 - `HttpExceptionFilter` - Standard error format
 - `configureApp()` - Bootstrap factory (reduces main.ts from ~100 to ~20 lines)
+- `HealthModule` - Health check with K8s graceful shutdown support
+- `GracefulShutdownService` - Manual shutdown control
 - `BasePrismaService` - Prisma service with lifecycle hooks
 - `ApiErrorResponse` / `ApiSuccessResponse` - Standard response types
+
+**Health Endpoints (HealthModule):**
+- `GET /health` - General health check
+- `GET /health/live` - K8s liveness probe
+- `GET /health/ready` - K8s readiness probe (503 during shutdown)
 
 ### Frontend: @my-girok/ui-components
 
@@ -284,14 +292,18 @@ import {
 ## Common Patterns
 
 **New Backend Service:**
-1. Use `@my-girok/nest-common` for bootstrap
-2. Define types in `packages/types`
-3. Update Prisma schema → migrate
-4. Create Repository (extends BaseRepository)
-5. Create Service (use `@Transactional()`)
-6. Create Controller (use `@Public()`, `@CurrentUser()`)
-7. Write tests (80% coverage)
-8. Create PR
+1. Add `@my-girok/nest-common` to package.json dependencies
+2. Use `configureApp()` in main.ts for bootstrap
+3. Import `HealthModule` in AppModule for K8s health checks
+4. Use `JwtAuthGuard` as global APP_GUARD
+5. Use `HttpExceptionFilter` as global APP_FILTER
+6. Define types in `packages/types`
+7. Update Prisma schema → migrate
+8. Create Service (use `@Transactional()`)
+9. Create Controller (use `@Public()`, `@CurrentUser()`)
+10. Write tests (80% coverage)
+11. Update Dockerfile to include nest-common package
+12. Create PR
 
 **New Frontend Feature:**
 1. Use `@my-girok/ui-components` for UI

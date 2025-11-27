@@ -1,8 +1,7 @@
 import { Controller, Get, Patch, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { JwtAuthGuard, CurrentUser } from '@my-girok/nest-common';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/guards';
-import { CurrentUser } from '../common/decorators';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('users')

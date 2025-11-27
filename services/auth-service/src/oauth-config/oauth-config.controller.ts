@@ -13,12 +13,11 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
+import { JwtAuthGuard, CurrentUser } from '@my-girok/nest-common';
 import { OAuthConfigService } from './oauth-config.service';
 import { ToggleProviderDto } from './dto/toggle-provider.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthProvider, Role } from '@my-girok/types';
 
 @ApiTags('oauth-config')
