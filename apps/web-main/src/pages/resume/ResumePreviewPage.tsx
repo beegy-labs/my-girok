@@ -94,9 +94,9 @@ export default function ResumePreviewPage() {
       {/* Action Bar - Common component with owner mode (all actions enabled) */}
       <ResumeActionBar resume={resume} mode="owner" />
 
-      {/* Resume Preview */}
-      <div className="py-6 sm:py-8 print:py-0 flex justify-center">
-        <ResumePreviewContainer resume={resume} />
+      {/* Resume Preview - Enable horizontal scroll on mobile for readability */}
+      <div className="py-4 sm:py-6 md:py-8 print:py-0 flex justify-center overflow-x-auto">
+        <ResumePreviewContainer resume={resume} enableHorizontalScroll={true} />
       </div>
     </div>
   );

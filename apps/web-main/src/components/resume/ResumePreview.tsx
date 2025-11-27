@@ -17,6 +17,12 @@ function getGenderLabelKey(gender: Gender): string {
   return keyMap[gender];
 }
 
+// Scale thresholds for mobile/tablet readability (prevent excessive shrinking)
+const MIN_SCALE_MOBILE = 0.65; // Minimum 65% for mobile (allows horizontal scroll)
+const MIN_SCALE_TABLET = 0.85; // Minimum 85% for tablet
+const MOBILE_BREAKPOINT = 640; // Tailwind sm breakpoint
+const TABLET_BREAKPOINT = 1024; // Tailwind lg breakpoint
+
 interface ResumePreviewProps {
   resume: Resume;
   paperSize?: 'A4' | 'LETTER';
@@ -57,7 +63,16 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
       const availableWidth = viewportWidth - padding;
 
       // Calculate scale to fit, but don't scale up beyond 100%
-      const newScale = Math.min(1, availableWidth / paperWidthPx);
+      let newScale = Math.min(1, availableWidth / paperWidthPx);
+
+      // Apply minimum scale based on device type for readability
+      if (viewportWidth < MOBILE_BREAKPOINT) {
+        // Mobile: enforce minimum scale for readability (horizontal scroll allowed)
+        newScale = Math.max(MIN_SCALE_MOBILE, newScale);
+      } else if (viewportWidth < TABLET_BREAKPOINT) {
+        // Tablet: enforce minimum scale for readability
+        newScale = Math.max(MIN_SCALE_TABLET, newScale);
+      }
 
       // Round to 2 decimal places to avoid unnecessary re-renders
       const roundedScale = Math.round(newScale * 100) / 100;
