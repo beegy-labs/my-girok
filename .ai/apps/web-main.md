@@ -491,6 +491,99 @@ pnpm preview
 - Single source of truth for preview wrapper logic
 - Easier maintenance and updates
 
+## Mobile Edit Patterns (Resume)
+
+### TouchSensor for Drag-and-Drop
+
+Mobile drag-and-drop requires TouchSensor with activation constraints:
+
+```typescript
+import { TouchSensor, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+
+const sensors = useSensors(
+  useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+);
+```
+
+**Key Settings**:
+- `distance: 8` - Prevents accidental drag on pointer devices
+- `delay: 200` - 200ms hold before drag starts on touch
+- `tolerance: 5` - 5px movement allowed during delay
+
+### Depth Colors for Hierarchical Data
+
+Use color-coded borders for nested items (achievements, descriptions):
+
+```typescript
+const DEPTH_COLORS = {
+  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
+  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
+  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
+  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+} as const;
+
+// Usage
+const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
+<div className={`${depthColor.bg} border-l-4 ${depthColor.border}`}>
+```
+
+### Collapsible Cards on Mobile
+
+Cards should be collapsible on mobile with summary when collapsed:
+
+```typescript
+const [isExpanded, setIsExpanded] = useState(true);
+
+// Header - clickable on mobile
+<button onClick={() => setIsExpanded(!isExpanded)} className="sm:cursor-default">
+  <h3>{title}</h3>
+  {/* Summary shown when collapsed on mobile */}
+  {!isExpanded && <p className="sm:hidden">{summary}</p>}
+  {/* Chevron icon - mobile only */}
+  <ChevronIcon className={`sm:hidden ${isExpanded ? 'rotate-180' : ''}`} />
+</button>
+
+// Content - collapsible on mobile, always visible on desktop
+<div className={`${isExpanded ? 'block' : 'hidden'} sm:block`}>
+  {/* Card content */}
+</div>
+```
+
+### Inline Action Buttons on Mobile
+
+Use compact 24x24px icon buttons on mobile:
+
+```jsx
+{/* Desktop: text buttons */}
+<div className="hidden sm:flex gap-2">
+  <button className="px-2 py-1 text-xs">+ Add</button>
+  <button className="px-2 py-1 text-xs">Remove</button>
+</div>
+
+{/* Mobile: icon buttons */}
+<div className="sm:hidden flex gap-0.5">
+  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">+</button>
+  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">✕</button>
+</div>
+```
+
+### Fixed Bottom Navigation Bar
+
+For mobile preview toggle and navigation:
+
+```jsx
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-bg-card
+                border-t border-gray-200 p-3 lg:hidden safe-area-bottom">
+  <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+    <SecondaryButton className="flex-1 py-3">← Back</SecondaryButton>
+    <PrimaryButton className="flex-1 py-3">👁️ Preview</PrimaryButton>
+  </div>
+</div>
+```
+
 ## References
 
 - **Design System**: `/docs/DESIGN_SYSTEM.md`
