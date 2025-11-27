@@ -491,6 +491,48 @@ pnpm preview
 - Single source of truth for preview wrapper logic
 - Easier maintenance and updates
 
+## Mobile Preview Scale Thresholds
+
+### Problem
+Resume preview uses CSS transform scale to fit the A4/Letter paper (794px/816px) into the viewport. On mobile devices, this causes excessive shrinking (e.g., 375px viewport → 43% scale), making text unreadable.
+
+### Solution
+Enforce minimum scale thresholds per device type and enable horizontal scroll for readability:
+
+```typescript
+// Constants (defined outside component)
+const MIN_SCALE_MOBILE = 0.65; // Minimum 65% for mobile
+const MIN_SCALE_TABLET = 0.85; // Minimum 85% for tablet
+const MOBILE_BREAKPOINT = 640; // Tailwind sm
+const TABLET_BREAKPOINT = 1024; // Tailwind lg
+
+// In scale calculation
+let newScale = Math.min(1, availableWidth / paperWidthPx);
+
+if (viewportWidth < MOBILE_BREAKPOINT) {
+  newScale = Math.max(MIN_SCALE_MOBILE, newScale);
+} else if (viewportWidth < TABLET_BREAKPOINT) {
+  newScale = Math.max(MIN_SCALE_TABLET, newScale);
+}
+```
+
+### Container Setup
+Enable horizontal scroll on mobile to accommodate the larger minimum scale:
+
+```tsx
+// Page container
+<div className="overflow-x-auto">
+  <ResumePreviewContainer resume={resume} enableHorizontalScroll={true} />
+</div>
+```
+
+### Scale Values by Device
+| Device | Viewport | Natural Scale | Enforced Scale |
+|--------|----------|---------------|----------------|
+| Mobile | 375px | 43% | **65%** (min) |
+| Tablet | 768px | 93% | 93% (natural) |
+| Desktop | 1024px+ | 100% | 100% |
+
 ## Mobile Edit Patterns (Resume)
 
 ### TouchSensor for Drag-and-Drop

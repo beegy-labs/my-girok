@@ -85,7 +85,7 @@ export default function ResumePreviewContainer({
   // Build container classes - minimize padding for full-width experience
   const outerClasses = [
     'bg-gray-100 dark:bg-dark-bg-secondary/50',
-    responsivePadding ? 'p-2 md:p-4' : 'p-4', // Reduced padding
+    responsivePadding ? 'p-1 sm:p-2 md:p-4' : 'p-2 sm:p-4', // Mobile-first reduced padding
     'rounded-lg shadow-inner dark:shadow-dark-inner',
     'transition-colors duration-200',
     'w-full',
