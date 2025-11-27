@@ -670,11 +670,12 @@ Users can drag-and-drop these sections to customize their resume order:
 - **Mobile**: Toggle button to switch between form and preview
 - **Update Frequency**: Real-time (updates as you type)
 - **Responsive Scaling**:
-  - Desktop (>794px): 100% original size
-  - Tablet (~768px): Auto-scaled to ~93%
-  - Mobile (~375px): Auto-scaled to ~43%
+  - Desktop (>1024px): 100% original size
+  - Tablet (~768px): Auto-scaled to ~93% (minimum 90%)
+  - Mobile (<640px): 100% with horizontal scroll for readability
   - Maintains A4/Letter paper dimensions
-  - Browser zoom still functional
+  - Browser zoom and pinch-to-zoom still functional
+  - No excessive shrinking on mobile - horizontal scroll preferred for readability
 - **Sticky**: Preview panel stays visible while scrolling form
 
 #### Performance Optimizations
