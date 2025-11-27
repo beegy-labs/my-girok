@@ -1,9 +1,8 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { JwtAuthGuard, CurrentUser, Public } from '@my-girok/nest-common';
 import { ShareService } from './share.service';
 import { CreateShareLinkDto, UpdateShareLinkDto } from './dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { CurrentUser, Public } from '../common/decorators';
 
 @ApiTags('share')
 @Controller('share')

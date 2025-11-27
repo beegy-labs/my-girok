@@ -1,2 +1,3 @@
-export * from './jwt-auth.guard';
+// Auth-service specific guards
+// Note: JwtAuthGuard is now imported from @my-girok/nest-common
 export * from './roles.guard';

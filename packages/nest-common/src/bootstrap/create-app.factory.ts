@@ -1,7 +1,8 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SwaggerModule, DocumentBuilder, SwaggerDocumentOptions } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { GracefulShutdownService } from '../health/graceful-shutdown.service';
 
 export interface AppConfig {
   /**
@@ -52,6 +53,18 @@ export interface AppConfig {
     production?: string[];
     development?: string[];
   };
+
+  /**
+   * Enable graceful shutdown handling (default: true)
+   * Handles SIGTERM signal for Kubernetes
+   */
+  enableGracefulShutdown?: boolean;
+
+  /**
+   * Shutdown timeout in milliseconds (default: 30000)
+   * Time to wait for in-flight requests to complete
+   */
+  shutdownTimeout?: number;
 }
 
 /**
@@ -186,14 +199,76 @@ export async function configureApp(
     });
   }
 
+  // Graceful shutdown handling for Kubernetes
+  if (config.enableGracefulShutdown !== false) {
+    setupGracefulShutdown(app, config);
+  }
+
   // Get port and listen
   const port = configService.get('PORT', config.defaultPort || 3000);
   await app.listen(port);
 
   // Log startup information
-  console.log(`${config.serviceName} is running on: http://localhost:${port}`);
-  console.log(`API version: v1`);
+  const logger = new Logger(config.serviceName);
+  logger.log(`${config.serviceName} is running on: http://localhost:${port}`);
+  logger.log(`API version: v1`);
   if (config.enableSwagger !== false) {
-    console.log(`Swagger docs: http://localhost:${port}/docs`);
+    logger.log(`Swagger docs: http://localhost:${port}/docs`);
   }
+  logger.log(`Graceful shutdown: ${config.enableGracefulShutdown !== false ? 'enabled' : 'disabled'}`);
+}
+
+/**
+ * Setup graceful shutdown handlers for SIGTERM
+ * Ensures Kubernetes can gracefully terminate the pod
+ */
+function setupGracefulShutdown(app: INestApplication, config: AppConfig): void {
+  const logger = new Logger('GracefulShutdown');
+  const shutdownTimeout = config.shutdownTimeout || 30000;
+
+  // Try to get GracefulShutdownService if HealthModule is imported
+  let shutdownService: GracefulShutdownService | null = null;
+  try {
+    shutdownService = app.get(GracefulShutdownService, { strict: false });
+  } catch {
+    // HealthModule not imported, continue without it
+  }
+
+  const shutdown = async (signal: string) => {
+    logger.log(`Received ${signal}, starting graceful shutdown...`);
+
+    // Mark service as not ready (K8s will stop routing traffic)
+    if (shutdownService) {
+      shutdownService.startShutdown();
+      logger.log('Service marked as not ready, waiting for in-flight requests...');
+    }
+
+    // Give K8s time to update endpoints and stop sending traffic
+    // This delay allows readiness probe to fail and traffic to be redirected
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    // Set a hard timeout for shutdown
+    const forceShutdownTimer = setTimeout(() => {
+      logger.error('Graceful shutdown timeout, forcing exit...');
+      process.exit(1);
+    }, shutdownTimeout);
+
+    try {
+      // Close the application (completes in-flight requests)
+      await app.close();
+      logger.log('Application closed successfully');
+      clearTimeout(forceShutdownTimer);
+      process.exit(0);
+    } catch (error) {
+      logger.error('Error during shutdown', error);
+      clearTimeout(forceShutdownTimer);
+      process.exit(1);
+    }
+  };
+
+  // Handle SIGTERM (Kubernetes graceful shutdown)
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+  // Handle SIGINT (Ctrl+C in development)
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }

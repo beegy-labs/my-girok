@@ -19,11 +19,10 @@ import {
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiParam, ApiConsumes, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { CurrentUser, Public } from '@my-girok/nest-common';
 import { ResumeService } from './resume.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
 import { AttachmentType } from '../storage/dto';
-import { CurrentUser } from '../common/decorators';
-import { Public } from '../common/decorators/public.decorator';
 import { StorageService } from '../storage/storage.service';
 
 @ApiTags('resume')

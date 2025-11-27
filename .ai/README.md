@@ -37,6 +37,9 @@
 - **[apps/web-admin.md](apps/web-admin.md)** - Admin dashboard (Next.js)
 - **[apps/mobile-flutter.md](apps/mobile-flutter.md)** - Mobile app (Flutter - iOS & Android)
 
+### Shared Packages
+- **[packages/nest-common.md](packages/nest-common.md)** - Shared NestJS utilities (guards, decorators, health)
+
 ## Task-Based Navigation
 
 **"I need to add authentication..."**
@@ -74,6 +77,12 @@
 
 **"I need testing/security/performance info..."**
 → Read: `testing.md` or refer to `docs/policies/` for detailed documentation
+
+**"I need to create a new NestJS service..."**
+→ Read: `rules.md` + `packages/nest-common.md`
+
+**"I need to understand shared utilities..."**
+→ Read: `packages/nest-common.md`
 
 ## Token Optimization
 
