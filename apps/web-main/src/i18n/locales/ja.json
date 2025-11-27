@@ -425,7 +425,15 @@
       "ongoingProject": "進行中の場合は空欄のまま",
       "projectDescription": "プロジェクトの簡単な説明...",
       "positionPlaceholder": "例：バックエンドチームリーダー",
-      "jobTitlePlaceholder": "シニアデベロッパー"
+      "jobTitlePlaceholder": "シニアデベロッパー",
+      "description": "説明",
+      "remove": "削除",
+      "project": "プロジェクト",
+      "projectNamePlaceholder": "例：Eコマースプラットフォーム再構築",
+      "rolePlaceholder": "例：リードバックエンド開発者",
+      "techStackPlaceholder": "例：NestJS, React, PostgreSQL",
+      "urlPlaceholder": "https://...",
+      "githubUrlPlaceholder": "https://github.com/..."
     },
     "militaryRanks": {
       "sergeant": "軍曹",
