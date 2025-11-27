@@ -163,26 +163,31 @@ function SortableExperienceCard({
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border border-amber-200 dark:border-dark-border-default rounded-xl p-6 bg-amber-50/30 dark:bg-dark-bg-card transition-colors duration-200">
+    <div ref={setNodeRef} style={style} className="border border-amber-200 dark:border-dark-border-default rounded-xl p-4 sm:p-6 bg-amber-50/30 dark:bg-dark-bg-card transition-colors duration-200">
       {/* Company Header with Drag Handle */}
-      <div className="flex items-start gap-4 mb-4">
+      <div className="flex items-start gap-2 sm:gap-4 mb-4">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-2 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200"
+          className="mt-1 sm:mt-2 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
           title={t('resume.experienceForm.dragToReorder')}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
         </button>
 
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200">📚 {t('resume.experienceForm.company')} #{index + 1}</h3>
-            <DestructiveButton onClick={onRemove} size="sm">
-              {t('resume.experienceForm.removeCompany')}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4">
+            <h3 className="text-base sm:text-lg font-bold text-amber-900 dark:text-amber-300 transition-colors duration-200 truncate">
+              <span className="hidden sm:inline">📚 {t('resume.experienceForm.company')}</span>
+              <span className="sm:hidden">📚 회사</span>
+              {' '}#{index + 1}
+            </h3>
+            <DestructiveButton onClick={onRemove} size="sm" className="self-start sm:self-auto flex-shrink-0">
+              <span className="hidden sm:inline">{t('resume.experienceForm.removeCompany')}</span>
+              <span className="sm:hidden">✕ 삭제</span>
             </DestructiveButton>
           </div>
 
@@ -315,13 +320,15 @@ function SortableExperienceCard({
           </div>
 
           {/* Projects Section */}
-          <div className="mt-6 border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-md font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
-                📁 Projects at this company
+          <div className="mt-4 sm:mt-6 border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4">
+              <h4 className="text-sm sm:text-md font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
+                <span className="hidden sm:inline">📁 Projects at this company</span>
+                <span className="sm:hidden">📁 프로젝트</span>
               </h4>
-              <SecondaryButton onClick={addProject} size="sm">
-                + Add Project
+              <SecondaryButton onClick={addProject} size="sm" className="self-start sm:self-auto">
+                <span className="hidden sm:inline">+ Add Project</span>
+                <span className="sm:hidden">+ 추가</span>
               </SecondaryButton>
             </div>
 
