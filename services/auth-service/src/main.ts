@@ -44,15 +44,24 @@ async function bootstrap() {
   );
 
   // CORS Policy (SECURITY.md) - Enhanced for iOS Safari compatibility
+  // Priority: CORS_ORIGINS env > NODE_ENV-based defaults
+  const corsOriginsEnv = configService.get<string>('CORS_ORIGINS');
+  let corsOrigins: string[];
+
+  if (corsOriginsEnv) {
+    corsOrigins = corsOriginsEnv.split(',').map((origin) => origin.trim());
+  } else if (nodeEnv === 'production') {
+    corsOrigins = ['https://mygirok.dev', 'https://admin.mygirok.dev'];
+  } else {
+    corsOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://my-dev.girok.dev',
+    ];
+  }
+
   app.enableCors({
-    origin:
-      nodeEnv === 'production'
-        ? ['https://mygirok.dev', 'https://admin.mygirok.dev']
-        : [
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'https://my-dev.girok.dev',
-          ],
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],

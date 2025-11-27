@@ -42,6 +42,10 @@ spec:
           value: {{ .Values.app.nodeEnv | quote }}
         - name: PORT
           value: {{ .Values.app.port | quote }}
+        {{- if .Values.app.corsOrigins }}
+        - name: CORS_ORIGINS
+          value: {{ .Values.app.corsOrigins | quote }}
+        {{- end }}
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
