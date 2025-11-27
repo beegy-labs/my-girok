@@ -425,7 +425,15 @@
       "ongoingProject": "Leave empty if ongoing",
       "projectDescription": "Brief project description...",
       "positionPlaceholder": "e.g., Backend Team Lead",
-      "jobTitlePlaceholder": "Senior Developer"
+      "jobTitlePlaceholder": "Senior Developer",
+      "description": "Description",
+      "remove": "Remove",
+      "project": "Project",
+      "projectNamePlaceholder": "e.g., E-Commerce Platform Rebuild",
+      "rolePlaceholder": "e.g., Lead Backend Developer",
+      "techStackPlaceholder": "e.g., NestJS, React, PostgreSQL",
+      "urlPlaceholder": "https://...",
+      "githubUrlPlaceholder": "https://github.com/..."
     },
     "militaryRanks": {
       "sergeant": "Sergeant",

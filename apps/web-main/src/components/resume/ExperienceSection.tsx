@@ -411,6 +411,7 @@ function SortableExperienceCard({
                       onUpdateAchievement={(achIndex, ach) => updateAchievement(projectIndex, achIndex, ach)}
                       onRemoveAchievement={(achIndex) => removeAchievement(projectIndex, achIndex)}
                       onAchievementDragEnd={(e) => handleAchievementDragEnd(projectIndex, e)}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -418,8 +419,7 @@ function SortableExperienceCard({
             </DndContext>
           ) : (
             <div className="text-center py-6 text-gray-500 dark:text-dark-text-tertiary text-sm bg-white dark:bg-dark-bg-elevated rounded-lg border border-dashed border-amber-200 dark:border-dark-border-default transition-colors duration-200">
-              <p className="hidden sm:block">No projects added yet. Click "Add Project" to add projects at this company.</p>
-              <p className="sm:hidden">프로젝트가 없습니다. "+ 추가" 버튼을 눌러 추가하세요.</p>
+              <p>{t('resume.experienceForm.noProjects')}</p>
             </div>
           )}
         </div>
@@ -440,6 +440,7 @@ function SortableProject({
   onUpdateAchievement,
   onRemoveAchievement,
   onAchievementDragEnd,
+  t,
 }: {
   project: ExperienceProject;
   projectIndex: number;
@@ -451,6 +452,7 @@ function SortableProject({
   onUpdateAchievement: (index: number, achievement: ProjectAchievement) => void;
   onRemoveAchievement: (index: number) => void;
   onAchievementDragEnd: (event: DragEndEvent) => void;
+  t: (key: string) => string;
 }) {
   // Local state for tech stack input to allow free-form typing
   const [techStackInput, setTechStackInput] = useState(project.techStack.join(', '));
@@ -490,7 +492,7 @@ function SortableProject({
           {...attributes}
           {...listeners}
           className="p-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0 touch-manipulation"
-          title="Drag to reorder"
+          title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
@@ -504,7 +506,7 @@ function SortableProject({
         >
           <span className="font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-1 sm:gap-2 transition-colors duration-200 min-w-0">
             <span className="flex-shrink-0">📖</span>
-            <span className="flex-shrink-0 hidden sm:inline">Project</span>
+            <span className="flex-shrink-0 hidden sm:inline">{t('resume.experienceForm.project')}</span>
             <span className="flex-shrink-0">#{projectIndex + 1}</span>
             {project.name && <span className="font-normal text-gray-700 dark:text-dark-text-secondary transition-colors duration-200 truncate">- {project.name}</span>}
           </span>
@@ -519,7 +521,7 @@ function SortableProject({
         </button>
 
         <DestructiveButton onClick={onRemove} size="sm" className="flex-shrink-0">
-          <span className="hidden sm:inline">Remove</span>
+          <span className="hidden sm:inline">{t('resume.experienceForm.remove')}</span>
           <span className="sm:hidden">✕</span>
         </DestructiveButton>
       </div>
@@ -530,17 +532,17 @@ function SortableProject({
           {/* Project Basic Info */}
           <div className="grid grid-cols-1 gap-3">
             <TextInput
-              label="Project Name"
+              label={t('resume.experienceForm.projectName')}
               value={project.name}
               onChange={value => onUpdate({ ...project, name: value })}
-              placeholder="e.g., E-Commerce Platform Rebuild"
+              placeholder={t('resume.experienceForm.projectNamePlaceholder')}
               required
             />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                  Start Date <span className="text-red-500">*</span>
+                  {t('resume.experienceForm.startDate')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="month"
@@ -552,36 +554,36 @@ function SortableProject({
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-                  End Date
+                  {t('resume.experienceForm.endDate')}
                 </label>
                 <input
                   type="month"
                   value={project.endDate || ''}
                   onChange={e => onUpdate({ ...project, endDate: e.target.value })}
                   className="w-full px-3 py-2 bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm text-gray-900 dark:text-dark-text-primary transition-colors duration-200"
-                  placeholder="Leave empty if ongoing"
+                  placeholder={t('resume.experienceForm.ongoingProject')}
                 />
               </div>
             </div>
 
             <TextArea
-              label="Description"
+              label={t('resume.experienceForm.description')}
               value={project.description}
               onChange={value => onUpdate({ ...project, description: value })}
               rows={3}
-              placeholder="Brief project description..."
+              placeholder={t('resume.experienceForm.projectDescription')}
               required
             />
 
             <TextInput
-              label="Your Role"
+              label={t('resume.experienceForm.yourRole')}
               value={project.role || ''}
               onChange={value => onUpdate({ ...project, role: value })}
-              placeholder="e.g., Lead Backend Developer"
+              placeholder={t('resume.experienceForm.rolePlaceholder')}
             />
 
             <TextInput
-              label="Tech Stack (comma-separated)"
+              label={t('resume.experienceForm.techStack')}
               value={techStackInput}
               onChange={value => setTechStackInput(value)}
               onBlur={() => {
@@ -589,24 +591,24 @@ function SortableProject({
                 onUpdate({ ...project, techStack: parsed });
                 setTechStackInput(parsed.join(', '));
               }}
-              placeholder="e.g., NestJS, React, PostgreSQL"
+              placeholder={t('resume.experienceForm.techStackPlaceholder')}
             />
 
             <div className="grid grid-cols-2 gap-3">
               <TextInput
-                label="Project URL"
+                label={t('resume.experienceForm.projectUrl')}
                 type="url"
                 value={project.url || ''}
                 onChange={value => onUpdate({ ...project, url: value })}
-                placeholder="https://..."
+                placeholder={t('resume.experienceForm.urlPlaceholder')}
               />
 
               <TextInput
-                label="GitHub URL"
+                label={t('resume.experienceForm.githubUrl')}
                 type="url"
                 value={project.githubUrl || ''}
                 onChange={value => onUpdate({ ...project, githubUrl: value })}
-                placeholder="https://github.com/..."
+                placeholder={t('resume.experienceForm.githubUrlPlaceholder')}
               />
             </div>
           </div>
@@ -615,15 +617,15 @@ function SortableProject({
           <div className="border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2 transition-colors duration-200">
-                ⭐ Key Achievements
-                <span className="text-xs text-gray-500 dark:text-dark-text-tertiary font-normal transition-colors duration-200">(4 depth levels)</span>
+                ⭐ {t('resume.experienceForm.keyAchievements')}
+                <span className="text-xs text-gray-500 dark:text-dark-text-tertiary font-normal transition-colors duration-200">{t('resume.experienceForm.depthLevels')}</span>
               </label>
               <button
                 type="button"
                 onClick={onAddAchievement}
                 className="px-2 py-1 bg-amber-600 dark:bg-amber-500 text-white text-xs rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors duration-200"
               >
-                + Add Achievement
+                {t('resume.experienceForm.addAchievement')}
               </button>
             </div>
 
@@ -658,13 +660,14 @@ function SortableProject({
                           };
                           onUpdateAchievement(achIndex, updatedAchievement);
                         }}
+                        t={t}
                       />
                     ))}
                   </div>
                 </SortableContext>
               </DndContext>
             ) : (
-              <p className="text-xs text-gray-500 dark:text-dark-text-tertiary italic transition-colors duration-200">No achievements yet. Click "Add Achievement" to add.</p>
+              <p className="text-xs text-gray-500 dark:text-dark-text-tertiary italic transition-colors duration-200">{t('resume.experienceForm.noAchievements')}</p>
             )}
           </div>
         </div>
@@ -680,12 +683,14 @@ function HierarchicalAchievement({
   onUpdate,
   onRemove,
   onAddChild,
+  t,
 }: {
   achievement: ProjectAchievement;
   depth: number;
   onUpdate: (achievement: ProjectAchievement) => void;
   onRemove: () => void;
   onAddChild: () => void;
+  t: (key: string) => string;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -748,7 +753,7 @@ function HierarchicalAchievement({
             onChange={e => onUpdate({ ...achievement, content: e.target.value })}
             className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
-            placeholder="Achievement description..."
+            placeholder={t('resume.experienceForm.achievementPlaceholder')}
           />
 
           <div className="flex items-center gap-1">
@@ -757,9 +762,9 @@ function HierarchicalAchievement({
                 type="button"
                 onClick={onAddChild}
                 className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-colors duration-200 font-semibold whitespace-nowrap"
-                title="Add sub-item"
+                title={t('resume.experienceForm.addSubItem')}
               >
-                + 하위
+                {t('resume.experienceForm.addSubItem')}
               </button>
             )}
 
@@ -768,7 +773,7 @@ function HierarchicalAchievement({
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
-                title={isExpanded ? "Collapse" : "Expand"}
+                title={isExpanded ? t('resume.experienceForm.collapse') : t('resume.experienceForm.expand')}
               >
                 {isExpanded ? '▼' : '▶'}
               </button>
@@ -778,7 +783,7 @@ function HierarchicalAchievement({
               type="button"
               onClick={onRemove}
               className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
-              title="Remove"
+              title={t('resume.experienceForm.remove')}
             >
               ✕
             </button>
@@ -796,7 +801,7 @@ function HierarchicalAchievement({
               value={achievement.content}
               onChange={e => onUpdate({ ...achievement, content: e.target.value })}
               className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
-              placeholder="설명 입력..."
+              placeholder={t('resume.experienceForm.achievementPlaceholder')}
             />
             {/* Inline action buttons for mobile */}
             <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -805,7 +810,7 @@ function HierarchicalAchievement({
                   type="button"
                   onClick={onAddChild}
                   className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 text-[10px] rounded hover:bg-green-200 transition-colors duration-200 touch-manipulation"
-                  title="Add sub-item"
+                  title={t('resume.experienceForm.addSubItem')}
                 >
                   +
                 </button>
@@ -844,6 +849,7 @@ function HierarchicalAchievement({
               onUpdate={(updatedChild) => handleUpdateChild(childIndex, updatedChild)}
               onRemove={() => handleRemoveChild(childIndex)}
               onAddChild={() => handleAddChildToChild(childIndex)}
+              t={t}
             />
           ))}
         </div>
@@ -859,12 +865,14 @@ function SortableAchievement({
   onUpdate,
   onRemove,
   onAddChild,
+  t,
 }: {
   achievement: ProjectAchievement;
   achIndex: number;
   onUpdate: (achievement: ProjectAchievement) => void;
   onRemove: () => void;
   onAddChild: () => void;
+  t: (key: string) => string;
 }) {
   const {
     attributes,
@@ -889,7 +897,7 @@ function SortableAchievement({
           {...attributes}
           {...listeners}
           className="mt-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0"
-          title="Drag to reorder"
+          title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
@@ -903,6 +911,7 @@ function SortableAchievement({
             onUpdate={onUpdate}
             onRemove={onRemove}
             onAddChild={onAddChild}
+            t={t}
           />
         </div>
       </div>
@@ -973,7 +982,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
           onClick={addExperience}
           className="px-2 py-1.5 sm:px-4 sm:py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors duration-200 font-semibold text-xs sm:text-sm flex-shrink-0"
         >
-          + Add Experience
+          {t('resume.experienceForm.addExperience')}
         </button>
       </div>
 
@@ -1003,7 +1012,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
         </DndContext>
       ) : (
         <div className="text-center py-6 sm:py-12 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200 text-sm sm:text-base">
-          <p>No work experience added yet. Click "Add Experience" to get started.</p>
+          <p>{t('resume.experienceForm.noExperience')}</p>
         </div>
       )}
     </div>
