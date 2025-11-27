@@ -1,8 +1,10 @@
+import { useState, useCallback } from 'react';
 import {
   DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -38,6 +40,9 @@ function SortableEducationCard({
   onRemove: () => void;
   t: (key: string) => string;
 }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const toggleExpand = useCallback(() => setIsExpanded(prev => !prev), []);
+
   const {
     attributes,
     listeners,
@@ -60,102 +65,153 @@ function SortableEducationCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-gray-200 dark:border-dark-border-subtle rounded-lg p-4 bg-white dark:bg-dark-bg-elevated transition-colors duration-200"
+      className="border border-gray-200 dark:border-dark-border-subtle rounded-xl overflow-hidden bg-white dark:bg-dark-bg-elevated transition-colors duration-200"
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      {/* Mobile-optimized Header */}
+      <div className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-dark-bg-elevated p-2 sm:p-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Drag Handle */}
           <button
             type="button"
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-gray-400 dark:text-dark-text-tertiary hover:text-gray-600 dark:hover:text-dark-text-secondary transition-colors duration-200"
+            className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 dark:text-dark-text-tertiary hover:text-gray-600 dark:hover:text-dark-text-secondary transition-colors duration-200 touch-manipulation"
             title="Drag to reorder"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
             </svg>
           </button>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 Education #{index + 1}</h3>
+
+          {/* Title - clickable on mobile */}
+          <button
+            type="button"
+            onClick={toggleExpand}
+            className="flex-1 flex items-center gap-2 text-left min-w-0 sm:cursor-default"
+          >
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-dark-text-primary transition-colors duration-200 truncate">
+                🎓 {education.school || 'Education'} #{index + 1}
+              </h3>
+              {!isExpanded && education.major && (
+                <p className="text-xs text-gray-500 dark:text-dark-text-tertiary truncate sm:hidden">
+                  {education.major} • {education.startDate}
+                </p>
+              )}
+            </div>
+            <svg
+              className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform duration-200 sm:hidden ${isExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Desktop delete button */}
+          <DestructiveButton onClick={onRemove} size="sm" className="hidden sm:flex flex-shrink-0">
+            Remove
+          </DestructiveButton>
         </div>
-        <DestructiveButton onClick={onRemove} size="sm">
-          Remove
-        </DestructiveButton>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <TextInput
-          label="School"
-          value={education.school}
-          onChange={value => onUpdate({ ...education, school: value })}
-          placeholder="University name"
-          required
-        />
+      {/* Collapsible Content */}
+      <div className={`${isExpanded ? 'block' : 'hidden'} sm:block p-3 sm:p-4`}>
+        {/* Mobile delete button */}
+        <div className="sm:hidden flex justify-end mb-2">
+          <DestructiveButton onClick={onRemove} size="sm" className="text-xs py-1.5 px-2 touch-manipulation">
+            ✕ 삭제
+          </DestructiveButton>
+        </div>
 
-        <TextInput
-          label="Major"
-          value={education.major}
-          onChange={value => onUpdate({ ...education, major: value })}
-          placeholder="e.g., Computer Science"
-          required
-        />
+        {/* School and Major */}
+        <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 mb-3">
+          <TextInput
+            label="School"
+            value={education.school}
+            onChange={value => onUpdate({ ...education, school: value })}
+            placeholder="University name"
+            required
+          />
 
-        <Select
-          label="Degree"
-          value={education.degree || ''}
-          onChange={value => onUpdate({ ...education, degree: value as DegreeType || undefined })}
-          options={[
-            { value: '', label: 'Select degree' },
-            ...degreeTypes.map(degreeType => ({
-              value: degreeType,
-              label: t(`resume.degreeTypes.${degreeType}`)
-            }))
-          ]}
-        />
-
-        <Select
-          label="GPA Format"
-          value={education.gpaFormat || GpaFormat.SCALE_4_0}
-          onChange={value => onUpdate({ ...education, gpaFormat: value as GpaFormat })}
-          options={gpaFormats.map(format => ({
-            value: format,
-            label: t(`resume.gpaFormats.${format}`)
-          }))}
-        />
-
-        <TextInput
-          label="GPA"
-          value={education.gpa || ''}
-          onChange={value => onUpdate({ ...education, gpa: value })}
-          placeholder={
-            education.gpaFormat === GpaFormat.SCALE_4_5 ? 'e.g., 4.2/4.5' :
-            education.gpaFormat === GpaFormat.SCALE_100 ? 'e.g., 85/100' :
-            'e.g., 3.8/4.0'
-          }
-        />
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-            Start Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="month"
-            value={education.startDate}
-            onChange={e => onUpdate({ ...education, startDate: e.target.value })}
-            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+          <TextInput
+            label="Major"
+            value={education.major}
+            onChange={value => onUpdate({ ...education, major: value })}
+            placeholder="e.g., Computer Science"
+            required
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2 transition-colors duration-200">
-            End Date
-          </label>
-          <input
-            type="month"
-            value={education.endDate || ''}
-            onChange={e => onUpdate({ ...education, endDate: e.target.value })}
-            className="w-full px-4 py-3 bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder="Leave empty if current"
+        {/* Degree and GPA Format */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3">
+          <Select
+            label="Degree"
+            value={education.degree || ''}
+            onChange={value => onUpdate({ ...education, degree: value as DegreeType || undefined })}
+            options={[
+              { value: '', label: 'Select degree' },
+              ...degreeTypes.map(degreeType => ({
+                value: degreeType,
+                label: t(`resume.degreeTypes.${degreeType}`)
+              }))
+            ]}
           />
+
+          <Select
+            label="GPA Format"
+            value={education.gpaFormat || GpaFormat.SCALE_4_0}
+            onChange={value => onUpdate({ ...education, gpaFormat: value as GpaFormat })}
+            options={gpaFormats.map(format => ({
+              value: format,
+              label: t(`resume.gpaFormats.${format}`)
+            }))}
+          />
+        </div>
+
+        {/* GPA */}
+        <div className="mb-3">
+          <TextInput
+            label="GPA"
+            value={education.gpa || ''}
+            onChange={value => onUpdate({ ...education, gpa: value })}
+            placeholder={
+              education.gpaFormat === GpaFormat.SCALE_4_5 ? 'e.g., 4.2/4.5' :
+              education.gpaFormat === GpaFormat.SCALE_100 ? 'e.g., 85/100' :
+              'e.g., 3.8/4.0'
+            }
+          />
+        </div>
+
+        {/* Dates - side by side */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          <div>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+              <span className="hidden sm:inline">Start Date</span>
+              <span className="sm:hidden">시작일</span>
+              <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <input
+              type="month"
+              value={education.startDate}
+              onChange={e => onUpdate({ ...education, startDate: e.target.value })}
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+              <span className="hidden sm:inline">End Date</span>
+              <span className="sm:hidden">종료일</span>
+            </label>
+            <input
+              type="month"
+              value={education.endDate || ''}
+              onChange={e => onUpdate({ ...education, endDate: e.target.value })}
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -164,10 +220,9 @@ function SortableEducationCard({
 
 export default function EducationSection({ educations, onChange, t }: EducationSectionProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -214,21 +269,21 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   };
 
   return (
-    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-2xl shadow-sm p-6 transition-colors duration-200">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
-          <p className="text-sm text-gray-600 dark:text-dark-text-secondary transition-colors duration-200">{t('resume.descriptions.education')}</p>
+    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-6 transition-colors duration-200">
+      <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary transition-colors duration-200 hidden sm:block">{t('resume.descriptions.education')}</p>
         </div>
-        <PrimaryButton onClick={handleAdd}>
-          + Add Education
+        <PrimaryButton onClick={handleAdd} className="text-xs sm:text-sm px-3 py-2 flex-shrink-0 touch-manipulation">
+          + <span className="hidden sm:inline">Add Education</span><span className="sm:hidden">추가</span>
         </PrimaryButton>
       </div>
 
       {educations.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={educations.map((edu, idx) => edu.id || `edu-${idx}`)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {educations.map((edu, index) => (
                 <SortableEducationCard
                   key={edu.id || `edu-${index}`}
@@ -243,8 +298,9 @@ export default function EducationSection({ educations, onChange, t }: EducationS
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-8 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200">
-          No education entries yet. Click "+ Add Education" to add one.
+        <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200 text-xs sm:text-base">
+          <span className="hidden sm:inline">No education entries yet. Click "+ Add Education" to add one.</span>
+          <span className="sm:hidden">학력 정보가 없습니다. "+ 추가"를 눌러 추가하세요.</span>
         </div>
       )}
     </div>
