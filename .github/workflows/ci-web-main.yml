@@ -31,6 +31,26 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Send Discord notification - Start
+        if: always()
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          COMMIT_MSG=$(printf '%s' "$COMMIT_MESSAGE" | head -n 1 | cut -c 1-200 | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"🚀 CI Started - Web Main\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Event:** ${{ github.event_name }}\\n**Commit:** ${COMMIT_MSG}\",
+                \"color\": 3447003,
+                \"timestamp\": \"${TIMESTAMP}\"
+              }]
+            }"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -377,3 +397,50 @@ jobs:
           done
 
           echo "Cleanup completed"
+
+  notify-result:
+    name: Send Final Notification
+    runs-on: [self-hosted, kubernetes, gitops]
+    needs: [test, build, update-gitops, cleanup-images]
+    if: always()
+    timeout-minutes: 2
+
+    steps:
+      - name: Send Discord notification - CI Complete
+        if: needs.test.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.update-gitops.result == 'success' || needs.update-gitops.result == 'skipped') && (needs.cleanup-images.result == 'success' || needs.cleanup-images.result == 'skipped')
+        run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"✅ CI Complete - Web Main\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Status:** All jobs passed\",
+                \"color\": 3066993,
+                \"timestamp\": \"${TIMESTAMP}\"
+              }]
+            }"
+
+      - name: Send Discord notification - CI Failed
+        if: needs.test.result == 'failure' || needs.build.result == 'failure' || needs.update-gitops.result == 'failure' || needs.cleanup-images.result == 'failure'
+        run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          FAILED_JOBS=""
+          if [[ "${{ needs.test.result }}" == "failure" ]]; then FAILED_JOBS="test"; fi
+          if [[ "${{ needs.build.result }}" == "failure" ]]; then FAILED_JOBS="${FAILED_JOBS:+$FAILED_JOBS, }build"; fi
+          if [[ "${{ needs.update-gitops.result }}" == "failure" ]]; then FAILED_JOBS="${FAILED_JOBS:+$FAILED_JOBS, }update-gitops"; fi
+          if [[ "${{ needs.cleanup-images.result }}" == "failure" ]]; then FAILED_JOBS="${FAILED_JOBS:+$FAILED_JOBS, }cleanup-images"; fi
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"❌ CI Failed - Web Main\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Failed jobs:** ${FAILED_JOBS}\",
+                \"color\": 15158332,
+                \"timestamp\": \"${TIMESTAMP}\"
+              }]
+            }"

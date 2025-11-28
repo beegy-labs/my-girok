@@ -99,34 +99,6 @@ jobs:
           cd services/auth-service
           pnpm lint
 
-      - name: Send Discord notification - Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '✅ CI Success - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **All tests passed!**
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ CI Failed - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Tests failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
   build:
     name: Build and Push Docker Image
     runs-on: [self-hosted, kubernetes, gitops]
@@ -135,22 +107,6 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Send Discord notification - Build Start
-        if: always()
-        run: |
-          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "username": "GitHub Actions",
-              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-              "embeds": [{
-                "title": "🔨 Build Started - Auth Service",
-                "description": "**Branch:** ${{ github.ref_name }}\n**Building Docker image...**",
-                "color": 3447003,
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
-              }]
-            }'
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -213,34 +169,6 @@ jobs:
         run: |
           echo "Image pushed with tags: ${{ steps.meta.outputs.tags }}"
           echo "Version: ${{ steps.meta.outputs.version }}"
-
-      - name: Send Discord notification - Build Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '✅ Build Success - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Version:** ${{ steps.meta.outputs.version }}
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Build Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ Build Failed - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Build failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
 
   update-gitops:
     name: Update GitOps Repository
@@ -373,35 +301,6 @@ jobs:
           # ArgoCD has automated sync enabled with polling interval
           # The application will be synced automatically when ArgoCD detects the Git change
 
-      - name: Send Discord notification - Deploy Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '🚀 Deploy Success - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Version:** ${{ steps.image.outputs.tag }}
-            **ArgoCD sync completed!**
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Deploy Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ Deploy Failed - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **GitOps update or ArgoCD sync failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
   cleanup-images:
     name: Cleanup Old Container Images
     runs-on: [self-hosted, kubernetes, gitops]
@@ -471,3 +370,50 @@ jobs:
           done
 
           echo "Cleanup completed"
+
+  notify-result:
+    name: Send Final Notification
+    runs-on: [self-hosted, kubernetes, gitops]
+    needs: [test, build, update-gitops, cleanup-images]
+    if: always()
+    timeout-minutes: 2
+
+    steps:
+      - name: Send Discord notification - CI Complete
+        if: needs.test.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.update-gitops.result == 'success' || needs.update-gitops.result == 'skipped') && (needs.cleanup-images.result == 'success' || needs.cleanup-images.result == 'skipped')
+        run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"✅ CI Complete - Auth Service\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Status:** All jobs passed\",
+                \"color\": 3066993,
+                \"timestamp\": \"${TIMESTAMP}\"
+              }]
+            }"
+
+      - name: Send Discord notification - CI Failed
+        if: needs.test.result == 'failure' || needs.build.result == 'failure' || needs.update-gitops.result == 'failure' || needs.cleanup-images.result == 'failure'
+        run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          FAILED_JOBS=""
+          if [[ "${{ needs.test.result }}" == "failure" ]]; then FAILED_JOBS="test"; fi
+          if [[ "${{ needs.build.result }}" == "failure" ]]; then FAILED_JOBS="${FAILED_JOBS:+$FAILED_JOBS, }build"; fi
+          if [[ "${{ needs.update-gitops.result }}" == "failure" ]]; then FAILED_JOBS="${FAILED_JOBS:+$FAILED_JOBS, }update-gitops"; fi
+          if [[ "${{ needs.cleanup-images.result }}" == "failure" ]]; then FAILED_JOBS="${FAILED_JOBS:+$FAILED_JOBS, }cleanup-images"; fi
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"username\": \"GitHub Actions\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"❌ CI Failed - Auth Service\",
+                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Failed jobs:** ${FAILED_JOBS}\",
+                \"color\": 15158332,
+                \"timestamp\": \"${TIMESTAMP}\"
+              }]
+            }"
