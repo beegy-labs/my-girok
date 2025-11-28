@@ -2,6 +2,7 @@ import { Controller, Get, HttpCode, HttpStatus, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Response } from 'express';
 import { GracefulShutdownService } from './graceful-shutdown.service';
+import { Public } from '../decorators/public.decorator';
 
 export interface HealthCheckResponse {
   status: 'healthy' | 'unhealthy';
@@ -20,6 +21,7 @@ export interface HealthCheckResponse {
  * - GET /health - General health check (backward compatibility)
  */
 @ApiTags('health')
+@Public()
 @Controller('health')
 export class HealthController {
   private readonly startTime = Date.now();
