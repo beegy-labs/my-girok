@@ -78,7 +78,7 @@ jobs:
     name: Build and Push Docker Image
     runs-on: [self-hosted, kubernetes, gitops]
     needs: test
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 10
 
     steps:
@@ -178,7 +178,7 @@ jobs:
     name: Update GitOps Repository
     runs-on: [self-hosted, kubernetes, gitops]
     needs: build
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
     timeout-minutes: 10
 
     steps:
@@ -312,7 +312,7 @@ jobs:
     name: Cleanup Old Container Images
     runs-on: [self-hosted, kubernetes, gitops]
     needs: update-gitops
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
     timeout-minutes: 5
 
     steps:
