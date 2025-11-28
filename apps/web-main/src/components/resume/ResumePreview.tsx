@@ -252,8 +252,8 @@ export default function ResumePreview({ resume, paperSize = 'A4' }: ResumePrevie
 
   return (
     <div className="relative">
-      {/* Fixed Toolbar (hidden in print) */}
-      <div className="print:hidden sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm mb-6">
+      {/* Fixed Toolbar (hidden in print) - z-10 to stay behind modals (z-50) */}
+      <div className="print:hidden sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm mb-6">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800">
