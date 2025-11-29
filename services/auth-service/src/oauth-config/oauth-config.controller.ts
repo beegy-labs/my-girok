@@ -13,23 +13,22 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
+import { JwtAuthGuard, CurrentUser } from '@my-girok/nest-common';
 import { OAuthConfigService } from './oauth-config.service';
 import { ToggleProviderDto } from './dto/toggle-provider.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthProvider, Role } from '@my-girok/types';
 
 @ApiTags('oauth-config')
-@Controller('api/v1/oauth-config')
+@Controller('oauth-config')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth('JWT-auth')
 export class OAuthConfigController {
   constructor(private readonly oauthConfigService: OAuthConfigService) {}
 
   /**
-   * GET /api/v1/oauth-config
+   * GET /v1/oauth-config
    * Get all OAuth provider configurations
    * Access: MASTER only
    */
@@ -47,7 +46,7 @@ export class OAuthConfigController {
   }
 
   /**
-   * GET /api/v1/oauth-config/:provider
+   * GET /v1/oauth-config/:provider
    * Get specific provider configuration
    * Access: MASTER only
    */
@@ -70,7 +69,7 @@ export class OAuthConfigController {
   }
 
   /**
-   * PATCH /api/v1/oauth-config/:provider/toggle
+   * PATCH /v1/oauth-config/:provider/toggle
    * Enable or disable OAuth provider
    * Access: MASTER only
    */
@@ -104,7 +103,7 @@ export class OAuthConfigController {
   }
 
   /**
-   * GET /api/v1/oauth-config/:provider/status
+   * GET /v1/oauth-config/:provider/status
    * Check if provider is enabled (public endpoint)
    * Access: Public
    */

@@ -1,9 +1,17 @@
-import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
+import { IsEmail, IsString, MinLength, Matches, MaxLength } from 'class-validator';
 import { RegisterDto as IRegisterDto } from '@my-girok/types';
 
 export class RegisterDto implements IRegisterDto {
   @IsEmail()
   email!: string;
+
+  @IsString()
+  @MinLength(3)
+  @MaxLength(20)
+  @Matches(/^[a-z0-9]+$/, {
+    message: 'Username must contain only lowercase letters and numbers',
+  })
+  username!: string;
 
   @IsString()
   @MinLength(8)

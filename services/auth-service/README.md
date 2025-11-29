@@ -27,8 +27,8 @@ Authentication and authorization microservice for my-girok.
 
 ## Tech Stack
 
-- NestJS 10
-- PostgreSQL 16 + Prisma 5
+- NestJS 11
+- PostgreSQL 16 + Prisma 6
 - Passport.js + JWT
 - bcrypt for password hashing
 

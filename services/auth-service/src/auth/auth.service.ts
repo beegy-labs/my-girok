@@ -16,6 +16,7 @@ import {
   Role,
   AuthProvider
 } from '@my-girok/types';
+import { generateUniqueExternalId } from '../common/utils/id-generator';
 
 @Injectable()
 export class AuthService {
@@ -26,19 +27,39 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthPayload> {
-    const existingUser = await this.prisma.user.findUnique({
+    // Check email uniqueness
+    const existingEmail = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
-    if (existingUser) {
+    if (existingEmail) {
       throw new ConflictException('Email already registered');
+    }
+
+    // Check username uniqueness
+    const existingUsername = await this.prisma.user.findUnique({
+      where: { username: dto.username },
+    });
+
+    if (existingUsername) {
+      throw new ConflictException('Username already taken');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
+    // Generate unique external_id with collision checking
+    const externalId = await generateUniqueExternalId(async (id) => {
+      const existing = await this.prisma.user.findUnique({
+        where: { externalId: id },
+      });
+      return !existing; // Return true if unique (not existing)
+    });
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
+        username: dto.username,
+        externalId,
         password: hashedPassword,
         name: dto.name,
         role: Role.USER,
@@ -54,6 +75,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         name: user.name,
         avatar: user.avatar,
         role: user.role as Role,
@@ -89,6 +111,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         name: user.name,
         avatar: user.avatar,
         role: user.role as Role,
@@ -124,12 +147,12 @@ export class AuthService {
         where: { id: session.id },
         data: {
           refreshToken: tokens.refreshToken,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
         },
       });
 
       return tokens;
-    } catch (error) {
+    } catch (_error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -180,7 +203,7 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(
+  async generateTokens(
     userId: string,
     email: string,
     role: string,
@@ -204,15 +227,15 @@ export class AuthService {
         expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '15m'),
       }),
       this.jwtService.signAsync(refreshPayload, {
-        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '7d'),
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '14d'),
       }),
     ]);
 
     return { accessToken, refreshToken };
   }
 
-  private async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
     await this.prisma.session.create({
       data: {
@@ -244,9 +267,24 @@ export class AuthService {
     });
 
     if (!user) {
+      // Generate unique username from email prefix + random suffix
+      const emailPrefix = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      const username = `${emailPrefix}${randomSuffix}`;
+
+      // Generate unique external_id with collision checking
+      const externalId = await generateUniqueExternalId(async (id) => {
+        const existing = await this.prisma.user.findUnique({
+          where: { externalId: id },
+        });
+        return !existing; // Return true if unique (not existing)
+      });
+
       user = await this.prisma.user.create({
         data: {
           email,
+          username,
+          externalId,
           name,
           avatar,
           provider,
