@@ -1,4 +1,4 @@
-name: CI - Auth Service
+name: CI - Personal Service
 
 on:
   push:
@@ -7,24 +7,24 @@ on:
       - 'release/**'
       - main
     paths:
-      - 'services/auth-service/**'
+      - 'services/personal-service/**'
       - 'packages/types/**'
       - 'packages/nest-common/**'
-      - '.github/workflows/ci-auth-service.yml'
+      - '.github/workflows/ci-personal-service.yml'
   pull_request:
     branches:
       - develop
       - 'release/**'
       - main
     paths:
-      - 'services/auth-service/**'
+      - 'services/personal-service/**'
       - 'packages/types/**'
       - 'packages/nest-common/**'
   workflow_dispatch:
 
 env:
   REGISTRY: gitea.girok.dev
-  IMAGE_NAME: beegy-labs/auth-service
+  IMAGE_NAME: beegy-labs/personal-service
 
 jobs:
   test:
@@ -46,7 +46,7 @@ jobs:
               \"username\": \"GitHub Actions\",
               \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
               \"embeds\": [{
-                \"title\": \"🚀 CI Started - Auth Service\",
+                \"title\": \"🚀 CI Started - Personal Service\",
                 \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Event:** ${{ github.event_name }}\\n**Commit:** ${COMMIT_MSG}\",
                 \"color\": 3447003,
                 \"timestamp\": \"${TIMESTAMP}\"
@@ -87,16 +87,16 @@ jobs:
           pnpm --filter @my-girok/nest-common build
 
       - name: Generate Prisma Client
-        run: pnpm --filter @my-girok/auth-service prisma:generate
+        run: pnpm --filter @my-girok/personal-service prisma:generate
 
       - name: Run tests
         run: |
-          cd services/auth-service
+          cd services/personal-service
           pnpm test
 
       - name: Run linter
         run: |
-          cd services/auth-service
+          cd services/personal-service
           pnpm lint
 
       - name: Send Discord notification - Success
@@ -105,7 +105,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: 'success'
-          title: '✅ CI Success - Auth Service'
+          title: '✅ CI Success - Personal Service'
           description: |
             **Branch:** ${{ github.ref_name }}
             **All tests passed!**
@@ -119,7 +119,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: 'failure'
-          title: '❌ CI Failed - Auth Service'
+          title: '❌ CI Failed - Personal Service'
           description: |
             **Branch:** ${{ github.ref_name }}
             **Tests failed. Check logs for details.**
@@ -144,7 +144,7 @@ jobs:
               "username": "GitHub Actions",
               "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
               "embeds": [{
-                "title": "🔨 Build Started - Auth Service",
+                "title": "🔨 Build Started - Personal Service",
                 "description": "**Branch:** ${{ github.ref_name }}\n**Building Docker image...**",
                 "color": 3447003,
                 "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
@@ -201,7 +201,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./services/auth-service/Dockerfile
+          file: ./services/personal-service/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
@@ -220,7 +220,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: 'success'
-          title: '✅ Build Success - Auth Service'
+          title: '✅ Build Success - Personal Service'
           description: |
             **Branch:** ${{ github.ref_name }}
             **Version:** ${{ steps.meta.outputs.version }}
@@ -234,7 +234,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: 'failure'
-          title: '❌ Build Failed - Auth Service'
+          title: '❌ Build Failed - Personal Service'
           description: |
             **Branch:** ${{ github.ref_name }}
             **Build failed. Check logs for details.**
@@ -288,13 +288,13 @@ jobs:
 
           # Determine values file path based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-prod.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-prod.yaml"
             ENVIRONMENT="production"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-dev.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-dev.yaml"
             ENVIRONMENT="development"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-staging.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-staging.yaml"
             ENVIRONMENT="staging"
           fi
 
@@ -311,13 +311,13 @@ jobs:
 
           # Determine values file path and environment (same logic as update step)
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-prod.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-prod.yaml"
             ENVIRONMENT="production"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-dev.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-dev.yaml"
             ENVIRONMENT="development"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-staging.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-personal-service-staging.yaml"
             ENVIRONMENT="staging"
           fi
 
@@ -329,7 +329,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore(${ENVIRONMENT}): update auth-service image to ${{ steps.image.outputs.tag }}" \
+            git commit -m "chore(${ENVIRONMENT}): update personal-service image to ${{ steps.image.outputs.tag }}" \
                        -m "Updated by GitHub Actions from my-girok@${{ github.sha }}" \
                        -m "Branch: ${{ github.ref_name }}" \
                        -m "Environment: ${ENVIRONMENT}"
@@ -356,13 +356,13 @@ jobs:
         run: |
           # Determine ArgoCD app name based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            APP_NAME="my-girok-prod-auth-service"
+            APP_NAME="my-girok-prod-personal-service"
             ENVIRONMENT="production"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            APP_NAME="my-girok-dev-auth-service"
+            APP_NAME="my-girok-dev-personal-service"
             ENVIRONMENT="development"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            APP_NAME="my-girok-staging-auth-service"
+            APP_NAME="my-girok-staging-personal-service"
             ENVIRONMENT="staging"
           fi
 
@@ -379,7 +379,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: 'success'
-          title: '🚀 Deploy Success - Auth Service'
+          title: '🚀 Deploy Success - Personal Service'
           description: |
             **Branch:** ${{ github.ref_name }}
             **Version:** ${{ steps.image.outputs.tag }}
@@ -394,7 +394,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: 'failure'
-          title: '❌ Deploy Failed - Auth Service'
+          title: '❌ Deploy Failed - Personal Service'
           description: |
             **Branch:** ${{ github.ref_name }}
             **GitOps update or ArgoCD sync failed. Check logs for details.**
@@ -432,7 +432,7 @@ jobs:
         run: |
           PREFIX="${{ steps.env.outputs.prefix }}"
           KEEP_TAGS="${{ steps.env.outputs.keep_tags }}"
-          PACKAGE="auth-service"
+          PACKAGE="personal-service"
           OWNER="beegy-labs"
           MAX_KEEP=10
 
