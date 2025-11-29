@@ -1,0 +1,20 @@
+apiVersion: v2
+name: web-main
+description: Main web application for My-Girok (blog, finance, resume)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - react
+  - frontend
+  - web
+  - main-app
+
+maintainers:
+  - name: My-Girok Team
+    email: your-team@example.com
+
+home: https://github.com/your-org/my-girok
+sources:
+  - https://github.com/your-org/my-girok

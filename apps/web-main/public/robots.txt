@@ -1,0 +1,40 @@
+# Robots.txt for My-Girok Web App
+# My-Girok is a professional resume and career management platform
+
+# Global rules for all robots
+User-agent: *
+
+# Allow only homepage (public landing page)
+Allow: /$
+
+# Disallow authentication pages
+Disallow: /login
+Disallow: /register
+Disallow: /change-password
+
+# Disallow ALL resume routes (resumes are private, only shared via token)
+# No public resume pages - resumes should NEVER appear in search engines
+Disallow: /resume/
+
+# Disallow temporary share links (token-based, private sharing only)
+# These are intentionally excluded from search indexing
+Disallow: /shared/
+
+# Disallow API endpoints
+Disallow: /api/
+
+# Allow search engines to crawl static assets
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.gif$
+Allow: /*.svg$
+Allow: /*.webp$
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://www.mygirok.com/sitemap.xml
