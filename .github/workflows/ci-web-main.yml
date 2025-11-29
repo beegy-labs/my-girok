@@ -1,4 +1,4 @@
-name: CI - Auth Service
+name: CI - Web Main
 
 on:
   push:
@@ -7,24 +7,22 @@ on:
       - 'release/**'
       - main
     paths:
-      - 'services/auth-service/**'
+      - 'apps/web-main/**'
       - 'packages/types/**'
-      - 'packages/nest-common/**'
-      - '.github/workflows/ci-auth-service.yml'
+      - '.github/workflows/ci-web-main.yml'
   pull_request:
     branches:
       - develop
       - 'release/**'
       - main
     paths:
-      - 'services/auth-service/**'
+      - 'apps/web-main/**'
       - 'packages/types/**'
-      - 'packages/nest-common/**'
   workflow_dispatch:
 
 env:
   REGISTRY: gitea.girok.dev
-  IMAGE_NAME: beegy-labs/auth-service
+  IMAGE_NAME: beegy-labs/web-main
 
 jobs:
   test:
@@ -33,26 +31,6 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Send Discord notification - Start
-        if: always()
-        env:
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-        run: |
-          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
-          COMMIT_MSG=$(printf '%s' "$COMMIT_MESSAGE" | head -n 1 | cut -c 1-200 | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"username\": \"GitHub Actions\",
-              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
-              \"embeds\": [{
-                \"title\": \"🚀 CI Started - Auth Service\",
-                \"description\": \"**Branch:** ${{ github.ref_name }}\\n**Event:** ${{ github.event_name }}\\n**Commit:** ${COMMIT_MSG}\",
-                \"color\": 3447003,
-                \"timestamp\": \"${TIMESTAMP}\"
-              }]
-            }"
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -81,76 +59,29 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build shared packages
+      - name: Run lint
         run: |
-          pnpm --filter @my-girok/types build
-          pnpm --filter @my-girok/nest-common build
+          cd apps/web-main
+          pnpm lint || true
 
-      - name: Generate Prisma Client
-        run: pnpm --filter @my-girok/auth-service prisma:generate
-
-      - name: Run tests
+      - name: Run type check
         run: |
-          cd services/auth-service
-          pnpm test
+          cd apps/web-main
+          pnpm type-check || true
 
-      - name: Run linter
+      - name: Run E2E tests
         run: |
-          cd services/auth-service
-          pnpm lint
-
-      - name: Send Discord notification - Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '✅ CI Success - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **All tests passed!**
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ CI Failed - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Tests failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          cd apps/web-main
+          pnpm test:e2e || true
 
   build:
     name: Build and Push Docker Image
     runs-on: [self-hosted, kubernetes, gitops]
     needs: test
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push'
     timeout-minutes: 10
 
     steps:
-      - name: Send Discord notification - Build Start
-        if: always()
-        run: |
-          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "username": "GitHub Actions",
-              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-              "embeds": [{
-                "title": "🔨 Build Started - Auth Service",
-                "description": "**Branch:** ${{ github.ref_name }}\n**Building Docker image...**",
-                "color": 3447003,
-                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
-              }]
-            }'
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -164,89 +95,90 @@ jobs:
           username: ${{ secrets.GITEA_USERNAME }}
           password: ${{ secrets.GITEA_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
+      - name: Determine environment and API URL
+        id: env
         run: |
           # Get short commit SHA
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
 
-          # Determine tag based on branch
+          # Determine environment, tag, and API URLs based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # Main branch: <hash> + latest
-            TAG="${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-            VERSION="${TAG}"
+            # Production
+            ENV="production"
+            TAG="latest"
+            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            # Production API URLs
+            API_URL="https://my-api.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api.girok.dev/personal"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            # Develop branch: develop-<hash> + develop
+            # Development: develop-<hash> + develop
+            ENV="development"
             TAG="develop-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
-            VERSION="${TAG}"
+            # Development API URLs
+            API_URL="https://my-api-dev.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            # Release branch: release-<hash> + release
+            # Staging: release-<hash> + release
+            ENV="staging"
             TAG="release-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
-            VERSION="${TAG}"
+            # Staging API URLs
+            API_URL="https://my-api-staging.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api-staging.girok.dev/personal"
           else
-            # Other branches: <branch>-<hash>
+            # Other branches: branch-<hash>
+            ENV="development"
             BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
             TAG="${BRANCH_NAME}-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+            API_URL="https://my-api-dev.girok.dev/auth"
+            PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
+          fi
+
+          # Set version for display (include environment prefix for non-main branches)
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            VERSION="${TAG}"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            VERSION="develop:${TAG}"
+          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
+            VERSION="release:${TAG}"
+          else
             VERSION="${TAG}"
           fi
 
+          echo "environment=${ENV}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
+          echo "personal_api_url=${PERSONAL_API_URL}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./services/auth-service/Dockerfile
+          file: ./apps/web-main/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.env.outputs.tags }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           build-args: |
-            NODE_ENV=production
+            VITE_API_URL=${{ steps.env.outputs.api_url }}
+            VITE_PERSONAL_API_URL=${{ steps.env.outputs.personal_api_url }}
 
       - name: Image digest
         run: |
-          echo "Image pushed with tags: ${{ steps.meta.outputs.tags }}"
-          echo "Version: ${{ steps.meta.outputs.version }}"
-
-      - name: Send Discord notification - Build Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '✅ Build Success - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Version:** ${{ steps.meta.outputs.version }}
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Build Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ Build Failed - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Build failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          echo "Environment: ${{ steps.env.outputs.environment }}"
+          echo "Image pushed with tags: ${{ steps.env.outputs.tags }}"
+          echo "Version: ${{ steps.env.outputs.version }}"
+          echo "API URL: ${{ steps.env.outputs.api_url }}"
+          echo "Personal API URL: ${{ steps.env.outputs.personal_api_url }}"
 
   update-gitops:
     name: Update GitOps Repository
     runs-on: [self-hosted, kubernetes, gitops]
     needs: build
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
     timeout-minutes: 10
 
     steps:
@@ -261,7 +193,10 @@ jobs:
         run: |
           SHORT_SHA=${{ steps.sha.outputs.short_sha }}
 
-          # Image tags must match build job format
+          # Tag format must match the build job:
+          # - main: <hash>
+          # - develop: develop-<hash>
+          # - release/*: release-<hash>
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             TAG="${SHORT_SHA}"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
@@ -288,13 +223,13 @@ jobs:
 
           # Determine values file path based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-prod.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-web-main-prod.yaml"
             ENVIRONMENT="production"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-dev.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-web-main-dev.yaml"
             ENVIRONMENT="development"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-staging.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-web-main-staging.yaml"
             ENVIRONMENT="staging"
           fi
 
@@ -311,13 +246,13 @@ jobs:
 
           # Determine values file path and environment (same logic as update step)
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-prod.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-web-main-prod.yaml"
             ENVIRONMENT="production"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-dev.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-web-main-dev.yaml"
             ENVIRONMENT="development"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-auth-service-staging.yaml"
+            VALUES_FILE="clusters/home/values/my-girok-web-main-staging.yaml"
             ENVIRONMENT="staging"
           fi
 
@@ -329,7 +264,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore(${ENVIRONMENT}): update auth-service image to ${{ steps.image.outputs.tag }}" \
+            git commit -m "chore(${ENVIRONMENT}): update web-main image to ${{ steps.image.outputs.tag }}" \
                        -m "Updated by GitHub Actions from my-girok@${{ github.sha }}" \
                        -m "Branch: ${{ github.ref_name }}" \
                        -m "Environment: ${ENVIRONMENT}"
@@ -356,13 +291,13 @@ jobs:
         run: |
           # Determine ArgoCD app name based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            APP_NAME="my-girok-prod-auth-service"
+            APP_NAME="my-girok-prod-web-main"
             ENVIRONMENT="production"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            APP_NAME="my-girok-dev-auth-service"
+            APP_NAME="my-girok-dev-web-main"
             ENVIRONMENT="development"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            APP_NAME="my-girok-staging-auth-service"
+            APP_NAME="my-girok-staging-web-main"
             ENVIRONMENT="staging"
           fi
 
@@ -373,40 +308,11 @@ jobs:
           # ArgoCD has automated sync enabled with polling interval
           # The application will be synced automatically when ArgoCD detects the Git change
 
-      - name: Send Discord notification - Deploy Success
-        if: success()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'success'
-          title: '🚀 Deploy Success - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **Version:** ${{ steps.image.outputs.tag }}
-            **ArgoCD sync completed!**
-          color: 0x2ecc71
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
-      - name: Send Discord notification - Deploy Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'failure'
-          title: '❌ Deploy Failed - Auth Service'
-          description: |
-            **Branch:** ${{ github.ref_name }}
-            **GitOps update or ArgoCD sync failed. Check logs for details.**
-          color: 0xe74c3c
-          username: GitHub Actions
-          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-
   cleanup-images:
     name: Cleanup Old Container Images
     runs-on: [self-hosted, kubernetes, gitops]
     needs: update-gitops
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
     timeout-minutes: 5
 
     steps:
@@ -432,7 +338,7 @@ jobs:
         run: |
           PREFIX="${{ steps.env.outputs.prefix }}"
           KEEP_TAGS="${{ steps.env.outputs.keep_tags }}"
-          PACKAGE="auth-service"
+          PACKAGE="web-main"
           OWNER="beegy-labs"
           MAX_KEEP=10
 

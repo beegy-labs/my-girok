@@ -1,0 +1,40 @@
+name: Sync to Gitea
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '**'
+  delete:
+  workflow_dispatch:
+
+concurrency:
+  group: sync-to-gitea
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Mirror to Gitea
+    runs-on: [self-hosted, kubernetes, gitops]
+
+    steps:
+      - name: Clone bare repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          rm -rf /tmp/mirror-repo
+          git clone --bare https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git /tmp/mirror-repo
+
+      - name: Push mirror to Gitea
+        env:
+          GITEA_URL: ${{ secrets.GITEA_URL }}
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          cd /tmp/mirror-repo
+          GITEA_PUSH_URL=$(echo "$GITEA_URL" | sed "s|https://|https://oauth2:${GITEA_TOKEN}@|")
+          git push --mirror --force "$GITEA_PUSH_URL"
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf /tmp/mirror-repo
