@@ -10,29 +10,33 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
+import { Public, CurrentUser, JwtAuthGuard } from '@my-girok/nest-common';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, RefreshTokenDto, GrantDomainAccessDto } from './dto';
-import { Public, CurrentUser } from '../common/decorators';
-import { JwtAuthGuard } from './guards';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private configService: ConfigService,
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
+  // SECURITY.md: Auth endpoints limited to 5 req/min per IP
   @Public()
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
+  // SECURITY.md: Auth endpoints limited to 5 req/min per IP
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -112,13 +116,5 @@ export class AuthController {
   @Post('domain-access')
   async grantDomainAccess(@CurrentUser() user: any, @Body() dto: GrantDomainAccessDto) {
     return this.authService.grantDomainAccess(user.id, dto);
-  }
-}
-
-// Fix for private method visibility
-declare module './auth.service' {
-  interface AuthService {
-    generateTokens(userId: string, email: string, role: string): Promise<any>;
-    saveRefreshToken(userId: string, refreshToken: string): Promise<void>;
   }
 }

@@ -14,17 +14,17 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
     super({
       authorizationURL: 'https://nid.naver.com/oauth2.0/authorize',
       tokenURL: 'https://nid.naver.com/oauth2.0/token',
-      clientID: configService.get('NAVER_CLIENT_ID'),
-      clientSecret: configService.get('NAVER_CLIENT_SECRET'),
-      callbackURL: configService.get('NAVER_CALLBACK_URL'),
+      clientID: configService.get('NAVER_CLIENT_ID')!,
+      clientSecret: configService.get('NAVER_CLIENT_SECRET')!,
+      callbackURL: configService.get('NAVER_CALLBACK_URL')!,
       scope: ['email', 'nickname', 'profile_image'],
     });
   }
 
   async validate(
     accessToken: string,
-    refreshToken: string,
-    profile: any,
+    _refreshToken: string,
+    _profile: any,
   ): Promise<any> {
     // Fetch user profile from Naver API
     const response = await fetch('https://openapi.naver.com/v1/nid/me', {
@@ -33,7 +33,7 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
       },
     });
 
-    const data = await response.json();
+    const data = await response.json() as { response: { id: string; email: string; nickname: string; profile_image: string } };
     const { id, email, nickname, profile_image } = data.response;
 
     const user = await this.authService.findOrCreateOAuthUser(

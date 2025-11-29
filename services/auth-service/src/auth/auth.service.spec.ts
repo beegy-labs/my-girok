@@ -62,6 +62,7 @@ describe('AuthService', () => {
       // Arrange
       const registerDto = {
         email: 'test@example.com',
+        username: 'testuser',
         password: 'Plain123!',
         name: 'Test User',
       };
@@ -69,6 +70,7 @@ describe('AuthService', () => {
       const mockUser = {
         id: '123',
         email: registerDto.email,
+        username: registerDto.username,
         password: 'hashed_password',
         name: registerDto.name,
         avatar: null,
@@ -112,6 +114,7 @@ describe('AuthService', () => {
       // Arrange
       const registerDto = {
         email: 'existing@example.com',
+        username: 'existinguser',
         password: 'Pass123!',
         name: 'Existing User',
       };
@@ -119,6 +122,7 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: '456',
         email: registerDto.email,
+        username: registerDto.username,
       });
 
       // Act & Assert
@@ -132,6 +136,7 @@ describe('AuthService', () => {
       // Arrange
       const registerDto = {
         email: 'hash@example.com',
+        username: 'hashtest',
         password: 'TestPass123!',
         name: 'Hash Test',
       };
