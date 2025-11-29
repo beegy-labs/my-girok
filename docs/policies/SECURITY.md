@@ -90,16 +90,317 @@ export class RateLimitMiddleware {
 ### CORS Policy
 
 ```typescript
-// services/gateway/api-gateway/src/main.ts
+// services/auth-service/src/main.ts
+// services/personal-service/src/main.ts
 app.enableCors({
   origin: process.env.NODE_ENV === 'production'
     ? ['https://mygirok.dev', 'https://admin.mygirok.dev']
-    : ['http://localhost:3000', 'http://localhost:3001'],
+    : ['http://localhost:3000', 'http://localhost:3001', 'https://my-dev.girok.dev'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 3600, // Cache preflight for 1 hour (iOS Safari compatibility)
+  optionsSuccessStatus: 204, // Some legacy browsers (IE11) choke on 204
 });
 ```
+
+**Mobile Browser Considerations:**
+- **iOS Safari CORS Strictness**: iOS Safari enforces CORS more strictly than other browsers
+  - Requires explicit header listing (no wildcards) in `allowedHeaders`
+  - `Authorization` header always triggers preflight (OPTIONS) requests
+  - Preflight caching (`maxAge`) is critical to reduce overhead
+  - Without `maxAge`, Safari sends OPTIONS on every request
+- **Ensure public endpoints don't require Authorization header**
+- **Test CORS preflight (OPTIONS) requests on mobile devices**
+- **Consider adding specific origin patterns for mobile deep links**
+- **iOS Safari Debugging**: Use Safari Web Inspector (Settings > Safari > Advanced > Web Inspector) to debug CORS issues on actual iOS devices
+
+### Public Endpoint Security
+
+**Public endpoints (marked with @Public() decorator) must NOT require authentication.**
+
+#### Backend Setup
+
+```typescript
+// ✅ DO: Use @Public() decorator for endpoints that don't require auth
+@Get('public/:token')
+@Public()
+@ApiOperation({ summary: 'Get public resume by share token (no auth)' })
+async getPublicResume(@Param('token') token: string) {
+  return this.shareService.getPublicResume(token);
+}
+```
+
+#### Frontend HTTP Client Configuration
+
+**CRITICAL: HTTP interceptors must skip auth for public endpoints**
+
+```typescript
+// ✅ DO: Skip auth headers for public endpoints
+api.interceptors.request.use(async (config) => {
+  // Detect public endpoints
+  const isPublicEndpoint = config.url?.includes('/share/public/') ||
+                           config.url?.includes('/resume/public/');
+
+  if (isPublicEndpoint) {
+    return config; // Skip auth header injection
+  }
+
+  // Add auth for non-public endpoints
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+
+// ✅ DO: Skip auth retry for public endpoints
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const isPublicEndpoint = error.config.url?.includes('/public/');
+
+    if (isPublicEndpoint) {
+      return Promise.reject(error); // Don't trigger login redirect
+    }
+
+    // Handle 401 for authenticated endpoints
+    if (error.response?.status === 401) {
+      // Refresh token logic...
+    }
+
+    return Promise.reject(error);
+  }
+);
+```
+
+**Why this matters:**
+- Mobile browsers (especially Safari) are more strict about unnecessary auth headers
+- Sending auth headers to public endpoints can cause CORS preflight failures
+- 401 errors on public endpoints should not trigger login redirects
+
+**Testing Requirements:**
+- Test public endpoints on iOS Safari, Android Chrome, and desktop browsers
+- Verify no Authorization headers are sent for public endpoints
+- Ensure 404/403 errors don't redirect to login page
+
+## Mobile Browser Compatibility
+
+### Overview
+
+Mobile browsers, particularly iOS Safari, have stricter security policies and unique behaviors that can cause compatibility issues. This section outlines common mobile browser issues and solutions.
+
+### iOS Safari Specific Issues
+
+#### 1. CORS Preflight Caching
+
+**Problem:**
+- iOS Safari does NOT cache preflight (OPTIONS) requests without explicit `Access-Control-Max-Age` header
+- Results in duplicate OPTIONS requests on every API call
+- Significantly degrades performance and increases mobile data usage
+
+**Solution:**
+```typescript
+// ✅ REQUIRED: Set maxAge for preflight caching
+app.enableCors({
+  // ... other settings
+  maxAge: 3600, // Cache preflight for 1 hour
+});
+```
+
+**Impact:**
+- Before: 2 requests per API call (OPTIONS + actual request)
+- After: 1 OPTIONS request per hour + actual requests
+- Reduces network overhead by ~50%
+
+#### 2. Authorization Header Triggers Preflight
+
+**Problem:**
+- iOS Safari ALWAYS triggers preflight for requests with `Authorization` header
+- Other browsers may skip preflight for same-origin requests
+- Safari requires explicit header listing (no wildcards)
+
+**Solution:**
+```typescript
+// ✅ DO: Explicitly list all headers
+app.enableCors({
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  // ❌ DON'T: Use wildcards - Safari doesn't support them
+  // allowedHeaders: '*',
+});
+```
+
+#### 3. Strict OPTIONS Response Validation
+
+**Problem:**
+- Safari validates OPTIONS response headers more strictly
+- Missing `Access-Control-Allow-Headers` causes CORS failure
+- Must include `OPTIONS` in allowed methods
+
+**Solution:**
+```typescript
+app.enableCors({
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Include OPTIONS
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'], // Explicit list
+});
+```
+
+#### 4. localStorage in Private Browsing
+
+**Problem:**
+- iOS Safari blocks `localStorage` access in Private Browsing mode
+- Causes auth token storage to fail silently
+- Common issue: "QuotaExceededError: DOM Exception 22"
+
+**Solution:**
+```typescript
+// ✅ DO: Handle localStorage errors gracefully
+try {
+  localStorage.setItem('auth-storage', JSON.stringify(authState));
+} catch (error) {
+  if (error.name === 'QuotaExceededError') {
+    console.warn('Private Browsing mode detected, using sessionStorage fallback');
+    sessionStorage.setItem('auth-storage', JSON.stringify(authState));
+  }
+}
+```
+
+### Android Chrome Specific Issues
+
+#### 1. Credentials Mode with CORS
+
+**Problem:**
+- Android Chrome requires `credentials: 'include'` for cookies
+- Must set `Access-Control-Allow-Credentials: true` on backend
+
+**Solution:**
+```typescript
+// Backend
+app.enableCors({
+  credentials: true, // REQUIRED for cookies
+});
+
+// Frontend
+fetch('/api/endpoint', {
+  credentials: 'include', // REQUIRED for sending cookies
+});
+```
+
+### Mobile Debugging Tools
+
+#### iOS Safari Web Inspector
+
+**Setup:**
+1. iPhone: Settings > Safari > Advanced > Web Inspector (Enable)
+2. Mac: Safari > Preferences > Advanced > Show Develop menu (Enable)
+3. Connect iPhone to Mac via USB
+4. Mac Safari > Develop > [Your iPhone] > [Your Tab]
+
+**Usage:**
+- Console tab: View error messages
+- Network tab: Inspect OPTIONS preflight requests
+- Storage tab: Check localStorage/cookies
+
+#### Android Chrome Remote Debugging
+
+**Setup:**
+1. Android: Settings > Developer Options > USB Debugging (Enable)
+2. Chrome Desktop: chrome://inspect/#devices
+3. Connect Android device via USB
+
+**Usage:**
+- Inspect network requests
+- View console logs
+- Debug CORS issues
+
+### Mobile Testing Checklist
+
+**Before Production Deploy:**
+- [ ] Test authenticated endpoints on iOS Safari (real device)
+- [ ] Test authenticated endpoints on Android Chrome (real device)
+- [ ] Verify preflight caching with Network Inspector
+- [ ] Test in Private Browsing mode (iOS Safari)
+- [ ] Test in Incognito mode (Android Chrome)
+- [ ] Verify localStorage fallback works
+- [ ] Check network performance (reduce OPTIONS requests)
+- [ ] Test offline/poor network scenarios
+
+**CORS Configuration Verification:**
+- [ ] `maxAge: 3600` set for preflight caching
+- [ ] `OPTIONS` included in allowed methods
+- [ ] All headers explicitly listed (no wildcards)
+- [ ] `credentials: true` set if using cookies
+- [ ] `exposedHeaders` includes necessary response headers
+
+**Common Mobile CORS Errors:**
+
+| Error Message | Cause | Solution |
+|---------------|-------|----------|
+| "CORS policy: No 'Access-Control-Allow-Origin'" | Origin not in whitelist | Add origin to CORS config |
+| "CORS policy: Request header field Authorization" | Missing Authorization in allowedHeaders | Add 'Authorization' to allowedHeaders |
+| "Preflight response invalid (redirect)" | OPTIONS returns 3xx redirect | Ensure OPTIONS returns 200/204 |
+| "QuotaExceededError" | localStorage in Private Browsing | Use sessionStorage fallback |
+
+### Performance Optimization for Mobile
+
+**Reduce Preflight Requests:**
+```typescript
+// ✅ BEST: Set maxAge to cache preflight
+app.enableCors({
+  maxAge: 3600, // 1 hour cache
+});
+
+// 📊 Impact:
+// - Before: 100 API calls = 200 network requests (100 OPTIONS + 100 actual)
+// - After: 100 API calls = 101 network requests (1 OPTIONS + 100 actual)
+// - Savings: 49.5% fewer requests
+```
+
+**Minimize Header Count:**
+```typescript
+// Only include necessary headers
+allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+// Don't include headers you don't use
+```
+
+### Known Issues and Workarounds
+
+#### Issue: iOS Safari 14+ Cookie SameSite
+
+**Problem:**
+- Safari 14+ requires `SameSite=None; Secure` for cross-origin cookies
+- Affects third-party cookie scenarios
+
+**Workaround:**
+```typescript
+// Use tokens in headers instead of cookies for cross-origin
+// OR set correct cookie attributes
+res.cookie('token', value, {
+  sameSite: 'none',
+  secure: true, // HTTPS required
+});
+```
+
+#### Issue: Mobile Data Connection Timeouts
+
+**Problem:**
+- Slow mobile networks cause timeout before preflight completes
+- Default axios timeout may be too short
+
+**Solution:**
+```typescript
+// ✅ Increase timeout for mobile
+const api = axios.create({
+  timeout: 15000, // 15 seconds (was 5000)
+});
+```
+
+### Reference Links
+
+- [MDN: CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+- [Safari Web Inspector Guide](https://developer.apple.com/safari/tools/)
+- [Chrome DevTools: Remote Debugging](https://developer.chrome.com/docs/devtools/remote-debugging/)
 
 ## Secrets Management
 
@@ -341,15 +642,45 @@ spec:
 
 ## Authentication Security
 
-### Token Expiration
-- Access Token: 15 minutes
-- Refresh Token: 7 days
-- Domain Access Token: Configurable (1-72 hours)
+### Token Expiration Policy
+
+**Current Configuration:**
+- **Access Token**: 15 minutes (JWT_ACCESS_EXPIRATION)
+- **Refresh Token**: 14 days (JWT_REFRESH_EXPIRATION)
+- **Domain Access Token**: Configurable (1-72 hours)
+
+**Token Lifecycle:**
+1. User logs in → receives both access token (15m) and refresh token (14d)
+2. Access token used for API authentication
+3. When access token expires → automatically refreshed using refresh token
+4. **Proactive Refresh**: Refresh token is automatically renewed when it has 7 days or less remaining
+5. After 14 days of inactivity → user must re-login
+
+**Rationale:**
+- **15-minute access token**: Minimizes security risk if token is compromised
+- **14-day refresh token**: Balances security and user convenience (2-week session)
+- **7-day proactive refresh**: Ensures active users never need to re-login
+  - Users who login weekly will have refresh token automatically extended
+  - Token is silently renewed in background without user interruption
+
+**Implementation:**
+```typescript
+// Check if refresh token expires within 7 days and renew it
+const shouldRefreshToken = (token: string): boolean => {
+  const decoded = JSON.parse(atob(token.split('.')[1]));
+  const expiryTime = decoded.exp * 1000;
+  const currentTime = Date.now();
+  const daysUntilExpiry = (expiryTime - currentTime) / (1000 * 60 * 60 * 24);
+
+  return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
+};
+```
 
 ### Token Storage
 - **Web**: HttpOnly cookies (refresh token) + localStorage (access token)
-- **iOS**: Keychain with `kSecAttrAccessibleWhenUnlocked`
-- **Android**: EncryptedSharedPreferences with AES-256
+- **Mobile (Flutter)**: flutter_secure_storage package
+  - **iOS**: Keychain with `kSecAttrAccessibleWhenUnlocked`
+  - **Android**: EncryptedSharedPreferences with AES-256-GCM
 
 ### Password Policy
 - Minimum 8 characters

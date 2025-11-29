@@ -1,454 +1,633 @@
 # Web Main App
 
-> Public-facing web application
-
-## Purpose
-
-Main web application for end users. Built with Next.js 15 App Router for optimal performance and SEO.
+> Public-facing web application for My-Girok
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State**: React Hooks + Server State
-- **API**: Fetch wrapper + GraphQL client (optional)
+- **Framework**: React 19.2 + Vite 7.2
+- **Router**: React Router v7
+- **Language**: TypeScript 5.7
+- **Styling**: Tailwind CSS 3.4
+- **State**: Zustand 5.0
+- **API**: Axios 1.7
+- **Testing**: Vitest 2.1 + Playwright 1.56
 
-## Project Structure
+## Structure
 
 ```
-apps/web/main/
-├── app/                    # App Router
-│   ├── (auth)/            # Auth route group
-│   │   ├── login/
-│   │   └── register/
-│   ├── (main)/            # Main route group
-│   │   ├── page.tsx       # Home
-│   │   ├── dashboard/
-│   │   ├── posts/
-│   │   └── profile/
-│   ├── layout.tsx         # Root layout (with Rybbit)
-│   └── api/               # API routes (if needed)
+apps/web-main/src/
+├── pages/              # Route pages
+│   ├── HomePage.tsx
+│   ├── LoginPage.tsx
+│   ├── RegisterPage.tsx
+│   ├── ChangePasswordPage.tsx
+│   ├── NotFoundPage.tsx
+│   └── resume/
+│       ├── MyResumePage.tsx      # Resume management (/resume/my)
+│       ├── PublicResumePage.tsx  # Public view (/resume/:username)
+│       ├── ResumeEditPage.tsx    # Editor (/resume/edit, /resume/edit/:resumeId)
+│       ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
+│       └── SharedResumePage.tsx  # Shared view (/shared/:token)
 ├── components/
-│   ├── auth/              # Login, Register forms
-│   ├── layout/            # Header, Footer, Sidebar
-│   ├── posts/             # Post components
-│   └── shared/            # Buttons, Inputs, Cards
-└── lib/
-    ├── api/               # API client
-    ├── auth/              # Auth helpers
-    └── utils/
+│   ├── Navbar.tsx
+│   ├── PrivateRoute.tsx
+│   └── resume/
+│       ├── ResumeForm.tsx
+│       ├── ResumePreview.tsx
+│       └── ResumePreviewContainer.tsx  # Shared preview wrapper
+├── api/                # API clients
+│   ├── auth.ts
+│   └── resume.ts
+├── stores/             # Zustand stores
+│   └── authStore.ts
+├── router.tsx          # Router config (createBrowserRouter)
+└── App.tsx             # Root component
 ```
 
-## API Integration
+## Key Routes
 
-### API Client
+### Public Routes
+- `/` - HomePage (dashboard for logged-in, landing for visitors)
+- `/login` - LoginPage
+- `/register` - RegisterPage
+- `/resume/:username` - PublicResumePage (public resume view)
+- `/shared/:token` - SharedResumePage (shared resume via token)
+
+### Protected Routes (PrivateRoute)
+- `/change-password` - ChangePasswordPage
+- `/resume/my` - MyResumePage (resume management dashboard)
+- `/resume/edit` - ResumeEditPage (create new resume)
+- `/resume/edit/:resumeId` - ResumeEditPage (edit existing resume)
+- `/resume/preview/:resumeId` - ResumePreviewPage (print preview)
+
+## Resume Feature
+
+### MyResumePage (`/resume/my`)
+**Purpose**: Resume management dashboard
+
+**Features**:
+- List all user's resumes
+- Create new resume
+- Edit/preview/delete resumes
+- Share with time-limited links
+- View share statistics
+
+**APIs Used**:
+```typescript
+getAllResumes()           // Get user's resume list
+getMyShareLinks()         // Get share links
+createResumeShare()       // Create share link
+deleteShareLink()         // Delete share link
+deleteResume()            // Delete resume
+```
+
+### PublicResumePage (`/resume/:username`)
+**Purpose**: Public resume view (no auth required)
+
+**Features**:
+- View user's default resume
+- Edit button (if own profile)
+- Print button
+
+**APIs Used**:
+```typescript
+getUserResume(username)   // Get public resume by username
+```
+
+### ResumeEditPage (`/resume/edit` or `/resume/edit/:resumeId`)
+**Purpose**: Create/edit resume (auth required)
+
+**Features**:
+- Full resume editor with live preview
+- Save/update resume
+- Navigate to preview on save
+- Auto-save draft to localStorage
+
+**APIs Used**:
+```typescript
+getResume(resumeId)       // Load existing resume by ID
+createResume(dto)         // Create new resume
+updateResume(id, dto)     // Update existing resume
+```
+
+## API Client Pattern
 
 ```typescript
-// lib/api/client.ts
-const API_BASE = process.env.NEXT_PUBLIC_WEB_BFF_URL || 'http://localhost:3001';
+// api/resume.ts
+import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
 
-export const apiClient = {
-  async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const token = getAccessToken();
+const PERSONAL_API_URL = import.meta.env.VITE_PERSONAL_API_URL;
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options?.headers,
-      },
-    });
+export const personalApi = axios.create({
+  baseURL: PERSONAL_API_URL,
+  headers: { 'Content-Type': 'application/json' },
+});
 
-    if (response.status === 401) {
-      // Token expired, try refresh
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        return this.request(endpoint, options); // Retry
+// Request interceptor: Add JWT token
+personalApi.interceptors.request.use(async (config) => {
+  // Skip auth for public endpoints
+  const isPublicEndpoint = config.url?.includes('/share/public/') ||
+                           config.url?.includes('/resume/public/');
+
+  if (isPublicEndpoint) {
+    return config; // No Authorization header
+  }
+
+  const { accessToken } = useAuthStore.getState();
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+
+// Response interceptor: Handle 401 and refresh token
+personalApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Enhanced error logging for mobile debugging
+    if (!error.response) {
+      console.error('[API Error] Network or CORS error:', {
+        message: error.message,
+        url: error.config?.url,
+        userAgent: navigator.userAgent, // iOS Safari debugging
+      });
+    }
+
+    // Handle 401 with token refresh
+    if (error.response?.status === 401 && !error.config._retry) {
+      error.config._retry = true;
+
+      try {
+        const { refreshToken } = useAuthStore.getState();
+        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
+          refreshToken,
+        });
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        useAuthStore.getState().updateTokens(accessToken, newRefreshToken);
+
+        error.config.headers.Authorization = `Bearer ${accessToken}`;
+        return personalApi(error.config);
+      } catch (refreshError) {
+        useAuthStore.getState().clearAuth();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
       }
-      // Redirect to login
-      window.location.href = '/login';
-      throw new Error('Unauthorized');
     }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'API request failed');
-    }
-
-    return response.json();
+    return Promise.reject(error);
   },
+);
 
-  get<T>(endpoint: string) {
-    return this.request<T>(endpoint, { method: 'GET' });
-  },
-
-  post<T>(endpoint: string, data: any) {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+export const getDefaultResume = async (): Promise<Resume> => {
+  const response = await personalApi.get('/v1/resume/default');
+  return response.data;
 };
 ```
 
-### GraphQL Client (Optional)
+**Key Points**:
+- Skip `Authorization` header for public endpoints (iOS Safari compatibility)
+- Enhanced error logging includes `userAgent` for mobile debugging
+- Auto-retry with token refresh on 401 errors
+- Network errors logged separately (helps debug CORS issues)
 
-```typescript
-// lib/api/graphql-client.ts
-import { GraphQLClient } from 'graphql-request';
-
-const endpoint = `${process.env.NEXT_PUBLIC_WEB_BFF_URL}/graphql`;
-
-export const graphqlClient = new GraphQLClient(endpoint, {
-  headers: () => ({
-    Authorization: `Bearer ${getAccessToken()}`,
-  }),
-});
-
-// Usage
-import { gql } from 'graphql-request';
-
-const DASHBOARD_QUERY = gql`
-  query Dashboard {
-    dashboard {
-      user {
-        name
-        avatar
-      }
-      recentPosts {
-        id
-        title
-        createdAt
-      }
-      stats {
-        totalPosts
-        totalViews
-      }
-    }
-  }
-`;
-
-const data = await graphqlClient.request(DASHBOARD_QUERY);
-```
-
-## Key Pages
-
-### Home Page
-
-```typescript
-// app/(main)/page.tsx
-export default async function HomePage() {
-  const posts = await getPosts({ limit: 10 });
-
-  return (
-    <main>
-      <h1>Welcome to My Girok</h1>
-      <PostList posts={posts} />
-    </main>
-  );
-}
-
-// ISR: Revalidate every 60 seconds
-export const revalidate = 60;
-```
-
-### Dashboard Page
-
-```typescript
-// app/(main)/dashboard/page.tsx
-import { Suspense } from 'react';
-
-export default async function DashboardPage() {
-  // Server Component - fetch on server
-  const user = await getCurrentUser();
-
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <UserProfile user={user} />
-
-      {/* Streaming with Suspense */}
-      <Suspense fallback={<PostsSkeleton />}>
-        <RecentPosts userId={user.id} />
-      </Suspense>
-
-      <Suspense fallback={<StatsSkeleton />}>
-        <UserStats userId={user.id} />
-      </Suspense>
-    </div>
-  );
-}
-```
-
-### Login Page
-
-```typescript
-// app/(auth)/login/page.tsx
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const router = useRouter();
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-
-    try {
-      const { accessToken, refreshToken } = await apiClient.post('/api/auth/login', {
-        email,
-        password,
-      });
-
-      // Store tokens
-      setAccessToken(accessToken);
-      setRefreshToken(refreshToken);
-
-      // Redirect to dashboard
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-      />
-      <button type="submit">Login</button>
-    </form>
-  );
-}
-```
-
-## Authentication
+## Auth Pattern
 
 ### Token Storage
+- **Access Token**: localStorage
+- **Refresh Token**: HttpOnly cookie (set by BFF)
 
+### Auth Store (Zustand)
 ```typescript
-// lib/auth/tokens.ts
-
-// Access token in localStorage (client-side only)
-export function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('accessToken');
-}
-
-export function setAccessToken(token: string) {
-  localStorage.setItem('accessToken', token);
-}
-
-// Refresh token in HttpOnly cookie (set by BFF)
-export async function refreshAccessToken(): Promise<boolean> {
-  try {
-    const response = await fetch(`${API_BASE}/api/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include', // Send HttpOnly cookie
-    });
-
-    if (response.ok) {
-      const { accessToken } = await response.json();
-      setAccessToken(accessToken);
-      return true;
-    }
-
-    return false;
-  } catch {
-    return false;
-  }
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  setUser: (user: User | null) => void;
 }
 ```
 
-### Protected Route
-
+### PrivateRoute
 ```typescript
-// app/(main)/dashboard/layout.tsx
-import { redirect } from 'next/navigation';
-
-export default async function DashboardLayout({ children }) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  return <>{children}</>;
-}
+// Redirects to /login if not authenticated
+<PrivateRoute>
+  <MyResumePage />
+</PrivateRoute>
 ```
 
-## Root Layout (CRITICAL)
+## UI Component Library
 
+**Location**: `apps/web-main/src/components/ui/`
+
+### Available Components (10 Total)
+
+**Form Components (4)**:
 ```typescript
-// app/layout.tsx
-import Script from 'next/script';
-import './globals.css';
+import { TextInput, Select, TextArea, FileUpload } from '../../components/ui';
 
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <head>
-        {/* Rybbit Analytics (REQUIRED) */}
-        <Script
-          src="https://rybbit.girok.dev/api/script.js"
-          data-site-id="7a5f53c5f793"
-          strategy="afterInteractive"
-        />
-      </head>
-      <body>
-        {children}
-      </body>
-    </html>
-  );
-}
-```
+// TextInput - Single-line text input
+<TextInput
+  label="Email"
+  value={email}
+  onChange={(value) => setEmail(value)}
+  type="email"
+  placeholder="your@email.com"
+  required
+  error={errors.email}
+  hint="We'll never share your email"
+/>
 
-## Performance Optimization
+// Select - Dropdown
+<Select
+  label="Country"
+  value={country}
+  onChange={(value) => setCountry(value)}
+  options={[
+    { value: 'kr', label: '한국' },
+    { value: 'us', label: 'United States' },
+  ]}
+  required
+/>
 
-### Image Optimization
+// TextArea - Multi-line text
+<TextArea
+  label="Description"
+  value={description}
+  onChange={(value) => setDescription(value)}
+  rows={4}
+  maxLength={500}
+/>
 
-```typescript
-import Image from 'next/image';
-
-<Image
-  src={post.coverImage}
-  alt={post.title}
-  width={1200}
-  height={630}
-  priority // For above-the-fold images
-  placeholder="blur"
+// FileUpload - Drag-and-drop file upload
+<FileUpload
+  label="Profile Photo"
+  accept="image/*"
+  maxSize={5 * 1024 * 1024} // 5MB
+  onUpload={(file) => handleUpload(file)}
 />
 ```
 
-### Dynamic Imports
-
+**Button Components (3)**:
 ```typescript
-import dynamic from 'next/dynamic';
+import { PrimaryButton, SecondaryButton, DestructiveButton } from '../../components/ui';
 
-const HeavyChart = dynamic(() => import('@/components/HeavyChart'), {
-  loading: () => <ChartSkeleton />,
-  ssr: false, // Client-side only
-});
+// PrimaryButton - Main actions
+<PrimaryButton onClick={handleSubmit} disabled={loading}>
+  Save Changes
+</PrimaryButton>
+
+// SecondaryButton - Secondary actions
+<SecondaryButton onClick={handleCancel}>
+  Cancel
+</SecondaryButton>
+
+// DestructiveButton - Delete/remove actions
+<DestructiveButton onClick={handleDelete}>
+  Delete Resume
+</DestructiveButton>
+
+// Button sizes
+<PrimaryButton size="sm">Small</PrimaryButton>
+<PrimaryButton>Default</PrimaryButton>
+<PrimaryButton size="lg">Large</PrimaryButton>
 ```
 
-### Data Fetching
-
+**Layout & Feedback (3)**:
 ```typescript
-// Server Component (default)
-async function getData() {
-  const res = await fetch('https://api.mygirok.dev/posts', {
-    next: { revalidate: 60 }, // ISR
-  });
-  return res.json();
-}
+import { Card, Alert, LoadingSpinner } from '../../components/ui';
 
-// Client Component
-'use client';
-import { useEffect, useState } from 'react';
+// Card - Content container
+<Card variant="primary">
+  <h2>Card Title</h2>
+  <p>Card content...</p>
+</Card>
 
-function ClientComponent() {
-  const [data, setData] = useState(null);
+// Alert - Status messages
+<Alert type="success">Resume saved successfully!</Alert>
+<Alert type="error">Failed to save resume</Alert>
 
-  useEffect(() => {
-    fetch('/api/data').then(res => res.json()).then(setData);
-  }, []);
-}
+// LoadingSpinner - Loading states
+<LoadingSpinner />
+<LoadingSpinner fullScreen message="Loading resume..." />
 ```
 
-## Integration Points
+### Component Structure
 
-### Outgoing (This app calls)
-- **web-bff**: Primary API for data
-- **api-gateway**: Alternative routing
+```
+apps/web-main/src/components/ui/
+├── index.ts              # Barrel exports
+├── Form/
+│   ├── TextInput.tsx
+│   ├── Select.tsx
+│   ├── TextArea.tsx
+│   └── FileUpload.tsx
+├── Button/
+│   ├── PrimaryButton.tsx
+│   ├── SecondaryButton.tsx
+│   └── DestructiveButton.tsx
+└── Layout/
+    ├── Card.tsx
+    ├── Alert.tsx
+    └── LoadingSpinner.tsx
+```
 
-### Environment Variables
+### Usage Guidelines
+
+**Import Pattern**:
+```typescript
+// ✅ DO - Use barrel imports
+import { TextInput, PrimaryButton, Card } from '../../components/ui';
+
+// ❌ DON'T - Direct imports
+import TextInput from '../../components/ui/Form/TextInput';
+```
+
+**Common Props**:
+- All form inputs: `value`, `onChange`, `error`, `hint`, `disabled`, `required`
+- All buttons: `onClick`, `disabled`, `size`, `className`
+- Consistent API across components
+
+**Dark Mode**:
+- All components have built-in dark mode support
+- Use `dark:` Tailwind variants
+- Automatically adapts to system/user preference
+
+## Design System
+
+**Color Theme**: Library/book theme with amber colors
+
+**Key Classes**:
+- Cards: `bg-amber-50/30 border-amber-100 rounded-2xl`
+- Primary Button: `bg-gradient-to-r from-amber-700 to-amber-600`
+- Secondary Button: `bg-gray-100 text-gray-700 border-gray-300`
+
+**See**:
+- **Component Library** (above) - Ready-to-use UI components
+- `/docs/DESIGN_SYSTEM.md` - Full design guidelines
+
+## Environment Variables
 
 ```bash
-NEXT_PUBLIC_WEB_BFF_URL=https://web-bff.mygirok.dev
-NEXT_PUBLIC_API_GATEWAY_URL=https://api.mygirok.dev
+VITE_WEB_BFF_URL=https://web-bff.mygirok.dev
+VITE_PERSONAL_API_URL=https://personal.mygirok.dev
 ```
 
 ## Common Patterns
 
-### Server Action (Form Submission)
-
+### Page Loading State
 ```typescript
-// app/actions/posts.ts
-'use server';
-
-export async function createPost(formData: FormData) {
-  const title = formData.get('title');
-  const content = formData.get('content');
-
-  const post = await apiClient.post('/api/posts', { title, content });
-
-  revalidatePath('/posts');
-  return post;
-}
-
-// Usage in component
-'use client';
-import { createPost } from '@/app/actions/posts';
-
-<form action={createPost}>
-  <input name="title" />
-  <textarea name="content" />
-  <button type="submit">Create</button>
-</form>
-```
-
-### Error Handling
-
-```typescript
-// app/error.tsx
-'use client';
-
-export default function Error({ error, reset }) {
+if (loading) {
   return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <button onClick={() => reset()}>Try again</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700" />
     </div>
   );
 }
 ```
 
-## Testing
-
+### Error Handling
 ```typescript
-// __tests__/LoginPage.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import LoginPage from '@/app/(auth)/login/page';
+const [error, setError] = useState<string | null>(null);
 
-test('login form submission', async () => {
-  render(<LoginPage />);
-
-  fireEvent.change(screen.getByPlaceholderText('Email'), {
-    target: { value: 'test@example.com' },
-  });
-
-  fireEvent.click(screen.getByText('Login'));
-
-  // Assert...
-});
+// Display error
+{error && (
+  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+    {error}
+  </div>
+)}
 ```
 
-## Deployment
+### Navigation
+```typescript
+const navigate = useNavigate();
+const { user } = useAuthStore();
 
-- Build: `pnpm build`
-- Output: `.next/` directory
-- Deploy: Vercel, Docker, or static export
+navigate(`/resume/${user?.username}/edit`);
+```
+
+## Testing
+
+- **Unit**: Component tests with Vitest + React Testing Library
+- **E2E**: Playwright for critical flows
+- **Coverage**: 80% minimum
+
+## Build & Deploy
+
+```bash
+# Development
+pnpm dev
+
+# Build
+pnpm build
+
+# Preview
+pnpm preview
+```
+
+**Deploy**: Docker container to Kubernetes
+
+## Resume Print & Preview
+
+### Print Margins (Updated 2025-01-19)
+**Problem**: Content was being clipped at page edges due to insufficient margins.
+
+**Solution**: Updated print margins from 1.2-1.5cm to **2cm** on all sides (top, bottom, left, right).
+
+**Files Modified**:
+- `apps/web-main/src/print.css` - Set `@page { size: A4; margin: 0; }`
+- `apps/web-main/src/styles/resume-print.css` - Increased padding to 2cm
+
+**Page Boundaries**:
+- A4: Content area is 25.7cm (29.7cm - 4cm padding)
+- Letter: Content area is 23.94cm (27.94cm - 4cm padding)
+- Visual page boundaries shown with gray separator lines in paginated view
+
+### ResumePreviewContainer Component (Added 2025-01-19)
+**Purpose**: Shared wrapper component for all resume preview displays.
+
+**Location**: `apps/web-main/src/components/resume/ResumePreviewContainer.tsx`
+
+**Features**:
+- Customizable scale factor (for live preview)
+- Optional maxHeight with overflow scrolling
+- Responsive padding (mobile vs desktop)
+- Horizontal scroll support (for mobile)
+- Full dark mode support
+- Flexible className overrides
+
+**Usage Examples**:
+
+```typescript
+// Live Preview (75% scale)
+<ResumePreviewContainer
+  resume={previewData}
+  scale={0.75}
+  maxHeight="calc(100vh - 200px)"
+  containerClassName="border-2 border-gray-300"
+/>
+
+// Full Preview (responsive)
+<ResumePreviewContainer
+  resume={resume}
+  paperSize={paperSize}
+  responsivePadding={true}
+  enableHorizontalScroll={true}
+/>
+
+// Simple Preview
+<ResumePreviewContainer resume={resume} />
+```
+
+**Used In**:
+- `ResumeEditPage` - Live preview with 0.75 scale
+- `ResumePreviewPage` - Full preview with responsive padding
+- `SharedResumePage` - Public shared resume view
+- `PublicResumePage` - Public profile resume view
+
+**Benefits**:
+- Eliminates code duplication across 4 pages
+- Ensures consistent preview styling
+- Single source of truth for preview wrapper logic
+- Easier maintenance and updates
+
+## Mobile Preview Scale Thresholds
+
+### Problem
+Resume preview uses CSS transform scale to fit the A4/Letter paper (794px/816px) into the viewport. On mobile devices, this causes excessive shrinking (e.g., 375px viewport → 43% scale), making text unreadable.
+
+### Solution
+Enforce minimum scale thresholds per device type and enable horizontal scroll for readability:
+
+```typescript
+// Constants (defined outside component)
+const MIN_SCALE_MOBILE = 1.0; // 100% for mobile - no scaling, use scroll
+const MIN_SCALE_TABLET = 0.9; // Minimum 90% for tablet
+const MOBILE_BREAKPOINT = 640; // Tailwind sm
+const TABLET_BREAKPOINT = 1024; // Tailwind lg
+
+// In scale calculation
+let newScale = Math.min(1, availableWidth / paperWidthPx);
+
+if (viewportWidth < MOBILE_BREAKPOINT) {
+  newScale = Math.max(MIN_SCALE_MOBILE, newScale);
+} else if (viewportWidth < TABLET_BREAKPOINT) {
+  newScale = Math.max(MIN_SCALE_TABLET, newScale);
+}
+```
+
+### Container Setup
+Enable horizontal scroll on mobile to accommodate the larger minimum scale:
+
+```tsx
+// Page container
+<div className="overflow-x-auto">
+  <ResumePreviewContainer resume={resume} enableHorizontalScroll={true} />
+</div>
+```
+
+### Scale Values by Device
+| Device | Viewport | Natural Scale | Enforced Scale |
+|--------|----------|---------------|----------------|
+| Mobile | 375px | 43% | **100%** (no scaling, horizontal scroll) |
+| Tablet | 768px | 93% | **93%** (natural, min 90%) |
+| Desktop | 1024px+ | 100% | 100% |
+
+## Mobile Edit Patterns (Resume)
+
+### TouchSensor for Drag-and-Drop
+
+Mobile drag-and-drop requires TouchSensor with activation constraints:
+
+```typescript
+import { TouchSensor, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+
+const sensors = useSensors(
+  useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+);
+```
+
+**Key Settings**:
+- `distance: 8` - Prevents accidental drag on pointer devices
+- `delay: 200` - 200ms hold before drag starts on touch
+- `tolerance: 5` - 5px movement allowed during delay
+
+### Depth Colors for Hierarchical Data
+
+Use color-coded borders for nested items (achievements, descriptions):
+
+```typescript
+const DEPTH_COLORS = {
+  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
+  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
+  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
+  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+} as const;
+
+// Usage
+const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
+<div className={`${depthColor.bg} border-l-4 ${depthColor.border}`}>
+```
+
+### Collapsible Cards on Mobile
+
+Cards should be collapsible on mobile with summary when collapsed:
+
+```typescript
+const [isExpanded, setIsExpanded] = useState(true);
+
+// Header - clickable on mobile
+<button onClick={() => setIsExpanded(!isExpanded)} className="sm:cursor-default">
+  <h3>{title}</h3>
+  {/* Summary shown when collapsed on mobile */}
+  {!isExpanded && <p className="sm:hidden">{summary}</p>}
+  {/* Chevron icon - mobile only */}
+  <ChevronIcon className={`sm:hidden ${isExpanded ? 'rotate-180' : ''}`} />
+</button>
+
+// Content - collapsible on mobile, always visible on desktop
+<div className={`${isExpanded ? 'block' : 'hidden'} sm:block`}>
+  {/* Card content */}
+</div>
+```
+
+### Inline Action Buttons on Mobile
+
+Use compact 24x24px icon buttons on mobile:
+
+```jsx
+{/* Desktop: text buttons */}
+<div className="hidden sm:flex gap-2">
+  <button className="px-2 py-1 text-xs">+ Add</button>
+  <button className="px-2 py-1 text-xs">Remove</button>
+</div>
+
+{/* Mobile: icon buttons */}
+<div className="sm:hidden flex gap-0.5">
+  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">+</button>
+  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">✕</button>
+</div>
+```
+
+### Fixed Bottom Navigation Bar
+
+For mobile preview toggle and navigation:
+
+```jsx
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-bg-card
+                border-t border-gray-200 p-3 lg:hidden safe-area-bottom">
+  <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+    <SecondaryButton className="flex-1 py-3">← Back</SecondaryButton>
+    <PrimaryButton className="flex-1 py-3">👁️ Preview</PrimaryButton>
+  </div>
+</div>
+```
+
+## References
+
+- **Design System**: `/docs/DESIGN_SYSTEM.md`
+- **Resume Policy**: `/docs/policies/RESUME.md`
+- **API Docs**: Personal Service API

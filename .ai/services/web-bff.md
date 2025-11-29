@@ -8,7 +8,7 @@ Aggregates and transforms backend service data specifically for web applications
 
 ## Tech Stack
 
-- **Framework**: NestJS 10 + TypeScript
+- **Framework**: NestJS 11 + TypeScript 5.7
 - **Protocols**: REST + GraphQL (both available)
 - **Cache**: Redis for aggregated data
 

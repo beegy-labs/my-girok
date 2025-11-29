@@ -387,6 +387,85 @@ it('should match snapshot', () => {
 - [ ] Keep tests focused and independent
 - [ ] Clean up resources in afterEach/afterAll
 
+## Mobile Browser Testing
+
+### Cross-Browser Testing Requirements
+
+**All public-facing features MUST be tested on mobile browsers.**
+
+#### Required Test Browsers
+- ✅ iOS Safari (latest 2 versions) - Primary concern due to stricter security
+- ✅ Android Chrome (latest 2 versions)
+- ✅ Desktop Chrome, Firefox, Safari
+
+#### Mobile-Specific Test Cases
+
+```typescript
+// E2E test example for mobile browsers (Playwright)
+describe('Shared Resume Link (Mobile)', () => {
+  it('should load shared resume on mobile Safari', async () => {
+    // Create share link
+    const shareLink = await createShareLink(resumeId);
+
+    // Test on mobile user-agent
+    await page.setUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'
+    );
+    await page.goto(shareLink.url);
+
+    // Verify resume loads without auth
+    await expect(page.locator('.resume-preview')).toBeVisible();
+    expect(await page.url()).not.toContain('/login');
+  });
+
+  it('should not send auth headers for public endpoints', async () => {
+    const requests = [];
+    page.on('request', req => requests.push(req));
+
+    await page.goto('/shared/token123');
+
+    const publicApiRequest = requests.find(r =>
+      r.url().includes('/share/public/')
+    );
+
+    expect(publicApiRequest.headers().authorization).toBeUndefined();
+  });
+});
+```
+
+### Playwright Mobile Configuration
+
+```typescript
+// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  projects: [
+    {
+      name: 'Desktop Chrome',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 7'] },
+    },
+  ],
+});
+```
+
+### Manual Testing Checklist for Mobile
+
+- [ ] Test on real iOS device (Safari)
+- [ ] Test on real Android device (Chrome)
+- [ ] Verify public links work without authentication
+- [ ] Check that error pages don't redirect to login
+- [ ] Test in both portrait and landscape orientations
+- [ ] Verify touch interactions work properly
+
 ## Common Testing Patterns
 
 ### Testing Guards
@@ -436,6 +515,69 @@ describe('TransformInterceptor', () => {
 });
 ```
 
+### Testing Public Endpoints
+
+**Public endpoints must work without authentication.**
+
+```typescript
+describe('Public Endpoints', () => {
+  it('should work without authentication', async () => {
+    // ✅ No auth headers
+    const response = await request(app.getHttpServer())
+      .get('/v1/share/public/token123')
+      .expect(200);
+
+    expect(response.body).toHaveProperty('resume');
+  });
+
+  it('should return 404 for invalid token (not 401)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/share/public/invalid-token')
+      .expect(404);
+
+    // Should return error, not redirect to login or return 401
+    expect(response.body.message).toContain('not found');
+    expect(response.status).not.toBe(401);
+  });
+
+  it('should not require Authorization header', async () => {
+    // Public endpoint should work without auth
+    await request(app.getHttpServer())
+      .get('/v1/share/public/token123')
+      .set('Authorization', '') // Explicitly no auth
+      .expect(200);
+  });
+});
+
+// Frontend: Testing axios interceptor for public endpoints
+describe('API Interceptor - Public Endpoints', () => {
+  it('should skip auth for public endpoints', async () => {
+    const mockConfig = {
+      url: '/v1/share/public/token123',
+      headers: {},
+    };
+
+    const result = await requestInterceptor(mockConfig);
+
+    // Should not have Authorization header
+    expect(result.headers.Authorization).toBeUndefined();
+  });
+
+  it('should not retry 401 for public endpoints', async () => {
+    const mockError = {
+      response: { status: 401 },
+      config: { url: '/v1/share/public/token123' },
+    };
+
+    await expect(responseInterceptor(mockError)).rejects.toThrow();
+
+    // Should not trigger token refresh or login redirect
+    expect(mockAuthService.refreshToken).not.toHaveBeenCalled();
+    expect(mockRouter.navigate).not.toHaveBeenCalledWith('/login');
+  });
+});
+```
+
 ### Testing with Transactions
 
 ```typescript
@@ -454,7 +596,117 @@ describe('PostsService @Transactional', () => {
 });
 ```
 
-## Performance Testing
+## Test Execution Performance
+
+### Parallel Test Execution
+
+**All unit tests SHOULD run in parallel for faster feedback.**
+
+#### Configuration
+
+```javascript
+// jest.config.js
+module.exports = {
+  // Enable parallel execution
+  maxWorkers: '50%', // Use 50% of CPU cores (safe default)
+  // maxWorkers: 4,   // Or specify exact number
+
+  // Performance optimizations
+  cache: true,
+  cacheDirectory: '<rootDir>/../.jest-cache',
+  bail: false, // Continue even if some tests fail
+
+  // Timeout configuration
+  testTimeout: 10000, // 10 seconds per test
+};
+```
+
+#### When Parallel Tests Are Safe
+
+✅ **Safe for parallel execution:**
+- Unit tests with mocked dependencies
+- Tests with isolated state (`beforeEach` setup)
+- Tests without shared resources
+- Tests without file system dependencies
+- Tests without real database connections
+
+❌ **NOT safe for parallel execution:**
+- Integration tests with shared database
+- Tests that modify global state
+- Tests with file system race conditions
+- Tests with shared network resources
+
+#### Best Practices
+
+1. **Isolate Test State**
+```typescript
+describe('Service', () => {
+  let service: Service;
+  let mockRepo: MockRepository;
+
+  // ✅ GOOD: Fresh instance per test
+  beforeEach(() => {
+    mockRepo = createMockRepository();
+    service = new Service(mockRepo);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+});
+```
+
+2. **Avoid Shared State**
+```typescript
+// ❌ BAD: Shared state across tests
+let sharedCounter = 0;
+
+it('test 1', () => {
+  sharedCounter++;
+  expect(sharedCounter).toBe(1); // Flaky in parallel
+});
+
+// ✅ GOOD: Isolated state
+it('test 1', () => {
+  const counter = 0;
+  const result = increment(counter);
+  expect(result).toBe(1);
+});
+```
+
+3. **Mock External Dependencies**
+```typescript
+// ✅ All external calls mocked
+const mockPrismaService = {
+  user: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+  },
+};
+
+const mockHttpService = {
+  get: jest.fn(() => of({ data: {} })),
+};
+```
+
+#### Performance Metrics
+
+**Target times (with parallel execution):**
+- Unit tests: < 15 seconds for entire suite
+- Individual test: < 1 second
+- Integration tests: < 30 seconds per file
+
+**Example parallel speedup:**
+```bash
+# Sequential execution
+pnpm test --runInBand
+# Time: 25-30 seconds
+
+# Parallel execution (50% workers)
+pnpm test
+# Time: 15-18 seconds
+# Speedup: ~40-50%
+```
 
 ### Load Testing
 

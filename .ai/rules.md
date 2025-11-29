@@ -14,6 +14,12 @@
 
 ### NEVER
 - ❌ Duplicate types → Use `packages/types`
+- ❌ Duplicate NestJS utilities → Use `@my-girok/nest-common`
+- ❌ Duplicate UI components → Use `@my-girok/ui-components`
+- ❌ Implement inline forms without validation → Use shared components
+- ❌ Implement drag-and-drop from scratch → Use `SortableList`
+- ❌ Duplicate async/loading patterns → Use `useAsyncOperation`
+- ❌ Return inconsistent error formats → Use `HttpExceptionFilter`
 - ❌ Prisma in Controllers → Use Services
 - ❌ Hardcode secrets → Use ConfigService
 - ❌ Make sync service-to-service calls → Use HTTP
@@ -25,9 +31,17 @@
 - ❌ Commit secrets to git
 - ❌ Log sensitive data (passwords, tokens)
 - ❌ Store plain text K8s Secrets in Git
+- ❌ **Inline functions in map()** → Use useCallback
+- ❌ **Objects/arrays inside render** → Use useMemo
+- ❌ **State for navigation** → Call navigate() directly
+- ❌ **Functions in useEffect deps** → Memoize parent
 
 ### ALWAYS
 - ✅ Define types first in `packages/types`
+- ✅ Use `@my-girok/nest-common` for backend services (decorators, guards, filters)
+- ✅ Use `@my-girok/ui-components` for frontend UI (TextInput, Button, Alert, etc.)
+- ✅ Use standard error format (`ApiErrorResponse` / `ApiSuccessResponse`)
+- ✅ Use `configureApp()` factory for NestJS bootstrapping
 - ✅ Use DTO validation (class-validator)
 - ✅ Apply `@Transactional()` for multi-step DB ops
 - ✅ Use Guards for protected endpoints
@@ -38,6 +52,10 @@
 - ✅ Follow git commit conventions
 - ✅ Create PRs for code review
 - ✅ Use Sealed Secrets for K8s
+- ✅ **Memoize handlers** with useCallback
+- ✅ **Memoize constants** with useMemo
+- ✅ **Use React.memo** for list items
+- ✅ **Target <16ms** render time
 
 ## Transaction Pattern
 
@@ -102,12 +120,37 @@ const posts = await prisma.post.findMany({
 - Validate file uploads (type, size)
 - Sanitize HTML (DOMPurify)
 
+**CORS for Mobile Browsers:**
+```typescript
+// ✅ REQUIRED: iOS Safari compatibility
+app.enableCors({
+  origin: [...],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 3600, // CRITICAL: Cache preflight for 1 hour
+  optionsSuccessStatus: 204,
+});
+```
+- iOS Safari requires explicit headers (no wildcards)
+- `maxAge` prevents duplicate OPTIONS requests
+- Without `maxAge`, Safari sends OPTIONS on every request (50% overhead)
+
 ## Testing
 
 **Coverage Requirements:**
 - Unit tests: 80% minimum
 - Integration tests: All critical flows
 - E2E tests: Main user journeys
+
+**Mobile Browser Testing:**
+- ✅ Test authenticated endpoints on iOS Safari (real device)
+- ✅ Test authenticated endpoints on Android Chrome (real device)
+- ✅ Verify CORS preflight caching with Network Inspector
+- ✅ Test in Private Browsing mode (iOS Safari)
+- ✅ Check for QuotaExceededError in console
+- Use Safari Web Inspector or Chrome Remote Debugging
 
 ## Git Commit Format
 
@@ -161,30 +204,121 @@ Never remove, applies to all environments.
 - Complex queries: < 500ms
 - Mutations: < 300ms
 
-**Always:**
+**Backend:**
 - Index foreign keys
 - Use cursor pagination for large datasets
 - Cache frequently accessed data (Redis)
 - Use SELECT only needed fields
 
+**Frontend (React):**
+```typescript
+// ❌ DON'T: Inline in map
+{items.map(item => <button onClick={() => handle(item.id)}>X</button>)}
+
+// ✅ DO: Memoize
+const handleClick = useCallback((id) => handle(id), []);
+{items.map(item => <button onClick={() => handleClick(item.id)}>X</button>)}
+
+// ❌ DON'T: State for nav
+const [nav, setNav] = useState(null);
+useEffect(() => { if(nav) navigate(nav) }, [nav]);
+
+// ✅ DO: Direct call
+navigate('/path'); // Works in React Router v7
+```
+
+## Common Packages
+
+### Backend: @my-girok/nest-common
+
+**Use for all NestJS services:**
+```typescript
+// Bootstrap with standard configuration
+import { configureApp } from '@my-girok/nest-common';
+
+const app = await NestFactory.create(AppModule);
+await configureApp(app, {
+  serviceName: 'My Service',
+  description: 'Service description',
+  defaultPort: 4000,
+});
+```
+
+**Available utilities:**
+- `@Public()` - Mark endpoints as public (skip JWT auth)
+- `@CurrentUser()` - Extract user from request
+- `JwtAuthGuard` - JWT authentication with @Public() support
+- `JwtStrategy` - Passport JWT strategy (use for non-auth services)
+- `HttpExceptionFilter` - Standard error format
+- `configureApp()` - Bootstrap factory (reduces main.ts from ~100 to ~20 lines)
+- `HealthModule` - Health check with K8s graceful shutdown support
+- `GracefulShutdownService` - Manual shutdown control
+- `BasePrismaService` - Prisma service with lifecycle hooks
+- `ApiErrorResponse` / `ApiSuccessResponse` - Standard response types
+
+**Health Endpoints (HealthModule):**
+- `GET /health` - General health check
+- `GET /health/live` - K8s liveness probe
+- `GET /health/ready` - K8s readiness probe (503 during shutdown)
+
+### Frontend: @my-girok/ui-components
+
+**Use for all React applications:**
+```typescript
+import {
+  TextInput,
+  SelectInput,
+  Button,
+  Alert,
+  SortableList,
+  SortableItem,
+  useAsyncOperation,
+} from '@my-girok/ui-components';
+```
+
+**Form components:**
+- `TextInput` - Text/email/password with validation
+- `SelectInput` - Dropdown with options
+- `Button` - Multi-variant (primary/secondary/danger/ghost) with loading
+- `Alert` - Notifications (success/error/warning/info)
+
+**Drag & Drop:**
+- `SortableList` - Sortable container (@dnd-kit wrapper)
+- `SortableItem` - Sortable item with drag handle support
+
+**Hooks:**
+- `useAsyncOperation` - Async operations with loading/error states
+
 ## Common Patterns
 
-**New Feature Workflow:**
-1. Define types in `packages/types`
-2. Update Prisma schema → migrate
-3. Create Repository (extends BaseRepository)
-4. Create Service (use `@Transactional()`)
-5. Create Controller (add validation)
-6. Frontend API call with shared types
-7. Write tests (80% coverage)
-8. Create PR
+**New Backend Service:**
+1. Add `@my-girok/nest-common` to package.json dependencies
+2. Use `configureApp()` in main.ts for bootstrap
+3. Import `HealthModule` in AppModule for K8s health checks
+4. Use `JwtAuthGuard` as global APP_GUARD
+5. Use `HttpExceptionFilter` as global APP_FILTER
+6. Define types in `packages/types`
+7. Update Prisma schema → migrate
+8. Create Service (use `@Transactional()`)
+9. Create Controller (use `@Public()`, `@CurrentUser()`)
+10. Write tests (80% coverage)
+11. Update Dockerfile to include nest-common package
+12. Create PR
+
+**New Frontend Feature:**
+1. Use `@my-girok/ui-components` for UI
+2. Use shared types from `packages/types`
+3. Use `useAsyncOperation` for API calls
+4. Use `SortableList` for drag-and-drop
+5. Write tests (80% coverage)
+6. Create PR
 
 ## Stack Reference
 
-- **Web**: Next.js 15, React 19, TypeScript, Tailwind
-- **Mobile**: iOS (Swift), Android (Kotlin)
-- **Backend**: Node.js 20, NestJS 10
-- **Database**: PostgreSQL 16 + Prisma 5 + Redis
+- **Web**: React 19.2 + Vite 7.2, Next.js 15, TypeScript 5.7, Tailwind 4.1
+- **Mobile**: Flutter 3.24+ (Dart 3.5+) - iOS & Android
+- **Backend**: Node.js 22, NestJS 11
+- **Database**: PostgreSQL 16 + Prisma 6 + Redis
 - **AI**: Python 3.11, FastAPI
 - **Tools**: pnpm, Turborepo
 - **Deploy**: Kubernetes, Kustomize, Sealed Secrets
