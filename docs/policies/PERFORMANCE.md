@@ -296,6 +296,134 @@ const cacheKey = `post:${id}:v${post.updatedAt.getTime()}`;
 
 ## Frontend Optimization
 
+### React Rendering Optimization
+
+**CRITICAL**: Always optimize component re-renders to maintain 60fps performance.
+
+#### useCallback for Event Handlers
+
+```typescript
+// ❌ DON'T: Inline functions in list items
+resumes.map((resume) => (
+  <button onClick={() => navigate(`/resume/edit/${resume.id}`)}>Edit</button>
+));
+
+// ✅ DO: Memoize handlers
+const navigateToEdit = useCallback((id: string) => {
+  navigate(`/resume/edit/${id}`);
+}, [navigate]);
+
+resumes.map((resume) => (
+  <button onClick={() => navigateToEdit(resume.id)}>Edit</button>
+));
+```
+
+**Rules**:
+- Memoize ALL event handlers passed to child components
+- Memoize handlers used in map() or repetitive renders
+- Include only stable dependencies (navigate, t, etc.)
+- Use arrow function in onClick when calling with parameters
+
+#### useMemo for Expensive Calculations
+
+```typescript
+// ❌ DON'T: Recreate arrays/objects on every render
+const defaultSections = [
+  { id: '1', type: 'SKILLS', order: 1, visible: true },
+  { id: '2', type: 'EXPERIENCE', order: 2, visible: true },
+  // ...
+];
+
+// ✅ DO: Memoize constant values
+const defaultSections = useMemo(() => [
+  { id: '1', type: 'SKILLS', order: 1, visible: true },
+  { id: '2', type: 'EXPERIENCE', order: 2, visible: true },
+  // ...
+], []);
+```
+
+#### React.memo for Component Optimization
+
+```typescript
+// ❌ DON'T: Re-render all cards when parent updates
+function ResumeCard({ resume, onEdit, onDelete }) {
+  return <div>...</div>;
+}
+
+// ✅ DO: Memoize repeated components
+const ResumeCard = React.memo(({ resume, onEdit, onDelete }) => {
+  return <div>...</div>;
+});
+```
+
+**When to use React.memo**:
+- Components rendered in lists (map)
+- Components with expensive render logic
+- Components that rarely change
+- Leaf components with primitive props
+
+#### Preventing useEffect Infinite Loops
+
+```typescript
+// ❌ DON'T: Include functions in dependencies
+const handleChange = (data) => { /* ... */ };
+
+useEffect(() => {
+  if (onChange) onChange(formData);
+}, [formData, onChange]); // onChange changes every render!
+
+// ✅ DO: Parent memoizes onChange, exclude from deps
+const handleChange = useCallback((data) => { /* ... */ }, []);
+
+useEffect(() => {
+  if (onChange) onChange(formData);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [formData]); // Only depend on data
+```
+
+#### Navigation Pattern (React Router v7)
+
+```typescript
+// ❌ DON'T: State-based navigation (anti-pattern)
+const [navigateTo, setNavigateTo] = useState<string | null>(null);
+
+useEffect(() => {
+  if (navigateTo) navigate(navigateTo);
+}, [navigateTo]);
+
+const handleSubmit = () => {
+  setNavigateTo('/resume/preview');
+};
+
+// ✅ DO: Direct navigation
+const handleSubmit = async () => {
+  await saveData();
+  navigate('/resume/preview'); // Direct call
+};
+```
+
+**React Router v7** fully supports direct navigate() calls in event handlers and async functions.
+
+#### Performance Checklist
+
+**Before Every PR**:
+- [ ] All event handlers in lists use useCallback
+- [ ] Constant objects/arrays use useMemo
+- [ ] Repeated components use React.memo
+- [ ] No inline functions in map() iterations
+- [ ] useEffect dependencies minimized
+- [ ] No potential infinite loops
+- [ ] Parent components pass stable callbacks
+
+**Measuring Performance**:
+```typescript
+// Use React DevTools Profiler
+// 1. Record interaction
+// 2. Check "Ranked" view
+// 3. Identify components with long render times
+// 4. Optimize components with >16ms renders
+```
+
 ### Next.js Optimization
 
 ```typescript
@@ -475,46 +603,117 @@ Monitor and alert on:
 - **Database connection pool exhausted**
 - **Redis connection failures**
 
-## Mobile Performance
+## Mobile Performance (Flutter)
 
-### iOS Optimization
+### Image Optimization
 
-```swift
-// Lazy loading images
-import SDWebImage
+```dart
+// Lazy loading images with caching
+import 'package:cached_network_image/cached_network_image.dart';
 
-imageView.sd_setImage(
-    with: URL(string: post.coverImage),
-    placeholderImage: UIImage(named: "placeholder"),
-    options: [.progressiveLoad, .scaleDownLargeImages]
+CachedNetworkImage(
+  imageUrl: post.coverImage,
+  placeholder: (context, url) => CircularProgressIndicator(),
+  errorWidget: (context, url, error) => Icon(Icons.error),
+  fadeInDuration: Duration(milliseconds: 200),
+  memCacheWidth: 800, // Scale down large images
+  maxHeightDiskCache: 1200,
 )
-
-// Background data sync
-func scheduleBackgroundRefresh() {
-    let request = BGAppRefreshTaskRequest(identifier: "dev.mygirok.refresh")
-    request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 min
-    try? BGTaskScheduler.shared.submit(request)
-}
 ```
 
-### Android Optimization
+### Pagination & List Performance
 
-```kotlin
-// Pagination with Paging 3
-val postsFlow = Pager(
-    config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-    pagingSourceFactory = { PostsPagingSource(apiService) }
-).flow.cachedIn(viewModelScope)
-
-// Image loading with Coil
-AsyncImage(
-    model = ImageRequest.Builder(context)
-        .data(post.coverImage)
-        .crossfade(true)
-        .diskCachePolicy(CachePolicy.ENABLED)
-        .build(),
-    contentDescription = post.title
+```dart
+// Infinite scroll with ListView.builder
+ListView.builder(
+  itemCount: posts.length,
+  itemBuilder: (context, index) {
+    if (index >= posts.length - 5) {
+      // Prefetch next page when near end
+      ref.read(postsProvider.notifier).loadNextPage();
+    }
+    return PostCard(post: posts[index]);
+  },
 )
+
+// Or use flutter_pagination package
+```
+
+### Background Sync
+
+```dart
+// Platform-specific background tasks
+// iOS: Use workmanager package with BGTaskScheduler
+// Android: Use workmanager package with WorkManager
+
+import 'package:workmanager/workmanager.dart';
+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    // Sync data in background
+    await syncUserData();
+    return Future.value(true);
+  });
+}
+
+// Schedule periodic sync
+Workmanager().registerPeriodicTask(
+  "1",
+  "syncUserData",
+  frequency: Duration(hours: 1),
+  constraints: Constraints(
+    networkType: NetworkType.connected,
+  ),
+)
+```
+
+### Build Optimization
+
+```dart
+// Use const widgets where possible
+const Text('Static text'); // const constructor
+
+// Avoid expensive rebuilds
+class MyWidget extends StatelessWidget {
+  final String data;
+
+  const MyWidget({super.key, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(data); // Rebuild only when data changes
+  }
+}
+
+// Use RepaintBoundary for complex widgets
+RepaintBoundary(
+  child: ExpensiveWidget(),
+)
+```
+
+### Platform-Specific Optimizations
+
+```dart
+import 'dart:io' show Platform;
+
+// Conditional code for platform-specific features
+if (Platform.isIOS) {
+  // iOS-specific code (e.g., Haptic feedback)
+  HapticFeedback.mediumImpact();
+} else if (Platform.isAndroid) {
+  // Android-specific code
+}
+
+// Platform channels for native performance
+static const platform = MethodChannel('dev.mygirok/native');
+
+Future<void> callNativeMethod() async {
+  try {
+    await platform.invokeMethod('performHeavyTask');
+  } on PlatformException catch (e) {
+    print("Failed: '${e.message}'.");
+  }
+}
 ```
 
 ## Performance Checklist

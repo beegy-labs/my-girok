@@ -14,9 +14,10 @@
 - **Steps**: Test → Build → Push to Harbor
 
 ### Web Test CI
-- **File**: `.github/workflows/ci-web-test.yml`
-- **Triggers**: Push to develop, release/*, main (when web-test changes)
-- **Steps**: Test → Build (with API URL) → Push to Harbor
+- **File**: `.github/workflows/ci-web-main.yml`
+- **Triggers**: Push to develop, release/*, main (when web-main changes)
+- **Steps**: Parallel (Lint + Type-check + Test) → Build (with API URL) → Push to Harbor
+- **Optimization**: 3 parallel jobs with node_modules caching (~3-5min total)
 
 ## Image Tagging Strategy
 
@@ -39,11 +40,11 @@ harbor.girok.dev/my-girok/auth-service:latest
 
 **Web Test:**
 ```
-harbor.girok.dev/my-girok/web-test:develop:a1b2c3d
-harbor.girok.dev/my-girok/web-test:develop:latest
-harbor.girok.dev/my-girok/web-test:release:a1b2c3d
-harbor.girok.dev/my-girok/web-test:release:latest
-harbor.girok.dev/my-girok/web-test:latest
+harbor.girok.dev/my-girok/web-main:develop:a1b2c3d
+harbor.girok.dev/my-girok/web-main:develop:latest
+harbor.girok.dev/my-girok/web-main:release:a1b2c3d
+harbor.girok.dev/my-girok/web-main:release:latest
+harbor.girok.dev/my-girok/web-main:latest
 ```
 
 ## Required GitHub Secrets
@@ -62,7 +63,7 @@ Build-time environment variable injection:
 - **release/***: `https://auth-api-staging.girok.dev/api/v1`
 - **main**: `https://auth-api.girok.dev/api/v1`
 
-**Update in**: `.github/workflows/ci-web-test.yml`
+**Update in**: `.github/workflows/ci-web-main.yml`
 
 ## Workflow Trigger Paths
 
@@ -72,9 +73,9 @@ Build-time environment variable injection:
 - `.github/workflows/ci-auth-service.yml`
 
 **Web Test** triggers on changes to:
-- `apps/web-test/**`
+- `apps/web-main/**`
 - `packages/types/**`
-- `.github/workflows/ci-web-test.yml`
+- `.github/workflows/ci-web-main.yml`
 
 ## ArgoCD Integration
 
@@ -106,10 +107,53 @@ docker build \
 # Web Test
 docker build \
   --build-arg VITE_API_URL=https://auth-api-dev.girok.dev/api/v1 \
-  -t test/web-test:local \
-  -f apps/web-test/Dockerfile \
+  -t test/web-main:local \
+  -f apps/web-main/Dockerfile \
   .
 ```
+
+## Performance Optimization
+
+### Web-Main CI Optimization (2025-11-19)
+
+**Before**: ~10 minutes (sequential jobs)
+**After**: ~3-5 minutes (parallel jobs with caching)
+
+**Strategy**:
+1. **Parallel Job Execution**: Split single test job into 3 parallel jobs:
+   - `lint`: ESLint checks
+   - `type-check`: TypeScript compilation
+   - `test`: Vitest unit tests
+   - `build`: Depends on all 3 jobs, runs only if all pass
+
+2. **Node Modules Caching**: Cache `node_modules` across jobs
+   ```yaml
+   - name: Setup node_modules cache
+     uses: actions/cache@v4
+     with:
+       path: |
+         node_modules
+         apps/web-main/node_modules
+       key: ${{ runner.os }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+   ```
+
+3. **Fast Installation**: Use `--prefer-offline` flag
+   ```yaml
+   - name: Install dependencies
+     run: pnpm install --frozen-lockfile --prefer-offline
+   ```
+
+**Results**:
+- **2-3x faster** CI pipeline
+- Better failure detection (fail fast on specific check)
+- Efficient resource usage (parallel execution)
+
+### General CI Best Practices
+
+1. **Use caching**: Cache dependencies (node_modules, cargo, go modules)
+2. **Parallelize**: Run independent checks in parallel
+3. **Fail fast**: Use `needs` to stop downstream jobs on failure
+4. **Cache keys**: Use lock file hashes for cache keys
 
 ## Troubleshooting
 

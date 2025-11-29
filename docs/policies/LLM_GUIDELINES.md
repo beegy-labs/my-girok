@@ -61,11 +61,11 @@ kubectl apply -k k8s/overlays/production
 
 ## Stack
 
-**Web:** Next.js 15, React 19, TypeScript, Tailwind CSS
-**Mobile:** iOS (Swift/SwiftUI), Android (Kotlin Multiplatform)
-**Backend:** Node.js 20, NestJS 10 (API Gateway Pattern)
-**Database:** PostgreSQL 16 + Prisma 5 + Redis
-**AI:** Python 3.11, FastAPI
+**Web:** React 19.2 + Vite 7.2, Next.js 15, TypeScript 5.7, Tailwind CSS 3.4
+**Mobile:** Flutter 3.24+ (Dart 3.5+) - iOS & Android
+**Backend:** Node.js 22, NestJS 11 (API Gateway Pattern)
+**Database:** PostgreSQL 16 + Prisma 6 + Redis
+**AI:** Python 3.13, FastAPI
 **Tools:** pnpm, Turborepo
 
 ## Architecture Overview
@@ -406,69 +406,109 @@ const apiClient = {
 };
 ```
 
-### Mobile Development
+### Mobile Development (Flutter)
 
-#### iOS (Swift + SwiftUI)
+```dart
+// apps/mobile-flutter/lib/core/api/api_client.dart
+import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-```swift
-// apps/mobile/ios/MyGirok/Services/APIService.swift
-class APIService {
-    static let shared = APIService()
-    private let baseURL = "https://api.mygirok.dev"
+class ApiClient {
+  static const String baseUrl = 'https://mobile-bff.mygirok.dev/api';
 
-    func request<T: Decodable>(
-        _ endpoint: String,
-        method: HTTPMethod = .get,
-        body: Encodable? = nil
-    ) async throws -> T {
-        var request = URLRequest(url: URL(string: baseURL + endpoint)!)
-        request.httpMethod = method.rawValue
+  late final Dio _dio;
+  final FlutterSecureStorage _storage;
 
-        // Add JWT token from Keychain
-        if let token = KeychainService.shared.getAccessToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
+  ApiClient(this._storage) {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: baseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+    // Add JWT token to all requests
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await _storage.read(key: 'access_token');
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+        onError: (error, handler) async {
+          // Handle 401 - refresh token
+          if (error.response?.statusCode == 401) {
+            if (await _refreshToken()) {
+              // Retry the original request
+              final opts = error.requestOptions;
+              final token = await _storage.read(key: 'access_token');
+              opts.headers['Authorization'] = 'Bearer $token';
 
-        // Handle 401 - refresh token
-        if (response as? HTTPURLResponse)?.statusCode == 401 {
-            try await refreshToken()
-            return try await request(endpoint, method: method, body: body)
-        }
+              try {
+                final response = await _dio.fetch(opts);
+                return handler.resolve(response);
+              } catch (e) {
+                return handler.next(error);
+              }
+            }
+          }
+          return handler.next(error);
+        },
+      ),
+    );
+  }
 
-        return try JSONDecoder().decode(T.self, from: data)
+  Future<bool> _refreshToken() async {
+    try {
+      final refreshToken = await _storage.read(key: 'refresh_token');
+      if (refreshToken == null) return false;
+
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refreshToken': refreshToken},
+      );
+
+      final accessToken = response.data['accessToken'];
+      await _storage.write(key: 'access_token', value: accessToken);
+
+      if (response.data['refreshToken'] != null) {
+        await _storage.write(
+          key: 'refresh_token',
+          value: response.data['refreshToken'],
+        );
+      }
+
+      return true;
+    } catch (e) {
+      return false;
     }
+  }
+
+  Dio get dio => _dio;
 }
 ```
 
-#### Android (Kotlin Multiplatform)
+**Secure Storage (Cross-Platform):**
+```dart
+// Handles platform-specific secure storage automatically
+// - iOS: Keychain
+// - Android: EncryptedSharedPreferences
 
-```kotlin
-// apps/mobile/android/shared/src/commonMain/kotlin/ApiClient.kt
-class ApiClient {
-    private val baseUrl = "https://api.mygirok.dev"
-    private val client = HttpClient {
-        install(ContentNegotiation) {
-            json()
-        }
-        install(Auth) {
-            bearer {
-                loadTokens {
-                    // Load from EncryptedSharedPreferences
-                    BearerTokens(accessToken, refreshToken)
-                }
-                refreshTokens {
-                    // Refresh logic
-                }
-            }
-        }
-    }
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-    suspend inline fun <reified T> get(endpoint: String): T {
-        return client.get("$baseUrl$endpoint").body()
-    }
-}
+final storage = FlutterSecureStorage();
+
+// Save token
+await storage.write(key: 'access_token', value: token);
+
+// Read token
+final token = await storage.read(key: 'access_token');
+
+// Delete token
+await storage.delete(key: 'access_token');
 ```
 
 ## Quick Start
@@ -692,6 +732,10 @@ main:
 10. Commit secrets to git (use Sealed Secrets for Kubernetes)
 11. Log sensitive data (passwords, tokens)
 12. Store plain text Kubernetes Secrets in Git
+13. Use inline functions in map() iterations → Use useCallback
+14. Create objects/arrays inside render → Use useMemo
+15. Use state for navigation → Call navigate() directly (React Router v7)
+16. Include functions in useEffect dependencies → Memoize parent functions
 
 **ALWAYS:**
 1. Define types first in `packages/types`
@@ -708,6 +752,10 @@ main:
 12. Write tests for new features (80% coverage minimum)
 13. Follow git commit conventions
 14. Create PRs for code review
+15. Memoize event handlers with useCallback
+16. Memoize constants/arrays/objects with useMemo
+17. Use React.memo for repeated components
+18. Optimize re-renders (target <16ms per component)
 
 ## Common Mistakes
 

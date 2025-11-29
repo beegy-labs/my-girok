@@ -40,11 +40,8 @@
 **Working on admin dashboard?**
 → Read: `.ai/rules.md` + `.ai/apps/web-admin.md`
 
-**Working on iOS app?**
-→ Read: `.ai/rules.md` + `.ai/apps/ios.md`
-
-**Working on Android app?**
-→ Read: `.ai/rules.md` + `.ai/apps/android.md`
+**Working on mobile app (Flutter)?**
+→ Read: `.ai/rules.md` + `.ai/apps/mobile-flutter.md`
 
 ## Documentation Structure
 
@@ -67,8 +64,7 @@ my-girok/
 │   └── apps/                 # Frontend app guides
 │       ├── web-main.md
 │       ├── web-admin.md
-│       ├── ios.md
-│       └── android.md
+│       └── mobile-flutter.md
 │
 └── docs/                     # 📚 Human-readable docs (~73K tokens)
     ├── policies/             # Detailed policies
@@ -104,11 +100,11 @@ my-girok/
 - Sealed Secrets for K8s
 
 ### Stack
-- **Web**: Next.js 15, React 19, TypeScript, Tailwind
+- **Web**: React 19.2, TypeScript 5.7, Tailwind CSS 3.4, Vite 7.2
 - **Mobile**: iOS (Swift), Android (Kotlin)
-- **Backend**: Node.js 20, NestJS 10
-- **Database**: PostgreSQL 16 + Prisma 5 + Redis
-- **AI**: Python 3.11, FastAPI
+- **Backend**: Node.js 22, NestJS 11
+- **Database**: PostgreSQL 16 + Prisma 6 + Redis
+- **AI**: Python 3.13, FastAPI
 - **Deploy**: Kubernetes, Kustomize
 
 ## Need More Detail?

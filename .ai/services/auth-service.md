@@ -8,61 +8,85 @@ Handles user authentication, session management, and access control.
 
 ## Tech Stack
 
-- **Framework**: NestJS 10 + TypeScript
-- **Database**: PostgreSQL 16 + Prisma 5
+- **Framework**: NestJS 11 + TypeScript 5.7
+- **Database**: PostgreSQL 16 + Prisma 6
 - **Auth**: Passport.js + JWT
 - **Protocols**: REST + GraphQL (both available)
 
 ## API Endpoints
 
-### REST API (`/api/v1`)
+### REST API (`/v1`)
+
+**IMPORTANT: Global prefix is `v1`, NOT `/api/v1`**
 
 ```typescript
 // Registration
-POST /api/v1/auth/register
+POST /v1/auth/register
 Body: { email: string, password: string, name: string }
 Response: { user: User, accessToken: string, refreshToken: string }
 
 // Local Login
-POST /api/v1/auth/login
+POST /v1/auth/login
 Body: { email: string, password: string }
 Response: { accessToken: string, refreshToken: string }
 
 // Google OAuth
-GET /api/v1/auth/google
+GET /v1/auth/google
 Response: Redirect to Google OAuth
 
-GET /api/v1/auth/google/callback
+GET /v1/auth/google/callback
 Query: { code: string }
 Response: { accessToken: string, refreshToken: string }
 
 // Refresh Token
-POST /api/v1/auth/refresh
+POST /v1/auth/refresh
 Body: { refreshToken: string }
 Response: { accessToken: string }
 
 // Logout
-POST /api/v1/auth/logout
+POST /v1/auth/logout
 Headers: Authorization: Bearer {token}
 Response: 204 No Content
 
 // User Profile
-GET /api/v1/users/me
+GET /v1/users/me
 Headers: Authorization: Bearer {token}
 Response: User
 
 // Update Profile
-PATCH /api/v1/users/me
+PATCH /v1/users/me
 Headers: Authorization: Bearer {token}
 Body: { name?: string, avatar?: string }
 Response: User
 
+// Change Password
+POST /v1/users/me/change-password
+Headers: Authorization: Bearer {token}
+Body: { currentPassword: string, newPassword: string }
+Response: { message: 'Password changed successfully' }
+
 // Domain Access Token (Time-limited)
-POST /api/v1/domain-access/grant
+POST /v1/domain-access/grant
 Headers: Authorization: Bearer {token}
 Body: { domain: string, expiresInHours: number, recipientEmail?: string }
 Response: { accessToken: string, expiresAt: string, accessUrl: string }
 ```
+
+### Access via Domain (Production/Staging)
+
+When accessing via `https://my-api-dev.girok.dev`:
+
+```
+Frontend URL: https://my-api-dev.girok.dev/auth/v1/auth/register
+             ↓ Istio rewrites /auth/ → /
+Auth Service: /v1/auth/register
+```
+
+**Example URLs:**
+- Registration: `https://my-api-dev.girok.dev/auth/v1/auth/register`
+- Login: `https://my-api-dev.girok.dev/auth/v1/auth/login`
+- Profile: `https://my-api-dev.girok.dev/auth/v1/users/me`
+- Health: `https://my-api-dev.girok.dev/auth/health` (no /v1 prefix)
 
 ### GraphQL API (`/graphql`)
 
@@ -154,6 +178,19 @@ enum Role {
 4. Generate new access token (15min)
 5. Optionally rotate refresh token
 6. Return { accessToken, refreshToken? }
+```
+
+### Password Change Flow
+
+```typescript
+1. Client sends: { currentPassword, newPassword }
+2. Verify JWT token (user must be authenticated)
+3. Check if user is OAuth user → 401 if OAuth (they don't have passwords)
+4. Verify current password with bcrypt.compare
+5. If invalid → 401 Unauthorized
+6. Hash new password (bcrypt, 12 rounds)
+7. Update user password in DB
+8. Return { message: 'Password changed successfully' }
 ```
 
 ### Domain Access Flow
