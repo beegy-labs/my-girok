@@ -1,0 +1,466 @@
+/* Resume Print Styles - Multi-page Layout (A4 and Letter) */
+
+/* Paged.js Container Styles */
+.pagedjs-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Screen-only: Hide in continuous mode but keep rendered for print */
+@media screen {
+  .screen-hidden {
+    display: none !important;
+  }
+}
+
+/* Paged.js Page Styles - Each page is a separate div */
+.pagedjs_page {
+  margin: 0 auto 2rem auto !important; /* Add gap between pages */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
+  background: white !important;
+}
+
+/* Page area - the actual content area */
+.pagedjs_page_content {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0.3cm !important; /* Reduced padding for more content space and less blank areas */
+}
+
+/* Paged.js area - where content is placed */
+.pagedjs_pagebox {
+  box-sizing: border-box;
+}
+
+/* Paged.js margin boxes */
+.pagedjs_margin {
+  box-sizing: border-box;
+}
+
+/* Ensure content within paged.js pages has proper spacing */
+.pagedjs_page_content > * > * {
+  padding: 0 !important;
+  margin: 0;
+}
+
+.pagedjs_page_content .border-b-2 {
+  margin-bottom: 1rem;
+}
+
+.pagedjs_page_content .mb-6 {
+  margin-bottom: 1rem;
+}
+
+.pagedjs_page_content .resume-section,
+.pagedjs_page_content .resume-item {
+  margin-bottom: 0.75rem;
+}
+
+/* Base page styles - Use block to avoid flex interfering with page breaks */
+.resume-page-container {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Remove scaling and optimization hints in print mode */
+@media print {
+  #resume-content {
+    transform: none !important;
+    margin-bottom: 0 !important;
+    will-change: auto !important;
+    transition: none !important;
+  }
+
+  .resume-page-container {
+    display: block;
+  }
+}
+
+/* A4 size: 210mm × 297mm */
+.resume-page-a4 {
+  width: 21cm;
+  min-height: 29.7cm;
+  padding: 0.3cm; /* Reduced padding for more content space */
+  margin: 0 auto;
+  background: white;
+  position: relative;
+  box-sizing: border-box;
+  overflow: visible; /* Allow natural content flow for print */
+}
+
+/* Letter size: 215.9mm × 279.4mm */
+.resume-page-letter {
+  width: 21.59cm;
+  min-height: 27.94cm;
+  padding: 0.3cm; /* Reduced padding for more content space */
+  margin: 0 auto;
+  background: white;
+  position: relative;
+  box-sizing: border-box;
+  overflow: visible; /* Allow natural content flow for print */
+}
+
+@media screen {
+  .resume-page-container {
+    background-color: #f3f4f6; /* gray-100 */
+    padding: 2rem 0;
+  }
+
+  .resume-page-a4,
+  .resume-page-letter {
+    margin: 0 auto 2rem auto; /* Add bottom margin to simulate page gap */
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Visual page break indicators for A4 */
+  .resume-page-a4 {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(29.7cm - 2px),
+      #ef4444 calc(29.7cm - 2px), /* red-500 for clear visibility */
+      #ef4444 calc(29.7cm - 1px),
+      #f3f4f6 calc(29.7cm - 1px), /* gray-100 for page gap */
+      #f3f4f6 calc(29.7cm + 2rem - 1px), /* 2rem gap between pages */
+      transparent calc(29.7cm + 2rem)
+    );
+    background-size: 100% calc(29.7cm + 2rem);
+  }
+
+  /* Visual page break indicators for Letter */
+  .resume-page-letter {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(27.94cm - 2px),
+      #ef4444 calc(27.94cm - 2px), /* red-500 for clear visibility */
+      #ef4444 calc(27.94cm - 1px),
+      #f3f4f6 calc(27.94cm - 1px), /* gray-100 for page gap */
+      #f3f4f6 calc(27.94cm + 2rem - 1px), /* 2rem gap between pages */
+      transparent calc(27.94cm + 2rem)
+    );
+    background-size: 100% calc(27.94cm + 2rem);
+  }
+}
+
+@media print {
+  /*
+   * Paged.js Print Configuration
+   * IMPORTANT: Set browser print settings:
+   * - Margins: None
+   * - Headers and footers: None
+   * - Background graphics: On
+   */
+  @page {
+    margin: 0; /* Paged.js handles all margins */
+  }
+
+  /* A4 paper size */
+  @page :root {
+    size: A4 portrait;
+  }
+
+  /* Hide ALL non-print elements */
+  header, nav, footer, .toolbar,
+  .print\:hidden,
+  [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Hide continuous view content - use Paged.js paginated view */
+  #resume-content {
+    display: none !important;
+  }
+
+  /* CRITICAL: Remove all transforms and scaling from ALL containers */
+  .pagedjs-container,
+  .pagedjs-container *,
+  [style*="transform"],
+  [style*="scale"] {
+    transform: none !important;
+    margin-bottom: 0 !important;
+    will-change: auto !important;
+    transition: none !important;
+  }
+
+  /* Show and optimize Paged.js container for print */
+  .pagedjs-container {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    position: static !important;
+  }
+
+  /* Paged.js pages wrapper */
+  .pagedjs_pages {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Paged.js individual pages - remove screen-only styling */
+  .pagedjs_page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-inside: avoid !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Paged.js page content area */
+  .pagedjs_page_content {
+    overflow: visible !important;
+    background: white !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+  }
+
+  /* Paged.js page box */
+  .pagedjs_pagebox {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Paged.js area */
+  .pagedjs_area {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* All content inside pages */
+  .pagedjs_page_content * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hide ResumePreviewContainer wrapper styling */
+  .bg-gray-100,
+  [class*="bg-gray-100"] {
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Force print-content (pagedjs-container) to display and reset all transforms */
+  .print-content {
+    display: block !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    position: static !important;
+  }
+
+  /* Ensure inline styles don't override print styles */
+  .print-content[style] {
+    transform: none !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Reset all backgrounds and shadows for print */
+  * {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure proper text rendering and prevent overflow */
+  * {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Prevent long URLs and text from overflowing */
+  a, span, p, div, li {
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    hyphens: auto !important;
+  }
+
+  /* Images and media */
+  img, video, svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Allow sections to break across pages naturally */
+  .resume-section {
+    max-width: 100% !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* Allow long resume items to break across pages if needed */
+  .resume-item {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Keep short items together (headings, single paragraphs) */
+  .resume-item > h3,
+  .resume-item > p:only-child {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Keep section headings with their first item */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Prevent orphans and widows - Balanced settings */
+  p, li {
+    orphans: 2;
+    widows: 2;
+  }
+
+  /* Header section - allow natural breaks if needed */
+  .border-b-2 {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    page-break-after: auto !important;
+  }
+
+  /* Hide page number indicators */
+  .resume-page-number {
+    display: none !important;
+  }
+}
+
+/* Page number indicator (screen only) */
+.resume-page-number {
+  position: absolute;
+  bottom: 0.5cm;
+  right: 1.5cm;
+  font-size: 10px;
+  color: #9CA3AF; /* gray-400 */
+  font-weight: 600;
+}
+
+@media print {
+  .resume-page-number {
+    display: none;
+  }
+}
+
+/* Print optimizations */
+@media print {
+  /* Root container optimizations */
+  body, html {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Allow sections to break naturally across pages */
+  .resume-section {
+    page-break-inside: auto;
+    break-inside: auto;
+    margin-bottom: 0.75rem;
+    page-break-before: auto;
+    break-before: auto;
+  }
+
+  .resume-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Prevent orphans and widows */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Keep headings with their content */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure profile image doesn't break */
+  img {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Header section - allow natural breaks */
+  .border-b-2 {
+    page-break-inside: auto;
+    break-inside: auto;
+    page-break-after: auto;
+  }
+
+  /* Header with border - main resume header */
+  .border-b-2.border-gray-800 {
+    page-break-inside: auto;
+    break-inside: auto;
+    page-break-after: auto;
+  }
+
+  /* Override flex layouts that interfere with page breaks */
+  /* Keep essential flex for header and small components, but override for large containers */
+  .resume-section .flex,
+  .resume-item .flex {
+    display: block !important;
+  }
+
+  /* Specific overrides for resume header - keep flex for better layout */
+  .border-b-2.border-gray-800 .flex {
+    display: flex !important;
+  }
+
+  /* Ensure list items stay together when possible */
+  li {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Better handling of tables and structured content */
+  table, tr, td, th {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Prevent widows/orphans in list items */
+  ul, ol {
+    orphans: 2;
+    widows: 2;
+  }
+
+  /* Space-y classes - ensure proper spacing */
+  .space-y-2 > * + * {
+    margin-top: 0.5rem !important;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  /* Margin bottom classes */
+  .mb-6 {
+    margin-bottom: 1rem !important;
+  }
+
+  .mb-5 {
+    margin-bottom: 0.75rem !important;
+  }
+}
