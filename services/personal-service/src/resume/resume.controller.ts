@@ -190,6 +190,76 @@ export class ResumeController {
     return this.resumeService.toggleSectionVisibility(resumeId, user.id, dto);
   }
 
+  // ========== Temporary File Upload Endpoints ==========
+
+  @Post('temp-upload')
+  @ApiBearerAuth('JWT-auth')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: 'Upload file to temporary storage',
+    description: 'Upload image to temp storage for preview. Returns presigned URL. File moves to permanent storage on resume save.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Image file to upload (max 10MB)',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'File uploaded to temp storage',
+    schema: {
+      type: 'object',
+      properties: {
+        tempKey: { type: 'string', description: 'Temporary file key' },
+        previewUrl: { type: 'string', description: 'Presigned URL for preview (1 hour validity)' },
+        fileSize: { type: 'number', description: 'File size in bytes' },
+        mimeType: { type: 'string', description: 'File MIME type' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid file or file type' })
+  async uploadToTemp(
+    @CurrentUser() user: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.storageService.uploadToTemp(file, user.id);
+  }
+
+  @Delete('temp-upload')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Delete temporary file',
+    description: 'Delete file from temp storage (for cleanup when user cancels)',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['tempKey'],
+      properties: {
+        tempKey: { type: 'string', description: 'Temporary file key' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Temp file deleted' })
+  @ApiResponse({ status: 400, description: 'Invalid temp key' })
+  @HttpCode(HttpStatus.OK)
+  async deleteTempFile(
+    @CurrentUser() user: any,
+    @Body('tempKey') tempKey: string,
+  ) {
+    await this.storageService.deleteTempFile(tempKey, user.id);
+    return { message: 'Temp file deleted successfully' };
+  }
+
   // ========== File Attachment Endpoints ==========
 
   @Post(':resumeId/attachments')

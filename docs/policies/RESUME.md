@@ -633,13 +633,51 @@ The resume system has been enhanced to support Korean job market requirements, s
 - **Display**:
   - Position: Top-left of resume header
   - Size: 3cm × 4cm (passport photo size)
-  - Style: Auto-converts to grayscale for print
+  - Style: **Color by default**, optional grayscale via UI toggle
   - Border: Subtle border matching resume theme
 
 #### Upload Options
 1. **URL Input**: Paste direct image URL in Basic Information section
 2. **File Upload**: Use Attachments section → Profile Photo category
 3. **MinIO Storage**: Files uploaded via attachments are stored in MinIO
+
+#### Storage Policy (CRITICAL)
+
+**Profile photos are stored in original color format only.**
+
+| Aspect | Policy |
+|--------|--------|
+| **Storage** | Original color image only |
+| **Server Processing** | No grayscale conversion |
+| **Display Default** | Color (original) |
+| **Grayscale Option** | Frontend CSS filter via UI toggle |
+| **Location** | `resumes/{userId}/{resumeId}/{uuid}.{ext}` |
+
+**Implementation Rules:**
+
+```typescript
+// Backend: resume.service.ts
+// ❌ NEVER do this
+data: { profileImage: result.grayscaleUrl || result.fileUrl }
+
+// ✅ ALWAYS do this
+data: { profileImage: result.fileUrl }
+```
+
+```typescript
+// Frontend: ResumePreview.tsx
+// Use CSS filter for grayscale display
+<img
+  src={profileImage}
+  className={isGrayscale ? 'filter grayscale' : ''}
+/>
+```
+
+**Rationale:**
+1. User choice over system decision
+2. Storage efficiency (no duplicate files)
+3. Flexibility via CSS presentation
+4. Consistent with policy: "Profile Photos: Show in color by default"
 
 ### Resume Sections and Ordering
 

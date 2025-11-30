@@ -9,6 +9,8 @@ import {
   uploadAttachment,
   getAttachments,
   deleteAttachment,
+  uploadToTemp,
+  deleteTempFile,
   SectionType,
   Gender,
 } from '../../api/resume';
@@ -182,7 +184,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
+  // Profile photo temp upload state
+  const [profilePhotoTempKey, setProfilePhotoTempKey] = useState<string | null>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null); // Presigned URL from temp upload
 
   // Section ordering
   const [sections, setSections] = useState(
@@ -326,35 +330,20 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   };
 
-  // Handle profile photo file selection
-  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle profile photo file selection - auto-uploads to temp storage
+  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setUploadError(t('resume.form.selectImageFile'));
-        return;
-      }
+    if (!file) return;
 
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
-        setUploadError(t('resume.form.imageSizeTooLarge'));
-        return;
-      }
-
-      setProfilePhotoFile(file);
-      setUploadError(null);
-
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, profileImage: previewUrl }));
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError(t('resume.form.selectImageFile'));
+      return;
     }
-  };
 
-  // Upload profile photo
-  const handleProfilePhotoUpload = async () => {
-    if (!profilePhotoFile || !resume?.id) {
-      setUploadError(t('resume.form.saveResumeFirstPhoto'));
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError(t('resume.form.imageSizeTooLarge'));
       return;
     }
 
@@ -362,24 +351,40 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     setUploadError(null);
 
     try {
-      const attachment = await uploadAttachment(
-        resume.id,
-        profilePhotoFile,
-        AttachmentType.PROFILE_PHOTO,
-        t('resume.form.profilePhoto')
-      );
+      // Clean up previous temp file if exists
+      if (profilePhotoTempKey) {
+        try {
+          await deleteTempFile(profilePhotoTempKey);
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
 
-      setFormData(prev => ({ ...prev, profileImage: attachment.fileUrl }));
-      setProfilePhotoFile(null);
-      await loadAttachments();
-      alert(t('resume.form.photoUploadSuccess'));
+      // Auto-upload to temp storage
+      const result = await uploadToTemp(file);
+
+      setProfilePhotoTempKey(result.tempKey);
+      setProfilePhotoPreview(result.previewUrl);
     } catch (error: any) {
-      console.error('Failed to upload profile photo:', error);
+      console.error('Failed to upload to temp storage:', error);
       setUploadError(error.response?.data?.message || t('resume.form.photoUploadFailed'));
     } finally {
       setUploading(false);
     }
   };
+
+  // Cancel profile photo selection
+  const handleProfilePhotoCancel = useCallback(async () => {
+    if (profilePhotoTempKey) {
+      try {
+        await deleteTempFile(profilePhotoTempKey);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+    setProfilePhotoTempKey(null);
+    setProfilePhotoPreview(null);
+  }, [profilePhotoTempKey]);
 
   // Delete profile photo
   const handleProfilePhotoDelete = async () => {
@@ -460,7 +465,19 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       // which converts empty strings to null for proper database clearing
       const { projects, ...dataToSubmit } = formData as any;
 
+      // Include profileImageTempKey if a new image was uploaded to temp storage
+      if (profilePhotoTempKey) {
+        dataToSubmit.profileImageTempKey = profilePhotoTempKey;
+      }
+
       await onSubmit(dataToSubmit);
+
+      // Clear temp state after successful save (backend moved file to permanent storage)
+      if (profilePhotoTempKey) {
+        setProfilePhotoTempKey(null);
+        setProfilePhotoPreview(null);
+      }
+
       // Clear draft after successful submission
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);
@@ -617,8 +634,32 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {t('resume.form.profilePhoto')}
           </label>
 
-          {/* Display current or preview photo */}
-          {formData.profileImage && (
+          {/* Display preview (pending upload) or current uploaded photo */}
+          {/* New photo preview (from temp upload) */}
+          {profilePhotoPreview && (
+            <div className="mb-3 flex items-center gap-3">
+              <img
+                src={profilePhotoPreview}
+                alt="Profile Preview"
+                className="w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-green-400 dark:border-green-500"
+              />
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                  ✓ {t('resume.form.photoReady')}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleProfilePhotoCancel}
+                  disabled={uploading}
+                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
+                >
+                  {t('common.cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+          {/* Current saved photo (not in temp, not a new upload) */}
+          {!profilePhotoPreview && formData.profileImage && !formData.profileImage.startsWith('blob:') && (
             <div className="mb-3 flex items-center gap-3">
               <img
                 src={formData.profileImage}
@@ -638,36 +679,35 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               </button>
             </div>
           )}
+          {/* Warning for invalid blob URL in database */}
+          {!profilePhotoPreview && formData.profileImage && formData.profileImage.startsWith('blob:') && (
+            <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-xs text-red-700 dark:text-red-400">
+                ⚠️ {t('resume.form.invalidImageUrl')}
+              </p>
+            </div>
+          )}
 
-          {/* File upload input */}
+          {/* File upload input - always visible */}
           <div className="space-y-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePhotoChange}
-              disabled={uploading || !resume?.id}
-              className="block w-full text-sm text-gray-700 dark:text-dark-text-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 dark:file:bg-amber-900/20 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            {profilePhotoFile && (
-              <button
-                type="button"
-                onClick={handleProfilePhotoUpload}
+            <label className="relative block cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoChange}
                 disabled={uploading}
-                className="px-4 py-2 text-sm bg-amber-700 dark:bg-amber-600 text-white dark:text-gray-900 rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-              >
-                {uploading ? t('resume.form.uploadingPhoto') : t('resume.form.uploadPhoto')}
-              </button>
-            )}
+                className="block w-full text-sm text-gray-700 dark:text-dark-text-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 dark:file:bg-amber-900/20 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              {uploading && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-amber-600 dark:text-amber-400">
+                  {t('resume.form.uploadingPhoto')}...
+                </span>
+              )}
+            </label>
           </div>
 
           {uploadError && (
             <p className="text-xs text-red-600 dark:text-red-400 mt-1">{uploadError}</p>
-          )}
-
-          {!resume?.id && (
-            <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-              {t('resume.form.saveFirstPhotoHint')}
-            </p>
           )}
 
           <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">

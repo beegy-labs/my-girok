@@ -138,6 +138,10 @@ export class ResumeService {
       // Store project achievements to create after projects are created
       const projectAchievementsMap = new Map<number, any[]>();
 
+      // Determine profileImage value
+      // Priority: profileImageTempKey (will be processed after resume creation) > profileImage
+      let profileImageValue = dto.profileImage;
+
       // Create resume with all nested data (except achievements)
       const resume = await tx.resume.create({
         data: {
@@ -156,7 +160,7 @@ export class ResumeService {
           portfolio: dto.portfolio,
           summary: dto.summary,
           keyAchievements: dto.keyAchievements ?? [],
-          profileImage: dto.profileImage,
+          profileImage: profileImageValue,
           birthYear: dto.birthYear,
           birthDate: dto.birthDate,
           gender: dto.gender,
@@ -262,6 +266,26 @@ export class ResumeService {
               }
             }
           }
+        }
+      }
+
+      // Handle profileImageTempKey: move from temp to permanent storage
+      if (dto.profileImageTempKey) {
+        try {
+          const result = await this.storageService.moveFromTemp(
+            dto.profileImageTempKey,
+            userId,
+            resume.id,
+          );
+          // Update resume with permanent image URL (use original color image per policy)
+          // Grayscale conversion is optional via UI toggle, not automatic
+          await tx.resume.update({
+            where: { id: resume.id },
+            data: { profileImage: result.fileUrl },
+          });
+        } catch (error: any) {
+          this.logger.warn(`Failed to move temp profile image: ${error.message}`);
+          // Continue without profile image - not critical for resume creation
         }
       }
 
@@ -486,6 +510,26 @@ export class ResumeService {
         await tx.certificate.createMany({
           data: dto.certificates.map(cert => ({ ...cert, resumeId: resume.id })),
         });
+      }
+
+      // Handle profileImageTempKey: move from temp to permanent storage
+      if (dto.profileImageTempKey) {
+        try {
+          const result = await this.storageService.moveFromTemp(
+            dto.profileImageTempKey,
+            userId,
+            resume.id,
+          );
+          // Update resume with permanent image URL (use original color image per policy)
+          // Grayscale conversion is optional via UI toggle, not automatic
+          await tx.resume.update({
+            where: { id: resume.id },
+            data: { profileImage: result.fileUrl },
+          });
+        } catch (error: any) {
+          this.logger.warn(`Failed to move temp profile image: ${error.message}`);
+          // Continue without updating profile image - not critical
+        }
       }
 
       // Return updated resume with hierarchical achievements

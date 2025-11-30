@@ -64,6 +64,39 @@ spec:
           value: {{ .Values.app.authServiceUrl | quote }}
         - name: FRONTEND_URL
           value: {{ .Values.app.frontendUrl | quote }}
+        # MinIO Configuration
+        - name: MINIO_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: endpoint
+        - name: MINIO_PORT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: port
+        - name: MINIO_USE_SSL
+          value: {{ .Values.minio.useSSL | quote }}
+        - name: MINIO_BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: bucketName
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: accessKey
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: secretKey
+        - name: MINIO_PUBLIC_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: publicUrl
         {{- with .Values.livenessProbe }}
         livenessProbe:
           {{- toYaml . | nindent 12 }}

@@ -433,6 +433,15 @@ export class CreateResumeDto {
   @IsString()
   profileImage?: string | null;
 
+  @ApiPropertyOptional({
+    example: 'tmp/user123/abc-def-ghi.jpg',
+    description: 'Temporary file key from temp-upload endpoint. File will be moved to permanent storage on save.'
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsString()
+  profileImageTempKey?: string | null;
+
   @ApiPropertyOptional({ example: 1994, description: 'Birth year (e.g., 1994) - deprecated, use birthDate' })
   @IsOptional()
   @IsInt()
