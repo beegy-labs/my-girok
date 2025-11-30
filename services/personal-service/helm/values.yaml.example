@@ -136,6 +136,15 @@ app:
   frontendUrl: "https://example.com"
 
 # ============================================================================
+# MinIO Configuration
+# ============================================================================
+minio:
+  # Name of the Kubernetes secret containing MinIO credentials
+  secretName: "personal-service-minio-credentials"
+  # Use SSL for MinIO connection (true for HTTPS endpoints)
+  useSSL: "true"
+
+# ============================================================================
 # Sealed Secrets Configuration
 # ============================================================================
 # Use kubeseal to encrypt secrets before committing

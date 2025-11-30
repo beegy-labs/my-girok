@@ -502,6 +502,44 @@ const handleSubmit = async (data) => {
 **Bullet Styles**: • → ◦ → ▪ → ▫
 **Max Depth**: 4 levels (achievements, skill descriptions)
 
+## File Storage Policy
+
+### Profile Photo Storage
+
+**CRITICAL**: Profile photos are stored in **original color format only**.
+
+| Aspect | Policy |
+|--------|--------|
+| **Storage** | Original color image only (no server-side grayscale conversion) |
+| **Display Default** | Color (original) |
+| **Grayscale Option** | Frontend CSS filter (`filter: grayscale(100%)`) via UI toggle |
+| **Location** | MinIO bucket: `resumes/{userId}/{resumeId}/{uuid}.{ext}` |
+| **Temp Storage** | `tmp/{userId}/{uuid}.{ext}` (24-hour auto-cleanup) |
+
+### Implementation Rules
+
+**Backend (storage.service.ts)**:
+- ❌ **NEVER** auto-convert images to grayscale on upload
+- ❌ **NEVER** store duplicate grayscale versions
+- ✅ Store original file only with `moveFromTemp()`
+- ✅ Return `{ fileKey, fileUrl }` (no grayscaleUrl)
+
+**Backend (resume.service.ts)**:
+- ❌ **NEVER** use `result.grayscaleUrl || result.fileUrl`
+- ✅ Always use `result.fileUrl` (original color image)
+
+**Frontend (ResumePreview.tsx)**:
+- ✅ Display color by default
+- ✅ Apply `filter: grayscale(100%)` when user enables B&W mode
+- ✅ Toggle button: 🎨 (color) / 🖤 (grayscale)
+
+### Rationale
+
+1. **User Choice**: Users decide grayscale preference, not system
+2. **Storage Efficiency**: No duplicate files for grayscale versions
+3. **Flexibility**: Same source, different presentation via CSS
+4. **Policy Compliance**: `.ai/resume.md` line 281-282 states "Profile Photos: Show in color by default, optional grayscale toggle"
+
 ## Recent Updates
 
 **2025-11-20 (Part 2)**: Birth date field upgrade for accurate age calculation (#TBD)

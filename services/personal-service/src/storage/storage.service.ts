@@ -2,12 +2,11 @@ import { Injectable, Logger, InternalServerErrorException, BadRequestException }
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { v4 as uuid } from 'uuid';
-import sharp from 'sharp';
 
 /**
  * Storage Service for MinIO Integration
  * Handles file upload, download, and deletion
- * Provides grayscale conversion for resume profile photos
+ * Note: Grayscale conversion removed per policy - handled by frontend CSS filter
  */
 @Injectable()
 export class StorageService {
@@ -158,62 +157,6 @@ export class StorageService {
   }
 
   /**
-   * Convert image to grayscale (for resume profile photos)
-   * @param file - Multer file object (image)
-   * @param userId - User ID
-   * @param resumeId - Resume ID
-   * @returns Object containing original and grayscale file info
-   */
-  async uploadWithGrayscale(
-    file: Express.Multer.File,
-    userId: string,
-    resumeId: string,
-  ): Promise<{
-    originalKey: string;
-    originalUrl: string;
-    grayscaleKey: string;
-    grayscaleUrl: string;
-  }> {
-    this.validateImageFile(file);
-
-    // Upload original
-    const { fileKey: originalKey, fileUrl: originalUrl } = await this.uploadFile(file, userId, resumeId);
-
-    try {
-      // Convert to grayscale
-      const grayscaleBuffer = await sharp(file.buffer)
-        .grayscale()
-        .jpeg({ quality: 90 }) // High quality for professional resumes
-        .toBuffer();
-
-      const fileExtension = '.jpg'; // Always output as JPEG
-      const grayscaleKey = `resumes/${userId}/${resumeId}/${uuid()}_grayscale${fileExtension}`;
-
-      await this.minioClient.putObject(
-        this.bucketName,
-        grayscaleKey,
-        grayscaleBuffer,
-        grayscaleBuffer.length,
-        {
-          'Content-Type': 'image/jpeg',
-          'X-Amz-Meta-Original-Name': encodeURIComponent(`grayscale_${file.originalname}`),
-          'X-Amz-Meta-Processed': 'true',
-        },
-      );
-
-      const grayscaleUrl = `${this.publicUrl}/${this.bucketName}/${grayscaleKey}`;
-
-      this.logger.log(`Grayscale image created: ${grayscaleKey}`);
-      return { originalKey, originalUrl, grayscaleKey, grayscaleUrl };
-    } catch (error: any) {
-      // If grayscale conversion fails, delete the original
-      await this.deleteFile(originalKey);
-      this.logger.error(`Failed to convert image to grayscale: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Failed to process image');
-    }
-  }
-
-  /**
    * Copy file within MinIO bucket
    * Used for duplicating resume attachments
    * @param sourceKey - Source file key
@@ -291,17 +234,151 @@ export class StorageService {
   }
 
   /**
-   * Get presigned URL for temporary access (not used for public bucket)
+   * Get presigned URL for temporary access
    * @param fileKey - MinIO object key
-   * @param expiry - Expiry time in seconds (default: 24 hours)
+   * @param expiry - Expiry time in seconds (default: 1 hour)
    */
-  async getPresignedUrl(fileKey: string, expiry: number = 86400): Promise<string> {
+  async getPresignedUrl(fileKey: string, expiry: number = 3600): Promise<string> {
     try {
       return await this.minioClient.presignedGetObject(this.bucketName, fileKey, expiry);
     } catch (error: any) {
       this.logger.error(`Failed to generate presigned URL: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Failed to generate file access URL');
     }
+  }
+
+  /**
+   * Upload file to temporary storage
+   * Files in tmp/ are automatically deleted after 24 hours via MinIO lifecycle policy
+   * @param file - Multer file object
+   * @param userId - User ID for organizing files (from JWT, verified)
+   * @returns Object containing tempKey and presigned preview URL
+   */
+  async uploadToTemp(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<{ tempKey: string; previewUrl: string; fileSize: number; mimeType: string }> {
+    this.validateImageFile(file);
+
+    const fileExtension = this.getFileExtension(file.originalname);
+    const tempKey = `tmp/${userId}/${uuid()}${fileExtension}`;
+
+    try {
+      await this.minioClient.putObject(
+        this.bucketName,
+        tempKey,
+        file.buffer,
+        file.size,
+        {
+          'Content-Type': file.mimetype,
+          'X-Amz-Meta-Original-Name': encodeURIComponent(file.originalname),
+          'X-Amz-Meta-Temp': 'true',
+          'X-Amz-Meta-User-Id': userId,
+        },
+      );
+
+      // Generate presigned URL for preview (1 hour validity)
+      const previewUrl = await this.getPresignedUrl(tempKey, 3600);
+
+      this.logger.log(`Temp file uploaded successfully: ${tempKey}`);
+      return {
+        tempKey,
+        previewUrl,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+      };
+    } catch (error: any) {
+      this.logger.error(`Failed to upload temp file: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to upload file to temporary storage');
+    }
+  }
+
+  /**
+   * Move file from temporary storage to permanent storage
+   * Moves file from temp to permanent storage
+   * @param tempKey - Temporary file key (must belong to userId)
+   * @param userId - User ID (from JWT, for ownership verification)
+   * @param resumeId - Resume ID for permanent storage path
+   * @returns Object containing permanent file info
+   */
+  async moveFromTemp(
+    tempKey: string,
+    userId: string,
+    resumeId: string,
+  ): Promise<{
+    fileKey: string;
+    fileUrl: string;
+  }> {
+    // Security: Verify tempKey belongs to userId (path traversal prevention)
+    const expectedPrefix = `tmp/${userId}/`;
+    if (!tempKey.startsWith(expectedPrefix)) {
+      this.logger.warn(`Unauthorized temp file access attempt: ${tempKey} by user ${userId}`);
+      throw new BadRequestException('Invalid temp file key');
+    }
+
+    try {
+      // Get the temp file
+      const tempStream = await this.minioClient.getObject(this.bucketName, tempKey);
+      const chunks: Buffer[] = [];
+      for await (const chunk of tempStream) {
+        chunks.push(chunk as Buffer);
+      }
+      const fileBuffer = Buffer.concat(chunks);
+
+      // Get metadata
+      const stat = await this.minioClient.statObject(this.bucketName, tempKey);
+      const originalName = stat.metaData['x-amz-meta-original-name']
+        ? decodeURIComponent(stat.metaData['x-amz-meta-original-name'])
+        : 'image.jpg';
+      const mimeType = stat.metaData['content-type'] || 'image/jpeg';
+
+      // Generate permanent file key
+      const fileExtension = this.getFileExtension(originalName);
+      const fileKey = `resumes/${userId}/${resumeId}/${uuid()}${fileExtension}`;
+
+      // Upload to permanent location
+      await this.minioClient.putObject(
+        this.bucketName,
+        fileKey,
+        fileBuffer,
+        fileBuffer.length,
+        {
+          'Content-Type': mimeType,
+          'X-Amz-Meta-Original-Name': encodeURIComponent(originalName),
+        },
+      );
+
+      const fileUrl = `${this.publicUrl}/${this.bucketName}/${fileKey}`;
+
+      // Note: Grayscale conversion removed per policy (.ai/resume.md)
+      // Profile photos show in color by default, grayscale is optional via UI toggle
+      // Frontend handles grayscale display using CSS filter when user selects B&W mode
+
+      // Delete temp file after successful move
+      await this.deleteFile(tempKey);
+
+      this.logger.log(`File moved from temp to permanent: ${tempKey} -> ${fileKey}`);
+      return { fileKey, fileUrl };
+    } catch (error: any) {
+      this.logger.error(`Failed to move temp file: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to move file from temporary storage');
+    }
+  }
+
+  /**
+   * Delete temp file (for cleanup when user cancels)
+   * @param tempKey - Temporary file key (must belong to userId)
+   * @param userId - User ID (from JWT, for ownership verification)
+   */
+  async deleteTempFile(tempKey: string, userId: string): Promise<void> {
+    // Security: Verify tempKey belongs to userId
+    const expectedPrefix = `tmp/${userId}/`;
+    if (!tempKey.startsWith(expectedPrefix)) {
+      this.logger.warn(`Unauthorized temp file delete attempt: ${tempKey} by user ${userId}`);
+      throw new BadRequestException('Invalid temp file key');
+    }
+
+    await this.deleteFile(tempKey);
   }
 
   /**

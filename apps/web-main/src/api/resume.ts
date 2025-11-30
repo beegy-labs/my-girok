@@ -54,6 +54,13 @@ export type {
   Resume,
 };
 
+export interface TempUploadResponse {
+  tempKey: string;
+  previewUrl: string;
+  fileSize: number;
+  mimeType: string;
+}
+
 export interface CreateResumeDto {
   title: string; // "대기업용 이력서", "스타트업용 이력서", etc.
   description?: string; // Brief description of resume purpose
@@ -70,6 +77,7 @@ export interface CreateResumeDto {
   summary?: string;
   keyAchievements?: string[]; // 주요 성과 (3-5 major accomplishments)
   profileImage?: string;
+  profileImageTempKey?: string; // Temp file key for profile image (from temp-upload)
   // Birth Date and Gender
   birthYear?: number; // 출생 연도 (e.g., 1994) - deprecated, use birthDate
   birthDate?: string; // 생년월일 (YYYY-MM-DD format) for accurate age calculation
@@ -581,4 +589,31 @@ export const reorderAttachments = async (
   attachmentIds: string[]
 ): Promise<void> => {
   await personalApi.patch(`/v1/resume/${resumeId}/attachments/reorder`, { type, attachmentIds });
+};
+
+// ========== Temp Upload APIs ==========
+
+/**
+ * Upload file to temporary storage
+ * Returns presigned URL for preview. File will be moved to permanent storage on resume save.
+ */
+export const uploadToTemp = async (file: File): Promise<TempUploadResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await personalApi.post('/v1/resume/temp-upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+/**
+ * Delete file from temporary storage (cleanup when user cancels)
+ */
+export const deleteTempFile = async (tempKey: string): Promise<void> => {
+  await personalApi.delete('/v1/resume/temp-upload', {
+    data: { tempKey },
+  });
 };

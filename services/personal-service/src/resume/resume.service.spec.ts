@@ -24,9 +24,9 @@ describe('ResumeService', () => {
 
   const mockStorageService = {
     uploadFile: jest.fn(),
-    uploadWithGrayscale: jest.fn(),
     deleteFile: jest.fn(),
     getFileUrl: jest.fn(),
+    moveFromTemp: jest.fn(),
   };
 
   const mockPrismaService = {
