@@ -116,7 +116,7 @@ export async function configureApp(
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'", "'unsafe-inline'", 'https://rybbit.girok.dev'],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'https:'],
+          imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
         },
       },
       hsts: {
