@@ -4,6 +4,12 @@ import { PaperSizeKey, calculateFitScale } from '../../constants/paper';
 import ResumePreview from './ResumePreview';
 import ResumeCaptureLayer from './ResumeCaptureLayer';
 
+// Scale thresholds for readability - mobile shows at 100% with horizontal scroll
+const MIN_SCALE_MOBILE = 1.0; // 100% for mobile - no scaling, use scroll instead
+const MIN_SCALE_TABLET = 0.9; // Minimum 90% for tablet
+const MOBILE_BREAKPOINT = 640; // Tailwind sm breakpoint
+const TABLET_BREAKPOINT = 1024; // Tailwind lg breakpoint
+
 interface ResumePreviewContainerProps {
   /** Resume data to display */
   resume: Resume;
@@ -69,15 +75,26 @@ export default function ResumePreviewContainer({
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate display scale based on container width (with debouncing)
+  // Applies minimum scale thresholds for readability on mobile/tablet
   const calculateDisplayScale = useCallback(() => {
     if (!containerRef.current || propScale !== undefined) return;
 
     const containerWidth = containerRef.current.offsetWidth;
+    const viewportWidth = window.innerWidth;
     const padding = 32; // 16px on each side
     const availableWidth = containerWidth - padding;
 
     // Calculate scale to fit container, max 1.0 (never scale up)
-    const newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
+    let newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
+
+    // Apply minimum scale thresholds based on device type for readability
+    if (viewportWidth < MOBILE_BREAKPOINT) {
+      // Mobile: enforce minimum scale (horizontal scroll allowed)
+      newScale = Math.max(MIN_SCALE_MOBILE, newScale);
+    } else if (viewportWidth < TABLET_BREAKPOINT) {
+      // Tablet: enforce minimum scale for readability
+      newScale = Math.max(MIN_SCALE_TABLET, newScale);
+    }
 
     // Round to 2 decimal places
     const roundedScale = Math.round(newScale * 100) / 100;
@@ -144,12 +161,14 @@ export default function ResumePreviewContainer({
   }
 
   // Inner wrapper style
+  // Enable horizontal scroll on mobile (viewport < 640px) since content maintains minimum scale
+  const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT;
   const innerWrapperStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'flex-start',
     width: '100%',
-    overflow: enableHorizontalScroll ? 'auto' : 'hidden',
+    overflow: enableHorizontalScroll || isMobileViewport ? 'auto' : 'hidden',
     minHeight: 'fit-content',
   };
 

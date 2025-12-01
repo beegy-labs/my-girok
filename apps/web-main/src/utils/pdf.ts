@@ -10,15 +10,15 @@ interface PDFExportOptions {
 }
 
 /**
- * Export resume to PDF using the Dual-Layer architecture
+ * Export resume to PDF with proper page view (A4/Letter format)
  *
  * Priority order:
- * 1. Capture Layer (#resume-capture-source) - Always original size, best quality
- * 2. Paged.js container (.pagedjs-container) - For paginated view
+ * 1. Paged.js container (.pagedjs-container) - Proper page breaks, A4/Letter format
+ * 2. Capture Layer (#resume-capture-source) - Continuous view fallback
  * 3. Fallback element (elementId) - Legacy support
  *
- * The Capture Layer ensures identical PDF output across all devices
- * because it always renders at the original paper dimensions without scaling.
+ * Paged.js is prioritized because it properly handles page breaks and renders
+ * content in A4/Letter format with correct pagination.
  */
 export async function exportResumeToPDF(
   elementId: string,
@@ -32,19 +32,19 @@ export async function exportResumeToPDF(
 
   const paper = PAPER_SIZES[paperSize];
 
-  // PRIORITY 1: Use Capture Layer (always original size, best quality)
-  const captureLayer = document.getElementById(captureElementId);
-  if (captureLayer) {
-    console.log('PDF Export: Using Capture Layer for consistent quality');
-    await exportCaptureLayerToPDF(captureLayer, paperSize, fileName);
+  // PRIORITY 1: Use Paged.js container for proper page view (A4/Letter format)
+  const pagedContainer = document.querySelector('.pagedjs-container') as HTMLElement;
+  if (pagedContainer && pagedContainer.querySelector('.pagedjs_page')) {
+    console.log('PDF Export: Using Paged.js container for page view');
+    await exportPagedJSToPDF(pagedContainer, paperSize, fileName);
     return;
   }
 
-  // PRIORITY 2: Use Paged.js container for paginated view
-  const pagedContainer = document.querySelector('.pagedjs-container') as HTMLElement;
-  if (pagedContainer && window.getComputedStyle(pagedContainer).display !== 'none') {
-    console.log('PDF Export: Using Paged.js container');
-    await exportPagedJSToPDF(pagedContainer, paperSize, fileName);
+  // PRIORITY 2: Use Capture Layer (continuous view fallback)
+  const captureLayer = document.getElementById(captureElementId);
+  if (captureLayer) {
+    console.log('PDF Export: Using Capture Layer (continuous view)');
+    await exportCaptureLayerToPDF(captureLayer, paperSize, fileName);
     return;
   }
 
@@ -163,6 +163,9 @@ async function exportCaptureLayerToPDF(
 
 /**
  * Export Paged.js container to PDF (multi-page support)
+ *
+ * Captures each Paged.js page at original paper dimensions (not scaled)
+ * to ensure consistent PDF quality across all devices.
  */
 async function exportPagedJSToPDF(
   container: HTMLElement,
@@ -184,52 +187,66 @@ async function exportPagedJSToPDF(
     format: paperSize === 'A4' ? 'a4' : 'letter',
   });
 
-  // Capture each page
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i] as HTMLElement;
+  // Temporarily remove transform scale from container for accurate capture
+  const originalTransform = container.style.transform;
+  const originalTransition = container.style.transition;
+  container.style.transform = 'none';
+  container.style.transition = 'none';
 
-    const canvas = await html2canvas(page, {
-      scale: PDF_EXPORT_SETTINGS.canvasScale,
-      useCORS: true,
-      allowTaint: false,
-      logging: false,
-      backgroundColor: '#ffffff',
-      windowWidth: page.scrollWidth,
-      windowHeight: page.scrollHeight,
-      imageTimeout: PDF_EXPORT_SETTINGS.imageTimeout,
-      onclone: (clonedDoc) => {
-        const images = clonedDoc.querySelectorAll('img');
-        images.forEach((img: HTMLImageElement) => {
-          if (!img.complete) {
-            console.warn('Image not fully loaded:', img.src);
-          }
-        });
-      },
-    });
+  try {
+    // Capture each page at original paper dimensions
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i] as HTMLElement;
 
-    if (i > 0) {
-      pdf.addPage();
+      const canvas = await html2canvas(page, {
+        scale: PDF_EXPORT_SETTINGS.canvasScale,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        backgroundColor: '#ffffff',
+        // Use original paper dimensions for consistent quality
+        width: paper.width.px,
+        windowWidth: paper.width.px,
+        imageTimeout: PDF_EXPORT_SETTINGS.imageTimeout,
+        onclone: (clonedDoc, clonedElement) => {
+          // Ensure cloned element has no transforms
+          clonedElement.style.transform = 'none';
+
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach((img: HTMLImageElement) => {
+            if (!img.complete) {
+              console.warn('Image not fully loaded:', img.src);
+            }
+          });
+        },
+      });
+
+      if (i > 0) {
+        pdf.addPage();
+      }
+
+      const imgData = canvas.toDataURL(
+        `image/${PDF_EXPORT_SETTINGS.imageFormat.toLowerCase()}`,
+        PDF_EXPORT_SETTINGS.imageQuality
+      );
+
+      // Add image to fill entire page
+      pdf.addImage(
+        imgData,
+        PDF_EXPORT_SETTINGS.imageFormat,
+        0,
+        0,
+        paper.width.mm,
+        paper.height.mm
+      );
     }
 
-    const imgData = canvas.toDataURL(
-      `image/${PDF_EXPORT_SETTINGS.imageFormat.toLowerCase()}`,
-      PDF_EXPORT_SETTINGS.imageQuality
-    );
-    const imgWidth = paper.width.mm;
-    const imgHeight = (canvas.height * paper.width.mm) / canvas.width;
-
-    const yOffset = imgHeight < paper.height.mm ? (paper.height.mm - imgHeight) / 2 : 0;
-    pdf.addImage(
-      imgData,
-      PDF_EXPORT_SETTINGS.imageFormat,
-      0,
-      yOffset,
-      imgWidth,
-      Math.min(imgHeight, paper.height.mm)
-    );
+    pdf.save(fileName);
+  } finally {
+    // Restore original transform
+    container.style.transform = originalTransform;
+    container.style.transition = originalTransition;
   }
-
-  pdf.save(fileName);
 }
 
 /**
