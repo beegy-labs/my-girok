@@ -81,6 +81,21 @@ my-girok/
 ### Language Policy
 **ALL code, documentation, and commits MUST be in English**
 
+### Git Branch & Merge Policy (GitFlow Standard)
+
+```
+feat/* ──squash──▶ develop ──merge──▶ release ──merge──▶ main
+                    (Dev)    (Staging)   (Prod)
+```
+
+| Source → Target | Merge Type | Command |
+|-----------------|------------|---------|
+| feat → develop | Squash | `gh pr merge --squash` |
+| develop → release | Merge | `gh pr merge --merge` |
+| release → main | Merge | `gh pr merge --merge` |
+
+👉 **Full details**: [.ai/git-flow.md](.ai/git-flow.md)
+
 ### Git Commit Policy
 **NEVER mention AI assistance in commit messages**
 - Do NOT include "Generated with Claude" or similar references

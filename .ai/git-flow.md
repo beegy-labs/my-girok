@@ -1,86 +1,105 @@
 # Git Flow Quick Reference
 
-## Branch Structure
+## Branch Structure (GitFlow Standard)
 
 ```
-main (production)
-  └── release/* (staging/QA)
-       └── develop (integration)
-            └── feature/* (features)
-            └── hotfix/* (emergency)
+feat/* ──squash──▶ develop ──merge──▶ release ──merge──▶ main
+                    (Dev)    (Staging)   (Prod)
 ```
 
 ## Branch Types
 
-| Branch | Purpose | Created From | Merged Into | Environment |
-|--------|---------|--------------|-------------|-------------|
-| `main` | Production | - | - | Production |
-| `develop` | Integration | `main` | - | Development |
-| `feature/*` | New features | `develop` | `develop` | - |
-| `release/*` | Release prep | `develop` | `main` + `develop` | Staging |
-| `hotfix/*` | Emergency fix | `main` | `main` + `develop` | - |
+| Branch | Purpose | Lifetime | Environment |
+|--------|---------|----------|-------------|
+| `main` | Production-ready code | Permanent | Production |
+| `release` | Staging/QA validation | Permanent | Staging |
+| `develop` | Development integration | Permanent | Development |
+| `feat/*`, `fix/*` | Feature/fix branches | Temporary | - |
+| `hotfix/*` | Production emergency fixes | Temporary | - |
+
+## Merge Strategy (GitFlow Standard)
+
+| Source → Target | Merge Type | Command | Rationale |
+|-----------------|------------|---------|-----------|
+| feat → develop | **Squash** | `gh pr merge --squash` | Atomic feature commit, clean history |
+| develop → release | **Merge** | `gh pr merge --merge` | Preserve integration history, promotion record |
+| release → main | **Merge** | `gh pr merge --merge` | Release point tracking, prod sync |
+| hotfix → main | **Merge** | `gh pr merge --merge` | Emergency fix tracking |
+| hotfix → develop | **Merge** | `gh pr merge --merge` | Backport fix to develop |
 
 ## Common Workflows
 
-### Feature Development
+### Feature Development (feat → develop)
 
 ```bash
+# 1. Create feature branch
 git checkout develop
 git pull origin develop
-git checkout -b feature/new-feature
+git checkout -b feat/new-feature
 
-# Work, commit
+# 2. Work and commit
 git add .
 git commit -m "feat(scope): description"
 
-# Create PR to develop
-git push origin feature/new-feature
+# 3. Push and create PR
+git push -u origin feat/new-feature
+gh pr create --base develop --title "feat(scope): Title" --body "..."
+
+# 4. Squash merge (after review)
+gh pr merge --squash --delete-branch
 ```
 
-### Release
+### Promote to Staging (develop → release)
 
 ```bash
-# Create release branch (maintainers only)
-git checkout develop
-git checkout -b release/v1.0.0
+# Create PR from develop to release
+gh pr create --base release --head develop --title "chore: promote to staging" --body "..."
 
-# Deploy to staging, test, fix bugs
-git commit -m "fix: staging bug"
+# Merge commit (preserve history)
+gh pr merge --merge
+```
 
-# Merge to main
+### Release to Production (release → main)
+
+```bash
+# Create PR from release to main
+gh pr create --base main --head release --title "chore: release v1.0.0" --body "..."
+
+# Merge commit (preserve history)
+gh pr merge --merge
+
+# Tag release
 git checkout main
-git merge --no-ff release/v1.0.0
+git pull origin main
 git tag -a v1.0.0 -m "Release 1.0.0"
-
-# Merge back to develop
-git checkout develop
-git merge --no-ff release/v1.0.0
-
-# Delete release branch
-git branch -d release/v1.0.0
+git push origin v1.0.0
 ```
 
-### Hotfix
+### Hotfix (hotfix → main, then backport to develop)
 
 ```bash
-# Create hotfix (maintainers only)
+# 1. Create hotfix branch from main
 git checkout main
+git pull origin main
 git checkout -b hotfix/critical-fix
 
-# Fix, commit
+# 2. Fix and commit
 git commit -m "fix: critical issue"
 
-# Merge to main
+# 3. PR to main (merge commit)
+git push -u origin hotfix/critical-fix
+gh pr create --base main --title "fix: critical issue" --body "..."
+gh pr merge --merge --delete-branch
+
+# 4. Tag hotfix
 git checkout main
-git merge --no-ff hotfix/critical-fix
+git pull origin main
 git tag -a v1.0.1 -m "Hotfix 1.0.1"
+git push origin v1.0.1
 
-# Merge to develop
-git checkout develop
-git merge --no-ff hotfix/critical-fix
-
-# Delete hotfix branch
-git branch -d hotfix/critical-fix
+# 5. Backport to develop via PR
+gh pr create --base develop --head main --title "chore: backport hotfix v1.0.1" --body "..."
+gh pr merge --merge
 ```
 
 ## Commit Convention
