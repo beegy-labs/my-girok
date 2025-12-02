@@ -19,8 +19,6 @@ interface ResumePreviewContainerProps {
   innerClassName?: string;
   /** Whether to show responsive padding (smaller on mobile) */
   responsivePadding?: boolean;
-  /** Whether to enable horizontal overflow scrolling */
-  enableHorizontalScroll?: boolean;
   /** Optional custom content to render above the preview */
   headerContent?: ReactNode;
   /** Whether to show the toolbar in ResumePreview */
@@ -58,7 +56,6 @@ export default function ResumePreviewContainer({
   containerClassName = '',
   innerClassName = '',
   responsivePadding = false,
-  enableHorizontalScroll = false,
   headerContent,
   showToolbar = true,
   captureId = 'resume-capture-source',
@@ -144,12 +141,14 @@ export default function ResumePreviewContainer({
   }
 
   // Inner wrapper style
+  // Note: overflow is set to 'visible' to prevent clipping of scaled content
+  // The wrapper divs inside ResumePreview handle the actual dimensions
   const innerWrapperStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'flex-start',
     width: '100%',
-    overflow: enableHorizontalScroll ? 'auto' : 'hidden',
+    overflow: 'visible',
     minHeight: 'fit-content',
   };
 
