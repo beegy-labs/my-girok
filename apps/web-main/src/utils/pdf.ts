@@ -13,12 +13,13 @@ interface PDFExportOptions {
  * Export resume to PDF with proper page view (A4/Letter format)
  *
  * Priority order:
- * 1. Paged.js container (.pagedjs-container) - Proper page breaks, A4/Letter format
- * 2. Capture Layer (#resume-capture-source) - Continuous view fallback
- * 3. Fallback element (elementId) - Legacy support
+ * 1. Capture Layer Paged.js (.capture-pagedjs-container) - Consistent quality across all devices
+ * 2. Capture Layer continuous - Fallback if Paged.js not ready
+ * 3. Screen Paged.js container - Fallback (may have quality variations)
+ * 4. Fallback element (elementId) - Legacy support
  *
- * Paged.js is prioritized because it properly handles page breaks and renders
- * content in A4/Letter format with correct pagination.
+ * Capture Layer is prioritized because it always renders at original paper size
+ * (no CSS transforms), ensuring identical PDF quality on mobile/tablet/desktop.
  */
 export async function exportResumeToPDF(
   elementId: string,
@@ -32,19 +33,27 @@ export async function exportResumeToPDF(
 
   const paper = PAPER_SIZES[paperSize];
 
-  // PRIORITY 1: Use Paged.js container for proper page view (A4/Letter format)
-  const pagedContainer = document.querySelector('.pagedjs-container') as HTMLElement;
-  if (pagedContainer && pagedContainer.querySelector('.pagedjs_page')) {
-    console.log('PDF Export: Using Paged.js container for page view');
-    await exportPagedJSToPDF(pagedContainer, paperSize, fileName);
+  // PRIORITY 1: Use Capture Layer's Paged.js container (consistent quality)
+  const captureLayer = document.getElementById(captureElementId);
+  if (captureLayer) {
+    const capturePagedContainer = captureLayer.querySelector('.capture-pagedjs-container') as HTMLElement;
+    if (capturePagedContainer && capturePagedContainer.querySelector('.pagedjs_page')) {
+      console.log('PDF Export: Using Capture Layer Paged.js (consistent quality)');
+      await exportPagedJSToPDF(capturePagedContainer, paperSize, fileName);
+      return;
+    }
+
+    // PRIORITY 2: Use Capture Layer continuous view
+    console.log('PDF Export: Using Capture Layer continuous view');
+    await exportCaptureLayerToPDF(captureLayer, paperSize, fileName);
     return;
   }
 
-  // PRIORITY 2: Use Capture Layer (continuous view fallback)
-  const captureLayer = document.getElementById(captureElementId);
-  if (captureLayer) {
-    console.log('PDF Export: Using Capture Layer (continuous view)');
-    await exportCaptureLayerToPDF(captureLayer, paperSize, fileName);
+  // PRIORITY 3: Use screen Paged.js container (may have quality variations based on scale)
+  const pagedContainer = document.querySelector('.pagedjs-container') as HTMLElement;
+  if (pagedContainer && pagedContainer.querySelector('.pagedjs_page')) {
+    console.log('PDF Export: Using screen Paged.js container (fallback)');
+    await exportPagedJSToPDF(pagedContainer, paperSize, fileName);
     return;
   }
 
