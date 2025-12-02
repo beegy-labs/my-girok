@@ -37,7 +37,7 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
     try {
       const paperSize = resume.paperSize || 'A4';
       const fileName = `${resume.name.replace(/\s+/g, '_')}_Resume_${paperSize}.pdf`;
-      await exportResumeToPDF('resume-content', {
+      await exportResumeToPDF(resume, {
         paperSize,
         fileName,
       });
