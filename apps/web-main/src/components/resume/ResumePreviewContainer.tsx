@@ -1,12 +1,14 @@
 import { ReactNode, useState, useEffect, useRef, useCallback } from 'react';
-import { Resume, PaperSize } from '../../api/resume';
+import { Resume } from '../../api/resume';
+import { PaperSizeKey, calculateFitScale } from '../../constants/paper';
 import ResumePreview from './ResumePreview';
+import ResumeCaptureLayer from './ResumeCaptureLayer';
 
 interface ResumePreviewContainerProps {
   /** Resume data to display */
   resume: Resume;
   /** Paper size for the preview (defaults to resume.paperSize or 'A4') */
-  paperSize?: PaperSize;
+  paperSize?: PaperSizeKey;
   /** Optional scale factor for the preview (e.g., 0.75 for 75% size). If not provided, auto-scales based on container width */
   scale?: number;
   /** Maximum height for the container (e.g., 'calc(100vh-200px)') */
@@ -21,12 +23,32 @@ interface ResumePreviewContainerProps {
   enableHorizontalScroll?: boolean;
   /** Optional custom content to render above the preview */
   headerContent?: ReactNode;
+  /** Whether to show the toolbar in ResumePreview */
+  showToolbar?: boolean;
+  /** ID for the capture layer (used by PDF export) */
+  captureId?: string;
 }
 
 /**
- * Shared container component for resume previews
- * Provides consistent styling across edit, preview, shared, and public pages
- * Automatically scales content to fit container width when scale is not provided
+ * Dual-Layer Resume Preview Container
+ *
+ * This component implements the Dual-Layer rendering architecture:
+ *
+ * 1. Display Layer (visible):
+ *    - Shows resume with responsive scaling based on viewport
+ *    - Provides good UX on all devices (mobile, tablet, desktop)
+ *    - Scale is calculated dynamically or provided via prop
+ *
+ * 2. Capture Layer (hidden):
+ *    - Always renders at original paper size (A4: 794px, Letter: 816px)
+ *    - No transforms or scaling applied
+ *    - Used as source for PDF export via html2canvas
+ *    - Ensures identical PDF quality across all devices
+ *
+ * Benefits:
+ * - Mobile, Tablet, Desktop all produce identical PDF output
+ * - Screen display is optimized for each device
+ * - PDF quality is guaranteed regardless of viewport size
  */
 export default function ResumePreviewContainer({
   resume,
@@ -38,67 +60,80 @@ export default function ResumePreviewContainer({
   responsivePadding = false,
   enableHorizontalScroll = false,
   headerContent,
+  showToolbar = true,
+  captureId = 'resume-capture-source',
 }: ResumePreviewContainerProps) {
-  const effectivePaperSize = paperSize || resume.paperSize || 'A4';
+  const effectivePaperSize: PaperSizeKey = (paperSize || resume.paperSize || 'A4') as PaperSizeKey;
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dynamicScale, setDynamicScale] = useState(1);
+  const [displayScale, setDisplayScale] = useState(1);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // A4: 210mm = 794px, Letter: 215.9mm = 816px at 96 DPI
-  const paperWidthPx = effectivePaperSize === 'A4' ? 794 : 816;
-
-  // Calculate dynamic scale based on container width
-  const calculateDynamicScale = useCallback(() => {
+  // Calculate display scale based on container width (with debouncing)
+  const calculateDisplayScale = useCallback(() => {
     if (!containerRef.current || propScale !== undefined) return;
 
     const containerWidth = containerRef.current.offsetWidth;
-    // Subtract minimal padding (16px on each side)
-    const availableWidth = containerWidth - 32;
+    const padding = 32; // 16px on each side
+    const availableWidth = containerWidth - padding;
 
-    // Calculate scale to fit, max 1.0 (don't scale up)
-    const newScale = Math.min(1, availableWidth / paperWidthPx);
+    // Calculate scale to fit container, max 1.0 (never scale up)
+    const newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
 
-    // Round to 2 decimal places to avoid unnecessary re-renders
+    // Round to 2 decimal places
     const roundedScale = Math.round(newScale * 100) / 100;
 
-    setDynamicScale(prevScale => {
+    setDisplayScale(prevScale => {
       const roundedPrevScale = Math.round(prevScale * 100) / 100;
       return roundedPrevScale !== roundedScale ? roundedScale : prevScale;
     });
-  }, [paperWidthPx, propScale]);
+  }, [effectivePaperSize, propScale]);
 
-  // Calculate scale on mount and window resize
+  // Calculate scale on mount and window resize (debounced)
   useEffect(() => {
-    if (propScale !== undefined) return; // Skip if manual scale is provided
+    if (propScale !== undefined) return;
 
-    calculateDynamicScale();
+    // Initial calculation
+    calculateDisplayScale();
 
+    // Debounced resize handler
     const handleResize = () => {
-      calculateDynamicScale();
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      resizeTimeoutRef.current = setTimeout(calculateDisplayScale, 100);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [calculateDynamicScale, propScale]);
+    window.addEventListener('resize', handleResize, { passive: true });
 
-  const effectiveScale = propScale !== undefined ? propScale : dynamicScale;
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, [calculateDisplayScale, propScale]);
 
-  // Build container classes - minimize padding for full-width experience
+  // Use prop scale if provided, otherwise use calculated display scale
+  const effectiveScale = propScale !== undefined ? propScale : displayScale;
+
+  // Build container classes
   const outerClasses = [
     'bg-gray-100 dark:bg-dark-bg-secondary/50',
-    responsivePadding ? 'p-1 sm:p-2 md:p-4' : 'p-2 sm:p-4', // Mobile-first reduced padding
+    responsivePadding ? 'p-1 sm:p-2 md:p-4' : 'p-2 sm:p-4',
     'rounded-lg shadow-inner dark:shadow-dark-inner',
     'transition-colors duration-200',
     'w-full',
+    'relative', // For positioning capture layer
     containerClassName,
   ].filter(Boolean).join(' ');
 
   const innerClasses = [
     'bg-white rounded shadow-lg',
-    'mx-auto', // Center the preview
+    'mx-auto',
     innerClassName,
   ].filter(Boolean).join(' ');
 
-  // Build style object for container
+  // Container style
   const containerStyle: React.CSSProperties = {
     position: 'relative',
   };
@@ -108,7 +143,7 @@ export default function ResumePreviewContainer({
     containerStyle.overflowY = 'auto';
   }
 
-  // Build style object for inner wrapper
+  // Inner wrapper style
   const innerWrapperStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
@@ -118,26 +153,26 @@ export default function ResumePreviewContainer({
     minHeight: 'fit-content',
   };
 
-  // Build style object for preview wrapper with transform
-  const previewWrapperStyle: React.CSSProperties = {
-    transformOrigin: 'top center',
-    transition: 'transform 0.2s ease-out',
-  };
-
-  if (effectiveScale !== 1) {
-    previewWrapperStyle.transform = `scale(${effectiveScale})`;
-    // Add bottom margin to account for scaled height reduction
-    previewWrapperStyle.marginBottom = `${(1 - effectiveScale) * 100}%`;
-  }
-
   return (
     <div ref={containerRef} className={outerClasses} style={containerStyle}>
       {headerContent}
+
+      {/* Display Layer - Visible, scaled for screen */}
       <div className={innerClasses} style={innerWrapperStyle}>
-        <div style={previewWrapperStyle}>
-          <ResumePreview resume={resume} paperSize={effectivePaperSize} />
-        </div>
+        <ResumePreview
+          resume={resume}
+          paperSize={effectivePaperSize}
+          scale={effectiveScale}
+          showToolbar={showToolbar}
+        />
       </div>
+
+      {/* Capture Layer - Hidden, original size for PDF export */}
+      <ResumeCaptureLayer
+        resume={resume}
+        paperSize={effectivePaperSize}
+        captureId={captureId}
+      />
     </div>
   );
 }
