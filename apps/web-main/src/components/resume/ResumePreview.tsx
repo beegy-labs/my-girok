@@ -1,11 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-// @ts-ignore - pagedjs doesn't have type definitions
-import { Previewer } from 'pagedjs';
+import { Document, Page, pdfjs } from 'react-pdf';
+import { usePDF } from '@react-pdf/renderer';
 import { Resume } from '../../api/resume';
 import { PAPER_SIZES, PaperSizeKey } from '../../constants/paper';
-import ResumeContent from './ResumeContent';
-import '../../styles/resume-print.css';
+import ResumePdfDocument from './ResumePdfDocument';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface ResumePreviewProps {
   resume: Resume;
@@ -19,14 +23,8 @@ interface ResumePreviewProps {
 /**
  * Resume Preview Component
  *
- * This component handles:
- * - Display of resume content with optional scaling (controlled by parent)
- * - View mode toggle (continuous vs paginated)
- * - Paged.js integration for print-optimized paginated view
- * - Grayscale mode toggle
- *
- * IMPORTANT: Scale is now controlled externally by ResumePreviewContainer.
- * This component no longer calculates its own scale - it receives scale as a prop.
+ * Uses @react-pdf/renderer to generate PDF and react-pdf to display it.
+ * This approach ensures pixel-perfect PDF preview without CSS transform issues.
  */
 export default function ResumePreview({
   resume,
@@ -35,176 +33,49 @@ export default function ResumePreview({
   showToolbar = true,
 }: ResumePreviewProps) {
   const { t } = useTranslation();
+  const [numPages, setNumPages] = useState<number>(0);
   const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
   const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('paginated');
-  const [pagedContainerHeight, setPagedContainerHeight] = useState<number>(0);
-  const [continuousContainerHeight, setContinuousContainerHeight] = useState<number>(0);
-  const pagedContainerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const paper = PAPER_SIZES[paperSize];
 
-  // Update container heights after render
-  const updateContainerHeights = useCallback(() => {
-    if (pagedContainerRef.current) {
-      const height = pagedContainerRef.current.scrollHeight || pagedContainerRef.current.offsetHeight;
-      setPagedContainerHeight(height);
-    }
-    if (contentRef.current) {
-      const height = contentRef.current.scrollHeight || contentRef.current.offsetHeight;
-      setContinuousContainerHeight(height);
-    }
+  // Generate PDF document
+  const pdfDocument = useMemo(
+    () => (
+      <ResumePdfDocument
+        resume={resume}
+        paperSize={paperSize}
+        isGrayscaleMode={isGrayscaleMode}
+      />
+    ),
+    [resume, paperSize, isGrayscaleMode]
+  );
+
+  // Use PDF hook to generate blob
+  const [instance, updateInstance] = usePDF({ document: pdfDocument });
+
+  // Re-generate PDF when resume or settings change
+  useEffect(() => {
+    updateInstance(pdfDocument);
+  }, [pdfDocument, updateInstance]);
+
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    setCurrentPage(1);
   }, []);
 
-  // Inject dynamic @page style based on paperSize
-  useEffect(() => {
-    const styleId = 'resume-page-size-style';
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+  // Calculate display width based on scale (memoized)
+  const displayWidth = useMemo(() => paper.width.px * scale, [paper.width.px, scale]);
 
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.id = styleId;
-      document.head.appendChild(styleElement);
-    }
+  // Page navigation handlers (memoized)
+  const goToPrevPage = useCallback(() => setCurrentPage(prev => Math.max(1, prev - 1)), []);
+  const goToNextPage = useCallback(() => setCurrentPage(prev => Math.min(numPages, prev + 1)), [numPages]);
 
-    const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
-    styleElement.textContent = `
-      @media print {
-        @page {
-          size: ${pageSize};
-          margin: 0;
-        }
-      }
-    `;
-
-    return () => {
-      const element = document.getElementById(styleId);
-      if (element) {
-        element.remove();
-      }
-    };
-  }, [paperSize]);
-
-  // Paged.js integration - Always render for print readiness
-  useEffect(() => {
-    if (contentRef.current && pagedContainerRef.current) {
-      const paged = new Previewer();
-
-      pagedContainerRef.current.innerHTML = '';
-
-      const contentClone = contentRef.current.cloneNode(true) as HTMLElement;
-
-      const stylesheets = Array.from(document.styleSheets)
-        .map(sheet => {
-          try {
-            return Array.from(sheet.cssRules)
-              .map(rule => rule.cssText)
-              .join('\n');
-          } catch (e) {
-            return '';
-          }
-        })
-        .join('\n');
-
-      const pageSize = paperSize === 'A4' ? 'A4' : 'letter';
-      const dynamicCSS = `
-        ${stylesheets}
-
-        @page {
-          size: ${pageSize};
-          margin: 0;
-        }
-
-        html, body {
-          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          font-size: 14px;
-          line-height: 1.5;
-          color: #1f2937;
-        }
-
-        ${isGrayscaleMode ? `
-        img {
-          filter: grayscale(100%) !important;
-        }
-        ` : ''}
-
-        @media print {
-          @page {
-            size: ${pageSize};
-            margin: 0;
-          }
-
-          .resume-section {
-            break-inside: auto;
-            page-break-inside: auto;
-          }
-
-          .resume-item {
-            break-inside: auto;
-            page-break-inside: auto;
-          }
-
-          .resume-item > h3,
-          .resume-item > p:only-child {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          h1, h2, h3, h4, h5, h6 {
-            break-after: avoid;
-            page-break-after: avoid;
-          }
-
-          * {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-        }
-
-        .resume-page-number {
-          display: none !important;
-        }
-      `;
-
-      const htmlWithEmbeddedStyles = `<style>${dynamicCSS}</style>${contentClone.innerHTML}`;
-
-      paged.preview(
-        htmlWithEmbeddedStyles,
-        [],
-        pagedContainerRef.current
-      ).then((flow: any) => {
-        console.log('Paged.js rendered', flow.total, 'pages with', pageSize, 'size');
-        // Update container height after Paged.js finishes rendering
-        updateContainerHeights();
-      }).catch((error: any) => {
-        console.error('Paged.js error:', error);
-      });
-    }
-  }, [resume, paperSize, isGrayscaleMode, updateContainerHeights]);
-
-  // Also update heights when continuous content changes
-  useEffect(() => {
-    updateContainerHeights();
-  }, [resume, updateContainerHeights]);
-
-  // Calculate wrapper dimensions for scaled content
-  // When scale < 1, the visual size decreases but layout space remains the same
-  // We need to set wrapper dimensions to correctly contain the scaled content
-  const getScaledWrapperDimensions = (originalHeight: number, originalWidth: number) => {
-    if (scale >= 1) {
-      return { height: 'auto', width: 'auto' };
-    }
-    return {
-      height: originalHeight > 0 ? `${originalHeight * scale}px` : 'auto',
-      width: originalWidth > 0 ? `${originalWidth * scale}px` : 'auto',
-    };
-  };
-
-  // Get paper width in pixels
-  const paperWidthPx = paper.width.px;
-
-  const pagedWrapperDimensions = getScaledWrapperDimensions(pagedContainerHeight, paperWidthPx);
-  const continuousWrapperDimensions = getScaledWrapperDimensions(continuousContainerHeight, paperWidthPx);
+  // View mode handlers (memoized)
+  const handleSetContinuousView = useCallback(() => setViewMode('continuous'), []);
+  const handleSetPaginatedView = useCallback(() => setViewMode('paginated'), []);
+  const handleToggleGrayscale = useCallback(() => setIsGrayscaleMode(prev => !prev), []);
 
   return (
     <div className="relative">
@@ -214,17 +85,22 @@ export default function ResumePreview({
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800">
-                📄 {paperSize} ({paper.css.width} × {paper.css.height})
+                {paperSize} ({paper.css.width} x {paper.css.height})
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded px-2 py-1 text-xs text-blue-700">
                 {Math.round(scale * 100)}%
               </div>
+              {numPages > 0 && (
+                <div className="bg-green-50 border border-green-200 rounded px-2 py-1 text-xs text-green-700">
+                  {numPages} {t('resume.preview.pages', { defaultValue: 'pages' })}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                 <button
-                  onClick={() => setViewMode('continuous')}
+                  onClick={handleSetContinuousView}
                   className={`px-3 py-1.5 text-xs font-semibold rounded transition-all ${
                     viewMode === 'continuous'
                       ? 'bg-white text-gray-900 shadow-sm'
@@ -232,10 +108,10 @@ export default function ResumePreview({
                   }`}
                   title={t('resume.preview.continuousView')}
                 >
-                  📜 {t('resume.preview.continuousView')}
+                  {t('resume.preview.continuousView')}
                 </button>
                 <button
-                  onClick={() => setViewMode('paginated')}
+                  onClick={handleSetPaginatedView}
                   className={`px-3 py-1.5 text-xs font-semibold rounded transition-all ${
                     viewMode === 'paginated'
                       ? 'bg-white text-gray-900 shadow-sm'
@@ -243,12 +119,12 @@ export default function ResumePreview({
                   }`}
                   title={t('resume.preview.paginatedView')}
                 >
-                  📄 {t('resume.preview.paginatedView')}
+                  {t('resume.preview.paginatedView')}
                 </button>
               </div>
               {/* Grayscale Toggle */}
               <button
-                onClick={() => setIsGrayscaleMode(!isGrayscaleMode)}
+                onClick={handleToggleGrayscale}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
                   isGrayscaleMode
                     ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
@@ -256,76 +132,93 @@ export default function ResumePreview({
                 }`}
                 title={isGrayscaleMode ? t('resume.preview.switchToColorMode') : t('resume.preview.switchToGrayscaleMode')}
               >
-                {isGrayscaleMode ? `🖤 ${t('resume.preview.grayscaleMode')}` : `🎨 ${t('resume.preview.colorMode')}`}
+                {isGrayscaleMode ? t('resume.preview.grayscaleMode') : t('resume.preview.colorMode')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Resume Content - Continuous View (source for Paged.js) */}
-      {/* Wrapper div handles the scaled dimensions to prevent content clipping */}
-      <div
-        style={{
-          display: viewMode === 'paginated' ? 'none' : 'block',
-          height: continuousWrapperDimensions.height,
-          width: continuousWrapperDimensions.width,
-          overflow: 'visible',
-          margin: '0 auto',
-        }}
-      >
-        <div
-          ref={contentRef}
-          id="resume-content"
-          className={viewMode === 'paginated' ? 'resume-page-container' : ''}
-          style={{
-            transform: `scale(${scale}) translate3d(0, 0, 0)`,
-            transformOrigin: 'top left',
-            willChange: 'transform',
-            transition: 'transform 0.15s ease-out',
-          }}
-        >
-          <div
-            className={viewMode === 'paginated' ? '' : 'bg-white shadow-lg'}
-            style={viewMode === 'continuous' ? {
-              width: paper.css.width,
-              minWidth: paper.css.width,
-            } : {
-              padding: 0,
-              margin: 0,
-            }}
-          >
-            <ResumeContent
-              resume={resume}
-              paperSize={paperSize}
-              isGrayscaleMode={isGrayscaleMode}
-            />
+      {/* PDF Viewer */}
+      <div className="flex flex-col items-center">
+        {instance.loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">{t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}</span>
           </div>
-        </div>
-      </div>
+        ) : instance.error ? (
+          <div className="flex items-center justify-center py-20 text-red-600">
+            <span>{t('resume.preview.error', { defaultValue: 'Error generating PDF' })}: {instance.error}</span>
+          </div>
+        ) : instance.blob ? (
+          <>
+            {/* Page Navigation (for paginated mode) */}
+            {viewMode === 'paginated' && numPages > 1 && (
+              <div className="flex items-center gap-4 mb-4">
+                <button
+                  onClick={goToPrevPage}
+                  disabled={currentPage <= 1}
+                  className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t('resume.preview.prevPage', { defaultValue: 'Previous' })}
+                </button>
+                <span className="text-sm text-gray-600">
+                  {currentPage} / {numPages}
+                </span>
+                <button
+                  onClick={goToNextPage}
+                  disabled={currentPage >= numPages}
+                  className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t('resume.preview.nextPage', { defaultValue: 'Next' })}
+                </button>
+              </div>
+            )}
 
-      {/* Paged.js Output - Always rendered, hidden in continuous mode on screen */}
-      {/* Wrapper div handles the scaled dimensions to prevent content clipping */}
-      <div
-        style={{
-          display: viewMode === 'continuous' ? 'none' : 'block',
-          height: pagedWrapperDimensions.height,
-          width: pagedWrapperDimensions.width,
-          overflow: 'visible',
-          margin: '0 auto',
-        }}
-        className="print:!h-auto print:!w-auto print:!overflow-visible"
-      >
-        <div
-          ref={pagedContainerRef}
-          className={`pagedjs-container print-content ${viewMode === 'continuous' ? 'screen-hidden' : ''}`}
-          style={{
-            transform: `scale(${scale}) translate3d(0, 0, 0)`,
-            transformOrigin: 'top left',
-            willChange: 'transform',
-            transition: 'transform 0.15s ease-out',
-          }}
-        />
+            {/* PDF Document */}
+            <Document
+              file={instance.blob}
+              onLoadSuccess={onDocumentLoadSuccess}
+              loading={
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              }
+              error={
+                <div className="flex items-center justify-center py-20 text-red-600">
+                  {t('resume.preview.loadError', { defaultValue: 'Failed to load PDF' })}
+                </div>
+              }
+              className="flex flex-col items-center"
+            >
+              {viewMode === 'continuous' ? (
+                // Show all pages
+                Array.from(new Array(numPages), (_, index) => (
+                  <div key={`page_${index + 1}`} className="mb-4 shadow-lg">
+                    <Page
+                      pageNumber={index + 1}
+                      width={displayWidth}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      className={isGrayscaleMode ? 'grayscale' : ''}
+                    />
+                  </div>
+                ))
+              ) : (
+                // Show single page
+                <div className="shadow-lg">
+                  <Page
+                    pageNumber={currentPage}
+                    width={displayWidth}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                    className={isGrayscaleMode ? 'grayscale' : ''}
+                  />
+                </div>
+              )}
+            </Document>
+          </>
+        ) : null}
       </div>
     </div>
   );

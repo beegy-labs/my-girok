@@ -64,16 +64,3 @@ export function calculateFitScale(
   return Math.min(maxScale, Math.max(0.1, scale)); // Clamp between 0.1 and maxScale
 }
 
-/**
- * PDF export quality settings
- */
-export const PDF_EXPORT_SETTINGS = {
-  // html2canvas scale for high resolution (2x = ~192 DPI)
-  canvasScale: 2,
-  // JPEG quality for PDF images
-  imageQuality: 0.95,
-  // Image format
-  imageFormat: 'JPEG' as const,
-  // Timeout for image loading (ms)
-  imageTimeout: 15000,
-} as const;

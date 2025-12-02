@@ -427,34 +427,58 @@ pnpm preview
 
 **Deploy**: Docker container to Kubernetes
 
-## Resume Print & Preview
+## Resume PDF & Preview (Updated 2025-12)
 
-### Print Margins (Updated 2025-01-19)
-**Problem**: Content was being clipped at page edges due to insufficient margins.
+### Architecture
+Resume preview and PDF export use **@react-pdf/renderer** + **react-pdf**:
 
-**Solution**: Updated print margins from 1.2-1.5cm to **2cm** on all sides (top, bottom, left, right).
+```
+ResumePdfDocument.tsx    → @react-pdf/renderer (generates PDF)
+        ↓
+ResumePreview.tsx        → react-pdf (displays PDF in canvas)
+        ↓
+ResumePreviewContainer   → Responsive wrapper with scale
+```
 
-**Files Modified**:
-- `apps/web-main/src/print.css` - Set `@page { size: A4; margin: 0; }`
-- `apps/web-main/src/styles/resume-print.css` - Increased padding to 2cm
+**Key Files**:
+- `ResumePdfDocument.tsx` - PDF document using @react-pdf/renderer components
+- `ResumePreview.tsx` - PDF viewer using react-pdf
+- `ResumePreviewContainer.tsx` - Responsive container with auto-scale
+- `utils/pdf.ts` - PDF export utilities
 
-**Page Boundaries**:
-- A4: Content area is 25.7cm (29.7cm - 4cm padding)
-- Letter: Content area is 23.94cm (27.94cm - 4cm padding)
-- Visual page boundaries shown with gray separator lines in paginated view
+**Benefits**:
+- True vector PDF (not image-based)
+- No CSS transform clipping issues
+- Consistent output across all devices
+- Korean font support (Pretendard)
 
-### ResumePreviewContainer Component (Added 2025-01-19)
+### PDF Export
+
+```typescript
+import { exportResumeToPDF } from '../../utils/pdf';
+
+// Download PDF
+await exportResumeToPDF(resume, {
+  paperSize: 'A4',
+  fileName: 'resume.pdf',
+});
+
+// Generate blob (for upload)
+import { generateResumePDFBlob } from '../../utils/pdf';
+const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
+```
+
+### ResumePreviewContainer Component
+
 **Purpose**: Shared wrapper component for all resume preview displays.
 
 **Location**: `apps/web-main/src/components/resume/ResumePreviewContainer.tsx`
 
 **Features**:
-- Customizable scale factor (for live preview)
+- Auto-scales based on container width
 - Optional maxHeight with overflow scrolling
 - Responsive padding (mobile vs desktop)
-- Horizontal scroll support (for mobile)
-- Full dark mode support
-- Flexible className overrides
+- Dark mode support
 
 **Usage Examples**:
 
@@ -464,15 +488,13 @@ pnpm preview
   resume={previewData}
   scale={0.75}
   maxHeight="calc(100vh - 200px)"
-  containerClassName="border-2 border-gray-300"
 />
 
-// Full Preview (responsive)
+// Full Preview (auto-scale)
 <ResumePreviewContainer
   resume={resume}
   paperSize={paperSize}
   responsivePadding={true}
-  enableHorizontalScroll={true}
 />
 
 // Simple Preview
@@ -480,40 +502,23 @@ pnpm preview
 ```
 
 **Used In**:
-- `ResumeEditPage` - Live preview with 0.75 scale
-- `ResumePreviewPage` - Full preview with responsive padding
+- `ResumeEditPage` - Live preview
+- `ResumePreviewPage` - Full preview
 - `SharedResumePage` - Public shared resume view
 - `PublicResumePage` - Public profile resume view
 
-**Benefits**:
-- Eliminates code duplication across 4 pages
-- Ensures consistent preview styling
-- Single source of truth for preview wrapper logic
-- Easier maintenance and updates
+### Preview Scale
 
-## Mobile Preview Scale Thresholds
-
-### Problem
-Resume preview uses CSS transform scale to fit the A4/Letter paper (794px/816px) into the viewport. On mobile devices, this causes excessive shrinking (e.g., 375px viewport → 43% scale), making text unreadable.
-
-### Solution
-Enforce minimum scale thresholds per device type and enable horizontal scroll for readability:
+react-pdf handles scaling via the `width` prop on `<Page>`:
 
 ```typescript
-// Constants (defined outside component)
-const MIN_SCALE_MOBILE = 1.0; // 100% for mobile - no scaling, use scroll
-const MIN_SCALE_TABLET = 0.9; // Minimum 90% for tablet
-const MOBILE_BREAKPOINT = 640; // Tailwind sm
-const TABLET_BREAKPOINT = 1024; // Tailwind lg
+// In ResumePreview.tsx
+const displayWidth = paper.width.px * scale;
 
-// In scale calculation
-let newScale = Math.min(1, availableWidth / paperWidthPx);
-
-if (viewportWidth < MOBILE_BREAKPOINT) {
-  newScale = Math.max(MIN_SCALE_MOBILE, newScale);
-} else if (viewportWidth < TABLET_BREAKPOINT) {
-  newScale = Math.max(MIN_SCALE_TABLET, newScale);
-}
+<Page
+  pageNumber={currentPage}
+  width={displayWidth}  // Scales the PDF page
+/>
 ```
 
 ### Container Setup
