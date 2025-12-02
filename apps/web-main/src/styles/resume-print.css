@@ -29,6 +29,17 @@
   transition: none !important;
 }
 
+/* Capture layer Paged.js container - no shadows, pure white background */
+.capture-pagedjs-container .pagedjs_page {
+  margin: 0 !important;
+  box-shadow: none !important;
+  background: white !important;
+}
+
+.capture-pagedjs-container .pagedjs_page_content {
+  padding: 0.3cm !important;
+}
+
 /*
  * =============================================================================
  * PAGED.JS CONTAINER STYLES (Screen)
