@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 // @ts-ignore - pagedjs doesn't have type definitions
 import { Previewer } from 'pagedjs';
@@ -37,10 +37,24 @@ export default function ResumePreview({
   const { t } = useTranslation();
   const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
   const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('paginated');
+  const [pagedContainerHeight, setPagedContainerHeight] = useState<number>(0);
+  const [continuousContainerHeight, setContinuousContainerHeight] = useState<number>(0);
   const pagedContainerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const paper = PAPER_SIZES[paperSize];
+
+  // Update container heights after render
+  const updateContainerHeights = useCallback(() => {
+    if (pagedContainerRef.current) {
+      const height = pagedContainerRef.current.scrollHeight || pagedContainerRef.current.offsetHeight;
+      setPagedContainerHeight(height);
+    }
+    if (contentRef.current) {
+      const height = contentRef.current.scrollHeight || contentRef.current.offsetHeight;
+      setContinuousContainerHeight(height);
+    }
+  }, []);
 
   // Inject dynamic @page style based on paperSize
   useEffect(() => {
@@ -160,14 +174,29 @@ export default function ResumePreview({
         pagedContainerRef.current
       ).then((flow: any) => {
         console.log('Paged.js rendered', flow.total, 'pages with', pageSize, 'size');
+        // Update container height after Paged.js finishes rendering
+        updateContainerHeights();
       }).catch((error: any) => {
         console.error('Paged.js error:', error);
       });
     }
-  }, [resume, paperSize, isGrayscaleMode]);
+  }, [resume, paperSize, isGrayscaleMode, updateContainerHeights]);
 
-  // Calculate margin adjustment for scaled content
-  const marginAdjustment = scale < 1 ? `${(1 - scale) * -200}px` : '0';
+  // Also update heights when continuous content changes
+  useEffect(() => {
+    updateContainerHeights();
+  }, [resume, updateContainerHeights]);
+
+  // Calculate wrapper height for scaled content
+  // When scale < 1, the visual size decreases but layout space remains the same
+  // We need to set a wrapper height to correctly contain the scaled content
+  const getScaledWrapperHeight = (originalHeight: number): number => {
+    if (scale >= 1 || originalHeight === 0) return 0;
+    return originalHeight * scale;
+  };
+
+  const pagedWrapperHeight = getScaledWrapperHeight(pagedContainerHeight);
+  const continuousWrapperHeight = getScaledWrapperHeight(continuousContainerHeight);
 
   return (
     <div className="relative">
@@ -227,50 +256,66 @@ export default function ResumePreview({
       )}
 
       {/* Resume Content - Continuous View (source for Paged.js) */}
+      {/* Wrapper div handles the scaled height to prevent content clipping */}
       <div
-        ref={contentRef}
-        id="resume-content"
-        className={viewMode === 'paginated' ? 'resume-page-container' : ''}
         style={{
           display: viewMode === 'paginated' ? 'none' : 'block',
-          transform: `scale(${scale}) translate3d(0, 0, 0)`,
-          transformOrigin: 'top center',
-          marginBottom: marginAdjustment,
-          willChange: 'transform',
-          transition: 'transform 0.15s ease-out',
+          height: continuousWrapperHeight > 0 ? `${continuousWrapperHeight}px` : 'auto',
+          overflow: 'visible',
         }}
       >
         <div
-          className={viewMode === 'paginated' ? '' : 'bg-white shadow-lg'}
-          style={viewMode === 'continuous' ? {
-            width: paper.css.width,
-            minWidth: paper.css.width,
-            margin: '0 auto',
-          } : {
-            padding: 0,
-            margin: 0,
+          ref={contentRef}
+          id="resume-content"
+          className={viewMode === 'paginated' ? 'resume-page-container' : ''}
+          style={{
+            transform: `scale(${scale}) translate3d(0, 0, 0)`,
+            transformOrigin: 'top center',
+            willChange: 'transform',
+            transition: 'transform 0.15s ease-out',
           }}
         >
-          <ResumeContent
-            resume={resume}
-            paperSize={paperSize}
-            isGrayscaleMode={isGrayscaleMode}
-          />
+          <div
+            className={viewMode === 'paginated' ? '' : 'bg-white shadow-lg'}
+            style={viewMode === 'continuous' ? {
+              width: paper.css.width,
+              minWidth: paper.css.width,
+              margin: '0 auto',
+            } : {
+              padding: 0,
+              margin: 0,
+            }}
+          >
+            <ResumeContent
+              resume={resume}
+              paperSize={paperSize}
+              isGrayscaleMode={isGrayscaleMode}
+            />
+          </div>
         </div>
       </div>
 
       {/* Paged.js Output - Always rendered, hidden in continuous mode on screen */}
+      {/* Wrapper div handles the scaled height to prevent content clipping */}
       <div
-        ref={pagedContainerRef}
-        className={`pagedjs-container print-content ${viewMode === 'continuous' ? 'screen-hidden' : ''}`}
         style={{
-          transform: `scale(${scale}) translate3d(0, 0, 0)`,
-          transformOrigin: 'top center',
-          marginBottom: marginAdjustment,
-          willChange: 'transform',
-          transition: 'transform 0.15s ease-out',
+          display: viewMode === 'continuous' ? 'none' : 'block',
+          height: pagedWrapperHeight > 0 ? `${pagedWrapperHeight}px` : 'auto',
+          overflow: 'visible',
         }}
-      />
+        className="print:!h-auto print:!overflow-visible"
+      >
+        <div
+          ref={pagedContainerRef}
+          className={`pagedjs-container print-content ${viewMode === 'continuous' ? 'screen-hidden' : ''}`}
+          style={{
+            transform: `scale(${scale}) translate3d(0, 0, 0)`,
+            transformOrigin: 'top center',
+            willChange: 'transform',
+            transition: 'transform 0.15s ease-out',
+          }}
+        />
+      </div>
     </div>
   );
 }
