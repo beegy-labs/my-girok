@@ -187,16 +187,24 @@ export default function ResumePreview({
     updateContainerHeights();
   }, [resume, updateContainerHeights]);
 
-  // Calculate wrapper height for scaled content
+  // Calculate wrapper dimensions for scaled content
   // When scale < 1, the visual size decreases but layout space remains the same
-  // We need to set a wrapper height to correctly contain the scaled content
-  const getScaledWrapperHeight = (originalHeight: number): number => {
-    if (scale >= 1 || originalHeight === 0) return 0;
-    return originalHeight * scale;
+  // We need to set wrapper dimensions to correctly contain the scaled content
+  const getScaledWrapperDimensions = (originalHeight: number, originalWidth: number) => {
+    if (scale >= 1) {
+      return { height: 'auto', width: 'auto' };
+    }
+    return {
+      height: originalHeight > 0 ? `${originalHeight * scale}px` : 'auto',
+      width: originalWidth > 0 ? `${originalWidth * scale}px` : 'auto',
+    };
   };
 
-  const pagedWrapperHeight = getScaledWrapperHeight(pagedContainerHeight);
-  const continuousWrapperHeight = getScaledWrapperHeight(continuousContainerHeight);
+  // Get paper width in pixels
+  const paperWidthPx = paper.width.px;
+
+  const pagedWrapperDimensions = getScaledWrapperDimensions(pagedContainerHeight, paperWidthPx);
+  const continuousWrapperDimensions = getScaledWrapperDimensions(continuousContainerHeight, paperWidthPx);
 
   return (
     <div className="relative">
@@ -256,12 +264,14 @@ export default function ResumePreview({
       )}
 
       {/* Resume Content - Continuous View (source for Paged.js) */}
-      {/* Wrapper div handles the scaled height to prevent content clipping */}
+      {/* Wrapper div handles the scaled dimensions to prevent content clipping */}
       <div
         style={{
           display: viewMode === 'paginated' ? 'none' : 'block',
-          height: continuousWrapperHeight > 0 ? `${continuousWrapperHeight}px` : 'auto',
+          height: continuousWrapperDimensions.height,
+          width: continuousWrapperDimensions.width,
           overflow: 'visible',
+          margin: '0 auto',
         }}
       >
         <div
@@ -270,7 +280,7 @@ export default function ResumePreview({
           className={viewMode === 'paginated' ? 'resume-page-container' : ''}
           style={{
             transform: `scale(${scale}) translate3d(0, 0, 0)`,
-            transformOrigin: 'top center',
+            transformOrigin: 'top left',
             willChange: 'transform',
             transition: 'transform 0.15s ease-out',
           }}
@@ -280,7 +290,6 @@ export default function ResumePreview({
             style={viewMode === 'continuous' ? {
               width: paper.css.width,
               minWidth: paper.css.width,
-              margin: '0 auto',
             } : {
               padding: 0,
               margin: 0,
@@ -296,21 +305,23 @@ export default function ResumePreview({
       </div>
 
       {/* Paged.js Output - Always rendered, hidden in continuous mode on screen */}
-      {/* Wrapper div handles the scaled height to prevent content clipping */}
+      {/* Wrapper div handles the scaled dimensions to prevent content clipping */}
       <div
         style={{
           display: viewMode === 'continuous' ? 'none' : 'block',
-          height: pagedWrapperHeight > 0 ? `${pagedWrapperHeight}px` : 'auto',
+          height: pagedWrapperDimensions.height,
+          width: pagedWrapperDimensions.width,
           overflow: 'visible',
+          margin: '0 auto',
         }}
-        className="print:!h-auto print:!overflow-visible"
+        className="print:!h-auto print:!w-auto print:!overflow-visible"
       >
         <div
           ref={pagedContainerRef}
           className={`pagedjs-container print-content ${viewMode === 'continuous' ? 'screen-hidden' : ''}`}
           style={{
             transform: `scale(${scale}) translate3d(0, 0, 0)`,
-            transformOrigin: 'top center',
+            transformOrigin: 'top left',
             willChange: 'transform',
             transition: 'transform 0.15s ease-out',
           }}
