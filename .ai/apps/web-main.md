@@ -195,6 +195,44 @@ export const getDefaultResume = async (): Promise<Resume> => {
 
 ## Auth Pattern
 
+### API Clients (IMPORTANT)
+
+**Two axios instances with different behaviors**:
+
+```typescript
+// api/auth.ts
+
+// 1. publicApi - For unauthenticated requests (login, register, logout)
+//    NO 401 interceptor - errors propagate directly to caller
+export const publicApi = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// 2. authApi - For authenticated requests (getCurrentUser, changePassword)
+//    HAS 401 interceptor - auto-refresh token on 401
+export const authApi = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' },
+});
+```
+
+**Why separate clients?**
+
+| Function | API Client | Reason |
+|----------|-----------|--------|
+| `login()` | `publicApi` | 401 = invalid credentials, show error to user |
+| `register()` | `publicApi` | 401 = validation error, show error to user |
+| `logout()` | `publicApi` | If token invalid, just clear local state |
+| `getCurrentUser()` | `authApi` | 401 = token expired, try refresh |
+| `changePassword()` | `authApi` | 401 = token expired, try refresh |
+
+**Problem this solves**:
+Without `publicApi`, login failure (401) would trigger:
+1. Token refresh attempt (no token exists)
+2. Refresh fails → `window.location.href = '/login'`
+3. Page reloads, error message lost
+
 ### Token Storage
 - **Access Token**: localStorage
 - **Refresh Token**: HttpOnly cookie (set by BFF)

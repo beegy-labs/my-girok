@@ -3,6 +3,21 @@ import { useAuthStore } from '../stores/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+/**
+ * Public API client - for unauthenticated requests (login, register, logout)
+ * Does NOT have 401 interceptor to avoid unnecessary token refresh attempts
+ */
+export const publicApi = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+/**
+ * Authenticated API client - for requests that require authentication
+ * Has request interceptor for adding Bearer token and response interceptor for 401 handling
+ */
 export const authApi = axios.create({
   baseURL: API_URL,
   headers: {
@@ -87,20 +102,37 @@ authApi.interceptors.response.use(
 
 import type { RegisterDto as IRegisterDto, LoginDto as ILoginDto, ChangePasswordDto as IChangePasswordDto } from '@my-girok/types';
 
+/**
+ * Register a new user
+ * Uses publicApi - 401 on validation errors should show error message, not trigger token refresh
+ */
 export const register = async (data: IRegisterDto) => {
-  const response = await authApi.post('/v1/auth/register', data);
+  const response = await publicApi.post('/v1/auth/register', data);
   return response.data;
 };
 
+/**
+ * Login with email and password
+ * Uses publicApi - 401 on invalid credentials should show error message, not redirect
+ */
 export const login = async (data: ILoginDto) => {
-  const response = await authApi.post('/v1/auth/login', data);
+  const response = await publicApi.post('/v1/auth/login', data);
   return response.data;
 };
 
+/**
+ * Logout the current user
+ * Uses publicApi - if token is invalid (401), just clear local state
+ * No need to refresh token just to invalidate it
+ */
 export const logout = async () => {
   const { refreshToken } = useAuthStore.getState();
-  await authApi.post('/v1/auth/logout', { refreshToken });
-  useAuthStore.getState().clearAuth();
+  try {
+    await publicApi.post('/v1/auth/logout', { refreshToken });
+  } finally {
+    // Always clear local state, even if API call fails
+    useAuthStore.getState().clearAuth();
+  }
 };
 
 export const getCurrentUser = async () => {
