@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { changePassword } from '../api/auth';
-import { TextInput, PrimaryButton, Card, Alert } from '../components/ui';
+import { TextInput, PrimaryButton, Card, Alert, PageContainer } from '../components/ui';
 
 export default function ChangePasswordPage() {
   const { t } = useTranslation();
@@ -59,78 +59,76 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-3">
-            <span className="text-3xl mr-2">🔒</span>
-            <h1 className="text-3xl font-bold text-amber-900">
-              {t('changePassword.title')}
-            </h1>
-          </div>
-          <p className="text-gray-600 text-sm">{t('changePassword.description')}</p>
+    <PageContainer maxWidth="sm" centered>
+      {/* Header */}
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="flex items-center justify-center mb-3">
+          <span className="text-2xl sm:text-3xl mr-2">🔒</span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">
+            {t('changePassword.title')}
+          </h1>
         </div>
-
-        {/* Change Password Form */}
-        <Card variant="primary" padding="lg" className="shadow-xl">
-          {error && <Alert type="error" message={error} />}
-          {success && <Alert type="success" message={success} />}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <TextInput
-              id="currentPassword"
-              label={t('changePassword.currentPassword')}
-              type="password"
-              value={currentPassword}
-              onChange={setCurrentPassword}
-              required
-              placeholder={t('changePassword.currentPasswordPlaceholder')}
-              autoComplete="current-password"
-            />
-
-            <TextInput
-              id="newPassword"
-              label={t('changePassword.newPassword')}
-              type="password"
-              value={newPassword}
-              onChange={setNewPassword}
-              required
-              placeholder={t('changePassword.newPasswordPlaceholder')}
-              autoComplete="new-password"
-            />
-
-            <TextInput
-              id="confirmPassword"
-              label={t('changePassword.confirmPassword')}
-              type="password"
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              required
-              placeholder={t('changePassword.confirmPasswordPlaceholder')}
-              autoComplete="new-password"
-            />
-
-            <PrimaryButton
-              type="submit"
-              disabled={loading}
-              loading={loading}
-              fullWidth
-            >
-              {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
-            </PrimaryButton>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => navigate('/')}
-              className="text-sm text-amber-700 hover:text-amber-800 font-medium transition"
-            >
-              {t('changePassword.backToHome')}
-            </button>
-          </div>
-        </Card>
+        <p className="text-gray-600 dark:text-dark-text-secondary text-sm">{t('changePassword.description')}</p>
       </div>
-    </div>
+
+      {/* Change Password Form */}
+      <Card variant="primary" padding="lg" className="shadow-xl">
+        {error && <Alert type="error" message={error} />}
+        {success && <Alert type="success" message={success} />}
+
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+          <TextInput
+            id="currentPassword"
+            label={t('changePassword.currentPassword')}
+            type="password"
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            required
+            placeholder={t('changePassword.currentPasswordPlaceholder')}
+            autoComplete="current-password"
+          />
+
+          <TextInput
+            id="newPassword"
+            label={t('changePassword.newPassword')}
+            type="password"
+            value={newPassword}
+            onChange={setNewPassword}
+            required
+            placeholder={t('changePassword.newPasswordPlaceholder')}
+            autoComplete="new-password"
+          />
+
+          <TextInput
+            id="confirmPassword"
+            label={t('changePassword.confirmPassword')}
+            type="password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            required
+            placeholder={t('changePassword.confirmPasswordPlaceholder')}
+            autoComplete="new-password"
+          />
+
+          <PrimaryButton
+            type="submit"
+            disabled={loading}
+            loading={loading}
+            fullWidth
+          >
+            {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
+          </PrimaryButton>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate('/')}
+            className="text-sm text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium transition-colors"
+          >
+            {t('changePassword.backToHome')}
+          </button>
+        </div>
+      </Card>
+    </PageContainer>
   );
 }

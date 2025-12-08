@@ -2,7 +2,6 @@ import { ReactNode, useState, useEffect, useRef, useCallback } from 'react';
 import { Resume } from '../../api/resume';
 import { PaperSizeKey, calculateFitScale } from '../../constants/paper';
 import ResumePreview from './ResumePreview';
-import ResumeCaptureLayer from './ResumeCaptureLayer';
 
 interface ResumePreviewContainerProps {
   /** Resume data to display */
@@ -23,30 +22,17 @@ interface ResumePreviewContainerProps {
   headerContent?: ReactNode;
   /** Whether to show the toolbar in ResumePreview */
   showToolbar?: boolean;
-  /** ID for the capture layer (used by PDF export) */
-  captureId?: string;
 }
 
 /**
- * Dual-Layer Resume Preview Container
+ * Resume Preview Container
  *
- * This component implements the Dual-Layer rendering architecture:
+ * This component provides a responsive container for the resume preview.
+ * It automatically calculates the optimal scale based on container width.
  *
- * 1. Display Layer (visible):
- *    - Shows resume with responsive scaling based on viewport
- *    - Provides good UX on all devices (mobile, tablet, desktop)
- *    - Scale is calculated dynamically or provided via prop
- *
- * 2. Capture Layer (hidden):
- *    - Always renders at original paper size (A4: 794px, Letter: 816px)
- *    - No transforms or scaling applied
- *    - Used as source for PDF export via html2canvas
- *    - Ensures identical PDF quality across all devices
- *
- * Benefits:
- * - Mobile, Tablet, Desktop all produce identical PDF output
- * - Screen display is optimized for each device
- * - PDF quality is guaranteed regardless of viewport size
+ * The preview uses @react-pdf/renderer to generate a PDF which is then
+ * displayed using react-pdf. This ensures pixel-perfect rendering without
+ * any CSS transform scaling issues.
  */
 export default function ResumePreviewContainer({
   resume,
@@ -58,7 +44,6 @@ export default function ResumePreviewContainer({
   responsivePadding = false,
   headerContent,
   showToolbar = true,
-  captureId = 'resume-capture-source',
 }: ResumePreviewContainerProps) {
   const effectivePaperSize: PaperSizeKey = (paperSize || resume.paperSize || 'A4') as PaperSizeKey;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,7 +105,6 @@ export default function ResumePreviewContainer({
     'rounded-lg shadow-inner dark:shadow-dark-inner',
     'transition-colors duration-200',
     'w-full',
-    'relative', // For positioning capture layer
     containerClassName,
   ].filter(Boolean).join(' ');
 
@@ -131,9 +115,7 @@ export default function ResumePreviewContainer({
   ].filter(Boolean).join(' ');
 
   // Container style
-  const containerStyle: React.CSSProperties = {
-    position: 'relative',
-  };
+  const containerStyle: React.CSSProperties = {};
 
   if (maxHeight) {
     containerStyle.maxHeight = maxHeight;
@@ -141,14 +123,11 @@ export default function ResumePreviewContainer({
   }
 
   // Inner wrapper style
-  // Note: overflow is set to 'visible' to prevent clipping of scaled content
-  // The wrapper divs inside ResumePreview handle the actual dimensions
   const innerWrapperStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'flex-start',
     width: '100%',
-    overflow: 'visible',
     minHeight: 'fit-content',
   };
 
@@ -156,7 +135,7 @@ export default function ResumePreviewContainer({
     <div ref={containerRef} className={outerClasses} style={containerStyle}>
       {headerContent}
 
-      {/* Display Layer - Visible, scaled for screen */}
+      {/* PDF Preview */}
       <div className={innerClasses} style={innerWrapperStyle}>
         <ResumePreview
           resume={resume}
@@ -165,13 +144,6 @@ export default function ResumePreviewContainer({
           showToolbar={showToolbar}
         />
       </div>
-
-      {/* Capture Layer - Hidden, original size for PDF export */}
-      <ResumeCaptureLayer
-        resume={resume}
-        paperSize={effectivePaperSize}
-        captureId={captureId}
-      />
     </div>
   );
 }
