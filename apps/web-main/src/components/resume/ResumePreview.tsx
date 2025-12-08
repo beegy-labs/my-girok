@@ -79,61 +79,63 @@ export default function ResumePreview({
 
   return (
     <div className="relative">
-      {/* Fixed Toolbar (hidden in print) */}
+      {/* Toolbar (hidden in print) */}
       {showToolbar && (
-        <div className="print:hidden sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm mb-6">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs text-gray-800">
-                {paperSize} ({paper.css.width} x {paper.css.height})
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded px-2 py-1 text-xs text-blue-700">
-                {Math.round(scale * 100)}%
-              </div>
-              {numPages > 0 && (
-                <div className="bg-green-50 border border-green-200 rounded px-2 py-1 text-xs text-green-700">
-                  {numPages} {t('resume.preview.pages', { defaultValue: 'pages' })}
+        <div className="print:hidden mb-6">
+          <div className="max-w-5xl mx-auto bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 transition-colors duration-200">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="bg-gray-100 dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg px-2 py-1 text-xs text-gray-800 dark:text-dark-text-primary">
+                  {paperSize} ({paper.css.width} x {paper.css.height})
                 </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1 text-xs text-blue-700 dark:text-blue-300">
+                  {Math.round(scale * 100)}%
+                </div>
+                {numPages > 0 && (
+                  <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg px-2 py-1 text-xs text-green-700 dark:text-green-300">
+                    {numPages} {t('resume.preview.pages', { defaultValue: 'pages' })}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-bg-elevated rounded-lg p-1">
+                  <button
+                    onClick={handleSetContinuousView}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      viewMode === 'continuous'
+                        ? 'bg-white dark:bg-dark-bg-card text-gray-900 dark:text-dark-text-primary shadow-sm'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-dark-text-primary'
+                    }`}
+                    title={t('resume.preview.continuousView')}
+                  >
+                    {t('resume.preview.continuousView')}
+                  </button>
+                  <button
+                    onClick={handleSetPaginatedView}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      viewMode === 'paginated'
+                        ? 'bg-white dark:bg-dark-bg-card text-gray-900 dark:text-dark-text-primary shadow-sm'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-dark-text-primary'
+                    }`}
+                    title={t('resume.preview.paginatedView')}
+                  >
+                    {t('resume.preview.paginatedView')}
+                  </button>
+                </div>
+                {/* Grayscale Toggle */}
                 <button
-                  onClick={handleSetContinuousView}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded transition-all ${
-                    viewMode === 'continuous'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                  onClick={handleToggleGrayscale}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
+                    isGrayscaleMode
+                      ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 border-gray-800 dark:border-gray-200 hover:bg-gray-900 dark:hover:bg-gray-100'
+                      : 'bg-white dark:bg-dark-bg-elevated text-gray-700 dark:text-dark-text-primary border-gray-300 dark:border-dark-border-default hover:border-gray-400 dark:hover:border-dark-border-hover hover:bg-gray-50 dark:hover:bg-dark-bg-hover'
                   }`}
-                  title={t('resume.preview.continuousView')}
+                  title={isGrayscaleMode ? t('resume.preview.switchToColorMode') : t('resume.preview.switchToGrayscaleMode')}
                 >
-                  {t('resume.preview.continuousView')}
-                </button>
-                <button
-                  onClick={handleSetPaginatedView}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded transition-all ${
-                    viewMode === 'paginated'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  title={t('resume.preview.paginatedView')}
-                >
-                  {t('resume.preview.paginatedView')}
+                  {isGrayscaleMode ? t('resume.preview.grayscaleMode') : t('resume.preview.colorMode')}
                 </button>
               </div>
-              {/* Grayscale Toggle */}
-              <button
-                onClick={handleToggleGrayscale}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
-                  isGrayscaleMode
-                    ? 'bg-gray-800 text-white border-gray-800 hover:bg-gray-900'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                }`}
-                title={isGrayscaleMode ? t('resume.preview.switchToColorMode') : t('resume.preview.switchToGrayscaleMode')}
-              >
-                {isGrayscaleMode ? t('resume.preview.grayscaleMode') : t('resume.preview.colorMode')}
-              </button>
             </div>
           </div>
         </div>
