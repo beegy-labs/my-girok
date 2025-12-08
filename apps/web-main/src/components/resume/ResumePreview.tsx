@@ -81,7 +81,7 @@ export default function ResumePreview({
     <div className="relative">
       {/* Toolbar (hidden in print) */}
       {showToolbar && (
-        <div className="print:hidden mb-6">
+        <div className="print:hidden mb-6 relative z-0">
           <div className="max-w-5xl mx-auto bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 transition-colors duration-200">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
