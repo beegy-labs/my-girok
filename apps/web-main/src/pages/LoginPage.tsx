@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
 import { login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
-import { TextInput, PrimaryButton, Card } from '../components/ui';
+import { TextInput, PrimaryButton, Card, PageContainer, Alert } from '../components/ui';
 
 const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
 const COOKIE_EXPIRY_DAYS = 30;
@@ -61,29 +61,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
-      <div className="max-w-md w-full">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-3">
-            <span className="text-3xl mr-2">📚</span>
-            <h1 className="text-4xl font-bold text-amber-900 dark:text-dark-text-primary">
-              My-Girok
-            </h1>
-          </div>
-          <p className="text-gray-600 dark:text-dark-text-secondary text-sm">{t('auth.startRecording')}</p>
+    <PageContainer maxWidth="sm" centered>
+      {/* Logo/Brand */}
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="flex items-center justify-center mb-3">
+          <span className="text-2xl sm:text-3xl mr-2">📚</span>
+          <h1 className="text-3xl sm:text-4xl font-bold text-amber-900 dark:text-dark-text-primary">
+            My-Girok
+          </h1>
         </div>
+        <p className="text-gray-600 dark:text-dark-text-secondary text-sm">{t('auth.startRecording')}</p>
+      </div>
 
-        {/* Login Form */}
-        <Card variant="primary" padding="lg" className="shadow-xl">
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6 flex items-start">
-              <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
+      {/* Login Form */}
+      <Card variant="primary" padding="lg" className="shadow-xl">
+        {error && <Alert type="error" message={error} className="mb-6" />}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <TextInput
@@ -145,11 +137,10 @@ export default function LoginPage() {
           </div>
         </Card>
 
-        {/* Footer Note */}
-        <p className="text-center text-xs text-gray-500 dark:text-dark-text-tertiary mt-6">
-          By signing in, you agree to our Terms of Service and Privacy Policy
-        </p>
-      </div>
-    </div>
+      {/* Footer Note */}
+      <p className="text-center text-xs text-gray-500 dark:text-dark-text-tertiary mt-6">
+        By signing in, you agree to our Terms of Service and Privacy Policy
+      </p>
+    </PageContainer>
   );
 }

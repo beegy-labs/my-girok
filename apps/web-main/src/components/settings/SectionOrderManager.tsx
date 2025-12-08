@@ -89,10 +89,10 @@ export default function SectionOrderManager() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary mb-2">
           {t('settings.sectionOrder')}
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dark-text-secondary mb-4">
           {t('settings.sectionOrderDescription')}
         </p>
       </div>
@@ -101,14 +101,14 @@ export default function SectionOrderManager() {
         {sections.map((section, index) => (
           <div
             key={section.type}
-            className="flex items-center justify-between bg-white border border-amber-200 rounded-lg p-4"
+            className="flex items-center justify-between bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg p-4 transition-colors duration-200"
           >
             <div className="flex items-center space-x-4">
               <div className="flex flex-col space-y-1">
                 <button
                   onClick={() => handleMoveUp(index)}
                   disabled={index === 0}
-                  className="text-gray-600 hover:text-amber-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                  className="text-gray-600 dark:text-dark-text-secondary hover:text-amber-700 dark:hover:text-amber-400 disabled:text-gray-300 dark:disabled:text-dark-text-disabled disabled:cursor-not-allowed transition-colors"
                   aria-label="Move up"
                 >
                   ▲
@@ -116,24 +116,24 @@ export default function SectionOrderManager() {
                 <button
                   onClick={() => handleMoveDown(index)}
                   disabled={index === sections.length - 1}
-                  className="text-gray-600 hover:text-amber-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                  className="text-gray-600 dark:text-dark-text-secondary hover:text-amber-700 dark:hover:text-amber-400 disabled:text-gray-300 dark:disabled:text-dark-text-disabled disabled:cursor-not-allowed transition-colors"
                   aria-label="Move down"
                 >
                   ▼
                 </button>
               </div>
-              <span className="text-gray-700 font-medium">
+              <span className="text-gray-700 dark:text-dark-text-primary font-medium">
                 {getSectionLabel(section.type)}
               </span>
             </div>
 
             <label className="flex items-center space-x-2 cursor-pointer">
-              <span className="text-sm text-gray-600">{t('settings.visibility')}</span>
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">{t('settings.visibility')}</span>
               <input
                 type="checkbox"
                 checked={section.visible}
                 onChange={() => handleVisibilityToggle(section.type)}
-                className="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                className="w-5 h-5 text-amber-600 dark:text-amber-400 bg-white dark:bg-dark-bg-secondary border-gray-300 dark:border-dark-border-default rounded focus:ring-amber-500 dark:focus:ring-amber-400"
               />
             </label>
           </div>
@@ -142,7 +142,7 @@ export default function SectionOrderManager() {
 
       <button
         onClick={handleSave}
-        className="w-full bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-amber-700/30 transform hover:scale-[1.02] transition-all"
+        className="w-full bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 font-semibold py-3 px-6 rounded-lg shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-[1.02] transition-all"
       >
         {t('common.save')}
       </button>

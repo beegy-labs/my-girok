@@ -37,7 +37,7 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
     try {
       const paperSize = resume.paperSize || 'A4';
       const fileName = `${resume.name.replace(/\s+/g, '_')}_Resume_${paperSize}.pdf`;
-      await exportResumeToPDF('resume-content', {
+      await exportResumeToPDF(resume, {
         paperSize,
         fileName,
       });
@@ -65,8 +65,8 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
 
   return (
     <>
-      <div className="bg-amber-50/30 dark:bg-dark-bg-card border-b border-amber-100 dark:border-dark-border-subtle print:hidden sticky top-0 z-10 shadow-sm dark:shadow-dark-sm transition-colors duration-200">
-        <div className="max-w-5xl mx-auto px-4 py-3 sm:py-4">
+      <div className="print:hidden px-4 pt-4 sm:pt-6">
+        <div className="max-w-5xl mx-auto bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 sm:py-4 transition-colors duration-200">
           {/* Header - Stack on mobile, side-by-side on larger screens */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
             <div>

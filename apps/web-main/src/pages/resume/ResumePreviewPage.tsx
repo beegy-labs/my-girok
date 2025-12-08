@@ -90,7 +90,7 @@ export default function ResumePreviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+    <>
       {/* Action Bar - Common component with owner mode (all actions enabled) */}
       <ResumeActionBar resume={resume} mode="owner" />
 
@@ -98,6 +98,6 @@ export default function ResumePreviewPage() {
       <div className="py-4 sm:py-6 md:py-8 print:py-0 flex justify-center">
         <ResumePreviewContainer resume={resume} />
       </div>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import os from 'os';
 
 export default defineConfig({
   plugins: [react()],
@@ -8,13 +9,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: [],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
 
     // Performance optimization: parallel execution
     pool: 'threads',
     poolOptions: {
       threads: {
         // Use 50% of CPU cores for parallel execution (per TESTING.md policy)
-        maxThreads: Math.max(1, Math.floor(require('os').cpus().length * 0.5)),
+        maxThreads: Math.max(1, Math.floor(os.cpus().length * 0.5)),
         minThreads: 1,
       },
     },
