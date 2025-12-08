@@ -109,7 +109,7 @@ export default function ResumePreviewContainer({
   ].filter(Boolean).join(' ');
 
   const innerClasses = [
-    'bg-white rounded shadow-lg',
+    'bg-white rounded-xl shadow-lg',
     'mx-auto',
     innerClassName,
   ].filter(Boolean).join(' ');
