@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import { generateWebsiteSchema } from '../utils/structuredData';
+import { PageHeader, SectionHeader, Card, PrimaryButton, SecondaryButton } from '../components/ui';
 
 interface AppCard {
   id: string;
@@ -66,28 +67,20 @@ export default function HomePage() {
         type="website"
         structuredData={generateWebsiteSchema()}
       />
-      <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {isAuthenticated ? (
         <div className="space-y-6 sm:space-y-8">
           {/* Welcome Section */}
-          <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-lg dark:shadow-dark-lg p-4 sm:p-6 lg:p-8 transition-colors duration-200">
-            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-              <span className="text-2xl sm:text-3xl">📚</span>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 dark:text-dark-text-primary break-words">
-                {user?.name || user?.username}{t('home.recordBook')}
-              </h1>
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary ml-8 sm:ml-10 lg:ml-12">
-              {t('home.startToday')}
-            </p>
-          </div>
+          <PageHeader
+            icon="📚"
+            title={`${user?.name || user?.username}${t('home.recordBook')}`}
+            subtitle={t('home.startToday')}
+          />
 
           {/* Apps Grid */}
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
-              <span>📖</span>
-              {t('home.recordType')}
-            </h2>
+            <SectionHeader icon="📖" title={t('home.recordType')} />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {apps.map((app) => (
                 <Link
@@ -123,7 +116,7 @@ export default function HomePage() {
           </div>
 
           {/* Quick Links */}
-          <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 transition-colors duration-200">
+          <Card variant="primary" padding="md">
             <h2 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-3 sm:mb-4">{t('home.quickLinks')}</h2>
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <Link
@@ -141,37 +134,37 @@ export default function HomePage() {
                 {t('home.settings')}
               </Link>
             </div>
-          </div>
+          </Card>
         </div>
       ) : (
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
           {/* Hero Section */}
-          <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-xl dark:shadow-dark-lg p-6 sm:p-8 lg:p-12 text-center transition-colors duration-200">
-            <div className="flex items-center justify-center mb-3 sm:mb-4">
-              <span className="text-5xl sm:text-6xl">📚</span>
+          <Card variant="primary" padding="lg" className="shadow-xl text-center">
+            <div className="p-2 sm:p-4">
+              <div className="flex items-center justify-center mb-3 sm:mb-4">
+                <span className="text-5xl sm:text-6xl">📚</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 dark:text-dark-text-primary mb-3 sm:mb-4">
+                My-Girok
+              </h1>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-700 dark:text-dark-text-secondary mb-6 sm:mb-8">
+                {t('home.title')}<br />
+                <span className="text-gray-600 dark:text-dark-text-tertiary text-sm sm:text-base">{t('home.allInOne')}</span>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <Link to="/register">
+                  <PrimaryButton size="lg" className="w-full sm:w-auto">
+                    {t('home.createRecordBook')}
+                  </PrimaryButton>
+                </Link>
+                <Link to="/login">
+                  <SecondaryButton size="lg" className="w-full sm:w-auto">
+                    {t('nav.login')}
+                  </SecondaryButton>
+                </Link>
+              </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 dark:text-dark-text-primary mb-3 sm:mb-4">
-              My-Girok
-            </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-700 dark:text-dark-text-secondary mb-6 sm:mb-8">
-              {t('home.title')}<br />
-              <span className="text-gray-600 dark:text-dark-text-tertiary text-sm sm:text-base">{t('home.allInOne')}</span>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <Link
-                to="/register"
-                className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-105 transition-all"
-              >
-                {t('home.createRecordBook')}
-              </Link>
-              <Link
-                to="/login"
-                className="bg-gray-100 dark:bg-dark-bg-elevated hover:bg-gray-200 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold border border-gray-300 dark:border-dark-border-default transform hover:scale-105 transition-all"
-              >
-                {t('nav.login')}
-              </Link>
-            </div>
-          </div>
+          </Card>
 
           {/* Features Section */}
           <div>
@@ -181,7 +174,7 @@ export default function HomePage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {apps.map((app) => (
-                <div key={app.id} className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 transition-colors duration-200">
+                <Card key={app.id} variant="primary" padding="md">
                   <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{app.icon}</div>
                   <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
                   <p className="text-gray-600 dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
@@ -190,12 +183,13 @@ export default function HomePage() {
                       {t('home.comingSoon')}
                     </span>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
           </div>
         </div>
       )}
+        </div>
       </div>
     </>
   );

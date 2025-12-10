@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
-import { PrimaryButton, SecondaryButton } from '../../components/ui';
+import { PrimaryButton, SecondaryButton, PageHeader, Alert, LoadingSpinner, Card } from '../../components/ui';
 
 export default function ResumeEditPage() {
   const { t } = useTranslation();
@@ -131,14 +131,7 @@ export default function ResumeEditPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 dark:border-amber-400 mx-auto"></div>
-          <p className="mt-4 text-gray-700 dark:text-dark-text-secondary font-medium">{t('errors.loadingResume')}</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen message={t('errors.loadingResume')} />;
   }
 
   return (
@@ -163,20 +156,14 @@ export default function ResumeEditPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-1 sm:px-4 py-2 sm:py-4 pb-24 lg:pb-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 pb-24 lg:pb-8">
         {/* Header - Simplified for mobile */}
-        <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md p-3 sm:p-6 mb-4 sm:mb-6 transition-colors duration-200">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-xl sm:text-3xl">✍️</span>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-amber-900 dark:text-dark-text-primary truncate">
-                {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-700 dark:text-dark-text-secondary truncate">
-                {resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
-              </p>
-            </div>
-            {/* Desktop only preview toggle */}
+        <PageHeader
+          icon="✍️"
+          title={resumeId ? t('edit.editResume') : t('edit.createNewResume')}
+          subtitle={resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
+          size="md"
+          action={
             <PrimaryButton
               onClick={() => setShowPreview(!showPreview)}
               size="sm"
@@ -184,13 +171,11 @@ export default function ResumeEditPage() {
             >
               {showPreview ? t('edit.showForm') : t('edit.showPreview')}
             </PrimaryButton>
-          </div>
-        </div>
+          }
+        />
 
         {error && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm sm:text-base">
-            <strong>{t('edit.error')}</strong> {error}
-          </div>
+          <Alert type="error" message={`${t('edit.error')} ${error}`} className="mb-4 sm:mb-6" />
         )}
 
         {/* Side-by-side layout */}
@@ -207,8 +192,8 @@ export default function ResumeEditPage() {
           {/* Live Preview Section */}
           <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-4 sm:top-8">
-              {/* Preview Header - Hidden on mobile since we have bottom bar */}
-              <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md p-3 sm:p-6 mb-3 sm:mb-4 transition-colors duration-200">
+              {/* Preview Header */}
+              <Card variant="secondary" padding="md" className="mb-3 sm:mb-4">
                 <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-1 sm:mb-2 flex items-center gap-2">
                   <span>👁️</span>
                   {t('edit.livePreview')}
@@ -216,7 +201,7 @@ export default function ResumeEditPage() {
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary">
                   {t('edit.previewDescription')}
                 </p>
-              </div>
+              </Card>
 
               {previewData ? (
                 <ResumePreviewContainer
@@ -225,11 +210,11 @@ export default function ResumeEditPage() {
                   containerClassName="border-2 border-gray-300 dark:border-dark-border-default rounded-xl"
                 />
               ) : (
-                <div className="bg-gray-100 dark:bg-dark-bg-secondary/50 p-4 rounded-xl shadow-inner dark:shadow-dark-inner transition-colors duration-200">
-                  <div className="p-6 sm:p-8 text-center text-gray-500 dark:text-dark-text-tertiary text-sm sm:text-base">
-                    <p>{t('errors.startFilling')}</p>
-                  </div>
-                </div>
+                <Card variant="secondary" padding="lg" className="text-center">
+                  <p className="text-gray-500 dark:text-dark-text-tertiary text-sm sm:text-base">
+                    {t('errors.startFilling')}
+                  </p>
+                </Card>
               )}
             </div>
           </div>

@@ -12,7 +12,7 @@ import {
   ShareLink,
   ShareDuration,
 } from '../../api/resume';
-import { PrimaryButton, SecondaryButton, DestructiveButton } from '../../components/ui';
+import { PrimaryButton, SecondaryButton, DestructiveButton, PageContainer, PageHeader, SectionHeader, Card, Alert, LoadingSpinner } from '../../components/ui';
 
 export default function MyResumePage() {
   const { t } = useTranslation();
@@ -144,134 +144,115 @@ export default function MyResumePage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 dark:border-amber-400 mx-auto"></div>
-          <p className="mt-4 text-gray-700 dark:text-dark-text-secondary font-medium">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen message={t('common.loading')} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary py-8 transition-colors duration-200">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-lg dark:shadow-dark-lg p-4 sm:p-8 mb-6 transition-colors duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <span className="text-2xl sm:text-3xl">📄</span>
-                <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">{t('resume.myResumes')}</h1>
-              </div>
-              <p className="text-sm sm:text-base text-gray-700 dark:text-dark-text-secondary ml-8 sm:ml-12">{t('resume.manageResumes')}</p>
-            </div>
-            <button
-              onClick={navigateToEdit}
-              className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap"
-            >
-              {t('resume.createNewResume')}
-            </button>
-          </div>
-        </div>
+    <PageContainer maxWidth="xl">
+      {/* Header */}
+      <PageHeader
+        icon="📄"
+        title={t('resume.myResumes')}
+        subtitle={t('resume.manageResumes')}
+        action={
+          <PrimaryButton onClick={navigateToEdit}>
+            {t('resume.createNewResume')}
+          </PrimaryButton>
+        }
+      />
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
-            {error}
-          </div>
-        )}
+      {error && (
+        <Alert type="error" message={error} className="mb-4 sm:mb-6" />
+      )}
 
-        {/* Resume List */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
-            <span>📋</span>
-            {t('resume.list.title')}
-          </h2>
+      {/* Resume List */}
+      <div className="mb-6 sm:mb-8">
+        <SectionHeader icon="📋" title={t('resume.list.title')} />
 
-          {resumes.length === 0 ? (
-            <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-6 sm:p-8 text-center transition-colors duration-200">
-              <div className="text-5xl sm:text-6xl mb-4">📝</div>
-              <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t('resume.list.noResumes')}</h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary mb-4">{t('resume.list.createFirst')}</p>
-              <button
-                onClick={navigateToEdit}
-                className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400 text-white dark:text-gray-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20 transform hover:scale-[1.02] active:scale-[0.98] transition-all"
-              >
-                {t('resume.list.createNew')}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {resumes.map((resume) => {
-                const activeShares = getResumeShareStatus(resume.id);
-                const hasActiveShare = activeShares.length > 0;
+        {resumes.length === 0 ? (
+          <Card variant="primary" padding="lg" className="text-center">
+            <div className="text-5xl sm:text-6xl mb-4">📝</div>
+            <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t('resume.list.noResumes')}</h3>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary mb-4">{t('resume.list.createFirst')}</p>
+            <PrimaryButton onClick={navigateToEdit}>
+              {t('resume.list.createNew')}
+            </PrimaryButton>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {resumes.map((resume) => {
+              const activeShares = getResumeShareStatus(resume.id);
+              const hasActiveShare = activeShares.length > 0;
 
-                return (
-                  <div
-                    key={resume.id}
-                    className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md hover:shadow-xl dark:hover:shadow-dark-lg hover:border-amber-300 dark:hover:border-amber-500/30 transition-all overflow-hidden"
-                  >
-                    <div className="p-4 sm:p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary">{resume.title}</h3>
-                            {resume.isDefault && (
-                              <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full">
-                                {t('common.default')}
-                              </span>
-                            )}
-                            {hasActiveShare && (
-                              <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
-                                {t('resume.sharing')} ({activeShares.length}/3)
-                              </span>
-                            )}
-                          </div>
-                          {resume.description?.trim() && (
-                            <p className="text-gray-600 dark:text-dark-text-secondary text-sm mb-3">{resume.description}</p>
-                          )}
-                          <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-dark-text-tertiary">
-                            <span>
-                              {t('resume.lastModified')}: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
+              return (
+                <Card
+                  key={resume.id}
+                  variant="primary"
+                  padding="none"
+                  interactive
+                  className="overflow-hidden"
+                >
+                  <div className="p-4 sm:p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary">{resume.title}</h3>
+                          {resume.isDefault && (
+                            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full">
+                              {t('common.default')}
                             </span>
-                          </div>
+                          )}
+                          {hasActiveShare && (
+                            <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
+                              {t('resume.sharing')} ({activeShares.length}/3)
+                            </span>
+                          )}
                         </div>
-
-                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
-                          <button
-                            onClick={() => navigateToPreview(resume.id)}
-                            className="px-2 sm:px-4 py-2 bg-white dark:bg-dark-bg-elevated hover:bg-gray-50 dark:hover:bg-dark-bg-hover text-gray-700 dark:text-dark-text-primary text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 dark:border-dark-border-default transition-all whitespace-nowrap"
-                          >
-                            👁️ {t('common.preview')}
-                          </button>
-                          <PrimaryButton
-                            onClick={() => navigateToEditResume(resume.id)}
-                            size="sm"
-                          >
-                            ✍️ {t('common.edit')}
-                          </PrimaryButton>
-                          <SecondaryButton
-                            onClick={() => handleCopyResume(resume.id)}
-                            size="sm"
-                          >
-                            📋 {t('common.copy')}
-                          </SecondaryButton>
-                          <SecondaryButton
-                            onClick={() => openShareModal(resume.id)}
-                            size="sm"
-                          >
-                            🔗 {t('common.share')}
-                          </SecondaryButton>
-                          <DestructiveButton
-                            onClick={() => handleDeleteResume(resume.id)}
-                            size="sm"
-                          >
-                            🗑️ {t('common.delete')}
-                          </DestructiveButton>
+                        {resume.description?.trim() && (
+                          <p className="text-gray-600 dark:text-dark-text-secondary text-sm mb-3">{resume.description}</p>
+                        )}
+                        <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-dark-text-tertiary">
+                          <span>
+                            {t('resume.lastModified')}: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
+                          </span>
                         </div>
                       </div>
+
+                      {/* Action Buttons - Responsive grid */}
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
+                        <SecondaryButton
+                          onClick={() => navigateToPreview(resume.id)}
+                          size="sm"
+                        >
+                          👁️ {t('common.preview')}
+                        </SecondaryButton>
+                        <PrimaryButton
+                          onClick={() => navigateToEditResume(resume.id)}
+                          size="sm"
+                        >
+                          ✍️ {t('common.edit')}
+                        </PrimaryButton>
+                        <SecondaryButton
+                          onClick={() => handleCopyResume(resume.id)}
+                          size="sm"
+                        >
+                          📋 {t('common.copy')}
+                        </SecondaryButton>
+                        <SecondaryButton
+                          onClick={() => openShareModal(resume.id)}
+                          size="sm"
+                        >
+                          🔗 {t('common.share')}
+                        </SecondaryButton>
+                        <DestructiveButton
+                          onClick={() => handleDeleteResume(resume.id)}
+                          size="sm"
+                        >
+                          🗑️ {t('common.delete')}
+                        </DestructiveButton>
+                      </div>
                     </div>
+                  </div>
 
                     {/* Share Links for this resume */}
                     {hasActiveShare && (
@@ -351,56 +332,54 @@ export default function MyResumePage() {
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-
-        {/* Share Modal */}
-        {showShareModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-dark-bg-card rounded-2xl shadow-xl dark:shadow-dark-lg p-6 sm:p-8 max-w-md w-full transition-colors duration-200">
-              <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
-                  {t('resume.shareDuration')}
-                </label>
-                <select
-                  value={shareDuration}
-                  onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-sm sm:text-base text-gray-900 dark:text-dark-text-primary"
-                >
-                  <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
-                  <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
-                  <option value={ShareDuration.THREE_MONTHS}>{t('resume.threeMonths')}</option>
-                  <option value={ShareDuration.PERMANENT}>{t('resume.permanent')}</option>
-                </select>
-              </div>
-              <div className="flex gap-3">
-                <SecondaryButton
-                  onClick={() => {
-                    setShowShareModal(false);
-                    setSelectedResumeId(null);
-                  }}
-                  className="flex-1"
-                >
-                  {t('common.cancel')}
-                </SecondaryButton>
-                <PrimaryButton
-                  onClick={handleCreateShare}
-                  className="flex-1"
-                >
-                  {t('common.save')}
-                </PrimaryButton>
-              </div>
-            </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
-    </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-xl">
+            <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
+                {t('resume.shareDuration')}
+              </label>
+              <select
+                value={shareDuration}
+                onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-sm sm:text-base text-gray-900 dark:text-dark-text-primary"
+              >
+                <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
+                <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
+                <option value={ShareDuration.THREE_MONTHS}>{t('resume.threeMonths')}</option>
+                <option value={ShareDuration.PERMANENT}>{t('resume.permanent')}</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <SecondaryButton
+                onClick={() => {
+                  setShowShareModal(false);
+                  setSelectedResumeId(null);
+                }}
+                className="flex-1"
+              >
+                {t('common.cancel')}
+              </SecondaryButton>
+              <PrimaryButton
+                onClick={handleCreateShare}
+                className="flex-1"
+              >
+                {t('common.save')}
+              </PrimaryButton>
+            </div>
+          </Card>
+        </div>
+      )}
+    </PageContainer>
   );
 }

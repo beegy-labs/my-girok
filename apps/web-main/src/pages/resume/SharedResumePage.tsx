@@ -54,7 +54,7 @@ export default function SharedResumePage() {
     else if (isNotFound) messageType = 'not-found';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary px-4 transition-colors duration-200">
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
         <CharacterMessage
           type={messageType}
           message={error}
@@ -75,14 +75,14 @@ export default function SharedResumePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+    <>
       {/* Action Bar - Common component with shared mode (PDF + print only) */}
       <ResumeActionBar resume={resume} mode="shared" />
 
       {/* Resume Preview */}
-      <div className="py-6 sm:py-8 print:py-0 flex justify-center">
+      <div className="py-4 sm:py-6 md:py-8 print:py-0 flex justify-center">
         <ResumePreviewContainer resume={resume} />
       </div>
-    </div>
+    </>
   );
 }
