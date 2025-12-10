@@ -138,7 +138,6 @@ export default function ResumePreview({
               </div>
             </div>
           </div>
-        </div>
       )}
 
       {/* PDF Viewer */}
