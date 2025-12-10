@@ -54,9 +54,13 @@ export default function ResumePreviewContainer({
   const calculateDisplayScale = useCallback(() => {
     if (!containerRef.current || propScale !== undefined) return;
 
-    const containerWidth = containerRef.current.offsetWidth;
-    const padding = 32; // 16px on each side
-    const availableWidth = containerWidth - padding;
+    const container = containerRef.current;
+    const computedStyle = window.getComputedStyle(container);
+    const paddingLeft = parseFloat(computedStyle.paddingLeft);
+    const paddingRight = parseFloat(computedStyle.paddingRight);
+
+    const containerWidth = container.offsetWidth;
+    const availableWidth = containerWidth - paddingLeft - paddingRight;
 
     // Calculate scale to fit container, max 1.0 (never scale up)
     const newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);

@@ -958,28 +958,14 @@ Typical section order and emphasis:
 ##### Paper Size Support
 - **A4**: 210mm × 297mm (default for Korea, Europe)
 - **Letter**: 215.9mm × 279.4mm (USA)
-- **Margins**: 0.5cm all sides (minimal padding for maximum content space)
-  - Screen view (continuous): 0.5cm padding on all sides
-  - Screen view (paginated): 0.5cm padding via Paged.js
-  - Print view: 0cm @page margin + 0.5cm content padding = 0.5cm total
-  - Consistent across all view modes
-- **Minimum Safe Margin**: 0.5cm for printer compatibility
+- **Margins**: Handled by the PDF generation process. The component defines the layout, and the resulting PDF has consistent margins.
 - **Indicator**: Shows current paper size in preview (hidden in print)
-- **Print Strategy**: Uses Paged.js paginated view for proper page breaks
-  - Continuous view hidden during print
-  - Paged.js container shown with optimized print styles
-  - @page margin set to 0 (Paged.js handles all spacing)
-  - **Required Print Settings**:
-    - Margins: **None**
-    - Headers and footers: **None**
-    - Background graphics: **On**
-- **PDF Export**: Uses paginated view (Paged.js) for multi-page PDF with proper page boundaries
-- **Page Break Handling**:
-  - `page-break-inside: avoid` for sections and items
-  - `page-break-after: avoid` for headings
-  - Orphans: 3, Widows: 3
-  - Print color adjustment: exact
-  - Word-break and overflow-wrap applied to all text elements
+- **PDF & Print Strategy**: The resume is first rendered into a PDF in the browser using `@react-pdf/renderer`. This generated PDF is then displayed on the screen using `react-pdf`.
+  - This ensures that the screen preview is a pixel-perfect representation of the final PDF document.
+  - When printing, the browser's native print functionality is used on the rendered PDF, guaranteeing that what you see is what you get (WYSIWYG).
+  - This method provides consistent output across all platforms and printers.
+- **PDF Export**: The "Export to PDF" functionality will simply provide the in-memory generated PDF blob for download.
+- **Page Break Handling**: Page breaks are handled logically by `@react-pdf/renderer` during PDF generation. Components from `@react-pdf/renderer` like `View`, `Text`, and `Page` are used to structure the document and control how content flows and breaks across pages.
 
 ##### Print Styling & Preview Design
 
