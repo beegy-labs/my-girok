@@ -22,6 +22,10 @@ interface ResumePreviewContainerProps {
   headerContent?: ReactNode;
   /** Whether to show the toolbar in ResumePreview */
   showToolbar?: boolean;
+  /** Whether to enable horizontal scroll on overflow (useful for mobile) */
+  enableHorizontalScroll?: boolean;
+  /** Minimum scale to enforce (default: 0.5 for mobile readability) */
+  minScale?: number;
 }
 
 /**
@@ -44,6 +48,8 @@ export default function ResumePreviewContainer({
   responsivePadding = false,
   headerContent,
   showToolbar = true,
+  enableHorizontalScroll = true,
+  minScale = 0.5,
 }: ResumePreviewContainerProps) {
   const effectivePaperSize: PaperSizeKey = (paperSize || resume.paperSize || 'A4') as PaperSizeKey;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,7 +69,12 @@ export default function ResumePreviewContainer({
     const availableWidth = containerWidth - paddingLeft - paddingRight;
 
     // Calculate scale to fit container, max 1.0 (never scale up)
-    const newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
+    let newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
+
+    // Enforce minimum scale for readability (allows horizontal scroll if needed)
+    if (enableHorizontalScroll && newScale < minScale) {
+      newScale = minScale;
+    }
 
     // Round to 2 decimal places
     const roundedScale = Math.round(newScale * 100) / 100;
@@ -72,7 +83,7 @@ export default function ResumePreviewContainer({
       const roundedPrevScale = Math.round(prevScale * 100) / 100;
       return roundedPrevScale !== roundedScale ? roundedScale : prevScale;
     });
-  }, [effectivePaperSize, propScale]);
+  }, [effectivePaperSize, propScale, enableHorizontalScroll, minScale]);
 
   // Calculate scale on mount and window resize (debounced)
   useEffect(() => {
@@ -109,29 +120,37 @@ export default function ResumePreviewContainer({
     'rounded-lg shadow-inner dark:shadow-dark-inner',
     'transition-colors duration-200',
     'w-full',
+    'max-w-full',
     containerClassName,
   ].filter(Boolean).join(' ');
 
   const innerClasses = [
-    'mx-auto',
     innerClassName,
   ].filter(Boolean).join(' ');
 
   // Container style
-  const containerStyle: React.CSSProperties = {};
+  const containerStyle: React.CSSProperties = {
+    maxWidth: '100%',
+  };
 
   if (maxHeight) {
     containerStyle.maxHeight = maxHeight;
     containerStyle.overflowY = 'auto';
   }
 
-  // Inner wrapper style
+  // Enable horizontal scroll when content exceeds container
+  if (enableHorizontalScroll) {
+    containerStyle.overflowX = 'auto';
+  }
+
+  // Inner wrapper style - centers content while allowing overflow
   const innerWrapperStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    width: '100%',
+    minWidth: 'fit-content',
     minHeight: 'fit-content',
+    padding: enableHorizontalScroll ? '0 16px' : undefined,
   };
 
   return (
