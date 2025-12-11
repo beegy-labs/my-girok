@@ -512,13 +512,18 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
 
 **Location**: `apps/web-main/src/components/resume/ResumePreviewContainer.tsx`
 
+**Responsive Design Policy (Updated 2025-12)**:
+- **Full responsive scaling**: Automatically scales PDF to fit container width
+- **No minimum scale**: Allows complete fit on all screen sizes (mobile ~47%, tablet ~93%, desktop 100%)
+- **No horizontal overflow**: PDF never clips or requires horizontal scrolling
+- **Pinch-to-zoom**: Mobile users can zoom in for details
+- **PDF quality preserved**: Export always generates full-resolution vector PDF regardless of display scale
+
 **Features**:
-- Auto-scales based on container width
+- Auto-scales based on container width (never scales up beyond 100%)
 - Optional maxHeight with overflow scrolling
 - Responsive padding (mobile vs desktop)
 - Dark mode support
-- **Horizontal scroll support for mobile** (`enableHorizontalScroll`)
-- **Minimum scale enforcement** (`minScale`) for readability
 
 **Props**:
 | Prop | Type | Default | Description |
@@ -527,29 +532,25 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
 | `paperSize` | `PaperSizeKey` | `'A4'` | Paper size |
 | `scale` | `number` | auto | Fixed scale (overrides auto-scale) |
 | `maxHeight` | `string` | - | Max container height with vertical scroll |
-| `enableHorizontalScroll` | `boolean` | `true` | Enable horizontal scroll on overflow |
-| `minScale` | `number` | `0.5` | Minimum scale to enforce (allows horizontal scroll) |
 | `showToolbar` | `boolean` | `true` | Show toolbar in ResumePreview |
 
 **Usage Examples**:
 
 ```typescript
-// Live Preview (75% scale)
+// Standard usage - full responsive scaling (recommended)
+<ResumePreviewContainer resume={resume} />
+
+// Live Preview with max height
 <ResumePreviewContainer
   resume={previewData}
-  scale={0.75}
   maxHeight="calc(100vh - 200px)"
 />
 
-// Full Preview with horizontal scroll support (recommended)
+// Fixed scale for specific use cases
 <ResumePreviewContainer
   resume={resume}
-  enableHorizontalScroll={true}
-  minScale={0.6}
+  scale={0.75}
 />
-
-// Simple Preview
-<ResumePreviewContainer resume={resume} />
 ```
 
 **Used In**:
@@ -595,21 +596,27 @@ const displayWidth = paper.width.px * scale;
 ```
 
 ### Container Setup
-Enable horizontal scroll on mobile to accommodate the larger minimum scale:
+
+Standard page layout for resume preview pages:
 
 ```tsx
-// Page container
-<div className="overflow-x-auto">
-  <ResumePreviewContainer resume={resume} enableHorizontalScroll={true} />
+// Page container - no overflow-x-hidden needed
+<div className="w-full min-h-screen">
+  <ResumeActionBar resume={resume} mode="owner" />
+  <div className="py-4 sm:py-6 md:py-8 print:py-0">
+    <ResumePreviewContainer resume={resume} />
+  </div>
 </div>
 ```
 
-### Scale Values by Device
-| Device | Viewport | Natural Scale | Enforced Scale |
-|--------|----------|---------------|----------------|
-| Mobile | 375px | 43% | **100%** (no scaling, horizontal scroll) |
-| Tablet | 768px | 93% | **93%** (natural, min 90%) |
-| Desktop | 1024px+ | 100% | 100% |
+### Scale Values by Device (Updated 2025-12)
+| Device | Viewport | Scale | Notes |
+|--------|----------|-------|-------|
+| Mobile | 375px | ~47% | Full fit, pinch-to-zoom for details |
+| Tablet | 768px | ~93% | Near full size |
+| Desktop | 1024px+ | 100% | Full size |
+
+**Design Decision**: Prioritize no-overflow over minimum readability scale. Users on mobile can pinch-to-zoom for details, which is the expected mobile UX pattern.
 
 ## Mobile Edit Patterns (Resume)
 

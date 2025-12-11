@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { getResume, Resume } from '../../api/resume';
@@ -17,7 +17,8 @@ export default function ResumePreviewPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Define loadResume function to be reused (for initial load and retry)
-  const loadResume = async () => {
+  // Memoized with useCallback per project policy (no eslint-disable)
+  const loadResume = useCallback(async () => {
     if (!resumeId) {
       setError('NO_ID');
       setLoading(false);
@@ -33,9 +34,10 @@ export default function ResumePreviewPage() {
       // Load resume data
       const data = await getResume(resumeId);
       setResume(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load resume', err);
-      if (err.response?.status === 404) {
+      const axiosError = err as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         setError('NOT_FOUND');
       } else {
         setError('GENERAL');
@@ -43,13 +45,12 @@ export default function ResumePreviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [resumeId]);
 
-  // Load resume when resumeId changes (React 19 compatibility)
+  // Load resume when resumeId changes
   useEffect(() => {
     loadResume();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeId]);
+  }, [loadResume]);
 
   if (loading) {
     return <LoadingSpinner fullScreen message={t('resume.preview.loading')} />;
@@ -90,17 +91,13 @@ export default function ResumePreviewPage() {
   }
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden">
+    <div className="w-full min-h-screen">
       {/* Action Bar - Common component with owner mode (all actions enabled) */}
       <ResumeActionBar resume={resume} mode="owner" />
 
-      {/* Resume Preview */}
-      <div className="py-4 sm:py-6 md:py-8 print:py-0 w-full max-w-full">
-        <ResumePreviewContainer
-          resume={resume}
-          enableHorizontalScroll={true}
-          minScale={0.6}
-        />
+      {/* Resume Preview - Full width responsive container */}
+      <div className="py-4 sm:py-6 md:py-8 print:py-0">
+        <ResumePreviewContainer resume={resume} />
       </div>
     </div>
   );

@@ -74,7 +74,7 @@ export default function PublicResumePage() {
   }
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden">
+    <div className="w-full min-h-screen">
       {/* Action Bar - Hidden when printing */}
       <div className="print:hidden px-4 pt-4 sm:pt-6">
         <div className="max-w-5xl mx-auto bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 sm:py-4 transition-colors duration-200">
@@ -106,13 +106,9 @@ export default function PublicResumePage() {
         </div>
       </div>
 
-      {/* Resume Preview */}
-      <div className="py-4 sm:py-6 md:py-8 print:py-0 w-full max-w-full">
-        <ResumePreviewContainer
-          resume={resume}
-          enableHorizontalScroll={true}
-          minScale={0.6}
-        />
+      {/* Resume Preview - Full responsive scaling */}
+      <div className="py-4 sm:py-6 md:py-8 print:py-0">
+        <ResumePreviewContainer resume={resume} />
       </div>
     </div>
   );
