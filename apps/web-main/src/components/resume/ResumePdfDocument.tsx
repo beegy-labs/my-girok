@@ -19,47 +19,75 @@ export type PdfLocale = 'ko' | 'en' | 'ja';
 // NOTE: Use npm CDN path, not gh (GitHub) path - gh path returns 404
 // Using Pretendard which has excellent CJK and special character support
 // Register both string and numeric fontWeight variants to handle all PDF renderer calls
+// IMPORTANT: Pretendard does NOT have native italic variants, so we use regular as fallback
 Font.register({
   family: 'Pretendard',
   fonts: [
+    // Regular weight (normal/400)
     {
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 'normal',
+      fontStyle: 'normal',
     },
     {
-      // Numeric fontWeight 400 registration for PDF renderer compatibility
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 400,
+      fontStyle: 'normal',
     },
+    // Regular weight italic fallback (Pretendard has no native italic)
     {
-      // Pretendard doesn't have native italic, use Regular as fallback for italic style
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 'normal',
       fontStyle: 'italic',
     },
     {
-      // Numeric fontWeight 400 + italic for PDF renderer compatibility
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 400,
       fontStyle: 'italic',
     },
-    {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
-      fontWeight: 'bold',
-    },
-    {
-      // Numeric fontWeight 700 for PDF renderer compatibility
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
-      fontWeight: 700,
-    },
+    // SemiBold weight (semibold/600)
     {
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
       fontWeight: 'semibold',
+      fontStyle: 'normal',
     },
     {
-      // Numeric fontWeight 600 for PDF renderer compatibility
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
       fontWeight: 600,
+      fontStyle: 'normal',
+    },
+    // SemiBold italic fallback
+    {
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      fontWeight: 'semibold',
+      fontStyle: 'italic',
+    },
+    {
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      fontWeight: 600,
+      fontStyle: 'italic',
+    },
+    // Bold weight (bold/700)
+    {
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      fontWeight: 'bold',
+      fontStyle: 'normal',
+    },
+    {
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      fontWeight: 700,
+      fontStyle: 'normal',
+    },
+    // Bold italic fallback
+    {
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+    },
+    {
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      fontWeight: 700,
+      fontStyle: 'italic',
     },
   ],
 });
