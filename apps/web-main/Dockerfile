@@ -39,36 +39,28 @@ RUN pnpm build
 WORKDIR /app/apps/web-main
 RUN pnpm build
 
-# Production stage with nginx
-FROM nginx:1.27-alpine AS production
+# Production stage with nginx-unprivileged (non-root)
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS production
 
-# Install security updates and gettext for envsubst
+# Install security updates and gettext for envsubst (as root temporarily)
+USER root
 RUN apk upgrade --no-cache && \
     apk add --no-cache gettext
 
-# Copy built files
-COPY --from=builder /app/apps/web-main/dist /usr/share/nginx/html
+# Copy built files with proper ownership (UID 101 = nginx user in nginx-unprivileged)
+COPY --from=builder --chown=101:101 /app/apps/web-main/dist /usr/share/nginx/html
 
-# Copy nginx configuration as template
-COPY apps/web-main/nginx.conf /etc/nginx/conf.d/default.conf.template
+# Copy nginx configuration
+COPY --chown=101:101 apps/web-main/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy entrypoint script
-COPY apps/web-main/docker-entrypoint.sh /docker-entrypoint.sh
+COPY --chown=101:101 apps/web-main/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Setup permissions for nginx user (already exists in nginx:alpine image)
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown nginx:nginx /var/run/nginx.pid && \
-    chmod +x /docker-entrypoint.sh
+# Switch to non-root user (UID 101)
+USER 101
 
-# Note: Entrypoint runs as root to modify nginx config,
-# then nginx process runs as nginx user (configured in nginx.conf)
-
-# Expose port
+# Expose port (must be >= 1024 for non-root)
 EXPOSE 3000
 
 # Health check
