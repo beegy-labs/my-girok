@@ -704,6 +704,64 @@ For mobile preview toggle and navigation:
 </div>
 ```
 
+## ESLint Configuration (Updated 2025-12)
+
+### react-hooks Plugin
+The project uses `eslint-plugin-react-hooks` for proper React Hooks linting:
+
+```javascript
+// eslint.config.mjs
+import pluginReactHooks from 'eslint-plugin-react-hooks';
+
+plugins: {
+  'react-hooks': pluginReactHooks,
+},
+rules: {
+  'react-hooks/rules-of-hooks': 'error',
+  'react-hooks/exhaustive-deps': 'warn',
+},
+```
+
+### useCallback Pattern for useEffect Dependencies
+
+Per project policy, **NEVER** use `eslint-disable` for `react-hooks/exhaustive-deps`. Instead, properly memoize functions:
+
+```typescript
+// ❌ DON'T - eslint-disable
+useEffect(() => {
+  loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+// ✅ DO - Memoize with useCallback
+const loadData = useCallback(async () => {
+  // ... implementation
+}, [dependency1, dependency2]);
+
+useEffect(() => {
+  loadData();
+}, [loadData]);
+```
+
+### Unused Variables Pattern
+
+Prefix unused variables with underscore to satisfy ESLint:
+
+```typescript
+// ❌ DON'T
+} catch (err) {
+  setError('Something went wrong');
+}
+
+// ✅ DO
+} catch (_err) {
+  setError('Something went wrong');
+}
+
+// ✅ DO - Destructuring unused properties
+const { projects: _projects, ...dataToSubmit } = formData;
+```
+
 ## References
 
 - **Design System**: `/docs/DESIGN_SYSTEM.md`

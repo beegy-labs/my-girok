@@ -98,7 +98,7 @@ test.describe('Authentication Flow', () => {
     // Error message will come from backend validation
   });
 
-  test('should maintain session after page reload', async ({ page, context }) => {
+  test('should maintain session after page reload', async ({ page, context: _context }) => {
     // 1. Login first
     await page.goto('/login');
 

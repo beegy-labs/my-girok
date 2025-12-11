@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllResumes, deleteResume, setDefaultResume, copyResume, Resume } from '../../api/resume';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -9,11 +9,7 @@ export default function ResumeList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadResumes();
-  }, []);
-
-  const loadResumes = async () => {
+  const loadResumes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -24,7 +20,11 @@ export default function ResumeList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    loadResumes();
+  }, [loadResumes]);
 
   const handleDelete = async (resumeId: string) => {
     if (!confirm(t('resume.list.confirmDelete'))) return;

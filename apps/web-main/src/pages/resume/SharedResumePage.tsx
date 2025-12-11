@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { getPublicResume, Resume } from '../../api/resume';
@@ -14,15 +14,9 @@ export default function SharedResumePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (token) {
-      loadSharedResume(token);
-    }
-  }, [token]);
-
-  const loadSharedResume = async (token: string) => {
+  const loadSharedResume = useCallback(async (shareToken: string) => {
     try {
-      const data = await getPublicResume(token);
+      const data = await getPublicResume(shareToken);
       setResume(data);
     } catch (err: any) {
       if (err.response?.status === 404) {
@@ -37,7 +31,13 @@ export default function SharedResumePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    if (token) {
+      loadSharedResume(token);
+    }
+  }, [token, loadSharedResume]);
 
   if (loading) {
     return <LoadingSpinner fullScreen message={t('resume.shared.loading')} />;
