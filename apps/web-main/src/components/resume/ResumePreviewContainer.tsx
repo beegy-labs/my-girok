@@ -22,21 +22,21 @@ interface ResumePreviewContainerProps {
   headerContent?: ReactNode;
   /** Whether to show the toolbar in ResumePreview */
   showToolbar?: boolean;
-  /** Whether to enable horizontal scroll on overflow (useful for mobile) */
-  enableHorizontalScroll?: boolean;
-  /** Minimum scale to enforce (default: 0.5 for mobile readability) */
-  minScale?: number;
 }
 
 /**
  * Resume Preview Container
  *
- * This component provides a responsive container for the resume preview.
- * It automatically calculates the optimal scale based on container width.
+ * Responsive Design Policy (Updated 2025-12):
+ * - Automatically scales PDF to fit container width (never scales up beyond 100%)
+ * - Mobile: Full responsive scaling for optimal fit (pinch-to-zoom for details)
+ * - Desktop: Natural scaling up to 100%
+ * - PDF quality maintained at 2x devicePixelRatio for crisp rendering
  *
- * The preview uses @react-pdf/renderer to generate a PDF which is then
- * displayed using react-pdf. This ensures pixel-perfect rendering without
- * any CSS transform scaling issues.
+ * This approach prioritizes:
+ * 1. No horizontal overflow/clipping on any device
+ * 2. Consistent PDF export quality
+ * 3. Natural mobile UX (no horizontal scroll needed)
  */
 export default function ResumePreviewContainer({
   resume,
@@ -48,8 +48,6 @@ export default function ResumePreviewContainer({
   responsivePadding = false,
   headerContent,
   showToolbar = true,
-  enableHorizontalScroll = true,
-  minScale = 0.5,
 }: ResumePreviewContainerProps) {
   const effectivePaperSize: PaperSizeKey = (paperSize || resume.paperSize || 'A4') as PaperSizeKey;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,12 +67,8 @@ export default function ResumePreviewContainer({
     const availableWidth = containerWidth - paddingLeft - paddingRight;
 
     // Calculate scale to fit container, max 1.0 (never scale up)
-    let newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
-
-    // Enforce minimum scale for readability (allows horizontal scroll if needed)
-    if (enableHorizontalScroll && newScale < minScale) {
-      newScale = minScale;
-    }
+    // No minimum scale - allows full responsive fit on all screen sizes
+    const newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
 
     // Round to 2 decimal places
     const roundedScale = Math.round(newScale * 100) / 100;
@@ -83,7 +77,7 @@ export default function ResumePreviewContainer({
       const roundedPrevScale = Math.round(prevScale * 100) / 100;
       return roundedPrevScale !== roundedScale ? roundedScale : prevScale;
     });
-  }, [effectivePaperSize, propScale, enableHorizontalScroll, minScale]);
+  }, [effectivePaperSize, propScale]);
 
   // Calculate scale on mount and window resize (debounced)
   useEffect(() => {
@@ -120,7 +114,6 @@ export default function ResumePreviewContainer({
     'rounded-lg shadow-inner dark:shadow-dark-inner',
     'transition-colors duration-200',
     'w-full',
-    'max-w-full',
     containerClassName,
   ].filter(Boolean).join(' ');
 
@@ -129,28 +122,18 @@ export default function ResumePreviewContainer({
   ].filter(Boolean).join(' ');
 
   // Container style
-  const containerStyle: React.CSSProperties = {
-    maxWidth: '100%',
-  };
+  const containerStyle: React.CSSProperties = {};
 
   if (maxHeight) {
     containerStyle.maxHeight = maxHeight;
     containerStyle.overflowY = 'auto';
   }
 
-  // Enable horizontal scroll when content exceeds container
-  if (enableHorizontalScroll) {
-    containerStyle.overflowX = 'auto';
-  }
-
-  // Inner wrapper style - centers content while allowing overflow
+  // Inner wrapper style - centers content
   const innerWrapperStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    minWidth: 'fit-content',
-    minHeight: 'fit-content',
-    padding: enableHorizontalScroll ? '0 16px' : undefined,
   };
 
   return (
