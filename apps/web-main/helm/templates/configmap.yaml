@@ -38,6 +38,9 @@ data:
         {{- $cspParts = append $cspParts (printf "font-src %s" $csp.fontSrc) }}
         {{- $cspParts = append $cspParts (printf "connect-src %s" $csp.connectSrc) }}
         {{- $cspParts = append $cspParts (printf "frame-ancestors %s" $csp.frameAncestors) }}
+        {{- if $csp.workerSrc }}
+        {{- $cspParts = append $cspParts (printf "worker-src %s" $csp.workerSrc) }}
+        {{- end }}
         {{- if $csp.extraDirectives }}
         {{- range $csp.extraDirectives }}
         {{- $cspParts = append $cspParts . }}

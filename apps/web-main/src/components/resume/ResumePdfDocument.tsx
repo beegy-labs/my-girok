@@ -13,19 +13,20 @@ import { sortByOrder, getBulletSymbol } from '../../utils/hierarchical-renderer'
 import { getProxyImageUrl } from '../../utils/imageProxy';
 
 // Register fonts for Korean support
+// NOTE: Use npm CDN path, not gh (GitHub) path - gh path returns 404
 Font.register({
   family: 'Pretendard',
   fonts: [
     {
-      src: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/public/static/Pretendard-Regular.otf',
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 'normal',
     },
     {
-      src: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/public/static/Pretendard-Bold.otf',
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
       fontWeight: 'bold',
     },
     {
-      src: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
       fontWeight: 'semibold',
     },
   ],
@@ -171,8 +172,7 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 9,
-    color: '#374151',
-    fontStyle: 'italic',
+    color: '#6b7280',
   },
   projectContainer: {
     paddingLeft: 8,
@@ -193,8 +193,7 @@ const styles = StyleSheet.create({
   },
   projectRole: {
     fontSize: 9,
-    color: '#374151',
-    fontStyle: 'italic',
+    color: '#6b7280',
   },
   projectDescription: {
     fontSize: 9,
