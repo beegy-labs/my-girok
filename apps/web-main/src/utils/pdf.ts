@@ -97,3 +97,54 @@ export async function generateResumePDFBase64(
     reader.readAsDataURL(blob);
   });
 }
+
+/**
+ * Print resume PDF directly
+ *
+ * Opens the PDF in a new window/tab for printing.
+ * This ensures proper PDF rendering with all fonts and styling.
+ */
+export async function printResumePDF(
+  resume: Resume,
+  options: Omit<PDFExportOptions, 'fileName'>
+): Promise<void> {
+  const { paperSize, isGrayscaleMode = false } = options;
+
+  try {
+    const documentElement = createElement(ResumePdfDocument, {
+      resume,
+      paperSize,
+      isGrayscaleMode,
+    }) as unknown as ReactElement<DocumentProps>;
+
+    const blob = await pdf(documentElement).toBlob();
+    const url = URL.createObjectURL(blob);
+
+    // Open PDF in new window for printing
+    const printWindow = window.open(url, '_blank');
+    if (printWindow) {
+      // Wait for PDF to load, then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      };
+    } else {
+      // Fallback: if popup blocked, download instead
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${resume.name.replace(/\s+/g, '_')}_Resume.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Cleanup URL after a delay
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000);
+  } catch (error) {
+    console.error('Failed to print PDF:', error);
+    throw new Error('Failed to print resume PDF');
+  }
+}
