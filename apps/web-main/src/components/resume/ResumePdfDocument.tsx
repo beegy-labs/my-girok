@@ -33,13 +33,15 @@ Font.register({
 });
 
 // PDF styles
+// Print margin reference: Word default is ~25mm, we use ~15mm for more content space
+// 15mm ≈ 42pt at 72dpi (PDF standard)
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Pretendard',
     fontSize: 10,
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+    paddingTop: 42,
+    paddingBottom: 42,
+    paddingHorizontal: 42,
     backgroundColor: '#ffffff',
   },
   header: {
@@ -122,9 +124,16 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 4,
     flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  achievementText: {
+    flex: 1,
+    fontSize: 10,
+    color: '#374151',
   },
   bullet: {
     marginRight: 4,
+    width: 10,
   },
   skillCategory: {
     marginBottom: 8,
@@ -245,16 +254,19 @@ const styles = StyleSheet.create({
   },
   hierarchicalItem: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: 2,
   },
   hierarchicalBullet: {
     marginRight: 4,
     fontSize: 10,
+    width: 10,
   },
   hierarchicalContent: {
     flex: 1,
     fontSize: 9,
     color: '#374151',
+    lineHeight: 1.4,
   },
   coverLetter: {
     fontSize: 10,
@@ -528,7 +540,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
               {project.achievements.map((achievement: string, i: number) => (
                 <View key={i} style={styles.achievementItem}>
                   <Text style={styles.bullet}>•</Text>
-                  <Text>{achievement}</Text>
+                  <Text style={styles.achievementText}>{achievement}</Text>
                 </View>
               ))}
             </View>
@@ -666,7 +678,7 @@ export default function ResumePdfDocument({
               {resume.keyAchievements.map((achievement: string, index: number) => (
                 <View key={index} style={styles.achievementItem}>
                   <Text style={styles.bullet}>•</Text>
-                  <Text>{achievement}</Text>
+                  <Text style={styles.achievementText}>{achievement}</Text>
                 </View>
               ))}
             </View>
