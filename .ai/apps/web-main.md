@@ -488,7 +488,32 @@ ResumePreviewContainer   → Responsive wrapper with scale
 - True vector PDF (not image-based)
 - No CSS transform clipping issues
 - Consistent output across all devices
-- Korean font support (Pretendard)
+- Multilingual support (Korean, English, Japanese)
+- CJK font support (Pretendard with italic fallback)
+
+### PDF i18n Support (Updated 2025-12)
+
+ResumePdfDocument supports multilingual PDF generation:
+
+```typescript
+import ResumePdfDocument, { PdfLocale } from './ResumePdfDocument';
+
+// Supported locales
+type PdfLocale = 'ko' | 'en' | 'ja';
+
+// Usage with locale
+<ResumePdfDocument
+  resume={resume}
+  paperSize="A4"
+  locale="en"  // Korean (default), English, or Japanese
+/>
+```
+
+**Locale-specific translations include**:
+- Section titles (Skills, Experience, Education, etc.)
+- Labels (Email, Phone, Present, Ongoing)
+- Duration format (1년 2개월 / 1 yrs 2 mos / 1年2ヶ月)
+- Degree types and gender labels
 
 ### PDF Export
 

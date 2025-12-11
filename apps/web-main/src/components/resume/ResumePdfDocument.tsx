@@ -12,15 +12,24 @@ import { PaperSizeKey } from '../../constants/paper';
 import { sortByOrder, getBulletSymbol } from '../../utils/hierarchical-renderer';
 import { getProxyImageUrl } from '../../utils/imageProxy';
 
-// Register fonts for Korean support with full Unicode coverage
+// Supported locales for PDF
+export type PdfLocale = 'ko' | 'en' | 'ja';
+
+// Register fonts for multilingual support with full Unicode coverage
 // NOTE: Use npm CDN path, not gh (GitHub) path - gh path returns 404
-// Using Pretendard which has excellent Korean and special character support
+// Using Pretendard which has excellent CJK and special character support
 Font.register({
   family: 'Pretendard',
   fonts: [
     {
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 'normal',
+    },
+    {
+      // Pretendard doesn't have native italic, use Regular as fallback for italic style
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      fontWeight: 'normal',
+      fontStyle: 'italic',
     },
     {
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
@@ -317,16 +326,17 @@ const styles = StyleSheet.create({
   },
 });
 
-// Translation helper (simplified for PDF)
-const t = (key: string, params?: Record<string, any>): string => {
-  const translations: Record<string, string> = {
+// Multilingual translations for PDF
+// Supports Korean (ko), English (en), and Japanese (ja)
+const translations: Record<PdfLocale, Record<string, string | ((params: Record<string, any>) => string)>> = {
+  ko: {
     'resume.genderLabels.MALE': '남',
     'resume.genderLabels.FEMALE': '여',
     'resume.genderLabels.OTHER': '기타',
-    'resume.age': `${params?.age}세`,
-    'resume.contactInfo.email': 'Email',
-    'resume.contactInfo.phone': 'Phone',
-    'resume.contactInfo.address': 'Address',
+    'resume.age': (p) => `${p.age}세`,
+    'resume.contactInfo.email': '이메일',
+    'resume.contactInfo.phone': '연락처',
+    'resume.contactInfo.address': '주소',
     'resume.militaryService.title': '병역',
     'resume.militaryService.exempted': '면제',
     'resume.militaryService.completed': '군필',
@@ -337,25 +347,121 @@ const t = (key: string, params?: Record<string, any>): string => {
     'resume.sections.projects': '프로젝트',
     'resume.sections.education': '학력',
     'resume.sections.certifications': '자격증',
-    'resume.experience.duration': `${params?.years}년 ${params?.months}개월`,
+    'resume.experience.duration': (p) => `${p.years}년 ${p.months}개월`,
     'resume.experience.currentlyWorking': '재직중',
     'resume.preview.ongoing': '진행중',
     'resume.preview.tech': '기술',
-    'resume.preview.demo': 'Demo',
+    'resume.preview.demo': '데모',
     'resume.preview.github': 'GitHub',
     'resume.preview.degree': '학위',
     'resume.preview.in': '',
     'resume.preview.present': '현재',
-    'resume.preview.verify': '확인',
+    'resume.preview.verify': '인증',
     'resume.preview.coverLetter': '자기소개서',
-    'resume.degreeTypes.HIGH_SCHOOL': '고등학교',
+    'resume.degreeTypes.HIGH_SCHOOL': '고등학교 졸업',
     'resume.degreeTypes.ASSOCIATE': '전문학사',
+    'resume.degreeTypes.ASSOCIATE_2': '전문학사 (2년제)',
+    'resume.degreeTypes.ASSOCIATE_3': '전문학사 (3년제)',
     'resume.degreeTypes.BACHELOR': '학사',
     'resume.degreeTypes.MASTER': '석사',
     'resume.degreeTypes.DOCTORATE': '박사',
     'resume.degreeTypes.OTHER': '기타',
+  },
+  en: {
+    'resume.genderLabels.MALE': 'M',
+    'resume.genderLabels.FEMALE': 'F',
+    'resume.genderLabels.OTHER': 'Other',
+    'resume.age': (p) => `${p.age} y/o`,
+    'resume.contactInfo.email': 'Email',
+    'resume.contactInfo.phone': 'Phone',
+    'resume.contactInfo.address': 'Address',
+    'resume.militaryService.title': 'Military Service',
+    'resume.militaryService.exempted': 'Exempted',
+    'resume.militaryService.completed': 'Completed',
+    'resume.preview.keyAchievements': 'Key Achievements',
+    'resume.preview.applicationReason': 'Application Reason',
+    'resume.sections.skills': 'Skills',
+    'resume.sections.experience': 'Work Experience',
+    'resume.sections.projects': 'Projects',
+    'resume.sections.education': 'Education',
+    'resume.sections.certifications': 'Certifications',
+    'resume.experience.duration': (p) => `${p.years} yrs ${p.months} mos`,
+    'resume.experience.currentlyWorking': 'Present',
+    'resume.preview.ongoing': 'Ongoing',
+    'resume.preview.tech': 'Tech',
+    'resume.preview.demo': 'Demo',
+    'resume.preview.github': 'GitHub',
+    'resume.preview.degree': 'Degree',
+    'resume.preview.in': 'in',
+    'resume.preview.present': 'Present',
+    'resume.preview.verify': 'Verify',
+    'resume.preview.coverLetter': 'Cover Letter',
+    'resume.degreeTypes.HIGH_SCHOOL': 'High School Diploma',
+    'resume.degreeTypes.ASSOCIATE': 'Associate Degree',
+    'resume.degreeTypes.ASSOCIATE_2': 'Associate Degree (2-year)',
+    'resume.degreeTypes.ASSOCIATE_3': 'Associate Degree (3-year)',
+    'resume.degreeTypes.BACHELOR': "Bachelor's Degree",
+    'resume.degreeTypes.MASTER': "Master's Degree",
+    'resume.degreeTypes.DOCTORATE': 'Doctorate (Ph.D.)',
+    'resume.degreeTypes.OTHER': 'Other',
+  },
+  ja: {
+    'resume.genderLabels.MALE': '男',
+    'resume.genderLabels.FEMALE': '女',
+    'resume.genderLabels.OTHER': 'その他',
+    'resume.age': (p) => `${p.age}歳`,
+    'resume.contactInfo.email': 'メール',
+    'resume.contactInfo.phone': '電話',
+    'resume.contactInfo.address': '住所',
+    'resume.militaryService.title': '兵役',
+    'resume.militaryService.exempted': '免除',
+    'resume.militaryService.completed': '履行済み',
+    'resume.preview.keyAchievements': '主な実績',
+    'resume.preview.applicationReason': '志望動機',
+    'resume.sections.skills': 'スキル',
+    'resume.sections.experience': '職務経歴',
+    'resume.sections.projects': 'プロジェクト',
+    'resume.sections.education': '学歴',
+    'resume.sections.certifications': '資格',
+    'resume.experience.duration': (p) => `${p.years}年${p.months}ヶ月`,
+    'resume.experience.currentlyWorking': '在職中',
+    'resume.preview.ongoing': '進行中',
+    'resume.preview.tech': '技術',
+    'resume.preview.demo': 'デモ',
+    'resume.preview.github': 'GitHub',
+    'resume.preview.degree': '学位',
+    'resume.preview.in': '専攻',
+    'resume.preview.present': '現在',
+    'resume.preview.verify': '認証',
+    'resume.preview.coverLetter': 'カバーレター',
+    'resume.degreeTypes.HIGH_SCHOOL': '高等学校卒業',
+    'resume.degreeTypes.ASSOCIATE': '短期大学士',
+    'resume.degreeTypes.ASSOCIATE_2': '短期大学士 (2年制)',
+    'resume.degreeTypes.ASSOCIATE_3': '短期大学士 (3年制)',
+    'resume.degreeTypes.BACHELOR': '学士',
+    'resume.degreeTypes.MASTER': '修士',
+    'resume.degreeTypes.DOCTORATE': '博士',
+    'resume.degreeTypes.OTHER': 'その他',
+  },
+};
+
+// Translation helper factory - creates a translation function for specific locale
+const createTranslator = (locale: PdfLocale) => {
+  return (key: string, params?: Record<string, any>): string => {
+    const localeTranslations = translations[locale];
+    const translation = localeTranslations[key];
+
+    if (!translation) {
+      // Fallback to English, then return key
+      const fallback = translations.en[key];
+      if (fallback) {
+        return typeof fallback === 'function' ? fallback(params || {}) : fallback;
+      }
+      return key;
+    }
+
+    return typeof translation === 'function' ? translation(params || {}) : translation;
   };
-  return translations[key] || key;
 };
 
 function getGenderLabelKey(gender: Gender): string {
@@ -371,6 +477,8 @@ interface ResumePdfDocumentProps {
   resume: Resume;
   paperSize?: PaperSizeKey;
   isGrayscaleMode?: boolean;
+  /** Locale for PDF text (ko, en, ja). Defaults to 'ko' */
+  locale?: PdfLocale;
 }
 
 // Hierarchical description renderer for PDF
@@ -394,8 +502,11 @@ function HierarchicalDescription({ items, depth = 0 }: { items: any[]; depth?: n
   );
 }
 
+// Type for translation function
+type TranslateFn = (key: string, params?: Record<string, any>) => string;
+
 // Skills Section
-function SkillsSection({ skills }: { skills: any[] }) {
+function SkillsSection({ skills, t }: { skills: any[]; t: TranslateFn }) {
   if (skills.length === 0) return null;
 
   return (
@@ -430,7 +541,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
 }
 
 // Experience Section
-function ExperienceSection({ experiences }: { experiences: any[] }) {
+function ExperienceSection({ experiences, t }: { experiences: any[]; t: TranslateFn }) {
   if (experiences.length === 0) return null;
 
   const totalDuration = calculateTotalExperienceWithOverlap(experiences);
@@ -505,7 +616,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
 }
 
 // Education Section
-function EducationSection({ educations }: { educations: any[] }) {
+function EducationSection({ educations, t }: { educations: any[]; t: TranslateFn }) {
   if (educations.length === 0) return null;
 
   return (
@@ -532,7 +643,7 @@ function EducationSection({ educations }: { educations: any[] }) {
 }
 
 // Certificates Section
-function CertificatesSection({ certificates }: { certificates: any[] }) {
+function CertificatesSection({ certificates, t }: { certificates: any[]; t: TranslateFn }) {
   if (certificates.length === 0) return null;
 
   return (
@@ -556,7 +667,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
 }
 
 // Projects Section (standalone projects, not experience projects)
-function ProjectsSection({ projects }: { projects: any[] }) {
+function ProjectsSection({ projects, t }: { projects: any[]; t: TranslateFn }) {
   if (projects.length === 0) return null;
 
   return (
@@ -603,11 +714,17 @@ function ProjectsSection({ projects }: { projects: any[] }) {
  * This component uses @react-pdf/renderer to generate a PDF document.
  * It renders the resume content in a print-optimized format with proper
  * page breaks and styling.
+ *
+ * Supports multiple locales: Korean (ko), English (en), Japanese (ja)
  */
 export default function ResumePdfDocument({
   resume,
   paperSize = 'A4',
+  locale = 'ko',
 }: ResumePdfDocumentProps) {
+  // Create translator for current locale
+  const t = createTranslator(locale);
+
   const visibleSections = resume.sections
     .filter(s => s.visible)
     .sort((a, b) => a.order - b.order);
@@ -738,15 +855,15 @@ export default function ResumePdfDocument({
         {visibleSections.map(section => {
           switch (section.type) {
             case 'SKILLS':
-              return <SkillsSection key={section.id} skills={resume.skills.filter(s => s.visible)} />;
+              return <SkillsSection key={section.id} skills={resume.skills.filter(s => s.visible)} t={t} />;
             case 'EXPERIENCE':
-              return <ExperienceSection key={section.id} experiences={resume.experiences.filter(e => e.visible)} />;
+              return <ExperienceSection key={section.id} experiences={resume.experiences.filter(e => e.visible)} t={t} />;
             case 'PROJECT':
-              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible)} />;
+              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible)} t={t} />;
             case 'EDUCATION':
-              return <EducationSection key={section.id} educations={resume.educations.filter(e => e.visible)} />;
+              return <EducationSection key={section.id} educations={resume.educations.filter(e => e.visible)} t={t} />;
             case 'CERTIFICATE':
-              return <CertificatesSection key={section.id} certificates={resume.certificates.filter(c => c.visible)} />;
+              return <CertificatesSection key={section.id} certificates={resume.certificates.filter(c => c.visible)} t={t} />;
             default:
               return null;
           }
