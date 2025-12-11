@@ -25,10 +25,11 @@ env:
   IMAGE_NAME: beegy-labs/web-main
 
 jobs:
-  test:
-    name: Run Tests
+  # Combined lint + type-check in single job to avoid duplicate pnpm install
+  check:
+    name: Lint & Type Check
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - name: Checkout code
@@ -45,8 +46,7 @@ jobs:
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Setup pnpm cache
         uses: actions/cache@v4
@@ -59,25 +59,41 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run lint
+      - name: Build shared packages
+        run: pnpm --filter @my-girok/types build
+
+      # Run lint and type-check in parallel using background processes
+      - name: Run lint and type-check
         run: |
           cd apps/web-main
-          pnpm lint || true
+          pnpm lint &
+          LINT_PID=$!
+          pnpm type-check &
+          TYPECHECK_PID=$!
 
-      - name: Run type check
-        run: |
-          cd apps/web-main
-          pnpm type-check || true
+          # Wait for both and capture exit codes
+          LINT_EXIT=0
+          TYPECHECK_EXIT=0
+          wait $LINT_PID || LINT_EXIT=$?
+          wait $TYPECHECK_PID || TYPECHECK_EXIT=$?
 
-      - name: Run E2E tests
-        run: |
-          cd apps/web-main
-          pnpm test:e2e || true
+          # Report results
+          if [ $LINT_EXIT -ne 0 ]; then
+            echo "::error::Lint failed with exit code $LINT_EXIT"
+          fi
+          if [ $TYPECHECK_EXIT -ne 0 ]; then
+            echo "::error::Type check failed with exit code $TYPECHECK_EXIT"
+          fi
 
+          # Exit with error if either failed
+          if [ $LINT_EXIT -ne 0 ] || [ $TYPECHECK_EXIT -ne 0 ]; then
+            exit 1
+          fi
+
+  # Build runs in parallel with check on push (no dependency)
   build:
     name: Build and Push Docker Image
     runs-on: [self-hosted, kubernetes, gitops]
-    needs: test
     if: github.event_name == 'push'
     timeout-minutes: 10
 
@@ -98,36 +114,27 @@ jobs:
       - name: Determine environment and API URL
         id: env
         run: |
-          # Get short commit SHA
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
 
-          # Determine environment, tag, and API URLs based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # Production
             ENV="production"
             TAG="latest"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-            # Production API URLs
             API_URL="https://my-api.girok.dev/auth"
             PERSONAL_API_URL="https://my-api.girok.dev/personal"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            # Development: develop-<hash> + develop
             ENV="development"
             TAG="develop-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
-            # Development API URLs
             API_URL="https://my-api-dev.girok.dev/auth"
             PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
           elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            # Staging: release-<hash> + release
             ENV="staging"
             TAG="release-${SHORT_SHA}"
             TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
-            # Staging API URLs
             API_URL="https://my-api-staging.girok.dev/auth"
             PERSONAL_API_URL="https://my-api-staging.girok.dev/personal"
           else
-            # Other branches: branch-<hash>
             ENV="development"
             BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
             TAG="${BRANCH_NAME}-${SHORT_SHA}"
@@ -136,7 +143,6 @@ jobs:
             PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
           fi
 
-          # Set version for display (include environment prefix for non-main branches)
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             VERSION="${TAG}"
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
@@ -148,6 +154,7 @@ jobs:
           fi
 
           echo "environment=${ENV}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
@@ -170,43 +177,20 @@ jobs:
         run: |
           echo "Environment: ${{ steps.env.outputs.environment }}"
           echo "Image pushed with tags: ${{ steps.env.outputs.tags }}"
-          echo "Version: ${{ steps.env.outputs.version }}"
-          echo "API URL: ${{ steps.env.outputs.api_url }}"
-          echo "Personal API URL: ${{ steps.env.outputs.personal_api_url }}"
 
-  update-gitops:
-    name: Update GitOps Repository
+    outputs:
+      tag: ${{ steps.env.outputs.tag }}
+      environment: ${{ steps.env.outputs.environment }}
+
+  # Deploy waits for both check and build to succeed
+  deploy:
+    name: Update GitOps & Cleanup
     runs-on: [self-hosted, kubernetes, gitops]
-    needs: build
+    needs: [check, build]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
     timeout-minutes: 10
 
     steps:
-      - name: Get short commit SHA
-        id: sha
-        run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
-
-      - name: Determine image tag
-        id: image
-        run: |
-          SHORT_SHA=${{ steps.sha.outputs.short_sha }}
-
-          # Tag format must match the build job:
-          # - main: <hash>
-          # - develop: develop-<hash>
-          # - release/*: release-<hash>
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            TAG="${SHORT_SHA}"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            TAG="develop-${SHORT_SHA}"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            TAG="release-${SHORT_SHA}"
-          fi
-
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-
       - name: Checkout GitOps repository
         uses: actions/checkout@v4
         with:
@@ -217,11 +201,8 @@ jobs:
       - name: Update image tag in GitOps repository
         run: |
           cd gitops
-
-          # Pull latest changes first to avoid conflicts
           git pull --rebase
 
-          # Determine values file path based on branch
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             VALUES_FILE="clusters/home/values/my-girok-web-main-prod.yaml"
             ENVIRONMENT="production"
@@ -233,18 +214,13 @@ jobs:
             ENVIRONMENT="staging"
           fi
 
-          # Update image tag using sed
-          sed -i "s|tag: \".*\"|tag: \"${{ steps.image.outputs.tag }}\"|g" ${VALUES_FILE}
-
-          echo "Updated ${VALUES_FILE} with tag: ${{ steps.image.outputs.tag }}"
-          echo "Environment: ${ENVIRONMENT}"
-          cat ${VALUES_FILE} | grep -A 3 "image:"
+          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${VALUES_FILE}
+          echo "Updated ${VALUES_FILE} with tag: ${{ needs.build.outputs.tag }}"
 
       - name: Commit and push changes
         run: |
           cd gitops
 
-          # Determine values file path and environment (same logic as update step)
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             VALUES_FILE="clusters/home/values/my-girok-web-main-prod.yaml"
             ENVIRONMENT="production"
@@ -258,25 +234,21 @@ jobs:
 
           git config user.name "GitHub Actions Bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git add ${VALUES_FILE}
 
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore(${ENVIRONMENT}): update web-main image to ${{ steps.image.outputs.tag }}" \
-                       -m "Updated by GitHub Actions from my-girok@${{ github.sha }}" \
-                       -m "Branch: ${{ github.ref_name }}" \
-                       -m "Environment: ${ENVIRONMENT}"
+            git commit -m "chore(${ENVIRONMENT}): update web-main image to ${{ needs.build.outputs.tag }}" \
+                       -m "Updated by GitHub Actions from my-girok@${{ github.sha }}"
 
-            # Push with retry logic (max 3 attempts)
             for i in {1..3}; do
               if git push; then
-                echo "Successfully updated GitOps repository for ${ENVIRONMENT}"
+                echo "Successfully updated GitOps repository"
                 break
               else
                 if [ $i -lt 3 ]; then
-                  echo "Push failed, retrying in 5 seconds... (attempt $i/3)"
+                  echo "Push failed, retrying... (attempt $i/3)"
                   sleep 5
                   git pull --rebase
                 else
@@ -287,37 +259,9 @@ jobs:
             done
           fi
 
-      - name: Trigger ArgoCD sync
-        run: |
-          # Determine ArgoCD app name based on branch
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            APP_NAME="my-girok-prod-web-main"
-            ENVIRONMENT="production"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            APP_NAME="my-girok-dev-web-main"
-            ENVIRONMENT="development"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            APP_NAME="my-girok-staging-web-main"
-            ENVIRONMENT="staging"
-          fi
-
-          echo "GitOps repository updated for ${APP_NAME} (${ENVIRONMENT})"
-          echo "ArgoCD will auto-sync within 3 minutes due to automated sync policy"
-
-          # Note: kubectl is not available in this runner environment
-          # ArgoCD has automated sync enabled with polling interval
-          # The application will be synced automatically when ArgoCD detects the Git change
-
-  cleanup-images:
-    name: Cleanup Old Container Images
-    runs-on: [self-hosted, kubernetes, gitops]
-    needs: update-gitops
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
-    timeout-minutes: 5
-
-    steps:
-      - name: Determine environment prefix
-        id: env
+      - name: Cleanup old images (keep latest 10)
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             PREFIX=""
@@ -329,51 +273,31 @@ jobs:
             PREFIX="release-"
             KEEP_TAGS="release"
           fi
-          echo "prefix=${PREFIX}" >> $GITHUB_OUTPUT
-          echo "keep_tags=${KEEP_TAGS}" >> $GITHUB_OUTPUT
 
-      - name: Cleanup old images (keep latest 10)
-        env:
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
-        run: |
-          PREFIX="${{ steps.env.outputs.prefix }}"
-          KEEP_TAGS="${{ steps.env.outputs.keep_tags }}"
           PACKAGE="web-main"
           OWNER="beegy-labs"
           MAX_KEEP=10
 
-          echo "Cleaning up ${PREFIX}* images for ${PACKAGE}, keeping latest ${MAX_KEEP}"
+          echo "Cleaning up ${PREFIX}* images, keeping latest ${MAX_KEEP}"
 
-          # Get all versions with the environment prefix
           VERSIONS=$(curl -s -H "Authorization: token ${GITEA_TOKEN}" \
             "https://gitea.girok.dev/api/v1/packages/${OWNER}/container/${PACKAGE}" | \
             jq -r ".[] | select(.version | startswith(\"${PREFIX}\")) | select(.version != \"${KEEP_TAGS}\") | \"\(.created_at)|\(.version)\"" | \
             sort -r)
 
           if [ -z "$VERSIONS" ]; then
-            echo "No ${PREFIX}* versions found to cleanup"
+            echo "No versions to cleanup"
             exit 0
           fi
 
-          # Count versions
           TOTAL=$(echo "$VERSIONS" | wc -l)
-          echo "Found ${TOTAL} ${PREFIX}* versions"
-
           if [ "$TOTAL" -le "$MAX_KEEP" ]; then
-            echo "Total versions (${TOTAL}) <= max keep (${MAX_KEEP}), nothing to delete"
+            echo "Total (${TOTAL}) <= max (${MAX_KEEP}), nothing to delete"
             exit 0
           fi
 
-          # Get versions to delete (skip first MAX_KEEP, delete the rest)
-          TO_DELETE=$(echo "$VERSIONS" | tail -n +$((MAX_KEEP + 1)))
-          DELETE_COUNT=$(echo "$TO_DELETE" | wc -l)
-
-          echo "Will delete ${DELETE_COUNT} old versions"
-
-          echo "$TO_DELETE" | while IFS='|' read -r created_at version; do
-            echo "Deleting: ${version} (created: ${created_at})"
+          echo "$VERSIONS" | tail -n +$((MAX_KEEP + 1)) | while IFS='|' read -r created_at version; do
+            echo "Deleting: ${version}"
             curl -s -X DELETE -H "Authorization: token ${GITEA_TOKEN}" \
               "https://gitea.girok.dev/api/v1/packages/${OWNER}/container/${PACKAGE}/${version}" || true
           done
-
-          echo "Cleanup completed"
