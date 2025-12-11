@@ -75,14 +75,18 @@ export default function SharedResumePage() {
   }
 
   return (
-    <>
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Action Bar - Common component with shared mode (PDF + print only) */}
       <ResumeActionBar resume={resume} mode="shared" />
 
       {/* Resume Preview */}
-      <div className="py-4 sm:py-6 md:py-8 print:py-0 flex justify-center">
-        <ResumePreviewContainer resume={resume} />
+      <div className="py-4 sm:py-6 md:py-8 print:py-0 w-full max-w-full">
+        <ResumePreviewContainer
+          resume={resume}
+          enableHorizontalScroll={true}
+          minScale={0.6}
+        />
       </div>
-    </>
+    </div>
   );
 }

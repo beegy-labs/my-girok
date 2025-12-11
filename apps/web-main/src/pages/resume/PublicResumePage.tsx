@@ -74,14 +74,14 @@ export default function PublicResumePage() {
   }
 
   return (
-    <>
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Action Bar - Hidden when printing */}
       <div className="print:hidden px-4 pt-4 sm:pt-6">
         <div className="max-w-5xl mx-auto bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 sm:py-4 transition-colors duration-200">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div className="flex-1">
               <h1 className="text-lg sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary">
-                📄 {resume.name}'s Resume
+                {resume.name}'s Resume
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary">@{username}</p>
@@ -95,11 +95,11 @@ export default function PublicResumePage() {
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {isOwnProfile && (
                 <PrimaryButton onClick={handleEdit} size="sm">
-                  ✍️ Edit Resume
+                  Edit Resume
                 </PrimaryButton>
               )}
               <SecondaryButton onClick={handlePrint} size="sm">
-                🖨️ Print
+                Print
               </SecondaryButton>
             </div>
           </div>
@@ -107,9 +107,13 @@ export default function PublicResumePage() {
       </div>
 
       {/* Resume Preview */}
-      <div className="py-4 sm:py-6 md:py-8 print:py-0 flex justify-center">
-        <ResumePreviewContainer resume={resume} />
+      <div className="py-4 sm:py-6 md:py-8 print:py-0 w-full max-w-full">
+        <ResumePreviewContainer
+          resume={resume}
+          enableHorizontalScroll={true}
+          minScale={0.6}
+        />
       </div>
-    </>
+    </div>
   );
 }

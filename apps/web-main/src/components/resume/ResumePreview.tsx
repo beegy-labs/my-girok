@@ -11,6 +11,16 @@ import 'react-pdf/dist/Page/TextLayer.css';
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+/**
+ * Get capped device pixel ratio for high-quality rendering
+ * Caps at 2 to prevent performance issues on very high DPI devices
+ * while maintaining good quality on retina displays
+ */
+function getCappedDevicePixelRatio(): number {
+  if (typeof window === 'undefined') return 1;
+  return Math.min(2, window.devicePixelRatio || 1);
+}
+
 interface ResumePreviewProps {
   resume: Resume;
   paperSize?: PaperSizeKey;
@@ -67,6 +77,9 @@ export default function ResumePreview({
 
   // Calculate display width based on scale (memoized)
   const displayWidth = useMemo(() => paper.width.px * scale, [paper.width.px, scale]);
+
+  // Get capped device pixel ratio for high-quality rendering on all devices
+  const devicePixelRatio = useMemo(() => getCappedDevicePixelRatio(), []);
 
   // Page navigation handlers (memoized)
   const goToPrevPage = useCallback(() => setCurrentPage(prev => Math.max(1, prev - 1)), []);
@@ -138,6 +151,7 @@ export default function ResumePreview({
               </div>
             </div>
           </div>
+        </div>
       )}
 
       {/* PDF Viewer */}
@@ -199,6 +213,7 @@ export default function ResumePreview({
                     <Page
                       pageNumber={index + 1}
                       width={displayWidth}
+                      devicePixelRatio={devicePixelRatio}
                       renderTextLayer={false}
                       renderAnnotationLayer={false}
                       className={isGrayscaleMode ? 'grayscale' : ''}
@@ -211,6 +226,7 @@ export default function ResumePreview({
                   <Page
                     pageNumber={currentPage}
                     width={displayWidth}
+                    devicePixelRatio={devicePixelRatio}
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
                     className={isGrayscaleMode ? 'grayscale' : ''}
