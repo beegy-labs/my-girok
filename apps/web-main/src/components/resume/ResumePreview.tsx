@@ -199,7 +199,7 @@ export default function ResumePreview({
           </div>
         ) : instance.error ? (
           <div className="flex items-center justify-center py-20 text-red-600">
-            <span>{t('resume.preview.error', { defaultValue: 'Error generating PDF' })}: {instance.error}</span>
+            <span>{t('resume.preview.error', { defaultValue: 'Error generating PDF' })}: {instance.error instanceof Error ? instance.error.message : String(instance.error)}</span>
           </div>
         ) : instance.blob ? (
           <>
