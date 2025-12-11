@@ -2,22 +2,11 @@ name: CI - Web Main
 
 on:
   push:
-    branches:
-      - develop
-      - 'release/**'
-      - main
-    paths:
-      - 'apps/web-main/**'
-      - 'packages/types/**'
-      - '.github/workflows/ci-web-main.yml'
+    branches: [develop, 'release/**', main]
+    paths: ['apps/web-main/**', 'packages/types/**', '.github/workflows/ci-web-main.yml']
   pull_request:
-    branches:
-      - develop
-      - 'release/**'
-      - main
-    paths:
-      - 'apps/web-main/**'
-      - 'packages/types/**'
+    branches: [develop, 'release/**', main]
+    paths: ['apps/web-main/**', 'packages/types/**']
   workflow_dispatch:
 
 env:
@@ -25,279 +14,101 @@ env:
   IMAGE_NAME: beegy-labs/web-main
 
 jobs:
-  # Combined lint + type-check in single job to avoid duplicate pnpm install
+  # Fast check for PR and Push (~1min with cache)
   check:
-    name: Lint & Type Check
+    name: Check
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 5
-
+    timeout-minutes: 3
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/cache@v4
         with:
-          node-version: '22'
+          path: |
+            ~/.local/share/pnpm/store
+            node_modules
+            apps/web-main/node_modules
+            packages/types/node_modules
+          key: ${{ runner.os }}-pnpm-web-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm --filter @my-girok/types build
+      - run: cd apps/web-main && pnpm lint & pnpm type-check & wait
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build shared packages
-        run: pnpm --filter @my-girok/types build
-
-      # Run lint and type-check in parallel using background processes
-      - name: Run lint and type-check
-        run: |
-          cd apps/web-main
-          pnpm lint &
-          LINT_PID=$!
-          pnpm type-check &
-          TYPECHECK_PID=$!
-
-          # Wait for both and capture exit codes
-          LINT_EXIT=0
-          TYPECHECK_EXIT=0
-          wait $LINT_PID || LINT_EXIT=$?
-          wait $TYPECHECK_PID || TYPECHECK_EXIT=$?
-
-          # Report results
-          if [ $LINT_EXIT -ne 0 ]; then
-            echo "::error::Lint failed with exit code $LINT_EXIT"
-          fi
-          if [ $TYPECHECK_EXIT -ne 0 ]; then
-            echo "::error::Type check failed with exit code $TYPECHECK_EXIT"
-          fi
-
-          # Exit with error if either failed
-          if [ $LINT_EXIT -ne 0 ] || [ $TYPECHECK_EXIT -ne 0 ]; then
-            exit 1
-          fi
-
-  # Build runs in parallel with check on push (no dependency)
   build:
-    name: Build and Push Docker Image
-    runs-on: [self-hosted, kubernetes, gitops]
+    name: Build
     if: github.event_name == 'push'
+    runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 10
-
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Gitea Container Registry
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.GITEA_USERNAME }}
           password: ${{ secrets.GITEA_TOKEN }}
-
-      - name: Determine environment and API URL
-        id: env
+      - name: Meta
+        id: meta
         run: |
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            ENV="production"
-            TAG="latest"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-            API_URL="https://my-api.girok.dev/auth"
-            PERSONAL_API_URL="https://my-api.girok.dev/personal"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            ENV="development"
-            TAG="develop-${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
-            API_URL="https://my-api-dev.girok.dev/auth"
-            PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            ENV="staging"
-            TAG="release-${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
-            API_URL="https://my-api-staging.girok.dev/auth"
-            PERSONAL_API_URL="https://my-api-staging.girok.dev/personal"
-          else
-            ENV="development"
-            BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
-            TAG="${BRANCH_NAME}-${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-            API_URL="https://my-api-dev.girok.dev/auth"
-            PERSONAL_API_URL="https://my-api-dev.girok.dev/personal"
-          fi
-
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            VERSION="${TAG}"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            VERSION="develop:${TAG}"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            VERSION="release:${TAG}"
-          else
-            VERSION="${TAG}"
-          fi
-
-          echo "environment=${ENV}" >> $GITHUB_OUTPUT
+          case "${{ github.ref }}" in
+            refs/heads/main) TAG="latest"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" ;;
+            refs/heads/develop) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop" ;;
+            refs/heads/release/*) TAG="release-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release" ;;
+            *) TAG="$(echo ${{ github.ref }} | sed 's|refs/heads/||;s|/|-|g')-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}" ;;
+          esac
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
-          echo "personal_api_url=${PERSONAL_API_URL}" >> $GITHUB_OUTPUT
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+          # API URLs
+          [[ "${{ github.ref }}" == "refs/heads/main" ]] && API="https://my-api.girok.dev" || API="https://my-api-dev.girok.dev"
+          echo "api_url=${API}/auth" >> $GITHUB_OUTPUT
+          echo "personal_api_url=${API}/personal" >> $GITHUB_OUTPUT
+      - uses: docker/build-push-action@v5
         with:
           context: .
           file: ./apps/web-main/Dockerfile
           push: true
-          tags: ${{ steps.env.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           build-args: |
-            VITE_API_URL=${{ steps.env.outputs.api_url }}
-            VITE_PERSONAL_API_URL=${{ steps.env.outputs.personal_api_url }}
+            VITE_API_URL=${{ steps.meta.outputs.api_url }}
+            VITE_PERSONAL_API_URL=${{ steps.meta.outputs.personal_api_url }}
 
-      - name: Image digest
-        run: |
-          echo "Environment: ${{ steps.env.outputs.environment }}"
-          echo "Image pushed with tags: ${{ steps.env.outputs.tags }}"
-
-    outputs:
-      tag: ${{ steps.env.outputs.tag }}
-      environment: ${{ steps.env.outputs.environment }}
-
-  # Deploy waits for both check and build to succeed
   deploy:
-    name: Update GitOps & Cleanup
-    runs-on: [self-hosted, kubernetes, gitops]
+    name: Deploy
     needs: [check, build]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
-    timeout-minutes: 10
-
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 5
     steps:
-      - name: Checkout GitOps repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: beegy-labs/platform-gitops
           token: ${{ secrets.GITOPS_PAT }}
           path: gitops
-
-      - name: Update image tag in GitOps repository
+      - name: Update & Push
         run: |
-          cd gitops
-          git pull --rebase
-
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-web-main-prod.yaml"
-            ENVIRONMENT="production"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-web-main-dev.yaml"
-            ENVIRONMENT="development"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-web-main-staging.yaml"
-            ENVIRONMENT="staging"
-          fi
-
-          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${VALUES_FILE}
-          echo "Updated ${VALUES_FILE} with tag: ${{ needs.build.outputs.tag }}"
-
-      - name: Commit and push changes
-        run: |
-          cd gitops
-
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-web-main-prod.yaml"
-            ENVIRONMENT="production"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-web-main-dev.yaml"
-            ENVIRONMENT="development"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            VALUES_FILE="clusters/home/values/my-girok-web-main-staging.yaml"
-            ENVIRONMENT="staging"
-          fi
-
+          cd gitops && git pull --rebase
+          case "${{ github.ref }}" in
+            refs/heads/main) FILE="clusters/home/values/my-girok-web-main-prod.yaml"; ENV="production" ;;
+            refs/heads/develop) FILE="clusters/home/values/my-girok-web-main-dev.yaml"; ENV="development" ;;
+            *) FILE="clusters/home/values/my-girok-web-main-staging.yaml"; ENV="staging" ;;
+          esac
+          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
           git config user.name "GitHub Actions Bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ${VALUES_FILE}
-
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore(${ENVIRONMENT}): update web-main image to ${{ needs.build.outputs.tag }}" \
-                       -m "Updated by GitHub Actions from my-girok@${{ github.sha }}"
-
-            for i in {1..3}; do
-              if git push; then
-                echo "Successfully updated GitOps repository"
-                break
-              else
-                if [ $i -lt 3 ]; then
-                  echo "Push failed, retrying... (attempt $i/3)"
-                  sleep 5
-                  git pull --rebase
-                else
-                  echo "Push failed after 3 attempts"
-                  exit 1
-                fi
-              fi
-            done
-          fi
-
-      - name: Cleanup old images (keep latest 10)
-        env:
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          git add ${FILE}
+          git diff --staged --quiet || git commit -m "chore(${ENV}): update web-main to ${{ needs.build.outputs.tag }}"
+          for i in 1 2 3; do git push && break || { sleep 3; git pull --rebase; }; done
+      - name: Cleanup
+        env: { GITEA_TOKEN: "${{ secrets.GITEA_TOKEN }}" }
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            PREFIX=""
-            KEEP_TAGS="latest"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            PREFIX="develop-"
-            KEEP_TAGS="develop"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            PREFIX="release-"
-            KEEP_TAGS="release"
-          fi
-
-          PACKAGE="web-main"
-          OWNER="beegy-labs"
-          MAX_KEEP=10
-
-          echo "Cleaning up ${PREFIX}* images, keeping latest ${MAX_KEEP}"
-
-          VERSIONS=$(curl -s -H "Authorization: token ${GITEA_TOKEN}" \
-            "https://gitea.girok.dev/api/v1/packages/${OWNER}/container/${PACKAGE}" | \
-            jq -r ".[] | select(.version | startswith(\"${PREFIX}\")) | select(.version != \"${KEEP_TAGS}\") | \"\(.created_at)|\(.version)\"" | \
-            sort -r)
-
-          if [ -z "$VERSIONS" ]; then
-            echo "No versions to cleanup"
-            exit 0
-          fi
-
-          TOTAL=$(echo "$VERSIONS" | wc -l)
-          if [ "$TOTAL" -le "$MAX_KEEP" ]; then
-            echo "Total (${TOTAL}) <= max (${MAX_KEEP}), nothing to delete"
-            exit 0
-          fi
-
-          echo "$VERSIONS" | tail -n +$((MAX_KEEP + 1)) | while IFS='|' read -r created_at version; do
-            echo "Deleting: ${version}"
-            curl -s -X DELETE -H "Authorization: token ${GITEA_TOKEN}" \
-              "https://gitea.girok.dev/api/v1/packages/${OWNER}/container/${PACKAGE}/${version}" || true
-          done
+          [[ "${{ github.ref }}" == "refs/heads/main" ]] && P="" || P="${{ github.ref == 'refs/heads/develop' && 'develop-' || 'release-' }}"
+          curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/web-main" | \
+            jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \
+            while IFS='|' read -r _ v; do curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/web-main/${v}"; done

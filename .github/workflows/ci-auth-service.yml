@@ -3,17 +3,10 @@ name: CI - Auth Service
 on:
   push:
     branches: [develop, 'release/**', main]
-    paths:
-      - 'services/auth-service/**'
-      - 'packages/types/**'
-      - 'packages/nest-common/**'
-      - '.github/workflows/ci-auth-service.yml'
+    paths: ['services/auth-service/**', 'packages/types/**', 'packages/nest-common/**', '.github/workflows/ci-auth-service.yml']
   pull_request:
     branches: [develop, 'release/**', main]
-    paths:
-      - 'services/auth-service/**'
-      - 'packages/types/**'
-      - 'packages/nest-common/**'
+    paths: ['services/auth-service/**', 'packages/types/**', 'packages/nest-common/**']
   workflow_dispatch:
 
 env:
@@ -22,37 +15,32 @@ env:
 
 jobs:
   check:
-    name: Test & Lint
+    name: Check
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+        with: { node-version: '22' }
       - uses: pnpm/action-setup@v4
-      - name: Cache pnpm
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-      - run: pnpm install --frozen-lockfile
-      - name: Build & Check
-        run: |
-          pnpm --filter @my-girok/types build &
-          pnpm --filter @my-girok/nest-common build &
-          wait
-          pnpm --filter @my-girok/auth-service prisma:generate
-          cd services/auth-service
-          pnpm test &
-          pnpm lint &
-          wait
+          path: |
+            ~/.local/share/pnpm/store
+            node_modules
+            services/auth-service/node_modules
+            packages/types/node_modules
+            packages/nest-common/node_modules
+          key: ${{ runner.os }}-pnpm-auth-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm --filter @my-girok/types build & pnpm --filter @my-girok/nest-common build & wait
+      - run: pnpm --filter @my-girok/auth-service prisma:generate
+      - run: cd services/auth-service && pnpm test & pnpm lint & wait
 
   build:
-    name: Build & Push
-    runs-on: [self-hosted, kubernetes, gitops]
+    name: Build
     if: github.event_name == 'push'
+    runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 10
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
@@ -64,24 +52,16 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.GITEA_USERNAME }}
           password: ${{ secrets.GITEA_TOKEN }}
-      - name: Set tags
+      - name: Meta
         id: meta
         run: |
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            TAG="${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            TAG="develop-${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
-          elif [[ "${{ github.ref }}" =~ refs/heads/release/.* ]]; then
-            TAG="release-${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release"
-          else
-            BRANCH=$(echo ${{ github.ref }} | sed 's/refs\/heads\///' | sed 's/\//-/g')
-            TAG="${BRANCH}-${SHORT_SHA}"
-            TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-          fi
+          case "${{ github.ref }}" in
+            refs/heads/main) TAG="${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" ;;
+            refs/heads/develop) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop" ;;
+            refs/heads/release/*) TAG="release-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release" ;;
+            *) TAG="$(echo ${{ github.ref }} | sed 's|refs/heads/||;s|/|-|g')-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}" ;;
+          esac
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - uses: docker/build-push-action@v5
@@ -95,9 +75,9 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: [self-hosted, kubernetes, gitops]
     needs: [check, build]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -105,34 +85,24 @@ jobs:
           repository: beegy-labs/platform-gitops
           token: ${{ secrets.GITOPS_PAT }}
           path: gitops
-      - name: Update GitOps
+      - name: Update & Push
         run: |
           cd gitops && git pull --rebase
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            FILE="clusters/home/values/my-girok-auth-service-prod.yaml"
-            ENV="production"
-          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            FILE="clusters/home/values/my-girok-auth-service-dev.yaml"
-            ENV="development"
-          else
-            FILE="clusters/home/values/my-girok-auth-service-staging.yaml"
-            ENV="staging"
-          fi
+          case "${{ github.ref }}" in
+            refs/heads/main) FILE="clusters/home/values/my-girok-auth-service-prod.yaml"; ENV="production" ;;
+            refs/heads/develop) FILE="clusters/home/values/my-girok-auth-service-dev.yaml"; ENV="development" ;;
+            *) FILE="clusters/home/values/my-girok-auth-service-staging.yaml"; ENV="staging" ;;
+          esac
           sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
           git config user.name "GitHub Actions Bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ${FILE}
           git diff --staged --quiet || git commit -m "chore(${ENV}): update auth-service to ${{ needs.build.outputs.tag }}"
-          for i in 1 2 3; do git push && break || { sleep 5; git pull --rebase; }; done
-      - name: Cleanup images
-        env:
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          for i in 1 2 3; do git push && break || { sleep 3; git pull --rebase; }; done
+      - name: Cleanup
+        env: { GITEA_TOKEN: "${{ secrets.GITEA_TOKEN }}" }
         run: |
-          [[ "${{ github.ref }}" == "refs/heads/main" ]] && PREFIX="" || PREFIX="${{ github.ref == 'refs/heads/develop' && 'develop-' || 'release-' }}"
-          VERSIONS=$(curl -s -H "Authorization: token ${GITEA_TOKEN}" \
-            "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/auth-service" | \
-            jq -r ".[] | select(.version | startswith(\"${PREFIX}\")) | \"\(.created_at)|\(.version)\"" | sort -r)
-          echo "$VERSIONS" | tail -n +11 | while IFS='|' read -r _ v; do
-            curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" \
-              "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/auth-service/${v}" || true
-          done
+          [[ "${{ github.ref }}" == "refs/heads/main" ]] && P="" || P="${{ github.ref == 'refs/heads/develop' && 'develop-' || 'release-' }}"
+          curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/auth-service" | \
+            jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \
+            while IFS='|' read -r _ v; do curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/auth-service/${v}"; done
