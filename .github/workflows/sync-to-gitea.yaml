@@ -3,7 +3,9 @@ name: Sync to Gitea
 on:
   push:
     branches:
-      - '**'
+      - main
+      - release
+      - develop
     tags:
       - '**'
   workflow_dispatch:
