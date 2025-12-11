@@ -28,6 +28,8 @@ interface ResumePreviewProps {
   scale?: number;
   /** Show toolbar with view mode toggle */
   showToolbar?: boolean;
+  /** Callback when paper size changes */
+  onPaperSizeChange?: (size: PaperSizeKey) => void;
 }
 
 /**
@@ -38,17 +40,29 @@ interface ResumePreviewProps {
  */
 export default function ResumePreview({
   resume,
-  paperSize = 'A4',
+  paperSize: externalPaperSize,
   scale = 1,
   showToolbar = true,
+  onPaperSizeChange,
 }: ResumePreviewProps) {
   const { t } = useTranslation();
   const [numPages, setNumPages] = useState<number>(0);
   const [isGrayscaleMode, setIsGrayscaleMode] = useState(false);
   const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('paginated');
   const [currentPage, setCurrentPage] = useState(1);
+  const [internalPaperSize, setInternalPaperSize] = useState<PaperSizeKey>(
+    (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey
+  );
 
+  // Use external paper size if provided, otherwise use internal state
+  const paperSize = externalPaperSize || internalPaperSize;
   const paper = PAPER_SIZES[paperSize];
+
+  // Handle paper size change
+  const handlePaperSizeChange = useCallback((size: PaperSizeKey) => {
+    setInternalPaperSize(size);
+    onPaperSizeChange?.(size);
+  }, [onPaperSizeChange]);
 
   // Generate PDF document
   const pdfDocument = useMemo(
@@ -98,8 +112,30 @@ export default function ResumePreview({
           <div className="max-w-5xl mx-auto bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 transition-colors duration-200">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="bg-gray-100 dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg px-2 py-1 text-xs text-gray-800 dark:text-dark-text-primary">
-                  {paperSize} ({paper.css.width} x {paper.css.height})
+                {/* Paper Size Selector */}
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-bg-elevated rounded-lg p-1">
+                  <button
+                    onClick={() => handlePaperSizeChange('A4')}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      paperSize === 'A4'
+                        ? 'bg-white dark:bg-dark-bg-card text-gray-900 dark:text-dark-text-primary shadow-sm'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-dark-text-primary'
+                    }`}
+                    title="A4 (210mm x 297mm)"
+                  >
+                    A4
+                  </button>
+                  <button
+                    onClick={() => handlePaperSizeChange('LETTER')}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      paperSize === 'LETTER'
+                        ? 'bg-white dark:bg-dark-bg-card text-gray-900 dark:text-dark-text-primary shadow-sm'
+                        : 'text-gray-600 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-dark-text-primary'
+                    }`}
+                    title="Letter (215.9mm x 279.4mm)"
+                  >
+                    Letter
+                  </button>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1 text-xs text-blue-700 dark:text-blue-300">
                   {Math.round(scale * 100)}%
