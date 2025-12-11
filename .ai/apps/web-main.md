@@ -517,6 +517,19 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
 - Optional maxHeight with overflow scrolling
 - Responsive padding (mobile vs desktop)
 - Dark mode support
+- **Horizontal scroll support for mobile** (`enableHorizontalScroll`)
+- **Minimum scale enforcement** (`minScale`) for readability
+
+**Props**:
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `resume` | `Resume` | required | Resume data to display |
+| `paperSize` | `PaperSizeKey` | `'A4'` | Paper size |
+| `scale` | `number` | auto | Fixed scale (overrides auto-scale) |
+| `maxHeight` | `string` | - | Max container height with vertical scroll |
+| `enableHorizontalScroll` | `boolean` | `true` | Enable horizontal scroll on overflow |
+| `minScale` | `number` | `0.5` | Minimum scale to enforce (allows horizontal scroll) |
+| `showToolbar` | `boolean` | `true` | Show toolbar in ResumePreview |
 
 **Usage Examples**:
 
@@ -528,11 +541,11 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
   maxHeight="calc(100vh - 200px)"
 />
 
-// Full Preview (auto-scale)
+// Full Preview with horizontal scroll support (recommended)
 <ResumePreviewContainer
   resume={resume}
-  paperSize={paperSize}
-  responsivePadding={true}
+  enableHorizontalScroll={true}
+  minScale={0.6}
 />
 
 // Simple Preview
@@ -544,6 +557,28 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
 - `ResumePreviewPage` - Full preview
 - `SharedResumePage` - Public shared resume view
 - `PublicResumePage` - Public profile resume view
+
+### High-Quality Rendering (Updated 2025-12)
+
+**devicePixelRatio Support**:
+All devices get consistent high-quality PDF rendering via `devicePixelRatio` prop:
+
+```typescript
+// In ResumePreview.tsx
+// Cap at 2 to balance quality and performance
+const devicePixelRatio = Math.min(2, window.devicePixelRatio || 1);
+
+<Page
+  pageNumber={currentPage}
+  width={displayWidth}
+  devicePixelRatio={devicePixelRatio}  // High-DPI support
+/>
+```
+
+**Why cap at 2?**
+- iPhone has 3x DPI - rendering at 3x causes memory issues
+- 2x provides excellent quality on Retina/4K displays
+- Performance remains stable on mobile devices
 
 ### Preview Scale
 

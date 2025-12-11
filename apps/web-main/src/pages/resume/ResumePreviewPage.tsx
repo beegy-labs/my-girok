@@ -90,14 +90,18 @@ export default function ResumePreviewPage() {
   }
 
   return (
-    <>
+    <div className="w-full max-w-full overflow-x-hidden">
       {/* Action Bar - Common component with owner mode (all actions enabled) */}
       <ResumeActionBar resume={resume} mode="owner" />
 
       {/* Resume Preview */}
-      <div className="py-4 sm:py-6 md:py-8 print:py-0 flex justify-center">
-        <ResumePreviewContainer resume={resume} />
+      <div className="py-4 sm:py-6 md:py-8 print:py-0 w-full max-w-full">
+        <ResumePreviewContainer
+          resume={resume}
+          enableHorizontalScroll={true}
+          minScale={0.6}
+        />
       </div>
-    </>
+    </div>
   );
 }
