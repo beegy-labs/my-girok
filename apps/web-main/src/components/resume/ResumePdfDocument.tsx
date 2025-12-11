@@ -172,8 +172,7 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 9,
-    color: '#374151',
-    fontStyle: 'italic',
+    color: '#6b7280',
   },
   projectContainer: {
     paddingLeft: 8,
@@ -194,8 +193,7 @@ const styles = StyleSheet.create({
   },
   projectRole: {
     fontSize: 9,
-    color: '#374151',
-    fontStyle: 'italic',
+    color: '#6b7280',
   },
   projectDescription: {
     fontSize: 9,
