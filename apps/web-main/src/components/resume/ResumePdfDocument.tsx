@@ -18,6 +18,7 @@ export type PdfLocale = 'ko' | 'en' | 'ja';
 // Register fonts for multilingual support with full Unicode coverage
 // NOTE: Use npm CDN path, not gh (GitHub) path - gh path returns 404
 // Using Pretendard which has excellent CJK and special character support
+// Register both string and numeric fontWeight variants to handle all PDF renderer calls
 Font.register({
   family: 'Pretendard',
   fonts: [
@@ -26,9 +27,20 @@ Font.register({
       fontWeight: 'normal',
     },
     {
+      // Numeric fontWeight 400 registration for PDF renderer compatibility
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      fontWeight: 400,
+    },
+    {
       // Pretendard doesn't have native italic, use Regular as fallback for italic style
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 'normal',
+      fontStyle: 'italic',
+    },
+    {
+      // Numeric fontWeight 400 + italic for PDF renderer compatibility
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      fontWeight: 400,
       fontStyle: 'italic',
     },
     {
@@ -36,8 +48,18 @@ Font.register({
       fontWeight: 'bold',
     },
     {
+      // Numeric fontWeight 700 for PDF renderer compatibility
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      fontWeight: 700,
+    },
+    {
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
       fontWeight: 'semibold',
+    },
+    {
+      // Numeric fontWeight 600 for PDF renderer compatibility
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      fontWeight: 600,
     },
   ],
 });

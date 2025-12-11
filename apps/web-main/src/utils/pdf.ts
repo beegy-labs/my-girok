@@ -50,8 +50,9 @@ export async function exportResumeToPDF(
     // Cleanup
     URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('Failed to export PDF:', error);
-    throw new Error('Failed to export resume to PDF');
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to export PDF:', errorMessage, error);
+    throw new Error(`Failed to export resume to PDF: ${errorMessage}`);
   }
 }
 
@@ -144,7 +145,8 @@ export async function printResumePDF(
       URL.revokeObjectURL(url);
     }, 60000);
   } catch (error) {
-    console.error('Failed to print PDF:', error);
-    throw new Error('Failed to print resume PDF');
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to print PDF:', errorMessage, error);
+    throw new Error(`Failed to print resume PDF: ${errorMessage}`);
   }
 }
