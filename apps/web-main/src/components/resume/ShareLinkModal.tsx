@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createResumeShare, getMyShareLinks, updateShareLink, deleteShareLink, ShareDuration, ShareLink } from '../../api/resume';
 
 interface ShareLinkModalProps {
@@ -14,22 +14,22 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
   const [customDate, setCustomDate] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadShareLinks();
-  }, []);
-
-  const loadShareLinks = async () => {
+  const loadShareLinks = useCallback(async () => {
     try {
       const links = await getMyShareLinks();
       // Filter only resume links
       const resumeLinks = links.filter(link => link.resourceId === resumeId);
       setShareLinks(resumeLinks);
-    } catch (err) {
-      console.error('Failed to load share links', err);
+    } catch (_err) {
+      console.error('Failed to load share links', _err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [resumeId]);
+
+  useEffect(() => {
+    loadShareLinks();
+  }, [loadShareLinks]);
 
   const handleCreate = async () => {
     if (duration === ShareDuration.CUSTOM && !customDate) {
@@ -46,7 +46,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
       await createResumeShare(resumeId, dto);
       await loadShareLinks();
       setCustomDate(''); // Reset custom date
-    } catch (err) {
+    } catch (_err) {
       alert('Failed to create share link. Please try again.');
     } finally {
       setCreating(false);
@@ -63,7 +63,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
     try {
       await updateShareLink(id, { isActive: !isActive });
       await loadShareLinks();
-    } catch (err) {
+    } catch (_err) {
       alert('Failed to update share link. Please try again.');
     }
   };
@@ -73,7 +73,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
     try {
       await deleteShareLink(id);
       await loadShareLinks();
-    } catch (err) {
+    } catch (_err) {
       alert('Failed to delete share link. Please try again.');
     }
   };

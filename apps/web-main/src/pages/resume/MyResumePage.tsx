@@ -36,7 +36,7 @@ export default function MyResumePage() {
       ]);
       setResumes(resumesData);
       setShareLinks(shareLinksData);
-    } catch (err: any) {
+    } catch (_err: any) {
       setError(t('resume.errors.loadFailed'));
     } finally {
       setLoading(false);
@@ -69,7 +69,7 @@ export default function MyResumePage() {
       await loadData();
       setShowShareModal(false);
       setSelectedResumeId(null);
-    } catch (err) {
+    } catch (_err) {
       setError(t('resume.errors.shareFailed'));
     }
   }, [selectedResumeId, shareDuration, loadData, t]);
@@ -80,7 +80,7 @@ export default function MyResumePage() {
     try {
       await deleteShareLink(shareId);
       await loadData();
-    } catch (err) {
+    } catch (_err) {
       setError(t('resume.errors.deleteShareFailed'));
     }
   }, [loadData, t]);
@@ -91,7 +91,7 @@ export default function MyResumePage() {
     try {
       await deleteResume(resumeId);
       await loadData();
-    } catch (err) {
+    } catch (_err) {
       setError(t('resume.errors.deleteFailed'));
     }
   }, [loadData, t]);
@@ -103,7 +103,7 @@ export default function MyResumePage() {
       await copyResume(resumeId);
       await loadData();
       alert(t('resume.success.copied'));
-    } catch (err) {
+    } catch (_err) {
       setError(t('resume.errors.copyFailed'));
     }
   }, [loadData, t]);
@@ -133,7 +133,7 @@ export default function MyResumePage() {
       await navigator.clipboard.writeText(text);
       setCopiedLinkId(linkId);
       setTimeout(() => setCopiedLinkId(null), 2000);
-    } catch (err) {
+    } catch (_err) {
       setError(t('resume.errors.copyLinkFailed'));
       setTimeout(() => setError(null), 3000);
     }

@@ -183,7 +183,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   // Profile photo temp upload state
   const [profilePhotoTempKey, setProfilePhotoTempKey] = useState<string | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null); // Presigned URL from temp upload
@@ -208,24 +207,21 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       try {
         const parsedDraft = JSON.parse(savedDraft);
         // Remove projects field if it exists in old drafts
-        const { projects, ...cleanDraft } = parsedDraft;
+        const { projects: _projects, ...cleanDraft } = parsedDraft;
         setFormData(cleanDraft);
       } catch (error) {
         console.error('Failed to load draft:', error);
       }
     }
-  }, []);
+  }, [resume]);
 
   // Auto-save draft to localStorage (debounced)
   useEffect(() => {
-    // Clear existing timeout
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-    }
+    const resumeId = resume?.id;
 
     // Set new timeout for auto-save (3 seconds after last change)
     const timeout = setTimeout(() => {
-      const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+      const draftKey = resumeId ? `resume-draft-${resumeId}` : 'resume-draft-new';
       localStorage.setItem(draftKey, JSON.stringify(formData));
       setDraftSaved(true);
 
@@ -233,13 +229,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       setTimeout(() => setDraftSaved(false), 2000);
     }, 3000);
 
-    setAutoSaveTimeout(timeout);
-
-    // Cleanup on unmount
+    // Cleanup on unmount or when formData changes
     return () => {
-      if (timeout) clearTimeout(timeout);
+      clearTimeout(timeout);
     };
-  }, [formData]);
+  }, [formData, resume?.id]);
 
   // Trigger onChange when formData or sections change
   // Note: onChange is excluded from dependencies to prevent infinite loop
@@ -251,14 +245,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, sections]);
 
-  // Load attachments if resume exists
-  useEffect(() => {
-    if (resume?.id) {
-      loadAttachments();
-    }
-  }, [resume?.id]);
-
-  const loadAttachments = async () => {
+  // Memoize loadAttachments to use in useEffect
+  const loadAttachments = useCallback(async () => {
     if (!resume?.id) return;
     try {
       const data = await getAttachments(resume.id);
@@ -272,7 +260,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     } catch (error) {
       console.error('Failed to load attachments:', error);
     }
-  };
+  }, [resume?.id]);
+
+  // Load attachments if resume exists
+  useEffect(() => {
+    if (resume?.id) {
+      loadAttachments();
+    }
+  }, [resume?.id, loadAttachments]);
 
   const handleFileUpload = async (file: File, type: AttachmentType) => {
     if (!resume?.id) {
@@ -463,7 +458,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       // Remove projects field before submitting (no longer supported by API)
       // Note: Empty string handling is done by stripIds() in resume.ts API layer
       // which converts empty strings to null for proper database clearing
-      const { projects, ...dataToSubmit } = formData as any;
+      const { projects: _projects, ...dataToSubmit } = formData as any;
 
       // Include profileImageTempKey if a new image was uploaded to temp storage
       if (profilePhotoTempKey) {

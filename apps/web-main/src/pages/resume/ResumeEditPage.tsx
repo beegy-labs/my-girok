@@ -16,16 +16,7 @@ export default function ResumeEditPage() {
   const [previewData, setPreviewData] = useState<Resume | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  useEffect(() => {
-    if (resumeId) {
-      loadResume();
-    } else {
-      // New resume creation - no need to load
-      setLoading(false);
-    }
-  }, [resumeId]);
-
-  const loadResume = async () => {
+  const loadResume = useCallback(async () => {
     if (!resumeId) return;
 
     try {
@@ -42,7 +33,16 @@ export default function ResumeEditPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [resumeId, t]);
+
+  useEffect(() => {
+    if (resumeId) {
+      loadResume();
+    } else {
+      // New resume creation - no need to load
+      setLoading(false);
+    }
+  }, [resumeId, loadResume]);
 
   // Memoize default sections to avoid recreating on every render
   const defaultSections = useMemo(() => [
