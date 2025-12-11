@@ -15,12 +15,18 @@ import { getProxyImageUrl } from '../../utils/imageProxy';
 // Register fonts for Korean support with full Unicode coverage
 // NOTE: Use npm CDN path, not gh (GitHub) path - gh path returns 404
 // Using Pretendard which has excellent Korean and special character support
+// Pretendard doesn't have native italic, so we register Regular as italic fallback
 Font.register({
   family: 'Pretendard',
   fonts: [
     {
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
       fontWeight: 'normal',
+    },
+    {
+      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      fontWeight: 'normal',
+      fontStyle: 'italic',
     },
     {
       src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
