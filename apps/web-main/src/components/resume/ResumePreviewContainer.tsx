@@ -40,7 +40,7 @@ interface ResumePreviewContainerProps {
  */
 export default function ResumePreviewContainer({
   resume,
-  paperSize,
+  paperSize: externalPaperSize,
   scale: propScale,
   maxHeight,
   containerClassName = '',
@@ -49,10 +49,24 @@ export default function ResumePreviewContainer({
   headerContent,
   showToolbar = true,
 }: ResumePreviewContainerProps) {
-  const effectivePaperSize: PaperSizeKey = (paperSize || resume.paperSize || 'A4') as PaperSizeKey;
+  const [currentPaperSize, setCurrentPaperSize] = useState<PaperSizeKey>(
+    (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayScale, setDisplayScale] = useState(1);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Update current paper size when external prop changes
+  useEffect(() => {
+    if (externalPaperSize) {
+      setCurrentPaperSize(externalPaperSize);
+    }
+  }, [externalPaperSize]);
+
+  // Handle paper size change from child component
+  const handlePaperSizeChange = useCallback((size: PaperSizeKey) => {
+    setCurrentPaperSize(size);
+  }, []);
 
   // Calculate display scale based on container width (with debouncing)
   const calculateDisplayScale = useCallback(() => {
@@ -68,7 +82,7 @@ export default function ResumePreviewContainer({
 
     // Calculate scale to fit container, max 1.0 (never scale up)
     // No minimum scale - allows full responsive fit on all screen sizes
-    const newScale = calculateFitScale(effectivePaperSize, availableWidth, 1);
+    const newScale = calculateFitScale(currentPaperSize, availableWidth, 1);
 
     // Round to 2 decimal places
     const roundedScale = Math.round(newScale * 100) / 100;
@@ -77,7 +91,7 @@ export default function ResumePreviewContainer({
       const roundedPrevScale = Math.round(prevScale * 100) / 100;
       return roundedPrevScale !== roundedScale ? roundedScale : prevScale;
     });
-  }, [effectivePaperSize, propScale]);
+  }, [currentPaperSize, propScale]);
 
   // Calculate scale on mount and window resize (debounced)
   useEffect(() => {
@@ -144,9 +158,10 @@ export default function ResumePreviewContainer({
       <div className={innerClasses} style={innerWrapperStyle}>
         <ResumePreview
           resume={resume}
-          paperSize={effectivePaperSize}
+          paperSize={currentPaperSize}
           scale={effectiveScale}
           showToolbar={showToolbar}
+          onPaperSizeChange={handlePaperSizeChange}
         />
       </div>
     </div>

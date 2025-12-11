@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Resume } from '../../api/resume';
-import { exportResumeToPDF } from '../../utils/pdf';
+import { exportResumeToPDF, printResumePDF } from '../../utils/pdf';
 import { PrimaryButton, SecondaryButton } from '../ui';
 import ShareLinkModal from './ShareLinkModal';
 
@@ -27,9 +27,19 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
   const { t } = useTranslation();
   const [showShareModal, setShowShareModal] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    setPrinting(true);
+    try {
+      const paperSize = resume.paperSize || 'A4';
+      await printResumePDF(resume, { paperSize });
+    } catch (error) {
+      console.error('Print failed:', error);
+      alert(t('resume.preview.printFailed'));
+    } finally {
+      setPrinting(false);
+    }
   };
 
   const handleExportPDF = async () => {
@@ -103,6 +113,7 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
             </PrimaryButton>
             <SecondaryButton
               onClick={handlePrint}
+              loading={printing}
               className="flex-1 whitespace-nowrap"
             >
               🖨️ {t('resume.preview.print')}

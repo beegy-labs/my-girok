@@ -12,8 +12,9 @@ import { PaperSizeKey } from '../../constants/paper';
 import { sortByOrder, getBulletSymbol } from '../../utils/hierarchical-renderer';
 import { getProxyImageUrl } from '../../utils/imageProxy';
 
-// Register fonts for Korean support
+// Register fonts for Korean support with full Unicode coverage
 // NOTE: Use npm CDN path, not gh (GitHub) path - gh path returns 404
+// Using Pretendard which has excellent Korean and special character support
 Font.register({
   family: 'Pretendard',
   fonts: [
@@ -32,31 +33,35 @@ Font.register({
   ],
 });
 
+// Configure hyphenation callback to prevent word breaking issues
+Font.registerHyphenationCallback((word: string) => [word]);
+
 // PDF styles
-// Print margin reference: Word default is ~25mm, we use ~15mm for more content space
-// 15mm ≈ 42pt at 72dpi (PDF standard)
+// Print margin reference: Word default is ~25.4mm (1 inch), we use ~20mm for good balance
+// 20mm ≈ 57pt at 72dpi (PDF standard)
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Pretendard',
     fontSize: 10,
-    paddingTop: 42,
-    paddingBottom: 42,
-    paddingHorizontal: 42,
+    paddingTop: 57,
+    paddingBottom: 57,
+    paddingHorizontal: 57,
     backgroundColor: '#ffffff',
   },
+  // Header section - clean and professional
   header: {
     borderBottomWidth: 2,
     borderBottomColor: '#1f2937',
-    paddingBottom: 12,
-    marginBottom: 12,
+    paddingBottom: 14,
+    marginBottom: 16,
   },
   headerContent: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 18,
   },
   profileImage: {
-    width: 80,
-    height: 100,
+    width: 85,
+    height: 105,
     objectFit: 'cover',
     borderRadius: 4,
     borderWidth: 1,
@@ -66,21 +71,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 4,
+    color: '#111827',
+    marginBottom: 6,
+    letterSpacing: 0.5,
   },
   nameInfo: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'normal',
-    color: '#4b5563',
+    color: '#6b7280',
   },
   contactRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
+    gap: 12,
+    marginTop: 6,
   },
   contactItem: {
     fontSize: 9,
@@ -88,41 +94,46 @@ const styles = StyleSheet.create({
   },
   contactLabel: {
     fontWeight: 'bold',
+    color: '#1f2937',
   },
   linkRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
+    gap: 12,
+    marginTop: 6,
   },
   linkItem: {
     fontSize: 9,
-    color: '#1f2937',
+    color: '#374151',
   },
+  // Section styles - improved spacing and hierarchy
   section: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
-    color: '#1f2937',
-    borderBottomWidth: 1,
-    borderBottomColor: '#9ca3af',
-    paddingBottom: 2,
-    marginBottom: 8,
+    color: '#111827',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#d1d5db',
+    paddingBottom: 4,
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   summary: {
     fontSize: 10,
     color: '#374151',
-    lineHeight: 1.5,
+    lineHeight: 1.6,
   },
+  // Achievement list - cleaner bullet points
   achievementList: {
-    paddingLeft: 12,
+    paddingLeft: 4,
   },
   achievementItem: {
     fontSize: 10,
     color: '#374151',
-    marginBottom: 4,
+    marginBottom: 5,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
@@ -130,19 +141,25 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 10,
     color: '#374151',
+    lineHeight: 1.5,
   },
   bullet: {
-    marginRight: 4,
-    width: 10,
+    marginRight: 6,
+    width: 8,
+    color: '#6b7280',
   },
+  // Skills section - more compact and readable
   skillCategory: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   skillCategoryTitle: {
     fontSize: 11,
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 4,
+    backgroundColor: '#f9fafb',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
   skillItems: {
     paddingLeft: 8,
@@ -150,10 +167,15 @@ const styles = StyleSheet.create({
   skillItem: {
     fontSize: 10,
     color: '#374151',
-    marginBottom: 2,
+    marginBottom: 3,
+    lineHeight: 1.4,
   },
+  // Experience section - better visual separation
   experienceItem: {
-    marginBottom: 12,
+    marginBottom: 14,
+    paddingBottom: 10,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e5e7eb',
   },
   experienceHeader: {
     flexDirection: 'row',
@@ -164,31 +186,38 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#111827',
   },
   duration: {
     fontSize: 9,
-    color: '#4b5563',
+    color: '#6b7280',
+    marginTop: 2,
   },
   dateRange: {
     fontSize: 9,
-    color: '#374151',
+    color: '#6b7280',
+    textAlign: 'right',
   },
   position: {
     fontSize: 10,
     fontWeight: 'semibold',
     color: '#1f2937',
+    marginTop: 2,
   },
   jobTitle: {
     fontSize: 9,
     color: '#6b7280',
+    fontStyle: 'italic',
   },
+  // Project section - clear hierarchy
   projectContainer: {
-    paddingLeft: 8,
-    marginTop: 8,
+    paddingLeft: 10,
+    marginTop: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: '#e5e7eb',
   },
   projectItem: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   projectHeader: {
     flexDirection: 'row',
@@ -203,19 +232,25 @@ const styles = StyleSheet.create({
   projectRole: {
     fontSize: 9,
     color: '#6b7280',
+    marginTop: 2,
   },
   projectDescription: {
     fontSize: 9,
-    color: '#374151',
-    marginTop: 2,
+    color: '#4b5563',
+    marginTop: 3,
+    lineHeight: 1.4,
   },
   techStack: {
     fontSize: 8,
-    color: '#4b5563',
-    marginTop: 2,
+    color: '#6b7280',
+    marginTop: 4,
+    backgroundColor: '#f3f4f6',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
+  // Education section
   educationItem: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   educationHeader: {
     flexDirection: 'row',
@@ -229,14 +264,17 @@ const styles = StyleSheet.create({
   },
   degree: {
     fontSize: 10,
-    color: '#374151',
+    color: '#4b5563',
+    marginTop: 2,
   },
   gpa: {
     fontSize: 9,
-    color: '#374151',
+    color: '#6b7280',
+    marginTop: 1,
   },
+  // Certificates section
   certItem: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   certHeader: {
     flexDirection: 'row',
@@ -250,29 +288,32 @@ const styles = StyleSheet.create({
   },
   certIssuer: {
     fontSize: 10,
-    color: '#374151',
+    color: '#4b5563',
+    marginTop: 1,
   },
+  // Hierarchical content - improved readability
   hierarchicalItem: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   hierarchicalBullet: {
-    marginRight: 4,
-    fontSize: 10,
+    marginRight: 5,
+    fontSize: 9,
     width: 10,
+    color: '#6b7280',
   },
   hierarchicalContent: {
     flex: 1,
     fontSize: 9,
     color: '#374151',
-    lineHeight: 1.4,
+    lineHeight: 1.5,
   },
+  // Cover letter
   coverLetter: {
     fontSize: 10,
     color: '#374151',
-    lineHeight: 1.6,
-    whiteSpace: 'pre-wrap',
+    lineHeight: 1.7,
   },
 });
 
