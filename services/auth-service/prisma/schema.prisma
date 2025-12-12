@@ -1,13 +1,12 @@
 // Prisma schema for auth-service
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/auth-client"
+  provider        = "prisma-client"
+  output          = "../node_modules/.prisma/auth-client"
   previewFeatures = ["typedSql", "relationJoins"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // User model
