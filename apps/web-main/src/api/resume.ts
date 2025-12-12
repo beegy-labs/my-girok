@@ -109,8 +109,18 @@ export interface CreateResumeDto {
  * - Not 7 months (which would exclude the end month)
  */
 function calculateMonths(startDate: string, endDate?: string): number {
+  // Return 0 if startDate is empty or invalid
+  if (!startDate || startDate.trim() === '') {
+    return 0;
+  }
+
   const start = new Date(startDate + '-01');
   const end = endDate ? new Date(endDate + '-01') : new Date();
+
+  // Return 0 if dates are invalid
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return 0;
+  }
 
   const years = end.getFullYear() - start.getFullYear();
   const months = end.getMonth() - start.getMonth();
@@ -140,13 +150,25 @@ export function calculateTotalExperienceWithOverlap(experiences: Experience[]): 
     end: Date;
   }
 
-  const intervals: DateInterval[] = experiences.map(exp => {
+  // Filter out experiences with invalid or empty startDate
+  const validExperiences = experiences.filter(exp => exp.startDate && exp.startDate.trim() !== '');
+
+  if (validExperiences.length === 0) {
+    return { years: 0, months: 0 };
+  }
+
+  const intervals: DateInterval[] = validExperiences.map(exp => {
     const start = new Date(exp.startDate + '-01');
     const end = exp.isCurrentlyWorking || !exp.endDate
       ? new Date()
       : new Date(exp.endDate + '-01');
     return { start, end };
-  });
+  }).filter(interval => !isNaN(interval.start.getTime()) && !isNaN(interval.end.getTime()));
+
+  // Return early if no valid intervals after filtering
+  if (intervals.length === 0) {
+    return { years: 0, months: 0 };
+  }
 
   // Sort intervals by start date
   intervals.sort((a, b) => a.start.getTime() - b.start.getTime());
