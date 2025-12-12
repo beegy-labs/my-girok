@@ -491,6 +491,26 @@ ResumePreviewContainer   → Responsive wrapper with scale
 - Multilingual support (Korean, English, Japanese)
 - CJK font support (Pretendard with italic fallback)
 
+**Important - Empty Value Filtering**:
+Both `ResumePdfDocument.tsx` and `ResumeContent.tsx` must filter empty values before rendering arrays to prevent crashes:
+
+```typescript
+// ❌ DON'T - Renders empty items, can crash PDF renderer
+{items.map((item) => <Text>{item}</Text>)}
+
+// ✅ DO - Filter empty values first
+{items.filter((item) => item?.trim()).map((item) => <Text>{item}</Text>)}
+
+// For objects with name property
+{items.filter((item) => typeof item === 'string' ? item?.trim() : item?.name?.trim()).map(...)}
+```
+
+**Affected Fields**:
+- `keyAchievements` - string[]
+- `project.achievements` - string[]
+- `skill.items` - string[] | SkillItem[]
+- `HierarchicalDescription.items` - objects with `content` property
+
 ### PDF i18n Support (Updated 2025-12)
 
 ResumePdfDocument supports multilingual PDF generation:

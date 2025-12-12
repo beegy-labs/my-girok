@@ -535,9 +535,13 @@ interface ResumePdfDocumentProps {
 function HierarchicalDescription({ items, depth = 0 }: { items: any[]; depth?: number }) {
   if (!items || items.length === 0) return null;
 
+  // Filter out items with empty content
+  const validItems = sortByOrder(items).filter((item: any) => item.content?.trim());
+  if (validItems.length === 0) return null;
+
   return (
     <>
-      {sortByOrder(items).map((item: any, idx: number) => (
+      {validItems.map((item: any, idx: number) => (
         <View key={idx}>
           <View style={[styles.hierarchicalItem, { paddingLeft: depth * 12 }]}>
             <Text style={styles.hierarchicalBullet}>{getBulletSymbol(depth)}</Text>
@@ -566,7 +570,9 @@ function SkillsSection({ skills, t }: { skills: any[]; t: TranslateFn }) {
         <View key={idx} style={styles.skillCategory}>
           <Text style={styles.skillCategoryTitle}>{skill.category}</Text>
           <View style={styles.skillItems}>
-            {Array.isArray(skill.items) && skill.items.map((item: any, itemIdx: number) => {
+            {Array.isArray(skill.items) && skill.items
+              .filter((item: any) => typeof item === 'string' ? item?.trim() : item?.name?.trim())
+              .map((item: any, itemIdx: number) => {
               if (typeof item === 'string') {
                 return (
                   <Text key={itemIdx} style={styles.skillItem}>• {item}</Text>
@@ -737,9 +743,9 @@ function ProjectsSection({ projects, t }: { projects: any[]; t: TranslateFn }) {
           {project.description?.trim() && (
             <Text style={styles.projectDescription}>{project.description}</Text>
           )}
-          {project.achievements && project.achievements.length > 0 && (
+          {project.achievements && project.achievements.filter((a: string) => a?.trim()).length > 0 && (
             <View style={styles.achievementList}>
-              {project.achievements.map((achievement: string, i: number) => (
+              {project.achievements.filter((a: string) => a?.trim()).map((achievement: string, i: number) => (
                 <View key={i} style={styles.achievementItem}>
                   <Text style={styles.bullet}>•</Text>
                   <Text style={styles.achievementText}>{achievement}</Text>
@@ -881,11 +887,11 @@ export default function ResumePdfDocument({
         )}
 
         {/* Key Achievements */}
-        {resume.keyAchievements && resume.keyAchievements.length > 0 && (
+        {resume.keyAchievements && resume.keyAchievements.filter((a: string) => a?.trim()).length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>⭐ {t('resume.preview.keyAchievements')}</Text>
             <View style={styles.achievementList}>
-              {resume.keyAchievements.map((achievement: string, index: number) => (
+              {resume.keyAchievements.filter((a: string) => a?.trim()).map((achievement: string, index: number) => (
                 <View key={index} style={styles.achievementItem}>
                   <Text style={styles.bullet}>•</Text>
                   <Text style={styles.achievementText}>{achievement}</Text>
