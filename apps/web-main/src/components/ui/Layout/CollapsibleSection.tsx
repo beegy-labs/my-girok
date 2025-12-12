@@ -5,8 +5,12 @@ export interface CollapsibleSectionProps {
   title: string;
   /** Icon emoji displayed before title */
   icon?: string;
-  /** Whether the section is expanded by default */
+  /** Whether the section is expanded by default (uncontrolled mode) */
   defaultExpanded?: boolean;
+  /** Controlled expanded state (overrides defaultExpanded) */
+  isExpanded?: boolean;
+  /** Callback when expanded state changes (for controlled mode) */
+  onToggle?: () => void;
   /** Whether the section can be collapsed (false = always expanded) */
   collapsible?: boolean;
   /** Section content */
@@ -17,6 +21,8 @@ export interface CollapsibleSectionProps {
   variant?: 'primary' | 'secondary';
   /** Additional CSS classes */
   className?: string;
+  /** Item count badge */
+  count?: number;
 }
 
 /**
@@ -49,28 +55,43 @@ export default function CollapsibleSection({
   title,
   icon,
   defaultExpanded = true,
+  isExpanded: controlledExpanded,
+  onToggle,
   collapsible = true,
   children,
   headerAction,
   variant = 'primary',
   className = '',
+  count,
 }: CollapsibleSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledExpanded !== undefined;
+  const isExpanded = isControlled ? controlledExpanded : internalExpanded;
 
   const handleToggle = useCallback(() => {
     if (collapsible) {
-      setIsExpanded((prev) => !prev);
+      if (isControlled && onToggle) {
+        onToggle();
+      } else {
+        setInternalExpanded((prev) => !prev);
+      }
     }
-  }, [collapsible]);
+  }, [collapsible, isControlled, onToggle]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (collapsible && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
-        setIsExpanded((prev) => !prev);
+        if (isControlled && onToggle) {
+          onToggle();
+        } else {
+          setInternalExpanded((prev) => !prev);
+        }
       }
     },
-    [collapsible]
+    [collapsible, isControlled, onToggle]
   );
 
   const variantClasses = {
@@ -113,6 +134,11 @@ export default function CollapsibleSection({
           <h2 className="text-base sm:text-lg lg:text-xl font-bold text-amber-900 dark:text-dark-text-primary truncate">
             {title}
           </h2>
+          {count !== undefined && count > 0 && (
+            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full flex-shrink-0">
+              {count}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
