@@ -97,47 +97,48 @@ export const typography = {
 // =============================================================================
 
 /**
- * Color tokens with dark mode support
- * Theme: "Vintage Natural Wood Library" - 빈티지 자연목 서재
- * Format: `light dark:dark`
+ * Color tokens - 주간/야간 통합 관리
+ * Theme: "Wood Library" - 원목 도서관
+ * base 색상 참조로 주간/야간 동일
  */
 export const colors = {
-  // Backgrounds (vintage warm tones)
+  // Backgrounds
   bg: {
-    page: 'bg-vintage-bg-page dark:bg-dark-bg-primary',           // #FAF9F6 - warm ivory
-    card: 'bg-vintage-bg-card dark:bg-dark-bg-card',              // #F5F0EB - warm beige
-    cardWhite: 'bg-white dark:bg-dark-bg-card',
-    elevated: 'bg-vintage-bg-elevated dark:bg-dark-bg-elevated',  // white
-    input: 'bg-vintage-bg-input dark:bg-dark-bg-secondary',       // white
+    page: 'bg-vintage-bg-page dark:bg-dark-bg-primary',
+    card: 'bg-vintage-bg-card dark:bg-dark-bg-card',
+    cardWhite: 'bg-vintage-bg-card dark:bg-dark-bg-card',
+    elevated: 'bg-vintage-bg-elevated dark:bg-dark-bg-elevated',
+    input: 'bg-vintage-bg-input dark:bg-dark-bg-secondary',
+    hover: 'bg-vintage-bg-hover dark:bg-dark-bg-hover',
   },
-  // Text colors (warm browns)
+  // Text colors
   text: {
-    primary: 'text-vintage-text-primary dark:text-dark-text-primary',       // #292524 stone-800
-    secondary: 'text-vintage-text-secondary dark:text-dark-text-secondary', // #44403C stone-700
-    tertiary: 'text-vintage-text-tertiary dark:text-dark-text-tertiary',    // #57534E stone-600
-    muted: 'text-vintage-text-muted dark:text-dark-text-disabled',          // #78716C stone-500
-    accent: 'text-vintage-text-accent dark:text-dark-text-primary',         // #78350F amber-900
-    link: 'text-vintage-primary dark:text-amber-400',                       // #92400E amber-800
-    linkHover: 'hover:text-vintage-primary-dark dark:hover:text-amber-300', // #78350F amber-900
+    primary: 'text-vintage-text-primary dark:text-dark-text-primary',
+    secondary: 'text-vintage-text-secondary dark:text-dark-text-secondary',
+    tertiary: 'text-vintage-text-tertiary dark:text-dark-text-tertiary',
+    muted: 'text-vintage-text-muted dark:text-dark-text-disabled',
+    accent: 'text-vintage-text-accent dark:text-dark-border-accent',
+    link: 'text-vintage-primary dark:text-vintage-primary',
+    linkHover: 'hover:text-vintage-primary-light dark:hover:text-vintage-primary-light',
   },
-  // Borders (soft earth tones)
+  // Borders
   border: {
-    subtle: 'border-vintage-border-subtle dark:border-dark-border-subtle',   // #E7E0D8
-    default: 'border-vintage-border-default dark:border-dark-border-default', // #D6CFC6
-    strong: 'border-vintage-border-strong dark:border-dark-border-strong',    // #C4BCB2
+    subtle: 'border-vintage-border-subtle dark:border-dark-border-subtle',
+    default: 'border-vintage-border-default dark:border-dark-border-default',
+    strong: 'border-vintage-border-strong dark:border-dark-border-strong',
   },
-  // Accent colors (olive/sage green - nature)
+  // Accent colors (버건디)
   accent: {
-    primary: 'text-vintage-accent dark:text-vintage-accent-light',      // #65703A olive
-    light: 'text-vintage-accent-light dark:text-vintage-accent-pale',   // #7C8A4A sage
-    bg: 'bg-vintage-accent/10 dark:bg-vintage-accent/20',               // subtle green bg
+    primary: 'text-vintage-accent dark:text-vintage-accent',
+    light: 'text-vintage-accent-light dark:text-vintage-accent-light',
+    bg: 'bg-vintage-accent/20 dark:bg-vintage-accent/20',
   },
   // Status colors
   status: {
-    success: 'bg-vintage-accent/20 dark:bg-green-900/30 text-vintage-accent-dark dark:text-green-300',
-    error: 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400',
-    warning: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400',
-    info: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400',
+    success: 'bg-green-900/30 text-green-300',
+    error: 'bg-red-900/20 text-red-400',
+    warning: 'bg-yellow-900/20 text-yellow-400',
+    info: 'bg-blue-900/20 text-blue-400',
   },
 } as const;
 
@@ -146,10 +147,10 @@ export const colors = {
 // =============================================================================
 
 export const shadows = {
-  sm: 'shadow-sm dark:shadow-dark-sm',
-  md: 'shadow-md dark:shadow-dark-md',
-  lg: 'shadow-lg dark:shadow-dark-lg',
-  xl: 'shadow-xl dark:shadow-dark-lg', // Note: dark-xl not defined, using lg
+  sm: 'shadow-vintage-sm dark:shadow-dark-sm',
+  md: 'shadow-vintage-md dark:shadow-dark-md',
+  lg: 'shadow-vintage-lg dark:shadow-dark-lg',
+  xl: 'shadow-vintage-lg dark:shadow-dark-lg',
 } as const;
 
 // =============================================================================
@@ -194,7 +195,7 @@ export const pageLayout = {
  * Theme: Vintage Natural Wood Library
  */
 export const cardStyles = {
-  // Primary card (vintage warm beige)
+  // Primary card
   primary: `
     bg-vintage-bg-card dark:bg-dark-bg-card
     border border-vintage-border-subtle dark:border-dark-border-subtle
@@ -204,18 +205,18 @@ export const cardStyles = {
   // Primary card hover
   primaryHover: `
     hover:shadow-vintage-lg dark:hover:shadow-dark-lg
-    hover:border-vintage-border-default dark:hover:border-amber-500/30
+    hover:border-vintage-border-default dark:hover:border-dark-border-default
   `,
-  // Secondary card (clean white)
+  // Secondary card
   secondary: `
-    bg-white dark:bg-dark-bg-card
+    bg-vintage-bg-card dark:bg-dark-bg-card
     border border-vintage-border-default dark:border-dark-border-default
     rounded-2xl shadow-vintage-sm dark:shadow-dark-sm
     transition-colors duration-200
   `,
   // Elevated card
   elevated: `
-    bg-white dark:bg-dark-bg-card
+    bg-vintage-bg-elevated dark:bg-dark-bg-elevated
     border border-vintage-border-subtle dark:border-dark-border-subtle
     rounded-2xl shadow-vintage-lg dark:shadow-dark-lg
     transition-colors duration-200
@@ -231,43 +232,43 @@ export const cardStyles = {
  * Theme: Vintage Natural Wood Library
  */
 export const buttonStyles = {
-  // Primary gradient button (warm wood brown)
+  // Primary gradient button
   primary: `
     bg-gradient-to-r from-vintage-primary-dark to-vintage-primary
-    dark:from-amber-400 dark:to-amber-500
+    dark:from-vintage-primary-dark dark:to-vintage-primary
     hover:from-vintage-primary hover:to-vintage-primary-light
-    dark:hover:from-amber-300 dark:hover:to-amber-400
-    text-white dark:text-gray-900
+    dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light
+    text-white dark:text-white
     font-semibold rounded-lg
-    shadow-lg shadow-vintage-primary/30 dark:shadow-amber-500/20
+    shadow-lg shadow-vintage-primary/30 dark:shadow-vintage-primary/30
     transform hover:scale-[1.02] active:scale-[0.98]
     transition-all
   `,
-  // Secondary button (warm neutral)
+  // Secondary button
   secondary: `
-    bg-vintage-bg-card dark:bg-dark-bg-elevated
-    hover:bg-vintage-border-subtle dark:hover:bg-dark-bg-hover
-    text-vintage-text-secondary dark:text-dark-text-primary
+    bg-vintage-bg-elevated dark:bg-dark-bg-elevated
+    hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover
+    text-vintage-text-primary dark:text-dark-text-primary
     border border-vintage-border-default dark:border-dark-border-default
     font-semibold rounded-lg
     transition-all
   `,
   // Destructive button
   destructive: `
-    bg-red-50 dark:bg-red-900/20
-    hover:bg-red-100 dark:hover:bg-red-900/30
-    text-red-700 dark:text-red-400
-    border border-red-200 dark:border-red-800
+    bg-red-900/20 dark:bg-red-900/20
+    hover:bg-red-900/30 dark:hover:bg-red-900/30
+    text-red-400 dark:text-red-400
+    border border-red-800 dark:border-red-800
     font-semibold rounded-lg
     transition-all
   `,
-  // Accent button (olive/sage green)
+  // Accent button (버건디)
   accent: `
-    bg-vintage-accent dark:bg-vintage-accent-light
-    hover:bg-vintage-accent-dark dark:hover:bg-vintage-accent
+    bg-vintage-accent dark:bg-vintage-accent
+    hover:bg-vintage-accent-light dark:hover:bg-vintage-accent-light
     text-white dark:text-white
     font-semibold rounded-lg
-    shadow-lg shadow-vintage-accent/30
+    shadow-lg shadow-vintage-accent/30 dark:shadow-vintage-accent/30
     transform hover:scale-[1.02] active:scale-[0.98]
     transition-all
   `,
@@ -321,7 +322,7 @@ export const mobilePatterns = {
   // Safe area for notch/home indicator
   safeArea: 'safe-area-bottom',
   // Fixed bottom bar
-  fixedBottom: 'fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-bg-card border-t border-gray-200 dark:border-dark-border-default p-3',
+  fixedBottom: 'fixed bottom-0 left-0 right-0 z-50 bg-vintage-bg-card dark:bg-dark-bg-card border-t border-vintage-border-default dark:border-dark-border-default p-3',
 } as const;
 
 // =============================================================================
@@ -362,7 +363,7 @@ export const animations = {
 export const formPatterns = {
   // Form section spacing
   section: 'space-y-6',
-  // Input base (vintage warm style)
+  // Input base
   input: `
     w-full px-3 py-3
     bg-vintage-bg-input dark:bg-dark-bg-secondary
@@ -370,13 +371,13 @@ export const formPatterns = {
     rounded-lg
     text-vintage-text-primary dark:text-dark-text-primary
     placeholder:text-vintage-text-muted dark:placeholder:text-dark-text-tertiary
-    focus:outline-none focus:ring-2 focus:ring-vintage-primary focus:border-transparent
+    focus:outline-none focus:ring-2 focus:ring-vintage-primary dark:focus:ring-vintage-primary focus:border-transparent
     transition-all
   `,
   // Label
   label: 'block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-1',
   // Error text
-  error: 'text-red-600 dark:text-red-400 text-xs mt-1',
+  error: 'text-red-400 dark:text-red-400 text-xs mt-1',
   // Hint text
   hint: 'text-vintage-text-muted dark:text-dark-text-tertiary text-xs mt-1',
 } as const;
@@ -404,8 +405,8 @@ export const loadingStates = {
     bg-vintage-bg-page dark:bg-dark-bg-primary
     transition-colors duration-200
   `,
-  // Spinner (vintage primary brown)
-  spinner: 'animate-spin rounded-full h-12 w-12 border-b-2 border-vintage-primary dark:border-amber-400',
+  // Spinner
+  spinner: 'animate-spin rounded-full h-12 w-12 border-b-2 border-vintage-primary dark:border-vintage-primary',
   // Loading text
   text: 'mt-4 text-vintage-text-secondary dark:text-dark-text-secondary font-medium',
 } as const;
