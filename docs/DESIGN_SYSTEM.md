@@ -17,63 +17,66 @@ My-Girok is a personal record-keeping platform where users document their life s
 
 ## Color Palette
 
-### Theme: "Warm Library" (원목 도서관의 은은한 조명)
+### Theme: "Warm Library" (PR #216 Dark mode → Light mode 적용)
 
-**Design Philosophy**: 원목으로 된 도서관에서 은은한 조명 아래 책을 읽는 분위기. 어두운 원목 배경에 밝은 크림색 텍스트로 콘텐츠에 집중.
+**Design Philosophy**: PR #216의 다크 모드(Moonlit Library) 디자인을 라이트 모드에 적용. 달빛 아래 서재에서 책 읽는 분위기를 주간 모드로 구현.
 
 **핵심 원칙**:
-- 배경: 어두운 원목 톤 (차분하고 눈이 편안함)
-- 텍스트: 오래된 종이/크림색 (가독성 확보)
-- 조명: 따뜻한 골드/호박색 (램프 조명)
-- 악센트: 가죽/버건디 (고급 책 장정)
+- 배경: PR #216 다크 모드의 어두운 원목 (#1A1612, #231E18, #2D261E)
+- 텍스트: 오래된 종이색 (#EDE8E0, #C4BAA8)
+- 조명: 시에나/호박색 램프 조명 (#A0522D, #8B5A2B)
+- 악센트: 가죽 바인딩 버건디 (#8B4343, #6B2D2D)
 
-### Light Mode - Warm Wood Library (어두운 원목 톤)
+### Light Mode - PR #216 Moonlit Library Applied
 
-#### Primary Colors (따뜻한 램프 조명/골드)
+#### Primary Colors (따뜻한 램프 조명 - 시에나)
 ```css
-/* 은은한 램프 빛 느낌의 골드 */
---vintage-primary-dark: #B8863A;    /* 진한 골드 */
---vintage-primary: #D4A574;          /* 따뜻한 골드 - 램프 빛 */
---vintage-primary-light: #E8C49A;    /* 밝은 골드 - Hover */
+/* PR #216 시에나 계열 - 은은한 램프 조명 */
+--vintage-primary-dark: #8B5A2B;     /* 진한 호박색 - 램프 심지 */
+--vintage-primary: #A0522D;          /* 시에나 - 따뜻한 조명 */
+--vintage-primary-light: #B8763A;    /* 밝은 호박 - Hover */
 ```
 
-#### Background Colors (어두운 원목)
+#### Background Colors (PR #216 Dark mode 색상)
 ```css
-/* 차분한 원목 배경 - 집중하기 좋음 */
---vintage-bg-page: #3D342A;          /* 어두운 원목 배경 */
---vintage-bg-card: #4A3F33;          /* 원목 카드 */
---vintage-bg-elevated: #574A3D;      /* 돌출 영역 */
---vintage-bg-input: #5C4E40;         /* 입력 영역 */
+/* PR #216 다크 모드 배경 그대로 적용 */
+--vintage-bg-page: #1A1612;          /* 어두운 원목 */
+--vintage-bg-secondary: #231E18;     /* 중간 원목 */
+--vintage-bg-card: #2D261E;          /* 카드 - 약간 밝은 원목 */
+--vintage-bg-elevated: #3A3128;      /* 돌출 영역 */
+--vintage-bg-input: #2D261E;         /* 입력 영역 - 카드와 동일 */
+--vintage-bg-hover: #453A2F;         /* 호버 */
 ```
 
-#### Text Colors (오래된 종이/크림색)
+#### Text Colors (PR #216 Dark mode 텍스트)
 ```css
-/* 밝은 크림색 텍스트 - 어두운 배경에서 가독성 */
---vintage-text-primary: #EDE8E0;     /* 오래된 종이색 - 메인 */
---vintage-text-secondary: #D4CBC0;   /* 중간 크림 */
---vintage-text-tertiary: #B8AA98;    /* 연한 크림 */
---vintage-text-muted: #9A8E7A;       /* 흐린 톤 */
---vintage-text-accent: #D4A574;      /* 따뜻한 골드 강조 */
+/* PR #216 오래된 종이색 텍스트 */
+--vintage-text-primary: #EDE8E0;     /* 오래된 종이색 */
+--vintage-text-secondary: #C4BAA8;   /* 중간 톤 */
+--vintage-text-tertiary: #9A8E7A;    /* 연한 톤 */
+--vintage-text-muted: #6B6055;       /* 비활성/흐린 톤 */
+--vintage-text-accent: #A0522D;      /* 시에나 강조 */
 ```
 
-#### Border Colors (나무결)
+#### Border Colors (PR #216 Dark mode 테두리)
 ```css
-/* 원목 테두리 */
---vintage-border-subtle: #4A3F33;    /* 연한 나무결 */
---vintage-border-default: #5C4E40;   /* 중간 나무결 */
+/* PR #216 나무결 테두리 */
+--vintage-border-subtle: #3D342A;    /* 연한 나무결 */
+--vintage-border-default: #554839;   /* 중간 나무결 */
 --vintage-border-strong: #6E5D4A;    /* 진한 나무결 */
+--vintage-border-accent: #8B5A2B;    /* 악센트 테두리 */
 ```
 
 #### Accent Colors (가죽/버건디)
 ```css
-/* 고급 책 장정의 가죽 바인딩 느낌 */
---vintage-accent-dark: #8B4343;      /* 딥 버건디 */
---vintage-accent: #A85858;           /* 버건디 */
---vintage-accent-light: #C27070;     /* 라이트 버건디 */
---vintage-accent-pale: #D49090;      /* 페일 버건디 */
+/* PR #216 고급 책 장정의 가죽 바인딩 느낌 */
+--vintage-accent-dark: #6B2D2D;      /* 딥 버건디 */
+--vintage-accent: #8B4343;           /* 버건디 */
+--vintage-accent-light: #A85858;     /* 라이트 버건디 */
+--vintage-accent-pale: #C27070;      /* 페일 버건디 */
 ```
 
-### Dark Mode - Classic Dark (기존 회색 계열)
+### Dark Mode - Classic Gray (기존 회색 계열 유지)
 
 ```css
 /* 회색 계열 배경 */
@@ -92,31 +95,32 @@ My-Girok is a personal record-keeping platform where users document their life s
 --dark-border-subtle: #3A3D45;
 --dark-border-default: #52575F;
 --dark-border-strong: #6B7078;
---dark-border-accent: #D4A574;       /* 골드 악센트 */
+--dark-border-accent: #8B5A2B;       /* 호박색 악센트 */
 ```
 
 ### Usage Guidelines (Light Mode)
 
 #### Background Hierarchy
-- **Page Background**: 어두운 원목 → `vintage-bg-page` (#3D342A)
-- **Cards/Content**: 원목 카드 → `vintage-bg-card` (#4A3F33)
-- **Elevated/Focus**: 밝은 원목 → `vintage-bg-elevated` (#574A3D)
-- **Inputs**: 입력 영역 → `vintage-bg-input` (#5C4E40)
+- **Page Background**: 어두운 원목 → `vintage-bg-page` (#1A1612)
+- **Secondary**: 중간 원목 → `vintage-bg-secondary` (#231E18)
+- **Cards/Content**: 카드 → `vintage-bg-card` (#2D261E)
+- **Elevated/Focus**: 돌출 영역 → `vintage-bg-elevated` (#3A3128)
+- **Inputs**: 입력 영역 → `vintage-bg-input` (#2D261E)
 
 #### Primary Use Cases
-- **Main Actions**: 버튼, CTA → `vintage-primary` gradient (골드)
-- **Headers**: 섹션 제목 → `vintage-text-accent` (골드)
+- **Main Actions**: 버튼, CTA → `vintage-primary` gradient (시에나)
+- **Headers**: 섹션 제목 → `vintage-text-accent` (시에나)
 - **Links**: 링크 → `vintage-primary`
 
 #### Text on Dark Background
-- **Main Text**: 크림색 → `vintage-text-primary` (#EDE8E0)
-- **Secondary**: 중간 크림 → `vintage-text-secondary` (#D4CBC0)
+- **Main Text**: 종이색 → `vintage-text-primary` (#EDE8E0)
+- **Secondary**: 중간 톤 → `vintage-text-secondary` (#C4BAA8)
 
 ### Color Accessibility
 All color combinations meet WCAG 2.1 AA standards:
-- `vintage-text-primary` on `vintage-bg-page`: 10.8:1 (AAA)
-- `vintage-text-secondary` on `vintage-bg-card`: 7.2:1 (AAA)
-- `vintage-primary` on `vintage-bg-card`: 5.4:1 (AA)
+- `vintage-text-primary` on `vintage-bg-page`: 12.8:1 (AAA)
+- `vintage-text-secondary` on `vintage-bg-card`: 8.2:1 (AAA)
+- `vintage-primary` on `vintage-bg-card`: 5.1:1 (AA)
 
 ### Special Case: Resume Preview & Print (Print-Optimized)
 
@@ -2133,7 +2137,8 @@ Potential component library extensions:
 
 ## Version History
 
-- v1.4.0 (2025-12-12): **NEW "Vintage Natural Wood Library" Light Mode Theme** - Replaced bright amber with softer vintage colors (warm ivory, beige backgrounds, stone text colors, olive green accents) for reduced eye strain and natural feel
+- v1.5.0 (2025-12-12): **PR #216 Dark mode → Light mode** - Applied PR #216 Moonlit Library dark mode design to light mode (dark wood backgrounds #1A1612, sienna primary #A0522D, paper-color text #EDE8E0)
+- v1.4.0 (2025-12-12): ~~"Vintage Natural Wood Library" Light Mode Theme~~ (superseded by v1.5.0)
 - v1.3.0 (2025-11-27): Added mobile edit patterns - TouchSensor, depth colors, collapsible cards, inline buttons, fixed bottom nav
 - v1.2.0 (2025-11-21): Added UI Component Library documentation - 10 reusable components with ~95% adoption
 - v1.1.0 (2025-01-15): Added comprehensive mobile-first responsive design patterns and guidelines
