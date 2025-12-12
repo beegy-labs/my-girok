@@ -97,6 +97,22 @@ spec:
             secretKeyRef:
               name: {{ .Values.minio.secretName }}
               key: publicUrl
+        # Valkey (Redis-compatible) Configuration for BullMQ
+        {{- if .Values.valkey.enabled }}
+        - name: VALKEY_HOST
+          value: {{ .Values.valkey.host | quote }}
+        - name: VALKEY_PORT
+          value: {{ .Values.valkey.port | quote }}
+        - name: VALKEY_DB
+          value: {{ .Values.valkey.db | quote }}
+        {{- if .Values.valkey.secretName }}
+        - name: VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.valkey.secretName }}
+              key: {{ .Values.valkey.secretKey | default "password" }}
+        {{- end }}
+        {{- end }}
         {{- with .Values.livenessProbe }}
         livenessProbe:
           {{- toYaml . | nindent 12 }}

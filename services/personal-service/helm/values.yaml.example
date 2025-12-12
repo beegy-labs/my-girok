@@ -145,6 +145,25 @@ minio:
   useSSL: "true"
 
 # ============================================================================
+# Valkey (Redis-compatible) Configuration for BullMQ
+# ============================================================================
+# Used for async job queues (file copy operations, etc.)
+valkey:
+  # Enable Valkey connection
+  enabled: true
+  # Valkey service host (use K8s service DNS)
+  # CHANGE THIS: Update with your Valkey service address
+  host: "valkey-2.storage.svc.cluster.local"
+  # Valkey port
+  port: 6379
+  # Database number (0-15, my-girok uses DB 1)
+  db: 1
+  # Name of the Kubernetes secret containing Valkey password
+  secretName: "valkey-2-password"
+  # Key in the secret containing the password
+  secretKey: "password"
+
+# ============================================================================
 # Sealed Secrets Configuration
 # ============================================================================
 # Use kubeseal to encrypt secrets before committing
