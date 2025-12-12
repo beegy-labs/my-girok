@@ -98,36 +98,43 @@ export const typography = {
 
 /**
  * Color tokens with dark mode support
+ * Theme: "Vintage Natural Wood Library" - 빈티지 자연목 서재
  * Format: `light dark:dark`
  */
 export const colors = {
-  // Backgrounds
+  // Backgrounds (vintage warm tones)
   bg: {
-    page: 'bg-gray-50 dark:bg-dark-bg-primary',
-    card: 'bg-amber-50/30 dark:bg-dark-bg-card',
+    page: 'bg-vintage-bg-page dark:bg-dark-bg-primary',           // #FAF9F6 - warm ivory
+    card: 'bg-vintage-bg-card dark:bg-dark-bg-card',              // #F5F0EB - warm beige
     cardWhite: 'bg-white dark:bg-dark-bg-card',
-    elevated: 'bg-white dark:bg-dark-bg-elevated',
-    input: 'bg-white dark:bg-dark-bg-secondary',
+    elevated: 'bg-vintage-bg-elevated dark:bg-dark-bg-elevated',  // white
+    input: 'bg-vintage-bg-input dark:bg-dark-bg-secondary',       // white
   },
-  // Text colors
+  // Text colors (warm browns)
   text: {
-    primary: 'text-gray-900 dark:text-dark-text-primary',
-    secondary: 'text-gray-700 dark:text-dark-text-secondary',
-    tertiary: 'text-gray-600 dark:text-dark-text-tertiary',
-    muted: 'text-gray-500 dark:text-dark-text-disabled',
-    accent: 'text-amber-900 dark:text-dark-text-primary',
-    link: 'text-amber-700 dark:text-amber-400',
-    linkHover: 'hover:text-amber-800 dark:hover:text-amber-300',
+    primary: 'text-vintage-text-primary dark:text-dark-text-primary',       // #292524 stone-800
+    secondary: 'text-vintage-text-secondary dark:text-dark-text-secondary', // #44403C stone-700
+    tertiary: 'text-vintage-text-tertiary dark:text-dark-text-tertiary',    // #57534E stone-600
+    muted: 'text-vintage-text-muted dark:text-dark-text-disabled',          // #78716C stone-500
+    accent: 'text-vintage-text-accent dark:text-dark-text-primary',         // #78350F amber-900
+    link: 'text-vintage-primary dark:text-amber-400',                       // #92400E amber-800
+    linkHover: 'hover:text-vintage-primary-dark dark:hover:text-amber-300', // #78350F amber-900
   },
-  // Borders
+  // Borders (soft earth tones)
   border: {
-    subtle: 'border-amber-100 dark:border-dark-border-subtle',
-    default: 'border-gray-200 dark:border-dark-border-default',
-    strong: 'border-gray-300 dark:border-dark-border-strong',
+    subtle: 'border-vintage-border-subtle dark:border-dark-border-subtle',   // #E7E0D8
+    default: 'border-vintage-border-default dark:border-dark-border-default', // #D6CFC6
+    strong: 'border-vintage-border-strong dark:border-dark-border-strong',    // #C4BCB2
+  },
+  // Accent colors (olive/sage green - nature)
+  accent: {
+    primary: 'text-vintage-accent dark:text-vintage-accent-light',      // #65703A olive
+    light: 'text-vintage-accent-light dark:text-vintage-accent-pale',   // #7C8A4A sage
+    bg: 'bg-vintage-accent/10 dark:bg-vintage-accent/20',               // subtle green bg
   },
   // Status colors
   status: {
-    success: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    success: 'bg-vintage-accent/20 dark:bg-green-900/30 text-vintage-accent-dark dark:text-green-300',
     error: 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400',
     warning: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400',
     info: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400',
@@ -161,10 +168,11 @@ export const radius = {
 
 /**
  * Standard page container patterns
+ * Theme: Vintage Natural Wood Library
  */
 export const pageLayout = {
-  // Full page background
-  wrapper: 'min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200',
+  // Full page background (warm ivory)
+  wrapper: 'min-h-screen bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200',
   // Content container
   container: {
     sm: 'max-w-md mx-auto',
@@ -183,32 +191,33 @@ export const pageLayout = {
 
 /**
  * Standard card styles
+ * Theme: Vintage Natural Wood Library
  */
 export const cardStyles = {
-  // Primary card (amber theme)
+  // Primary card (vintage warm beige)
   primary: `
-    bg-amber-50/30 dark:bg-dark-bg-card
-    border border-amber-100 dark:border-dark-border-subtle
-    rounded-2xl shadow-md dark:shadow-dark-md
+    bg-vintage-bg-card dark:bg-dark-bg-card
+    border border-vintage-border-subtle dark:border-dark-border-subtle
+    rounded-2xl shadow-vintage-md dark:shadow-dark-md
     transition-colors duration-200
   `,
   // Primary card hover
   primaryHover: `
-    hover:shadow-lg dark:hover:shadow-dark-lg
-    hover:border-amber-300 dark:hover:border-amber-500/30
+    hover:shadow-vintage-lg dark:hover:shadow-dark-lg
+    hover:border-vintage-border-default dark:hover:border-amber-500/30
   `,
-  // Secondary card (white/neutral)
+  // Secondary card (clean white)
   secondary: `
     bg-white dark:bg-dark-bg-card
-    border border-gray-200 dark:border-dark-border-default
-    rounded-2xl shadow-sm dark:shadow-dark-sm
+    border border-vintage-border-default dark:border-dark-border-default
+    rounded-2xl shadow-vintage-sm dark:shadow-dark-sm
     transition-colors duration-200
   `,
   // Elevated card
   elevated: `
     bg-white dark:bg-dark-bg-card
-    border border-gray-100 dark:border-dark-border-subtle
-    rounded-2xl shadow-lg dark:shadow-dark-lg
+    border border-vintage-border-subtle dark:border-dark-border-subtle
+    rounded-2xl shadow-vintage-lg dark:shadow-dark-lg
     transition-colors duration-200
   `,
 } as const;
@@ -219,26 +228,27 @@ export const cardStyles = {
 
 /**
  * Button base styles (use with UI components when possible)
+ * Theme: Vintage Natural Wood Library
  */
 export const buttonStyles = {
-  // Primary gradient button
+  // Primary gradient button (warm wood brown)
   primary: `
-    bg-gradient-to-r from-amber-700 to-amber-600
+    bg-gradient-to-r from-vintage-primary-dark to-vintage-primary
     dark:from-amber-400 dark:to-amber-500
-    hover:from-amber-800 hover:to-amber-700
+    hover:from-vintage-primary hover:to-vintage-primary-light
     dark:hover:from-amber-300 dark:hover:to-amber-400
     text-white dark:text-gray-900
     font-semibold rounded-lg
-    shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20
+    shadow-lg shadow-vintage-primary/30 dark:shadow-amber-500/20
     transform hover:scale-[1.02] active:scale-[0.98]
     transition-all
   `,
-  // Secondary button
+  // Secondary button (warm neutral)
   secondary: `
-    bg-gray-100 dark:bg-dark-bg-elevated
-    hover:bg-gray-200 dark:hover:bg-dark-bg-hover
-    text-gray-700 dark:text-dark-text-primary
-    border border-gray-300 dark:border-dark-border-default
+    bg-vintage-bg-card dark:bg-dark-bg-elevated
+    hover:bg-vintage-border-subtle dark:hover:bg-dark-bg-hover
+    text-vintage-text-secondary dark:text-dark-text-primary
+    border border-vintage-border-default dark:border-dark-border-default
     font-semibold rounded-lg
     transition-all
   `,
@@ -249,6 +259,16 @@ export const buttonStyles = {
     text-red-700 dark:text-red-400
     border border-red-200 dark:border-red-800
     font-semibold rounded-lg
+    transition-all
+  `,
+  // Accent button (olive/sage green)
+  accent: `
+    bg-vintage-accent dark:bg-vintage-accent-light
+    hover:bg-vintage-accent-dark dark:hover:bg-vintage-accent
+    text-white dark:text-white
+    font-semibold rounded-lg
+    shadow-lg shadow-vintage-accent/30
+    transform hover:scale-[1.02] active:scale-[0.98]
     transition-all
   `,
 } as const;
@@ -342,23 +362,23 @@ export const animations = {
 export const formPatterns = {
   // Form section spacing
   section: 'space-y-6',
-  // Input base
+  // Input base (vintage warm style)
   input: `
     w-full px-3 py-3
-    bg-white dark:bg-dark-bg-secondary
-    border border-amber-200 dark:border-dark-border-default
+    bg-vintage-bg-input dark:bg-dark-bg-secondary
+    border border-vintage-border-default dark:border-dark-border-default
     rounded-lg
-    text-gray-900 dark:text-dark-text-primary
-    placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary
-    focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent
+    text-vintage-text-primary dark:text-dark-text-primary
+    placeholder:text-vintage-text-muted dark:placeholder:text-dark-text-tertiary
+    focus:outline-none focus:ring-2 focus:ring-vintage-primary focus:border-transparent
     transition-all
   `,
   // Label
-  label: 'block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1',
+  label: 'block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-1',
   // Error text
   error: 'text-red-600 dark:text-red-400 text-xs mt-1',
   // Hint text
-  hint: 'text-gray-500 dark:text-dark-text-tertiary text-xs mt-1',
+  hint: 'text-vintage-text-muted dark:text-dark-text-tertiary text-xs mt-1',
 } as const;
 
 // =============================================================================
@@ -381,11 +401,11 @@ export const loadingStates = {
   // Full page loading
   fullPage: `
     min-h-screen flex items-center justify-center
-    bg-gray-50 dark:bg-dark-bg-primary
+    bg-vintage-bg-page dark:bg-dark-bg-primary
     transition-colors duration-200
   `,
-  // Spinner
-  spinner: 'animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 dark:border-amber-400',
+  // Spinner (vintage primary brown)
+  spinner: 'animate-spin rounded-full h-12 w-12 border-b-2 border-vintage-primary dark:border-amber-400',
   // Loading text
-  text: 'mt-4 text-gray-700 dark:text-dark-text-secondary font-medium',
+  text: 'mt-4 text-vintage-text-secondary dark:text-dark-text-secondary font-medium',
 } as const;

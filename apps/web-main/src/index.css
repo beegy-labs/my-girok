@@ -1,23 +1,72 @@
 @import "tailwindcss";
 
-/* Tailwind CSS v4 theme configuration (migrated from tailwind.config.js) */
+/* Tailwind CSS v4 theme configuration */
+/* Theme: "Vintage Natural Wood Library" - 빈티지 자연목 서재 */
 @theme {
-  /* Dark mode custom colors (Moonlit Library theme) */
+  /* ============================================
+     LIGHT MODE - Vintage Natural Wood Theme
+     ============================================ */
+
+  /* Light mode backgrounds (aged paper & natural wood) */
+  --color-vintage-bg-page: #FAF9F6;        /* Warm ivory - 차분한 아이보리 */
+  --color-vintage-bg-card: #F5F0EB;        /* Warm beige - 따뜻한 베이지 */
+  --color-vintage-bg-elevated: #FFFFFF;    /* Pure white for elevated surfaces */
+  --color-vintage-bg-input: #FFFFFF;       /* Clean white for inputs */
+
+  /* Light mode text (warm browns) */
+  --color-vintage-text-primary: #292524;   /* stone-800 - 진한 갈색 */
+  --color-vintage-text-secondary: #44403C; /* stone-700 - 중간 갈색 */
+  --color-vintage-text-tertiary: #57534E;  /* stone-600 - 연한 갈색 */
+  --color-vintage-text-muted: #78716C;     /* stone-500 - 흐린 갈색 */
+  --color-vintage-text-accent: #78350F;    /* amber-900 - 강조 갈색 */
+
+  /* Light mode borders (soft earth tones) */
+  --color-vintage-border-subtle: #E7E0D8;  /* Soft beige - 부드러운 베이지 */
+  --color-vintage-border-default: #D6CFC6; /* Medium beige - 중간 베이지 */
+  --color-vintage-border-strong: #C4BCB2;  /* Stronger beige - 진한 베이지 */
+
+  /* Primary colors (natural wood brown) */
+  --color-vintage-primary-dark: #78350F;   /* amber-900 - 진한 나무색 */
+  --color-vintage-primary: #92400E;        /* amber-800 - 기본 나무색 */
+  --color-vintage-primary-light: #A3541A;  /* Custom - 밝은 나무색 */
+
+  /* Accent colors (olive/sage green - nature) */
+  --color-vintage-accent-dark: #4A5A28;    /* Dark olive - 진한 올리브 */
+  --color-vintage-accent: #65703A;         /* Olive green - 올리브 그린 */
+  --color-vintage-accent-light: #7C8A4A;   /* Sage green - 세이지 그린 */
+  --color-vintage-accent-pale: #8B9A5B;    /* Light sage - 연한 세이지 */
+
+  /* ============================================
+     DARK MODE - Moonlit Library Theme
+     ============================================ */
+
+  /* Dark mode backgrounds */
   --color-dark-bg-primary: #0F1419;
   --color-dark-bg-secondary: #1A1D23;
   --color-dark-bg-card: #242830;
   --color-dark-bg-elevated: #2D3139;
   --color-dark-bg-hover: #353A42;
 
+  /* Dark mode text */
   --color-dark-text-primary: #E8E6E3;
   --color-dark-text-secondary: #B8B5B2;
   --color-dark-text-tertiary: #8B8885;
   --color-dark-text-disabled: #5A5856;
 
+  /* Dark mode borders */
   --color-dark-border-subtle: #3A3D45;
   --color-dark-border-default: #52575F;
   --color-dark-border-strong: #6B7078;
   --color-dark-border-accent: #78350F;
+
+  /* ============================================
+     SHADOWS
+     ============================================ */
+
+  /* Light mode shadows (softer, warmer) */
+  --shadow-vintage-sm: 0 1px 2px rgba(41, 37, 36, 0.05);
+  --shadow-vintage-md: 0 4px 6px rgba(41, 37, 36, 0.07);
+  --shadow-vintage-lg: 0 10px 15px rgba(41, 37, 36, 0.1);
 
   /* Dark mode shadows */
   --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.3);

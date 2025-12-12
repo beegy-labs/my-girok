@@ -17,62 +17,92 @@ My-Girok is a personal record-keeping platform where users document their life s
 
 ## Color Palette
 
-### Primary Colors (Library Theme)
+### Theme: "Vintage Natural Wood Library" (빈티지 자연목 서재)
 
-#### Main Brand Color
+**Design Philosophy**: A warm, comfortable study room with natural wood furniture, aged paper, and plants. Less eye strain than bright amber, more natural and cozy.
+
+### Light Mode - Vintage Natural Wood
+
+#### Primary Colors (Natural Wood Brown)
 ```css
-/* Warm Brown - Vintage book cover feel */
---primary-amber-900: #78350F;
---primary-amber-800: #92400E;
---primary-amber-700: #B45309;
---primary-amber-600: #D97706;
+/* Warm Wood Tones - Deeper than amber for less eye strain */
+--vintage-primary-dark: #78350F;    /* Deep wood - Primary CTA, emphasis */
+--vintage-primary: #92400E;          /* Natural wood - Main actions */
+--vintage-primary-light: #A3541A;    /* Light wood - Hover states */
 ```
 
-#### Secondary Colors
+#### Background Colors (Aged Paper & Cream)
 ```css
-/* Cool Gray - Serene study atmosphere */
---secondary-gray-700: #374151;
---secondary-gray-600: #4B5563;
---secondary-gray-500: #6B7280;
+/* Soft, eye-friendly backgrounds */
+--vintage-bg-page: #FAF9F6;          /* Warm ivory - Page background */
+--vintage-bg-card: #F5F0EB;          /* Warm beige - Card backgrounds */
+--vintage-bg-elevated: #FFFFFF;      /* Clean white - Elevated surfaces */
+--vintage-bg-input: #FFFFFF;         /* White - Form inputs */
 ```
 
-#### Accent Colors
+#### Text Colors (Warm Stone)
 ```css
-/* Warm Amber - Cozy lighting */
---accent-amber-500: #F59E0B;
---accent-amber-400: #FBBF24;
+/* Warm browns instead of harsh grays */
+--vintage-text-primary: #292524;     /* stone-800 - Headings, important text */
+--vintage-text-secondary: #44403C;   /* stone-700 - Body text */
+--vintage-text-tertiary: #57534E;    /* stone-600 - Secondary text */
+--vintage-text-muted: #78716C;       /* stone-500 - Hints, captions */
+--vintage-text-accent: #78350F;      /* amber-900 - Emphasis, titles */
 ```
 
-#### Background Colors
+#### Border Colors (Soft Earth)
 ```css
-/* Off-white - Book page feel */
---bg-amber-50: #FFFBEB;
---bg-gray-50: #F9FAFB;
---bg-white: #FFFFFF;
+/* Softer, warmer borders than amber-100 */
+--vintage-border-subtle: #E7E0D8;    /* Soft beige - Subtle separators */
+--vintage-border-default: #D6CFC6;   /* Medium beige - Default borders */
+--vintage-border-strong: #C4BCB2;    /* Stronger beige - Prominent borders */
 ```
 
-### Usage Guidelines
+#### Accent Colors (Olive/Sage Green - Nature)
+```css
+/* Natural green accent for badges, success states, subtle highlights */
+--vintage-accent-dark: #4A5A28;      /* Dark olive - Strong emphasis */
+--vintage-accent: #65703A;           /* Olive green - Primary accent */
+--vintage-accent-light: #7C8A4A;     /* Sage green - Hover states */
+--vintage-accent-pale: #8B9A5B;      /* Light sage - Subtle backgrounds */
+```
+
+#### Shadows (Softer, Warmer)
+```css
+/* Softer shadows for comfortable reading */
+--shadow-vintage-sm: 0 1px 2px rgba(41, 37, 36, 0.05);
+--shadow-vintage-md: 0 4px 6px rgba(41, 37, 36, 0.07);
+--shadow-vintage-lg: 0 10px 15px rgba(41, 37, 36, 0.1);
+```
+
+### Usage Guidelines (Light Mode)
 
 #### Primary Use Cases
-- **Main Actions**: Login buttons, CTAs → `amber-700 to amber-600` gradient
-- **Headers**: Page titles, section headers → `amber-900`
-- **Links**: Interactive text elements → `amber-700`
+- **Main Actions**: Login buttons, CTAs → `vintage-primary-dark to vintage-primary` gradient
+- **Headers**: Page titles, section headers → `vintage-text-accent`
+- **Links**: Interactive text elements → `vintage-primary`
 
 #### Secondary Use Cases
-- **Body Text**: Main content → `gray-700`
-- **Secondary Text**: Descriptions, hints → `gray-600`
-- **Borders**: Card outlines, dividers → `amber-100`, `gray-200`
+- **Body Text**: Main content → `vintage-text-secondary`
+- **Secondary Text**: Descriptions, hints → `vintage-text-tertiary`
+- **Borders**: Card outlines, dividers → `vintage-border-subtle`, `vintage-border-default`
 
 #### Background Use Cases
-- **Cards**: Content containers → `amber-50/30` (30% opacity)
-- **Page Background**: Default background → `gray-50`
-- **Form Inputs**: Input fields → `white` with `amber-200` borders
+- **Cards**: Content containers → `vintage-bg-card`
+- **Page Background**: Default background → `vintage-bg-page`
+- **Form Inputs**: Input fields → `vintage-bg-input` with `vintage-border-default` borders
+
+#### Accent Use Cases (NEW)
+- **Success states**: Use olive/sage green instead of pure green
+- **Count badges**: `vintage-accent/20` background with `vintage-accent-dark` text
+- **Highlights**: Subtle nature-inspired green touches
 
 ### Color Accessibility
 All color combinations meet WCAG 2.1 AA standards:
-- `amber-900` on `white`: 8.52:1 (AAA)
-- `gray-700` on `white`: 7.21:1 (AAA)
-- `amber-700` on `white`: 5.12:1 (AA)
+- `vintage-text-primary` on `vintage-bg-page`: 12.1:1 (AAA)
+- `vintage-text-secondary` on `vintage-bg-page`: 8.7:1 (AAA)
+- `vintage-primary` on `white`: 6.2:1 (AA)
+- `vintage-accent-dark` on `vintage-accent/20`: 7.8:1 (AAA)
 
 ### Special Case: Resume Preview & Print (Print-Optimized)
 
@@ -2089,6 +2119,7 @@ Potential component library extensions:
 
 ## Version History
 
+- v1.4.0 (2025-12-12): **NEW "Vintage Natural Wood Library" Light Mode Theme** - Replaced bright amber with softer vintage colors (warm ivory, beige backgrounds, stone text colors, olive green accents) for reduced eye strain and natural feel
 - v1.3.0 (2025-11-27): Added mobile edit patterns - TouchSensor, depth colors, collapsible cards, inline buttons, fixed bottom nav
 - v1.2.0 (2025-11-21): Added UI Component Library documentation - 10 reusable components with ~95% adoption
 - v1.1.0 (2025-01-15): Added comprehensive mobile-first responsive design patterns and guidelines

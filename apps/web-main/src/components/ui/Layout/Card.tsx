@@ -38,34 +38,35 @@ export default function Card({
   className = '',
   onClick,
 }: CardProps) {
+  // Theme: Vintage Natural Wood Library
   const variantClasses = {
     primary: `
-      bg-amber-50/30 dark:bg-dark-bg-card
-      border border-amber-100 dark:border-dark-border-subtle
-      shadow-md dark:shadow-dark-md
+      bg-vintage-bg-card dark:bg-dark-bg-card
+      border border-vintage-border-subtle dark:border-dark-border-subtle
+      shadow-vintage-md dark:shadow-dark-md
       ${
         interactive
-          ? 'hover:shadow-lg dark:hover:shadow-dark-lg hover:border-amber-300 dark:hover:border-amber-500/30 cursor-pointer'
+          ? 'hover:shadow-vintage-lg dark:hover:shadow-dark-lg hover:border-vintage-border-default dark:hover:border-amber-500/30 cursor-pointer'
           : ''
       }
     `,
     secondary: `
       bg-white dark:bg-dark-bg-card
-      border border-gray-200 dark:border-dark-border-default
-      shadow-sm dark:shadow-dark-sm
+      border border-vintage-border-default dark:border-dark-border-default
+      shadow-vintage-sm dark:shadow-dark-sm
       ${
         interactive
-          ? 'hover:shadow-md dark:hover:shadow-dark-md hover:border-gray-300 dark:hover:border-dark-border-subtle cursor-pointer'
+          ? 'hover:shadow-vintage-md dark:hover:shadow-dark-md hover:border-vintage-border-strong dark:hover:border-dark-border-subtle cursor-pointer'
           : ''
       }
     `,
     elevated: `
       bg-white dark:bg-dark-bg-card
-      border border-gray-100 dark:border-dark-border-subtle
-      shadow-lg dark:shadow-dark-lg
+      border border-vintage-border-subtle dark:border-dark-border-subtle
+      shadow-vintage-lg dark:shadow-dark-lg
       ${
         interactive
-          ? 'hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-200 dark:hover:border-dark-border-default cursor-pointer'
+          ? 'hover:shadow-xl dark:hover:shadow-dark-xl hover:border-vintage-border-default dark:hover:border-dark-border-default cursor-pointer'
           : ''
       }
     `,
