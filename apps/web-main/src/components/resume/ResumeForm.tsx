@@ -443,11 +443,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Resume Settings - Compact on mobile */}
-      <Card variant="secondary" padding="responsive" className="shadow-sm rounded-xl sm:rounded-2xl">
-        <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-3 sm:mb-4">⚙️ {t('resume.sections.settings')}</h2>
-        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
+      <Card variant="secondary" padding="responsive" className="shadow-sm rounded-xl sm:rounded-2xl lg:rounded-3xl">
+        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary mb-3 sm:mb-4 lg:mb-6">⚙️ {t('resume.sections.settings')}</h2>
+        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-6">
           <TextInput
             label={t('resume.form.resumeTitle')}
             value={formData.title}
@@ -487,7 +487,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         onToggle={() => toggleSection('basicInfo')}
         variant="primary"
       >
-        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
+        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6">
           <TextInput
             label={t('resume.form.name')}
             value={formData.name}
@@ -1112,7 +1112,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   </DestructiveButton>
                 </div>
 
-                <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
+                <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6">
                   <TextInput
                     label={t('resume.form.certificateName')}
                     value={cert.name}
@@ -1195,8 +1195,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </CollapsibleSection>
 
       {/* Attachments Section */}
-      <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm transition-colors duration-200 p-3 sm:p-6">
-        <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-1 sm:mb-2">📎 Attachments</h2>
+      <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm dark:shadow-dark-sm transition-colors duration-200 p-3 sm:p-6 lg:p-8">
+        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary mb-1 sm:mb-2 lg:mb-4">📎 Attachments</h2>
         <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary mb-3 sm:mb-4">
           Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.
         </p>
