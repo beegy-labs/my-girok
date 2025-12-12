@@ -1,96 +1,80 @@
 @import "tailwindcss";
 
 /* Tailwind CSS v4 theme configuration */
-/* Theme: "Classic Library" - 고풍스러운 원목 도서관 */
+/* Theme: "Warm Library" - 원목 도서관의 은은한 조명 */
 @theme {
   /* ============================================
-     LIGHT MODE - 클래식 원목 도서관
-     마호가니 서재, 은은한 램프, 오래된 양장본
+     LIGHT MODE - Warm Wood Library Theme
+     원목 도서관에서 은은한 조명 아래 책 읽는 분위기
      ============================================ */
 
-  /* Light mode backgrounds (깊은 원목 톤) */
-  --color-vintage-bg-page: #3D3028;        /* 마호가니 원목 - 깊은 갈색 */
-  --color-vintage-bg-secondary: #4A3D32;   /* 월넛 - 중간 원목 */
-  --color-vintage-bg-card: #574A3D;        /* 오크 - 카드 배경 */
-  --color-vintage-bg-elevated: #655748;    /* 밝은 원목 - 돌출 영역 */
-  --color-vintage-bg-input: #4A3D32;       /* 입력 영역 */
-  --color-vintage-bg-hover: #6B5C4A;       /* 호버 */
+  /* Light mode backgrounds (원목 + 오래된 책 페이지) */
+  --color-vintage-bg-page: #E8DFD4;        /* 원목 책상/선반 - 따뜻한 베이지 */
+  --color-vintage-bg-card: #F7F3ED;        /* 오래된 책 페이지 - 크림색 (콘텐츠 집중) */
+  --color-vintage-bg-elevated: #FFFDF9;    /* 밝은 페이지 - 살짝 노르스름한 화이트 */
+  --color-vintage-bg-input: #FFFEFA;       /* 입력 영역 - 깨끗한 크림 */
 
-  /* Light mode text (양피지/크림) */
-  --color-vintage-text-primary: #F5F0E6;   /* 양피지 - 메인 텍스트 */
-  --color-vintage-text-secondary: #D9D0C1; /* 오래된 종이 */
-  --color-vintage-text-tertiary: #B8A994;  /* 연한 크림 */
-  --color-vintage-text-muted: #9A8B78;     /* 흐린 톤 */
-  --color-vintage-text-accent: #E8C47C;    /* 황동 - 고급스러운 강조 */
+  /* Light mode text (잉크/책 텍스트 느낌) */
+  --color-vintage-text-primary: #2C2416;   /* 진한 세피아 - 오래된 잉크 */
+  --color-vintage-text-secondary: #4A3F2F; /* 중간 세피아 */
+  --color-vintage-text-tertiary: #6B5D4A;  /* 연한 세피아 */
+  --color-vintage-text-muted: #8C7B65;     /* 흐린 세피아 */
+  --color-vintage-text-accent: #5C3D1E;    /* 가죽 바인딩 갈색 */
 
-  /* Light mode borders (원목 테두리) */
-  --color-vintage-border-subtle: #5C4D3D;  /* 연한 원목 */
-  --color-vintage-border-default: #6E5D4A; /* 중간 원목 */
-  --color-vintage-border-strong: #8A7560;  /* 진한 원목 */
-  --color-vintage-border-accent: #C9A227;  /* 황동 악센트 */
+  /* Light mode borders (나무 결 느낌) */
+  --color-vintage-border-subtle: #D9CEBF;  /* 연한 나무결 */
+  --color-vintage-border-default: #C4B5A1; /* 중간 나무결 */
+  --color-vintage-border-strong: #A89880;  /* 진한 나무결 */
 
-  /* Primary colors (황동/골드 - 램프 조명) */
-  --color-vintage-primary-dark: #B8942A;   /* 진한 황동 */
-  --color-vintage-primary: #C9A227;        /* 황동 - 은은한 조명 */
-  --color-vintage-primary-light: #D4B54A;  /* 밝은 황동 */
+  /* Primary colors (따뜻한 램프 조명) */
+  --color-vintage-primary-dark: #8B5A2B;   /* 진한 호박색 - 램프 심지 */
+  --color-vintage-primary: #A0522D;        /* 시에나 - 따뜻한 조명 */
+  --color-vintage-primary-light: #B8763A;  /* 밝은 호박 */
 
-  /* Accent colors (딥 그린 - 가죽 장정) */
-  --color-vintage-accent-dark: #1E3D2F;    /* 딥 포레스트 */
-  --color-vintage-accent: #2D5A45;         /* 헌터 그린 */
-  --color-vintage-accent-light: #3D7A5C;   /* 세이지 */
-  --color-vintage-accent-pale: #4D9A70;    /* 라이트 그린 */
+  /* Accent colors (가죽/버건디 - 고급 책 장정) */
+  --color-vintage-accent-dark: #6B2D2D;    /* 딥 버건디 */
+  --color-vintage-accent: #8B4343;         /* 버건디 */
+  --color-vintage-accent-light: #A85858;   /* 라이트 버건디 */
+  --color-vintage-accent-pale: #C27070;    /* 페일 버건디 */
 
   /* ============================================
-     DARK MODE - 주간 모드와 동일
+     DARK MODE - Moonlit Library Theme
+     달빛 아래 서재
      ============================================ */
 
-  /* Dark mode backgrounds (주간과 동일) */
-  --color-dark-bg-primary: #3D3028;        /* 마호가니 원목 */
-  --color-dark-bg-secondary: #4A3D32;      /* 월넛 */
-  --color-dark-bg-card: #574A3D;           /* 오크 */
-  --color-dark-bg-elevated: #655748;       /* 밝은 원목 */
-  --color-dark-bg-input: #4A3D32;          /* 입력 영역 */
-  --color-dark-bg-hover: #6B5C4A;          /* 호버 */
+  /* Dark mode backgrounds */
+  --color-dark-bg-primary: #1A1612;        /* 어두운 원목 */
+  --color-dark-bg-secondary: #231E18;      /* 중간 원목 */
+  --color-dark-bg-card: #2D261E;           /* 카드 - 약간 밝은 원목 */
+  --color-dark-bg-elevated: #3A3128;       /* 돌출 영역 */
+  --color-dark-bg-hover: #453A2F;          /* 호버 */
 
-  /* Dark mode text (주간과 동일) */
-  --color-dark-text-primary: #F5F0E6;      /* 양피지 */
-  --color-dark-text-secondary: #D9D0C1;    /* 오래된 종이 */
-  --color-dark-text-tertiary: #B8A994;     /* 연한 크림 */
-  --color-dark-text-muted: #9A8B78;        /* 흐린 톤 */
-  --color-dark-text-disabled: #9A8B78;     /* 흐린 톤 */
-  --color-dark-text-accent: #E8C47C;       /* 황동 */
+  /* Dark mode text */
+  --color-dark-text-primary: #EDE8E0;      /* 오래된 종이색 */
+  --color-dark-text-secondary: #C4BAA8;    /* 중간 톤 */
+  --color-dark-text-tertiary: #9A8E7A;     /* 연한 톤 */
+  --color-dark-text-disabled: #6B6055;     /* 비활성 */
 
-  /* Dark mode borders (주간과 동일) */
-  --color-dark-border-subtle: #5C4D3D;     /* 연한 원목 */
-  --color-dark-border-default: #6E5D4A;    /* 중간 원목 */
-  --color-dark-border-strong: #8A7560;     /* 진한 원목 */
-  --color-dark-border-accent: #C9A227;     /* 황동 악센트 */
-
-  /* Dark mode primary colors (주간과 동일) */
-  --color-dark-primary-dark: #B8942A;      /* 진한 황동 */
-  --color-dark-primary: #C9A227;           /* 황동 */
-  --color-dark-primary-light: #D4B54A;     /* 밝은 황동 */
-
-  /* Dark mode accent colors (주간과 동일) */
-  --color-dark-accent-dark: #1E3D2F;       /* 딥 포레스트 */
-  --color-dark-accent: #2D5A45;            /* 헌터 그린 */
-  --color-dark-accent-light: #3D7A5C;      /* 세이지 */
-  --color-dark-accent-pale: #4D9A70;       /* 라이트 그린 */
+  /* Dark mode borders */
+  --color-dark-border-subtle: #3D342A;     /* 연한 나무결 */
+  --color-dark-border-default: #554839;    /* 중간 나무결 */
+  --color-dark-border-strong: #6E5D4A;     /* 진한 나무결 */
+  --color-dark-border-accent: #8B5A2B;     /* 악센트 */
 
   /* ============================================
-     SHADOWS (주간/야간 동일)
+     SHADOWS (은은한 조명 효과)
      ============================================ */
 
-  /* Light mode shadows */
-  --shadow-vintage-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
-  --shadow-vintage-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-vintage-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-amber-glow: 0 0 20px rgba(201, 162, 39, 0.15);
+  /* Light mode shadows (따뜻한 그림자) */
+  --shadow-vintage-sm: 0 1px 3px rgba(44, 36, 22, 0.08);
+  --shadow-vintage-md: 0 4px 8px rgba(44, 36, 22, 0.12);
+  --shadow-vintage-lg: 0 10px 20px rgba(44, 36, 22, 0.15);
 
-  /* Dark mode shadows (주간과 동일) */
-  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
-  --shadow-dark-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-dark-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
+  /* Dark mode shadows */
+  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-dark-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --shadow-dark-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --shadow-amber-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
 }
 
 /* Dark mode variant using class strategy */
