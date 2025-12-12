@@ -1,6 +1,33 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Tailwind CSS v4 theme configuration (migrated from tailwind.config.js) */
+@theme {
+  /* Dark mode custom colors (Moonlit Library theme) */
+  --color-dark-bg-primary: #0F1419;
+  --color-dark-bg-secondary: #1A1D23;
+  --color-dark-bg-card: #242830;
+  --color-dark-bg-elevated: #2D3139;
+  --color-dark-bg-hover: #353A42;
+
+  --color-dark-text-primary: #E8E6E3;
+  --color-dark-text-secondary: #B8B5B2;
+  --color-dark-text-tertiary: #8B8885;
+  --color-dark-text-disabled: #5A5856;
+
+  --color-dark-border-subtle: #3A3D45;
+  --color-dark-border-default: #52575F;
+  --color-dark-border-strong: #6B7078;
+  --color-dark-border-accent: #78350F;
+
+  /* Dark mode shadows */
+  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-dark-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-dark-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
+  --shadow-amber-glow: 0 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+/* Dark mode variant using class strategy */
+@variant dark (&:where(.dark, .dark *));
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
