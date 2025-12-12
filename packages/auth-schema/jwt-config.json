@@ -1,0 +1,12 @@
+{
+  "accessToken": {
+    "expiresIn": "15m",
+    "expiresInSeconds": 900,
+    "algorithm": "HS256"
+  },
+  "refreshToken": {
+    "expiresIn": "7d",
+    "expiresInSeconds": 604800,
+    "algorithm": "HS256"
+  }
+}
