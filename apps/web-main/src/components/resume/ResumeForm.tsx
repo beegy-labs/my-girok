@@ -26,52 +26,13 @@ import {
   SecondaryButton,
   DestructiveButton,
   Card,
+  CollapsibleSection,
 } from '../ui';
 
 interface ResumeFormProps {
   resume: Resume | null;
   onSubmit: (data: CreateResumeDto) => Promise<void>;
   onChange?: (data: CreateResumeDto) => void;
-}
-
-// Collapsible Section Header Component - Mobile optimized with larger touch targets
-interface CollapsibleHeaderProps {
-  title: string;
-  icon: string;
-  isCollapsed: boolean;
-  onToggle: () => void;
-  count?: number;
-}
-
-function CollapsibleHeader({ title, icon, isCollapsed, onToggle, count }: CollapsibleHeaderProps) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="w-full flex items-center justify-between p-2 -m-2 mb-2 sm:mb-4 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 rounded-lg transition-all touch-manipulation active:scale-[0.98]"
-    >
-      <div className="flex items-center gap-2 min-w-0">
-        <h2 className="text-base sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary truncate">
-          {icon} {title}
-        </h2>
-        {count !== undefined && count > 0 && (
-          <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full flex-shrink-0">
-            {count}
-          </span>
-        )}
-      </div>
-      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-        <svg
-          className={`w-5 h-5 text-amber-900 dark:text-dark-text-primary transform transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-    </button>
-  );
 }
 
 export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormProps) {
@@ -519,15 +480,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </Card>
 
       {/* Basic Info */}
-      <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-3 sm:p-6">
-        <CollapsibleHeader
-          title={t('resume.sections.basicInfo')}
-          icon="📋"
-          isCollapsed={collapsedSections.basicInfo}
-          onToggle={() => toggleSection('basicInfo')}
-        />
-        {!collapsedSections.basicInfo && (
-        <>
+      <CollapsibleSection
+        title={t('resume.sections.basicInfo')}
+        icon="📋"
+        isExpanded={!collapsedSections.basicInfo}
+        onToggle={() => toggleSection('basicInfo')}
+        variant="primary"
+      >
         <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
           <TextInput
             label={t('resume.form.name')}
@@ -842,30 +801,24 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             + {t('resume.experienceForm.addAchievement')}
           </SecondaryButton>
         </div>
-        </>
-        )}
-      </div>
+      </CollapsibleSection>
 
       {/* Application Reason (지원 동기) */}
-      <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-3 sm:p-6">
-        <CollapsibleHeader
-          title={t('resume.form.applicationReason')}
-          icon="💼"
-          isCollapsed={collapsedSections.applicationReason}
-          onToggle={() => toggleSection('applicationReason')}
+      <CollapsibleSection
+        title={t('resume.form.applicationReason')}
+        icon="💼"
+        isExpanded={!collapsedSections.applicationReason}
+        onToggle={() => toggleSection('applicationReason')}
+        variant="primary"
+      >
+        <TextArea
+          value={formData.applicationReason || ''}
+          onChange={value => setFormData({ ...formData, applicationReason: value })}
+          rows={4}
+          placeholder={t('resume.form.applicationReasonPlaceholder')}
+          hint={t('resume.form.applicationReasonHint')}
         />
-        {!collapsedSections.applicationReason && (
-        <>
-          <TextArea
-            value={formData.applicationReason || ''}
-            onChange={value => setFormData({ ...formData, applicationReason: value })}
-            rows={4}
-            placeholder={t('resume.form.applicationReasonPlaceholder')}
-            hint={t('resume.form.applicationReasonHint')}
-          />
-        </>
-        )}
-      </div>
+      </CollapsibleSection>
 
       {/* Work Experience Section */}
       <ExperienceSection
@@ -879,18 +832,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       />
 
       {/* Skills Section */}
-      <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm transition-colors duration-200 p-3 sm:p-6">
-        <CollapsibleHeader
-          title={t('resume.sections.skills')}
-          icon="⚡"
-          isCollapsed={collapsedSections.skills}
-          onToggle={() => toggleSection('skills')}
-          count={formData.skills?.length}
-        />
-        {!collapsedSections.skills && (
-        <>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary">{t('resume.descriptions.skills')}</p>
+      <CollapsibleSection
+        title={t('resume.sections.skills')}
+        icon="⚡"
+        isExpanded={!collapsedSections.skills}
+        onToggle={() => toggleSection('skills')}
+        count={formData.skills?.length}
+        variant="secondary"
+        headerAction={
           <PrimaryButton
             onClick={() => {
               setFormData({
@@ -907,11 +856,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               });
             }}
             size="sm"
-            className="self-start sm:self-auto py-2 touch-manipulation"
+            className="py-2 touch-manipulation"
           >
             + {t('resume.form.addCategory')}
           </PrimaryButton>
-        </div>
+        }
+      >
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary mb-3 sm:mb-4">{t('resume.descriptions.skills')}</p>
 
         {formData.skills && formData.skills.length > 0 ? (
           <div className="space-y-4 sm:space-y-6">
@@ -1096,9 +1047,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <p>{t('resume.form.clickToAddCategory')}</p>
           </div>
         )}
-        </>
-        )}
-      </div>
+      </CollapsibleSection>
 
       {/* Education Section */}
       <EducationSection
@@ -1108,18 +1057,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       />
 
       {/* Certificates Section */}
-      <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm transition-colors duration-200 p-3 sm:p-6">
-        <CollapsibleHeader
-          title={t('resume.sections.certifications')}
-          icon="🏆"
-          isCollapsed={collapsedSections.certificates}
-          onToggle={() => toggleSection('certificates')}
-          count={formData.certificates?.length}
-        />
-        {!collapsedSections.certificates && (
-        <>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary">{t('resume.descriptions.certifications')}</p>
+      <CollapsibleSection
+        title={t('resume.sections.certifications')}
+        icon="🏆"
+        isExpanded={!collapsedSections.certificates}
+        onToggle={() => toggleSection('certificates')}
+        count={formData.certificates?.length}
+        variant="secondary"
+        headerAction={
           <PrimaryButton
             onClick={() => {
               setFormData({
@@ -1140,11 +1085,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               });
             }}
             size="sm"
-            className="self-start sm:self-auto py-2 touch-manipulation"
+            className="py-2 touch-manipulation"
           >
             + {t('resume.form.addCertificate')}
           </PrimaryButton>
-        </div>
+        }
+      >
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary mb-3 sm:mb-4">{t('resume.descriptions.certifications')}</p>
 
         {formData.certificates && formData.certificates.length > 0 ? (
           <div className="space-y-3 sm:space-y-4">
@@ -1245,9 +1192,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <p>{t('resume.form.noCertificates')}</p>
           </div>
         )}
-        </>
-        )}
-      </div>
+      </CollapsibleSection>
 
       {/* Attachments Section */}
       <div className="bg-white dark:bg-dark-bg-card border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm transition-colors duration-200 p-3 sm:p-6">
@@ -1413,28 +1358,24 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       )}
 
       {/* Cover Letter (자기소개서) - At the bottom */}
-      <div className="bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-md dark:shadow-dark-md transition-colors duration-200 p-3 sm:p-6">
-        <CollapsibleHeader
-          title={t('resume.form.coverLetter')}
-          icon="📝"
-          isCollapsed={collapsedSections.coverLetter}
-          onToggle={() => toggleSection('coverLetter')}
+      <CollapsibleSection
+        title={t('resume.form.coverLetter')}
+        icon="📝"
+        isExpanded={!collapsedSections.coverLetter}
+        onToggle={() => toggleSection('coverLetter')}
+        variant="primary"
+      >
+        <textarea
+          value={formData.coverLetter || ''}
+          onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}
+          rows={6}
+          className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+          placeholder={t('resume.form.coverLetterPlaceholder')}
         />
-        {!collapsedSections.coverLetter && (
-        <>
-          <textarea
-            value={formData.coverLetter || ''}
-            onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}
-            rows={6}
-            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
-            placeholder={t('resume.form.coverLetterPlaceholder')}
-          />
-          <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
-            {t('resume.form.coverLetterHint')}
-          </p>
-        </>
-        )}
-      </div>
+        <p className="text-xs text-gray-500 dark:text-dark-text-tertiary mt-1">
+          {t('resume.form.coverLetterHint')}
+        </p>
+      </CollapsibleSection>
 
       {/* Submit Buttons */}
       {/* Auto-save indicator */}
