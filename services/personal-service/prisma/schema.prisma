@@ -58,6 +58,11 @@ model Resume {
   coverLetter               String?          @map("cover_letter") @db.Text // Cover letter
   applicationReason         String?          @map("application_reason") @db.Text // Application reason
 
+  // Copy status for async file operations (when copying resume with attachments)
+  copyStatus       CopyStatus? @map("copy_status") // null = not a copy, or copy without attachments
+  copyJobId        String?     @map("copy_job_id") // BullMQ job ID for tracking
+  copyCompletedAt  DateTime?   @map("copy_completed_at") @db.Timestamptz(6)
+
   // Attachments
   attachments ResumeAttachment[]
 
@@ -143,6 +148,15 @@ enum GpaFormat {
   SCALE_4_0   // 4.0 scale (US: 3.8/4.0)
   SCALE_4_5   // 4.5 scale (KR: 4.2/4.5)
   SCALE_100   // 100-point scale (JP: 85/100)
+}
+
+// Copy status for async file operations
+enum CopyStatus {
+  PENDING     // Copy job queued
+  IN_PROGRESS // Copy job processing
+  COMPLETED   // All attachments copied successfully
+  PARTIAL     // Some attachments failed to copy
+  FAILED      // All attachments failed to copy
 }
 
 // Resume File Attachments (profile photos, portfolios, certificates)

@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { CopyStatus } from '../../node_modules/.prisma/personal-client';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { FileCopyService } from '../queue/services/file-copy.service';
 import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
 import { AttachmentType } from '../storage/dto';
 import { firstValueFrom } from 'rxjs';
@@ -63,6 +65,7 @@ export class ResumeService {
     private httpService: HttpService,
     private configService: ConfigService,
     private storageService: StorageService,
+    private fileCopyService: FileCopyService,
   ) {
     this.authServiceUrl = this.configService.get('AUTH_SERVICE_URL') || 'http://auth-service:4001';
   }
@@ -569,6 +572,7 @@ export class ResumeService {
 
   /**
    * Copy/duplicate a resume with all its nested data
+   * Attachments are copied asynchronously via BullMQ queue to avoid transaction timeout
    */
   async copyResume(resumeId: string, userId: string) {
     // Get the original resume with all relations
@@ -598,9 +602,11 @@ export class ResumeService {
       throw new NotFoundException('Resume not found');
     }
 
-    // Create a copy
-    return await this.prisma.$transaction(async (tx) => {
-      const copy = await tx.resume.create({
+    const hasAttachments = original.attachments && original.attachments.length > 0;
+
+    // Create a copy (DB operations only, no file I/O in transaction)
+    const copy = await this.prisma.$transaction(async (tx) => {
+      const newResume = await tx.resume.create({
         data: {
           userId,
           title: `${original.title} (Copy)`,
@@ -629,6 +635,8 @@ export class ResumeService {
           militaryServiceEndDate: original.militaryServiceEndDate,
           coverLetter: original.coverLetter,
           applicationReason: original.applicationReason,
+          // Set copyStatus if there are attachments to copy
+          copyStatus: hasAttachments ? CopyStatus.PENDING : null,
         },
       });
 
@@ -636,7 +644,7 @@ export class ResumeService {
       if (original.sections && original.sections.length > 0) {
         await tx.resumeSection.createMany({
           data: original.sections.map(section => ({
-            resumeId: copy.id,
+            resumeId: newResume.id,
             type: section.type,
             order: section.order,
             visible: section.visible,
@@ -649,7 +657,7 @@ export class ResumeService {
         for (const skill of original.skills) {
           await tx.skill.create({
             data: {
-              resumeId: copy.id,
+              resumeId: newResume.id,
               category: skill.category,
               items: skill.items as any, // Prisma JSON type
               order: skill.order,
@@ -663,7 +671,7 @@ export class ResumeService {
       if (original.experiences && original.experiences.length > 0) {
         for (const exp of original.experiences) {
           const expData: any = {
-            resumeId: copy.id,
+            resumeId: newResume.id,
             company: exp.company,
             startDate: exp.startDate,
             endDate: exp.endDate,
@@ -720,7 +728,7 @@ export class ResumeService {
       if (original.educations && original.educations.length > 0) {
         await tx.education.createMany({
           data: original.educations.map(edu => ({
-            resumeId: copy.id,
+            resumeId: newResume.id,
             school: edu.school,
             major: edu.major,
             degree: edu.degree,
@@ -738,7 +746,7 @@ export class ResumeService {
       if (original.certificates && original.certificates.length > 0) {
         await tx.certificate.createMany({
           data: original.certificates.map(cert => ({
-            resumeId: copy.id,
+            resumeId: newResume.id,
             name: cert.name,
             issuer: cert.issuer,
             issueDate: cert.issueDate,
@@ -751,55 +759,45 @@ export class ResumeService {
         });
       }
 
-      // Copy attachments (profile photos, portfolios, certificates, etc.)
-      if (original.attachments && original.attachments.length > 0) {
-        for (const attachment of original.attachments) {
-          try {
-            // Copy file in MinIO storage
-            const { fileKey: newFileKey, fileUrl: newFileUrl } = await this.storageService.copyFile(
-              attachment.fileKey,
-              userId,
-              copy.id,
-            );
+      // Return the new resume ID (attachments will be copied async)
+      return newResume;
+    });
 
-            // Copy original file if it exists (for grayscale photos)
-            let newOriginalUrl: string | null = null;
-            if (attachment.originalUrl) {
-              const originalKey = attachment.originalUrl.split('/').slice(-4).join('/');
-              const { fileUrl } = await this.storageService.copyFile(originalKey, userId, copy.id);
-              newOriginalUrl = fileUrl;
-            }
-
-            // Create attachment record for copied resume
-            await tx.resumeAttachment.create({
-              data: {
-                resumeId: copy.id,
-                type: attachment.type,
-                fileName: attachment.fileName,
-                fileKey: newFileKey,
-                fileUrl: newFileUrl,
-                fileSize: attachment.fileSize,
-                mimeType: attachment.mimeType,
-                isProcessed: attachment.isProcessed,
-                originalUrl: newOriginalUrl,
-                title: attachment.title,
-                description: attachment.description,
-                order: attachment.order,
-                visible: attachment.visible,
-              },
-            });
-          } catch (error: any) {
-            this.logger.error(`Failed to copy attachment ${attachment.id}: ${error.message}`);
-            // Continue copying other attachments even if one fails
-          }
-        }
-      }
-
-      // Return the copied resume with all relations
-      return await tx.resume.findUnique({
-        where: { id: copy.id },
-        include: this.RESUME_FULL_INCLUDE,
+    // Queue attachment copy job (outside transaction to avoid timeout)
+    if (hasAttachments) {
+      const jobId = await this.fileCopyService.queueAttachmentCopy({
+        sourceResumeId: resumeId,
+        targetResumeId: copy.id,
+        userId,
+        attachments: original.attachments.map(att => ({
+          id: att.id,
+          type: att.type,
+          fileName: att.fileName,
+          fileKey: att.fileKey,
+          fileSize: att.fileSize,
+          mimeType: att.mimeType,
+          isProcessed: att.isProcessed,
+          originalUrl: att.originalUrl,
+          title: att.title,
+          description: att.description,
+          order: att.order,
+          visible: att.visible,
+        })),
       });
+
+      // Update resume with job ID for tracking
+      await this.prisma.resume.update({
+        where: { id: copy.id },
+        data: { copyJobId: jobId },
+      });
+
+      this.logger.log(`Resume ${resumeId} copied to ${copy.id}, attachment copy job: ${jobId}`);
+    }
+
+    // Return the copied resume with all relations (attachments will be empty initially if copying async)
+    return await this.prisma.resume.findUnique({
+      where: { id: copy.id },
+      include: this.RESUME_FULL_INCLUDE,
     });
   }
 
