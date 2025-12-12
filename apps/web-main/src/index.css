@@ -41,30 +41,44 @@
   --color-vintage-accent-pale: #4D9A70;    /* 라이트 그린 */
 
   /* ============================================
-     DARK MODE - 심야 도서관
+     DARK MODE - 주간 모드와 동일
      ============================================ */
 
-  /* Dark mode backgrounds (더 어두운 원목) */
-  --color-dark-bg-primary: #1C1814;        /* 에보니 */
-  --color-dark-bg-secondary: #262018;      /* 다크 월넛 */
-  --color-dark-bg-card: #302820;           /* 다크 오크 */
-  --color-dark-bg-elevated: #3A3028;       /* 돌출 영역 */
-  --color-dark-bg-hover: #453830;          /* 호버 */
+  /* Dark mode backgrounds (주간과 동일) */
+  --color-dark-bg-primary: #3D3028;        /* 마호가니 원목 */
+  --color-dark-bg-secondary: #4A3D32;      /* 월넛 */
+  --color-dark-bg-card: #574A3D;           /* 오크 */
+  --color-dark-bg-elevated: #655748;       /* 밝은 원목 */
+  --color-dark-bg-input: #4A3D32;          /* 입력 영역 */
+  --color-dark-bg-hover: #6B5C4A;          /* 호버 */
 
-  /* Dark mode text */
-  --color-dark-text-primary: #F0EBE0;      /* 양피지 */
-  --color-dark-text-secondary: #C9C0B0;    /* 오래된 종이 */
-  --color-dark-text-tertiary: #9A9080;     /* 연한 톤 */
-  --color-dark-text-disabled: #6B6358;     /* 비활성 */
+  /* Dark mode text (주간과 동일) */
+  --color-dark-text-primary: #F5F0E6;      /* 양피지 */
+  --color-dark-text-secondary: #D9D0C1;    /* 오래된 종이 */
+  --color-dark-text-tertiary: #B8A994;     /* 연한 크림 */
+  --color-dark-text-muted: #9A8B78;        /* 흐린 톤 */
+  --color-dark-text-disabled: #9A8B78;     /* 흐린 톤 */
+  --color-dark-text-accent: #E8C47C;       /* 황동 */
 
-  /* Dark mode borders */
-  --color-dark-border-subtle: #3D352A;     /* 연한 나무결 */
-  --color-dark-border-default: #524840;    /* 중간 나무결 */
-  --color-dark-border-strong: #6B5D50;     /* 진한 나무결 */
+  /* Dark mode borders (주간과 동일) */
+  --color-dark-border-subtle: #5C4D3D;     /* 연한 원목 */
+  --color-dark-border-default: #6E5D4A;    /* 중간 원목 */
+  --color-dark-border-strong: #8A7560;     /* 진한 원목 */
   --color-dark-border-accent: #C9A227;     /* 황동 악센트 */
 
+  /* Dark mode primary colors (주간과 동일) */
+  --color-dark-primary-dark: #B8942A;      /* 진한 황동 */
+  --color-dark-primary: #C9A227;           /* 황동 */
+  --color-dark-primary-light: #D4B54A;     /* 밝은 황동 */
+
+  /* Dark mode accent colors (주간과 동일) */
+  --color-dark-accent-dark: #1E3D2F;       /* 딥 포레스트 */
+  --color-dark-accent: #2D5A45;            /* 헌터 그린 */
+  --color-dark-accent-light: #3D7A5C;      /* 세이지 */
+  --color-dark-accent-pale: #4D9A70;       /* 라이트 그린 */
+
   /* ============================================
-     SHADOWS (은은한 램프 조명 효과)
+     SHADOWS (주간/야간 동일)
      ============================================ */
 
   /* Light mode shadows */
@@ -73,10 +87,10 @@
   --shadow-vintage-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-amber-glow: 0 0 20px rgba(201, 162, 39, 0.15);
 
-  /* Dark mode shadows */
-  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-dark-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-dark-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  /* Dark mode shadows (주간과 동일) */
+  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-dark-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-dark-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* Dark mode variant using class strategy */
