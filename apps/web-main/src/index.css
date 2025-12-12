@@ -1,82 +1,107 @@
 @import "tailwindcss";
 
 /* Tailwind CSS v4 theme configuration */
-/* Theme: "Warm Library" - 원목 도서관의 은은한 조명 */
+/* Theme: "Wood Library" - 원목 도서관 */
 @theme {
   /* ============================================
-     LIGHT MODE - Warm Wood Library Theme
-     원목 도서관에서 은은한 조명 아래 책 읽는 분위기
+     BASE COLOR PALETTE - 통합 색상 관리
+     모든 색상은 여기서 한 번만 정의
+     다크모드 기준 디자인
      ============================================ */
 
-  /* Light mode backgrounds (야간모드와 동일) */
-  --color-vintage-bg-page: #1A1612;        /* 어두운 원목 */
-  --color-vintage-bg-secondary: #231E18;   /* 중간 원목 */
-  --color-vintage-bg-card: #2D261E;        /* 카드 - 약간 밝은 원목 */
-  --color-vintage-bg-elevated: #3A3128;    /* 돌출 영역 */
-  --color-vintage-bg-input: #231E18;       /* 입력 영역 */
-  --color-vintage-bg-hover: #453A2F;       /* 호버 */
+  /* Background colors */
+  --color-base-bg-page: #1A1612;        /* 어두운 원목 */
+  --color-base-bg-secondary: #231E18;   /* 중간 원목 */
+  --color-base-bg-card: #2D261E;        /* 카드 배경 */
+  --color-base-bg-elevated: #3A3128;    /* 돌출 영역 */
+  --color-base-bg-hover: #453A2F;       /* 호버 */
 
-  /* Light mode text (야간모드와 동일) */
-  --color-vintage-text-primary: #EDE8E0;   /* 오래된 종이색 */
-  --color-vintage-text-secondary: #C4BAA8; /* 중간 톤 */
-  --color-vintage-text-tertiary: #9A8E7A;  /* 연한 톤 */
-  --color-vintage-text-muted: #6B6055;     /* 비활성 */
-  --color-vintage-text-accent: #8B5A2B;    /* 호박색 악센트 */
+  /* Text colors */
+  --color-base-text-primary: #EDE8E0;   /* 오래된 종이색 */
+  --color-base-text-secondary: #C4BAA8; /* 중간 톤 */
+  --color-base-text-tertiary: #9A8E7A;  /* 연한 톤 */
+  --color-base-text-muted: #6B6055;     /* 비활성 */
 
-  /* Light mode borders (야간모드와 동일) */
-  --color-vintage-border-subtle: #3D342A;  /* 연한 나무결 */
-  --color-vintage-border-default: #554839; /* 중간 나무결 */
-  --color-vintage-border-strong: #6E5D4A;  /* 진한 나무결 */
+  /* Border colors */
+  --color-base-border-subtle: #3D342A;  /* 연한 나무결 */
+  --color-base-border-default: #554839; /* 중간 나무결 */
+  --color-base-border-strong: #6E5D4A;  /* 진한 나무결 */
 
-  /* Primary colors */
-  --color-vintage-primary-dark: #8B5A2B;   /* 진한 호박색 */
-  --color-vintage-primary: #A0522D;        /* 시에나 */
-  --color-vintage-primary-light: #B8763A;  /* 밝은 호박 */
+  /* Primary colors (호박색 계열) */
+  --color-base-primary-dark: #8B5A2B;   /* 진한 호박색 */
+  --color-base-primary: #A0522D;        /* 시에나 */
+  --color-base-primary-light: #B8763A;  /* 밝은 호박 */
 
-  /* Accent colors */
-  --color-vintage-accent-dark: #6B2D2D;    /* 딥 버건디 */
-  --color-vintage-accent: #8B4343;         /* 버건디 */
-  --color-vintage-accent-light: #A85858;   /* 라이트 버건디 */
-  --color-vintage-accent-pale: #C27070;    /* 페일 버건디 */
+  /* Accent colors (버건디 계열) */
+  --color-base-accent-dark: #6B2D2D;    /* 딥 버건디 */
+  --color-base-accent: #8B4343;         /* 버건디 */
+  --color-base-accent-light: #A85858;   /* 라이트 버건디 */
+  --color-base-accent-pale: #C27070;    /* 페일 버건디 */
+
+  /* Shadow values */
+  --shadow-base-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-base-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --shadow-base-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --shadow-base-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
 
   /* ============================================
-     DARK MODE - Moonlit Library Theme
-     달빛 아래 서재
+     LIGHT MODE (vintage-*) - base 색상 참조
      ============================================ */
 
-  /* Dark mode backgrounds */
-  --color-dark-bg-primary: #1A1612;        /* 어두운 원목 */
-  --color-dark-bg-secondary: #231E18;      /* 중간 원목 */
-  --color-dark-bg-card: #2D261E;           /* 카드 - 약간 밝은 원목 */
-  --color-dark-bg-elevated: #3A3128;       /* 돌출 영역 */
-  --color-dark-bg-hover: #453A2F;          /* 호버 */
+  --color-vintage-bg-page: var(--color-base-bg-page);
+  --color-vintage-bg-secondary: var(--color-base-bg-secondary);
+  --color-vintage-bg-card: var(--color-base-bg-card);
+  --color-vintage-bg-elevated: var(--color-base-bg-elevated);
+  --color-vintage-bg-input: var(--color-base-bg-secondary);
+  --color-vintage-bg-hover: var(--color-base-bg-hover);
 
-  /* Dark mode text */
-  --color-dark-text-primary: #EDE8E0;      /* 오래된 종이색 */
-  --color-dark-text-secondary: #C4BAA8;    /* 중간 톤 */
-  --color-dark-text-tertiary: #9A8E7A;     /* 연한 톤 */
-  --color-dark-text-disabled: #6B6055;     /* 비활성 */
+  --color-vintage-text-primary: var(--color-base-text-primary);
+  --color-vintage-text-secondary: var(--color-base-text-secondary);
+  --color-vintage-text-tertiary: var(--color-base-text-tertiary);
+  --color-vintage-text-muted: var(--color-base-text-muted);
+  --color-vintage-text-accent: var(--color-base-primary-dark);
 
-  /* Dark mode borders */
-  --color-dark-border-subtle: #3D342A;     /* 연한 나무결 */
-  --color-dark-border-default: #554839;    /* 중간 나무결 */
-  --color-dark-border-strong: #6E5D4A;     /* 진한 나무결 */
-  --color-dark-border-accent: #8B5A2B;     /* 악센트 */
+  --color-vintage-border-subtle: var(--color-base-border-subtle);
+  --color-vintage-border-default: var(--color-base-border-default);
+  --color-vintage-border-strong: var(--color-base-border-strong);
+
+  --color-vintage-primary-dark: var(--color-base-primary-dark);
+  --color-vintage-primary: var(--color-base-primary);
+  --color-vintage-primary-light: var(--color-base-primary-light);
+
+  --color-vintage-accent-dark: var(--color-base-accent-dark);
+  --color-vintage-accent: var(--color-base-accent);
+  --color-vintage-accent-light: var(--color-base-accent-light);
+  --color-vintage-accent-pale: var(--color-base-accent-pale);
+
+  --shadow-vintage-sm: var(--shadow-base-sm);
+  --shadow-vintage-md: var(--shadow-base-md);
+  --shadow-vintage-lg: var(--shadow-base-lg);
 
   /* ============================================
-     SHADOWS (은은한 조명 효과)
+     DARK MODE (dark-*) - base 색상 참조
      ============================================ */
 
-  /* Light mode shadows (야간모드와 동일) */
-  --shadow-vintage-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-vintage-md: 0 4px 10px rgba(0, 0, 0, 0.5);
-  --shadow-vintage-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --color-dark-bg-primary: var(--color-base-bg-page);
+  --color-dark-bg-secondary: var(--color-base-bg-secondary);
+  --color-dark-bg-card: var(--color-base-bg-card);
+  --color-dark-bg-elevated: var(--color-base-bg-elevated);
+  --color-dark-bg-hover: var(--color-base-bg-hover);
 
-  /* Dark mode shadows */
-  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-dark-md: 0 4px 10px rgba(0, 0, 0, 0.5);
-  --shadow-dark-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
-  --shadow-amber-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
+  --color-dark-text-primary: var(--color-base-text-primary);
+  --color-dark-text-secondary: var(--color-base-text-secondary);
+  --color-dark-text-tertiary: var(--color-base-text-tertiary);
+  --color-dark-text-disabled: var(--color-base-text-muted);
+
+  --color-dark-border-subtle: var(--color-base-border-subtle);
+  --color-dark-border-default: var(--color-base-border-default);
+  --color-dark-border-strong: var(--color-base-border-strong);
+  --color-dark-border-accent: var(--color-base-primary-dark);
+
+  --shadow-dark-sm: var(--shadow-base-sm);
+  --shadow-dark-md: var(--shadow-base-md);
+  --shadow-dark-lg: var(--shadow-base-lg);
+  --shadow-amber-glow: var(--shadow-base-glow);
 }
 
 /* Dark mode variant using class strategy */
