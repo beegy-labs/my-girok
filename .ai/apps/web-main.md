@@ -6,11 +6,11 @@
 
 - **Framework**: React 19.2 + Vite 7.2
 - **Router**: React Router v7
-- **Language**: TypeScript 5.7
-- **Styling**: Tailwind CSS 3.4
+- **Language**: TypeScript 5.9
+- **Styling**: Tailwind CSS 4.1 (Vite plugin)
 - **State**: Zustand 5.0
-- **API**: Axios 1.7
-- **Testing**: Vitest 2.1 + Playwright 1.56
+- **API**: Axios 1.13
+- **Testing**: Vitest 4.0 + Playwright 1.57
 
 ## Structure
 
