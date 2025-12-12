@@ -269,13 +269,13 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   };
 
   return (
-    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-6 transition-colors duration-200">
-      <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+      <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 lg:mb-6">
         <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary transition-colors duration-200 hidden sm:block">{t('resume.descriptions.education')}</p>
+          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
+          <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-dark-text-secondary transition-colors duration-200 hidden sm:block">{t('resume.descriptions.education')}</p>
         </div>
-        <PrimaryButton onClick={handleAdd} className="text-xs sm:text-sm px-3 py-2 flex-shrink-0 touch-manipulation">
+        <PrimaryButton onClick={handleAdd} className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation">
           + <span className="hidden sm:inline">Add Education</span><span className="sm:hidden">추가</span>
         </PrimaryButton>
       </div>
@@ -283,7 +283,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
       {educations.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={educations.map((edu, idx) => edu.id || `edu-${idx}`)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4 lg:space-y-6">
               {educations.map((edu, index) => (
                 <SortableEducationCard
                   key={edu.id || `edu-${index}`}
