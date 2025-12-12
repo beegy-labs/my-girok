@@ -55,7 +55,9 @@
   --color-dark-text-primary: #F5F0E6;      /* 양피지 */
   --color-dark-text-secondary: #D9D0C1;    /* 오래된 종이 */
   --color-dark-text-tertiary: #B8A994;     /* 연한 크림 */
+  --color-dark-text-muted: #9A8B78;        /* 흐린 톤 */
   --color-dark-text-disabled: #9A8B78;     /* 흐린 톤 */
+  --color-dark-text-accent: #E8C47C;       /* 황동 */
 
   /* Dark mode borders (주간과 동일) */
   --color-dark-border-subtle: #5C4D3D;     /* 연한 원목 */
