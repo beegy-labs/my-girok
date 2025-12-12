@@ -1,37 +1,40 @@
 @import "tailwindcss";
 
 /* Tailwind CSS v4 theme configuration */
-/* Theme: "Warm Library" - 원목 도서관의 은은한 조명 */
+/* Theme: "Warm Library" - PR #216 Dark mode를 Light mode에 적용 */
 @theme {
   /* ============================================
-     LIGHT MODE - Dark Wood Library Theme
-     PR #216 야간모드 디자인을 주간모드에 적용
+     LIGHT MODE - PR #216 Dark mode (Moonlit Library) 적용
+     달빛 아래 서재 컨셉을 주간 모드로
      ============================================ */
 
-  /* Light mode backgrounds (PR #216 Dark mode 색상) */
+  /* Light mode backgrounds (PR #216 Dark mode 색상 그대로) */
   --color-vintage-bg-page: #1A1612;        /* 어두운 원목 */
+  --color-vintage-bg-secondary: #231E18;   /* 중간 원목 */
   --color-vintage-bg-card: #2D261E;        /* 카드 - 약간 밝은 원목 */
   --color-vintage-bg-elevated: #3A3128;    /* 돌출 영역 */
-  --color-vintage-bg-input: #453A2F;       /* 입력 영역 */
+  --color-vintage-bg-input: #2D261E;       /* 입력 영역 - 카드와 동일 */
+  --color-vintage-bg-hover: #453A2F;       /* 호버 */
 
-  /* Light mode text (오래된 종이색) */
+  /* Light mode text (PR #216 Dark mode 텍스트) */
   --color-vintage-text-primary: #EDE8E0;   /* 오래된 종이색 */
   --color-vintage-text-secondary: #C4BAA8; /* 중간 톤 */
   --color-vintage-text-tertiary: #9A8E7A;  /* 연한 톤 */
-  --color-vintage-text-muted: #6B6055;     /* 흐린 톤 */
-  --color-vintage-text-accent: #D4A574;    /* 따뜻한 골드 강조 */
+  --color-vintage-text-muted: #6B6055;     /* 비활성/흐린 톤 */
+  --color-vintage-text-accent: #A0522D;    /* 시에나 강조 */
 
-  /* Light mode borders (나무 결 느낌) */
+  /* Light mode borders (PR #216 Dark mode 테두리) */
   --color-vintage-border-subtle: #3D342A;  /* 연한 나무결 */
   --color-vintage-border-default: #554839; /* 중간 나무결 */
   --color-vintage-border-strong: #6E5D4A;  /* 진한 나무결 */
+  --color-vintage-border-accent: #8B5A2B;  /* 악센트 테두리 */
 
-  /* Primary colors (따뜻한 램프 조명/골드) */
-  --color-vintage-primary-dark: #8B5A2B;   /* 진한 호박색 */
-  --color-vintage-primary: #D4A574;        /* 따뜻한 골드 - 램프 빛 */
-  --color-vintage-primary-light: #E8C49A;  /* 밝은 골드 */
+  /* Primary colors (PR #216 따뜻한 램프 조명 - 시에나) */
+  --color-vintage-primary-dark: #8B5A2B;   /* 진한 호박색 - 램프 심지 */
+  --color-vintage-primary: #A0522D;        /* 시에나 - 따뜻한 조명 */
+  --color-vintage-primary-light: #B8763A;  /* 밝은 호박 */
 
-  /* Accent colors (가죽/버건디 - 고급 책 장정) */
+  /* Accent colors (PR #216 가죽/버건디 - 고급 책 장정) */
   --color-vintage-accent-dark: #6B2D2D;    /* 딥 버건디 */
   --color-vintage-accent: #8B4343;         /* 버건디 */
   --color-vintage-accent-light: #A85858;   /* 라이트 버건디 */
@@ -58,22 +61,22 @@
   --color-dark-border-subtle: #3A3D45;     /* 연한 테두리 */
   --color-dark-border-default: #52575F;    /* 중간 테두리 */
   --color-dark-border-strong: #6B7078;     /* 진한 테두리 */
-  --color-dark-border-accent: #D4A574;     /* 골드 악센트 */
+  --color-dark-border-accent: #8B5A2B;     /* 호박색 악센트 */
 
   /* ============================================
      SHADOWS (은은한 조명 효과)
      ============================================ */
 
-  /* Light mode shadows */
-  --shadow-vintage-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-vintage-md: 0 4px 8px rgba(0, 0, 0, 0.35);
-  --shadow-vintage-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+  /* Light mode shadows (어두운 배경용) */
+  --shadow-vintage-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-vintage-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --shadow-vintage-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --shadow-amber-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
 
   /* Dark mode shadows */
   --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
   --shadow-dark-md: 0 4px 10px rgba(0, 0, 0, 0.5);
   --shadow-dark-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
-  --shadow-amber-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
 }
 
 /* Dark mode variant using class strategy */
