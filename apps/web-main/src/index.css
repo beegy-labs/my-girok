@@ -8,30 +8,30 @@
      원목 도서관에서 은은한 조명 아래 책 읽는 분위기
      ============================================ */
 
-  /* Light mode backgrounds (원목 + 오래된 책 페이지) */
-  --color-vintage-bg-page: #E8DFD4;        /* 원목 책상/선반 - 따뜻한 베이지 */
-  --color-vintage-bg-card: #F7F3ED;        /* 오래된 책 페이지 - 크림색 (콘텐츠 집중) */
-  --color-vintage-bg-elevated: #FFFDF9;    /* 밝은 페이지 - 살짝 노르스름한 화이트 */
-  --color-vintage-bg-input: #FFFEFA;       /* 입력 영역 - 깨끗한 크림 */
+  /* Light mode backgrounds (야간모드와 동일 계열, 밝은 버전) */
+  --color-vintage-bg-page: #D4C8B8;        /* 밝은 원목 - 오크 */
+  --color-vintage-bg-card: #E8DFD2;        /* 오래된 종이 - 야간 텍스트색 계열 */
+  --color-vintage-bg-elevated: #F2EBE0;    /* 크림 종이 */
+  --color-vintage-bg-input: #EDE6DA;       /* 입력 영역 */
 
-  /* Light mode text (잉크/책 텍스트 느낌) */
-  --color-vintage-text-primary: #2C2416;   /* 진한 세피아 - 오래된 잉크 */
-  --color-vintage-text-secondary: #4A3F2F; /* 중간 세피아 */
-  --color-vintage-text-tertiary: #6B5D4A;  /* 연한 세피아 */
-  --color-vintage-text-muted: #8C7B65;     /* 흐린 세피아 */
-  --color-vintage-text-accent: #5C3D1E;    /* 가죽 바인딩 갈색 */
+  /* Light mode text (야간모드 배경색 계열) */
+  --color-vintage-text-primary: #1A1612;   /* 야간 배경색 - 어두운 원목 */
+  --color-vintage-text-secondary: #2D261E; /* 야간 카드색 */
+  --color-vintage-text-tertiary: #453A2F;  /* 야간 호버색 */
+  --color-vintage-text-muted: #6B6055;     /* 야간 비활성 텍스트 */
+  --color-vintage-text-accent: #8B5A2B;    /* 호박색 악센트 */
 
-  /* Light mode borders (나무 결 느낌) */
-  --color-vintage-border-subtle: #D9CEBF;  /* 연한 나무결 */
-  --color-vintage-border-default: #C4B5A1; /* 중간 나무결 */
-  --color-vintage-border-strong: #A89880;  /* 진한 나무결 */
+  /* Light mode borders (야간모드 테두리 계열, 밝은 버전) */
+  --color-vintage-border-subtle: #C4BAA8;  /* 야간 secondary 텍스트 계열 */
+  --color-vintage-border-default: #A89880; /* 중간 나무결 */
+  --color-vintage-border-strong: #8A7A68;  /* 진한 나무결 */
 
-  /* Primary colors (따뜻한 램프 조명) */
-  --color-vintage-primary-dark: #8B5A2B;   /* 진한 호박색 - 램프 심지 */
-  --color-vintage-primary: #A0522D;        /* 시에나 - 따뜻한 조명 */
+  /* Primary colors (야간모드와 동일) */
+  --color-vintage-primary-dark: #8B5A2B;   /* 진한 호박색 */
+  --color-vintage-primary: #A0522D;        /* 시에나 */
   --color-vintage-primary-light: #B8763A;  /* 밝은 호박 */
 
-  /* Accent colors (가죽/버건디 - 고급 책 장정) */
+  /* Accent colors (야간모드와 동일) */
   --color-vintage-accent-dark: #6B2D2D;    /* 딥 버건디 */
   --color-vintage-accent: #8B4343;         /* 버건디 */
   --color-vintage-accent-light: #A85858;   /* 라이트 버건디 */
@@ -65,10 +65,10 @@
      SHADOWS (은은한 조명 효과)
      ============================================ */
 
-  /* Light mode shadows (따뜻한 그림자) */
-  --shadow-vintage-sm: 0 1px 3px rgba(44, 36, 22, 0.08);
-  --shadow-vintage-md: 0 4px 8px rgba(44, 36, 22, 0.12);
-  --shadow-vintage-lg: 0 10px 20px rgba(44, 36, 22, 0.15);
+  /* Light mode shadows (야간모드와 동일 계열) */
+  --shadow-vintage-sm: 0 1px 3px rgba(26, 22, 18, 0.15);
+  --shadow-vintage-md: 0 4px 8px rgba(26, 22, 18, 0.20);
+  --shadow-vintage-lg: 0 10px 20px rgba(26, 22, 18, 0.25);
 
   /* Dark mode shadows */
   --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
