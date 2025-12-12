@@ -38,28 +38,27 @@
   --color-vintage-accent-pale: #C27070;    /* 페일 버건디 */
 
   /* ============================================
-     DARK MODE - Moonlit Library Theme
-     PR #216 야간모드 유지 (달빛 아래 서재)
+     DARK MODE - 기존 회색 계열 유지
      ============================================ */
 
-  /* Dark mode backgrounds */
-  --color-dark-bg-primary: #1A1612;        /* 어두운 원목 */
-  --color-dark-bg-secondary: #231E18;      /* 중간 원목 */
-  --color-dark-bg-card: #2D261E;           /* 카드 - 약간 밝은 원목 */
-  --color-dark-bg-elevated: #3A3128;       /* 돌출 영역 */
-  --color-dark-bg-hover: #453A2F;          /* 호버 */
+  /* Dark mode backgrounds (회색 계열) */
+  --color-dark-bg-primary: #0F1419;        /* 어두운 배경 */
+  --color-dark-bg-secondary: #1A1D23;      /* 중간 배경 */
+  --color-dark-bg-card: #242830;           /* 카드 배경 */
+  --color-dark-bg-elevated: #2D3139;       /* 돌출 영역 */
+  --color-dark-bg-hover: #353A42;          /* 호버 */
 
   /* Dark mode text */
-  --color-dark-text-primary: #EDE8E0;      /* 오래된 종이색 */
-  --color-dark-text-secondary: #C4BAA8;    /* 중간 톤 */
-  --color-dark-text-tertiary: #9A8E7A;     /* 연한 톤 */
-  --color-dark-text-disabled: #6B6055;     /* 비활성 */
+  --color-dark-text-primary: #E8E6E3;      /* 밝은 텍스트 */
+  --color-dark-text-secondary: #B8B5B2;    /* 중간 텍스트 */
+  --color-dark-text-tertiary: #8B8885;     /* 연한 텍스트 */
+  --color-dark-text-disabled: #5A5856;     /* 비활성 */
 
-  /* Dark mode borders */
-  --color-dark-border-subtle: #3D342A;     /* 연한 나무결 */
-  --color-dark-border-default: #554839;    /* 중간 나무결 */
-  --color-dark-border-strong: #6E5D4A;     /* 진한 나무결 */
-  --color-dark-border-accent: #8B5A2B;     /* 악센트 */
+  /* Dark mode borders (회색 계열) */
+  --color-dark-border-subtle: #3A3D45;     /* 연한 테두리 */
+  --color-dark-border-default: #52575F;    /* 중간 테두리 */
+  --color-dark-border-strong: #6B7078;     /* 진한 테두리 */
+  --color-dark-border-accent: #D4A574;     /* 골드 악센트 */
 
   /* ============================================
      SHADOWS (은은한 조명 효과)
