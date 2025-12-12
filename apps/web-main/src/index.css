@@ -49,6 +49,7 @@
   --color-dark-bg-secondary: #4A3D32;      /* 월넛 */
   --color-dark-bg-card: #574A3D;           /* 오크 */
   --color-dark-bg-elevated: #655748;       /* 밝은 원목 */
+  --color-dark-bg-input: #4A3D32;          /* 입력 영역 */
   --color-dark-bg-hover: #6B5C4A;          /* 호버 */
 
   /* Dark mode text (주간과 동일) */
@@ -64,6 +65,17 @@
   --color-dark-border-default: #6E5D4A;    /* 중간 원목 */
   --color-dark-border-strong: #8A7560;     /* 진한 원목 */
   --color-dark-border-accent: #C9A227;     /* 황동 악센트 */
+
+  /* Dark mode primary colors (주간과 동일) */
+  --color-dark-primary-dark: #B8942A;      /* 진한 황동 */
+  --color-dark-primary: #C9A227;           /* 황동 */
+  --color-dark-primary-light: #D4B54A;     /* 밝은 황동 */
+
+  /* Dark mode accent colors (주간과 동일) */
+  --color-dark-accent-dark: #1E3D2F;       /* 딥 포레스트 */
+  --color-dark-accent: #2D5A45;            /* 헌터 그린 */
+  --color-dark-accent-light: #3D7A5C;      /* 세이지 */
+  --color-dark-accent-pale: #4D9A70;       /* 라이트 그린 */
 
   /* ============================================
      SHADOWS (주간/야간 동일)
