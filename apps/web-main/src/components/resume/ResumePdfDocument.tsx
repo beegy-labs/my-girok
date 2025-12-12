@@ -775,8 +775,10 @@ export default function ResumePdfDocument({
   // Create translator for current locale
   const t = createTranslator(locale);
 
-  const visibleSections = resume.sections
-    .filter(s => s.visible)
+  // Safe access to sections with fallback to empty array
+  // Use `visible !== false` to include items where visible is undefined or true
+  const visibleSections = (resume.sections || [])
+    .filter(s => s.visible !== false)
     .sort((a, b) => a.order - b.order);
 
   return (
@@ -905,15 +907,15 @@ export default function ResumePdfDocument({
         {visibleSections.map(section => {
           switch (section.type) {
             case 'SKILLS':
-              return <SkillsSection key={section.id} skills={resume.skills.filter(s => s.visible)} t={t} />;
+              return <SkillsSection key={section.id} skills={(resume.skills || []).filter(s => s.visible !== false)} t={t} />;
             case 'EXPERIENCE':
-              return <ExperienceSection key={section.id} experiences={resume.experiences.filter(e => e.visible)} t={t} />;
+              return <ExperienceSection key={section.id} experiences={(resume.experiences || []).filter(e => e.visible !== false)} t={t} />;
             case 'PROJECT':
-              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible)} t={t} />;
+              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible !== false)} t={t} />;
             case 'EDUCATION':
-              return <EducationSection key={section.id} educations={resume.educations.filter(e => e.visible)} t={t} />;
+              return <EducationSection key={section.id} educations={(resume.educations || []).filter(e => e.visible !== false)} t={t} />;
             case 'CERTIFICATE':
-              return <CertificatesSection key={section.id} certificates={resume.certificates.filter(c => c.visible)} t={t} />;
+              return <CertificatesSection key={section.id} certificates={(resume.certificates || []).filter(c => c.visible !== false)} t={t} />;
             default:
               return null;
           }

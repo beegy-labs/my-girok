@@ -103,11 +103,12 @@ function SortableExperienceCard({
     if (!over || active.id === over.id) return;
 
     const project = projects[projectIndex];
-    const oldIndex = project.achievements.findIndex(a => (a.id || `ach-${project.achievements.indexOf(a)}`) === active.id);
-    const newIndex = project.achievements.findIndex(a => (a.id || `ach-${project.achievements.indexOf(a)}`) === over.id);
+    const achievements = project.achievements || [];
+    const oldIndex = achievements.findIndex(a => (a.id || `ach-${achievements.indexOf(a)}`) === active.id);
+    const newIndex = achievements.findIndex(a => (a.id || `ach-${achievements.indexOf(a)}`) === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
-      const newAchievements = arrayMove(project.achievements, oldIndex, newIndex).map((a, idx) => ({
+      const newAchievements = arrayMove(achievements, oldIndex, newIndex).map((a, idx) => ({
         ...a,
         order: idx,
       }));
@@ -146,27 +147,28 @@ function SortableExperienceCard({
 
   const addAchievement = (projectIndex: number) => {
     const project = projects[projectIndex];
+    const achievements = project.achievements || [];
     const newAchievement: ProjectAchievement = {
       content: '',
       depth: 1,
-      order: project.achievements.length,
+      order: achievements.length,
     };
     updateProject(projectIndex, {
       ...project,
-      achievements: [...project.achievements, newAchievement],
+      achievements: [...achievements, newAchievement],
     });
   };
 
   const updateAchievement = (projectIndex: number, achievementIndex: number, achievement: ProjectAchievement) => {
     const project = projects[projectIndex];
-    const newAchievements = [...project.achievements];
+    const newAchievements = [...(project.achievements || [])];
     newAchievements[achievementIndex] = achievement;
     updateProject(projectIndex, { ...project, achievements: newAchievements });
   };
 
   const removeAchievement = (projectIndex: number, achievementIndex: number) => {
     const project = projects[projectIndex];
-    const newAchievements = project.achievements.filter((_, i) => i !== achievementIndex);
+    const newAchievements = (project.achievements || []).filter((_, i) => i !== achievementIndex);
     updateProject(projectIndex, { ...project, achievements: newAchievements });
   };
 
@@ -455,11 +457,12 @@ function SortableProject({
   t: (key: string) => string;
 }) {
   // Local state for tech stack input to allow free-form typing
-  const [techStackInput, setTechStackInput] = useState(project.techStack.join(', '));
+  // Safe access with fallback to empty array to prevent undefined.join() crash
+  const [techStackInput, setTechStackInput] = useState((project.techStack || []).join(', '));
 
   // Update local state when project changes externally
   useEffect(() => {
-    setTechStackInput(project.techStack.join(', '));
+    setTechStackInput((project.techStack || []).join(', '));
   }, [project.techStack]);
 
   const {

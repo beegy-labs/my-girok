@@ -35,8 +35,10 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
   const { t, i18n } = useTranslation();
   const paper = PAPER_SIZES[paperSize];
 
-  const visibleSections = resume.sections
-    .filter(s => s.visible)
+  // Safe access to sections with fallback to empty array
+  // Use `visible !== false` to include items where visible is undefined or true
+  const visibleSections = (resume.sections || [])
+    .filter(s => s.visible !== false)
     .sort((a, b) => a.order - b.order);
 
   return (
@@ -210,15 +212,15 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
       {visibleSections.map(section => {
         switch (section.type) {
           case 'SKILLS':
-            return <SkillsSection key={section.id} skills={resume.skills.filter(s => s.visible)} />;
+            return <SkillsSection key={section.id} skills={(resume.skills || []).filter(s => s.visible !== false)} />;
           case 'EXPERIENCE':
-            return <ExperienceSection key={section.id} experiences={resume.experiences.filter(e => e.visible)} />;
+            return <ExperienceSection key={section.id} experiences={(resume.experiences || []).filter(e => e.visible !== false)} />;
           case 'PROJECT':
-            return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible)} />;
+            return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible !== false)} />;
           case 'EDUCATION':
-            return <EducationSection key={section.id} educations={resume.educations.filter(e => e.visible)} />;
+            return <EducationSection key={section.id} educations={(resume.educations || []).filter(e => e.visible !== false)} />;
           case 'CERTIFICATE':
-            return <CertificatesSection key={section.id} certificates={resume.certificates.filter(c => c.visible)} />;
+            return <CertificatesSection key={section.id} certificates={(resume.certificates || []).filter(c => c.visible !== false)} />;
           default:
             return null;
         }
@@ -454,14 +456,14 @@ function ProjectsSection({ projects }: { projects: any[] }) {
             </span>
           </div>
           <p className="text-sm text-gray-700 mb-2">{project.description}</p>
-          {project.achievements.length > 0 && (
+          {project.achievements && project.achievements.length > 0 && (
             <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-2">
               {project.achievements.map((achievement: string, i: number) => (
                 <li key={i}>{achievement}</li>
               ))}
             </ul>
           )}
-          {project.techStack.length > 0 && (
+          {project.techStack && project.techStack.length > 0 && (
             <p className="text-sm text-gray-700 mt-2">
               <span className="font-semibold">{t('resume.preview.tech')}:</span> {project.techStack.join(', ')}
             </p>
