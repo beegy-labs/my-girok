@@ -484,7 +484,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   return (
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {/* Resume Settings - Compact on mobile */}
-      <Card variant="secondary" padding="md" className="shadow-sm !p-3 sm:!p-6 !rounded-xl sm:!rounded-2xl">
+      <Card variant="secondary" padding="responsive" className="shadow-sm rounded-xl sm:rounded-2xl">
         <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-3 sm:mb-4">⚙️ {t('resume.sections.settings')}</h2>
         <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
           <TextInput

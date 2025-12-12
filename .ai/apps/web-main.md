@@ -663,6 +663,56 @@ Standard page layout for resume preview pages:
 
 **Design Decision**: Prioritize no-overflow over minimum readability scale. Users on mobile can pinch-to-zoom for details, which is the expected mobile UX pattern.
 
+## Mobile Design Consistency Standards
+
+### Core Design Tokens (MUST USE)
+
+All resume edit components MUST use these consistent values from `src/styles/design-tokens.ts`:
+
+| Element | Mobile | Tablet (sm:) | Desktop (lg:) |
+|---------|--------|--------------|---------------|
+| Card padding | `p-3` | `sm:p-4` | `lg:p-6` |
+| Section gap | `space-y-3` | `sm:space-y-4` | `lg:space-y-6` |
+| Form field gap | `space-y-3` | `sm:space-y-4` | - |
+| Border radius | `rounded-xl` | `sm:rounded-2xl` | - |
+| Section title | `text-base font-bold` | `sm:text-lg` | `lg:text-xl` |
+| Label | `text-xs font-semibold` | `sm:text-sm` | - |
+| Body text | `text-xs` | `sm:text-sm` | - |
+
+### Button Size Standards
+
+| Size | Padding | Font | Use Case |
+|------|---------|------|----------|
+| xs | `py-1.5 px-2` | `text-xs` | Inline actions, nested items |
+| sm | `py-2 px-3` | `text-xs sm:text-sm` | Default buttons |
+| md | `py-2.5 px-4` | `text-sm sm:text-base` | Primary actions |
+
+### Usage Example
+
+```tsx
+// ❌ DON'T: Inconsistent inline styles
+<div className="p-4 sm:p-6 lg:p-8 rounded-2xl">
+  <h2 className="text-lg font-bold">Title</h2>
+</div>
+
+// ✅ DO: Use design tokens
+import { spacing, typography, radius } from '../../styles/design-tokens';
+
+<div className={`${spacing.card.all} ${radius.lg}`}>
+  <h2 className={typography.sectionTitle.all}>Title</h2>
+</div>
+```
+
+### Responsive Pattern Checklist
+
+- [ ] Use mobile-first: default → `sm:` → `lg:`
+- [ ] Card padding: `p-3 sm:p-4 lg:p-6`
+- [ ] Section titles: `text-base sm:text-lg lg:text-xl font-bold`
+- [ ] Body text: `text-xs sm:text-sm`
+- [ ] Button touch target: min 44x44px (use `py-2.5 px-4` or larger)
+- [ ] Border radius: `rounded-xl sm:rounded-2xl`
+- [ ] Import design tokens instead of hardcoding
+
 ## Mobile Edit Patterns (Resume)
 
 ### TouchSensor for Drag-and-Drop

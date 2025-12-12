@@ -4,7 +4,7 @@ export interface CardProps {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'elevated';
   interactive?: boolean;
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'responsive';
   className?: string;
   onClick?: () => void;
 }
@@ -76,6 +76,7 @@ export default function Card({
     sm: 'p-4',
     md: 'p-6',
     lg: 'p-8',
+    responsive: 'p-3 sm:p-4 lg:p-6', // Mobile-first responsive padding
   };
 
   return (
