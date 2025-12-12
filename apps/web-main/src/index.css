@@ -64,7 +64,7 @@
   --color-dark-border-accent: #C9A227;     /* 황동 악센트 */
 
   /* ============================================
-     SHADOWS (은은한 램프 조명 효과)
+     SHADOWS (주간/야간 동일)
      ============================================ */
 
   /* Light mode shadows */
@@ -73,10 +73,10 @@
   --shadow-vintage-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-amber-glow: 0 0 20px rgba(201, 162, 39, 0.15);
 
-  /* Dark mode shadows */
-  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-dark-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-dark-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  /* Dark mode shadows (주간과 동일) */
+  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-dark-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-dark-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* Dark mode variant using class strategy */
