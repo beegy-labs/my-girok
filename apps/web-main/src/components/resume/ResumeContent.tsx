@@ -183,13 +183,13 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
       )}
 
       {/* Key Achievements */}
-      {resume.keyAchievements && resume.keyAchievements.length > 0 && (
+      {resume.keyAchievements && resume.keyAchievements.filter((a: string) => a?.trim()).length > 0 && (
         <div className="mb-6 resume-section">
           <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
             ⭐ {t('resume.preview.keyAchievements')}
           </h2>
           <ul className="list-disc list-outside pl-5 space-y-2">
-            {resume.keyAchievements.map((achievement: string, index: number) => (
+            {resume.keyAchievements.filter((a: string) => a?.trim()).map((achievement: string, index: number) => (
               <li key={index} className="text-gray-700 leading-relaxed">
                 {achievement}
               </li>
@@ -273,7 +273,9 @@ function SkillsSection({ skills }: { skills: any[] }) {
           <div key={idx}>
             <h3 className="font-bold text-gray-900 mb-2">{skill.category}</h3>
             <div className="space-y-2 ml-4">
-              {Array.isArray(skill.items) && skill.items.map((item: any, itemIdx: number) => {
+              {Array.isArray(skill.items) && skill.items
+                .filter((item: any) => typeof item === 'string' ? item?.trim() : item?.name?.trim())
+                .map((item: any, itemIdx: number) => {
                 if (typeof item === 'string') {
                   return (
                     <div key={itemIdx} className="text-sm text-gray-700">
@@ -456,9 +458,9 @@ function ProjectsSection({ projects }: { projects: any[] }) {
             </span>
           </div>
           <p className="text-sm text-gray-700 mb-2">{project.description}</p>
-          {project.achievements && project.achievements.length > 0 && (
+          {project.achievements && project.achievements.filter((a: string) => a?.trim()).length > 0 && (
             <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-2">
-              {project.achievements.map((achievement: string, i: number) => (
+              {project.achievements.filter((a: string) => a?.trim()).map((achievement: string, i: number) => (
                 <li key={i}>{achievement}</li>
               ))}
             </ul>
