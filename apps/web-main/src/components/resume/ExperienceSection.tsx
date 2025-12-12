@@ -971,18 +971,18 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
   };
 
   return (
-    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-6 transition-colors duration-200">
-      <div className="flex items-center justify-between mb-3 sm:mb-6">
+    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+      <div className="flex items-center justify-between mb-3 sm:mb-6 lg:mb-8">
         <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2 transition-colors duration-200">
+          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2 transition-colors duration-200">
             💼 {t('resume.sections.experience')}
           </h2>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary mt-1 transition-colors duration-200 hidden sm:block">{t('resume.descriptions.experience')}</p>
+          <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-dark-text-secondary mt-1 transition-colors duration-200 hidden sm:block">{t('resume.descriptions.experience')}</p>
         </div>
         <button
           type="button"
           onClick={addExperience}
-          className="px-2 py-1.5 sm:px-4 sm:py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors duration-200 font-semibold text-xs sm:text-sm flex-shrink-0"
+          className="px-2 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-amber-700 dark:bg-amber-600 text-white rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors duration-200 font-semibold text-xs sm:text-sm lg:text-base flex-shrink-0"
         >
           {t('resume.experienceForm.addExperience')}
         </button>
@@ -998,7 +998,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
             items={experiences.map((exp, i) => exp.id || `exp-${i}`)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="space-y-3 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-6 lg:space-y-8">
               {experiences.map((exp, index) => (
                 <SortableExperienceCard
                   key={exp.id || `exp-${index}`}
