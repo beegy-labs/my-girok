@@ -119,7 +119,7 @@ my-girok/
 
 ## Stack
 
-- **Backend**: Node.js 22, NestJS 11, TypeScript 5.7, Prisma 6
+- **Backend**: Node.js 24, NestJS 11, TypeScript 5.9, Prisma 6
 - **Frontend**: React 19.2, Vite 7.2, Tailwind CSS 4.1
 - **Database**: PostgreSQL 16, Redis 7
 - **Testing**: Jest, Playwright

@@ -115,9 +115,9 @@ feat/* ──squash──▶ develop ──merge──▶ release ──merge─
 - Sealed Secrets for K8s
 
 ### Stack
-- **Web**: React 19.2, TypeScript 5.7, Tailwind CSS 3.4, Vite 7.2
+- **Web**: React 19.2, TypeScript 5.9, Tailwind CSS 4.1, Vite 7.2
 - **Mobile**: iOS (Swift), Android (Kotlin)
-- **Backend**: Node.js 22, NestJS 11
+- **Backend**: Node.js 24, NestJS 11
 - **Database**: PostgreSQL 16 + Prisma 6 + Redis
 - **AI**: Python 3.13, FastAPI
 - **Deploy**: Kubernetes, Kustomize
