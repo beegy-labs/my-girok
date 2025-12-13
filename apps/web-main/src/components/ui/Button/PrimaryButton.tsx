@@ -61,23 +61,23 @@ export default function PrimaryButton({
         ${fullWidth ? 'w-full' : ''}
         ${sizeClasses[size]}
         bg-gradient-to-r from-vintage-primary-dark to-vintage-primary
-        dark:from-amber-400 dark:to-amber-500
+        dark:from-vintage-primary-dark dark:to-vintage-primary
         hover:from-vintage-primary hover:to-vintage-primary-light
-        dark:hover:from-amber-300 dark:hover:to-amber-400
-        text-white dark:text-gray-900
+        dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light
+        text-white dark:text-white
         font-semibold
         rounded-lg
         transition-all
         transform hover:scale-[1.02] active:scale-[0.98]
         disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-        shadow-lg shadow-vintage-primary/30 dark:shadow-amber-500/20
+        shadow-lg shadow-vintage-primary/30 dark:shadow-vintage-primary/30
         ${className}
       `}
     >
       {loading ? (
         <span className="flex items-center justify-center">
           <svg
-            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white dark:text-gray-900"
+            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white dark:text-white"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

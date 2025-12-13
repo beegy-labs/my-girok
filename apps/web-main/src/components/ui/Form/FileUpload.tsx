@@ -73,7 +73,7 @@ export default function FileUpload({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2"
+          className="block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-2"
         >
           {label}
         </label>
@@ -110,11 +110,11 @@ export default function FileUpload({
             ${
               hasError
                 ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10'
-                : 'border-gray-300 dark:border-dark-border-subtle bg-white dark:bg-dark-bg-elevated'
+                : 'border-vintage-border-default dark:border-dark-border-subtle bg-vintage-bg-input dark:bg-dark-bg-elevated'
             }
             ${
               !disabled && !uploading
-                ? 'hover:border-amber-400 dark:hover:border-amber-500'
+                ? 'hover:border-vintage-primary dark:hover:border-vintage-primary'
                 : ''
             }
           `}
@@ -122,7 +122,7 @@ export default function FileUpload({
           {uploading ? (
             <div className="flex flex-col items-center">
               <svg
-                className="animate-spin h-8 w-8 text-amber-700 dark:text-amber-400 mb-2"
+                className="animate-spin h-8 w-8 text-vintage-primary dark:text-vintage-primary mb-2"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -141,14 +141,14 @@ export default function FileUpload({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
+              <p className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
                 Uploading...
               </p>
             </div>
           ) : (
             <div>
               <svg
-                className="mx-auto h-12 w-12 text-gray-400 dark:text-dark-text-tertiary mb-3"
+                className="mx-auto h-12 w-12 text-vintage-text-muted dark:text-dark-text-tertiary mb-3"
                 stroke="currentColor"
                 fill="none"
                 viewBox="0 0 48 48"
@@ -161,14 +161,14 @@ export default function FileUpload({
                   strokeLinejoin="round"
                 />
               </svg>
-              <p className="text-sm text-gray-600 dark:text-dark-text-secondary mb-1">
-                <span className="font-semibold text-amber-700 dark:text-amber-400">
+              <p className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary mb-1">
+                <span className="font-semibold text-vintage-primary dark:text-vintage-primary">
                   Click to upload
                 </span>{' '}
                 or drag and drop
               </p>
               {accept && (
-                <p className="text-xs text-gray-500 dark:text-dark-text-tertiary">
+                <p className="text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary">
                   {accept}
                 </p>
               )}
@@ -203,7 +203,7 @@ export default function FileUpload({
       {!hasError && hint && (
         <p
           id={`${inputId}-hint`}
-          className="mt-2 text-sm text-gray-500 dark:text-dark-text-tertiary"
+          className="mt-2 text-sm text-vintage-text-tertiary dark:text-dark-text-tertiary"
         >
           {hint}
         </p>

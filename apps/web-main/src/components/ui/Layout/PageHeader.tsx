@@ -110,8 +110,8 @@ export default function PageHeader({
   return (
     <div
       className={`
-        bg-amber-50/30 dark:bg-dark-bg-card
-        border border-amber-100 dark:border-dark-border-subtle
+        bg-vintage-bg-card dark:bg-dark-bg-card
+        border border-vintage-border-subtle dark:border-dark-border-subtle
         rounded-xl sm:rounded-2xl
         shadow-lg dark:shadow-dark-lg
         ${styles.wrapper}
@@ -123,7 +123,7 @@ export default function PageHeader({
       {backLink && (
         <Link
           to={backLink}
-          className="inline-flex items-center text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 mb-3 sm:mb-4 text-sm sm:text-base transition-colors"
+          className="inline-flex items-center text-vintage-primary dark:text-vintage-primary hover:text-vintage-primary-light dark:hover:text-vintage-primary-light mb-3 sm:mb-4 text-sm sm:text-base transition-colors"
         >
           {backText}
         </Link>
@@ -134,7 +134,7 @@ export default function PageHeader({
         <div className="flex-1 min-w-0">
           <div className={`flex items-center ${styles.gap} mb-1 sm:mb-2`}>
             {icon && <span className={styles.iconSize}>{icon}</span>}
-            <h1 className={`${styles.titleSize} text-amber-900 dark:text-dark-text-primary break-words`}>
+            <h1 className={`${styles.titleSize} text-vintage-text-primary dark:text-dark-text-primary break-words`}>
               {title}
             </h1>
           </div>
@@ -142,7 +142,7 @@ export default function PageHeader({
             <p
               className={`
                 ${styles.subtitleSize}
-                text-gray-700 dark:text-dark-text-secondary
+                text-vintage-text-secondary dark:text-dark-text-secondary
                 ${icon ? 'ml-8 sm:ml-10 lg:ml-12' : ''}
               `}
             >

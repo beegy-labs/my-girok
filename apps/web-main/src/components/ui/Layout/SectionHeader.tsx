@@ -52,7 +52,7 @@ export default function SectionHeader({
 
   return (
     <div className={`flex items-center justify-between mb-3 sm:mb-4 ${className}`}>
-      <h2 className={`${sizeClasses[size]} font-bold text-amber-900 dark:text-dark-text-primary flex items-center gap-2`}>
+      <h2 className={`${sizeClasses[size]} font-bold text-vintage-text-primary dark:text-dark-text-primary flex items-center gap-2`}>
         {icon && <span>{icon}</span>}
         {title}
       </h2>

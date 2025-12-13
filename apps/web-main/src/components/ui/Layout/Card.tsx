@@ -46,12 +46,12 @@ export default function Card({
       shadow-vintage-md dark:shadow-dark-md
       ${
         interactive
-          ? 'hover:shadow-vintage-lg dark:hover:shadow-dark-lg hover:border-vintage-border-default dark:hover:border-amber-500/30 cursor-pointer'
+          ? 'hover:shadow-vintage-lg dark:hover:shadow-dark-lg hover:border-vintage-border-default dark:hover:border-vintage-primary/30 cursor-pointer'
           : ''
       }
     `,
     secondary: `
-      bg-white dark:bg-dark-bg-card
+      bg-vintage-bg-card dark:bg-dark-bg-card
       border border-vintage-border-default dark:border-dark-border-default
       shadow-vintage-sm dark:shadow-dark-sm
       ${
@@ -61,7 +61,7 @@ export default function Card({
       }
     `,
     elevated: `
-      bg-white dark:bg-dark-bg-card
+      bg-vintage-bg-elevated dark:bg-dark-bg-card
       border border-vintage-border-subtle dark:border-dark-border-subtle
       shadow-vintage-lg dark:shadow-dark-lg
       ${

@@ -102,7 +102,7 @@ export default function CollapsibleSection({
       shadow-vintage-md dark:shadow-dark-md
     `,
     secondary: `
-      bg-white dark:bg-dark-bg-card
+      bg-vintage-bg-card dark:bg-dark-bg-card
       border border-vintage-border-default dark:border-dark-border-default
       shadow-vintage-sm dark:shadow-dark-sm
     `,

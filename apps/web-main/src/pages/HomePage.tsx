@@ -67,7 +67,7 @@ export default function HomePage() {
         type="website"
         structuredData={generateWebsiteSchema()}
       />
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+      <div className="min-h-screen bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {isAuthenticated ? (
         <div className="space-y-6 sm:space-y-8">
@@ -86,10 +86,10 @@ export default function HomePage() {
                 <Link
                   key={app.id}
                   to={app.status === 'active' ? app.route : '#'}
-                  className={`block bg-amber-50/30 dark:bg-dark-bg-card border border-amber-100 dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 transition-all ${
+                  className={`block bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-subtle dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 transition-all ${
                     app.status === 'coming-soon'
                       ? 'opacity-60 cursor-not-allowed'
-                      : 'hover:shadow-xl dark:hover:shadow-dark-lg hover:-translate-y-1 hover:border-amber-300 dark:hover:border-amber-500/30'
+                      : 'hover:shadow-xl dark:hover:shadow-dark-lg hover:-translate-y-1 hover:border-vintage-primary dark:hover:border-vintage-primary/30'
                   }`}
                   onClick={(e) => app.status === 'coming-soon' && e.preventDefault()}
                 >
@@ -98,15 +98,15 @@ export default function HomePage() {
                       {app.icon}
                     </div>
                     {app.status === 'coming-soon' && (
-                      <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 sm:px-3 py-1 rounded-full font-medium whitespace-nowrap">
+                      <span className="text-xs bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary dark:text-vintage-primary-light px-2 sm:px-3 py-1 rounded-full font-medium whitespace-nowrap">
                         {t('home.comingSoon')}
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
-                  <p className="text-gray-600 dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
+                  <p className="text-vintage-text-secondary dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
                   {app.status === 'active' && (
-                    <div className="mt-3 sm:mt-4 text-amber-700 dark:text-amber-400 font-semibold text-xs sm:text-sm flex items-center gap-1">
+                    <div className="mt-3 sm:mt-4 text-vintage-primary dark:text-vintage-primary font-semibold text-xs sm:text-sm flex items-center gap-1">
                       {t('home.recordGoTo')}
                     </div>
                   )}
@@ -117,18 +117,18 @@ export default function HomePage() {
 
           {/* Quick Links */}
           <Card variant="primary" padding="md">
-            <h2 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-3 sm:mb-4">{t('home.quickLinks')}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-3 sm:mb-4">{t('home.quickLinks')}</h2>
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <Link
                 to={`/${user?.username}`}
-                className="text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:underline font-medium text-sm sm:text-base flex items-center gap-1"
+                className="text-vintage-primary dark:text-vintage-primary hover:text-vintage-primary-light dark:hover:text-vintage-primary-light hover:underline font-medium text-sm sm:text-base flex items-center gap-1"
               >
                 <span>🔗</span>
                 {t('home.viewPublicProfile')}
               </Link>
               <Link
                 to="/settings"
-                className="text-gray-600 dark:text-dark-text-secondary hover:text-gray-700 dark:hover:text-dark-text-primary hover:underline font-medium text-sm sm:text-base flex items-center gap-1"
+                className="text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary hover:underline font-medium text-sm sm:text-base flex items-center gap-1"
               >
                 <span>⚙️</span>
                 {t('home.settings')}
@@ -144,12 +144,12 @@ export default function HomePage() {
               <div className="flex items-center justify-center mb-3 sm:mb-4">
                 <span className="text-5xl sm:text-6xl">📚</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-amber-900 dark:text-dark-text-primary mb-3 sm:mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-3 sm:mb-4">
                 My-Girok
               </h1>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-700 dark:text-dark-text-secondary mb-6 sm:mb-8">
+              <p className="text-base sm:text-lg lg:text-xl text-vintage-text-secondary dark:text-dark-text-secondary mb-6 sm:mb-8">
                 {t('home.title')}<br />
-                <span className="text-gray-600 dark:text-dark-text-tertiary text-sm sm:text-base">{t('home.allInOne')}</span>
+                <span className="text-vintage-text-tertiary dark:text-dark-text-tertiary text-sm sm:text-base">{t('home.allInOne')}</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <Link to="/register">
@@ -168,7 +168,7 @@ export default function HomePage() {
 
           {/* Features Section */}
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-amber-900 dark:text-dark-text-primary mb-4 sm:mb-6 text-center flex items-center justify-center gap-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-4 sm:mb-6 text-center flex items-center justify-center gap-2">
               <span>📖</span>
               {t('home.recordingTypes')}
             </h2>
@@ -176,10 +176,10 @@ export default function HomePage() {
               {apps.map((app) => (
                 <Card key={app.id} variant="primary" padding="md">
                   <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{app.icon}</div>
-                  <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
-                  <p className="text-gray-600 dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
+                  <h3 className="text-lg sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
+                  <p className="text-vintage-text-secondary dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
                   {app.status === 'coming-soon' && (
-                    <span className="inline-block mt-2 sm:mt-3 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 sm:px-3 py-1 rounded-full font-medium">
+                    <span className="inline-block mt-2 sm:mt-3 text-xs bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary dark:text-vintage-primary-light px-2 sm:px-3 py-1 rounded-full font-medium">
                       {t('home.comingSoon')}
                     </span>
                   )}
