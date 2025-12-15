@@ -72,7 +72,7 @@ export default function ChangePasswordPage() {
       </div>
 
       {/* Change Password Form */}
-      <Card variant="primary" padding="lg" className="shadow-xl">
+      <Card variant="primary" padding="lg" className="shadow-vintage-xl dark:shadow-dark-xl">
         {error && <Alert type="error" message={error} />}
         {success && <Alert type="success" message={success} />}
 

@@ -113,7 +113,7 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
   };
 
   return (
-    <div className="bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-subtle dark:border-dark-border-subtle rounded-2xl shadow-md p-6 transition-colors duration-200">
+    <div className="bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-subtle dark:border-dark-border-subtle rounded-2xl shadow-vintage-md dark:shadow-dark-md p-6 transition-colors duration-200">
       <div className="mb-4">
         <h2 className="text-xl font-bold text-vintage-text-accent dark:text-dark-text-accent mb-2 flex items-center gap-2">
           <span>↕️</span>
@@ -134,8 +134,8 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
         </SortableContext>
       </DndContext>
 
-      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm text-blue-800">
+      <div className="mt-4 p-4 bg-blue-900/20 dark:bg-blue-900/20 border border-blue-800 dark:border-blue-800 rounded-lg">
+        <p className="text-sm text-blue-300 dark:text-blue-300">
           💡 <strong>Tip:</strong> Sections will appear in this order in your resume preview and PDF export.
         </p>
       </div>

@@ -42,6 +42,9 @@
   --shadow-base-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
   --shadow-base-md: 0 4px 10px rgba(0, 0, 0, 0.5);
   --shadow-base-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --shadow-base-xl: 0 15px 35px rgba(0, 0, 0, 0.7);
+  --shadow-base-2xl: 0 20px 50px rgba(0, 0, 0, 0.8);
+  --shadow-base-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-base-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
 
   /* ============================================
@@ -77,6 +80,9 @@
   --shadow-vintage-sm: var(--shadow-base-sm);
   --shadow-vintage-md: var(--shadow-base-md);
   --shadow-vintage-lg: var(--shadow-base-lg);
+  --shadow-vintage-xl: var(--shadow-base-xl);
+  --shadow-vintage-2xl: var(--shadow-base-2xl);
+  --shadow-vintage-inner: var(--shadow-base-inner);
 
   /* ============================================
      DARK MODE (dark-*) - base 색상 참조
@@ -102,6 +108,9 @@
   --shadow-dark-sm: var(--shadow-base-sm);
   --shadow-dark-md: var(--shadow-base-md);
   --shadow-dark-lg: var(--shadow-base-lg);
+  --shadow-dark-xl: var(--shadow-base-xl);
+  --shadow-dark-2xl: var(--shadow-base-2xl);
+  --shadow-dark-inner: var(--shadow-base-inner);
   --shadow-amber-glow: var(--shadow-base-glow);
 }
 

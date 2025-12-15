@@ -150,7 +150,9 @@ export const shadows = {
   sm: 'shadow-vintage-sm dark:shadow-dark-sm',
   md: 'shadow-vintage-md dark:shadow-dark-md',
   lg: 'shadow-vintage-lg dark:shadow-dark-lg',
-  xl: 'shadow-vintage-lg dark:shadow-dark-lg',
+  xl: 'shadow-vintage-xl dark:shadow-dark-xl',
+  '2xl': 'shadow-vintage-2xl dark:shadow-dark-2xl',
+  inner: 'shadow-vintage-inner dark:shadow-dark-inner',
 } as const;
 
 // =============================================================================

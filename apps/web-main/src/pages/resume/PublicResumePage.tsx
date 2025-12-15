@@ -86,7 +86,7 @@ export default function PublicResumePage() {
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs sm:text-sm text-vintage-text-secondary dark:text-dark-text-secondary">@{username}</p>
                 {isOwnProfile && (
-                  <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full">
+                  <span className="px-2 py-0.5 text-xs font-semibold bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light rounded-full">
                     Your Profile
                   </span>
                 )}

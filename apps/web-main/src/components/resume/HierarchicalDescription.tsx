@@ -140,7 +140,7 @@ function HierarchicalItemComponent({
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="px-2 py-1 text-xs text-gray-600 dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200 touch-manipulation"
+                className="px-2 py-1 text-xs text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary transition-colors duration-200 touch-manipulation"
                 title={isExpanded ? "Collapse" : "Expand"}
               >
                 {isExpanded ? '▼' : '▶'}
@@ -188,7 +188,7 @@ function HierarchicalItemComponent({
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-6 h-6 flex items-center justify-center text-[10px] text-gray-600 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors duration-200 touch-manipulation"
+                  className="w-6 h-6 flex items-center justify-center text-[10px] text-vintage-text-secondary dark:text-dark-text-secondary hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover rounded transition-colors duration-200 touch-manipulation"
                 >
                   {isExpanded ? '▼' : '▶'}
                 </button>

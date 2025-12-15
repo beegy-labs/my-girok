@@ -75,7 +75,7 @@ function SortableEducationCard({
             type="button"
             {...attributes}
             {...listeners}
-            className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 dark:text-dark-text-tertiary hover:text-gray-600 dark:hover:text-dark-text-secondary transition-colors duration-200 touch-manipulation"
+            className="p-1.5 cursor-grab active:cursor-grabbing text-vintage-text-tertiary dark:text-dark-text-tertiary hover:text-vintage-text-secondary dark:hover:text-dark-text-secondary transition-colors duration-200 touch-manipulation"
             title="Drag to reorder"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +100,7 @@ function SortableEducationCard({
               )}
             </div>
             <svg
-              className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform duration-200 sm:hidden ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 sm:w-5 sm:h-5 text-vintage-text-tertiary dark:text-dark-text-tertiary transition-transform duration-200 sm:hidden ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

@@ -74,7 +74,7 @@ export default function LoginPage() {
       </div>
 
       {/* Login Form */}
-      <Card variant="primary" padding="lg" className="shadow-xl">
+      <Card variant="primary" padding="lg" className="shadow-vintage-xl dark:shadow-dark-xl">
         {error && <Alert type="error" message={error} className="mb-6" />}
 
           <form onSubmit={handleSubmit} className="space-y-6">

@@ -198,7 +198,7 @@ export default function MyResumePage() {
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           <h3 className="text-lg sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary">{resume.title}</h3>
                           {resume.isDefault && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full">
+                            <span className="px-2 py-0.5 text-xs font-semibold bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light rounded-full">
                               {t('common.default')}
                             </span>
                           )}
@@ -287,7 +287,7 @@ export default function MyResumePage() {
                                         className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                           link.isActive
                                             ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
+                                            : 'bg-vintage-bg-elevated dark:bg-dark-bg-elevated text-vintage-text-secondary dark:text-dark-text-secondary'
                                         }`}
                                       >
                                         {link.isActive ? t('common.active') : t('common.inactive')}
@@ -343,7 +343,7 @@ export default function MyResumePage() {
       {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-xl">
+          <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-vintage-xl dark:shadow-dark-xl">
             <h2 className="text-xl sm:text-2xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
             <div className="mb-6">
               <label className="block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-2">
