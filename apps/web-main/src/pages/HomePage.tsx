@@ -98,7 +98,7 @@ export default function HomePage() {
                       {app.icon}
                     </div>
                     {app.status === 'coming-soon' && (
-                      <span className="text-xs bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary dark:text-vintage-primary-light px-2 sm:px-3 py-1 rounded-full font-medium whitespace-nowrap">
+                      <span className="text-xs bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light px-2 sm:px-3 py-1 rounded-full font-medium whitespace-nowrap">
                         {t('home.comingSoon')}
                       </span>
                     )}
@@ -179,7 +179,7 @@ export default function HomePage() {
                   <h3 className="text-lg sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-2">{t(app.nameKey)}</h3>
                   <p className="text-vintage-text-secondary dark:text-dark-text-secondary text-xs sm:text-sm">{t(app.descriptionKey)}</p>
                   {app.status === 'coming-soon' && (
-                    <span className="inline-block mt-2 sm:mt-3 text-xs bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary dark:text-vintage-primary-light px-2 sm:px-3 py-1 rounded-full font-medium">
+                    <span className="inline-block mt-2 sm:mt-3 text-xs bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light px-2 sm:px-3 py-1 rounded-full font-medium">
                       {t('home.comingSoon')}
                     </span>
                   )}

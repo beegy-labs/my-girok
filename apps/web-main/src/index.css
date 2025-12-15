@@ -92,6 +92,7 @@
   --color-dark-text-secondary: var(--color-base-text-secondary);
   --color-dark-text-tertiary: var(--color-base-text-tertiary);
   --color-dark-text-disabled: var(--color-base-text-muted);
+  --color-dark-text-accent: var(--color-base-primary-dark);
 
   --color-dark-border-subtle: var(--color-base-border-subtle);
   --color-dark-border-default: var(--color-base-border-default);

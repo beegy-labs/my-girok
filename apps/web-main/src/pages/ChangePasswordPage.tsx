@@ -64,11 +64,11 @@ export default function ChangePasswordPage() {
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex items-center justify-center mb-3">
           <span className="text-2xl sm:text-3xl mr-2">🔒</span>
-          <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 dark:text-dark-text-primary">
+          <h1 className="text-2xl sm:text-3xl font-bold text-vintage-text-primary dark:text-dark-text-primary">
             {t('changePassword.title')}
           </h1>
         </div>
-        <p className="text-gray-600 dark:text-dark-text-secondary text-sm">{t('changePassword.description')}</p>
+        <p className="text-vintage-text-secondary dark:text-dark-text-secondary text-sm">{t('changePassword.description')}</p>
       </div>
 
       {/* Change Password Form */}
@@ -123,7 +123,7 @@ export default function ChangePasswordPage() {
         <div className="mt-6 text-center">
           <button
             onClick={() => navigate('/')}
-            className="text-sm text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium transition-colors"
+            className="text-sm text-vintage-primary dark:text-vintage-primary hover:text-vintage-primary-light dark:hover:text-vintage-primary-light font-medium transition-colors"
           >
             {t('changePassword.backToHome')}
           </button>

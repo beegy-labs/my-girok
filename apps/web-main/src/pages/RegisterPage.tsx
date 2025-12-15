@@ -47,16 +47,16 @@ export default function RegisterPage() {
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex items-center justify-center mb-3">
           <span className="text-2xl sm:text-3xl mr-2">📚</span>
-          <h1 className="text-3xl sm:text-4xl font-bold text-amber-900 dark:text-dark-text-primary">
+          <h1 className="text-3xl sm:text-4xl font-bold text-vintage-text-primary dark:text-dark-text-primary">
             My-Girok
           </h1>
         </div>
-        <p className="text-gray-600 dark:text-dark-text-secondary text-sm">{t('auth.createYourSpace')}</p>
+        <p className="text-vintage-text-secondary dark:text-dark-text-secondary text-sm">{t('auth.createYourSpace')}</p>
       </div>
 
       {/* Register Form */}
       <Card variant="primary" padding="lg" className="shadow-xl">
-        <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-6">{t('auth.registerTitle')}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-6">{t('auth.registerTitle')}</h2>
 
         {error && <Alert type="error" message={error} className="mb-6" />}
 
@@ -118,12 +118,12 @@ export default function RegisterPage() {
           </form>
 
           {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border-subtle">
-            <p className="text-center text-sm text-gray-600 dark:text-dark-text-secondary">
+          <div className="mt-8 pt-6 border-t border-vintage-border-subtle dark:border-dark-border-subtle">
+            <p className="text-center text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
               {t('auth.hasAccount')}{' '}
               <Link
                 to="/login"
-                className="font-semibold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors"
+                className="font-semibold text-vintage-primary dark:text-vintage-primary hover:text-vintage-primary-light dark:hover:text-vintage-primary-light transition-colors"
               >
                 {t('auth.loginHere')}
               </Link>
@@ -132,7 +132,7 @@ export default function RegisterPage() {
         </Card>
 
       {/* Footer Note */}
-      <p className="text-center text-xs text-gray-500 dark:text-dark-text-tertiary mt-6">
+      <p className="text-center text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary mt-6">
         {t('auth.termsAgreement')}
       </p>
     </PageContainer>
