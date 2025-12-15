@@ -281,7 +281,7 @@ function SortableExperienceCard({
                 value={experience.endDate || ''}
                 onChange={e => onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })}
                 disabled={experience.isCurrentlyWorking}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-vintage-bg-card dark:bg-dark-bg-elevated border border-vintage-border-default dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-vintage-primary text-vintage-text-primary dark:text-dark-text-primary disabled:bg-gray-100 dark:disabled:bg-dark-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-vintage-bg-card dark:bg-dark-bg-elevated border border-vintage-border-default dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-vintage-primary text-vintage-text-primary dark:text-dark-text-primary disabled:bg-vintage-bg-hover dark:disabled:bg-dark-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
               />
             </div>
           </div>
@@ -303,7 +303,7 @@ function SortableExperienceCard({
 
         {/* Experience Duration */}
         {experience.startDate && (
-          <div className="mb-3 p-2 sm:p-3 bg-amber-50 dark:bg-dark-bg-card border border-vintage-border-default dark:border-dark-border-default rounded-lg transition-colors duration-200">
+          <div className="mb-3 p-2 sm:p-3 bg-vintage-primary/10 dark:bg-dark-bg-card border border-vintage-border-default dark:border-dark-border-default rounded-lg transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-vintage-primary dark:text-vintage-primary-light transition-colors duration-200">
               {t('resume.experienceForm.experiencePeriod')} {(() => {
                 const duration = calculateExperienceDuration(
@@ -367,7 +367,7 @@ function SortableExperienceCard({
               type="checkbox"
               checked={experience.showSalary ?? false}
               onChange={e => onUpdate({ ...experience, showSalary: e.target.checked })}
-              className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 bg-vintage-bg-card dark:bg-dark-bg-elevated border-amber-300 dark:border-dark-border-default rounded focus:ring-amber-500 dark:focus:ring-amber-600 focus:ring-2"
+              className="w-4 h-4 sm:w-5 sm:h-5 text-vintage-primary dark:text-vintage-primary bg-vintage-bg-card dark:bg-dark-bg-elevated border-vintage-border-default dark:border-dark-border-default rounded focus:ring-vintage-primary dark:focus:ring-vintage-primary focus:ring-2"
             />
             <span className="ml-2 text-xs sm:text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
               <span className="hidden sm:inline">Show salary in preview (미리보기에 표시)</span>
@@ -494,7 +494,7 @@ function SortableProject({
           type="button"
           {...attributes}
           {...listeners}
-          className="p-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-vintage-primary dark:hover:text-vintage-primary transition-colors duration-200 flex-shrink-0 touch-manipulation"
+          className="p-1 cursor-move text-vintage-text-tertiary dark:text-dark-text-tertiary hover:text-vintage-primary dark:hover:text-vintage-primary transition-colors duration-200 flex-shrink-0 touch-manipulation"
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -774,7 +774,7 @@ function HierarchicalAchievement({
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="px-2 py-1 text-xs text-vintage-text-secondary dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary transition-colors duration-200"
+                className="px-2 py-1 text-xs text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary transition-colors duration-200"
                 title={isExpanded ? t('resume.experienceForm.collapse') : t('resume.experienceForm.expand')}
               >
                 {isExpanded ? '▼' : '▶'}
@@ -822,7 +822,7 @@ function HierarchicalAchievement({
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-6 h-6 flex items-center justify-center text-[10px] text-vintage-text-secondary dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors duration-200 touch-manipulation"
+                  className="w-6 h-6 flex items-center justify-center text-[10px] text-vintage-text-secondary dark:text-dark-text-secondary hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover rounded transition-colors duration-200 touch-manipulation"
                 >
                   {isExpanded ? '▼' : '▶'}
                 </button>
@@ -898,7 +898,7 @@ function SortableAchievement({
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-vintage-primary dark:hover:text-vintage-primary transition-colors duration-200 flex-shrink-0"
+          className="mt-1 cursor-move text-vintage-text-tertiary dark:text-dark-text-tertiary hover:text-vintage-primary dark:hover:text-vintage-primary transition-colors duration-200 flex-shrink-0"
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

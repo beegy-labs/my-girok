@@ -1393,7 +1393,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <button
           type="button"
           onClick={handleClearDraft}
-          className="hidden sm:block px-4 py-2 text-sm text-vintage-text-secondary dark:text-dark-text-secondary hover:text-gray-800 dark:hover:text-dark-text-primary underline transition-all"
+          className="hidden sm:block px-4 py-2 text-sm text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary underline transition-all"
         >
           {t('resume.form.deleteDraft')}
         </button>
@@ -1427,7 +1427,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <button
           type="button"
           onClick={handleClearDraft}
-          className="sm:hidden w-full px-4 py-2 text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary hover:text-gray-700 dark:hover:text-dark-text-secondary transition-all"
+          className="sm:hidden w-full px-4 py-2 text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary hover:text-vintage-text-secondary dark:hover:text-dark-text-secondary transition-all"
         >
           {t('resume.form.deleteDraft')}
         </button>

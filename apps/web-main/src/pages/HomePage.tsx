@@ -86,10 +86,10 @@ export default function HomePage() {
                 <Link
                   key={app.id}
                   to={app.status === 'active' ? app.route : '#'}
-                  className={`block bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-subtle dark:border-dark-border-subtle rounded-2xl shadow-md dark:shadow-dark-md p-4 sm:p-6 transition-all ${
+                  className={`block bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-subtle dark:border-dark-border-subtle rounded-2xl shadow-vintage-md dark:shadow-dark-md p-4 sm:p-6 transition-all ${
                     app.status === 'coming-soon'
                       ? 'opacity-60 cursor-not-allowed'
-                      : 'hover:shadow-xl dark:hover:shadow-dark-lg hover:-translate-y-1 hover:border-vintage-primary dark:hover:border-vintage-primary/30'
+                      : 'hover:shadow-vintage-xl dark:hover:shadow-dark-xl hover:-translate-y-1 hover:border-vintage-primary dark:hover:border-vintage-primary/30'
                   }`}
                   onClick={(e) => app.status === 'coming-soon' && e.preventDefault()}
                 >
@@ -139,7 +139,7 @@ export default function HomePage() {
       ) : (
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
           {/* Hero Section */}
-          <Card variant="primary" padding="lg" className="shadow-xl text-center">
+          <Card variant="primary" padding="lg" className="shadow-vintage-xl dark:shadow-dark-xl text-center">
             <div className="p-2 sm:p-4">
               <div className="flex items-center justify-center mb-3 sm:mb-4">
                 <span className="text-5xl sm:text-6xl">📚</span>

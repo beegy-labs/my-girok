@@ -80,7 +80,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-colors duration-200">
-      <div className="bg-vintage-bg-card dark:bg-dark-bg-elevated rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col transition-colors duration-200">
+      <div className="bg-vintage-bg-card dark:bg-dark-bg-elevated rounded-2xl shadow-vintage-2xl dark:shadow-dark-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col transition-colors duration-200">
         {/* Header */}
         <div className="bg-gradient-to-r from-vintage-primary-dark to-vintage-primary p-6 transition-colors duration-200">
           <div className="flex justify-between items-center">
@@ -88,7 +88,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                 🔗 Share Resume
               </h2>
-              <p className="text-amber-50 text-sm mt-1">
+              <p className="text-white/80 dark:text-white/80 text-sm mt-1">
                 Create shareable links with custom expiration dates
               </p>
             </div>
@@ -149,7 +149,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-vintage-primary-dark to-vintage-primary dark:from-amber-600 dark:to-amber-500 hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-500 dark:hover:to-amber-600 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-700/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-vintage-primary-dark to-vintage-primary dark:from-vintage-primary-dark dark:to-vintage-primary hover:from-vintage-primary hover:to-vintage-primary-light dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light text-white dark:text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-vintage-lg dark:shadow-dark-lg shadow-vintage-primary/30 dark:shadow-vintage-primary/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {creating ? '⏳ Creating...' : '➕ Create Link'}
               </button>
@@ -163,7 +163,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
             </h3>
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-700 mx-auto"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-vintage-primary dark:border-vintage-primary mx-auto"></div>
                 <p className="mt-3 text-vintage-text-secondary dark:text-dark-text-secondary">Loading share links...</p>
               </div>
             ) : shareLinks.length === 0 ? (
@@ -179,7 +179,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                     key={link.id}
                     className={`border rounded-xl p-4 transition-all transition-colors duration-200 ${
                       link.isActive
-                        ? 'border-vintage-border-default dark:border-dark-border-default bg-amber-50/30 dark:bg-dark-bg-card'
+                        ? 'border-vintage-border-default dark:border-dark-border-default bg-vintage-primary/10 dark:bg-dark-bg-card'
                         : 'border-vintage-border-subtle dark:border-dark-border-subtle bg-vintage-bg-hover dark:bg-dark-bg-secondary'
                     }`}
                   >
@@ -224,8 +224,8 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                         onClick={() => handleCopy(link.shareUrl, link.id)}
                         className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all transition-colors duration-200 ${
                           copySuccess === link.id
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                            : 'bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary dark:text-vintage-primary hover:bg-vintage-primary/30 dark:hover:bg-vintage-primary/30'
                         }`}
                       >
                         {copySuccess === link.id ? '✓ Copied!' : '📋 Copy Link'}

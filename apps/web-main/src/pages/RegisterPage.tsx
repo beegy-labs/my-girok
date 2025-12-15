@@ -55,7 +55,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Register Form */}
-      <Card variant="primary" padding="lg" className="shadow-xl">
+      <Card variant="primary" padding="lg" className="shadow-vintage-xl dark:shadow-dark-xl">
         <h2 className="text-xl sm:text-2xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-6">{t('auth.registerTitle')}</h2>
 
         {error && <Alert type="error" message={error} className="mb-6" />}

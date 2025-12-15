@@ -66,7 +66,7 @@ export default function Card({
       shadow-vintage-lg dark:shadow-dark-lg
       ${
         interactive
-          ? 'hover:shadow-xl dark:hover:shadow-dark-xl hover:border-vintage-border-default dark:hover:border-dark-border-default cursor-pointer'
+          ? 'hover:shadow-vintage-xl dark:hover:shadow-dark-xl hover:border-vintage-border-default dark:hover:border-dark-border-default cursor-pointer'
           : ''
       }
     `,

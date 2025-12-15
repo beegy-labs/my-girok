@@ -245,7 +245,7 @@ export default function ResumePreview({
               {viewMode === 'continuous' ? (
                 // Show all pages
                 Array.from(new Array(numPages), (_, index) => (
-                  <div key={`page_${index + 1}`} className="mb-4 shadow-lg">
+                  <div key={`page_${index + 1}`} className="mb-4 shadow-vintage-lg dark:shadow-dark-lg">
                     <Page
                       pageNumber={index + 1}
                       width={displayWidth}
@@ -258,7 +258,7 @@ export default function ResumePreview({
                 ))
               ) : (
                 // Show single page
-                <div className="shadow-lg">
+                <div className="shadow-vintage-lg dark:shadow-dark-lg">
                   <Page
                     pageNumber={currentPage}
                     width={displayWidth}

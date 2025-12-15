@@ -113,7 +113,7 @@ export default function PageHeader({
         bg-vintage-bg-card dark:bg-dark-bg-card
         border border-vintage-border-subtle dark:border-dark-border-subtle
         rounded-xl sm:rounded-2xl
-        shadow-lg dark:shadow-dark-lg
+        shadow-vintage-lg dark:shadow-dark-lg
         ${styles.wrapper}
         transition-colors duration-200
         ${className}
