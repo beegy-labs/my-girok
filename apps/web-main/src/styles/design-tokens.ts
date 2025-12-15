@@ -117,7 +117,7 @@ export const colors = {
     secondary: 'text-vintage-text-secondary dark:text-dark-text-secondary',
     tertiary: 'text-vintage-text-tertiary dark:text-dark-text-tertiary',
     muted: 'text-vintage-text-muted dark:text-dark-text-disabled',
-    accent: 'text-vintage-text-accent dark:text-dark-border-accent',
+    accent: 'text-vintage-text-accent dark:text-dark-text-accent',
     link: 'text-vintage-primary dark:text-vintage-primary',
     linkHover: 'hover:text-vintage-primary-light dark:hover:text-vintage-primary-light',
   },

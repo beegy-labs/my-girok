@@ -109,17 +109,17 @@ function HierarchicalItemComponent({
           marginLeft: `${(depth - 1) * 0.75}rem`,
         }}>
           <div className="flex items-center gap-1 min-w-[50px] flex-shrink-0">
-            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-sm select-none">
+            <span className="text-vintage-text-secondary dark:text-dark-text-secondary font-bold text-sm select-none">
               {getBulletSymbol(depth)}
             </span>
-            <span className="text-xs text-gray-500 dark:text-dark-text-tertiary">({depth})</span>
+            <span className="text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary">({depth})</span>
           </div>
 
           <input
             type="text"
             value={item.content}
             onChange={e => onUpdate({ ...item, content: e.target.value })}
-            className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
+            className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-vintage-text-primary dark:text-dark-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder="설명을 입력하세요..."
           />
@@ -161,14 +161,14 @@ function HierarchicalItemComponent({
         {/* Mobile: compact layout with inline action buttons */}
         <div className="sm:hidden">
           <div className="flex items-center gap-1.5">
-            <span className="text-gray-600 dark:text-dark-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
+            <span className="text-vintage-text-secondary dark:text-dark-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
               {getBulletSymbol(depth)}
             </span>
             <input
               type="text"
               value={item.content}
               onChange={e => onUpdate({ ...item, content: e.target.value })}
-              className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-gray-900 dark:text-dark-text-primary min-w-0 transition-colors duration-200"
+              className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-vintage-text-primary dark:text-dark-text-primary min-w-0 transition-colors duration-200"
               placeholder="설명 입력..."
             />
             {/* Inline action buttons for mobile */}
@@ -259,12 +259,12 @@ function SortableHierarchicalItem({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-1 sm:space-y-2">
-      <div className="flex items-start gap-1.5 sm:gap-2 bg-white dark:bg-dark-bg-elevated rounded-lg p-1.5 sm:p-2 border border-amber-200 dark:border-dark-border-default transition-colors duration-200">
+      <div className="flex items-start gap-1.5 sm:gap-2 bg-vintage-bg-card dark:bg-dark-bg-elevated rounded-lg p-1.5 sm:p-2 border border-vintage-border-subtle dark:border-dark-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-0.5 sm:mt-1 p-1 cursor-move text-gray-400 dark:text-dark-text-tertiary hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200 flex-shrink-0 touch-manipulation"
+          className="mt-0.5 sm:mt-1 p-1 cursor-move text-vintage-text-tertiary dark:text-dark-text-tertiary hover:text-vintage-primary dark:hover:text-vintage-primary-light transition-colors duration-200 flex-shrink-0 touch-manipulation"
           title="Drag to reorder"
         >
           <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,16 +339,16 @@ export default function HierarchicalDescription({
   };
 
   return (
-    <div className="border-t border-amber-200 dark:border-dark-border-default pt-4 transition-colors duration-200">
+    <div className="border-t border-vintage-border-subtle dark:border-dark-border-default pt-4 transition-colors duration-200">
       <div className="flex items-center justify-between mb-3">
-        <label className="text-sm font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+        <label className="text-sm font-bold text-vintage-text-accent dark:text-dark-text-accent flex items-center gap-2">
           ⭐ {label}
-          <span className="text-xs text-gray-500 dark:text-dark-text-tertiary font-normal">(최대 {maxDepth}단계)</span>
+          <span className="text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary font-normal">(최대 {maxDepth}단계)</span>
         </label>
         <button
           type="button"
           onClick={addItem}
-          className="px-2 py-1 bg-amber-600 dark:bg-amber-500 text-white text-xs rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-all transition-colors duration-200"
+          className="px-2 py-1 bg-vintage-primary dark:bg-vintage-primary text-white text-xs rounded-lg hover:bg-vintage-primary-light dark:hover:bg-vintage-primary-light transition-all transition-colors duration-200"
         >
           + 추가
         </button>
@@ -391,7 +391,7 @@ export default function HierarchicalDescription({
           </SortableContext>
         </DndContext>
       ) : (
-        <p className="text-xs text-gray-500 dark:text-dark-text-tertiary italic">{placeholder}</p>
+        <p className="text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary italic">{placeholder}</p>
       )}
     </div>
   );

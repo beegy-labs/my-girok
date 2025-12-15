@@ -56,7 +56,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             <span className="text-xl sm:text-2xl">📚</span>
-            <span className="text-lg sm:text-2xl font-bold text-vintage-text-accent dark:text-dark-text-primary">My-Girok</span>
+            <span className="text-lg sm:text-2xl font-bold text-vintage-text-accent dark:text-dark-text-accent">My-Girok</span>
           </Link>
 
           {/* Right side menu */}
@@ -65,7 +65,7 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
-              className="p-2 rounded-lg hover:bg-vintage-bg-card dark:hover:bg-dark-bg-hover transition-colors"
+              className="p-2 rounded-lg hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover transition-colors"
               title={effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {effectiveTheme === 'dark' ? (
@@ -111,18 +111,18 @@ export default function Navbar() {
                   className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-vintage-bg-card dark:hover:bg-dark-bg-hover transition-colors"
                 >
                   <div className="text-right">
-                    <p className="text-xs sm:text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-primary">
+                    <p className="text-xs sm:text-sm font-semibold text-vintage-text-primary dark:text-dark-text-primary">
                       {user?.name || user?.email}
                     </p>
                     {/* Only show role for ADMIN */}
                     {user?.role === 'ADMIN' && (
-                      <p className="text-xs text-vintage-accent dark:text-vintage-primary font-medium">
+                      <p className="text-xs text-vintage-primary dark:text-vintage-primary font-medium">
                         {user.role}
                       </p>
                     )}
                   </div>
                   <svg
-                    className={`w-4 h-4 text-vintage-text-tertiary dark:text-dark-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 text-vintage-text-secondary dark:text-dark-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -147,7 +147,7 @@ export default function Navbar() {
                         setIsDropdownOpen(false);
                         handleLogout();
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 dark:text-red-400 hover:bg-red-900/20 dark:hover:bg-red-900/20 transition-colors"
                     >
                       {t('nav.logout')}
                     </button>

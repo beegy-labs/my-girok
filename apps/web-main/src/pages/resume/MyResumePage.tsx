@@ -172,8 +172,8 @@ export default function MyResumePage() {
         {resumes.length === 0 ? (
           <Card variant="primary" padding="lg" className="text-center">
             <div className="text-5xl sm:text-6xl mb-4">📝</div>
-            <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary mb-2">{t('resume.list.noResumes')}</h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-dark-text-secondary mb-4">{t('resume.list.createFirst')}</p>
+            <h3 className="text-lg sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-2">{t('resume.list.noResumes')}</h3>
+            <p className="text-sm sm:text-base text-vintage-text-secondary dark:text-dark-text-secondary mb-4">{t('resume.list.createFirst')}</p>
             <PrimaryButton onClick={navigateToEdit}>
               {t('resume.list.createNew')}
             </PrimaryButton>
@@ -196,7 +196,7 @@ export default function MyResumePage() {
                     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <h3 className="text-lg sm:text-xl font-bold text-amber-900 dark:text-dark-text-primary">{resume.title}</h3>
+                          <h3 className="text-lg sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary">{resume.title}</h3>
                           {resume.isDefault && (
                             <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full">
                               {t('common.default')}
@@ -209,9 +209,9 @@ export default function MyResumePage() {
                           )}
                         </div>
                         {resume.description?.trim() && (
-                          <p className="text-gray-600 dark:text-dark-text-secondary text-sm mb-3">{resume.description}</p>
+                          <p className="text-vintage-text-secondary dark:text-dark-text-secondary text-sm mb-3">{resume.description}</p>
                         )}
-                        <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-dark-text-tertiary">
+                        <div className="flex flex-col gap-1 text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary">
                           <span>
                             {t('resume.lastModified')}: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
                           </span>
@@ -256,10 +256,10 @@ export default function MyResumePage() {
 
                     {/* Share Links for this resume */}
                     {hasActiveShare && (
-                      <div className="border-t border-amber-200 dark:border-dark-border-subtle bg-amber-50/50 dark:bg-dark-bg-elevated/50">
+                      <div className="border-t border-vintage-border-subtle dark:border-dark-border-subtle bg-vintage-bg-elevated/50 dark:bg-dark-bg-elevated/50">
                         <button
                           onClick={() => toggleShareLinks(resume.id)}
-                          className="w-full px-4 sm:px-6 py-3 flex items-center justify-between text-sm font-semibold text-amber-900 dark:text-dark-text-primary hover:bg-amber-100/50 dark:hover:bg-dark-bg-hover/50 transition-all"
+                          className="w-full px-4 sm:px-6 py-3 flex items-center justify-between text-sm font-semibold text-vintage-text-primary dark:text-dark-text-primary hover:bg-vintage-bg-hover/50 dark:hover:bg-dark-bg-hover/50 transition-all"
                         >
                           <span className="flex items-center gap-2">
                             <span>🔗</span>
@@ -275,12 +275,12 @@ export default function MyResumePage() {
                             {activeShares.map((link) => (
                               <div
                                 key={link.id}
-                                className="bg-white dark:bg-dark-bg-primary border border-amber-200 dark:border-dark-border-default rounded-lg p-3 sm:p-4 transition-colors duration-200"
+                                className="bg-vintage-bg-card dark:bg-dark-bg-primary border border-vintage-border-subtle dark:border-dark-border-default rounded-lg p-3 sm:p-4 transition-colors duration-200"
                               >
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-xs font-semibold text-gray-700 dark:text-dark-text-secondary">
+                                      <span className="text-xs font-semibold text-vintage-text-secondary dark:text-dark-text-secondary">
                                         {t('resume.shareLink')}
                                       </span>
                                       <span
@@ -298,7 +298,7 @@ export default function MyResumePage() {
                                         type="text"
                                         value={link.shareUrl}
                                         readOnly
-                                        className="flex-1 text-xs sm:text-sm text-gray-700 dark:text-dark-text-primary font-mono bg-gray-50 dark:bg-dark-bg-secondary px-2 sm:px-3 py-1.5 rounded border border-gray-200 dark:border-dark-border-default focus:outline-none"
+                                        className="flex-1 text-xs sm:text-sm text-vintage-text-primary dark:text-dark-text-primary font-mono bg-vintage-bg-secondary dark:bg-dark-bg-secondary px-2 sm:px-3 py-1.5 rounded border border-vintage-border-subtle dark:border-dark-border-default focus:outline-none"
                                       />
                                       <SecondaryButton
                                         onClick={() => copyToClipboard(link.shareUrl, link.id)}
@@ -309,7 +309,7 @@ export default function MyResumePage() {
                                     </div>
                                   </div>
                                 </div>
-                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-dark-text-tertiary">
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary">
                                   <div className="flex flex-wrap gap-3">
                                     <span>{t('resume.viewCount')}: {link.viewCount}</span>
                                     {link.expiresAt ? (
@@ -344,15 +344,15 @@ export default function MyResumePage() {
       {showShareModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
           <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-xl">
-            <h2 className="text-xl sm:text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2">
+              <label className="block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-2">
                 {t('resume.shareDuration')}
               </label>
               <select
                 value={shareDuration}
                 onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-dark-bg-secondary border border-amber-200 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-sm sm:text-base text-gray-900 dark:text-dark-text-primary"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-vintage-bg-input dark:bg-dark-bg-secondary border border-vintage-border-default dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-vintage-primary focus:border-transparent transition-all text-sm sm:text-base text-vintage-text-primary dark:text-dark-text-primary"
               >
                 <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
                 <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>

@@ -189,7 +189,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                           className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors duration-200 ${
                             link.isActive
                               ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-200 dark:bg-dark-bg-secondary text-vintage-text-secondary dark:text-dark-text-secondary'
+                              : 'bg-vintage-bg-elevated dark:bg-dark-bg-secondary text-vintage-text-secondary dark:text-dark-text-secondary'
                           }`}
                         >
                           {link.isActive ? '✓ Active' : '⏸ Inactive'}
@@ -232,7 +232,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                       </button>
                       <button
                         onClick={() => handleToggle(link.id, link.isActive)}
-                        className="px-4 py-2 text-sm font-semibold bg-gray-100 dark:bg-dark-bg-secondary text-vintage-text-secondary dark:text-dark-text-secondary rounded-lg hover:bg-gray-200 dark:hover:bg-dark-bg-hover transition-all transition-colors duration-200"
+                        className="px-4 py-2 text-sm font-semibold bg-vintage-bg-elevated dark:bg-dark-bg-secondary text-vintage-text-secondary dark:text-dark-text-secondary rounded-lg hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover transition-all transition-colors duration-200"
                       >
                         {link.isActive ? '⏸ Deactivate' : '▶️ Activate'}
                       </button>
