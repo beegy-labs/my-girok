@@ -61,7 +61,7 @@ export default function ResumeList() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-gray-600">{t('resume.list.loading')}</div>
+        <div className="text-vintage-text-secondary dark:text-dark-text-secondary">{t('resume.list.loading')}</div>
       </div>
     );
   }
@@ -77,10 +77,10 @@ export default function ResumeList() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-amber-900">{t('resume.list.title')}</h1>
+        <h1 className="text-3xl font-bold text-vintage-text-primary dark:text-dark-text-primary">{t('resume.list.title')}</h1>
         <Link
           to="/resume/new"
-          className="px-4 py-2 bg-gradient-to-r from-amber-700 to-amber-600 text-white rounded-lg hover:from-amber-800 hover:to-amber-700 transition"
+          className="px-4 py-2 bg-gradient-to-r from-vintage-primary-dark to-vintage-primary dark:from-vintage-primary-dark dark:to-vintage-primary text-white dark:text-white rounded-lg hover:from-vintage-primary hover:to-vintage-primary-light dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light transition"
         >
           {t('resume.list.createNew')}
         </Link>
@@ -88,10 +88,10 @@ export default function ResumeList() {
 
       {resumes.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 mb-4">{t('resume.list.noResumes')}</p>
+          <p className="text-vintage-text-secondary dark:text-dark-text-secondary mb-4">{t('resume.list.noResumes')}</p>
           <Link
             to="/resume/new"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600 text-white rounded-lg hover:from-amber-800 hover:to-amber-700 transition"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-vintage-primary-dark to-vintage-primary dark:from-vintage-primary-dark dark:to-vintage-primary text-white dark:text-white rounded-lg hover:from-vintage-primary hover:to-vintage-primary-light dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light transition"
           >
             {t('resume.list.createFirst')}
           </Link>
@@ -101,27 +101,27 @@ export default function ResumeList() {
           {resumes.map((resume) => (
             <div
               key={resume.id}
-              className="bg-white border border-amber-200 rounded-lg p-6 hover:shadow-lg transition"
+              className="bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-default dark:border-dark-border-default rounded-lg p-6 hover:shadow-vintage-lg dark:hover:shadow-dark-lg transition"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-xl font-semibold text-amber-900">
+                    <h2 className="text-xl font-semibold text-vintage-text-primary dark:text-dark-text-primary">
                       {resume.title}
                     </h2>
                     {resume.isDefault && (
-                      <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+                      <span className="px-2 py-1 text-xs font-medium bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light rounded">
                         {t('resume.list.defaultBadge')}
                       </span>
                     )}
                   </div>
                   {resume.description?.trim() && (
-                    <p className="text-gray-600 mb-2">{resume.description}</p>
+                    <p className="text-vintage-text-secondary dark:text-dark-text-secondary mb-2">{resume.description}</p>
                   )}
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-vintage-text-tertiary dark:text-dark-text-tertiary">
                     {resume.name} · {resume.email}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-vintage-text-muted dark:text-dark-text-disabled mt-1">
                     {t('resume.list.updatedAt')}: {new Date(resume.updatedAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -129,26 +129,26 @@ export default function ResumeList() {
                 <div className="flex gap-2">
                   <Link
                     to={`/resume/edit/${resume.id}`}
-                    className="px-4 py-2 text-sm bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition"
+                    className="px-4 py-2 text-sm bg-vintage-primary/10 dark:bg-vintage-primary/10 text-vintage-primary dark:text-vintage-primary rounded hover:bg-vintage-primary/20 dark:hover:bg-vintage-primary/20 transition"
                   >
                     {t('resume.list.edit')}
                   </Link>
                   <Link
                     to={`/resume/preview/${resume.id}`}
-                    className="px-4 py-2 text-sm bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition"
+                    className="px-4 py-2 text-sm bg-vintage-primary/10 dark:bg-vintage-primary/10 text-vintage-primary dark:text-vintage-primary rounded hover:bg-vintage-primary/20 dark:hover:bg-vintage-primary/20 transition"
                   >
                     {t('resume.list.preview')}
                   </Link>
                   <button
                     onClick={() => handleCopy(resume.id, resume.title)}
-                    className="px-4 py-2 text-sm bg-amber-50 text-amber-700 rounded hover:bg-amber-100 transition"
+                    className="px-4 py-2 text-sm bg-vintage-primary/10 dark:bg-vintage-primary/10 text-vintage-primary dark:text-vintage-primary rounded hover:bg-vintage-primary/20 dark:hover:bg-vintage-primary/20 transition"
                   >
                     {t('resume.list.copy')}
                   </button>
                   {!resume.isDefault && (
                     <button
                       onClick={() => handleSetDefault(resume.id)}
-                      className="px-4 py-2 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition"
+                      className="px-4 py-2 text-sm bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light rounded hover:bg-vintage-primary/30 dark:hover:bg-vintage-primary/30 transition"
                     >
                       {t('resume.list.setDefault')}
                     </button>
@@ -162,7 +162,7 @@ export default function ResumeList() {
                 </div>
               </div>
 
-              <div className="flex gap-6 text-sm text-gray-600">
+              <div className="flex gap-6 text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
                 <div>{t('resume.list.stats.skills')}: {resume.skills.length}</div>
                 <div>{t('resume.list.stats.experiences')}: {resume.experiences.length}</div>
                 <div>{t('resume.list.stats.projects')}: {resume.projects.length}</div>

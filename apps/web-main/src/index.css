@@ -1,8 +1,94 @@
 @import "tailwindcss";
 
-/* Tailwind CSS v4 theme configuration (migrated from tailwind.config.js) */
+/* Tailwind CSS v4 theme configuration */
+/* Theme: "Wood Library" - 원목 도서관 */
 @theme {
-  /* Dark mode custom colors (Moonlit Library theme) */
+  /* ============================================
+     BASE COLOR PALETTE - 통합 색상 관리
+     모든 색상은 여기서 한 번만 정의
+     다크모드 기준 디자인
+     ============================================ */
+
+  /* Background colors */
+  --color-base-bg-page: #1A1612;        /* 어두운 원목 */
+  --color-base-bg-secondary: #231E18;   /* 중간 원목 */
+  --color-base-bg-card: #2D261E;        /* 카드 배경 */
+  --color-base-bg-elevated: #3A3128;    /* 돌출 영역 */
+  --color-base-bg-hover: #453A2F;       /* 호버 */
+
+  /* Text colors */
+  --color-base-text-primary: #EDE8E0;   /* 오래된 종이색 */
+  --color-base-text-secondary: #C4BAA8; /* 중간 톤 */
+  --color-base-text-tertiary: #9A8E7A;  /* 연한 톤 */
+  --color-base-text-muted: #6B6055;     /* 비활성 */
+
+  /* Border colors */
+  --color-base-border-subtle: #3D342A;  /* 연한 나무결 */
+  --color-base-border-default: #554839; /* 중간 나무결 */
+  --color-base-border-strong: #6E5D4A;  /* 진한 나무결 */
+
+  /* Primary colors (호박색 계열) */
+  --color-base-primary-dark: #8B5A2B;   /* 진한 호박색 */
+  --color-base-primary: #A0522D;        /* 시에나 */
+  --color-base-primary-light: #B8763A;  /* 밝은 호박 */
+
+  /* Accent colors (버건디 계열) */
+  --color-base-accent-dark: #6B2D2D;    /* 딥 버건디 */
+  --color-base-accent: #8B4343;         /* 버건디 */
+  --color-base-accent-light: #A85858;   /* 라이트 버건디 */
+  --color-base-accent-pale: #C27070;    /* 페일 버건디 */
+
+  /* Shadow values */
+  --shadow-base-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-base-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --shadow-base-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --shadow-base-xl: 0 15px 35px rgba(0, 0, 0, 0.7);
+  --shadow-base-2xl: 0 20px 50px rgba(0, 0, 0, 0.8);
+  --shadow-base-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-base-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
+
+  /* ============================================
+     LIGHT MODE (vintage-*) - base 색상 참조
+     ============================================ */
+
+  --color-vintage-bg-page: var(--color-base-bg-page);
+  --color-vintage-bg-secondary: var(--color-base-bg-secondary);
+  --color-vintage-bg-card: var(--color-base-bg-card);
+  --color-vintage-bg-elevated: var(--color-base-bg-elevated);
+  --color-vintage-bg-input: var(--color-base-bg-secondary);
+  --color-vintage-bg-hover: var(--color-base-bg-hover);
+
+  --color-vintage-text-primary: var(--color-base-text-primary);
+  --color-vintage-text-secondary: var(--color-base-text-secondary);
+  --color-vintage-text-tertiary: var(--color-base-text-tertiary);
+  --color-vintage-text-muted: var(--color-base-text-muted);
+  --color-vintage-text-accent: var(--color-base-primary-dark);
+
+  --color-vintage-border-subtle: var(--color-base-border-subtle);
+  --color-vintage-border-default: var(--color-base-border-default);
+  --color-vintage-border-strong: var(--color-base-border-strong);
+
+  --color-vintage-primary-dark: var(--color-base-primary-dark);
+  --color-vintage-primary: var(--color-base-primary);
+  --color-vintage-primary-light: var(--color-base-primary-light);
+
+  --color-vintage-accent-dark: var(--color-base-accent-dark);
+  --color-vintage-accent: var(--color-base-accent);
+  --color-vintage-accent-light: var(--color-base-accent-light);
+  --color-vintage-accent-pale: var(--color-base-accent-pale);
+
+  --shadow-vintage-sm: var(--shadow-base-sm);
+  --shadow-vintage-md: var(--shadow-base-md);
+  --shadow-vintage-lg: var(--shadow-base-lg);
+  --shadow-vintage-xl: var(--shadow-base-xl);
+  --shadow-vintage-2xl: var(--shadow-base-2xl);
+  --shadow-vintage-inner: var(--shadow-base-inner);
+
+  /* ============================================
+     DARK MODE (dark-*) - Moonlit Library Theme (흑색 계열)
+     PR #214 원본 값
+     ============================================ */
+
   --color-dark-bg-primary: #0F1419;
   --color-dark-bg-secondary: #1A1D23;
   --color-dark-bg-card: #242830;
@@ -13,16 +99,19 @@
   --color-dark-text-secondary: #B8B5B2;
   --color-dark-text-tertiary: #8B8885;
   --color-dark-text-disabled: #5A5856;
+  --color-dark-text-accent: #78350F;
 
   --color-dark-border-subtle: #3A3D45;
   --color-dark-border-default: #52575F;
   --color-dark-border-strong: #6B7078;
   --color-dark-border-accent: #78350F;
 
-  /* Dark mode shadows */
   --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-dark-md: 0 4px 8px rgba(0, 0, 0, 0.4);
   --shadow-dark-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
+  --shadow-dark-xl: 0 15px 30px rgba(0, 0, 0, 0.6);
+  --shadow-dark-2xl: 0 20px 40px rgba(0, 0, 0, 0.7);
+  --shadow-dark-inner: inset 0 2px 4px rgba(0, 0, 0, 0.2);
   --shadow-amber-glow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 

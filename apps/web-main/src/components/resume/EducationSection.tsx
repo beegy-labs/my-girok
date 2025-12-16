@@ -65,17 +65,17 @@ function SortableEducationCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-gray-200 dark:border-dark-border-subtle rounded-xl overflow-hidden bg-white dark:bg-dark-bg-elevated transition-colors duration-200"
+      className="border border-vintage-border-subtle dark:border-dark-border-subtle rounded-xl overflow-hidden bg-vintage-bg-card dark:bg-dark-bg-elevated transition-colors duration-200"
     >
       {/* Mobile-optimized Header */}
-      <div className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/50 dark:to-dark-bg-elevated p-2 sm:p-4">
+      <div className="bg-gradient-to-r from-vintage-bg-hover to-vintage-bg-card dark:from-dark-bg-secondary dark:to-dark-bg-elevated p-2 sm:p-4">
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Drag Handle */}
           <button
             type="button"
             {...attributes}
             {...listeners}
-            className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 dark:text-dark-text-tertiary hover:text-gray-600 dark:hover:text-dark-text-secondary transition-colors duration-200 touch-manipulation"
+            className="p-1.5 cursor-grab active:cursor-grabbing text-vintage-text-tertiary dark:text-dark-text-tertiary hover:text-vintage-text-secondary dark:hover:text-dark-text-secondary transition-colors duration-200 touch-manipulation"
             title="Drag to reorder"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,17 +90,17 @@ function SortableEducationCard({
             className="flex-1 flex items-center gap-2 text-left min-w-0 sm:cursor-default"
           >
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-dark-text-primary transition-colors duration-200 truncate">
+              <h3 className="text-sm sm:text-lg font-semibold text-vintage-text-primary dark:text-dark-text-primary transition-colors duration-200 truncate">
                 🎓 {education.school || 'Education'} #{index + 1}
               </h3>
               {!isExpanded && education.major && (
-                <p className="text-xs text-gray-500 dark:text-dark-text-tertiary truncate sm:hidden">
+                <p className="text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary truncate sm:hidden">
                   {education.major} • {education.startDate}
                 </p>
               )}
             </div>
             <svg
-              className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform duration-200 sm:hidden ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 sm:w-5 sm:h-5 text-vintage-text-tertiary dark:text-dark-text-tertiary transition-transform duration-200 sm:hidden ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -187,7 +187,7 @@ function SortableEducationCard({
         {/* Dates - side by side */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <div>
-            <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+            <label className="block text-xs sm:text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
               <span className="hidden sm:inline">Start Date</span>
               <span className="sm:hidden">시작일</span>
               <span className="text-red-500 ml-0.5">*</span>
@@ -196,12 +196,12 @@ function SortableEducationCard({
               type="month"
               value={education.startDate}
               onChange={e => onUpdate({ ...education, startDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-vintage-bg-card dark:bg-dark-bg-elevated border border-vintage-border-default dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-vintage-primary focus:border-transparent transition-all text-vintage-text-primary dark:text-dark-text-primary"
             />
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+            <label className="block text-xs sm:text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
               <span className="hidden sm:inline">End Date</span>
               <span className="sm:hidden">종료일</span>
             </label>
@@ -209,7 +209,7 @@ function SortableEducationCard({
               type="month"
               value={education.endDate || ''}
               onChange={e => onUpdate({ ...education, endDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-white dark:bg-dark-bg-elevated border border-gray-300 dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all text-gray-900 dark:text-dark-text-primary"
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-vintage-bg-card dark:bg-dark-bg-elevated border border-vintage-border-default dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-vintage-primary focus:border-transparent transition-all text-vintage-text-primary dark:text-dark-text-primary"
             />
           </div>
         </div>
@@ -269,11 +269,11 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   };
 
   return (
-    <div className="bg-white dark:bg-dark-bg-elevated border border-gray-200 dark:border-dark-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+    <div className="bg-vintage-bg-card dark:bg-dark-bg-elevated border border-vintage-border-subtle dark:border-dark-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 lg:mb-6">
         <div className="min-w-0">
-          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-dark-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
-          <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-dark-text-secondary transition-colors duration-200 hidden sm:block">{t('resume.descriptions.education')}</p>
+          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-vintage-text-primary dark:text-dark-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
+          <p className="text-xs sm:text-sm lg:text-base text-vintage-text-secondary dark:text-dark-text-secondary transition-colors duration-200 hidden sm:block">{t('resume.descriptions.education')}</p>
         </div>
         <PrimaryButton onClick={handleAdd} className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation">
           + <span className="hidden sm:inline">Add Education</span><span className="sm:hidden">추가</span>
@@ -298,7 +298,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-dark-text-tertiary transition-colors duration-200 text-xs sm:text-base">
+        <div className="text-center py-6 sm:py-8 text-vintage-text-tertiary dark:text-dark-text-tertiary transition-colors duration-200 text-xs sm:text-base">
           <span className="hidden sm:inline">No education entries yet. Click "+ Add Education" to add one.</span>
           <span className="sm:hidden">학력 정보가 없습니다. "+ 추가"를 눌러 추가하세요.</span>
         </div>

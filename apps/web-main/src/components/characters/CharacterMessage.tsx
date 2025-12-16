@@ -76,12 +76,12 @@ export default function CharacterMessage({
       <CharacterLoader state={characterState} size={size} className="mb-6" />
 
       {/* Title */}
-      <h2 className="text-2xl font-bold text-amber-900 dark:text-dark-text-primary mb-3">
+      <h2 className="text-2xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-3">
         {displayTitle}
       </h2>
 
       {/* Message */}
-      <p className="text-base text-gray-700 dark:text-dark-text-secondary max-w-md mb-6">
+      <p className="text-base text-vintage-text-secondary dark:text-dark-text-secondary max-w-md mb-6">
         {displayMessage}
       </p>
 

@@ -54,12 +54,12 @@ export default function SecondaryButton({
       className={`
         ${fullWidth ? 'w-full' : ''}
         ${sizeClasses[size]}
-        bg-gray-100 dark:bg-dark-bg-elevated
-        hover:bg-gray-200 dark:hover:bg-dark-bg-hover
-        text-gray-700 dark:text-dark-text-primary
+        bg-vintage-bg-card dark:bg-dark-bg-elevated
+        hover:bg-vintage-border-subtle dark:hover:bg-dark-bg-hover
+        text-vintage-text-secondary dark:text-dark-text-primary
         font-semibold
         rounded-lg
-        border border-gray-300 dark:border-dark-border-default
+        border border-vintage-border-default dark:border-dark-border-default
         transition-all
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}

@@ -135,9 +135,9 @@ export default function ResumeEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+    <div className="min-h-screen bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200">
       {/* Mobile: Fixed bottom navigation bar for preview toggle */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-bg-card border-t border-gray-200 dark:border-dark-border-default p-3 lg:hidden safe-area-bottom">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-vintage-bg-card dark:bg-dark-bg-card border-t border-vintage-border-subtle dark:border-dark-border-default p-3 lg:hidden safe-area-bottom">
         <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
           <SecondaryButton
             onClick={() => navigate(-1)}
@@ -194,11 +194,11 @@ export default function ResumeEditPage() {
             <div className="sticky top-4 sm:top-8">
               {/* Preview Header */}
               <Card variant="secondary" padding="md" className="mb-3 sm:mb-4">
-                <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-1 sm:mb-2 flex items-center gap-2">
+                <h2 className="text-base sm:text-xl font-bold text-vintage-text-primary dark:text-dark-text-primary mb-1 sm:mb-2 flex items-center gap-2">
                   <span>👁️</span>
                   {t('edit.livePreview')}
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-text-secondary">
+                <p className="text-xs sm:text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
                   {t('edit.previewDescription')}
                 </p>
               </Card>
@@ -207,11 +207,11 @@ export default function ResumeEditPage() {
                 <ResumePreviewContainer
                   resume={previewData}
                   maxHeight="calc(100vh - 280px)"
-                  containerClassName="border-2 border-gray-300 dark:border-dark-border-default rounded-xl"
+                  containerClassName="border-2 border-vintage-border-default dark:border-dark-border-default rounded-xl"
                 />
               ) : (
                 <Card variant="secondary" padding="lg" className="text-center">
-                  <p className="text-gray-500 dark:text-dark-text-tertiary text-sm sm:text-base">
+                  <p className="text-vintage-text-tertiary dark:text-dark-text-tertiary text-sm sm:text-base">
                     {t('errors.startFilling')}
                   </p>
                 </Card>
