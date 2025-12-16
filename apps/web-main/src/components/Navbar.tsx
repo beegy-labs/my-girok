@@ -50,13 +50,13 @@ export default function Navbar() {
   }, [isDropdownOpen]);
 
   return (
-    <nav className="bg-vintage-bg-card dark:bg-dark-bg-card border-b border-vintage-border-subtle dark:border-dark-border-subtle transition-colors duration-200">
+    <nav className="bg-theme-bg-card border-b border-theme-border-subtle transition-colors duration-200">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             <span className="text-xl sm:text-2xl">📚</span>
-            <span className="text-lg sm:text-2xl font-bold text-vintage-text-accent dark:text-dark-text-accent">My-Girok</span>
+            <span className="text-lg sm:text-2xl font-bold text-theme-text-accent">My-Girok</span>
           </Link>
 
           {/* Right side menu */}
@@ -65,13 +65,13 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
-              className="p-2 rounded-lg hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover transition-colors"
+              className="p-2 rounded-lg hover:bg-theme-bg-hover transition-colors"
               title={effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {effectiveTheme === 'dark' ? (
                 // Sun icon for light mode
                 <svg
-                  className="w-5 h-5 text-vintage-primary"
+                  className="w-5 h-5 text-theme-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -86,7 +86,7 @@ export default function Navbar() {
               ) : (
                 // Moon icon for dark mode
                 <svg
-                  className="w-5 h-5 text-vintage-primary"
+                  className="w-5 h-5 text-theme-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -108,21 +108,21 @@ export default function Navbar() {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-vintage-bg-card dark:hover:bg-dark-bg-hover transition-colors"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-theme-bg-hover transition-colors"
                 >
                   <div className="text-right">
-                    <p className="text-xs sm:text-sm font-semibold text-vintage-text-primary dark:text-dark-text-primary">
+                    <p className="text-xs sm:text-sm font-semibold text-theme-text-primary">
                       {user?.name || user?.email}
                     </p>
                     {/* Only show role for ADMIN */}
                     {user?.role === 'ADMIN' && (
-                      <p className="text-xs text-vintage-primary dark:text-vintage-primary font-medium">
+                      <p className="text-xs text-theme-primary font-medium">
                         {user.role}
                       </p>
                     )}
                   </div>
                   <svg
-                    className={`w-4 h-4 text-vintage-text-secondary dark:text-dark-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 text-theme-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -133,15 +133,15 @@ export default function Navbar() {
 
                 {/* Dropdown menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-vintage-bg-elevated dark:bg-dark-bg-elevated rounded-lg shadow-vintage-lg dark:shadow-dark-lg border border-vintage-border-subtle dark:border-dark-border-default py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-theme-bg-elevated rounded-lg shadow-theme-lg border border-theme-border-subtle py-1 z-50">
                     <Link
                       to="/change-password"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-vintage-text-secondary dark:text-dark-text-secondary hover:bg-vintage-bg-card dark:hover:bg-dark-bg-hover transition-colors"
+                      className="block px-4 py-2 text-sm text-theme-text-secondary hover:bg-theme-bg-hover transition-colors"
                     >
                       {t('nav.changePassword')}
                     </Link>
-                    <hr className="my-1 border-vintage-border-subtle dark:border-dark-border-subtle" />
+                    <hr className="my-1 border-theme-border-subtle" />
                     <button
                       onClick={() => {
                         setIsDropdownOpen(false);
@@ -158,13 +158,13 @@ export default function Navbar() {
               <>
                 <Link
                   to="/login"
-                  className="text-vintage-primary dark:text-vintage-primary hover:text-vintage-primary-light dark:hover:text-vintage-primary-light px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors"
+                  className="text-theme-primary hover:text-theme-primary-light px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors"
                 >
                   {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-gradient-to-r from-vintage-primary-dark to-vintage-primary dark:from-vintage-primary-dark dark:to-vintage-primary hover:from-vintage-primary hover:to-vintage-primary-light dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light text-white dark:text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all transform hover:scale-[1.02] shadow-lg shadow-vintage-primary/30 dark:shadow-vintage-primary/30"
+                  className="bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all transform hover:scale-[1.02] shadow-lg shadow-theme-primary/30"
                 >
                   {t('nav.register')}
                 </Link>
