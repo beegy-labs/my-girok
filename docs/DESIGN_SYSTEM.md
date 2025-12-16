@@ -15,6 +15,67 @@ My-Girok is a personal record-keeping platform where users document their life s
 - **🎯 Focus**: Comfortable for long reading and writing sessions
 - **🌱 Growth**: Track personal development over time
 
+## Scalable Theme Architecture (2025-12)
+
+The theme system uses a 3-layer architecture for easy extensibility:
+
+```
+Layer 1: Palette (--palette-*)  → Raw colors, defined once, never use directly
+Layer 2: Semantic (--theme-*)   → Theme-switchable via [data-theme] attribute
+Layer 3: Tailwind (@theme)      → Maps to utilities (bg-theme-*, text-theme-*)
+```
+
+### Usage in Components
+
+```tsx
+// ✅ Use semantic theme classes (auto-adapts to theme)
+<div className="bg-theme-bg-card text-theme-text-primary border-theme-border-subtle">
+
+// ✅ Use themed shadows
+<div className="shadow-theme-lg">
+```
+
+### Adding a New Theme
+
+Only modify `apps/web-main/src/index.css`:
+
+```css
+[data-theme="ocean"] {
+  --theme-bg-page: #0a192f;
+  --theme-bg-card: #112240;
+  --theme-text-primary: #ccd6f6;
+  /* ... map all semantic tokens ... */
+}
+```
+
+Then update `apps/web-main/src/types/theme.ts` to include the new theme name.
+
+### Key Theme Tokens
+
+| Token | Usage |
+|-------|-------|
+| `bg-theme-bg-page` | Page background |
+| `bg-theme-bg-card` | Card backgrounds |
+| `bg-theme-bg-elevated` | Elevated surfaces |
+| `text-theme-text-primary` | Primary text |
+| `text-theme-text-secondary` | Secondary text |
+| `border-theme-border-subtle` | Subtle borders |
+| `shadow-theme-lg` | Large shadows |
+| `text-theme-primary` | Primary accent color |
+
+### When to Use `dark:` Variant
+
+The `dark:` Tailwind variant is **only** for semantic colors (error, success, warning, info) that need explicit dark mode handling:
+
+```tsx
+// ✅ OK - Semantic colors (not themed)
+<div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400">
+<div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+
+// ❌ DON'T - Theme colors (use theme-* instead)
+<div className="bg-vintage-bg-card dark:bg-dark-bg-card">
+```
+
 ## Color Palette
 
 ### Theme: "Warm Library" (원목 도서관의 은은한 조명)

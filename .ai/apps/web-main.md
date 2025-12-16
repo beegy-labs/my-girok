@@ -386,10 +386,10 @@ import TextInput from '../../components/ui/Form/TextInput';
 - All buttons: `onClick`, `disabled`, `size`, `className`
 - Consistent API across components
 
-**Dark Mode**:
-- All components have built-in dark mode support
-- Use `dark:` Tailwind variants
-- Automatically adapts to system/user preference
+**Theme Support**:
+- All components use semantic theme tokens (`theme-*`)
+- Automatically adapts via `data-theme` attribute
+- See "Scalable Theme Architecture" section below
 
 ## Design System
 
@@ -417,12 +417,12 @@ Layer 3: Tailwind (@theme)     → Maps to utilities (bg-theme-*, text-theme-*)
 
 **Usage in Components**:
 ```tsx
-// NEW: Single semantic class (auto-adapts to theme)
+// Use semantic theme classes (auto-adapts to theme)
 <div className="bg-theme-bg-card text-theme-text-primary">
-
-// LEGACY: Dual class pattern (deprecated, will be removed)
-<div className="bg-vintage-bg-card dark:bg-dark-bg-card">
 ```
+
+**Note**: The legacy dual-class pattern (`vintage-* dark:dark-*`) has been removed.
+All components now use unified `theme-*` tokens.
 
 ### Key Classes
 
@@ -773,7 +773,10 @@ const sensors = useSensors(
 
 ### Depth Colors for Hierarchical Data
 
-Use color-coded borders for nested items (achievements, descriptions):
+Use color-coded borders for nested items (achievements, descriptions).
+
+**Note**: These use `dark:` variant intentionally - semantic colors (blue, green, etc.)
+are not part of the theme system and need explicit dark mode handling.
 
 ```typescript
 const DEPTH_COLORS = {
@@ -833,8 +836,8 @@ Use compact 24x24px icon buttons on mobile:
 For mobile preview toggle and navigation:
 
 ```jsx
-<div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-bg-card
-                border-t border-gray-200 p-3 lg:hidden safe-area-bottom">
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card
+                border-t border-theme-border-subtle p-3 lg:hidden safe-area-bottom">
   <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
     <SecondaryButton className="flex-1 py-3">← Back</SecondaryButton>
     <PrimaryButton className="flex-1 py-3">👁️ Preview</PrimaryButton>

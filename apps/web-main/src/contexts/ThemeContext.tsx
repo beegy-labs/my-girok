@@ -17,21 +17,13 @@ interface ThemeProviderProps {
 
 /**
  * Apply theme to the document root
- * - Sets data-theme attribute for CSS variable switching (new system)
- * - Maintains .dark class for backward compatibility (legacy system)
+ * Sets data-theme attribute for CSS variable switching
  */
 function applyTheme(effectiveTheme: 'light' | 'dark') {
   const themeName = mapPreferenceToTheme(effectiveTheme);
 
-  // New system: data-theme attribute for CSS variable switching
+  // Set data-theme attribute for CSS variable switching
   document.documentElement.setAttribute('data-theme', themeName);
-
-  // Legacy system: .dark class for backward compatibility (Phase 8 cleanup)
-  if (effectiveTheme === 'dark') {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
 
   return themeName;
 }
