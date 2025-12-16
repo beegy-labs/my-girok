@@ -60,7 +60,7 @@ export default function SharedResumePage() {
           message={error}
           action={
             (isExpired || isInactive) && (
-              <p className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
+              <p className="text-sm text-theme-text-secondary">
                 {t('resume.shared.contactOwner')}
               </p>
             )

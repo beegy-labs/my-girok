@@ -77,16 +77,16 @@ export default function PublicResumePage() {
     <div className="w-full min-h-screen">
       {/* Action Bar - Hidden when printing */}
       <div className="print:hidden px-4 pt-4 sm:pt-6">
-        <div className="max-w-5xl mx-auto bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-subtle dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 sm:py-4 transition-colors duration-200">
+        <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl shadow-theme-sm px-4 py-3 sm:py-4 transition-colors duration-200">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div className="flex-1">
-              <h1 className="text-lg sm:text-2xl font-bold text-vintage-text-primary dark:text-dark-text-primary">
+              <h1 className="text-lg sm:text-2xl font-bold text-theme-text-primary">
                 {resume.name}'s Resume
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs sm:text-sm text-vintage-text-secondary dark:text-dark-text-secondary">@{username}</p>
+                <p className="text-xs sm:text-sm text-theme-text-secondary">@{username}</p>
                 {isOwnProfile && (
-                  <span className="px-2 py-0.5 text-xs font-semibold bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light rounded-full">
+                  <span className="px-2 py-0.5 text-xs font-semibold bg-theme-primary/20 text-theme-primary-light rounded-full">
                     Your Profile
                   </span>
                 )}
