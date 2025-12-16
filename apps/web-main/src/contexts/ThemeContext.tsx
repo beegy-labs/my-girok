@@ -1,10 +1,10 @@
 import React, { createContext, useEffect, useState } from 'react';
-
-type Theme = 'light' | 'dark' | 'system';
+import { mapPreferenceToTheme, type Theme, type ThemeName } from '../types/theme';
 
 interface ThemeContextType {
   theme: Theme;
   effectiveTheme: 'light' | 'dark';
+  themeName: ThemeName;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
@@ -15,6 +15,27 @@ interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * Apply theme to the document root
+ * - Sets data-theme attribute for CSS variable switching (new system)
+ * - Maintains .dark class for backward compatibility (legacy system)
+ */
+function applyTheme(effectiveTheme: 'light' | 'dark') {
+  const themeName = mapPreferenceToTheme(effectiveTheme);
+
+  // New system: data-theme attribute for CSS variable switching
+  document.documentElement.setAttribute('data-theme', themeName);
+
+  // Legacy system: .dark class for backward compatibility (Phase 8 cleanup)
+  if (effectiveTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+
+  return themeName;
+}
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem('theme') as Theme | null;
@@ -22,6 +43,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   });
 
   const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
+  const [themeName, setThemeName] = useState<ThemeName>('vintage');
 
   // Determine effective theme based on user preference and system preference
   useEffect(() => {
@@ -36,12 +58,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const newEffectiveTheme = determineEffectiveTheme();
     setEffectiveTheme(newEffectiveTheme);
 
-    // Apply or remove 'dark' class on document root
-    if (newEffectiveTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const newThemeName = applyTheme(newEffectiveTheme);
+    setThemeName(newThemeName);
   }, [theme]);
 
   // Listen for system theme changes when using 'system' mode
@@ -53,11 +71,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       const newEffectiveTheme = e.matches ? 'dark' : 'light';
       setEffectiveTheme(newEffectiveTheme);
 
-      if (newEffectiveTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      const newThemeName = applyTheme(newEffectiveTheme);
+      setThemeName(newThemeName);
     };
 
     mediaQuery.addEventListener('change', handleChange);
@@ -81,7 +96,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, effectiveTheme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, effectiveTheme, themeName, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
