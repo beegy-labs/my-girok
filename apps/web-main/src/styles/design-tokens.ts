@@ -8,6 +8,10 @@
  * - Mobile: < 640px (default styles)
  * - Tablet: 640px - 1024px (sm: prefix)
  * - Desktop: > 1024px (lg: prefix)
+ *
+ * Theme System:
+ * - Uses semantic `theme-*` tokens that auto-switch based on data-theme attribute
+ * - No need for `dark:` variants - handled automatically by CSS variables
  */
 
 // =============================================================================
@@ -97,43 +101,43 @@ export const typography = {
 // =============================================================================
 
 /**
- * Color tokens - 주간/야간 통합 관리
- * Theme: "Wood Library" - 원목 도서관
- * base 색상 참조로 주간/야간 동일
+ * Color tokens - Semantic theme tokens
+ * Uses theme-* classes that auto-switch based on data-theme attribute
+ * No dark: variants needed - handled by CSS variables
  */
 export const colors = {
   // Backgrounds
   bg: {
-    page: 'bg-vintage-bg-page dark:bg-dark-bg-primary',
-    card: 'bg-vintage-bg-card dark:bg-dark-bg-card',
-    cardWhite: 'bg-vintage-bg-card dark:bg-dark-bg-card',
-    elevated: 'bg-vintage-bg-elevated dark:bg-dark-bg-elevated',
-    input: 'bg-vintage-bg-input dark:bg-dark-bg-secondary',
-    hover: 'bg-vintage-bg-hover dark:bg-dark-bg-hover',
+    page: 'bg-theme-bg-page',
+    card: 'bg-theme-bg-card',
+    cardWhite: 'bg-theme-bg-card',
+    elevated: 'bg-theme-bg-elevated',
+    input: 'bg-theme-bg-input',
+    hover: 'bg-theme-bg-hover',
   },
   // Text colors
   text: {
-    primary: 'text-vintage-text-primary dark:text-dark-text-primary',
-    secondary: 'text-vintage-text-secondary dark:text-dark-text-secondary',
-    tertiary: 'text-vintage-text-tertiary dark:text-dark-text-tertiary',
-    muted: 'text-vintage-text-muted dark:text-dark-text-disabled',
-    accent: 'text-vintage-text-accent dark:text-dark-text-accent',
-    link: 'text-vintage-primary dark:text-vintage-primary',
-    linkHover: 'hover:text-vintage-primary-light dark:hover:text-vintage-primary-light',
+    primary: 'text-theme-text-primary',
+    secondary: 'text-theme-text-secondary',
+    tertiary: 'text-theme-text-tertiary',
+    muted: 'text-theme-text-muted',
+    accent: 'text-theme-text-accent',
+    link: 'text-theme-primary',
+    linkHover: 'hover:text-theme-primary-light',
   },
   // Borders
   border: {
-    subtle: 'border-vintage-border-subtle dark:border-dark-border-subtle',
-    default: 'border-vintage-border-default dark:border-dark-border-default',
-    strong: 'border-vintage-border-strong dark:border-dark-border-strong',
+    subtle: 'border-theme-border-subtle',
+    default: 'border-theme-border-default',
+    strong: 'border-theme-border-strong',
   },
-  // Accent colors (버건디)
+  // Accent colors
   accent: {
-    primary: 'text-vintage-accent dark:text-vintage-accent',
-    light: 'text-vintage-accent-light dark:text-vintage-accent-light',
-    bg: 'bg-vintage-accent/20 dark:bg-vintage-accent/20',
+    primary: 'text-theme-accent',
+    light: 'text-theme-accent-light',
+    bg: 'bg-theme-accent/20',
   },
-  // Status colors
+  // Status colors (consistent across themes)
   status: {
     success: 'bg-green-900/30 text-green-300',
     error: 'bg-red-900/20 text-red-400',
@@ -147,12 +151,13 @@ export const colors = {
 // =============================================================================
 
 export const shadows = {
-  sm: 'shadow-vintage-sm dark:shadow-dark-sm',
-  md: 'shadow-vintage-md dark:shadow-dark-md',
-  lg: 'shadow-vintage-lg dark:shadow-dark-lg',
-  xl: 'shadow-vintage-xl dark:shadow-dark-xl',
-  '2xl': 'shadow-vintage-2xl dark:shadow-dark-2xl',
-  inner: 'shadow-vintage-inner dark:shadow-dark-inner',
+  sm: 'shadow-theme-sm',
+  md: 'shadow-theme-md',
+  lg: 'shadow-theme-lg',
+  xl: 'shadow-theme-xl',
+  '2xl': 'shadow-theme-2xl',
+  inner: 'shadow-theme-inner',
+  glow: 'shadow-theme-glow',
 } as const;
 
 // =============================================================================
@@ -171,11 +176,11 @@ export const radius = {
 
 /**
  * Standard page container patterns
- * Theme: Vintage Natural Wood Library
+ * Theme: Semantic theme tokens
  */
 export const pageLayout = {
-  // Full page background (warm ivory)
-  wrapper: 'min-h-screen bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200',
+  // Full page background
+  wrapper: 'min-h-screen bg-theme-bg-page transition-colors duration-200',
   // Content container
   container: {
     sm: 'max-w-md mx-auto',
@@ -194,33 +199,33 @@ export const pageLayout = {
 
 /**
  * Standard card styles
- * Theme: Vintage Natural Wood Library
+ * Theme: Semantic theme tokens
  */
 export const cardStyles = {
   // Primary card
   primary: `
-    bg-vintage-bg-card dark:bg-dark-bg-card
-    border border-vintage-border-subtle dark:border-dark-border-subtle
-    rounded-2xl shadow-vintage-md dark:shadow-dark-md
+    bg-theme-bg-card
+    border border-theme-border-subtle
+    rounded-2xl shadow-theme-md
     transition-colors duration-200
   `,
   // Primary card hover
   primaryHover: `
-    hover:shadow-vintage-lg dark:hover:shadow-dark-lg
-    hover:border-vintage-border-default dark:hover:border-dark-border-default
+    hover:shadow-theme-lg
+    hover:border-theme-border-default
   `,
   // Secondary card
   secondary: `
-    bg-vintage-bg-card dark:bg-dark-bg-card
-    border border-vintage-border-default dark:border-dark-border-default
-    rounded-2xl shadow-vintage-sm dark:shadow-dark-sm
+    bg-theme-bg-card
+    border border-theme-border-default
+    rounded-2xl shadow-theme-sm
     transition-colors duration-200
   `,
   // Elevated card
   elevated: `
-    bg-vintage-bg-elevated dark:bg-dark-bg-elevated
-    border border-vintage-border-subtle dark:border-dark-border-subtle
-    rounded-2xl shadow-vintage-lg dark:shadow-dark-lg
+    bg-theme-bg-elevated
+    border border-theme-border-subtle
+    rounded-2xl shadow-theme-lg
     transition-colors duration-200
   `,
 } as const;
@@ -231,46 +236,44 @@ export const cardStyles = {
 
 /**
  * Button base styles (use with UI components when possible)
- * Theme: Vintage Natural Wood Library
+ * Theme: Semantic theme tokens
  */
 export const buttonStyles = {
   // Primary gradient button
   primary: `
-    bg-gradient-to-r from-vintage-primary-dark to-vintage-primary
-    dark:from-vintage-primary-dark dark:to-vintage-primary
-    hover:from-vintage-primary hover:to-vintage-primary-light
-    dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light
-    text-white dark:text-white
+    bg-gradient-to-r from-theme-primary-dark to-theme-primary
+    hover:from-theme-primary hover:to-theme-primary-light
+    text-white
     font-semibold rounded-lg
-    shadow-lg shadow-vintage-primary/30 dark:shadow-vintage-primary/30
+    shadow-lg shadow-theme-primary/30
     transform hover:scale-[1.02] active:scale-[0.98]
     transition-all
   `,
   // Secondary button
   secondary: `
-    bg-vintage-bg-elevated dark:bg-dark-bg-elevated
-    hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover
-    text-vintage-text-primary dark:text-dark-text-primary
-    border border-vintage-border-default dark:border-dark-border-default
+    bg-theme-bg-elevated
+    hover:bg-theme-bg-hover
+    text-theme-text-primary
+    border border-theme-border-default
     font-semibold rounded-lg
     transition-all
   `,
   // Destructive button
   destructive: `
-    bg-red-900/20 dark:bg-red-900/20
-    hover:bg-red-900/30 dark:hover:bg-red-900/30
-    text-red-400 dark:text-red-400
-    border border-red-800 dark:border-red-800
+    bg-red-900/20
+    hover:bg-red-900/30
+    text-red-400
+    border border-red-800
     font-semibold rounded-lg
     transition-all
   `,
-  // Accent button (버건디)
+  // Accent button
   accent: `
-    bg-vintage-accent dark:bg-vintage-accent
-    hover:bg-vintage-accent-light dark:hover:bg-vintage-accent-light
-    text-white dark:text-white
+    bg-theme-accent
+    hover:bg-theme-accent-light
+    text-white
     font-semibold rounded-lg
-    shadow-lg shadow-vintage-accent/30 dark:shadow-vintage-accent/30
+    shadow-lg shadow-theme-accent/30
     transform hover:scale-[1.02] active:scale-[0.98]
     transition-all
   `,
@@ -324,7 +327,7 @@ export const mobilePatterns = {
   // Safe area for notch/home indicator
   safeArea: 'safe-area-bottom',
   // Fixed bottom bar
-  fixedBottom: 'fixed bottom-0 left-0 right-0 z-50 bg-vintage-bg-card dark:bg-dark-bg-card border-t border-vintage-border-default dark:border-dark-border-default p-3',
+  fixedBottom: 'fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card border-t border-theme-border-default p-3',
 } as const;
 
 // =============================================================================
@@ -368,20 +371,20 @@ export const formPatterns = {
   // Input base
   input: `
     w-full px-3 py-3
-    bg-vintage-bg-input dark:bg-dark-bg-secondary
-    border border-vintage-border-default dark:border-dark-border-default
+    bg-theme-bg-input
+    border border-theme-border-default
     rounded-lg
-    text-vintage-text-primary dark:text-dark-text-primary
-    placeholder:text-vintage-text-muted dark:placeholder:text-dark-text-tertiary
-    focus:outline-none focus:ring-2 focus:ring-vintage-primary dark:focus:ring-vintage-primary focus:border-transparent
+    text-theme-text-primary
+    placeholder:text-theme-text-muted
+    focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent
     transition-all
   `,
   // Label
-  label: 'block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-1',
+  label: 'block text-sm font-semibold text-theme-text-secondary mb-1',
   // Error text
-  error: 'text-red-400 dark:text-red-400 text-xs mt-1',
+  error: 'text-red-400 text-xs mt-1',
   // Hint text
-  hint: 'text-vintage-text-muted dark:text-dark-text-tertiary text-xs mt-1',
+  hint: 'text-theme-text-muted text-xs mt-1',
 } as const;
 
 // =============================================================================
@@ -404,11 +407,11 @@ export const loadingStates = {
   // Full page loading
   fullPage: `
     min-h-screen flex items-center justify-center
-    bg-vintage-bg-page dark:bg-dark-bg-primary
+    bg-theme-bg-page
     transition-colors duration-200
   `,
   // Spinner
-  spinner: 'animate-spin rounded-full h-12 w-12 border-b-2 border-vintage-primary dark:border-vintage-primary',
+  spinner: 'animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary',
   // Loading text
-  text: 'mt-4 text-vintage-text-secondary dark:text-dark-text-secondary font-medium',
+  text: 'mt-4 text-theme-text-secondary font-medium',
 } as const;
