@@ -109,17 +109,17 @@ export default function ResumePreview({
       {/* Toolbar (hidden in print) */}
       {showToolbar && (
         <div className="print:hidden mb-6 relative z-0">
-          <div className="max-w-5xl mx-auto bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-subtle dark:border-dark-border-subtle rounded-xl sm:rounded-2xl shadow-sm dark:shadow-dark-sm px-4 py-3 transition-colors duration-200">
+          <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl shadow-sm shadow-theme-sm px-4 py-3 transition-colors duration-200">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 {/* Paper Size Selector */}
-                <div className="flex items-center gap-1 bg-vintage-bg-elevated dark:bg-dark-bg-elevated rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-lg p-1">
                   <button
                     onClick={() => handlePaperSizeChange('A4')}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                       paperSize === 'A4'
-                        ? 'bg-vintage-bg-card dark:bg-dark-bg-card text-vintage-text-primary dark:text-dark-text-primary shadow-sm'
-                        : 'text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary'
+                        ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
+                        : 'text-theme-text-secondary hover:text-theme-text-primary'
                     }`}
                     title="A4 (210mm x 297mm)"
                   >
@@ -129,8 +129,8 @@ export default function ResumePreview({
                     onClick={() => handlePaperSizeChange('LETTER')}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                       paperSize === 'LETTER'
-                        ? 'bg-vintage-bg-card dark:bg-dark-bg-card text-vintage-text-primary dark:text-dark-text-primary shadow-sm'
-                        : 'text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary'
+                        ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
+                        : 'text-theme-text-secondary hover:text-theme-text-primary'
                     }`}
                     title="Letter (215.9mm x 279.4mm)"
                   >
@@ -148,13 +148,13 @@ export default function ResumePreview({
               </div>
               <div className="flex items-center gap-2">
                 {/* View Mode Toggle */}
-                <div className="flex items-center gap-1 bg-vintage-bg-elevated dark:bg-dark-bg-elevated rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-lg p-1">
                   <button
                     onClick={handleSetContinuousView}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                       viewMode === 'continuous'
-                        ? 'bg-vintage-bg-card dark:bg-dark-bg-card text-vintage-text-primary dark:text-dark-text-primary shadow-sm'
-                        : 'text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary'
+                        ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
+                        : 'text-theme-text-secondary hover:text-theme-text-primary'
                     }`}
                     title={t('resume.preview.continuousView')}
                   >
@@ -164,8 +164,8 @@ export default function ResumePreview({
                     onClick={handleSetPaginatedView}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                       viewMode === 'paginated'
-                        ? 'bg-vintage-bg-card dark:bg-dark-bg-card text-vintage-text-primary dark:text-dark-text-primary shadow-sm'
-                        : 'text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-text-primary dark:hover:text-dark-text-primary'
+                        ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
+                        : 'text-theme-text-secondary hover:text-theme-text-primary'
                     }`}
                     title={t('resume.preview.paginatedView')}
                   >
@@ -177,8 +177,8 @@ export default function ResumePreview({
                   onClick={handleToggleGrayscale}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
                     isGrayscaleMode
-                      ? 'bg-vintage-bg-elevated dark:bg-dark-bg-card text-vintage-text-primary dark:text-dark-text-primary border-vintage-border-strong dark:border-dark-border-default'
-                      : 'bg-vintage-bg-card dark:bg-dark-bg-elevated text-vintage-text-primary dark:text-dark-text-primary border-vintage-border-default dark:border-dark-border-default hover:border-vintage-border-strong dark:hover:border-dark-border-strong hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover'
+                      ? 'bg-theme-bg-elevated text-theme-text-primary border-theme-border-strong'
+                      : 'bg-theme-bg-card text-theme-text-primary border-theme-border-default hover:border-theme-border-strong hover:bg-theme-bg-hover'
                   }`}
                   title={isGrayscaleMode ? t('resume.preview.switchToColorMode') : t('resume.preview.switchToGrayscaleMode')}
                 >
@@ -195,7 +195,7 @@ export default function ResumePreview({
         {instance.loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-vintage-text-secondary dark:text-dark-text-secondary">{t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}</span>
+            <span className="ml-3 text-theme-text-secondary">{t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}</span>
           </div>
         ) : instance.error ? (
           <div className="flex items-center justify-center py-20 text-red-600">
@@ -209,17 +209,17 @@ export default function ResumePreview({
                 <button
                   onClick={goToPrevPage}
                   disabled={currentPage <= 1}
-                  className="px-3 py-1 text-sm font-medium text-vintage-text-primary dark:text-dark-text-primary bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-default dark:border-dark-border-default rounded-md hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-md hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('resume.preview.prevPage', { defaultValue: 'Previous' })}
                 </button>
-                <span className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
+                <span className="text-sm text-theme-text-secondary">
                   {currentPage} / {numPages}
                 </span>
                 <button
                   onClick={goToNextPage}
                   disabled={currentPage >= numPages}
-                  className="px-3 py-1 text-sm font-medium text-vintage-text-primary dark:text-dark-text-primary bg-vintage-bg-card dark:bg-dark-bg-card border border-vintage-border-default dark:border-dark-border-default rounded-md hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-md hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('resume.preview.nextPage', { defaultValue: 'Next' })}
                 </button>
@@ -245,7 +245,7 @@ export default function ResumePreview({
               {viewMode === 'continuous' ? (
                 // Show all pages
                 Array.from(new Array(numPages), (_, index) => (
-                  <div key={`page_${index + 1}`} className="mb-4 shadow-vintage-lg dark:shadow-dark-lg">
+                  <div key={`page_${index + 1}`} className="mb-4 shadow-theme-lg">
                     <Page
                       pageNumber={index + 1}
                       width={displayWidth}
@@ -258,7 +258,7 @@ export default function ResumePreview({
                 ))
               ) : (
                 // Show single page
-                <div className="shadow-vintage-lg dark:shadow-dark-lg">
+                <div className="shadow-theme-lg">
                   <Page
                     pageNumber={currentPage}
                     width={displayWidth}
