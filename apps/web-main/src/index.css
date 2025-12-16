@@ -1,122 +1,199 @@
 @import "tailwindcss";
 
-/* Tailwind CSS v4 theme configuration */
-/* Theme: "Wood Library" - 원목 도서관 */
-@theme {
-  /* ============================================
-     BASE COLOR PALETTE - 통합 색상 관리
-     모든 색상은 여기서 한 번만 정의
-     다크모드 기준 디자인
-     ============================================ */
+/* ============================================
+   SCALABLE THEME SYSTEM
 
-  /* Background colors */
-  --color-base-bg-page: #1A1612;        /* 어두운 원목 */
-  --color-base-bg-secondary: #231E18;   /* 중간 원목 */
-  --color-base-bg-card: #2D261E;        /* 카드 배경 */
-  --color-base-bg-elevated: #3A3128;    /* 돌출 영역 */
-  --color-base-bg-hover: #453A2F;       /* 호버 */
+   Architecture:
+   - Layer 1: Palette (raw colors, never use directly)
+   - Layer 2: Semantic Tokens (theme-switchable via data-theme)
+   - Layer 3: Tailwind Integration (@theme directive)
 
-  /* Text colors */
-  --color-base-text-primary: #EDE8E0;   /* 오래된 종이색 */
-  --color-base-text-secondary: #C4BAA8; /* 중간 톤 */
-  --color-base-text-tertiary: #9A8E7A;  /* 연한 톤 */
-  --color-base-text-muted: #6B6055;     /* 비활성 */
+   To add a new theme:
+   1. Add palette colors if needed
+   2. Add [data-theme="newtheme"] override block
+   3. Done! All components auto-adapt
+   ============================================ */
 
-  /* Border colors */
-  --color-base-border-subtle: #3D342A;  /* 연한 나무결 */
-  --color-base-border-default: #554839; /* 중간 나무결 */
-  --color-base-border-strong: #6E5D4A;  /* 진한 나무결 */
+/* ============================================
+   LAYER 1: COLOR PALETTE
+   Raw color values - never use directly in components
+   ============================================ */
 
-  /* Primary colors (호박색 계열) */
-  --color-base-primary-dark: #8B5A2B;   /* 진한 호박색 */
-  --color-base-primary: #A0522D;        /* 시에나 */
-  --color-base-primary-light: #B8763A;  /* 밝은 호박 */
+:root {
+  /* Wood Library Palette (Vintage Theme) */
+  --palette-wood-900: #1A1612;
+  --palette-wood-800: #231E18;
+  --palette-wood-700: #2D261E;
+  --palette-wood-600: #3A3128;
+  --palette-wood-500: #453A2F;
 
-  /* Accent colors (버건디 계열) */
-  --color-base-accent-dark: #6B2D2D;    /* 딥 버건디 */
-  --color-base-accent: #8B4343;         /* 버건디 */
-  --color-base-accent-light: #A85858;   /* 라이트 버건디 */
-  --color-base-accent-pale: #C27070;    /* 페일 버건디 */
+  --palette-paper-100: #EDE8E0;
+  --palette-paper-200: #C4BAA8;
+  --palette-paper-300: #9A8E7A;
+  --palette-paper-400: #6B6055;
 
-  /* Shadow values */
-  --shadow-base-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-base-md: 0 4px 10px rgba(0, 0, 0, 0.5);
-  --shadow-base-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
-  --shadow-base-xl: 0 15px 35px rgba(0, 0, 0, 0.7);
-  --shadow-base-2xl: 0 20px 50px rgba(0, 0, 0, 0.8);
-  --shadow-base-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-base-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
+  --palette-grain-300: #3D342A;
+  --palette-grain-400: #554839;
+  --palette-grain-500: #6E5D4A;
 
-  /* ============================================
-     LIGHT MODE (vintage-*) - base 색상 참조
-     ============================================ */
+  --palette-amber-700: #8B5A2B;
+  --palette-amber-600: #A0522D;
+  --palette-amber-500: #B8763A;
 
-  --color-vintage-bg-page: var(--color-base-bg-page);
-  --color-vintage-bg-secondary: var(--color-base-bg-secondary);
-  --color-vintage-bg-card: var(--color-base-bg-card);
-  --color-vintage-bg-elevated: var(--color-base-bg-elevated);
-  --color-vintage-bg-input: var(--color-base-bg-secondary);
-  --color-vintage-bg-hover: var(--color-base-bg-hover);
+  --palette-burgundy-700: #6B2D2D;
+  --palette-burgundy-600: #8B4343;
+  --palette-burgundy-500: #A85858;
+  --palette-burgundy-400: #C27070;
 
-  --color-vintage-text-primary: var(--color-base-text-primary);
-  --color-vintage-text-secondary: var(--color-base-text-secondary);
-  --color-vintage-text-tertiary: var(--color-base-text-tertiary);
-  --color-vintage-text-muted: var(--color-base-text-muted);
-  --color-vintage-text-accent: var(--color-base-primary-dark);
+  /* Moonlit Library Palette (Dark Theme) */
+  --palette-slate-900: #0F1419;
+  --palette-slate-800: #1A1D23;
+  --palette-slate-700: #242830;
+  --palette-slate-600: #2D3139;
+  --palette-slate-500: #353A42;
 
-  --color-vintage-border-subtle: var(--color-base-border-subtle);
-  --color-vintage-border-default: var(--color-base-border-default);
-  --color-vintage-border-strong: var(--color-base-border-strong);
+  --palette-silver-100: #E8E6E3;
+  --palette-silver-200: #B8B5B2;
+  --palette-silver-300: #8B8885;
+  --palette-silver-400: #5A5856;
 
-  --color-vintage-primary-dark: var(--color-base-primary-dark);
-  --color-vintage-primary: var(--color-base-primary);
-  --color-vintage-primary-light: var(--color-base-primary-light);
-
-  --color-vintage-accent-dark: var(--color-base-accent-dark);
-  --color-vintage-accent: var(--color-base-accent);
-  --color-vintage-accent-light: var(--color-base-accent-light);
-  --color-vintage-accent-pale: var(--color-base-accent-pale);
-
-  --shadow-vintage-sm: var(--shadow-base-sm);
-  --shadow-vintage-md: var(--shadow-base-md);
-  --shadow-vintage-lg: var(--shadow-base-lg);
-  --shadow-vintage-xl: var(--shadow-base-xl);
-  --shadow-vintage-2xl: var(--shadow-base-2xl);
-  --shadow-vintage-inner: var(--shadow-base-inner);
-
-  /* ============================================
-     DARK MODE (dark-*) - Moonlit Library Theme (흑색 계열)
-     PR #214 원본 값
-     ============================================ */
-
-  --color-dark-bg-primary: #0F1419;
-  --color-dark-bg-secondary: #1A1D23;
-  --color-dark-bg-card: #242830;
-  --color-dark-bg-elevated: #2D3139;
-  --color-dark-bg-hover: #353A42;
-
-  --color-dark-text-primary: #E8E6E3;
-  --color-dark-text-secondary: #B8B5B2;
-  --color-dark-text-tertiary: #8B8885;
-  --color-dark-text-disabled: #5A5856;
-  --color-dark-text-accent: #78350F;
-
-  --color-dark-border-subtle: #3A3D45;
-  --color-dark-border-default: #52575F;
-  --color-dark-border-strong: #6B7078;
-  --color-dark-border-accent: #78350F;
-
-  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-dark-md: 0 4px 8px rgba(0, 0, 0, 0.4);
-  --shadow-dark-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
-  --shadow-dark-xl: 0 15px 30px rgba(0, 0, 0, 0.6);
-  --shadow-dark-2xl: 0 20px 40px rgba(0, 0, 0, 0.7);
-  --shadow-dark-inner: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-amber-glow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  --palette-steel-300: #3A3D45;
+  --palette-steel-400: #52575F;
+  --palette-steel-500: #6B7078;
 }
 
-/* Dark mode variant using class strategy */
-@variant dark (&:where(.dark, .dark *));
+/* ============================================
+   LAYER 2: SEMANTIC THEME TOKENS
+   Default = vintage theme
+   Override with [data-theme="..."] selector
+   ============================================ */
+
+:root {
+  /* Background */
+  --theme-bg-page: var(--palette-wood-900);
+  --theme-bg-secondary: var(--palette-wood-800);
+  --theme-bg-card: var(--palette-wood-700);
+  --theme-bg-elevated: var(--palette-wood-600);
+  --theme-bg-input: var(--palette-wood-800);
+  --theme-bg-hover: var(--palette-wood-500);
+
+  /* Text */
+  --theme-text-primary: var(--palette-paper-100);
+  --theme-text-secondary: var(--palette-paper-200);
+  --theme-text-tertiary: var(--palette-paper-300);
+  --theme-text-muted: var(--palette-paper-400);
+  --theme-text-accent: var(--palette-amber-700);
+
+  /* Border */
+  --theme-border-subtle: var(--palette-grain-300);
+  --theme-border-default: var(--palette-grain-400);
+  --theme-border-strong: var(--palette-grain-500);
+
+  /* Primary (amber tones) */
+  --theme-primary-dark: var(--palette-amber-700);
+  --theme-primary: var(--palette-amber-600);
+  --theme-primary-light: var(--palette-amber-500);
+
+  /* Accent (burgundy tones) */
+  --theme-accent-dark: var(--palette-burgundy-700);
+  --theme-accent: var(--palette-burgundy-600);
+  --theme-accent-light: var(--palette-burgundy-500);
+  --theme-accent-pale: var(--palette-burgundy-400);
+
+  /* Shadows */
+  --theme-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --theme-shadow-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --theme-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --theme-shadow-xl: 0 15px 35px rgba(0, 0, 0, 0.7);
+  --theme-shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.8);
+  --theme-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  --theme-shadow-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
+}
+
+/* Dark Theme Override */
+[data-theme="dark"] {
+  --theme-bg-page: var(--palette-slate-900);
+  --theme-bg-secondary: var(--palette-slate-800);
+  --theme-bg-card: var(--palette-slate-700);
+  --theme-bg-elevated: var(--palette-slate-600);
+  --theme-bg-input: var(--palette-slate-800);
+  --theme-bg-hover: var(--palette-slate-500);
+
+  --theme-text-primary: var(--palette-silver-100);
+  --theme-text-secondary: var(--palette-silver-200);
+  --theme-text-tertiary: var(--palette-silver-300);
+  --theme-text-muted: var(--palette-silver-400);
+  --theme-text-accent: #78350F;
+
+  --theme-border-subtle: var(--palette-steel-300);
+  --theme-border-default: var(--palette-steel-400);
+  --theme-border-strong: var(--palette-steel-500);
+
+  --theme-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --theme-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --theme-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
+  --theme-shadow-xl: 0 15px 30px rgba(0, 0, 0, 0.6);
+  --theme-shadow-2xl: 0 20px 40px rgba(0, 0, 0, 0.7);
+  --theme-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  --theme-shadow-glow: 0 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+/* ============================================
+   LAYER 3: TAILWIND INTEGRATION
+   Maps CSS variables to Tailwind utilities
+   ============================================ */
+
+@theme {
+  /* ============================================
+     NEW SEMANTIC THEME TOKENS (theme-*)
+     Use these in new/migrated components
+     ============================================ */
+
+  /* Background utilities: bg-theme-bg-page, bg-theme-bg-card, etc. */
+  --color-theme-bg-page: var(--theme-bg-page);
+  --color-theme-bg-secondary: var(--theme-bg-secondary);
+  --color-theme-bg-card: var(--theme-bg-card);
+  --color-theme-bg-elevated: var(--theme-bg-elevated);
+  --color-theme-bg-input: var(--theme-bg-input);
+  --color-theme-bg-hover: var(--theme-bg-hover);
+
+  /* Text utilities: text-theme-text-primary, etc. */
+  --color-theme-text-primary: var(--theme-text-primary);
+  --color-theme-text-secondary: var(--theme-text-secondary);
+  --color-theme-text-tertiary: var(--theme-text-tertiary);
+  --color-theme-text-muted: var(--theme-text-muted);
+  --color-theme-text-accent: var(--theme-text-accent);
+
+  /* Border utilities: border-theme-border-subtle, etc. */
+  --color-theme-border-subtle: var(--theme-border-subtle);
+  --color-theme-border-default: var(--theme-border-default);
+  --color-theme-border-strong: var(--theme-border-strong);
+
+  /* Primary utilities: bg-theme-primary, text-theme-primary, etc. */
+  --color-theme-primary-dark: var(--theme-primary-dark);
+  --color-theme-primary: var(--theme-primary);
+  --color-theme-primary-light: var(--theme-primary-light);
+
+  /* Accent utilities: bg-theme-accent, text-theme-accent, etc. */
+  --color-theme-accent-dark: var(--theme-accent-dark);
+  --color-theme-accent: var(--theme-accent);
+  --color-theme-accent-light: var(--theme-accent-light);
+  --color-theme-accent-pale: var(--theme-accent-pale);
+
+  /* Shadow utilities: shadow-theme-sm, shadow-theme-lg, etc. */
+  --shadow-theme-sm: var(--theme-shadow-sm);
+  --shadow-theme-md: var(--theme-shadow-md);
+  --shadow-theme-lg: var(--theme-shadow-lg);
+  --shadow-theme-xl: var(--theme-shadow-xl);
+  --shadow-theme-2xl: var(--theme-shadow-2xl);
+  --shadow-theme-inner: var(--theme-shadow-inner);
+  --shadow-theme-glow: var(--theme-shadow-glow);
+
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

@@ -15,6 +15,67 @@ My-Girok is a personal record-keeping platform where users document their life s
 - **🎯 Focus**: Comfortable for long reading and writing sessions
 - **🌱 Growth**: Track personal development over time
 
+## Scalable Theme Architecture (2025-12)
+
+The theme system uses a 3-layer architecture for easy extensibility:
+
+```
+Layer 1: Palette (--palette-*)  → Raw colors, defined once, never use directly
+Layer 2: Semantic (--theme-*)   → Theme-switchable via [data-theme] attribute
+Layer 3: Tailwind (@theme)      → Maps to utilities (bg-theme-*, text-theme-*)
+```
+
+### Usage in Components
+
+```tsx
+// ✅ Use semantic theme classes (auto-adapts to theme)
+<div className="bg-theme-bg-card text-theme-text-primary border-theme-border-subtle">
+
+// ✅ Use themed shadows
+<div className="shadow-theme-lg">
+```
+
+### Adding a New Theme
+
+Only modify `apps/web-main/src/index.css`:
+
+```css
+[data-theme="ocean"] {
+  --theme-bg-page: #0a192f;
+  --theme-bg-card: #112240;
+  --theme-text-primary: #ccd6f6;
+  /* ... map all semantic tokens ... */
+}
+```
+
+Then update `apps/web-main/src/types/theme.ts` to include the new theme name.
+
+### Key Theme Tokens
+
+| Token | Usage |
+|-------|-------|
+| `bg-theme-bg-page` | Page background |
+| `bg-theme-bg-card` | Card backgrounds |
+| `bg-theme-bg-elevated` | Elevated surfaces |
+| `text-theme-text-primary` | Primary text |
+| `text-theme-text-secondary` | Secondary text |
+| `border-theme-border-subtle` | Subtle borders |
+| `shadow-theme-lg` | Large shadows |
+| `text-theme-primary` | Primary accent color |
+
+### When to Use `dark:` Variant
+
+The `dark:` Tailwind variant is **only** for semantic colors (error, success, warning, info) that need explicit dark mode handling:
+
+```tsx
+// ✅ OK - Semantic colors (not themed)
+<div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400">
+<div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+
+// ❌ DON'T - Theme colors (use theme-* instead)
+<div className="bg-vintage-bg-card dark:bg-dark-bg-card">
+```
+
 ## Color Palette
 
 ### Theme: "Warm Library" (원목 도서관의 은은한 조명)
@@ -2139,8 +2200,168 @@ Potential component library extensions:
 - WCAG 2.1 Guidelines: https://www.w3.org/WAI/WCAG21/quickref/
 - Material Design Color Tool: https://material.io/resources/color/
 
+## Scalable Theme System (2025-12)
+
+### Overview
+
+The theme system was refactored to support N themes with minimal code changes. Previously, adding a new theme required modifying 46+ component files with `vintage-* dark:dark-*` patterns. Now, adding a theme requires modifying only 1-2 CSS files.
+
+### Architecture: 3-Layer System
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1: PALETTE                                           │
+│  Raw colors - Never use directly in components              │
+│  --palette-wood-900, --palette-slate-900, etc.              │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2: SEMANTIC TOKENS                                   │
+│  Theme-switchable via [data-theme="..."] selector           │
+│  --theme-bg-page, --theme-text-primary, etc.                │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3: TAILWIND INTEGRATION                              │
+│  @theme directive maps to utility classes                   │
+│  bg-theme-bg-page, text-theme-text-primary, etc.            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Layer 1: Palette (Raw Colors)
+
+```css
+:root {
+  /* Wood Library Palette (Vintage Theme) */
+  --palette-wood-900: #1A1612;
+  --palette-wood-800: #231E18;
+  --palette-paper-100: #EDE8E0;
+  --palette-amber-600: #A0522D;
+  --palette-burgundy-600: #8B4343;
+
+  /* Moonlit Library Palette (Dark Theme) */
+  --palette-slate-900: #0F1419;
+  --palette-slate-800: #1A1D23;
+  --palette-silver-100: #E8E6E3;
+  --palette-steel-400: #52575F;
+}
+```
+
+**Rule**: Never reference `--palette-*` variables directly in components. Always use semantic tokens.
+
+### Layer 2: Semantic Tokens
+
+```css
+:root {
+  /* Default theme = vintage */
+  --theme-bg-page: var(--palette-wood-900);
+  --theme-bg-card: var(--palette-wood-700);
+  --theme-text-primary: var(--palette-paper-100);
+  --theme-border-subtle: var(--palette-grain-300);
+  --theme-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] {
+  --theme-bg-page: var(--palette-slate-900);
+  --theme-bg-card: var(--palette-slate-700);
+  --theme-text-primary: var(--palette-silver-100);
+  --theme-border-subtle: var(--palette-steel-300);
+  --theme-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+```
+
+**Theme Switching**: Set `data-theme` attribute on `<html>` element.
+
+### Layer 3: Tailwind Integration
+
+```css
+@theme {
+  /* Maps semantic tokens to Tailwind utilities */
+  --color-theme-bg-page: var(--theme-bg-page);
+  --color-theme-bg-card: var(--theme-bg-card);
+  --color-theme-text-primary: var(--theme-text-primary);
+  --color-theme-border-subtle: var(--theme-border-subtle);
+  --shadow-theme-lg: var(--theme-shadow-lg);
+}
+```
+
+**Result**: Use `bg-theme-bg-page`, `text-theme-text-primary`, `shadow-theme-lg` in components.
+
+### Adding a New Theme
+
+To add a new theme (e.g., "ocean"):
+
+**Step 1**: Add palette colors (if needed)
+```css
+:root {
+  --palette-ocean-900: #0a192f;
+  --palette-ocean-100: #ccd6f6;
+}
+```
+
+**Step 2**: Add theme override
+```css
+[data-theme="ocean"] {
+  --theme-bg-page: var(--palette-ocean-900);
+  --theme-text-primary: var(--palette-ocean-100);
+  /* ... other semantic tokens ... */
+}
+```
+
+**Step 3**: Update ThemeContext (optional)
+```tsx
+type ThemeName = 'vintage' | 'dark' | 'ocean';
+```
+
+**Files modified**: 1-2 (vs 46+ previously)
+
+### Token Reference
+
+| Semantic Token | Vintage (Light) | Dark | Tailwind Class |
+|---------------|-----------------|------|----------------|
+| `--theme-bg-page` | #1A1612 | #0F1419 | `bg-theme-bg-page` |
+| `--theme-bg-card` | #2D261E | #242830 | `bg-theme-bg-card` |
+| `--theme-bg-elevated` | #3A3128 | #2D3139 | `bg-theme-bg-elevated` |
+| `--theme-bg-hover` | #453A2F | #353A42 | `bg-theme-bg-hover` |
+| `--theme-text-primary` | #EDE8E0 | #E8E6E3 | `text-theme-text-primary` |
+| `--theme-text-secondary` | #C4BAA8 | #B8B5B2 | `text-theme-text-secondary` |
+| `--theme-text-tertiary` | #9A8E7A | #8B8885 | `text-theme-text-tertiary` |
+| `--theme-border-subtle` | #3D342A | #3A3D45 | `border-theme-border-subtle` |
+| `--theme-border-default` | #554839 | #52575F | `border-theme-border-default` |
+
+### Migration Guide
+
+**Before (Legacy Pattern)**:
+```tsx
+<div className="bg-vintage-bg-card dark:bg-dark-bg-card
+                text-vintage-text-primary dark:text-dark-text-primary
+                border-vintage-border-subtle dark:border-dark-border-subtle">
+```
+
+**After (Semantic Pattern)**:
+```tsx
+<div className="bg-theme-bg-card text-theme-text-primary border-theme-border-subtle">
+```
+
+### Backward Compatibility
+
+Legacy tokens (`vintage-*`, `dark-*`) are preserved during migration:
+- Old code continues to work
+- Migrate components incrementally
+- Remove legacy tokens after full migration (Phase 8)
+
+### File Locations
+
+```
+apps/web-main/src/
+├── index.css                  # Theme variables (Layers 1-3)
+├── contexts/ThemeContext.tsx  # Theme switching logic
+└── styles/design-tokens.ts    # TypeScript token exports
+```
+
 ## Version History
 
+- v1.5.0 (2025-12-16): **Scalable Theme System** - 3-layer architecture for N-theme support, semantic tokens, reduced theme change footprint from 46 files to 1-2
 - v1.4.0 (2025-12-12): **NEW "Vintage Natural Wood Library" Light Mode Theme** - Replaced bright amber with softer vintage colors (warm ivory, beige backgrounds, stone text colors, olive green accents) for reduced eye strain and natural feel
 - v1.3.0 (2025-11-27): Added mobile edit patterns - TouchSensor, depth colors, collapsible cards, inline buttons, fixed bottom nav
 - v1.2.0 (2025-11-21): Added UI Component Library documentation - 10 reusable components with ~95% adoption

@@ -5,7 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 function App() {
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200">
+      <div className="min-h-screen bg-theme-bg-page transition-colors duration-200">
         <Navbar />
         <main className="container mx-auto px-4 py-8">
           <Outlet />
