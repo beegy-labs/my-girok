@@ -73,7 +73,7 @@ export default function FileUpload({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-2"
+          className="block text-sm font-semibold text-theme-text-secondary mb-2"
         >
           {label}
         </label>
@@ -110,19 +110,15 @@ export default function FileUpload({
             ${
               hasError
                 ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10'
-                : 'border-vintage-border-default dark:border-dark-border-subtle bg-vintage-bg-input dark:bg-dark-bg-elevated'
+                : 'border-theme-border-default bg-theme-bg-input'
             }
-            ${
-              !disabled && !uploading
-                ? 'hover:border-vintage-primary dark:hover:border-vintage-primary'
-                : ''
-            }
+            ${!disabled && !uploading ? 'hover:border-theme-primary' : ''}
           `}
         >
           {uploading ? (
             <div className="flex flex-col items-center">
               <svg
-                className="animate-spin h-8 w-8 text-vintage-primary dark:text-vintage-primary mb-2"
+                className="animate-spin h-8 w-8 text-theme-primary mb-2"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -141,14 +137,12 @@ export default function FileUpload({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
-                Uploading...
-              </p>
+              <p className="text-sm text-theme-text-secondary">Uploading...</p>
             </div>
           ) : (
             <div>
               <svg
-                className="mx-auto h-12 w-12 text-vintage-text-muted dark:text-dark-text-tertiary mb-3"
+                className="mx-auto h-12 w-12 text-theme-text-muted mb-3"
                 stroke="currentColor"
                 fill="none"
                 viewBox="0 0 48 48"
@@ -161,17 +155,11 @@ export default function FileUpload({
                   strokeLinejoin="round"
                 />
               </svg>
-              <p className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary mb-1">
-                <span className="font-semibold text-vintage-primary dark:text-vintage-primary">
-                  Click to upload
-                </span>{' '}
-                or drag and drop
+              <p className="text-sm text-theme-text-secondary mb-1">
+                <span className="font-semibold text-theme-primary">Click to upload</span> or drag
+                and drop
               </p>
-              {accept && (
-                <p className="text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary">
-                  {accept}
-                </p>
-              )}
+              {accept && <p className="text-xs text-theme-text-muted">{accept}</p>}
             </div>
           )}
         </div>
@@ -201,10 +189,7 @@ export default function FileUpload({
 
       {/* Hint Message */}
       {!hasError && hint && (
-        <p
-          id={`${inputId}-hint`}
-          className="mt-2 text-sm text-vintage-text-tertiary dark:text-dark-text-tertiary"
-        >
+        <p id={`${inputId}-hint`} className="mt-2 text-sm text-theme-text-muted">
           {hint}
         </p>
       )}

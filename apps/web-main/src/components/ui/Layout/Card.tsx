@@ -38,37 +38,25 @@ export default function Card({
   className = '',
   onClick,
 }: CardProps) {
-  // Theme: Vintage Natural Wood Library
+  // Theme: Semantic theme tokens (auto-switch via data-theme)
   const variantClasses = {
     primary: `
-      bg-vintage-bg-card dark:bg-dark-bg-card
-      border border-vintage-border-subtle dark:border-dark-border-subtle
-      shadow-vintage-md dark:shadow-dark-md
-      ${
-        interactive
-          ? 'hover:shadow-vintage-lg dark:hover:shadow-dark-lg hover:border-vintage-border-default dark:hover:border-vintage-primary/30 cursor-pointer'
-          : ''
-      }
+      bg-theme-bg-card
+      border border-theme-border-subtle
+      shadow-theme-md
+      ${interactive ? 'hover:shadow-theme-lg hover:border-theme-border-default cursor-pointer' : ''}
     `,
     secondary: `
-      bg-vintage-bg-card dark:bg-dark-bg-card
-      border border-vintage-border-default dark:border-dark-border-default
-      shadow-vintage-sm dark:shadow-dark-sm
-      ${
-        interactive
-          ? 'hover:shadow-vintage-md dark:hover:shadow-dark-md hover:border-vintage-border-strong dark:hover:border-dark-border-subtle cursor-pointer'
-          : ''
-      }
+      bg-theme-bg-card
+      border border-theme-border-default
+      shadow-theme-sm
+      ${interactive ? 'hover:shadow-theme-md hover:border-theme-border-strong cursor-pointer' : ''}
     `,
     elevated: `
-      bg-vintage-bg-elevated dark:bg-dark-bg-card
-      border border-vintage-border-subtle dark:border-dark-border-subtle
-      shadow-vintage-lg dark:shadow-dark-lg
-      ${
-        interactive
-          ? 'hover:shadow-vintage-xl dark:hover:shadow-dark-xl hover:border-vintage-border-default dark:hover:border-dark-border-default cursor-pointer'
-          : ''
-      }
+      bg-theme-bg-elevated
+      border border-theme-border-subtle
+      shadow-theme-lg
+      ${interactive ? 'hover:shadow-theme-xl hover:border-theme-border-default cursor-pointer' : ''}
     `,
   };
 

@@ -94,17 +94,17 @@ export default function CollapsibleSection({
     [collapsible, isControlled, onToggle]
   );
 
-  // Theme: Vintage Natural Wood Library
+  // Theme: Semantic theme tokens (auto-switch via data-theme)
   const variantClasses = {
     primary: `
-      bg-vintage-bg-card dark:bg-dark-bg-card
-      border border-vintage-border-subtle dark:border-dark-border-subtle
-      shadow-vintage-md dark:shadow-dark-md
+      bg-theme-bg-card
+      border border-theme-border-subtle
+      shadow-theme-md
     `,
     secondary: `
-      bg-vintage-bg-card dark:bg-dark-bg-card
-      border border-vintage-border-default dark:border-dark-border-default
-      shadow-vintage-sm dark:shadow-dark-sm
+      bg-theme-bg-card
+      border border-theme-border-default
+      shadow-theme-sm
     `,
   };
 
@@ -132,11 +132,11 @@ export default function CollapsibleSection({
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {icon && <span className="text-lg sm:text-xl lg:text-2xl flex-shrink-0">{icon}</span>}
-          <h2 className="text-base sm:text-lg lg:text-xl font-bold text-vintage-text-accent dark:text-dark-text-primary truncate">
+          <h2 className="text-base sm:text-lg lg:text-xl font-bold text-theme-text-accent truncate">
             {title}
           </h2>
           {count !== undefined && count > 0 && (
-            <span className="px-2 py-0.5 text-xs font-semibold bg-vintage-accent/20 dark:bg-vintage-accent/30 text-vintage-accent-dark dark:text-vintage-accent-light rounded-full flex-shrink-0">
+            <span className="px-2 py-0.5 text-xs font-semibold bg-theme-accent/20 text-theme-accent rounded-full flex-shrink-0">
               {count}
             </span>
           )}
@@ -148,7 +148,7 @@ export default function CollapsibleSection({
           {/* Chevron indicator - Mobile only, only if collapsible */}
           {collapsible && (
             <svg
-              className={`w-5 h-5 text-vintage-text-muted dark:text-dark-text-tertiary transition-transform sm:hidden ${
+              className={`w-5 h-5 text-theme-text-muted transition-transform sm:hidden ${
                 isExpanded ? 'rotate-180' : ''
               }`}
               fill="none"
