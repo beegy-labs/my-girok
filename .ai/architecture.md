@@ -35,12 +35,12 @@ my-girok/
 │   └── mobile-flutter/    # Flutter (iOS + Android)
 ├── services/
 │   ├── gateway/
-│   │   ├── api-gateway/   # Optional shared gateway
-│   │   ├── web-bff/       # REST + GraphQL
-│   │   └── mobile-bff/    # REST + GraphQL
-│   ├── auth-service/      # REST + GraphQL
-│   ├── personal-service/  # REST + GraphQL (Resume, etc.)
-│   └── llm-api/           # REST only (Python)
+│   │   ├── api-gateway/   # 🦀 Rust (Axum) - centralized auth/routing
+│   │   ├── web-bff/       # NestJS - web client optimization
+│   │   └── mobile-bff/    # NestJS - mobile client (future)
+│   ├── auth-service/      # NestJS - authentication
+│   ├── personal-service/  # NestJS - resume, budget, etc.
+│   └── llm-api/           # Python FastAPI
 └── packages/              # Shared code (ALWAYS use these!)
     ├── types/             # TypeScript types
     ├── nest-common/       # ✨ NestJS utilities (NEW)
@@ -55,13 +55,26 @@ my-girok/
         └── hooks/         # useAsyncOperation, etc.
 ```
 
+## Port Assignment
+
+| Service | Port | Description |
+|---------|------|-------------|
+| web-main | 3000 | React web application |
+| API Gateway | 4000 | 🦀 Rust - single entry point |
+| auth-service | 4001 | NestJS - authentication |
+| personal-service | 4002 | NestJS - personal data |
+| Web BFF | 4010 | NestJS - web client optimization |
+| Mobile BFF | 4020 | NestJS - mobile client (future) |
+
 ## Layer Responsibilities
 
-### API Gateway (Optional)
-- Central routing
-- Common middleware (CORS, rate limiting, logging)
-- JWT validation
-- Use when: Need single entry point
+### API Gateway (🦀 Rust/Axum)
+- **Centralized JWT validation** (auth-service issues, Gateway validates)
+- Rate limiting (governor)
+- OpenTelemetry tracing + Prometheus metrics
+- Reverse proxy to upstream services
+- Single entry point for all external traffic
+- Use when: Production deployment (always recommended)
 
 ### BFF Layer (Optional)
 - Client-specific API optimization
@@ -239,16 +252,30 @@ async getUser(id: string) {
 ## Authentication Flow
 
 ```
-1. User submits credentials
-2. Gateway validates & routes to auth-service
-3. Auth service executes strategy (Local/OAuth)
-4. JWT tokens issued (Access 15min + Refresh 7days)
-5. Client stores tokens:
-   - Web: HttpOnly cookies + localStorage
-   - iOS: Keychain
-   - Android: EncryptedSharedPreferences
-6. All requests include token in Authorization header
-7. Gateway/BFF validates token before routing
+┌─────────┐    ┌─────────────┐    ┌─────────────┐    ┌──────────────┐
+│ Client  │───▶│ API Gateway │───▶│ auth-service│───▶│  Database    │
+│ (web)   │    │ (Rust:4000) │    │ (NestJS:4001)│   │ (PostgreSQL) │
+└─────────┘    └─────────────┘    └─────────────┘    └──────────────┘
+
+Login Flow:
+1. Client → Gateway: POST /api/auth/login (email, password)
+2. Gateway: Route to auth-service (public route, no JWT needed)
+3. auth-service: Validate credentials, issue JWT tokens
+4. Response: Access token (15min) + Refresh token (7days)
+5. Client stores tokens (HttpOnly cookie / localStorage)
+
+Authenticated Request Flow:
+1. Client → Gateway: GET /api/resume (Authorization: Bearer <token>)
+2. Gateway: Validate JWT, extract claims
+3. Gateway: Inject headers (X-User-Id, X-User-Email, X-User-Role)
+4. Gateway → Upstream: Forward request with user headers
+5. Upstream: Trust headers, process request
+6. Response flows back through Gateway
+
+Token Storage:
+- Web: HttpOnly cookies + localStorage
+- iOS: Keychain
+- Android: EncryptedSharedPreferences
 ```
 
 ## Shared Packages Usage

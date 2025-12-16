@@ -1,0 +1,206 @@
+# ===========================================
+# API Gateway Helm Values Example
+# ===========================================
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install api-gateway . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit your actual configuration
+#   - Customize for your environment (development, staging, production)
+#   - Use Sealed Secrets for sensitive data in production
+
+# Number of replicas
+# Development: 1, Staging: 2, Production: 3+
+replicaCount: 2
+
+image:
+  repository: harbor.girok.dev/my-girok/api-gateway
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "4000"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  fsGroup: 1001
+  runAsNonRoot: true
+  runAsUser: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 4000
+  targetPort: 4000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate limiting at ingress level (backup)
+    nginx.ingress.kubernetes.io/limit-rps: "500"
+    # Timeout settings
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+  hosts:
+    # CHANGE THIS: Update with your domain
+    - host: api.girok.dev
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-gateway-tls
+      hosts:
+        - api.girok.dev
+
+# Resource limits - Rust is memory efficient
+# Development: Lower limits, Production: Higher
+resources:
+  limits:
+    cpu: 500m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+# Auto-scaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - api-gateway
+          topologyKey: kubernetes.io/hostname
+
+# ===========================================
+# Application Configuration
+# ===========================================
+
+app:
+  # Rust log level
+  rustLog: "info,api_gateway=debug,tower_http=info"
+  rustEnv: production
+  port: 4000
+
+  # Upstream Services (internal K8s DNS)
+  upstream:
+    authService: "http://auth-service:4001"
+    personalService: "http://personal-service:4002"
+    webBff: "http://web-bff:4010"
+
+  # Rate Limiting
+  rateLimit:
+    requestsPerMinute: 1000
+    burst: 100
+
+  # Performance
+  requestTimeoutSecs: 30
+  shutdownTimeoutSecs: 10
+  connectionPoolSize: 100
+
+  # CORS (comma-separated)
+  corsOrigins: "https://girok.dev,https://www.girok.dev"
+
+# OpenTelemetry Configuration
+otel:
+  enabled: false
+  endpoint: "http://otel-collector:4317"
+  serviceName: "api-gateway"
+
+# ===========================================
+# Sealed Secrets Configuration
+# ===========================================
+sealedSecrets:
+  enabled: true
+  annotations:
+    sealedsecrets.bitnami.com/managed: "true"
+
+# Health checks - Rust is fast to start
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: http
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# ===========================================
+# ENVIRONMENT-SPECIFIC CONFIGURATIONS
+# ===========================================
+#
+# DEVELOPMENT:
+#   replicaCount: 1
+#   autoscaling.enabled: false
+#   app.rustEnv: development
+#   app.rustLog: "debug,api_gateway=trace,tower_http=debug"
+#   resources.limits.cpu: 250m
+#   resources.limits.memory: 64Mi
+#   otel.enabled: false
+#
+# STAGING:
+#   replicaCount: 2
+#   autoscaling.minReplicas: 2
+#   autoscaling.maxReplicas: 5
+#   app.rustEnv: staging
+#   otel.enabled: true
+#
+# PRODUCTION:
+#   replicaCount: 3
+#   autoscaling.minReplicas: 3
+#   autoscaling.maxReplicas: 10
+#   app.rustEnv: production
+#   app.rustLog: "info,api_gateway=info"
+#   otel.enabled: true
+#   resources.limits.cpu: 1000m
+#   resources.limits.memory: 256Mi
+#
+# ===========================================
