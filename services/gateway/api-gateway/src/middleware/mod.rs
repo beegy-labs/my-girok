@@ -1,10 +1,15 @@
 //! Gateway middleware
 //!
-//! Middleware for authentication, rate limiting, and request tracing.
-//! Will be implemented in Issues #260, #261, #263.
+//! Middleware for request context extraction, authentication, rate limiting, and tracing.
 
-// TODO: Implement middleware (Issues #260, #261, #263)
-// - auth.rs: JWT authentication middleware
-// - rate_limit.rs: Rate limiting with governor
-// - tracing.rs: Request tracing middleware
-// - request_id.rs: X-Request-Id injection
+pub mod request_context;
+
+pub use request_context::{
+    request_context_middleware, DeviceType, RequestContext,
+    headers as context_headers,
+};
+
+// TODO: Implement additional middleware (future issues)
+// - auth.rs: JWT authentication middleware (Issue #260)
+// - rate_limit.rs: Rate limiting with governor (Issue #263)
+// - tracing.rs: Request tracing middleware (Issue #261)

@@ -8,6 +8,7 @@
 
 mod config;
 mod error;
+mod middleware;
 mod routes;
 mod observability;
 
@@ -15,7 +16,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use axum::Router;
+use axum::{middleware as axum_middleware, Router};
 use tokio::net::TcpListener;
 use tokio::signal;
 use tower_http::compression::CompressionLayer;
@@ -25,6 +26,7 @@ use tower_http::trace::TraceLayer;
 use tracing::{info, warn};
 
 use crate::config::AppConfig;
+use crate::middleware::request_context_middleware;
 use crate::observability::{init_metrics, init_tracing, shutdown_tracer};
 
 /// Shared application state
@@ -75,9 +77,13 @@ async fn main() -> anyhow::Result<()> {
     info!(addr = %addr, "API Gateway listening");
 
     // Run server with graceful shutdown
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal(state.clone()))
-        .await?;
+    // Use into_make_service_with_connect_info to get client socket address
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal(state.clone()))
+    .await?;
 
     // Cleanup
     shutdown_tracer();
@@ -98,6 +104,8 @@ fn build_router(state: AppState) -> Router {
         .merge(routes::health::router())
         .merge(routes::metrics::router())
         // TODO: Add proxy routes in future issues
+        // Request context middleware: extracts client IP, device info, request ID
+        .layer(axum_middleware::from_fn(request_context_middleware))
         .layer(CompressionLayer::new())
         .layer(TimeoutLayer::new(Duration::from_secs(
             state.config.request_timeout_secs,

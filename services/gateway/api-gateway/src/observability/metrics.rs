@@ -66,6 +66,12 @@ fn register_default_metrics() {
         "gateway_upstream_duration_seconds",
         "Upstream service response time in seconds"
     );
+
+    // Counter for requests by device type
+    metrics::describe_counter!(
+        "gateway_requests_by_device",
+        "Total requests grouped by device type (desktop, mobile, tablet, bot)"
+    );
 }
 
 /// Record a request metric

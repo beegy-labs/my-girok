@@ -45,9 +45,9 @@ services/gateway/api-gateway/
     │   ├── health.rs         # /health, /health/live, /health/ready
     │   └── metrics.rs        # /metrics (Prometheus)
     ├── middleware/
+    │   ├── request_context.rs # ✅ IP, device, request ID extraction
     │   ├── auth.rs           # JWT validation (Issue #260)
-    │   ├── rate_limit.rs     # Rate limiting (Issue #263)
-    │   └── tracing.rs        # Request tracing
+    │   └── rate_limit.rs     # Rate limiting (Issue #263)
     ├── proxy/
     │   ├── handler.rs        # Reverse proxy (Issue #262)
     │   └── routes.rs         # Route configuration
@@ -67,6 +67,28 @@ services/gateway/api-gateway/
 | `/health/live` | GET | K8s liveness probe |
 | `/health/ready` | GET | K8s readiness probe (503 during shutdown) |
 | `/metrics` | GET | Prometheus metrics |
+
+## Request Context Headers
+
+Gateway automatically extracts and forwards context headers to upstream services:
+
+| Header | Description | Example |
+|--------|-------------|---------|
+| `X-Forwarded-For` | Original client IP | `203.0.113.195` |
+| `X-Real-IP` | Client IP (single) | `203.0.113.195` |
+| `X-Request-Id` | Unique request ID (UUID) | `550e8400-e29b-41d4-a716-446655440000` |
+| `X-Device-Type` | Detected device | `desktop`, `mobile`, `tablet`, `bot` |
+| `X-User-Agent` | Original User-Agent | `Mozilla/5.0 (iPhone...)` |
+| `X-Accept-Language` | Client language | `ko-KR,ko;q=0.9,en;q=0.8` |
+| `X-Forwarded-Host` | Original host | `api.girok.dev` |
+| `X-Forwarded-Proto` | Protocol | `https` |
+| `X-Gateway-Timestamp` | Gateway receive time (ms) | `1702734567890` |
+
+**Device Detection Logic**:
+- `bot`: Googlebot, Bingbot, Twitterbot, etc.
+- `tablet`: iPad, Android tablets
+- `mobile`: iPhone, Android phones
+- `desktop`: Chrome, Firefox, Safari on desktop
 
 ## JWT Middleware Pattern
 
@@ -180,6 +202,7 @@ Prometheus metrics at `/metrics`:
 - `gateway_upstream_duration_seconds` - Upstream latency
 - `gateway_errors_total` - Errors by type
 - `gateway_active_connections` - Active connection gauge
+- `gateway_requests_by_device` - Requests by device type (desktop/mobile/tablet/bot)
 
 ## Performance Characteristics
 
@@ -205,6 +228,7 @@ Prometheus metrics at `/metrics`:
 | Feature | Status | Issue |
 |---------|--------|-------|
 | Basic scaffold | ✅ Done | #259 |
+| Request context headers | ✅ Done | - |
 | JWT middleware | 🔄 Pending | #260 |
 | OpenTelemetry | 🔄 Pending | #261 |
 | Reverse proxy | 🔄 Pending | #262 |
