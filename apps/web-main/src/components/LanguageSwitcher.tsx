@@ -36,7 +36,7 @@ export default function LanguageSwitcher() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-vintage-primary dark:text-vintage-primary hover:text-vintage-primary-light dark:hover:text-vintage-primary-light hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover rounded-lg transition-colors"
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-theme-primary hover:text-theme-primary-light hover:bg-theme-bg-hover rounded-lg transition-colors"
       >
         <span className="text-lg">{currentLanguage.flag}</span>
         <span className="hidden sm:inline">{currentLanguage.label}</span>
@@ -51,21 +51,21 @@ export default function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-vintage-bg-elevated dark:bg-dark-bg-elevated border border-vintage-border-subtle dark:border-dark-border-default rounded-lg shadow-vintage-lg dark:shadow-dark-lg overflow-hidden z-50">
+        <div className="absolute right-0 mt-2 w-48 bg-theme-bg-elevated border border-theme-border-subtle rounded-lg shadow-theme-lg overflow-hidden z-50">
           {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => changeLanguage(lang.code)}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
                 i18n.language === lang.code
-                  ? 'bg-vintage-primary/20 dark:bg-vintage-primary/20 text-vintage-primary-light dark:text-vintage-primary-light font-semibold'
-                  : 'text-vintage-text-secondary dark:text-dark-text-secondary hover:bg-vintage-bg-hover dark:hover:bg-dark-bg-hover'
+                  ? 'bg-theme-primary/20 text-theme-primary-light font-semibold'
+                  : 'text-theme-text-secondary hover:bg-theme-bg-hover'
               }`}
             >
               <span className="text-xl">{lang.flag}</span>
               <span>{lang.label}</span>
               {i18n.language === lang.code && (
-                <svg className="w-4 h-4 ml-auto text-vintage-primary dark:text-vintage-primary" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 ml-auto text-theme-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}

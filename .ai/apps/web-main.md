@@ -386,23 +386,59 @@ import TextInput from '../../components/ui/Form/TextInput';
 - All buttons: `onClick`, `disabled`, `size`, `className`
 - Consistent API across components
 
-**Dark Mode**:
-- All components have built-in dark mode support
-- Use `dark:` Tailwind variants
-- Automatically adapts to system/user preference
+**Theme Support**:
+- All components use semantic theme tokens (`theme-*`)
+- Automatically adapts via `data-theme` attribute
+- See "Scalable Theme Architecture" section below
 
 ## Design System
 
-**Color Theme**: Library/book theme with amber colors
+**Color Theme**: "Wood Library" (Vintage) + "Moonlit Library" (Dark)
 
-**Key Classes**:
-- Cards: `bg-amber-50/30 border-amber-100 rounded-2xl`
-- Primary Button: `bg-gradient-to-r from-amber-700 to-amber-600`
-- Secondary Button: `bg-gray-100 text-gray-700 border-gray-300`
+### Scalable Theme Architecture (2025-12)
+
+The theme system uses a 3-layer architecture for easy extensibility:
+
+```
+Layer 1: Palette (--palette-*) → Raw colors, never use directly
+Layer 2: Semantic (--theme-*)  → Theme-switchable via [data-theme]
+Layer 3: Tailwind (@theme)     → Maps to utilities (bg-theme-*, text-theme-*)
+```
+
+**Adding a New Theme**:
+```css
+/* index.css - Only modify this file */
+[data-theme="ocean"] {
+  --theme-bg-page: #0a192f;
+  --theme-text-primary: #ccd6f6;
+  /* ... semantic tokens ... */
+}
+```
+
+**Usage in Components**:
+```tsx
+// Use semantic theme classes (auto-adapts to theme)
+<div className="bg-theme-bg-card text-theme-text-primary">
+```
+
+**Note**: The legacy dual-class pattern (`vintage-* dark:dark-*`) has been removed.
+All components now use unified `theme-*` tokens.
+
+### Key Classes
+
+| Token | Usage |
+|-------|-------|
+| `bg-theme-bg-page` | Page background |
+| `bg-theme-bg-card` | Card backgrounds |
+| `text-theme-text-primary` | Primary text |
+| `text-theme-text-secondary` | Secondary text |
+| `border-theme-border-subtle` | Subtle borders |
+| `shadow-theme-lg` | Large shadows |
 
 **See**:
 - **Component Library** (above) - Ready-to-use UI components
 - `/docs/DESIGN_SYSTEM.md` - Full design guidelines
+- `apps/web-main/src/index.css` - Theme variable definitions
 
 ## Environment Variables
 
@@ -737,7 +773,10 @@ const sensors = useSensors(
 
 ### Depth Colors for Hierarchical Data
 
-Use color-coded borders for nested items (achievements, descriptions):
+Use color-coded borders for nested items (achievements, descriptions).
+
+**Note**: These use `dark:` variant intentionally - semantic colors (blue, green, etc.)
+are not part of the theme system and need explicit dark mode handling.
 
 ```typescript
 const DEPTH_COLORS = {
@@ -797,8 +836,8 @@ Use compact 24x24px icon buttons on mobile:
 For mobile preview toggle and navigation:
 
 ```jsx
-<div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-bg-card
-                border-t border-gray-200 p-3 lg:hidden safe-area-bottom">
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card
+                border-t border-theme-border-subtle p-3 lg:hidden safe-area-bottom">
   <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
     <SecondaryButton className="flex-1 py-3">← Back</SecondaryButton>
     <PrimaryButton className="flex-1 py-3">👁️ Preview</PrimaryButton>

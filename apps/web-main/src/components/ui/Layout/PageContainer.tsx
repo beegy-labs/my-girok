@@ -77,7 +77,7 @@ export default function PageContainer({
 }: PageContainerProps) {
   if (centered) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4 bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200">
+      <div className="min-h-[80vh] flex items-center justify-center px-4 bg-theme-bg-page transition-colors duration-200">
         <div className={`${maxWidthClasses[maxWidth]} w-full ${className}`}>
           {children}
         </div>
@@ -86,7 +86,7 @@ export default function PageContainer({
   }
 
   return (
-    <div className="min-h-screen bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200">
+    <div className="min-h-screen bg-theme-bg-page transition-colors duration-200">
       <div
         className={`
           ${maxWidthClasses[maxWidth]} mx-auto

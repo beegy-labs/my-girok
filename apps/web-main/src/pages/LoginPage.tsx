@@ -66,15 +66,15 @@ export default function LoginPage() {
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex items-center justify-center mb-3">
           <span className="text-2xl sm:text-3xl mr-2">📚</span>
-          <h1 className="text-3xl sm:text-4xl font-bold text-vintage-text-primary dark:text-dark-text-primary">
+          <h1 className="text-3xl sm:text-4xl font-bold text-theme-text-primary">
             My-Girok
           </h1>
         </div>
-        <p className="text-vintage-text-secondary dark:text-dark-text-secondary text-sm">{t('auth.startRecording')}</p>
+        <p className="text-theme-text-secondary text-sm">{t('auth.startRecording')}</p>
       </div>
 
       {/* Login Form */}
-      <Card variant="primary" padding="lg" className="shadow-vintage-xl dark:shadow-dark-xl">
+      <Card variant="primary" padding="lg" className="shadow-theme-xl">
         {error && <Alert type="error" message={error} className="mb-6" />}
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -106,9 +106,9 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberEmail}
                 onChange={(e) => setRememberEmail(e.target.checked)}
-                className="w-4 h-4 text-vintage-primary dark:text-vintage-primary bg-vintage-bg-input dark:bg-dark-bg-secondary border-vintage-border-default dark:border-dark-border-default rounded focus:ring-vintage-primary dark:focus:ring-vintage-primary focus:ring-2"
+                className="w-4 h-4 text-theme-primary bg-theme-bg-input border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
               />
-              <label htmlFor="rememberEmail" className="ml-2 text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
+              <label htmlFor="rememberEmail" className="ml-2 text-sm text-theme-text-secondary">
                 {t('auth.rememberEmail')}
               </label>
             </div>
@@ -124,12 +124,12 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-vintage-border-subtle dark:border-dark-border-subtle">
-            <p className="text-center text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
+          <div className="mt-8 pt-6 border-t border-theme-border-subtle">
+            <p className="text-center text-sm text-theme-text-secondary">
               {t('auth.noAccount')}{' '}
               <Link
                 to="/register"
-                className="font-semibold text-vintage-primary dark:text-vintage-primary hover:text-vintage-primary-light dark:hover:text-vintage-primary-light transition-colors"
+                className="font-semibold text-theme-primary hover:text-theme-primary-light transition-colors"
               >
                 {t('auth.registerHere')}
               </Link>
@@ -138,7 +138,7 @@ export default function LoginPage() {
         </Card>
 
       {/* Footer Note */}
-      <p className="text-center text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary mt-6">
+      <p className="text-center text-xs text-theme-text-tertiary mt-6">
         By signing in, you agree to our Terms of Service and Privacy Policy
       </p>
     </PageContainer>

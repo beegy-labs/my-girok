@@ -30,7 +30,7 @@ export default function LoadingSpinner({
   const content = (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <CharacterLoader state="loading" size={size} />
-      <p className="mt-6 text-base font-medium text-vintage-text-secondary dark:text-dark-text-secondary">
+      <p className="mt-6 text-base font-medium text-theme-text-secondary">
         {message || defaultMessage}
       </p>
     </div>
@@ -38,7 +38,7 @@ export default function LoadingSpinner({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-vintage-bg-page dark:bg-dark-bg-primary z-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-theme-bg-page z-50">
         {content}
       </div>
     );

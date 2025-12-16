@@ -123,9 +123,9 @@ export default function ResumePreviewContainer({
 
   // Build container classes
   const outerClasses = [
-    'bg-vintage-bg-secondary dark:bg-dark-bg-secondary/50',
+    'bg-theme-bg-secondary',
     responsivePadding ? 'p-1 sm:p-2 md:p-4' : 'p-2 sm:p-4',
-    'rounded-lg shadow-vintage-inner dark:shadow-dark-inner',
+    'rounded-lg shadow-theme-inner',
     'transition-colors duration-200',
     'w-full',
     containerClassName,
