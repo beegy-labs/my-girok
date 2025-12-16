@@ -46,17 +46,17 @@ export default class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg-primary">
+        <div className="min-h-screen flex items-center justify-center bg-vintage-bg-page dark:bg-dark-bg-primary">
           <CharacterMessage
             type="error"
             size={150}
             action={
               <button
                 onClick={this.handleReset}
-                className="bg-gradient-to-r from-amber-700 to-amber-600 dark:from-amber-400 dark:to-amber-500
-                           hover:from-amber-800 hover:to-amber-700 dark:hover:from-amber-300 dark:hover:to-amber-400
-                           text-white dark:text-gray-900 px-6 py-3 rounded-lg font-semibold
-                           shadow-lg shadow-amber-700/30 dark:shadow-amber-500/20
+                className="bg-gradient-to-r from-vintage-primary-dark to-vintage-primary dark:from-vintage-primary-dark dark:to-vintage-primary
+                           hover:from-vintage-primary hover:to-vintage-primary-light dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light
+                           text-white dark:text-white px-6 py-3 rounded-lg font-semibold
+                           shadow-lg shadow-vintage-primary/30 dark:shadow-vintage-primary/30
                            transform hover:scale-105 transition-all"
               >
                 {i18n.t('common.backToHome')}

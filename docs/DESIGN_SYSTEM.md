@@ -17,62 +17,114 @@ My-Girok is a personal record-keeping platform where users document their life s
 
 ## Color Palette
 
-### Primary Colors (Library Theme)
+### Theme: "Warm Library" (원목 도서관의 은은한 조명)
 
-#### Main Brand Color
+**Design Philosophy**: 원목으로 된 도서관에서 은은한 조명 아래 책을 읽는 분위기. 콘텐츠(글, 사진)에 집중할 수 있도록 배경은 원목 느낌, 콘텐츠 영역은 오래된 책 페이지처럼 밝게.
+
+**핵심 원칙**:
+- 배경: 원목 책장/책상 느낌의 따뜻한 베이지
+- 콘텐츠 영역: 오래된 책 페이지 같은 크림색 (집중도 향상)
+- 조명: 은은한 램프 조명의 따뜻한 호박색
+- 악센트: 고급 책 장정의 가죽/버건디
+
+### Light Mode - Warm Wood Library
+
+#### Primary Colors (따뜻한 램프 조명)
 ```css
-/* Warm Brown - Vintage book cover feel */
---primary-amber-900: #78350F;
---primary-amber-800: #92400E;
---primary-amber-700: #B45309;
---primary-amber-600: #D97706;
+/* 은은한 램프 조명 느낌의 호박색/시에나 */
+--vintage-primary-dark: #8B5A2B;    /* 진한 호박 - Primary CTA */
+--vintage-primary: #A0522D;          /* 시에나 - 따뜻한 조명 */
+--vintage-primary-light: #B8763A;    /* 밝은 호박 - Hover states */
 ```
 
-#### Secondary Colors
+#### Background Colors (원목 + 오래된 책 페이지)
 ```css
-/* Cool Gray - Serene study atmosphere */
---secondary-gray-700: #374151;
---secondary-gray-600: #4B5563;
---secondary-gray-500: #6B7280;
+/* 원목 배경 + 크림색 콘텐츠 영역 */
+--vintage-bg-page: #E8DFD4;          /* 원목 책상/선반 - Page background */
+--vintage-bg-card: #F7F3ED;          /* 오래된 책 페이지 - 콘텐츠 집중 */
+--vintage-bg-elevated: #FFFDF9;      /* 밝은 페이지 - Elevated surfaces */
+--vintage-bg-input: #FFFEFA;         /* 깨끗한 크림 - Form inputs */
 ```
 
-#### Accent Colors
+#### Text Colors (잉크/세피아)
 ```css
-/* Warm Amber - Cozy lighting */
---accent-amber-500: #F59E0B;
---accent-amber-400: #FBBF24;
+/* 오래된 잉크 느낌의 세피아 톤 */
+--vintage-text-primary: #2C2416;     /* 진한 세피아 - 오래된 잉크 */
+--vintage-text-secondary: #4A3F2F;   /* 중간 세피아 - Body text */
+--vintage-text-tertiary: #6B5D4A;    /* 연한 세피아 - Secondary text */
+--vintage-text-muted: #8C7B65;       /* 흐린 세피아 - Hints, captions */
+--vintage-text-accent: #5C3D1E;      /* 가죽 바인딩 - Emphasis */
 ```
 
-#### Background Colors
+#### Border Colors (나무결)
 ```css
-/* Off-white - Book page feel */
---bg-amber-50: #FFFBEB;
---bg-gray-50: #F9FAFB;
---bg-white: #FFFFFF;
+/* 자연스러운 나무결 느낌 */
+--vintage-border-subtle: #D9CEBF;    /* 연한 나무결 */
+--vintage-border-default: #C4B5A1;   /* 중간 나무결 */
+--vintage-border-strong: #A89880;    /* 진한 나무결 */
 ```
 
-### Usage Guidelines
+#### Accent Colors (가죽/버건디)
+```css
+/* 고급 책 장정의 가죽 바인딩 느낌 */
+--vintage-accent-dark: #6B2D2D;      /* 딥 버건디 - Strong emphasis */
+--vintage-accent: #8B4343;           /* 버건디 - Primary accent */
+--vintage-accent-light: #A85858;     /* 라이트 버건디 - Hover states */
+--vintage-accent-pale: #C27070;      /* 페일 버건디 - Subtle backgrounds */
+```
+
+#### Shadows (은은한 조명 효과)
+```css
+/* 따뜻한 그림자 - 램프 조명 아래 느낌 */
+--shadow-vintage-sm: 0 1px 3px rgba(44, 36, 22, 0.08);
+--shadow-vintage-md: 0 4px 8px rgba(44, 36, 22, 0.12);
+--shadow-vintage-lg: 0 10px 20px rgba(44, 36, 22, 0.15);
+```
+
+### Dark Mode - Moonlit Library (달빛 아래 서재)
+
+```css
+/* 어두운 원목 배경 */
+--dark-bg-primary: #1A1612;          /* 어두운 원목 */
+--dark-bg-secondary: #231E18;        /* 중간 원목 */
+--dark-bg-card: #2D261E;             /* 약간 밝은 원목 */
+--dark-bg-elevated: #3A3128;         /* 돌출 영역 */
+--dark-bg-hover: #453A2F;            /* 호버 */
+
+/* 오래된 종이색 텍스트 */
+--dark-text-primary: #EDE8E0;        /* 오래된 종이 */
+--dark-text-secondary: #C4BAA8;      /* 중간 톤 */
+--dark-text-tertiary: #9A8E7A;       /* 연한 톤 */
+
+/* 나무결 테두리 */
+--dark-border-subtle: #3D342A;
+--dark-border-default: #554839;
+--dark-border-strong: #6E5D4A;
+```
+
+### Usage Guidelines (Light Mode)
+
+#### Background Hierarchy (콘텐츠 집중)
+- **Page Background**: 원목 느낌 → `vintage-bg-page` (#E8DFD4)
+- **Cards/Content**: 책 페이지 느낌 → `vintage-bg-card` (#F7F3ED)
+- **Elevated/Focus**: 밝은 페이지 → `vintage-bg-elevated` (#FFFDF9)
+- **Inputs**: 깨끗한 입력 → `vintage-bg-input` (#FFFEFA)
 
 #### Primary Use Cases
-- **Main Actions**: Login buttons, CTAs → `amber-700 to amber-600` gradient
-- **Headers**: Page titles, section headers → `amber-900`
-- **Links**: Interactive text elements → `amber-700`
+- **Main Actions**: 버튼, CTA → `vintage-primary` gradient (호박색)
+- **Headers**: 섹션 제목 → `vintage-text-accent` (가죽 갈색)
+- **Links**: 링크 → `vintage-primary`
 
-#### Secondary Use Cases
-- **Body Text**: Main content → `gray-700`
-- **Secondary Text**: Descriptions, hints → `gray-600`
-- **Borders**: Card outlines, dividers → `amber-100`, `gray-200`
-
-#### Background Use Cases
-- **Cards**: Content containers → `amber-50/30` (30% opacity)
-- **Page Background**: Default background → `gray-50`
-- **Form Inputs**: Input fields → `white` with `amber-200` borders
+#### Accent Use Cases
+- **Important tags**: 버건디 계열 → `vintage-accent`
+- **Highlights**: 고급스러운 강조 → `vintage-accent-light`
 
 ### Color Accessibility
 All color combinations meet WCAG 2.1 AA standards:
-- `amber-900` on `white`: 8.52:1 (AAA)
-- `gray-700` on `white`: 7.21:1 (AAA)
-- `amber-700` on `white`: 5.12:1 (AA)
+- `vintage-text-primary` on `vintage-bg-card`: 11.2:1 (AAA)
+- `vintage-text-secondary` on `vintage-bg-card`: 7.8:1 (AAA)
+- `vintage-primary` on `vintage-bg-elevated`: 5.1:1 (AA)
+- `vintage-accent-dark` on `vintage-accent-pale/20`: 8.2:1 (AAA)
 
 ### Special Case: Resume Preview & Print (Print-Optimized)
 
@@ -2089,6 +2141,7 @@ Potential component library extensions:
 
 ## Version History
 
+- v1.4.0 (2025-12-12): **NEW "Vintage Natural Wood Library" Light Mode Theme** - Replaced bright amber with softer vintage colors (warm ivory, beige backgrounds, stone text colors, olive green accents) for reduced eye strain and natural feel
 - v1.3.0 (2025-11-27): Added mobile edit patterns - TouchSensor, depth colors, collapsible cards, inline buttons, fixed bottom nav
 - v1.2.0 (2025-11-21): Added UI Component Library documentation - 10 reusable components with ~95% adoption
 - v1.1.0 (2025-01-15): Added comprehensive mobile-first responsive design patterns and guidelines

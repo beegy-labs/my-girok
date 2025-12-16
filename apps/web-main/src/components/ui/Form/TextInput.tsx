@@ -70,7 +70,7 @@ export default function TextInput({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-semibold text-gray-700 dark:text-dark-text-secondary mb-2"
+          className="block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-2"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -81,7 +81,7 @@ export default function TextInput({
       <div className="relative">
         {/* Icon (if provided) */}
         {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-dark-text-tertiary">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-vintage-text-muted dark:text-dark-text-tertiary">
             {icon}
           </div>
         )}
@@ -110,18 +110,18 @@ export default function TextInput({
           className={`
             w-full px-4 py-3
             ${icon ? 'pl-10' : ''}
-            bg-white dark:bg-dark-bg-elevated
+            bg-vintage-bg-input dark:bg-dark-bg-elevated
             border
             ${
               hasError
                 ? 'border-red-300 dark:border-red-700 focus:ring-red-400'
-                : 'border-amber-200 dark:border-dark-border-default focus:ring-amber-400'
+                : 'border-vintage-border-default dark:border-dark-border-default focus:ring-vintage-primary'
             }
             rounded-lg
             focus:outline-none focus:ring-2 focus:border-transparent
             transition-all
-            text-gray-900 dark:text-dark-text-primary
-            placeholder:text-gray-400 dark:placeholder:text-dark-text-tertiary
+            text-vintage-text-primary dark:text-dark-text-primary
+            placeholder:text-vintage-text-muted dark:placeholder:text-dark-text-tertiary
             disabled:opacity-50 disabled:cursor-not-allowed
           `}
         />
@@ -153,7 +153,7 @@ export default function TextInput({
       {!hasError && hint && (
         <p
           id={`${inputId}-hint`}
-          className="mt-2 text-sm text-gray-500 dark:text-dark-text-tertiary"
+          className="mt-2 text-sm text-vintage-text-muted dark:text-dark-text-tertiary"
         >
           {hint}
         </p>

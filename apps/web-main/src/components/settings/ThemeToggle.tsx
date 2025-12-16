@@ -27,10 +27,10 @@ export default function ThemeToggle() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary">
+        <h3 className="text-lg font-semibold text-vintage-text-primary dark:text-dark-text-primary">
           {t('settings.darkMode')}
         </h3>
-        <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
+        <p className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary">
           {t('settings.themeDescription')}
         </p>
       </div>
@@ -39,7 +39,7 @@ export default function ThemeToggle() {
         className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
           currentTheme === Theme.DARK
             ? 'bg-amber-600 dark:bg-amber-500'
-            : 'bg-gray-300 dark:bg-dark-border-default'
+            : 'bg-vintage-border-default dark:bg-dark-border-default'
         }`}
         aria-label="Toggle theme"
       >

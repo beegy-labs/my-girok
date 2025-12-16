@@ -10,7 +10,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 export default function MainLayout() {
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg-primary transition-colors duration-200">
+      <div className="min-h-screen bg-vintage-bg-page dark:bg-dark-bg-primary transition-colors duration-200">
         <Navbar />
         <main className="container mx-auto px-4 py-6 sm:py-8">
           <Outlet />
