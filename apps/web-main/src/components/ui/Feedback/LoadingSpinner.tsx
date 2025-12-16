@@ -44,7 +44,7 @@ export default function LoadingSpinner({
       className={`
         animate-spin rounded-full
         ${sizeClasses[size]}
-        border-vintage-primary dark:border-vintage-primary
+        border-theme-primary
       `}
       role="status"
       aria-label="Loading"
@@ -57,7 +57,7 @@ export default function LoadingSpinner({
         className={`
           min-h-screen
           flex items-center justify-center
-          bg-vintage-bg-page dark:bg-dark-bg-primary
+          bg-theme-bg-page
           transition-colors duration-200
           ${className}
         `}
@@ -65,9 +65,7 @@ export default function LoadingSpinner({
         <div className="text-center">
           <div className="mx-auto">{spinner}</div>
           {message && (
-            <p className="mt-4 text-vintage-text-secondary dark:text-dark-text-secondary font-medium">
-              {message}
-            </p>
+            <p className="mt-4 text-theme-text-secondary font-medium">{message}</p>
           )}
         </div>
       </div>
@@ -78,9 +76,7 @@ export default function LoadingSpinner({
     <div className={`flex items-center justify-center ${className}`}>
       {spinner}
       {message && (
-        <p className="ml-3 text-vintage-text-secondary dark:text-dark-text-secondary font-medium">
-          {message}
-        </p>
+        <p className="ml-3 text-theme-text-secondary font-medium">{message}</p>
       )}
     </div>
   );

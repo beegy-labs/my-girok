@@ -64,7 +64,7 @@ export default function Select({
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary mb-2"
+          className="block text-sm font-semibold text-theme-text-secondary mb-2"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -89,17 +89,17 @@ export default function Select({
         }
         className={`
           w-full px-4 py-3
-          bg-vintage-bg-input dark:bg-dark-bg-elevated
+          bg-theme-bg-input
           border
           ${
             hasError
               ? 'border-red-300 dark:border-red-700 focus:ring-red-400'
-              : 'border-vintage-border-default dark:border-dark-border-default focus:ring-vintage-primary'
+              : 'border-theme-border-default focus:ring-theme-primary'
           }
           rounded-lg
           focus:outline-none focus:ring-2 focus:border-transparent
           transition-all
-          text-vintage-text-primary dark:text-dark-text-primary
+          text-theme-text-primary
           disabled:opacity-50 disabled:cursor-not-allowed
         `}
       >
@@ -141,7 +141,7 @@ export default function Select({
       {!hasError && hint && (
         <p
           id={`${selectId}-hint`}
-          className="mt-2 text-sm text-vintage-text-muted dark:text-dark-text-tertiary"
+          className="mt-2 text-sm text-theme-text-muted"
         >
           {hint}
         </p>

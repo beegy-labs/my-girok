@@ -67,13 +67,13 @@ export default function TextArea({
         <div className="flex items-center justify-between mb-2">
           <label
             htmlFor={textareaId}
-            className="block text-sm font-semibold text-vintage-text-secondary dark:text-dark-text-secondary"
+            className="block text-sm font-semibold text-theme-text-secondary"
           >
             {label}
             {required && <span className="text-red-500 ml-1">*</span>}
           </label>
           {showCounter && (
-            <span className="text-xs text-vintage-text-tertiary dark:text-dark-text-tertiary">
+            <span className="text-xs text-theme-text-tertiary">
               {charCount}/{maxLength}
             </span>
           )}
@@ -101,18 +101,18 @@ export default function TextArea({
         }
         className={`
           w-full px-4 py-3
-          bg-vintage-bg-input dark:bg-dark-bg-elevated
+          bg-theme-bg-input
           border
           ${
             hasError
               ? 'border-red-300 dark:border-red-700 focus:ring-red-400'
-              : 'border-vintage-border-default dark:border-dark-border-default focus:ring-vintage-primary'
+              : 'border-theme-border-default focus:ring-theme-primary'
           }
           rounded-lg
           focus:outline-none focus:ring-2 focus:border-transparent
           transition-all
-          text-vintage-text-primary dark:text-dark-text-primary
-          placeholder:text-vintage-text-muted dark:placeholder:text-dark-text-tertiary
+          text-theme-text-primary
+          placeholder:text-theme-text-muted
           disabled:opacity-50 disabled:cursor-not-allowed
           resize-y
         `}
@@ -144,7 +144,7 @@ export default function TextArea({
       {!hasError && hint && (
         <p
           id={`${textareaId}-hint`}
-          className="mt-2 text-sm text-vintage-text-tertiary dark:text-dark-text-tertiary"
+          className="mt-2 text-sm text-theme-text-muted"
         >
           {hint}
         </p>
