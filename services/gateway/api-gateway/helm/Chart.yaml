@@ -1,0 +1,23 @@
+apiVersion: v2
+name: api-gateway
+description: High-performance Rust API Gateway for my-girok platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - gateway
+  - api-gateway
+  - rust
+  - axum
+  - authentication
+  - rate-limiting
+  - observability
+
+maintainers:
+  - name: Beegy Labs
+    email: beegy.net@gmail.com
+
+home: https://github.com/beegy-labs/my-girok
+sources:
+  - https://github.com/beegy-labs/my-girok
