@@ -315,13 +315,11 @@ import {
 
 ## Stack Reference
 
-- **Web**: React 19.2 + Vite 7.2, Next.js 15, TypeScript 5.9, Tailwind 4.1
-- **Mobile**: Flutter 3.24+ (Dart 3.5+) - iOS & Android
+- **Web**: React 19.2 + Vite 7.2, TypeScript 5.9, Tailwind 4.1
 - **Backend**: Node.js 24, NestJS 11
 - **Database**: PostgreSQL 16 + Prisma 6 + Redis
-- **AI**: Python 3.13, FastAPI
 - **Tools**: pnpm, Turborepo
-- **Deploy**: Kubernetes, Kustomize, Sealed Secrets
+- **Deploy**: Kubernetes, Kustomize, ArgoCD, Sealed Secrets
 
 ## Documentation Links
 

@@ -20,28 +20,13 @@
 **Working on authentication?**
 → Read: `.ai/rules.md` + `.ai/services/auth-service.md`
 
-**Working on content (posts/notes)?**
-→ Read: `.ai/rules.md` + `.ai/services/content-api.md`
-
-**Working on BFF layer?**
-→ Read: `.ai/rules.md` + `.ai/architecture.md` + `.ai/services/web-bff.md` or `.ai/services/mobile-bff.md`
-
-**Working on API Gateway?**
-→ Read: `.ai/rules.md` + `.ai/services/api-gateway.md`
-
-**Working on AI features?**
-→ Read: `.ai/rules.md` + `.ai/services/llm-api.md`
+**Working on personal data (resume, share)?**
+→ Read: `.ai/rules.md` + `.ai/services/personal-service.md`
 
 ### Frontend Development
 
 **Working on web app?**
 → Read: `.ai/rules.md` + `.ai/apps/web-main.md`
-
-**Working on admin dashboard?**
-→ Read: `.ai/rules.md` + `.ai/apps/web-admin.md`
-
-**Working on mobile app (Flutter)?**
-→ Read: `.ai/rules.md` + `.ai/apps/mobile-flutter.md`
 
 ## Documentation Structure
 
@@ -50,30 +35,21 @@ my-girok/
 ├── CLAUDE.md                 # ← You are here (Entry point)
 ├── README.md                 # Project introduction
 │
-├── .ai/                      # 🤖 LLM-optimized docs (~10K tokens)
+├── .ai/                      # 🤖 LLM-optimized docs
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
 │   ├── architecture.md       # Architecture patterns
 │   ├── services/             # Backend service APIs
-│   │   ├── auth-service.md
-│   │   ├── content-api.md
-│   │   ├── web-bff.md
-│   │   ├── mobile-bff.md
-│   │   ├── api-gateway.md
-│   │   └── llm-api.md
-│   └── apps/                 # Frontend app guides
-│       ├── web-main.md
-│       ├── web-admin.md
-│       └── mobile-flutter.md
+│   │   ├── auth-service.md   # Authentication (Node.js)
+│   │   └── personal-service.md # Resume, Share, Preferences
+│   ├── apps/                 # Frontend app guides
+│   │   └── web-main.md       # Main web application
+│   └── packages/             # Shared packages
+│       └── nest-common.md    # NestJS utilities
 │
-└── docs/                     # 📚 Human-readable docs (~73K tokens)
+└── docs/                     # 📚 Human-readable docs
     ├── policies/             # Detailed policies
-    │   ├── SECURITY.md
-    │   ├── TESTING.md
-    │   ├── PERFORMANCE.md
-    │   └── DEPLOYMENT.md
-    ├── guides/               # Tutorials
-    └── api/                  # API specs
+    └── DESIGN_SYSTEM.md      # Theme system guide
 ```
 
 ## Key Principles
@@ -116,11 +92,9 @@ feat/* ──squash──▶ develop ──merge──▶ release ──merge─
 
 ### Stack
 - **Web**: React 19.2, TypeScript 5.9, Tailwind CSS 4.1, Vite 7.2
-- **Mobile**: iOS (Swift), Android (Kotlin)
 - **Backend**: Node.js 24, NestJS 11
 - **Database**: PostgreSQL 16 + Prisma 6 + Redis
-- **AI**: Python 3.13, FastAPI
-- **Deploy**: Kubernetes, Kustomize
+- **Deploy**: Kubernetes, Kustomize, ArgoCD
 
 ## Need More Detail?
 

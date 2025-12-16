@@ -201,12 +201,12 @@ pnpm dev
 
 6. **Access applications**
 
-- Web App: http://localhost:3000
-- Auth Service: http://localhost:3001
-- Personal Service: http://localhost:3002
+- Web App: http://localhost:5173
+- Auth Service: http://localhost:4001
+- Personal Service: http://localhost:4002
 - API Docs:
-  - Auth: http://localhost:3001/api/docs
-  - Personal: http://localhost:3002/api/docs
+  - Auth: http://localhost:4001/api/docs
+  - Personal: http://localhost:4002/api/docs
 
 ## 📖 Documentation
 
@@ -259,16 +259,10 @@ my-girok/
 │   │   ├── prisma/               # Database schema
 │   │   ├── helm/                 # Kubernetes Helm chart
 │   │   └── Dockerfile
-│   └── gateway/
-│       ├── web-bff/              # Web Backend-for-Frontend
-│       └── mobile-bff/           # Mobile Backend-for-Frontend (planned)
 ├── packages/
-│   └── types/                     # Shared TypeScript types
-│       └── src/
-│           ├── auth/
-│           ├── user/
-│           ├── resume/
-│           └── budget/
+│   ├── types/                     # Shared TypeScript types
+│   ├── nest-common/               # Shared NestJS utilities
+│   └── ui-components/             # Shared React components
 ├── docs/                          # Documentation
 ├── .ai/                           # LLM-optimized docs
 ├── docker-compose.yml             # Docker orchestration
@@ -531,8 +525,7 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 - [ ] Share budget summaries
 
 **Additional Features:**
-- [ ] Admin dashboard (Next.js)
-- [ ] Mobile apps (iOS, Android)
+- [ ] Admin dashboard
 - [ ] Email verification
 - [ ] Password reset flow
 - [ ] Two-factor authentication (2FA)
