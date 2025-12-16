@@ -89,10 +89,10 @@ export default function SectionOrderManager() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-vintage-text-primary dark:text-dark-text-primary mb-2">
+        <h3 className="text-lg font-semibold theme-text-primary mb-2">
           {t('settings.sectionOrder')}
         </h3>
-        <p className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary mb-4">
+        <p className="text-sm theme-text-secondary mb-4">
           {t('settings.sectionOrderDescription')}
         </p>
       </div>
@@ -101,14 +101,14 @@ export default function SectionOrderManager() {
         {sections.map((section, index) => (
           <div
             key={section.type}
-            className="flex items-center justify-between bg-vintage-bg-card dark:bg-dark-bg-elevated border border-vintage-border-default dark:border-dark-border-default rounded-lg p-4 transition-colors duration-200"
+            className="flex items-center justify-between theme-bg-elevated border theme-border-default rounded-lg p-4 transition-colors duration-200"
           >
             <div className="flex items-center space-x-4">
               <div className="flex flex-col space-y-1">
                 <button
                   onClick={() => handleMoveUp(index)}
                   disabled={index === 0}
-                  className="text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-primary dark:hover:text-vintage-primary disabled:text-vintage-text-muted dark:disabled:text-dark-text-disabled disabled:cursor-not-allowed transition-colors"
+                  className="theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
                   aria-label="Move up"
                 >
                   ▲
@@ -116,24 +116,24 @@ export default function SectionOrderManager() {
                 <button
                   onClick={() => handleMoveDown(index)}
                   disabled={index === sections.length - 1}
-                  className="text-vintage-text-secondary dark:text-dark-text-secondary hover:text-vintage-primary dark:hover:text-vintage-primary disabled:text-vintage-text-muted dark:disabled:text-dark-text-disabled disabled:cursor-not-allowed transition-colors"
+                  className="theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
                   aria-label="Move down"
                 >
                   ▼
                 </button>
               </div>
-              <span className="text-vintage-text-primary dark:text-dark-text-primary font-medium">
+              <span className="theme-text-primary font-medium">
                 {getSectionLabel(section.type)}
               </span>
             </div>
 
             <label className="flex items-center space-x-2 cursor-pointer">
-              <span className="text-sm text-vintage-text-secondary dark:text-dark-text-secondary">{t('settings.visibility')}</span>
+              <span className="text-sm theme-text-secondary">{t('settings.visibility')}</span>
               <input
                 type="checkbox"
                 checked={section.visible}
                 onChange={() => handleVisibilityToggle(section.type)}
-                className="w-5 h-5 text-vintage-primary dark:text-vintage-primary bg-vintage-bg-card dark:bg-dark-bg-secondary border-vintage-border-default dark:border-dark-border-default rounded focus:ring-vintage-primary dark:focus:ring-vintage-primary"
+                className="w-5 h-5 text-theme-primary theme-bg-card border-theme-border-default rounded focus:ring-theme-primary"
               />
             </label>
           </div>
@@ -142,7 +142,7 @@ export default function SectionOrderManager() {
 
       <button
         onClick={handleSave}
-        className="w-full bg-gradient-to-r from-vintage-primary-dark to-vintage-primary dark:from-vintage-primary-dark dark:to-vintage-primary hover:from-vintage-primary hover:to-vintage-primary-light dark:hover:from-vintage-primary dark:hover:to-vintage-primary-light text-white dark:text-white font-semibold py-3 px-6 rounded-lg shadow-vintage-lg dark:shadow-dark-lg shadow-vintage-primary/30 dark:shadow-vintage-primary/30 transform hover:scale-[1.02] transition-all"
+        className="w-full bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white font-semibold py-3 px-6 rounded-lg shadow-theme-lg shadow-theme-primary/30 transform hover:scale-[1.02] transition-all"
       >
         {t('common.save')}
       </button>
