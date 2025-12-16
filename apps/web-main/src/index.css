@@ -85,33 +85,34 @@
   --shadow-vintage-inner: var(--shadow-base-inner);
 
   /* ============================================
-     DARK MODE (dark-*) - base 색상 참조
+     DARK MODE (dark-*) - Moonlit Library Theme (흑색 계열)
+     PR #214 원본 값
      ============================================ */
 
-  --color-dark-bg-primary: var(--color-base-bg-page);
-  --color-dark-bg-secondary: var(--color-base-bg-secondary);
-  --color-dark-bg-card: var(--color-base-bg-card);
-  --color-dark-bg-elevated: var(--color-base-bg-elevated);
-  --color-dark-bg-hover: var(--color-base-bg-hover);
+  --color-dark-bg-primary: #0F1419;
+  --color-dark-bg-secondary: #1A1D23;
+  --color-dark-bg-card: #242830;
+  --color-dark-bg-elevated: #2D3139;
+  --color-dark-bg-hover: #353A42;
 
-  --color-dark-text-primary: var(--color-base-text-primary);
-  --color-dark-text-secondary: var(--color-base-text-secondary);
-  --color-dark-text-tertiary: var(--color-base-text-tertiary);
-  --color-dark-text-disabled: var(--color-base-text-muted);
-  --color-dark-text-accent: var(--color-base-primary-dark);
+  --color-dark-text-primary: #E8E6E3;
+  --color-dark-text-secondary: #B8B5B2;
+  --color-dark-text-tertiary: #8B8885;
+  --color-dark-text-disabled: #5A5856;
+  --color-dark-text-accent: #78350F;
 
-  --color-dark-border-subtle: var(--color-base-border-subtle);
-  --color-dark-border-default: var(--color-base-border-default);
-  --color-dark-border-strong: var(--color-base-border-strong);
-  --color-dark-border-accent: var(--color-base-primary-dark);
+  --color-dark-border-subtle: #3A3D45;
+  --color-dark-border-default: #52575F;
+  --color-dark-border-strong: #6B7078;
+  --color-dark-border-accent: #78350F;
 
-  --shadow-dark-sm: var(--shadow-base-sm);
-  --shadow-dark-md: var(--shadow-base-md);
-  --shadow-dark-lg: var(--shadow-base-lg);
-  --shadow-dark-xl: var(--shadow-base-xl);
-  --shadow-dark-2xl: var(--shadow-base-2xl);
-  --shadow-dark-inner: var(--shadow-base-inner);
-  --shadow-amber-glow: var(--shadow-base-glow);
+  --shadow-dark-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-dark-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-dark-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
+  --shadow-dark-xl: 0 15px 30px rgba(0, 0, 0, 0.6);
+  --shadow-dark-2xl: 0 20px 40px rgba(0, 0, 0, 0.7);
+  --shadow-dark-inner: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-amber-glow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 /* Dark mode variant using class strategy */
