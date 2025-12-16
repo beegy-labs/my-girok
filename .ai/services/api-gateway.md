@@ -1,217 +1,274 @@
-# API Gateway (Rust)
+# API Gateway
 
-> High-performance centralized routing and middleware layer
+> Optional centralized routing and middleware layer
 
 ## Purpose
 
-Provides single entry point for all clients, handles cross-cutting concerns:
-- **JWT Authentication**: Centralized token validation
-- **Rate Limiting**: Per-IP/user request limits
-- **Observability**: OpenTelemetry tracing + Prometheus metrics
-- **Reverse Proxy**: Routes requests to backend services
+Provides single entry point for all clients, handles cross-cutting concerns like authentication, rate limiting, and logging. **Can be bypassed if BFFs handle everything.**
 
 ## Tech Stack
 
-- **Language**: Rust 1.83+
-- **Framework**: Axum 0.8
-- **Async Runtime**: Tokio
-- **JWT**: jsonwebtoken
-- **Rate Limiting**: governor
-- **Tracing**: OpenTelemetry + tracing-opentelemetry
-- **Metrics**: metrics-exporter-prometheus
+- **Framework**: NestJS 11 + TypeScript 5.7
+- **Proxy**: http-proxy-middleware
+- **Rate Limiting**: @nestjs/throttler
+- **Monitoring**: Prometheus, Winston
 
-## Architecture
+## When to Use
 
-```
-Client → API Gateway (4000) → Web BFF (4010) → Backend Services
-                ↓ (direct for auth)
-           auth-service (4001)
-           personal-service (4002)
-```
+**Use Gateway When:**
+- Need centralized auth/rate limiting across ALL services
+- Want single entry point for external clients
+- Need request/response logging in one place
 
-## Directory Structure
-
-```
-services/gateway/api-gateway/
-├── Cargo.toml                # Dependencies
-├── .env.example              # Environment template
-├── Dockerfile                # Multi-stage Rust build
-├── helm/                     # Kubernetes Helm chart
-└── src/
-    ├── main.rs               # Axum server entry
-    ├── config.rs             # Configuration
-    ├── error.rs              # Error types
-    ├── routes/
-    │   ├── health.rs         # /health, /health/live, /health/ready
-    │   └── metrics.rs        # /metrics (Prometheus)
-    ├── middleware/
-    │   ├── auth.rs           # JWT validation (Issue #260)
-    │   ├── rate_limit.rs     # Rate limiting (Issue #263)
-    │   └── tracing.rs        # Request tracing
-    ├── proxy/
-    │   ├── handler.rs        # Reverse proxy (Issue #262)
-    │   └── routes.rs         # Route configuration
-    ├── auth/
-    │   ├── jwt.rs            # JWT validation
-    │   └── claims.rs         # JWT claims struct
-    └── observability/
-        ├── tracing.rs        # OpenTelemetry setup
-        └── metrics.rs        # Prometheus setup
-```
-
-## Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | General health status |
-| `/health/live` | GET | K8s liveness probe |
-| `/health/ready` | GET | K8s readiness probe (503 during shutdown) |
-| `/metrics` | GET | Prometheus metrics |
-
-## JWT Middleware Pattern
-
-```rust
-pub async fn jwt_middleware<B>(
-    State(state): State<AppState>,
-    mut request: Request<B>,
-    next: Next<B>,
-) -> Result<Response, AuthError> {
-    // Skip validation for public routes
-    if is_public_route(request.uri().path()) {
-        return Ok(next.run(request).await);
-    }
-
-    // Extract and validate JWT
-    let token = extract_bearer_token(&request)?;
-    let claims = validate_jwt(&token, &state.jwt_secret)?;
-
-    // Inject user headers for downstream services
-    let headers = request.headers_mut();
-    headers.insert("X-User-Id", claims.sub.parse()?);
-    headers.insert("X-User-Email", claims.email.parse()?);
-    headers.insert("X-User-Role", claims.role.parse()?);
-
-    Ok(next.run(request).await)
-}
-```
+**Skip Gateway When:**
+- BFFs can handle auth and rate limiting
+- Prefer distributed concerns
+- Want to minimize latency
 
 ## Routing Configuration
 
-```rust
-pub enum Route {
-    Auth,       // /api/auth/* → auth-service:4001
-    Personal,   // /api/personal/* → personal-service:4002
-    WebBff,     // /api/web/* → web-bff:4010
-}
+```typescript
+// src/gateway/routes.config.ts
+export const ROUTES = {
+  auth: {
+    prefix: '/api/auth',
+    target: process.env.AUTH_SERVICE_URL,
+    public: true,  // No auth required
+  },
+  content: {
+    prefix: '/api/content',
+    target: process.env.CONTENT_SERVICE_URL,
+    public: false, // Auth required
+  },
+  webBff: {
+    prefix: '/api/web',
+    target: process.env.WEB_BFF_URL,
+    public: false,
+  },
+  mobileBff: {
+    prefix: '/api/mobile',
+    target: process.env.MOBILE_BFF_URL,
+    public: false,
+  },
+  llm: {
+    prefix: '/api/ai',
+    target: process.env.LLM_SERVICE_URL,
+    public: false,
+  },
+};
+```
 
-pub fn route_to_upstream(path: &str) -> Route {
-    if path.starts_with("/api/auth") {
-        Route::Auth
-    } else if path.starts_with("/api/personal") {
-        Route::Personal
-    } else {
-        Route::WebBff
+## Middleware Order
+
+```typescript
+1. CORS handling
+2. Request logging
+3. Rate limiting (by IP/User)
+4. JWT validation (if route not public)
+5. Route to appropriate service
+6. Response transformation
+7. Error handling
+```
+
+## Implementation
+
+### Proxy Setup
+
+```typescript
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
+@Injectable()
+export class GatewayService {
+  createProxy(route: RouteConfig) {
+    return createProxyMiddleware({
+      target: route.target,
+      changeOrigin: true,
+      pathRewrite: {
+        [`^${route.prefix}`]: '',
+      },
+      onProxyReq: (proxyReq, req) => {
+        // Forward user info
+        if (req.user) {
+          proxyReq.setHeader('X-User-Id', req.user.id);
+          proxyReq.setHeader('X-User-Role', req.user.role);
+        }
+      },
+      onError: (err, req, res) => {
+        this.logger.error(`Proxy error: ${err.message}`);
+        res.status(503).json({ error: 'Service unavailable' });
+      },
+    });
+  }
+}
+```
+
+### JWT Validation
+
+```typescript
+@Injectable()
+export class JwtValidationMiddleware implements NestMiddleware {
+  constructor(private jwtService: JwtService) {}
+
+  async use(req: Request, res: Response, next: NextFunction) {
+    const route = this.getRouteConfig(req.path);
+
+    // Skip validation for public routes
+    if (route.public) {
+      return next();
     }
+
+    const token = this.extractToken(req);
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+      req.user = payload; // Attach user to request
+      next();
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  }
+
+  private extractToken(req: Request): string | null {
+    const authHeader = req.headers.authorization;
+    return authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  }
+}
+```
+
+### Rate Limiting
+
+```typescript
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      ttl: 60,      // 60 seconds
+      limit: 100,   // 100 requests per 60s
+    }),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
+})
+export class GatewayModule {}
+
+// Custom rate limits per endpoint
+@Throttle(5, 60) // 5 requests per minute
+@Post('auth/login')
+async login() {
+  // ...
+}
+```
+
+### Request Logging
+
+```typescript
+@Injectable()
+export class LoggingMiddleware implements NestMiddleware {
+  private logger = new Logger('HTTP');
+
+  use(req: Request, res: Response, next: NextFunction) {
+    const startTime = Date.now();
+
+    res.on('finish', () => {
+      const duration = Date.now() - startTime;
+      const { method, originalUrl, ip } = req;
+      const { statusCode } = res;
+
+      this.logger.log({
+        method,
+        url: originalUrl,
+        statusCode,
+        duration: `${duration}ms`,
+        ip,
+        userAgent: req.get('user-agent'),
+        userId: req.user?.id,
+      });
+
+      // Alert on slow requests
+      if (duration > 1000) {
+        this.logger.warn(`Slow request: ${method} ${originalUrl} - ${duration}ms`);
+      }
+    });
+
+    next();
+  }
 }
 ```
 
 ## Environment Variables
 
 ```bash
-# Server
-RUST_LOG=info,api_gateway=debug,tower_http=debug
-RUST_ENV=production
-HOST=0.0.0.0
-PORT=4000
-
-# JWT (must match auth-service)
-JWT_SECRET=your-jwt-secret
-
-# Upstream Services
-AUTH_SERVICE_URL=http://auth-service:4001
-PERSONAL_SERVICE_URL=http://personal-service:4002
-WEB_BFF_URL=http://web-bff:4010
-
-# OpenTelemetry
-OTEL_ENABLED=true
-OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-OTEL_SERVICE_NAME=api-gateway
-
-# Rate Limiting
-RATE_LIMIT_REQUESTS_PER_MINUTE=1000
-RATE_LIMIT_BURST=100
-
-# Performance
-REQUEST_TIMEOUT_SECS=30
-SHUTDOWN_TIMEOUT_SECS=10
-CONNECTION_POOL_SIZE=100
-
-# CORS
-CORS_ORIGINS=https://girok.dev,https://www.girok.dev
+AUTH_SERVICE_URL=http://auth-service:3000
+CONTENT_SERVICE_URL=http://content-api:3000
+WEB_BFF_URL=http://web-bff:3000
+MOBILE_BFF_URL=http://mobile-bff:3000
+LLM_SERVICE_URL=http://llm-api:8000
+JWT_SECRET=same-as-auth-service
+CORS_ORIGINS=https://mygirok.dev,https://admin.mygirok.dev
 ```
 
-## Port Assignment
+## CORS Configuration
 
-| Service | Port | Description |
-|---------|------|-------------|
-| API Gateway | 4000 | Single entry point |
-| auth-service | 4001 | Authentication |
-| personal-service | 4002 | Personal data |
-| Web BFF | 4010 | Web client optimization |
-| Mobile BFF | 4020 | (Future) Mobile client |
-
-## Kubernetes Deployment
-
-```bash
-# Install Helm chart
-cd services/gateway/api-gateway/helm
-cp values.yaml.example values.yaml
-# Edit values.yaml
-helm install api-gateway . -f values.yaml -n my-girok
+```typescript
+app.enableCors({
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://mygirok.dev', 'https://admin.mygirok.dev']
+    : ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
 ```
 
-## Metrics
+## Health Check
 
-Prometheus metrics at `/metrics`:
+```typescript
+@Get('health')
+async healthCheck() {
+  const services = await Promise.all([
+    this.checkService('auth', AUTH_SERVICE_URL),
+    this.checkService('content', CONTENT_SERVICE_URL),
+    this.checkService('web-bff', WEB_BFF_URL),
+  ]);
 
-- `gateway_requests_total` - Total requests by method/path/status
-- `gateway_request_duration_seconds` - Request latency histogram
-- `gateway_upstream_requests_total` - Requests to upstream services
-- `gateway_upstream_duration_seconds` - Upstream latency
-- `gateway_errors_total` - Errors by type
-- `gateway_active_connections` - Active connection gauge
+  const allHealthy = services.every(s => s.status === 'up');
 
-## Performance Characteristics
+  return {
+    status: allHealthy ? 'ok' : 'degraded',
+    services,
+    timestamp: new Date(),
+  };
+}
+```
 
-| Metric | Target |
-|--------|--------|
-| Latency (p50) | < 1ms overhead |
-| Latency (p99) | < 5ms overhead |
-| Throughput | 150k+ req/sec |
-| Memory | < 50MB |
-| CPU | Minimal (async I/O) |
+## Monitoring
+
+- Prometheus metrics (/metrics)
+- Request duration histogram
+- Error rate counter
+- Active connections gauge
+- Service health status
 
 ## Security
 
-- JWT validation at gateway (centralized)
-- Rate limiting per IP/user
-- Request size limits
-- Request timeout (30s default)
-- CORS configuration
-- No secrets in logs
+- HTTPS only in production
+- Security headers (helmet)
+- Rate limiting per IP/User
+- JWT validation
+- Request size limits (10MB)
+- Timeout: 30 seconds
 
-## Implementation Status
+## Performance
 
-| Feature | Status | Issue |
-|---------|--------|-------|
-| Basic scaffold | ✅ Done | #259 |
-| JWT middleware | 🔄 Pending | #260 |
-| OpenTelemetry | 🔄 Pending | #261 |
-| Reverse proxy | 🔄 Pending | #262 |
-| Rate limiting | 🔄 Pending | #263 |
-
-## Related Documentation
-
-- **Web BFF**: `.ai/services/web-bff.md`
-- **Auth Service**: `.ai/services/auth-service.md`
-- **Architecture**: `.ai/architecture.md`
+- Connection pooling to backend services
+- Keep-alive connections
+- Response compression (gzip)
+- Circuit breaker pattern (optional)
