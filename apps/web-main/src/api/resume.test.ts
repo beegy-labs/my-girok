@@ -176,9 +176,10 @@ describe('Resume Utility Functions', () => {
       ];
 
       const result = calculateTotalExperienceWithOverlap(experiences);
-      // Merged: 2025-01 to current (at least to 2025-05)
-      // Depending on test date, should be at least 4 months
-      expect(result.years >= 0 && result.months >= 4).toBe(true);
+      // Merged: 2025-01 to current (at least 4 months total)
+      // Total months = years * 12 + months
+      const totalMonths = result.years * 12 + result.months;
+      expect(totalMonths).toBeGreaterThanOrEqual(4);
     });
 
     it('should handle multiple overlapping experiences', () => {
