@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { CharacterLoader } from './characters';
 
 interface LoadingSpinnerProps {
@@ -21,11 +22,12 @@ export default function LoadingSpinner({
   fullScreen = false,
   className = '',
 }: LoadingSpinnerProps) {
+  const { t } = useTranslation();
   const isDark = document.documentElement.classList.contains('dark');
 
   const defaultMessage = isDark
-    ? '고요한 밤에 기록을 찾는 중이에요...'
-    : '기록을 부지런히 찾고 있어요...';
+    ? t('loading.darkMode')
+    : t('loading.lightMode');
 
   const content = (
     <div className={`flex flex-col items-center justify-center ${className}`}>

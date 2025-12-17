@@ -209,7 +209,7 @@ function SortableExperienceCard({
               {/* Show summary when collapsed on mobile */}
               {!isCompanyExpanded && experience.startDate && (
                 <p className="text-xs text-theme-primary truncate sm:hidden">
-                  {experience.finalPosition} • {experience.startDate} ~ {experience.isCurrentlyWorking ? '현재' : experience.endDate}
+                  {experience.finalPosition} • {experience.startDate} ~ {experience.isCurrentlyWorking ? t('common.present') : experience.endDate}
                 </p>
               )}
             </div>
@@ -241,7 +241,7 @@ function SortableExperienceCard({
         {/* Mobile: Delete button */}
         <div className="sm:hidden flex justify-end mb-3">
           <Button variant="danger" onClick={onRemove} size="sm" className="text-xs py-1.5 px-3 touch-manipulation">
-            ✕ 삭제
+            ✕ {t('common.delete')}
           </Button>
         </div>
 
@@ -260,7 +260,7 @@ function SortableExperienceCard({
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
                 <span className="hidden sm:inline">{t('resume.experienceForm.startDate')}</span>
-                <span className="sm:hidden">시작일</span>
+                <span className="sm:hidden">{t('common.startDate')}</span>
                 <span className="text-theme-status-error-text ml-1">*</span>
               </label>
               <input
@@ -274,7 +274,7 @@ function SortableExperienceCard({
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
                 <span className="hidden sm:inline">{t('resume.experienceForm.endDate')}</span>
-                <span className="sm:hidden">종료일</span>
+                <span className="sm:hidden">{t('common.endDate')}</span>
               </label>
               <input
                 type="month"
@@ -297,7 +297,7 @@ function SortableExperienceCard({
           />
           <span className="ml-3 text-xs sm:text-sm text-theme-text-secondary">
             <span className="hidden sm:inline">{t('resume.experience.currentlyWorking')}</span>
-            <span className="sm:hidden">현재 재직 중</span>
+            <span className="sm:hidden">{t('common.currentlyWorking')}</span>
           </span>
         </label>
 
@@ -339,8 +339,8 @@ function SortableExperienceCard({
         {/* Salary Section - Compact on mobile */}
         <div className="mt-3 sm:mt-4">
           <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
-            <span className="hidden sm:inline">연봉 / Salary (Optional)</span>
-            <span className="sm:hidden">연봉 (선택)</span>
+            <span className="hidden sm:inline">{t('resume.experienceForm.salaryOptional')}</span>
+            <span className="sm:hidden">{t('resume.experienceForm.salaryOptional')}</span>
           </label>
           <div className="flex gap-2 sm:gap-4">
             <input
@@ -352,11 +352,11 @@ function SortableExperienceCard({
               min="0"
             />
             <select
-              value={experience.salaryUnit || '만원'}
+              value={experience.salaryUnit || 'KRW'}
               onChange={e => onUpdate({ ...experience, salaryUnit: e.target.value })}
               className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
             >
-              <option value="만원">만원</option>
+              <option value="KRW">{t('resume.experienceForm.salaryUnits.manwon')}</option>
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
               <option value="JPY">JPY</option>
@@ -370,8 +370,8 @@ function SortableExperienceCard({
               className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
             />
             <span className="ml-2 text-xs sm:text-sm text-theme-text-secondary">
-              <span className="hidden sm:inline">Show salary in preview (미리보기에 표시)</span>
-              <span className="sm:hidden">미리보기에 표시</span>
+              <span className="hidden sm:inline">{t('resume.experienceForm.showSalaryInPreview')}</span>
+              <span className="sm:hidden">{t('common.showInPreview')}</span>
             </span>
           </label>
         </div>
@@ -380,12 +380,12 @@ function SortableExperienceCard({
         <div className="mt-3 sm:mt-6 border-t border-theme-border-default pt-3 sm:pt-4 transition-colors duration-200">
           <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
             <h4 className="text-xs sm:text-md font-bold text-theme-primary-light transition-colors duration-200">
-              <span className="hidden sm:inline">📁 Projects at this company</span>
-              <span className="sm:hidden">📁 프로젝트 ({projects.length})</span>
+              <span className="hidden sm:inline">{t('resume.experienceForm.projects')}</span>
+              <span className="sm:hidden">📁 {t('resume.experienceForm.projectsCount', { count: projects.length })}</span>
             </h4>
             <Button variant="secondary" onClick={addProject} size="sm" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3 touch-manipulation">
-              <span className="hidden sm:inline">+ Add Project</span>
-              <span className="sm:hidden">+ 추가</span>
+              <span className="hidden sm:inline">{t('resume.experienceForm.addProject')}</span>
+              <span className="sm:hidden">+ {t('common.add')}</span>
             </Button>
           </div>
 
