@@ -63,14 +63,11 @@ export default function LoginPage() {
 
   return (
     <PageContainer maxWidth="sm" centered>
-      {/* Logo/Brand */}
+      {/* Logo/Brand - Text only, font-mono font-bold per design spec */}
       <div className="text-center mb-6 sm:mb-8">
-        <div className="flex items-center justify-center mb-3">
-          <span className="text-2xl sm:text-3xl mr-2">📚</span>
-          <h1 className="text-3xl sm:text-4xl font-bold text-theme-text-primary">
-            My-Girok
-          </h1>
-        </div>
+        <h1 className="text-3xl sm:text-4xl font-bold font-mono text-theme-text-primary mb-3">
+          girok
+        </h1>
         <p className="text-theme-text-secondary text-sm">{t('auth.startRecording')}</p>
       </div>
 
@@ -101,18 +98,22 @@ export default function LoginPage() {
               autoComplete="current-password"
             />
 
-            <div className="flex items-center">
+            {/* Checkbox with larger touch target for accessibility */}
+            <label
+              htmlFor="rememberEmail"
+              className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none"
+            >
               <input
                 id="rememberEmail"
                 type="checkbox"
                 checked={rememberEmail}
                 onChange={(e) => setRememberEmail(e.target.checked)}
-                className="w-4 h-4 text-theme-primary bg-theme-bg-input border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
+                className="w-5 h-5 text-theme-primary bg-theme-bg-input border-theme-border-default rounded focus:ring-theme-primary focus:ring-2 cursor-pointer"
               />
-              <label htmlFor="rememberEmail" className="ml-2 text-sm text-theme-text-secondary">
+              <span className="text-sm text-theme-text-secondary">
                 {t('auth.rememberEmail')}
-              </label>
-            </div>
+              </span>
+            </label>
 
             <Button
               variant="primary"
