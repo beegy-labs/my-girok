@@ -6,14 +6,14 @@
 
 **When starting a new task:**
 1. Read `rules.md` for core development rules
-2. Read `architecture.md` for system patterns
+2. Read `architecture.md` for system patterns (2025 architecture)
 3. Read specific service/app file based on your task
 
 ## Quick Links
 
 ### Core Documentation
 - **[rules.md](rules.md)** - Essential DO/DON'T rules (READ FIRST)
-- **[architecture.md](architecture.md)** - Architecture patterns and routing
+- **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
 
 ### Development & Deployment
 - **[project-setup.md](project-setup.md)** - Quick project setup guide
@@ -24,38 +24,28 @@
 - **[helm-deployment.md](helm-deployment.md)** - Kubernetes/Helm quick reference
 - **[testing.md](testing.md)** - TDD guidelines and testing patterns
 
-### Backend Services
-- **[services/auth-service.md](services/auth-service.md)** - Authentication & authorization API
-- **[services/content-api.md](services/content-api.md)** - Posts, notes, files API
-- **[services/web-bff.md](services/web-bff.md)** - Web Backend-for-Frontend
-- **[services/mobile-bff.md](services/mobile-bff.md)** - Mobile Backend-for-Frontend
-- **[services/api-gateway.md](services/api-gateway.md)** - Optional API Gateway
-- **[services/llm-api.md](services/llm-api.md)** - AI/LLM service (Python)
+### Services (Implemented)
+- **[services/auth-service.md](services/auth-service.md)** - Authentication & authorization (REST + gRPC)
+- **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST + gRPC)
 
-### Frontend Apps
+### Frontend Apps (Implemented)
 - **[apps/web-main.md](apps/web-main.md)** - Main web application (React + Vite)
-- **[apps/web-admin.md](apps/web-admin.md)** - Admin dashboard (Next.js)
-- **[apps/mobile-flutter.md](apps/mobile-flutter.md)** - Mobile app (Flutter - iOS & Android)
 
 ### Shared Packages
-- **[packages/nest-common.md](packages/nest-common.md)** - Shared NestJS utilities (guards, decorators, health)
+- **[packages/nest-common.md](packages/nest-common.md)** - Shared NestJS utilities (guards, decorators, gRPC)
+- **[packages/types.md](packages/types.md)** - TypeScript types + Protobuf
+- **[packages/ui-components.md](packages/ui-components.md)** - React UI components
 
 ## Task-Based Navigation
 
 **"I need to add authentication..."**
 → Read: `rules.md` + `architecture.md` + `services/auth-service.md`
 
-**"I need to create a new API endpoint..."**
-→ Read: `rules.md` + specific service file (auth-service or content-api)
-
-**"I need to add a new BFF endpoint..."**
-→ Read: `rules.md` + `architecture.md` + `services/web-bff.md` or `services/mobile-bff.md`
+**"I need to work on resume..."**
+→ Read: `rules.md` + `services/personal-service.md`
 
 **"I need to update the web frontend..."**
 → Read: `rules.md` + `apps/web-main.md`
-
-**"I need to work on mobile app..."**
-→ Read: `rules.md` + `apps/mobile-flutter.md`
 
 **"I need to set up the project..."**
 → Read: `project-setup.md`
@@ -81,12 +71,33 @@
 **"I need to create a new NestJS service..."**
 → Read: `rules.md` + `packages/nest-common.md`
 
-**"I need to understand shared utilities..."**
-→ Read: `packages/nest-common.md`
+## Current Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Cilium Gateway API                        │
+│  api.girok.dev │ auth.girok.dev │ my.girok.dev             │
+└──────────┬─────────────┬────────────────────────────────────┘
+           │             │
+    ┌──────▼──────┐  ┌───▼────────┐
+    │Auth Service │  │  Personal  │
+    │ (REST+gRPC) │  │  Service   │
+    │ PostgreSQL  │  │ PostgreSQL │
+    └─────────────┘  └────────────┘
+```
+
+**Planned (Not Implemented):**
+- GraphQL BFF (Federation Gateway)
+- WS Gateway (Socket.io)
+- Feed Service (MongoDB)
+- Chat Service (MongoDB)
+- Matching Service (Valkey)
+- Media Service (MinIO)
+- LLM API (Python FastAPI)
 
 ## Token Optimization
 
-- **This directory (.ai/)**: ~10K tokens (patterns, APIs, flows)
+- **This directory (.ai/)**: ~5K tokens (patterns, APIs, flows)
 - **Full docs (docs/)**: ~73K tokens (detailed policies, tutorials)
 
 **Read .ai/ for coding tasks, refer to docs/ for learning/policies.**
@@ -96,7 +107,7 @@
 Each service/app file contains:
 1. **Purpose** - What this service does
 2. **Tech Stack** - Technologies used
-3. **API Endpoints** - Key routes and methods
+3. **API/gRPC Endpoints** - Key routes and methods
 4. **Key Flows** - Important business logic flows
 5. **Integration** - How it connects to other services
 

@@ -114,7 +114,7 @@ A comprehensive personal management platform that helps you organize and showcas
 - **Framework**: NestJS 11.x
 - **Language**: TypeScript 5.7
 - **Database**: PostgreSQL 16 + Prisma 6
-- **Cache**: Redis 7 (optional)
+- **Cache**: Valkey (Redis-compatible)
 - **Authentication**: Passport.js + JWT
 
 ### Frontend
@@ -135,6 +135,7 @@ A comprehensive personal management platform that helps you organize and showcas
 - **CI**: GitHub Actions
 - **CD**: ArgoCD (GitOps)
 - **Registry**: Harbor (harbor.girok.dev)
+- **Service Mesh**: Cilium Gateway API
 - **Deployment**: Docker Compose, Kubernetes
 
 ## 🚀 Quick Start
@@ -231,47 +232,34 @@ pnpm dev
 ```
 my-girok/
 ├── apps/
-│   └── web-main/                  # React web application
-│       ├── src/
-│       │   ├── pages/
-│       │   │   └── resume/       # Resume management pages
-│       │   ├── components/
-│       │   │   └── resume/       # Resume components
-│       │   └── api/              # API clients
-│       ├── e2e/                  # Playwright E2E tests
-│       └── Dockerfile
+│   ├── web-main/                  # React web application (Vite)
+│   ├── web-admin/                 # Admin dashboard (Next.js)
+│   └── mobile-flutter/            # Mobile app (Flutter)
+│
 ├── services/
-│   ├── auth-service/              # Authentication & user management
-│   │   ├── src/
-│   │   │   ├── auth/             # Auth module (login, register, OAuth)
-│   │   │   ├── users/            # User management
-│   │   │   ├── oauth-config/     # OAuth provider configuration
-│   │   │   └── database/         # Prisma client
-│   │   ├── prisma/               # Database schema
-│   │   ├── helm/                 # Kubernetes Helm chart
-│   │   └── Dockerfile
-│   ├── personal-service/          # Personal information management
-│   │   ├── src/
-│   │   │   ├── resume/           # Resume management
-│   │   │   ├── budget/           # Budget tracking (planned)
-│   │   │   ├── share/            # Share links
-│   │   │   └── database/         # Prisma client
-│   │   ├── prisma/               # Database schema
-│   │   ├── helm/                 # Kubernetes Helm chart
-│   │   └── Dockerfile
-│   └── gateway/
-│       ├── web-bff/              # Web Backend-for-Frontend
-│       └── mobile-bff/           # Mobile Backend-for-Frontend (planned)
+│   ├── gateway/
+│   │   ├── graphql-bff/          # GraphQL Federation Gateway
+│   │   └── ws-gateway/           # WebSocket Gateway (Socket.io)
+│   │
+│   ├── auth-service/              # Authentication (REST + gRPC)
+│   ├── personal-service/          # Resume, Profile (REST + gRPC)
+│   ├── feed-service/              # Timeline, Posts (gRPC + MongoDB)
+│   ├── chat-service/              # Messages, Rooms (gRPC + MongoDB)
+│   ├── matching-service/          # Random matching (gRPC + Valkey)
+│   ├── media-service/             # Image processing (gRPC + MinIO)
+│   └── llm-api/                   # AI features (Python FastAPI)
+│
 ├── packages/
-│   └── types/                     # Shared TypeScript types
-│       └── src/
-│           ├── auth/
-│           ├── user/
-│           ├── resume/
-│           └── budget/
+│   ├── types/                     # Shared TypeScript types
+│   ├── proto/                     # Protobuf definitions
+│   ├── nest-common/               # NestJS utilities
+│   └── ui-components/             # React components
+│
+├── infra/
+│   └── k8s/                       # Kubernetes manifests
+│
 ├── docs/                          # Documentation
 ├── .ai/                           # LLM-optimized docs
-├── docker-compose.yml             # Docker orchestration
 └── CONTRIBUTING.md                # Contribution guidelines
 ```
 
