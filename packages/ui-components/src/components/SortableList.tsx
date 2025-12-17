@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -101,7 +101,11 @@ export function SortableList<T>({
     horizontal: horizontalListSortingStrategy,
   };
 
-  const ids = items.map((item, idx) => getItemId(item, idx));
+  // Memoize ids array to prevent unnecessary re-renders of SortableContext
+  const ids = useMemo(
+    () => items.map((item, idx) => getItemId(item, idx)),
+    [items, getItemId]
+  );
 
   return (
     <DndContext

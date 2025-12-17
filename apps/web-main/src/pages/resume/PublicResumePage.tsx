@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { getUserResume, Resume } from '../../api/resume';
 import { useAuthStore } from '../../stores/authStore';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
@@ -11,6 +12,7 @@ export default function PublicResumePage() {
   const { username } = useParams<{ username: string }>();
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,8 @@ export default function PublicResumePage() {
     try {
       const data = await getUserResume(username);
       setResume(data);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
       if (err.response?.status === 404) {
         setError('User not found');
       } else {
@@ -47,7 +50,7 @@ export default function PublicResumePage() {
   };
 
   if (loading) {
-    return <LoadingSpinner fullScreen message="이력서를 불러오는 중..." />;
+    return <LoadingSpinner fullScreen message={t('resume.preview.loading')} />;
   }
 
   if (error) {
@@ -57,11 +60,11 @@ export default function PublicResumePage() {
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <CharacterMessage
           type={isNotFound ? 'not-found' : 'error'}
-          title={isNotFound ? '이력서를 찾을 수 없어요' : undefined}
-          message={isNotFound ? '요청하신 사용자를 찾을 수 없습니다' : error}
+          title={isNotFound ? t('resume.preview.notFoundTitle') : undefined}
+          message={isNotFound ? t('resume.preview.notFoundMessage') : error}
           action={
             <Button variant="primary" onClick={() => navigate('/')}>
-              홈으로 돌아가기
+              {t('common.backToHome')}
             </Button>
           }
         />
@@ -81,13 +84,13 @@ export default function PublicResumePage() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div className="flex-1">
               <h1 className="text-lg sm:text-2xl font-bold text-theme-text-primary">
-                {resume.name}'s Resume
+                {t('resume.preview.title', { name: resume.name })}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs sm:text-sm text-theme-text-secondary">@{username}</p>
                 {isOwnProfile && (
                   <span className="px-2 py-0.5 text-xs font-semibold bg-theme-primary/20 text-theme-primary-light rounded-full">
-                    Your Profile
+                    {t('resume.public.yourProfile')}
                   </span>
                 )}
               </div>
@@ -95,11 +98,11 @@ export default function PublicResumePage() {
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {isOwnProfile && (
                 <Button variant="primary" onClick={handleEdit} size="sm">
-                  Edit Resume
+                  {t('resume.edit')}
                 </Button>
               )}
               <Button variant="secondary" onClick={handlePrint} size="sm">
-                Print
+                {t('resume.preview.print')}
               </Button>
             </div>
           </div>

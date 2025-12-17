@@ -25,7 +25,8 @@ export default function ResumeEditPage() {
       const data = await getResume(resumeId);
       setResume(data);
       setPreviewData(data);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
       if (err.response?.status === 404) {
         setError(t('resume.errors.resumeNotFound'));
       } else {
@@ -115,9 +116,10 @@ export default function ResumeEditPage() {
         // Direct navigation - React Router v7 supports this without issues
         navigate(`/resume/preview/${created.id}`);
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
       // Log detailed error for debugging
-      console.error('Resume save failed:', err);
+      console.error('Resume save failed:', error);
+      const err = error as { response?: { data?: { message?: string | string[] } } };
       if (err.response?.data?.message) {
         console.error('Server error message:', err.response.data.message);
         // Show specific validation errors if available

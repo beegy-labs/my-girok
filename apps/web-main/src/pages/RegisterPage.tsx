@@ -34,7 +34,8 @@ export default function RegisterPage() {
       const response = await register({ email, username, password, name });
       setAuth(response.user, response.accessToken, response.refreshToken);
       setRegisterSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || t('errors.registrationFailed'));
     } finally {
       setLoading(false);

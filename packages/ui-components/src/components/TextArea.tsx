@@ -1,4 +1,4 @@
-import { forwardRef, TextareaHTMLAttributes, useId } from 'react';
+import { forwardRef, TextareaHTMLAttributes, useId, useMemo } from 'react';
 
 export interface TextAreaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> {
   /**
@@ -44,6 +44,16 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   }, ref) => {
     const generatedId = useId();
     const inputId = id || generatedId;
+    const errorId = `${inputId}-error`;
+    const hintId = `${inputId}-hint`;
+
+    // Build aria-describedby based on present elements
+    const ariaDescribedBy = useMemo(() => {
+      const ids: string[] = [];
+      if (error) ids.push(errorId);
+      if (hint && !error) ids.push(hintId);
+      return ids.length > 0 ? ids.join(' ') : undefined;
+    }, [error, hint, errorId, hintId]);
 
     return (
       <div className="w-full">
@@ -59,6 +69,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
         <textarea
           ref={ref}
           id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={ariaDescribedBy}
           onChange={(e) => onChange?.(e.target.value)}
           className={`
             w-full
@@ -78,10 +90,10 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           {...props}
         />
         {hint && !error && (
-          <p className="mt-1 text-sm text-theme-text-tertiary">{hint}</p>
+          <p id={hintId} className="mt-1 text-sm text-theme-text-tertiary">{hint}</p>
         )}
         {error && (
-          <p className="mt-1 text-sm text-theme-status-error-text">{error}</p>
+          <p id={errorId} className="mt-1 text-sm text-theme-status-error-text" role="alert">{error}</p>
         )}
       </div>
     );

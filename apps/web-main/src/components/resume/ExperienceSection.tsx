@@ -179,7 +179,7 @@ function SortableExperienceCard({
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border theme-border-default rounded-xl overflow-hidden bg-theme-bg-hover transition-colors duration-200">
+    <div ref={setNodeRef} style={style} className="border border-theme-border-default rounded-xl overflow-hidden bg-theme-bg-hover transition-colors duration-200">
       {/* Mobile-optimized Company Header */}
       <div className="bg-gradient-to-r from-theme-bg-elevated to-theme-bg-card p-3 sm:p-4">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -258,7 +258,7 @@ function SortableExperienceCard({
           {/* Date fields - side by side on mobile for better UX */}
           <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-2 sm:gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
                 <span className="hidden sm:inline">{t('resume.experienceForm.startDate')}</span>
                 <span className="sm:hidden">시작일</span>
                 <span className="text-theme-status-error-text ml-1">*</span>
@@ -267,12 +267,12 @@ function SortableExperienceCard({
                 type="month"
                 value={experience.startDate}
                 onChange={e => onUpdate({ ...experience, startDate: e.target.value })}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base theme-bg-card border theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary theme-text-primary transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               />
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
                 <span className="hidden sm:inline">{t('resume.experienceForm.endDate')}</span>
                 <span className="sm:hidden">종료일</span>
               </label>
@@ -281,7 +281,7 @@ function SortableExperienceCard({
                 value={experience.endDate || ''}
                 onChange={e => onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })}
                 disabled={experience.isCurrentlyWorking}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base theme-bg-card border theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
               />
             </div>
           </div>
@@ -295,7 +295,7 @@ function SortableExperienceCard({
             onChange={e => onUpdate({ ...experience, isCurrentlyWorking: e.target.checked, endDate: e.target.checked ? '' : experience.endDate })}
             className="w-5 h-5 text-theme-primary border-theme-border-default rounded focus:ring-theme-primary"
           />
-          <span className="ml-3 text-xs sm:text-sm theme-text-secondary">
+          <span className="ml-3 text-xs sm:text-sm text-theme-text-secondary">
             <span className="hidden sm:inline">{t('resume.experience.currentlyWorking')}</span>
             <span className="sm:hidden">현재 재직 중</span>
           </span>
@@ -303,7 +303,7 @@ function SortableExperienceCard({
 
         {/* Experience Duration */}
         {experience.startDate && (
-          <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border theme-border-default rounded-lg transition-colors duration-200">
+          <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-lg transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-theme-primary-light transition-colors duration-200">
               {t('resume.experienceForm.experiencePeriod')} {(() => {
                 const duration = calculateExperienceDuration(
@@ -338,7 +338,7 @@ function SortableExperienceCard({
 
         {/* Salary Section - Compact on mobile */}
         <div className="mt-3 sm:mt-4">
-          <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
             <span className="hidden sm:inline">연봉 / Salary (Optional)</span>
             <span className="sm:hidden">연봉 (선택)</span>
           </label>
@@ -347,14 +347,14 @@ function SortableExperienceCard({
               type="number"
               value={experience.salary || ''}
               onChange={e => onUpdate({ ...experience, salary: e.target.value ? parseInt(e.target.value) : undefined })}
-              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base theme-bg-card border theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary theme-text-primary transition-colors duration-200"
+              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               placeholder="5000"
               min="0"
             />
             <select
               value={experience.salaryUnit || '만원'}
               onChange={e => onUpdate({ ...experience, salaryUnit: e.target.value })}
-              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base theme-bg-card border theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary theme-text-primary transition-colors duration-200"
+              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
             >
               <option value="만원">만원</option>
               <option value="USD">USD</option>
@@ -367,9 +367,9 @@ function SortableExperienceCard({
               type="checkbox"
               checked={experience.showSalary ?? false}
               onChange={e => onUpdate({ ...experience, showSalary: e.target.checked })}
-              className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
+              className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
             />
-            <span className="ml-2 text-xs sm:text-sm theme-text-secondary">
+            <span className="ml-2 text-xs sm:text-sm text-theme-text-secondary">
               <span className="hidden sm:inline">Show salary in preview (미리보기에 표시)</span>
               <span className="sm:hidden">미리보기에 표시</span>
             </span>
@@ -377,7 +377,7 @@ function SortableExperienceCard({
         </div>
 
         {/* Projects Section */}
-        <div className="mt-3 sm:mt-6 border-t theme-border-default pt-3 sm:pt-4 transition-colors duration-200">
+        <div className="mt-3 sm:mt-6 border-t border-theme-border-default pt-3 sm:pt-4 transition-colors duration-200">
           <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
             <h4 className="text-xs sm:text-md font-bold text-theme-primary-light transition-colors duration-200">
               <span className="hidden sm:inline">📁 Projects at this company</span>
@@ -420,7 +420,7 @@ function SortableExperienceCard({
               </SortableContext>
             </DndContext>
           ) : (
-            <div className="text-center py-6 theme-text-tertiary text-sm theme-bg-card rounded-lg border border-dashed theme-border-default transition-colors duration-200">
+            <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-card rounded-lg border border-dashed border-theme-border-default transition-colors duration-200">
               <p>{t('resume.experienceForm.noProjects')}</p>
             </div>
           )}
@@ -487,14 +487,14 @@ function SortableProject({
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border theme-border-strong rounded-lg theme-bg-card transition-colors duration-200">
+    <div ref={setNodeRef} style={style} className="border border-theme-border-strong rounded-lg bg-theme-bg-card transition-colors duration-200">
       {/* Project Header */}
-      <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 theme-bg-hover transition-colors duration-200">
+      <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-theme-bg-hover transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="p-1 cursor-move theme-text-tertiary hover:text-theme-primary transition-colors duration-200 flex-shrink-0 touch-manipulation"
+          className="p-1 cursor-move text-theme-text-tertiary hover:text-theme-primary transition-colors duration-200 flex-shrink-0 touch-manipulation"
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -511,10 +511,10 @@ function SortableProject({
             <span className="flex-shrink-0">📖</span>
             <span className="flex-shrink-0 hidden sm:inline">{t('resume.experienceForm.project')}</span>
             <span className="flex-shrink-0">#{projectIndex + 1}</span>
-            {project.name && <span className="font-normal theme-text-secondary transition-colors duration-200 truncate">- {project.name}</span>}
+            {project.name && <span className="font-normal text-theme-text-secondary transition-colors duration-200 truncate">- {project.name}</span>}
           </span>
           <svg
-            className={`w-5 h-5 theme-text-tertiary transition-transform duration-200 flex-shrink-0 ml-1 ${isExpanded ? 'rotate-180' : ''}`}
+            className={`w-5 h-5 text-theme-text-tertiary transition-transform duration-200 flex-shrink-0 ml-1 ${isExpanded ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -544,26 +544,26 @@ function SortableProject({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold theme-text-secondary mb-2 transition-colors duration-200">
+                <label className="block text-sm font-semibold text-theme-text-secondary mb-2 transition-colors duration-200">
                   {t('resume.experienceForm.startDate')} <span className="text-theme-status-error-text">*</span>
                 </label>
                 <input
                   type="month"
                   value={project.startDate}
                   onChange={e => onUpdate({ ...project, startDate: e.target.value })}
-                  className="w-full px-3 py-2 theme-bg-card border theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm theme-text-primary transition-colors duration-200"
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold theme-text-secondary mb-2 transition-colors duration-200">
+                <label className="block text-sm font-semibold text-theme-text-secondary mb-2 transition-colors duration-200">
                   {t('resume.experienceForm.endDate')}
                 </label>
                 <input
                   type="month"
                   value={project.endDate || ''}
                   onChange={e => onUpdate({ ...project, endDate: e.target.value })}
-                  className="w-full px-3 py-2 theme-bg-card border theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm theme-text-primary transition-colors duration-200"
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                   placeholder={t('resume.experienceForm.ongoingProject')}
                 />
               </div>
@@ -617,11 +617,11 @@ function SortableProject({
           </div>
 
           {/* Key Achievements */}
-          <div className="border-t theme-border-default pt-4 transition-colors duration-200">
+          <div className="border-t border-theme-border-default pt-4 transition-colors duration-200">
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-bold text-theme-primary-light flex items-center gap-2 transition-colors duration-200">
                 ⭐ {t('resume.experienceForm.keyAchievements')}
-                <span className="text-xs theme-text-tertiary font-normal transition-colors duration-200">{t('resume.experienceForm.depthLevels')}</span>
+                <span className="text-xs text-theme-text-tertiary font-normal transition-colors duration-200">{t('resume.experienceForm.depthLevels')}</span>
               </label>
               <button
                 type="button"
@@ -670,7 +670,7 @@ function SortableProject({
                 </SortableContext>
               </DndContext>
             ) : (
-              <p className="text-xs theme-text-tertiary italic transition-colors duration-200">{t('resume.experienceForm.noAchievements')}</p>
+              <p className="text-xs text-theme-text-tertiary italic transition-colors duration-200">{t('resume.experienceForm.noAchievements')}</p>
             )}
           </div>
         </div>
@@ -744,7 +744,7 @@ function HierarchicalAchievement({
           marginLeft: `${(depth - 1) * 0.75}rem`,
         }}>
           <div className="flex items-center gap-1 min-w-[30px] flex-shrink-0">
-            <span className="theme-text-secondary font-bold text-sm select-none">
+            <span className="text-theme-text-secondary font-bold text-sm select-none">
               {getBulletSymbol(depth)}
             </span>
           </div>
@@ -753,7 +753,7 @@ function HierarchicalAchievement({
             type="text"
             value={achievement.content}
             onChange={e => onUpdate({ ...achievement, content: e.target.value })}
-            className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm theme-text-primary min-w-0 transition-colors duration-200"
+            className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder={t('resume.experienceForm.achievementPlaceholder')}
           />
@@ -774,7 +774,7 @@ function HierarchicalAchievement({
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="px-2 py-1 text-xs theme-text-secondary hover:text-theme-text-primary transition-colors duration-200"
+                className="px-2 py-1 text-xs text-theme-text-secondary hover:text-theme-text-primary transition-colors duration-200"
                 title={isExpanded ? t('resume.experienceForm.collapse') : t('resume.experienceForm.expand')}
               >
                 {isExpanded ? '▼' : '▶'}
@@ -795,14 +795,14 @@ function HierarchicalAchievement({
         {/* Mobile: compact layout with inline action buttons */}
         <div className="sm:hidden">
           <div className="flex items-center gap-1.5">
-            <span className="theme-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
+            <span className="text-theme-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
               {getBulletSymbol(depth)}
             </span>
             <input
               type="text"
               value={achievement.content}
               onChange={e => onUpdate({ ...achievement, content: e.target.value })}
-              className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs theme-text-primary min-w-0 transition-colors duration-200"
+              className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
               placeholder={t('resume.experienceForm.achievementPlaceholder')}
             />
             {/* Inline action buttons for mobile */}
@@ -822,7 +822,7 @@ function HierarchicalAchievement({
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-6 h-6 flex items-center justify-center text-[10px] theme-text-secondary hover:bg-theme-bg-hover rounded transition-colors duration-200 touch-manipulation"
+                  className="w-6 h-6 flex items-center justify-center text-[10px] text-theme-text-secondary hover:bg-theme-bg-hover rounded transition-colors duration-200 touch-manipulation"
                 >
                   {isExpanded ? '▼' : '▶'}
                 </button>
@@ -893,12 +893,12 @@ function SortableAchievement({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
-      <div className="flex items-start gap-2 theme-bg-card rounded-lg p-2 border theme-border-default transition-colors duration-200">
+      <div className="flex items-start gap-2 bg-theme-bg-card rounded-lg p-2 border border-theme-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-1 cursor-move theme-text-tertiary hover:text-theme-primary transition-colors duration-200 flex-shrink-0"
+          className="mt-1 cursor-move text-theme-text-tertiary hover:text-theme-primary transition-colors duration-200 flex-shrink-0"
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -971,13 +971,13 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
   };
 
   return (
-    <div className="theme-bg-card border theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between mb-3 sm:mb-6 lg:mb-8">
         <div className="min-w-0">
-          <h2 className="text-base sm:text-xl lg:text-2xl font-bold theme-text-primary flex items-center gap-2 transition-colors duration-200">
+          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary flex items-center gap-2 transition-colors duration-200">
             💼 {t('resume.sections.experience')}
           </h2>
-          <p className="text-xs sm:text-sm lg:text-base theme-text-secondary mt-1 transition-colors duration-200 hidden sm:block">{t('resume.descriptions.experience')}</p>
+          <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary mt-1 transition-colors duration-200 hidden sm:block">{t('resume.descriptions.experience')}</p>
         </div>
         <button
           type="button"
@@ -1013,7 +1013,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-6 sm:py-12 theme-text-tertiary transition-colors duration-200 text-sm sm:text-base">
+        <div className="text-center py-6 sm:py-12 text-theme-text-tertiary transition-colors duration-200 text-sm sm:text-base">
           <p>{t('resume.experienceForm.noExperience')}</p>
         </div>
       )}

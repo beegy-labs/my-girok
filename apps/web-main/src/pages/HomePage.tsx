@@ -63,7 +63,7 @@ export default function HomePage() {
         type="website"
         structuredData={generateWebsiteSchema()}
       />
-      <div className="min-h-screen theme-bg-page transition-colors duration-200">
+      <div className="min-h-screen bg-theme-bg-page transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {isAuthenticated ? (
         <div className="space-y-6 sm:space-y-8">
@@ -82,7 +82,7 @@ export default function HomePage() {
                 <Link
                   key={app.id}
                   to={app.status === 'active' ? app.route : '#'}
-                  className={`block theme-bg-card border border-theme-border-subtle rounded-2xl shadow-theme-md p-4 sm:p-6 transition-all ${
+                  className={`block bg-theme-bg-card border border-theme-border-subtle rounded-2xl shadow-theme-md p-4 sm:p-6 transition-all ${
                     app.status === 'coming-soon'
                       ? 'opacity-60 cursor-not-allowed'
                       : 'hover:shadow-theme-xl hover:-translate-y-1 hover:border-theme-primary'

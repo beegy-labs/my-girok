@@ -17,7 +17,7 @@ import {
 import SectionOrderManager from './SectionOrderManager';
 import ExperienceSection from './ExperienceSection';
 import EducationSection from './EducationSection';
-import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
+import SkillsSection from './SkillsSection';
 import {
   TextInput,
   SelectInput,
@@ -240,8 +240,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     try {
       const attachment = await uploadAttachment(resume.id, file, type);
       setAttachments([...attachments, attachment]);
-    } catch (error: any) {
-      setUploadError(error.response?.data?.message || t('resume.form.uploadFailed'));
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setUploadError(err.response?.data?.message || t('resume.form.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -319,9 +320,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       setProfilePhotoTempKey(result.tempKey);
       setProfilePhotoPreview(result.previewUrl);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upload to temp storage:', error);
-      setUploadError(error.response?.data?.message || t('resume.form.photoUploadFailed'));
+      const err = error as { response?: { data?: { message?: string } } };
+      setUploadError(err.response?.data?.message || t('resume.form.photoUploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -444,7 +446,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Resume Settings - Compact on mobile */}
       <Card variant="secondary" padding="responsive" className="shadow-sm rounded-xl sm:rounded-2xl lg:rounded-3xl">
-        <h2 className="text-base sm:text-xl lg:text-2xl font-bold theme-text-primary mb-3 sm:mb-4 lg:mb-6">⚙️ {t('resume.sections.settings')}</h2>
+        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-3 sm:mb-4 lg:mb-6">⚙️ {t('resume.sections.settings')}</h2>
         <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-6">
           <TextInput
             label={t('resume.form.resumeTitle')}
@@ -547,7 +549,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         {/* Birth Date and Gender */}
         <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
               {t('resume.birthDate')}
             </label>
             <input
@@ -559,12 +561,12 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               min="1900-01-01"
               max={new Date().toISOString().split('T')[0]}
             />
-            <p className="text-xs theme-text-tertiary mt-1 hidden sm:block">
+            <p className="text-xs text-theme-text-tertiary mt-1 hidden sm:block">
               {t('resume.birthDateHint')}
             </p>
           </div>
           <div>
-            <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
               {t('resume.gender')}
             </label>
             <select
@@ -581,7 +583,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </div>
 
         <div className="mt-3 sm:mt-4">
-          <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
             {t('resume.form.profilePhoto')}
           </label>
 
@@ -602,7 +604,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   type="button"
                   onClick={handleProfilePhotoCancel}
                   disabled={uploading}
-                  className="px-3 py-1 text-xs theme-bg-elevated theme-text-secondary rounded-lg hover:bg-theme-bg-hover disabled:opacity-50"
+                  className="px-3 py-1 text-xs bg-theme-bg-elevated text-theme-text-secondary rounded-lg hover:bg-theme-bg-hover disabled:opacity-50"
                 >
                   {t('common.cancel')}
                 </button>
@@ -661,13 +663,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <p className="text-xs text-theme-status-error-text mt-1">{uploadError}</p>
           )}
 
-          <p className="text-xs theme-text-tertiary mt-1">
+          <p className="text-xs text-theme-text-tertiary mt-1">
             {t('resume.form.photoFormats')}
           </p>
         </div>
 
         <div className="mt-3 sm:mt-4">
-          <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
             {t('resume.form.militaryServiceKorean')}
           </label>
           <select
@@ -684,7 +686,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         {formData.militaryService === 'COMPLETED' && (
           <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
                 {t('resume.militaryService.rank')}
               </label>
               <select
@@ -700,7 +702,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               </select>
             </div>
             <div>
-              <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
                 {t('resume.militaryService.dischargeType')}
               </label>
               <select
@@ -714,7 +716,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               </select>
             </div>
             <div className="col-span-2">
-              <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
                 {t('resume.militaryService.servicePeriod')}
               </label>
               <div className="flex gap-2 items-center">
@@ -724,7 +726,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   onChange={e => setFormData({ ...formData, militaryServiceStartDate: e.target.value })}
                   className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
-                <span className="theme-text-tertiary text-sm">~</span>
+                <span className="text-theme-text-tertiary text-sm">~</span>
                 <input
                   type="month"
                   value={formData.militaryServiceEndDate || ''}
@@ -732,7 +734,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
               </div>
-              <p className="text-xs theme-text-tertiary mt-1 hidden sm:block">
+              <p className="text-xs text-theme-text-tertiary mt-1 hidden sm:block">
                 {t('resume.form.yyyymmFormat')}
               </p>
             </div>
@@ -750,10 +752,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         {/* Key Achievements */}
         <div className="mt-4 sm:mt-6">
-          <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2">
+          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
             {t('resume.form.keyAchievements')}
           </label>
-          <p className="text-xs theme-text-tertiary mb-2 sm:mb-3">
+          <p className="text-xs text-theme-text-tertiary mb-2 sm:mb-3">
             {t('resume.form.keyAchievementsHint')}
           </p>
           {(formData.keyAchievements || []).map((achievement, index) => (
@@ -829,222 +831,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       />
 
       {/* Skills Section */}
-      <CollapsibleSection
-        title={t('resume.sections.skills')}
-        icon="⚡"
-        isExpanded={!collapsedSections.skills}
-        onToggle={() => toggleSection('skills')}
-        count={formData.skills?.length}
-        variant="secondary"
-        headerAction={
-          <Button variant="primary"
-            onClick={() => {
-              setFormData({
-                ...formData,
-                skills: [
-                  ...(formData.skills || []),
-                  {
-                    category: '',
-                    items: [],
-                    order: formData.skills?.length || 0,
-                    visible: true,
-                  },
-                ],
-              });
-            }}
-            size="sm"
-            className="py-2 touch-manipulation"
-          >
-            + {t('resume.form.addCategory')}
-          </Button>
-        }
-      >
-        <p className="text-xs sm:text-sm theme-text-secondary mb-3 sm:mb-4">{t('resume.descriptions.skills')}</p>
-
-        {formData.skills && formData.skills.length > 0 ? (
-          <div className="space-y-4 sm:space-y-6">
-            {formData.skills.map((skill, skillIndex) => (
-              <div key={skillIndex} className="border border-theme-border-default rounded-lg p-3 sm:p-5 bg-theme-bg-hover transition-colors duration-200">
-                <div className="flex justify-between items-center mb-3 sm:mb-4">
-                  <h3 className="text-sm sm:text-lg font-semibold theme-text-primary">{t('resume.form.categoryNumber', { index: skillIndex + 1 })}</h3>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newSkills = formData.skills?.filter((_, i) => i !== skillIndex);
-                      setFormData({ ...formData, skills: newSkills });
-                    }}
-                    className="text-theme-status-error-text hover:opacity-80 text-xs sm:text-sm font-semibold px-2 py-1 hover:bg-theme-status-error-bg rounded touch-manipulation"
-                  >
-                    {t('common.delete')}
-                  </button>
-                </div>
-
-                {/* Category Name */}
-                <div className="mb-4">
-                  <TextInput
-                    label={t('resume.form.categoryName')}
-                    value={skill.category}
-                    onChange={value => {
-                      const newSkills = [...(formData.skills || [])];
-                      newSkills[skillIndex] = { ...newSkills[skillIndex], category: value };
-                      setFormData({ ...formData, skills: newSkills });
-                    }}
-                    placeholder={t('resume.form.categoryPlaceholder')}
-                    required
-                  />
-                </div>
-
-                {/* Skill Items */}
-                <div className="space-y-2 sm:space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <label className="text-xs sm:text-sm font-semibold theme-text-secondary">{t('resume.form.skillStack')}</label>
-                    <Button variant="secondary"
-                      onClick={() => {
-                        const newSkills = [...(formData.skills || [])];
-                        const currentItems = Array.isArray(newSkills[skillIndex].items)
-                          ? newSkills[skillIndex].items
-                          : [];
-                        newSkills[skillIndex] = {
-                          ...newSkills[skillIndex],
-                          items: [
-                            ...currentItems,
-                            { name: '', description: '' },
-                          ],
-                        };
-                        setFormData({ ...formData, skills: newSkills });
-                      }}
-                      size="sm"
-                      className="py-1.5 px-2 text-xs sm:text-sm touch-manipulation"
-                    >
-                      + {t('resume.form.addSkillButton')}
-                    </Button>
-                  </div>
-
-                  {Array.isArray(skill.items) && skill.items.length > 0 ? (
-                    <div className="space-y-2 sm:space-y-3">
-                      {skill.items.map((item: any, itemIndex: number) => (
-                        <div key={itemIndex} className="border theme-border-subtle rounded-lg p-2 sm:p-4 theme-bg-card transition-colors duration-200">
-                          <div className="flex justify-between items-center mb-2 sm:mb-3">
-                            <div className="flex items-center gap-1 sm:gap-2">
-                              {/* Move buttons - stacked vertically */}
-                              <div className="flex flex-col gap-0.5">
-                                {itemIndex > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newSkills = [...(formData.skills || [])];
-                                      const newItems = [...(newSkills[skillIndex].items || [])];
-                                      [newItems[itemIndex - 1], newItems[itemIndex]] = [newItems[itemIndex], newItems[itemIndex - 1]];
-                                      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                                      setFormData({ ...formData, skills: newSkills });
-                                    }}
-                                    className="w-6 h-6 flex items-center justify-center text-theme-primary hover:text-theme-primary-light hover:bg-theme-bg-hover rounded text-xs font-semibold touch-manipulation"
-                                    title={t('resume.form.moveUpButton')}
-                                  >
-                                    ▲
-                                  </button>
-                                )}
-                                {itemIndex < skill.items.length - 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newSkills = [...(formData.skills || [])];
-                                      const newItems = [...(newSkills[skillIndex].items || [])];
-                                      [newItems[itemIndex], newItems[itemIndex + 1]] = [newItems[itemIndex + 1], newItems[itemIndex]];
-                                      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                                      setFormData({ ...formData, skills: newSkills });
-                                    }}
-                                    className="w-6 h-6 flex items-center justify-center text-theme-primary hover:text-theme-primary-light hover:bg-theme-bg-hover rounded text-xs font-semibold touch-manipulation"
-                                    title={t('resume.form.moveDownButton')}
-                                  >
-                                    ▼
-                                  </button>
-                                )}
-                              </div>
-                              <span className="text-xs sm:text-sm font-semibold theme-text-secondary">{t('resume.form.skillNumber', { index: itemIndex + 1 })}</span>
-                            </div>
-                            <Button variant="danger"
-                              onClick={() => {
-                                const newSkills = [...(formData.skills || [])];
-                                const newItems = Array.isArray(newSkills[skillIndex].items)
-                                  ? newSkills[skillIndex].items.filter((_: any, i: number) => i !== itemIndex)
-                                  : [];
-                                newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                                setFormData({ ...formData, skills: newSkills });
-                              }}
-                              size="sm"
-                              className="py-1.5 px-2 text-xs touch-manipulation"
-                            >
-                              <span className="hidden sm:inline">{t('common.delete')}</span>
-                              <span className="sm:hidden">✕</span>
-                            </Button>
-                          </div>
-
-                          <div className="mb-3">
-                            {/* Skill Name */}
-                            <TextInput
-                              label={t('resume.form.skillName')}
-                              value={typeof item === 'string' ? item : item.name || ''}
-                              onChange={value => {
-                                const newSkills = [...(formData.skills || [])];
-                                const newItems = [...(newSkills[skillIndex].items || [])];
-                                newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-                                  ? { name: value, description: '' }
-                                  : { ...newItems[itemIndex], name: value };
-                                newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                                setFormData({ ...formData, skills: newSkills });
-                              }}
-                              placeholder={t('resume.form.skillPlaceholder')}
-                              required
-                            />
-                          </div>
-
-                          {/* Hierarchical Description */}
-                          <HierarchicalDescription
-                            items={(typeof item === 'string' ? [] : item.descriptions || []) as HierarchicalItem[]}
-                            onChange={(descriptions) => {
-                              const newSkills = [...(formData.skills || [])];
-                              const newItems = [...(newSkills[skillIndex].items || [])];
-                              newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-                                ? { name: newItems[itemIndex], description: '', descriptions }
-                                : { ...newItems[itemIndex], descriptions };
-                              newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-                              setFormData({ ...formData, skills: newSkills });
-                            }}
-                            label="활용 경험 / 세부 설명"
-                            placeholder="활용 경험이나 세부 설명을 추가하려면 '+ 추가' 버튼을 클릭하세요"
-                            maxDepth={4}
-                          />
-
-                          {/* Legacy Description (for backward compatibility) */}
-                          {typeof item !== 'string' && item.description && !item.descriptions?.length && (
-                            <div className="mt-3 p-3 bg-theme-status-warning-bg border border-theme-status-warning-border rounded-lg">
-                              <p className="text-xs text-theme-status-warning-text mb-2">
-                                <strong>{t('resume.form.legacyDescriptionTitle')}</strong> {item.description}
-                              </p>
-                              <p className="text-xs text-theme-status-warning-text opacity-80">
-                                {t('resume.form.legacyDescriptionMigration')}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-input rounded-lg border border-dashed border-theme-border-default transition-colors duration-200">
-                      <p>{t('resume.form.clickToAddSkills')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 theme-text-tertiary">
-            <p>{t('resume.form.clickToAddCategory')}</p>
-          </div>
-        )}
-      </CollapsibleSection>
+      <SkillsSection
+        skills={formData.skills || []}
+        onChange={(skills) => setFormData({ ...formData, skills })}
+        t={t}
+      />
 
       {/* Education Section */}
       <EducationSection
@@ -1088,14 +879,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </Button>
         }
       >
-        <p className="text-xs sm:text-sm theme-text-secondary mb-3 sm:mb-4">{t('resume.descriptions.certifications')}</p>
+        <p className="text-xs sm:text-sm text-theme-text-secondary mb-3 sm:mb-4">{t('resume.descriptions.certifications')}</p>
 
         {formData.certificates && formData.certificates.length > 0 ? (
           <div className="space-y-3 sm:space-y-4">
             {formData.certificates.map((cert, index) => (
               <div key={index} className="border border-theme-border-subtle rounded-lg p-3 sm:p-4 bg-theme-bg-input transition-colors duration-200">
                 <div className="flex justify-between items-center mb-3 sm:mb-4">
-                  <h3 className="text-sm sm:text-lg font-semibold theme-text-primary">{t('resume.form.certificateNumber', { index: index + 1 })}</h3>
+                  <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">{t('resume.form.certificateNumber', { index: index + 1 })}</h3>
                   <Button variant="danger"
                     onClick={() => {
                       const newCertificates = formData.certificates?.filter((_, i) => i !== index);
@@ -1185,7 +976,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 theme-text-tertiary">
+          <div className="text-center py-8 text-theme-text-tertiary">
             <p>{t('resume.form.noCertificates')}</p>
           </div>
         )}
@@ -1193,15 +984,15 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       {/* Attachments Section */}
       <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-theme-sm transition-colors duration-200 p-3 sm:p-6 lg:p-8">
-        <h2 className="text-base sm:text-xl lg:text-2xl font-bold theme-text-primary mb-1 sm:mb-2 lg:mb-4">📎 Attachments</h2>
-        <p className="text-xs sm:text-sm theme-text-secondary mb-3 sm:mb-4">
-          Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.
+        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-1 sm:mb-2 lg:mb-4">📎 {t('resume.form.attachments')}</h2>
+        <p className="text-xs sm:text-sm text-theme-text-secondary mb-3 sm:mb-4">
+          {t('resume.form.attachmentsDesc')}
         </p>
 
         {!resume?.id && (
           <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-lg p-4 mb-4">
             <p className="text-theme-status-info-text text-sm">
-              💡 Please save your resume first to enable file uploads.
+              💡 {t('resume.form.saveFirst')}
             </p>
           </div>
         )}
@@ -1216,9 +1007,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         {/* Profile Photo */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold theme-text-primary mb-3">📷 Profile Photo</h3>
-          <p className="text-sm theme-text-secondary mb-3">
-            Professional photo (automatically converted to grayscale)
+          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">📷 {t('resume.form.profilePhotoSection')}</h3>
+          <p className="text-sm text-theme-text-secondary mb-3">
+            {t('resume.form.profilePhotoDesc')}
           </p>
           <div className="space-y-3">
             {getAttachmentsByType(AttachmentType.PROFILE_PHOTO).map(attachment => (
@@ -1232,8 +1023,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     />
                   )}
                   <div>
-                    <p className="text-sm font-medium theme-text-primary">{attachment.fileName}</p>
-                    <p className="text-xs theme-text-tertiary">{formatFileSize(attachment.fileSize)}</p>
+                    <p className="text-sm font-medium text-theme-text-primary">{attachment.fileName}</p>
+                    <p className="text-xs text-theme-text-tertiary">{formatFileSize(attachment.fileSize)}</p>
                   </div>
                 </div>
                 <button
@@ -1241,7 +1032,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   onClick={() => handleDeleteAttachment(attachment.id)}
                   className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
-                  Delete
+                  {t('common.delete')}
                 </button>
               </div>
             ))}
@@ -1253,8 +1044,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0], AttachmentType.PROFILE_PHOTO)}
                 className="hidden"
               />
-              <div className="border-2 border-dashed theme-border-default rounded-lg p-4 text-center hover:border-theme-primary transition-colors">
-                <p className="text-sm theme-text-secondary">
+              <div className="border-2 border-dashed border-theme-border-default rounded-lg p-4 text-center hover:border-theme-primary transition-colors">
+                <p className="text-sm text-theme-text-secondary">
                   {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPhoto')}
                 </p>
               </div>
@@ -1264,17 +1055,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         {/* Portfolio Files */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold theme-text-primary mb-3">🎨 {t('resume.form.portfolioSection')}</h3>
-          <p className="text-sm theme-text-secondary mb-3">
+          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">🎨 {t('resume.form.portfolioSection')}</h3>
+          <p className="text-sm text-theme-text-secondary mb-3">
             {t('resume.form.portfolioDesc')}
           </p>
           <div className="space-y-3">
             {getAttachmentsByType(AttachmentType.PORTFOLIO).map(attachment => (
               <div key={attachment.id} className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-lg p-3 transition-colors duration-200">
                 <div>
-                  <p className="text-sm font-medium theme-text-primary">{attachment.fileName}</p>
-                  <p className="text-xs theme-text-tertiary">{formatFileSize(attachment.fileSize)}</p>
-                  {attachment.title && <p className="text-xs theme-text-secondary mt-1">{attachment.title}</p>}
+                  <p className="text-sm font-medium text-theme-text-primary">{attachment.fileName}</p>
+                  <p className="text-xs text-theme-text-tertiary">{formatFileSize(attachment.fileSize)}</p>
+                  {attachment.title && <p className="text-xs text-theme-text-secondary mt-1">{attachment.title}</p>}
                 </div>
                 <button
                   type="button"
@@ -1293,8 +1084,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0], AttachmentType.PORTFOLIO)}
                 className="hidden"
               />
-              <div className="border-2 border-dashed theme-border-default rounded-lg p-4 text-center hover:border-theme-primary transition-colors">
-                <p className="text-sm theme-text-secondary">
+              <div className="border-2 border-dashed border-theme-border-default rounded-lg p-4 text-center hover:border-theme-primary transition-colors">
+                <p className="text-sm text-theme-text-secondary">
                   {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPortfolio')}
                 </p>
               </div>
@@ -1304,17 +1095,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         {/* Certificate Files */}
         <div>
-          <h3 className="text-lg font-semibold theme-text-primary mb-3">🏆 {t('resume.form.certificatesSection')}</h3>
-          <p className="text-sm theme-text-secondary mb-3">
+          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">🏆 {t('resume.form.certificatesSection')}</h3>
+          <p className="text-sm text-theme-text-secondary mb-3">
             {t('resume.form.certificatesDesc')}
           </p>
           <div className="space-y-3">
             {getAttachmentsByType(AttachmentType.CERTIFICATE).map(attachment => (
               <div key={attachment.id} className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-lg p-3 transition-colors duration-200">
                 <div>
-                  <p className="text-sm font-medium theme-text-primary">{attachment.fileName}</p>
-                  <p className="text-xs theme-text-tertiary">{formatFileSize(attachment.fileSize)}</p>
-                  {attachment.title && <p className="text-xs theme-text-secondary mt-1">{attachment.title}</p>}
+                  <p className="text-sm font-medium text-theme-text-primary">{attachment.fileName}</p>
+                  <p className="text-xs text-theme-text-tertiary">{formatFileSize(attachment.fileSize)}</p>
+                  {attachment.title && <p className="text-xs text-theme-text-secondary mt-1">{attachment.title}</p>}
                 </div>
                 <button
                   type="button"
@@ -1333,8 +1124,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0], AttachmentType.CERTIFICATE)}
                 className="hidden"
               />
-              <div className="border-2 border-dashed theme-border-default rounded-lg p-4 text-center hover:border-theme-primary transition-colors">
-                <p className="text-sm theme-text-secondary">
+              <div className="border-2 border-dashed border-theme-border-default rounded-lg p-4 text-center hover:border-theme-primary transition-colors">
+                <p className="text-sm text-theme-text-secondary">
                   {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadCertificate')}
                 </p>
               </div>
@@ -1369,7 +1160,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
           placeholder={t('resume.form.coverLetterPlaceholder')}
         />
-        <p className="text-xs theme-text-tertiary mt-1">
+        <p className="text-xs text-theme-text-tertiary mt-1">
           {t('resume.form.coverLetterHint')}
         </p>
       </CollapsibleSection>
@@ -1390,7 +1181,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <button
           type="button"
           onClick={handleClearDraft}
-          className="hidden sm:block px-4 py-2 text-sm theme-text-secondary hover:theme-text-primary underline transition-all"
+          className="hidden sm:block px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary underline transition-all"
         >
           {t('resume.form.deleteDraft')}
         </button>
@@ -1414,7 +1205,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 theme-bg-elevated hover:bg-theme-bg-hover theme-text-secondary rounded-lg font-semibold border theme-border-default transition-all touch-manipulation text-sm sm:text-base"
+            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-elevated hover:bg-theme-bg-hover text-theme-text-secondary rounded-lg font-semibold border border-theme-border-default transition-all touch-manipulation text-sm sm:text-base"
           >
             {t('common.cancel')}
           </button>
@@ -1424,7 +1215,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <button
           type="button"
           onClick={handleClearDraft}
-          className="sm:hidden w-full px-4 py-2 text-xs theme-text-tertiary hover:theme-text-secondary transition-all"
+          className="sm:hidden w-full px-4 py-2 text-xs text-theme-text-tertiary hover:text-theme-text-secondary transition-all"
         >
           {t('resume.form.deleteDraft')}
         </button>

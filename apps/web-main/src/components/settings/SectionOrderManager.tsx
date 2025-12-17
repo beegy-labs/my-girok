@@ -89,10 +89,10 @@ export default function SectionOrderManager() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold theme-text-primary mb-2">
+        <h3 className="text-lg font-semibold text-theme-text-primary mb-2">
           {t('settings.sectionOrder')}
         </h3>
-        <p className="text-sm theme-text-secondary mb-4">
+        <p className="text-sm text-theme-text-secondary mb-4">
           {t('settings.sectionOrderDescription')}
         </p>
       </div>
@@ -101,14 +101,14 @@ export default function SectionOrderManager() {
         {sections.map((section, index) => (
           <div
             key={section.type}
-            className="flex items-center justify-between theme-bg-elevated border theme-border-default rounded-lg p-4 transition-colors duration-200"
+            className="flex items-center justify-between bg-theme-bg-elevated border border-theme-border-default rounded-lg p-4 transition-colors duration-200"
           >
             <div className="flex items-center space-x-4">
               <div className="flex flex-col space-y-1">
                 <button
                   onClick={() => handleMoveUp(index)}
                   disabled={index === 0}
-                  className="theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
+                  className="text-theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
                   aria-label="Move up"
                 >
                   ▲
@@ -116,24 +116,24 @@ export default function SectionOrderManager() {
                 <button
                   onClick={() => handleMoveDown(index)}
                   disabled={index === sections.length - 1}
-                  className="theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
+                  className="text-theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
                   aria-label="Move down"
                 >
                   ▼
                 </button>
               </div>
-              <span className="theme-text-primary font-medium">
+              <span className="text-theme-text-primary font-medium">
                 {getSectionLabel(section.type)}
               </span>
             </div>
 
             <label className="flex items-center space-x-2 cursor-pointer">
-              <span className="text-sm theme-text-secondary">{t('settings.visibility')}</span>
+              <span className="text-sm text-theme-text-secondary">{t('settings.visibility')}</span>
               <input
                 type="checkbox"
                 checked={section.visible}
                 onChange={() => handleVisibilityToggle(section.type)}
-                className="w-5 h-5 text-theme-primary theme-bg-card border-theme-border-default rounded focus:ring-theme-primary"
+                className="w-5 h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary"
               />
             </label>
           </div>

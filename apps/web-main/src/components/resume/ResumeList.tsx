@@ -15,7 +15,8 @@ export default function ResumeList() {
       setError(null);
       const data = await getAllResumes();
       setResumes(data);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || t('resume.list.loadFailed'));
     } finally {
       setLoading(false);
@@ -32,7 +33,8 @@ export default function ResumeList() {
     try {
       await deleteResume(resumeId);
       await loadResumes();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || t('resume.list.deleteFailed'));
     }
   };
@@ -41,7 +43,8 @@ export default function ResumeList() {
     try {
       await setDefaultResume(resumeId);
       await loadResumes();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || t('resume.list.setDefaultFailed'));
     }
   };
@@ -53,7 +56,8 @@ export default function ResumeList() {
       await copyResume(resumeId);
       await loadResumes();
       alert(t('resume.list.copySuccess'));
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || t('resume.list.copyFailed'));
     }
   };

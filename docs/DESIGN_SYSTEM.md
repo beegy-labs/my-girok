@@ -2131,13 +2131,16 @@ Legacy tokens (`vintage-*`, `dark-*`) are preserved during migration:
 
 ```
 apps/web-main/src/
-├── index.css                  # Theme variables (Layers 1-3)
-├── contexts/ThemeContext.tsx  # Theme switching logic
-└── styles/design-tokens.ts    # TypeScript token exports
+├── index.css                  # Theme variables (Layers 1-3) - SINGLE SOURCE OF TRUTH
+└── contexts/ThemeContext.tsx  # Theme switching logic
 ```
+
+**Note**: TypeScript design tokens (`styles/design-tokens.ts`) were removed as an anti-pattern.
+Use Tailwind classes directly with theme tokens from `index.css`.
 
 ## Version History
 
+- v1.5.1 (2025-12-17): **Remove design-tokens.ts** - Removed TypeScript design tokens anti-pattern, single source of truth is now index.css
 - v1.5.0 (2025-12-16): **Scalable Theme System** - 3-layer architecture for N-theme support, semantic tokens, reduced theme change footprint from 46 files to 1-2
 - v1.4.0 (2025-12-12): **NEW "Vintage Natural Wood Library" Light Mode Theme** - Replaced bright amber with softer vintage colors (warm ivory, beige backgrounds, stone text colors, olive green accents) for reduced eye strain and natural feel
 - v1.3.0 (2025-11-27): Added mobile edit patterns - TouchSensor, depth colors, collapsible cards, inline buttons, fixed bottom nav

@@ -229,6 +229,9 @@
       "print": "Print",
       "resumeTitle": "{{name}}'s Resume"
     },
+    "public": {
+      "yourProfile": "Your Profile"
+    },
     "myResumes": "My Resumes",
     "manageResumes": "Manage and share your resumes",
     "createNewResume": "✍️ Create New Resume",
@@ -554,5 +557,25 @@
     "livePreview": "Live Preview",
     "previewDescription": "This is how your resume will look. Changes appear instantly.",
     "error": "Error:"
+  },
+  "share": {
+    "title": "Share Resume",
+    "description": "Create shareable links with custom expiration dates",
+    "createNew": "Create New Share Link",
+    "createDescription": "Generate a shareable link that allows others to view your resume",
+    "expirationPeriod": "Expiration Period",
+    "customDate": "Custom Date",
+    "customExpirationDate": "Custom Expiration Date",
+    "selectCustomDate": "Please select a custom expiration date.",
+    "creating": "Creating...",
+    "createLink": "Create Link",
+    "yourLinks": "Your Share Links",
+    "loadingLinks": "Loading share links...",
+    "noLinksYet": "No share links yet",
+    "createFirstLink": "Create your first link above",
+    "lastViewed": "Last viewed",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "updateFailed": "Failed to update share link. Please try again."
   }
 }
