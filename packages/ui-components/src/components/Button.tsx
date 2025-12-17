@@ -57,9 +57,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantClasses = {
       primary:
-        'bg-gradient-to-r from-theme-primary-dark to-theme-primary text-white shadow-lg shadow-theme-primary/30 focus:ring-theme-primary hover:scale-[1.02] active:scale-[0.98] dark:from-theme-primary-light dark:to-theme-primary dark:text-gray-900 dark:shadow-theme-primary/20',
+        'bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text shadow-lg shadow-theme-primary/30 focus:ring-theme-primary hover:scale-[1.02] active:scale-[0.98]',
       secondary:
-        'bg-theme-bg-card border border-theme-primary text-theme-primary hover:bg-theme-bg-elevated focus:ring-theme-primary dark:bg-theme-bg-secondary dark:border-theme-primary dark:text-theme-primary dark:hover:bg-theme-bg-card hover:scale-[1.01] active:scale-[0.99]',
+        'bg-btn-secondary-bg border border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover focus:ring-theme-primary hover:scale-[1.01] active:scale-[0.99]',
       danger:
         'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 dark:bg-red-700 dark:hover:bg-red-800',
       ghost:
