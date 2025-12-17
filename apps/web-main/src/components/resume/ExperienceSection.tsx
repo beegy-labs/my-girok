@@ -250,7 +250,7 @@ function SortableExperienceCard({
           <TextInput
             label={t('resume.experienceForm.company')}
             value={experience.company}
-            onChange={value => onUpdate({ ...experience, company: value })}
+            onChange={(value: string) => onUpdate({ ...experience, company: value })}
             placeholder={t('resume.experienceForm.companyName')}
             required
           />
@@ -322,7 +322,7 @@ function SortableExperienceCard({
           <TextInput
             label={t('resume.experienceForm.position')}
             value={experience.finalPosition}
-            onChange={value => onUpdate({ ...experience, finalPosition: value })}
+            onChange={(value: string) => onUpdate({ ...experience, finalPosition: value })}
             placeholder={t('resume.experienceForm.positionPlaceholder')}
             required
           />
@@ -330,7 +330,7 @@ function SortableExperienceCard({
           <TextInput
             label={t('resume.experienceForm.jobTitle')}
             value={experience.jobTitle}
-            onChange={value => onUpdate({ ...experience, jobTitle: value })}
+            onChange={(value: string) => onUpdate({ ...experience, jobTitle: value })}
             placeholder={t('resume.experienceForm.jobTitlePlaceholder')}
             required
           />
@@ -537,7 +537,7 @@ function SortableProject({
             <TextInput
               label={t('resume.experienceForm.projectName')}
               value={project.name}
-              onChange={value => onUpdate({ ...project, name: value })}
+              onChange={(value: string) => onUpdate({ ...project, name: value })}
               placeholder={t('resume.experienceForm.projectNamePlaceholder')}
               required
             />
@@ -572,7 +572,7 @@ function SortableProject({
             <TextArea
               label={t('resume.experienceForm.description')}
               value={project.description}
-              onChange={value => onUpdate({ ...project, description: value })}
+              onChange={(value: string) => onUpdate({ ...project, description: value })}
               rows={3}
               placeholder={t('resume.experienceForm.projectDescription')}
               required
@@ -581,14 +581,14 @@ function SortableProject({
             <TextInput
               label={t('resume.experienceForm.yourRole')}
               value={project.role || ''}
-              onChange={value => onUpdate({ ...project, role: value })}
+              onChange={(value: string) => onUpdate({ ...project, role: value })}
               placeholder={t('resume.experienceForm.rolePlaceholder')}
             />
 
             <TextInput
               label={t('resume.experienceForm.techStack')}
               value={techStackInput}
-              onChange={value => setTechStackInput(value)}
+              onChange={(value: string) => setTechStackInput(value)}
               onBlur={() => {
                 const parsed = techStackInput.split(',').map(s => s.trim()).filter(Boolean);
                 onUpdate({ ...project, techStack: parsed });
@@ -602,7 +602,7 @@ function SortableProject({
                 label={t('resume.experienceForm.projectUrl')}
                 type="url"
                 value={project.url || ''}
-                onChange={value => onUpdate({ ...project, url: value })}
+                onChange={(value: string) => onUpdate({ ...project, url: value })}
                 placeholder={t('resume.experienceForm.urlPlaceholder')}
               />
 
@@ -610,7 +610,7 @@ function SortableProject({
                 label={t('resume.experienceForm.githubUrl')}
                 type="url"
                 value={project.githubUrl || ''}
-                onChange={value => onUpdate({ ...project, githubUrl: value })}
+                onChange={(value: string) => onUpdate({ ...project, githubUrl: value })}
                 placeholder={t('resume.experienceForm.githubUrlPlaceholder')}
               />
             </div>

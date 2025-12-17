@@ -78,7 +78,7 @@ export default function RegisterPage() {
               label={t('auth.usernameHint')}
               type="text"
               value={username}
-              onChange={(value) => setUsername(value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+              onChange={(value: string) => setUsername(value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
               required
               placeholder="hongkildong"
               hint={`📖 ${t('auth.usernameRule')}`}
