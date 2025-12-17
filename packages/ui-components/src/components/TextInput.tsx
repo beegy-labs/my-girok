@@ -1,6 +1,6 @@
 import { forwardRef, InputHTMLAttributes, ChangeEvent } from 'react';
 
-export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'onChange'> {
+export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   /**
    * Label text displayed above the input
    */
@@ -29,6 +29,10 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
    * Additional CSS classes for the input element
    */
   inputClassName?: string;
+  /**
+   * Additional CSS classes (alias for containerClassName for backwards compatibility)
+   */
+  className?: string;
 }
 
 /**
@@ -54,10 +58,13 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     required,
     containerClassName = '',
     inputClassName = '',
+    className = '',
     id,
     onChange,
     ...props
   }, ref) => {
+    // className is an alias for containerClassName for backwards compatibility
+    const finalContainerClassName = containerClassName || className;
     const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
 
     const baseInputClasses =
@@ -75,7 +82,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     };
 
     return (
-      <div className={containerClassName}>
+      <div className={finalContainerClassName}>
         {label && (
           <label
             htmlFor={inputId}

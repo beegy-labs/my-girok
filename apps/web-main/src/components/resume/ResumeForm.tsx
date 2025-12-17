@@ -20,14 +20,12 @@ import EducationSection from './EducationSection';
 import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
 import {
   TextInput,
-  Select,
+  SelectInput,
   TextArea,
-  PrimaryButton,
-  SecondaryButton,
-  DestructiveButton,
+  Button,
   Card,
   CollapsibleSection,
-} from '../ui';
+} from '@my-girok/ui-components';
 
 interface ResumeFormProps {
   resume: Resume | null;
@@ -456,16 +454,15 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             placeholder={t('resume.form.resumeTitlePlaceholder')}
             className="mb-0"
           />
-          <Select
+          <SelectInput
             label={t('resume.form.paperSize')}
             value={formData.paperSize || 'A4'}
-            onChange={(value) => setFormData({ ...formData, paperSize: value as PaperSize })}
+            onChange={(value: string) => setFormData({ ...formData, paperSize: value as PaperSize })}
             options={[
               { value: 'A4', label: t('resume.form.paperSizeA4') },
               { value: 'LETTER', label: t('resume.form.paperSizeLetter') }
             ]}
             required
-            className="mb-0"
           />
         </div>
         <div className="mt-3 sm:mt-4">
@@ -774,7 +771,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     placeholder={t('resume.form.achievementPlaceholder', { index: index + 1 })}
                   />
                 </div>
-                <DestructiveButton
+                <Button variant="danger"
                   onClick={() => {
                     const newAchievements = formData.keyAchievements?.filter((_, i) => i !== index);
                     setFormData({ ...formData, keyAchievements: newAchievements });
@@ -784,11 +781,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 >
                   <span className="hidden sm:inline">{t('resume.form.remove')}</span>
                   <span className="sm:hidden">✕ 삭제</span>
-                </DestructiveButton>
+                </Button>
               </div>
             </div>
           ))}
-          <SecondaryButton
+          <Button variant="secondary"
             onClick={() => {
               setFormData({
                 ...formData,
@@ -799,7 +796,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             className="py-2 touch-manipulation"
           >
             + {t('resume.experienceForm.addAchievement')}
-          </SecondaryButton>
+          </Button>
         </div>
       </CollapsibleSection>
 
@@ -840,7 +837,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         count={formData.skills?.length}
         variant="secondary"
         headerAction={
-          <PrimaryButton
+          <Button variant="primary"
             onClick={() => {
               setFormData({
                 ...formData,
@@ -859,7 +856,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             className="py-2 touch-manipulation"
           >
             + {t('resume.form.addCategory')}
-          </PrimaryButton>
+          </Button>
         }
       >
         <p className="text-xs sm:text-sm theme-text-secondary mb-3 sm:mb-4">{t('resume.descriptions.skills')}</p>
@@ -901,7 +898,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <label className="text-xs sm:text-sm font-semibold theme-text-secondary">{t('resume.form.skillStack')}</label>
-                    <SecondaryButton
+                    <Button variant="secondary"
                       onClick={() => {
                         const newSkills = [...(formData.skills || [])];
                         const currentItems = Array.isArray(newSkills[skillIndex].items)
@@ -920,7 +917,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       className="py-1.5 px-2 text-xs sm:text-sm touch-manipulation"
                     >
                       + {t('resume.form.addSkillButton')}
-                    </SecondaryButton>
+                    </Button>
                   </div>
 
                   {Array.isArray(skill.items) && skill.items.length > 0 ? (
@@ -966,7 +963,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                               </div>
                               <span className="text-xs sm:text-sm font-semibold theme-text-secondary">{t('resume.form.skillNumber', { index: itemIndex + 1 })}</span>
                             </div>
-                            <DestructiveButton
+                            <Button variant="danger"
                               onClick={() => {
                                 const newSkills = [...(formData.skills || [])];
                                 const newItems = Array.isArray(newSkills[skillIndex].items)
@@ -980,7 +977,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                             >
                               <span className="hidden sm:inline">{t('common.delete')}</span>
                               <span className="sm:hidden">✕</span>
-                            </DestructiveButton>
+                            </Button>
                           </div>
 
                           <div className="mb-3">
@@ -1065,7 +1062,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         count={formData.certificates?.length}
         variant="secondary"
         headerAction={
-          <PrimaryButton
+          <Button variant="primary"
             onClick={() => {
               setFormData({
                 ...formData,
@@ -1088,7 +1085,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             className="py-2 touch-manipulation"
           >
             + {t('resume.form.addCertificate')}
-          </PrimaryButton>
+          </Button>
         }
       >
         <p className="text-xs sm:text-sm theme-text-secondary mb-3 sm:mb-4">{t('resume.descriptions.certifications')}</p>
@@ -1099,7 +1096,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               <div key={index} className="border border-theme-border-subtle rounded-lg p-3 sm:p-4 bg-theme-bg-input transition-colors duration-200">
                 <div className="flex justify-between items-center mb-3 sm:mb-4">
                   <h3 className="text-sm sm:text-lg font-semibold theme-text-primary">{t('resume.form.certificateNumber', { index: index + 1 })}</h3>
-                  <DestructiveButton
+                  <Button variant="danger"
                     onClick={() => {
                       const newCertificates = formData.certificates?.filter((_, i) => i !== index);
                       setFormData({ ...formData, certificates: newCertificates });
@@ -1109,7 +1106,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   >
                     <span className="hidden sm:inline">{t('resume.form.remove')}</span>
                     <span className="sm:hidden">✕</span>
-                  </DestructiveButton>
+                  </Button>
                 </div>
 
                 <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6">

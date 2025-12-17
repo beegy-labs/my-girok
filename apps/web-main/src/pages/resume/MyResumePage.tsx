@@ -12,7 +12,8 @@ import {
   ShareLink,
   ShareDuration,
 } from '../../api/resume';
-import { PrimaryButton, SecondaryButton, DestructiveButton, PageContainer, PageHeader, SectionHeader, Card, Alert, LoadingSpinner } from '../../components/ui';
+import { Button, PageContainer, PageHeader, SectionHeader, Card, Alert } from '@my-girok/ui-components';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function MyResumePage() {
   const { t } = useTranslation();
@@ -155,14 +156,14 @@ export default function MyResumePage() {
         title={t('resume.myResumes')}
         subtitle={t('resume.manageResumes')}
         action={
-          <PrimaryButton onClick={navigateToEdit}>
+          <Button variant="primary" onClick={navigateToEdit}>
             {t('resume.createNewResume')}
-          </PrimaryButton>
+          </Button>
         }
       />
 
       {error && (
-        <Alert type="error" message={error} className="mb-4 sm:mb-6" />
+        <Alert variant="error" className="mb-4 sm:mb-6">{error}</Alert>
       )}
 
       {/* Resume List */}
@@ -174,9 +175,9 @@ export default function MyResumePage() {
             <div className="text-5xl sm:text-6xl mb-4">📝</div>
             <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary mb-2">{t('resume.list.noResumes')}</h3>
             <p className="text-sm sm:text-base text-theme-text-secondary mb-4">{t('resume.list.createFirst')}</p>
-            <PrimaryButton onClick={navigateToEdit}>
+            <Button variant="primary" onClick={navigateToEdit}>
               {t('resume.list.createNew')}
-            </PrimaryButton>
+            </Button>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -220,36 +221,41 @@ export default function MyResumePage() {
 
                       {/* Action Buttons - Responsive grid */}
                       <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
-                        <SecondaryButton
+                        <Button
+                          variant="secondary"
                           onClick={() => navigateToPreview(resume.id)}
                           size="sm"
                         >
                           👁️ {t('common.preview')}
-                        </SecondaryButton>
-                        <PrimaryButton
+                        </Button>
+                        <Button
+                          variant="primary"
                           onClick={() => navigateToEditResume(resume.id)}
                           size="sm"
                         >
                           ✍️ {t('common.edit')}
-                        </PrimaryButton>
-                        <SecondaryButton
+                        </Button>
+                        <Button
+                          variant="secondary"
                           onClick={() => handleCopyResume(resume.id)}
                           size="sm"
                         >
                           📋 {t('common.copy')}
-                        </SecondaryButton>
-                        <SecondaryButton
+                        </Button>
+                        <Button
+                          variant="secondary"
                           onClick={() => openShareModal(resume.id)}
                           size="sm"
                         >
                           🔗 {t('common.share')}
-                        </SecondaryButton>
-                        <DestructiveButton
+                        </Button>
+                        <Button
+                          variant="danger"
                           onClick={() => handleDeleteResume(resume.id)}
                           size="sm"
                         >
                           🗑️ {t('common.delete')}
-                        </DestructiveButton>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -300,12 +306,13 @@ export default function MyResumePage() {
                                         readOnly
                                         className="flex-1 text-xs sm:text-sm text-theme-text-primary font-mono bg-theme-bg-secondary px-2 sm:px-3 py-1.5 rounded border border-theme-border-subtle focus:outline-none"
                                       />
-                                      <SecondaryButton
+                                      <Button
+                                        variant="secondary"
                                         onClick={() => copyToClipboard(link.shareUrl, link.id)}
                                         size="sm"
                                       >
                                         {copiedLinkId === link.id ? `✓ ${t('resume.linkCopied')}` : `📋 ${t('resume.copyLink')}`}
-                                      </SecondaryButton>
+                                      </Button>
                                     </div>
                                   </div>
                                 </div>
@@ -320,12 +327,13 @@ export default function MyResumePage() {
                                       <span className="text-green-700 dark:text-green-400">{t('resume.permanent')}</span>
                                     )}
                                   </div>
-                                  <DestructiveButton
+                                  <Button
+                                    variant="danger"
                                     onClick={() => handleDeleteShare(link.id)}
                                     size="sm"
                                   >
                                     {t('common.delete')}
-                                  </DestructiveButton>
+                                  </Button>
                                 </div>
                               </div>
                             ))}
@@ -361,7 +369,8 @@ export default function MyResumePage() {
               </select>
             </div>
             <div className="flex gap-3">
-              <SecondaryButton
+              <Button
+                variant="secondary"
                 onClick={() => {
                   setShowShareModal(false);
                   setSelectedResumeId(null);
@@ -369,13 +378,14 @@ export default function MyResumePage() {
                 className="flex-1"
               >
                 {t('common.cancel')}
-              </SecondaryButton>
-              <PrimaryButton
+              </Button>
+              <Button
+                variant="primary"
                 onClick={handleCreateShare}
                 className="flex-1"
               >
                 {t('common.save')}
-              </PrimaryButton>
+              </Button>
             </div>
           </Card>
         </div>

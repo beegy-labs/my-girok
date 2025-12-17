@@ -6,7 +6,7 @@ import ResumePreviewContainer from '../../components/resume/ResumePreviewContain
 import ResumeActionBar from '../../components/resume/ResumeActionBar';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CharacterMessage } from '../../components/characters';
-import { PrimaryButton } from '../../components/ui';
+import { Button } from '@my-girok/ui-components';
 
 export default function ResumePreviewPage() {
   const navigate = useNavigate();
@@ -63,9 +63,9 @@ export default function ResumePreviewPage() {
         title={t('resume.preview.notFoundTitle')}
         message={t('resume.preview.notFoundMessage')}
         action={
-          <PrimaryButton onClick={() => navigate('/resume/my')}>
+          <Button variant="primary" onClick={() => navigate('/resume/my')}>
             {t('resume.preview.backToMyResumes')}
-          </PrimaryButton>
+          </Button>
         }
       />
     );
@@ -78,9 +78,9 @@ export default function ResumePreviewPage() {
         title={t('resume.preview.errorTitle')}
         message={t('resume.preview.errorMessage')}
         action={
-          <PrimaryButton onClick={() => loadResume()}>
+          <Button variant="primary" onClick={() => loadResume()}>
             {t('resume.preview.retry')}
-          </PrimaryButton>
+          </Button>
         }
       />
     );

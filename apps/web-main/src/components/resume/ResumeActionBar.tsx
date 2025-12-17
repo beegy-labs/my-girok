@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Resume } from '../../api/resume';
 import { exportResumeToPDF, printResumePDF } from '../../utils/pdf';
-import { PrimaryButton, SecondaryButton } from '../ui';
+import { Button } from '@my-girok/ui-components';
 import ShareLinkModal from './ShareLinkModal';
 
 export interface ResumeActionBarProps {
@@ -92,39 +92,43 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
               </div>
             </div>
             {isOwner && (
-              <SecondaryButton
+              <Button
+                variant="secondary"
                 onClick={() => navigate(`/resume/edit/${resume.id}`)}
                 size="sm"
                 className="self-start sm:self-auto"
               >
                 ✍️ {t('resume.preview.edit')}
-              </SecondaryButton>
+              </Button>
             )}
           </div>
 
           {/* Action Buttons - Responsive grid on mobile, flex on larger screens */}
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2 sm:gap-3">
-            <PrimaryButton
+            <Button
+              variant="primary"
               onClick={handleExportPDF}
               loading={exporting}
               className="flex-1 whitespace-nowrap"
             >
               📥 {t('resume.preview.downloadPdf')}
-            </PrimaryButton>
-            <SecondaryButton
+            </Button>
+            <Button
+              variant="secondary"
               onClick={handlePrint}
               loading={printing}
               className="flex-1 whitespace-nowrap"
             >
               🖨️ {t('resume.preview.print')}
-            </SecondaryButton>
+            </Button>
             {isOwner && (
-              <SecondaryButton
+              <Button
+                variant="secondary"
                 onClick={() => setShowShareModal(true)}
                 className="col-span-2 sm:col-span-1 flex-1 whitespace-nowrap"
               >
                 🔗 {t('resume.preview.shareLink')}
-              </SecondaryButton>
+              </Button>
             )}
           </div>
         </div>

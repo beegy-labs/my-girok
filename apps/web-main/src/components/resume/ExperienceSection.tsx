@@ -19,7 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Experience, ExperienceProject, ProjectAchievement, calculateExperienceDuration } from '../../api/resume';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
-import { TextInput, TextArea, SecondaryButton, DestructiveButton } from '../ui';
+import { TextInput, TextArea, Button } from '@my-girok/ui-components';
 
 // Depth colors for visual hierarchy in achievements
 const DEPTH_COLORS = {
@@ -233,16 +233,16 @@ function SortableExperienceCard({
           <h3 className="text-lg font-bold text-theme-primary-light transition-colors duration-200">
             📚 {t('resume.experienceForm.company')} #{index + 1}
           </h3>
-          <DestructiveButton onClick={onRemove} size="sm" className="flex-shrink-0">
+          <Button variant="danger" onClick={onRemove} size="sm" className="flex-shrink-0">
             {t('resume.experienceForm.removeCompany')}
-          </DestructiveButton>
+          </Button>
         </div>
 
         {/* Mobile: Delete button */}
         <div className="sm:hidden flex justify-end mb-3">
-          <DestructiveButton onClick={onRemove} size="sm" className="text-xs py-1.5 px-3 touch-manipulation">
+          <Button variant="danger" onClick={onRemove} size="sm" className="text-xs py-1.5 px-3 touch-manipulation">
             ✕ 삭제
-          </DestructiveButton>
+          </Button>
         </div>
 
         {/* Company Basic Info - Mobile optimized */}
@@ -383,10 +383,10 @@ function SortableExperienceCard({
               <span className="hidden sm:inline">📁 Projects at this company</span>
               <span className="sm:hidden">📁 프로젝트 ({projects.length})</span>
             </h4>
-            <SecondaryButton onClick={addProject} size="sm" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3 touch-manipulation">
+            <Button variant="secondary" onClick={addProject} size="sm" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3 touch-manipulation">
               <span className="hidden sm:inline">+ Add Project</span>
               <span className="sm:hidden">+ 추가</span>
-            </SecondaryButton>
+            </Button>
           </div>
 
           {projects && projects.length > 0 ? (
@@ -523,10 +523,10 @@ function SortableProject({
           </svg>
         </button>
 
-        <DestructiveButton onClick={onRemove} size="sm" className="flex-shrink-0">
+        <Button variant="danger" onClick={onRemove} size="sm" className="flex-shrink-0">
           <span className="hidden sm:inline">{t('resume.experienceForm.remove')}</span>
           <span className="sm:hidden">✕</span>
-        </DestructiveButton>
+        </Button>
       </div>
 
       {/* Project Details (Collapsible) */}

@@ -9,6 +9,7 @@ export * from './components/SectionHeader';
 export * from './components/SelectInput';
 export * from './components/SortableItem';
 export * from './components/SortableList';
+export * from './components/TextArea';
 export * from './components/TextInput';
 
 // Hooks
