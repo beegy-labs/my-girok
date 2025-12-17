@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { logout } from '../api/auth';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useTheme } from '../hooks/useTheme';
+import { Button } from '@my-girok/ui-components';
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -17,7 +18,6 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await logout();
-      // Direct navigation - React Router v7 supports this without issues
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -50,7 +50,7 @@ export default function Navbar() {
   }, [isDropdownOpen]);
 
   return (
-    <nav className="bg-theme-bg-card border-b border-theme-border-subtle transition-colors duration-200">
+    <nav className="bg-theme-bg-elevated border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
@@ -137,7 +137,7 @@ export default function Navbar() {
                     <Link
                       to="/change-password"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-theme-text-secondary hover:bg-theme-bg-hover transition-colors"
+                      className="block w-full text-left px-4 py-2 text-sm text-theme-text-secondary hover:bg-theme-bg-hover transition-colors"
                     >
                       {t('nav.changePassword')}
                     </Link>
@@ -147,7 +147,7 @@ export default function Navbar() {
                         setIsDropdownOpen(false);
                         handleLogout();
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-400 dark:text-red-400 hover:bg-red-900/20 dark:hover:bg-red-900/20 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg transition-colors"
                     >
                       {t('nav.logout')}
                     </button>
@@ -162,11 +162,8 @@ export default function Navbar() {
                 >
                   {t('nav.login')}
                 </Link>
-                <Link
-                  to="/register"
-                  className="bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all transform hover:scale-[1.02] shadow-lg shadow-theme-primary/30"
-                >
-                  {t('nav.register')}
+                <Link to="/register" className="flex items-center">
+                  <Button size="sm">{t('nav.register')}</Button>
                 </Link>
               </>
             )}

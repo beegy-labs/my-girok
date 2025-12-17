@@ -38,7 +38,7 @@ export default function ThemeToggle() {
         onClick={handleToggle}
         className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
           currentTheme === Theme.DARK
-            ? 'bg-amber-600'
+            ? 'bg-theme-primary'
             : 'bg-theme-border-default'
         }`}
         aria-label="Toggle theme"

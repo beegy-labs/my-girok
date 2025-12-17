@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { register } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
-import { TextInput, PrimaryButton, Card, PageContainer, Alert } from '../components/ui';
+import { TextInput, Button, Card, PageContainer, Alert } from '@my-girok/ui-components';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -58,7 +58,7 @@ export default function RegisterPage() {
       <Card variant="primary" padding="lg" className="shadow-theme-xl">
         <h2 className="text-xl sm:text-2xl font-bold text-theme-text-primary mb-6">{t('auth.registerTitle')}</h2>
 
-        {error && <Alert type="error" message={error} className="mb-6" />}
+        {error && <Alert variant="error" className="mb-6">{error}</Alert>}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <TextInput
@@ -107,14 +107,15 @@ export default function RegisterPage() {
               autoComplete="new-password"
             />
 
-            <PrimaryButton
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading}
               loading={loading}
               fullWidth
             >
               {loading ? t('auth.registering') : t('auth.registerButton')}
-            </PrimaryButton>
+            </Button>
           </form>
 
           {/* Divider */}

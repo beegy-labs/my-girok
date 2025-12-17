@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { changePassword } from '../api/auth';
-import { TextInput, PrimaryButton, Card, Alert, PageContainer } from '../components/ui';
+import { TextInput, Button, Card, Alert, PageContainer, PageHeader } from '@my-girok/ui-components';
 
 export default function ChangePasswordPage() {
   const { t } = useTranslation();
@@ -59,24 +59,24 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <PageContainer maxWidth="sm" centered>
-      {/* Header */}
-      <div className="text-center mb-6 sm:mb-8">
-        <div className="flex items-center justify-center mb-3">
-          <span className="text-2xl sm:text-3xl mr-2">🔒</span>
-          <h1 className="text-2xl sm:text-3xl font-bold text-theme-text-primary">
-            {t('changePassword.title')}
-          </h1>
-        </div>
-        <p className="text-theme-text-secondary text-sm">{t('changePassword.description')}</p>
-      </div>
+    <PageContainer maxWidth="sm">
+      <PageHeader
+        icon="🔒"
+        title={t('changePassword.title')}
+        subtitle={t('changePassword.description')}
+        backLink="/"
+        backLinkComponent={Link}
+        backText={t('changePassword.backToHome')}
+        size="md"
+        className="mb-6 sm:mb-8"
+      />
 
       {/* Change Password Form */}
       <Card variant="primary" padding="lg" className="shadow-theme-xl">
-        {error && <Alert type="error" message={error} />}
-        {success && <Alert type="success" message={success} />}
+        {error && <Alert variant="error">{error}</Alert>}
+        {success && <Alert variant="success">{success}</Alert>}
 
-        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5 sm:space-y-6">
           <TextInput
             id="currentPassword"
             label={t('changePassword.currentPassword')}
@@ -110,24 +110,18 @@ export default function ChangePasswordPage() {
             autoComplete="new-password"
           />
 
-          <PrimaryButton
-            type="submit"
-            disabled={loading}
-            loading={loading}
-            fullWidth
-          >
-            {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
-          </PrimaryButton>
+          <div className="pt-2">
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={loading}
+              loading={loading}
+              fullWidth
+            >
+              {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
+            </Button>
+          </div>
         </form>
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => navigate('/')}
-            className="text-sm text-theme-primary hover:text-theme-primary-light font-medium transition-colors"
-          >
-            {t('changePassword.backToHome')}
-          </button>
-        </div>
       </Card>
     </PageContainer>
   );

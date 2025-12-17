@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import ThemeToggle from '../../components/settings/ThemeToggle';
 import SectionOrderManager from '../../components/settings/SectionOrderManager';
-import { PageContainer, PageHeader, Card } from '../../components/ui';
+import { PageContainer, PageHeader, Card } from '@my-girok/ui-components';
 
 export default function SettingsPage() {
   const { t } = useTranslation();

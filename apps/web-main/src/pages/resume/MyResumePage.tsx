@@ -12,7 +12,8 @@ import {
   ShareLink,
   ShareDuration,
 } from '../../api/resume';
-import { PrimaryButton, SecondaryButton, DestructiveButton, PageContainer, PageHeader, SectionHeader, Card, Alert, LoadingSpinner } from '../../components/ui';
+import { Button, PageContainer, PageHeader, SectionHeader, Card, Alert } from '@my-girok/ui-components';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function MyResumePage() {
   const { t } = useTranslation();
@@ -155,14 +156,14 @@ export default function MyResumePage() {
         title={t('resume.myResumes')}
         subtitle={t('resume.manageResumes')}
         action={
-          <PrimaryButton onClick={navigateToEdit}>
+          <Button variant="primary" onClick={navigateToEdit}>
             {t('resume.createNewResume')}
-          </PrimaryButton>
+          </Button>
         }
       />
 
       {error && (
-        <Alert type="error" message={error} className="mb-4 sm:mb-6" />
+        <Alert variant="error" className="mb-4 sm:mb-6">{error}</Alert>
       )}
 
       {/* Resume List */}
@@ -174,9 +175,9 @@ export default function MyResumePage() {
             <div className="text-5xl sm:text-6xl mb-4">📝</div>
             <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary mb-2">{t('resume.list.noResumes')}</h3>
             <p className="text-sm sm:text-base text-theme-text-secondary mb-4">{t('resume.list.createFirst')}</p>
-            <PrimaryButton onClick={navigateToEdit}>
+            <Button variant="primary" onClick={navigateToEdit}>
               {t('resume.list.createNew')}
-            </PrimaryButton>
+            </Button>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -203,7 +204,7 @@ export default function MyResumePage() {
                             </span>
                           )}
                           {hasActiveShare && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
+                            <span className="px-2 py-0.5 text-xs font-semibold bg-theme-status-success-bg text-theme-status-success-text rounded-full">
                               {t('resume.sharing')} ({activeShares.length}/3)
                             </span>
                           )}
@@ -220,36 +221,41 @@ export default function MyResumePage() {
 
                       {/* Action Buttons - Responsive grid */}
                       <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
-                        <SecondaryButton
+                        <Button
+                          variant="secondary"
                           onClick={() => navigateToPreview(resume.id)}
                           size="sm"
                         >
                           👁️ {t('common.preview')}
-                        </SecondaryButton>
-                        <PrimaryButton
+                        </Button>
+                        <Button
+                          variant="primary"
                           onClick={() => navigateToEditResume(resume.id)}
                           size="sm"
                         >
                           ✍️ {t('common.edit')}
-                        </PrimaryButton>
-                        <SecondaryButton
+                        </Button>
+                        <Button
+                          variant="secondary"
                           onClick={() => handleCopyResume(resume.id)}
                           size="sm"
                         >
                           📋 {t('common.copy')}
-                        </SecondaryButton>
-                        <SecondaryButton
+                        </Button>
+                        <Button
+                          variant="secondary"
                           onClick={() => openShareModal(resume.id)}
                           size="sm"
                         >
                           🔗 {t('common.share')}
-                        </SecondaryButton>
-                        <DestructiveButton
+                        </Button>
+                        <Button
+                          variant="danger"
                           onClick={() => handleDeleteResume(resume.id)}
                           size="sm"
                         >
                           🗑️ {t('common.delete')}
-                        </DestructiveButton>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -286,7 +292,7 @@ export default function MyResumePage() {
                                       <span
                                         className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                           link.isActive
-                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                            ? 'bg-theme-status-success-bg text-theme-status-success-text'
                                             : 'bg-theme-bg-elevated text-theme-text-secondary'
                                         }`}
                                       >
@@ -300,12 +306,13 @@ export default function MyResumePage() {
                                         readOnly
                                         className="flex-1 text-xs sm:text-sm text-theme-text-primary font-mono bg-theme-bg-secondary px-2 sm:px-3 py-1.5 rounded border border-theme-border-subtle focus:outline-none"
                                       />
-                                      <SecondaryButton
+                                      <Button
+                                        variant="secondary"
                                         onClick={() => copyToClipboard(link.shareUrl, link.id)}
                                         size="sm"
                                       >
                                         {copiedLinkId === link.id ? `✓ ${t('resume.linkCopied')}` : `📋 ${t('resume.copyLink')}`}
-                                      </SecondaryButton>
+                                      </Button>
                                     </div>
                                   </div>
                                 </div>
@@ -313,19 +320,20 @@ export default function MyResumePage() {
                                   <div className="flex flex-wrap gap-3">
                                     <span>{t('resume.viewCount')}: {link.viewCount}</span>
                                     {link.expiresAt ? (
-                                      <span className="text-green-700 dark:text-green-400">
+                                      <span className="text-theme-status-success-text">
                                         {t('resume.expires')}: {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
                                       </span>
                                     ) : (
-                                      <span className="text-green-700 dark:text-green-400">{t('resume.permanent')}</span>
+                                      <span className="text-theme-status-success-text">{t('resume.permanent')}</span>
                                     )}
                                   </div>
-                                  <DestructiveButton
+                                  <Button
+                                    variant="danger"
                                     onClick={() => handleDeleteShare(link.id)}
                                     size="sm"
                                   >
                                     {t('common.delete')}
-                                  </DestructiveButton>
+                                  </Button>
                                 </div>
                               </div>
                             ))}
@@ -342,7 +350,7 @@ export default function MyResumePage() {
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-theme-xl">
             <h2 className="text-xl sm:text-2xl font-bold text-theme-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
             <div className="mb-6">
@@ -361,7 +369,8 @@ export default function MyResumePage() {
               </select>
             </div>
             <div className="flex gap-3">
-              <SecondaryButton
+              <Button
+                variant="secondary"
                 onClick={() => {
                   setShowShareModal(false);
                   setSelectedResumeId(null);
@@ -369,13 +378,14 @@ export default function MyResumePage() {
                 className="flex-1"
               >
                 {t('common.cancel')}
-              </SecondaryButton>
-              <PrimaryButton
+              </Button>
+              <Button
+                variant="primary"
                 onClick={handleCreateShare}
                 className="flex-1"
               >
                 {t('common.save')}
-              </PrimaryButton>
+              </Button>
             </div>
           </Card>
         </div>

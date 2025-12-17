@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
 import { login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
-import { TextInput, PrimaryButton, Card, PageContainer, Alert } from '../components/ui';
+import { TextInput, Button, Card, PageContainer, Alert } from '@my-girok/ui-components';
 
 const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
 const COOKIE_EXPIRY_DAYS = 30;
@@ -75,7 +75,7 @@ export default function LoginPage() {
 
       {/* Login Form */}
       <Card variant="primary" padding="lg" className="shadow-theme-xl">
-        {error && <Alert type="error" message={error} className="mb-6" />}
+        {error && <Alert variant="error" className="mb-6">{error}</Alert>}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <TextInput
@@ -113,14 +113,15 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <PrimaryButton
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading}
               loading={loading}
               fullWidth
             >
               {t('auth.loginButton')}
-            </PrimaryButton>
+            </Button>
           </form>
 
           {/* Divider */}

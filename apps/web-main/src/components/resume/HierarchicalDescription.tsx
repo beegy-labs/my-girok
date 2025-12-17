@@ -21,10 +21,10 @@ import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 
 // Depth colors for visual hierarchy
 const DEPTH_COLORS = {
-  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
-  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
-  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
-  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+  1: { bg: 'bg-theme-level-1-bg', border: 'border-l-theme-level-1-border' },
+  2: { bg: 'bg-theme-level-2-bg', border: 'border-l-theme-level-2-border' },
+  3: { bg: 'bg-theme-level-3-bg', border: 'border-l-theme-level-3-border' },
+  4: { bg: 'bg-theme-level-4-bg', border: 'border-l-theme-level-4-border' },
 } as const;
 
 // Generic type for hierarchical descriptions
@@ -129,7 +129,7 @@ function HierarchicalItemComponent({
               <button
                 type="button"
                 onClick={onAddChild}
-                className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-all font-semibold whitespace-nowrap touch-manipulation"
+                className="px-2 py-1 bg-theme-status-success-bg border border-theme-status-success-border text-theme-status-success-text text-xs rounded hover:opacity-80 transition-all font-semibold whitespace-nowrap touch-manipulation"
                 title="Add sub-item"
               >
                 + 하위
@@ -150,7 +150,7 @@ function HierarchicalItemComponent({
             <button
               type="button"
               onClick={onRemove}
-              className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200 touch-manipulation"
+              className="text-theme-status-error-text hover:opacity-80 text-xs font-semibold transition-colors duration-200 touch-manipulation"
               title="Remove"
             >
               ✕
@@ -177,7 +177,7 @@ function HierarchicalItemComponent({
                 <button
                   type="button"
                   onClick={onAddChild}
-                  className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 text-[10px] rounded hover:bg-green-200 transition-colors duration-200 touch-manipulation"
+                  className="w-6 h-6 flex items-center justify-center bg-theme-status-success-bg text-theme-status-success-text text-[10px] rounded hover:opacity-80 transition-colors duration-200 touch-manipulation"
                   title="Add sub-item"
                 >
                   +
@@ -197,7 +197,7 @@ function HierarchicalItemComponent({
               <button
                 type="button"
                 onClick={onRemove}
-                className="w-6 h-6 flex items-center justify-center text-red-600 hover:bg-red-50 rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
+                className="w-6 h-6 flex items-center justify-center text-theme-status-error-text hover:bg-theme-status-error-bg rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
               >
                 ✕
               </button>

@@ -30,7 +30,7 @@ export interface CardProps {
  * </Card>
  * ```
  */
-export default function Card({
+export function Card({
   children,
   variant = 'primary',
   interactive = false,
@@ -75,7 +75,7 @@ export default function Card({
         ${variantClasses[variant]}
         ${paddingClasses[padding]}
         rounded-2xl
-        transition-all duration-200
+        transition duration-200
         ${className}
       `}
       role={interactive ? 'button' : undefined}

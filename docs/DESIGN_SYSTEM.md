@@ -1590,45 +1590,61 @@ Potential future additions to the character system:
 
 ## UI Component Library
 
-> **Status**: ✅ Complete (2025-11-21)
-> **Coverage**: ~95% of form inputs and buttons across the application
-> **Location**: `apps/web-main/src/components/ui/`
+> **Status**: ✅ Consolidated (2025-12-17)
+> **Location**: `packages/ui-components/src/`
 
 ### Overview
 
-The UI Component Library extracts repeated patterns into reusable components, reducing code duplication and improving maintainability across the application.
+The UI Component Library extracts repeated UI patterns into reusable, theme-aware components. This single, centralized library is consumed by all frontend applications within the monorepo, ensuring consistency and maintainability.
 
 **Key Metrics**:
-- **Components**: 10 total (Form: 4, Button: 3, Layout/Feedback: 3)
-- **Code Reduction**: 305 lines eliminated (~21%)
-- **Bundle Impact**: Minimal (-6KB)
-- **Adoption**: ~95% (36 files migrated)
-- **Build Time**: ~8.6s (consistent)
+- **Components**: 11 total
+- **Adoption**: 100% (All pages refactored to use this library)
+- **Architecture**: Single source of truth for all UI components.
 
 ### Component Catalog
 
-#### Form Components (4)
+#### Form Components
+
+##### Button
+
+A multi-variant button with support for loading states, sizes, and icons.
+
+**Props**:
+```typescript
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+  fullWidth?: boolean;
+  icon?: ReactNode;
+}
+```
+
+**Example**:
+```jsx
+<Button variant="primary" onClick={handleSubmit} loading={isLoading}>
+  Save Changes
+</Button>
+
+<Button variant="secondary" size="sm">Cancel</Button>
+
+<Button variant="danger">Delete</Button>
+```
 
 ##### TextInput
 
-Single-line text input with label, error, and hint support.
+A theme-aware, single-line text input with a simplified `onChange` handler.
 
 **Props**:
 ```typescript
 interface TextInputProps {
   label?: string;
   value: string;
-  onChange: (value: string) => void;
-  type?: 'text' | 'email' | 'tel' | 'password' | 'url' | 'month';
-  placeholder?: string;
-  required?: boolean;
+  onChange: (value: string) => void; // Simplified handler
   error?: string;
   hint?: string;
-  disabled?: boolean;
-  icon?: React.ReactNode;
-  maxLength?: number;
-  className?: string;
-  onBlur?: () => void;
+  // ...other standard input props
 }
 ```
 
@@ -1637,367 +1653,128 @@ interface TextInputProps {
 <TextInput
   label="Email Address"
   value={email}
-  onChange={(value) => setEmail(value)}
-  type="email"
-  placeholder="your@email.com"
-  required
+  onChange={setEmail} // Directly pass the state setter
   error={errors.email}
-  hint="We'll never share your email"
+  hint="We'll never share your email."
 />
 ```
 
-**Features**:
-- Built-in label, error, and hint rendering
-- Focus ring with amber-400
-- Dark mode support
-- Accessible with proper ARIA attributes
-- Character counter when maxLength is set
+##### SelectInput
 
-##### Select
-
-Dropdown component with options array.
-
-**Props**:
-```typescript
-interface SelectProps {
-  label?: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: Array<{ value: string; label: string }>;
-  placeholder?: string;
-  required?: boolean;
-  error?: string;
-  hint?: string;
-  disabled?: boolean;
-  className?: string;
-}
-```
+A theme-aware `<select>` dropdown with a simplified `onChange` handler.
 
 **Example**:
 ```jsx
-<Select
+<SelectInput
   label="Country"
   value={country}
-  onChange={(value) => setCountry(value)}
-  options={[
-    { value: '', label: 'Select a country' },
-    { value: 'kr', label: '대한민국' },
-    { value: 'us', label: 'United States' },
-    { value: 'jp', label: '日本' },
-  ]}
-  required
-  error={errors.country}
+  onChange={setCountry} // Simplified handler
+  options={[{ value: 'kr', label: '대한민국' }]}
 />
 ```
 
-**Features**:
-- Native `<select>` element (no custom dropdown)
-- Consistent styling with TextInput
-- Dark mode support
-- Keyboard accessible
-
-##### TextArea
-
-Multi-line text input with character counter.
-
-**Props**:
-```typescript
-interface TextAreaProps {
-  label?: string;
-  value: string;
-  onChange: (value: string) => void;
-  rows?: number;
-  placeholder?: string;
-  required?: boolean;
-  error?: string;
-  hint?: string;
-  disabled?: boolean;
-  maxLength?: number;
-  className?: string;
-}
-```
-
-**Example**:
-```jsx
-<TextArea
-  label="Summary"
-  value={summary}
-  onChange={(value) => setSummary(value)}
-  rows={4}
-  maxLength={500}
-  placeholder="Write a brief summary..."
-  hint="Highlight your key achievements and skills"
-/>
-```
-
-**Features**:
-- Auto-growing height based on rows prop
-- Character counter (e.g., "245 / 500")
-- Resize handle (vertical only)
-- Dark mode support
-
-##### FileUpload
-
-Drag-and-drop file upload component.
-
-**Props**:
-```typescript
-interface FileUploadProps {
-  label?: string;
-  accept?: string;
-  maxSize?: number;
-  onUpload: (file: File) => void;
-  error?: string;
-  hint?: string;
-  disabled?: boolean;
-  className?: string;
-}
-```
-
-**Example**:
-```jsx
-<FileUpload
-  label="Profile Photo"
-  accept="image/*"
-  maxSize={5 * 1024 * 1024} // 5MB
-  onUpload={(file) => handlePhotoUpload(file)}
-  hint="PNG, JPG up to 5MB"
-/>
-```
-
-**Features**:
-- Drag-and-drop support
-- Click to browse files
-- Visual feedback on drag over
-- File size validation
-- Accept attribute for file type filtering
-
-#### Button Components (3)
-
-##### PrimaryButton
-
-Primary action button with amber gradient.
-
-**Props**:
-```typescript
-interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  type?: 'button' | 'submit' | 'reset';
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
-```
-
-**Example**:
-```jsx
-<PrimaryButton onClick={handleSubmit} disabled={loading}>
-  Save Changes
-</PrimaryButton>
-
-<PrimaryButton size="sm">Small Action</PrimaryButton>
-<PrimaryButton size="lg">Large CTA</PrimaryButton>
-```
-
-**Styling**:
-- Light mode: `bg-gradient-to-r from-amber-700 to-amber-600`
-- Dark mode: `bg-gradient-to-r from-amber-400 to-amber-500`
-- Hover: Scale animation (1.02)
-- Active: Scale animation (0.98)
-- Shadow: `shadow-lg shadow-amber-700/30`
-
-##### SecondaryButton
-
-Secondary action button with gray background.
-
-**Example**:
-```jsx
-<SecondaryButton onClick={handleCancel}>
-  Cancel
-</SecondaryButton>
-```
-
-**Styling**:
-- Light mode: `bg-gray-100 border-gray-300 text-gray-700`
-- Dark mode: `bg-dark-bg-secondary border-dark-border-default text-dark-text-primary`
-- Hover: Lighter background
-
-##### DestructiveButton
-
-Destructive action button for delete/remove operations.
-
-**Example**:
-```jsx
-<DestructiveButton onClick={handleDelete}>
-  Delete Resume
-</DestructiveButton>
-```
-
-**Styling**:
-- Light mode: `bg-red-600 text-white`
-- Dark mode: `bg-red-700 text-white`
-- Hover: Darker red
-- Warning color for dangerous actions
-
-**Button Sizes**:
-- `sm`: `px-3 py-1.5 text-sm` - Compact layouts
-- `md`: `px-4 py-2 text-base` - Default
-- `lg`: `px-6 py-3 text-lg` - Hero sections
-
-#### Layout & Feedback (3)
+#### Layout & Feedback
 
 ##### Card
 
-Content container with multiple variants.
-
-**Props**:
-```typescript
-interface CardProps {
-  children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'elevated';
-  className?: string;
-}
-```
+A versatile, theme-aware content container with multiple variants.
 
 **Example**:
 ```jsx
-<Card variant="primary">
-  <h2 className="text-xl font-bold text-amber-900 mb-2">
-    Card Title
-  </h2>
-  <p className="text-gray-600">Card content goes here...</p>
+<Card variant="primary" padding="lg">
+  <h2>Card Title</h2>
+  <p>Card content...</p>
 </Card>
 ```
 
-**Variants**:
-- `primary`: Amber background with subtle opacity
-- `secondary`: White background with border
-- `elevated`: Higher shadow for emphasis
-
 ##### Alert
 
-Status message component with multiple types.
-
-**Props**:
-```typescript
-interface AlertProps {
-  type: 'success' | 'error' | 'warning' | 'info';
-  children: React.ReactNode;
-  className?: string;
-}
-```
+A component for status messages with variants for success, error, warning, and info.
 
 **Example**:
 ```jsx
-<Alert type="success">Resume saved successfully!</Alert>
-<Alert type="error">Failed to save resume. Please try again.</Alert>
-<Alert type="warning">Your session will expire in 5 minutes.</Alert>
-<Alert type="info">You have 3 resumes. Maximum is 10.</Alert>
+<Alert variant="success">Resume saved successfully!</Alert>
+<Alert variant="error">{error}</Alert>
 ```
 
-**Types**:
-- `success`: Green background, checkmark icon
-- `error`: Red background, X icon
-- `warning`: Yellow background, warning icon
-- `info`: Blue background, info icon
+##### PageHeader, SectionHeader, PageContainer
 
-##### LoadingSpinner
+Components for building consistent page layouts.
 
-Loading indicator with optional message.
+### File Structure
 
-**Props**:
-```typescript
-interface LoadingSpinnerProps {
-  fullScreen?: boolean;
-  message?: string;
-  size?: number;
-}
 ```
-
-**Example**:
-```jsx
-// Inline loading
-<LoadingSpinner />
-
-// Full screen overlay
-<LoadingSpinner fullScreen message="Loading resume..." />
-
-// Custom size
-<LoadingSpinner size={60} />
+packages/ui-components/src/components/
+├── Alert.tsx
+├── Button.tsx
+├── Card.tsx
+├── CollapsibleSection.tsx
+├── index.ts
+├── PageContainer.tsx
+├── PageHeader.tsx
+├── SectionHeader.tsx
+├── SelectInput.tsx
+├── SortableItem.tsx
+├── SortableList.tsx
+└── TextInput.tsx
 ```
-
-**Features**:
-- Amber-colored spinner (brand consistency)
-- Optional full-screen overlay
-- Theme-aware character animation (Squirrel/Owl)
-- Smooth fade-in animation
 
 ### Usage Guidelines
 
 #### Import Pattern
 
-Always use barrel imports from `'../../components/ui'`:
+Always use barrel imports from the `@my-girok/ui-components` package.
 
 ```typescript
-// ✅ DO - Barrel import
+// ✅ DO - Barrel import from the package
 import {
-  TextInput,
-  Select,
-  TextArea,
-  PrimaryButton,
-  SecondaryButton,
+  Button,
   Card,
-} from '../../components/ui';
+  TextInput,
+  SelectInput,
+  Alert,
+  PageHeader,
+} from '@my-girok/ui-components';
 
-// ❌ DON'T - Direct imports
-import TextInput from '../../components/ui/Form/TextInput';
-import PrimaryButton from '../../components/ui/Button/PrimaryButton';
+// ❌ DON'T - Use relative paths
+import Card from '../../../packages/ui-components/src/components/Card';
 ```
 
-#### Migration Pattern
-
-When migrating existing components:
+#### Migration Pattern (Example)
 
 **Before**:
 ```jsx
-<input
-  type="text"
-  value={name}
-  onChange={(e) => setName(e.target.value)}
-  className="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg..."
-  placeholder="Full Name"
-/>
+// From apps/web-main/src/components/ui/Button/PrimaryButton.tsx
+<PrimaryButton onClick={submit}>Save</PrimaryButton>
 ```
 
 **After**:
 ```jsx
-<TextInput
-  label="Full Name"
-  value={name}
-  onChange={(value) => setName(value)}
-  placeholder="Full Name"
-  required
-/>
+// From @my-girok/ui-components
+<Button variant="primary" onClick={submit}>Save</Button>
 ```
 
 **Key Changes**:
-- `onChange` callback receives `value` (string) directly, not event
-- No need to write className styling - handled internally
-- Label is separate prop, not JSX element
-- Consistent prop API across all components
+- **Single `Button` Component**: `PrimaryButton`, `SecondaryButton`, etc., are replaced by a single `Button` component with a `variant` prop.
+- **Simplified `onChange`**: Form components now use `onChange={setValue}` directly, thanks to the `(value: string) => void` signature.
 
-#### Common Props
+### Best Practices
 
-All form components share these common props:
+#### Do's ✅
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `label` | `string?` | Input label text |
-| `value` | `string` | Current value |
-| `onChange` | `(value: string) => void` | Value change handler |
-| `placeholder` | `string?` | Placeholder text |
-| `required` | `boolean?` | Shows asterisk in label |
+- Use the single source of truth: `@my-girok/ui-components`.
+- Provide meaningful labels for accessibility.
+- Use the `variant` prop on `Button` for different actions.
+- Add `error`/`hint` messages to `TextInput` for better UX.
+- Test components with dark mode enabled.
+
+#### Don'ts ❌
+
+- **Don't use the old library**: Avoid any component from `apps/web-main/src/components/ui`.
+- Don't bypass components with direct HTML (breaks consistency).
+- Don't use arbitrary Tailwind classes on components (use `className` sparingly).
+- Don't use the wrong button variant (e.g., `variant="primary"` for a delete action).
+- Don't forget accessibility attributes.
 | `error` | `string?` | Error message |
 | `hint` | `string?` | Helper text |
 | `disabled` | `boolean?` | Disable input |

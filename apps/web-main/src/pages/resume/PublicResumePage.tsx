@@ -5,7 +5,7 @@ import { useAuthStore } from '../../stores/authStore';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { CharacterMessage } from '../../components/characters';
-import { PrimaryButton, SecondaryButton } from '../../components/ui';
+import { Button } from '@my-girok/ui-components';
 
 export default function PublicResumePage() {
   const { username } = useParams<{ username: string }>();
@@ -60,9 +60,9 @@ export default function PublicResumePage() {
           title={isNotFound ? '이력서를 찾을 수 없어요' : undefined}
           message={isNotFound ? '요청하신 사용자를 찾을 수 없습니다' : error}
           action={
-            <PrimaryButton onClick={() => navigate('/')}>
+            <Button variant="primary" onClick={() => navigate('/')}>
               홈으로 돌아가기
-            </PrimaryButton>
+            </Button>
           }
         />
       </div>
@@ -94,13 +94,13 @@ export default function PublicResumePage() {
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {isOwnProfile && (
-                <PrimaryButton onClick={handleEdit} size="sm">
+                <Button variant="primary" onClick={handleEdit} size="sm">
                   Edit Resume
-                </PrimaryButton>
+                </Button>
               )}
-              <SecondaryButton onClick={handlePrint} size="sm">
+              <Button variant="secondary" onClick={handlePrint} size="sm">
                 Print
-              </SecondaryButton>
+              </Button>
             </div>
           </div>
         </div>

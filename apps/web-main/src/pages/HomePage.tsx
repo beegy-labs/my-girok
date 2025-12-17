@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import { generateWebsiteSchema } from '../utils/structuredData';
-import { PageHeader, SectionHeader, Card, PrimaryButton, SecondaryButton } from '../components/ui';
+import { PageHeader, SectionHeader, Card, Button } from '@my-girok/ui-components';
 
 interface AppCard {
   id: string;
@@ -11,7 +11,6 @@ interface AppCard {
   descriptionKey: string;
   icon: string;
   route: string;
-  color: string;
   status: 'active' | 'coming-soon';
 }
 
@@ -26,7 +25,6 @@ export default function HomePage() {
       descriptionKey: 'home.resume.description',
       icon: '📄',
       route: '/resume/my',
-      color: 'bg-amber-700',
       status: 'active',
     },
     {
@@ -35,7 +33,6 @@ export default function HomePage() {
       descriptionKey: 'home.blog.description',
       icon: '✍️',
       route: '/apps/blog',
-      color: 'bg-amber-600',
       status: 'coming-soon',
     },
     {
@@ -44,7 +41,6 @@ export default function HomePage() {
       descriptionKey: 'home.budget.description',
       icon: '💰',
       route: '/apps/budget',
-      color: 'bg-amber-800',
       status: 'coming-soon',
     },
   ];
@@ -153,14 +149,14 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <Link to="/register">
-                  <PrimaryButton size="lg" className="w-full sm:w-auto">
+                  <Button variant="primary" size="lg" className="w-full sm:w-auto">
                     {t('home.createRecordBook')}
-                  </PrimaryButton>
+                  </Button>
                 </Link>
                 <Link to="/login">
-                  <SecondaryButton size="lg" className="w-full sm:w-auto">
+                  <Button variant="secondary" size="lg" className="w-full sm:w-auto">
                     {t('nav.login')}
-                  </SecondaryButton>
+                  </Button>
                 </Link>
               </div>
             </div>
