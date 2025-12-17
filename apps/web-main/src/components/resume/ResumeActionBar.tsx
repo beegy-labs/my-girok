@@ -95,13 +95,7 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
     return null;
   };
 
-  // Determine edit route based on mode
-  const getEditRoute = () => {
-    if (isPublic) {
-      return `/resume/edit/${resume.id}`;
-    }
-    return `/resume/edit/${resume.id}`;
-  };
+  const editRoute = `/resume/edit/${resume.id}`;
 
   const BadgeIcon = badge.icon;
 
@@ -136,7 +130,7 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
             {canEdit && (
               <Button
                 variant="secondary"
-                onClick={() => navigate(getEditRoute())}
+                onClick={() => navigate(editRoute)}
                 size="sm"
                 icon={<Pencil className="w-4 h-4" />}
                 className="self-start sm:self-auto"
