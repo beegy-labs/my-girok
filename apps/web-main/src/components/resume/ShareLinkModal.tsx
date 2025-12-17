@@ -188,7 +188,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                         <span
                           className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors duration-200 ${
                             link.isActive
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-theme-status-success-bg text-theme-status-success-text'
                               : 'theme-bg-secondary theme-text-secondary'
                           }`}
                         >
@@ -224,7 +224,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                         onClick={() => handleCopy(link.shareUrl, link.id)}
                         className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all transition-colors duration-200 ${
                           copySuccess === link.id
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                            ? 'bg-theme-status-success-bg text-theme-status-success-text'
                             : 'bg-theme-primary/20 text-theme-primary hover:bg-theme-primary/30'
                         }`}
                       >
@@ -238,7 +238,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                       </button>
                       <button
                         onClick={() => handleDelete(link.id)}
-                        className="px-4 py-2 text-sm font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all"
+                        className="px-4 py-2 text-sm font-semibold bg-theme-status-error-bg text-theme-status-error-text rounded-lg hover:opacity-80 transition-all"
                       >
                         🗑️ Delete
                       </button>

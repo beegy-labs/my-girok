@@ -23,10 +23,10 @@ import { TextInput, TextArea, Button } from '@my-girok/ui-components';
 
 // Depth colors for visual hierarchy in achievements
 const DEPTH_COLORS = {
-  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
-  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
-  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
-  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+  1: { bg: 'bg-theme-level-1-bg', border: 'border-l-theme-level-1-border' },
+  2: { bg: 'bg-theme-level-2-bg', border: 'border-l-theme-level-2-border' },
+  3: { bg: 'bg-theme-level-3-bg', border: 'border-l-theme-level-3-border' },
+  4: { bg: 'bg-theme-level-4-bg', border: 'border-l-theme-level-4-border' },
 } as const;
 
 interface ExperienceSectionProps {
@@ -261,7 +261,7 @@ function SortableExperienceCard({
               <label className="block text-xs sm:text-sm font-semibold theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
                 <span className="hidden sm:inline">{t('resume.experienceForm.startDate')}</span>
                 <span className="sm:hidden">시작일</span>
-                <span className="text-red-500 ml-1">*</span>
+                <span className="text-theme-status-error-text ml-1">*</span>
               </label>
               <input
                 type="month"
@@ -545,7 +545,7 @@ function SortableProject({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-semibold theme-text-secondary mb-2 transition-colors duration-200">
-                  {t('resume.experienceForm.startDate')} <span className="text-red-500">*</span>
+                  {t('resume.experienceForm.startDate')} <span className="text-theme-status-error-text">*</span>
                 </label>
                 <input
                   type="month"
@@ -763,7 +763,7 @@ function HierarchicalAchievement({
               <button
                 type="button"
                 onClick={onAddChild}
-                className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-colors duration-200 font-semibold whitespace-nowrap"
+                className="px-2 py-1 bg-theme-status-success-bg border border-theme-status-success-border text-theme-status-success-text text-xs rounded hover:opacity-80 transition-colors duration-200 font-semibold whitespace-nowrap"
                 title={t('resume.experienceForm.addSubItem')}
               >
                 {t('resume.experienceForm.addSubItem')}
@@ -784,7 +784,7 @@ function HierarchicalAchievement({
             <button
               type="button"
               onClick={onRemove}
-              className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200"
+              className="text-theme-status-error-text hover:opacity-80 text-xs font-semibold transition-colors duration-200"
               title={t('resume.experienceForm.remove')}
             >
               ✕
@@ -811,7 +811,7 @@ function HierarchicalAchievement({
                 <button
                   type="button"
                   onClick={onAddChild}
-                  className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 text-[10px] rounded hover:bg-green-200 transition-colors duration-200 touch-manipulation"
+                  className="w-6 h-6 flex items-center justify-center bg-theme-status-success-bg text-theme-status-success-text text-[10px] rounded hover:opacity-80 transition-colors duration-200 touch-manipulation"
                   title={t('resume.experienceForm.addSubItem')}
                 >
                   +
@@ -831,7 +831,7 @@ function HierarchicalAchievement({
               <button
                 type="button"
                 onClick={onRemove}
-                className="w-6 h-6 flex items-center justify-center text-red-600 hover:bg-red-50 rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
+                className="w-6 h-6 flex items-center justify-center text-theme-status-error-text hover:bg-theme-status-error-bg rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
               >
                 ✕
               </button>

@@ -53,7 +53,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             className="block text-sm font-semibold text-theme-text-secondary mb-2"
           >
             {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
+            {props.required && <span className="text-theme-status-error-text ml-1">*</span>}
           </label>
         )}
         <textarea
@@ -72,7 +72,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-200
             resize-y
-            ${error ? 'border-red-500 focus:ring-red-500' : ''}
+            ${error ? 'border-theme-status-error-border focus:ring-theme-status-error-text' : ''}
             ${className}
           `}
           {...props}
@@ -81,7 +81,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           <p className="mt-1 text-sm text-theme-text-tertiary">{hint}</p>
         )}
         {error && (
-          <p className="mt-1 text-sm text-red-500 dark:text-red-400">{error}</p>
+          <p className="mt-1 text-sm text-theme-status-error-text">{error}</p>
         )}
       </div>
     );

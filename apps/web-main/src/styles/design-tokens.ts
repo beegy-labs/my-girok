@@ -137,12 +137,12 @@ export const colors = {
     light: 'text-theme-accent-light',
     bg: 'bg-theme-accent/20',
   },
-  // Status colors (consistent across themes)
+  // Status colors (using theme tokens)
   status: {
-    success: 'bg-green-900/30 text-green-300',
-    error: 'bg-red-900/20 text-red-400',
-    warning: 'bg-yellow-900/20 text-yellow-400',
-    info: 'bg-blue-900/20 text-blue-400',
+    success: 'bg-theme-status-success-bg text-theme-status-success-text',
+    error: 'bg-theme-status-error-bg text-theme-status-error-text',
+    warning: 'bg-theme-status-warning-bg text-theme-status-warning-text',
+    info: 'bg-theme-status-info-bg text-theme-status-info-text',
   },
 } as const;
 
@@ -260,10 +260,10 @@ export const buttonStyles = {
   `,
   // Destructive button
   destructive: `
-    bg-red-900/20
-    hover:bg-red-900/30
-    text-red-400
-    border border-red-800
+    bg-theme-status-error-bg
+    hover:opacity-80
+    text-theme-status-error-text
+    border border-theme-status-error-border
     font-semibold rounded-lg
     transition-all
   `,
@@ -382,7 +382,7 @@ export const formPatterns = {
   // Label
   label: 'block text-sm font-semibold text-theme-text-secondary mb-1',
   // Error text
-  error: 'text-red-400 text-xs mt-1',
+  error: 'text-theme-status-error-text text-xs mt-1',
   // Hint text
   hint: 'text-theme-text-muted text-xs mt-1',
 } as const;

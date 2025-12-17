@@ -204,7 +204,7 @@ export default function MyResumePage() {
                             </span>
                           )}
                           {hasActiveShare && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
+                            <span className="px-2 py-0.5 text-xs font-semibold bg-theme-status-success-bg text-theme-status-success-text rounded-full">
                               {t('resume.sharing')} ({activeShares.length}/3)
                             </span>
                           )}
@@ -292,7 +292,7 @@ export default function MyResumePage() {
                                       <span
                                         className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                           link.isActive
-                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                            ? 'bg-theme-status-success-bg text-theme-status-success-text'
                                             : 'bg-theme-bg-elevated text-theme-text-secondary'
                                         }`}
                                       >
@@ -320,11 +320,11 @@ export default function MyResumePage() {
                                   <div className="flex flex-wrap gap-3">
                                     <span>{t('resume.viewCount')}: {link.viewCount}</span>
                                     {link.expiresAt ? (
-                                      <span className="text-green-700 dark:text-green-400">
+                                      <span className="text-theme-status-success-text">
                                         {t('resume.expires')}: {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
                                       </span>
                                     ) : (
-                                      <span className="text-green-700 dark:text-green-400">{t('resume.permanent')}</span>
+                                      <span className="text-theme-status-success-text">{t('resume.permanent')}</span>
                                     )}
                                   </div>
                                   <Button

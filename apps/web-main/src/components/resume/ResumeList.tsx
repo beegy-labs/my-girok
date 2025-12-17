@@ -69,7 +69,7 @@ export default function ResumeList() {
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-red-600">{error}</div>
+        <div className="text-theme-status-error-text">{error}</div>
       </div>
     );
   }
@@ -155,7 +155,7 @@ export default function ResumeList() {
                   )}
                   <button
                     onClick={() => handleDelete(resume.id)}
-                    className="px-4 py-2 text-sm bg-red-50 text-red-700 rounded hover:bg-red-100 transition"
+                    className="px-4 py-2 text-sm bg-theme-status-error-bg text-theme-status-error-text rounded hover:opacity-80 transition"
                   >
                     {t('resume.list.delete')}
                   </button>

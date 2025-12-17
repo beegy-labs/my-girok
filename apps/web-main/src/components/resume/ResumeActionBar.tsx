@@ -69,8 +69,8 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
   };
 
   const badgeColorClasses = {
-    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-    green: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    blue: 'bg-theme-status-info-bg text-theme-status-info-text',
+    green: 'bg-theme-status-success-bg text-theme-status-success-text',
   };
 
   return (

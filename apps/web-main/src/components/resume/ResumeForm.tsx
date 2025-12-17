@@ -592,10 +592,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               <img
                 src={profilePhotoPreview}
                 alt="Profile Preview"
-                className="w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-green-400 dark:border-green-500"
+                className="w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-theme-status-success-border"
               />
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                <span className="text-xs text-theme-status-success-text font-medium flex items-center gap-1">
                   ✓ {t('resume.form.photoReady')}
                 </span>
                 <button
@@ -624,7 +624,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 type="button"
                 onClick={handleProfilePhotoDelete}
                 disabled={uploading}
-                className="px-3 py-2 text-xs sm:text-sm bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                className="px-3 py-2 text-xs sm:text-sm bg-theme-status-error-bg text-theme-status-error-text rounded-lg hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 {uploading ? t('resume.form.deletingPhoto') : t('resume.form.deletePhoto')}
               </button>
@@ -632,8 +632,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           )}
           {/* Warning for invalid blob URL in database */}
           {!profilePhotoPreview && formData.profileImage && formData.profileImage.startsWith('blob:') && (
-            <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-xs text-red-700 dark:text-red-400">
+            <div className="mb-3 p-3 bg-theme-status-error-bg border border-theme-status-error-border rounded-lg">
+              <p className="text-xs text-theme-status-error-text">
                 ⚠️ {t('resume.form.invalidImageUrl')}
               </p>
             </div>
@@ -658,7 +658,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </div>
 
           {uploadError && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{uploadError}</p>
+            <p className="text-xs text-theme-status-error-text mt-1">{uploadError}</p>
           )}
 
           <p className="text-xs theme-text-tertiary mt-1">
@@ -873,7 +873,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                       const newSkills = formData.skills?.filter((_, i) => i !== skillIndex);
                       setFormData({ ...formData, skills: newSkills });
                     }}
-                    className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-semibold px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/10 rounded touch-manipulation"
+                    className="text-theme-status-error-text hover:opacity-80 text-xs sm:text-sm font-semibold px-2 py-1 hover:bg-theme-status-error-bg rounded touch-manipulation"
                   >
                     {t('common.delete')}
                   </button>
@@ -1018,11 +1018,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
                           {/* Legacy Description (for backward compatibility) */}
                           {typeof item !== 'string' && item.description && !item.descriptions?.length && (
-                            <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                              <p className="text-xs text-yellow-800 dark:text-yellow-300 mb-2">
+                            <div className="mt-3 p-3 bg-theme-status-warning-bg border border-theme-status-warning-border rounded-lg">
+                              <p className="text-xs text-theme-status-warning-text mb-2">
                                 <strong>{t('resume.form.legacyDescriptionTitle')}</strong> {item.description}
                               </p>
-                              <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                              <p className="text-xs text-theme-status-warning-text opacity-80">
                                 {t('resume.form.legacyDescriptionMigration')}
                               </p>
                             </div>
@@ -1199,16 +1199,16 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </p>
 
         {!resume?.id && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-            <p className="text-blue-800 dark:text-blue-400 text-sm">
+          <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-lg p-4 mb-4">
+            <p className="text-theme-status-info-text text-sm">
               💡 Please save your resume first to enable file uploads.
             </p>
           </div>
         )}
 
         {uploadError && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
-            <p className="text-red-800 dark:text-red-400 text-sm">
+          <div className="bg-theme-status-error-bg border border-theme-status-error-border rounded-lg p-4 mb-4">
+            <p className="text-theme-status-error-text text-sm">
               ⚠️ {uploadError}
             </p>
           </div>
@@ -1239,7 +1239,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <button
                   type="button"
                   onClick={() => handleDeleteAttachment(attachment.id)}
-                  className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                  className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
                   Delete
                 </button>
@@ -1279,7 +1279,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <button
                   type="button"
                   onClick={() => handleDeleteAttachment(attachment.id)}
-                  className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                  className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
                   {t('common.delete')}
                 </button>
@@ -1319,7 +1319,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <button
                   type="button"
                   onClick={() => handleDeleteAttachment(attachment.id)}
-                  className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                  className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
                   {t('common.delete')}
                 </button>
@@ -1378,7 +1378,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       {/* Auto-save indicator */}
       {draftSaved && (
         <div className="flex justify-end">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-xs sm:text-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-theme-status-success-bg border border-theme-status-success-border rounded-lg text-theme-status-success-text text-xs sm:text-sm">
             <span>✓</span>
             <span>{t('resume.success.saved')}</span>
           </div>

@@ -190,7 +190,7 @@ function SortableEducationCard({
             <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
               <span className="hidden sm:inline">Start Date</span>
               <span className="sm:hidden">시작일</span>
-              <span className="text-red-500 ml-0.5">*</span>
+              <span className="text-theme-status-error-text ml-0.5">*</span>
             </label>
             <input
               type="month"

@@ -61,7 +61,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       secondary:
         'bg-btn-secondary-bg border border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover focus:ring-theme-primary hover:scale-[1.01] active:scale-[0.99]',
       danger:
-        'bg-btn-danger-bg hover:bg-btn-danger-bg-hover text-btn-danger-text focus:ring-red-500',
+        'bg-btn-danger-bg hover:bg-btn-danger-bg-hover text-btn-danger-text focus:ring-theme-status-error-text',
       ghost:
         'text-theme-text-primary hover:bg-theme-bg-hover focus:ring-theme-primary',
     };

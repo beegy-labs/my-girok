@@ -89,7 +89,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             className="block text-sm font-semibold text-theme-text-secondary mb-2"
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-theme-status-error-text ml-1">*</span>}
           </label>
         )}
 
@@ -106,7 +106,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         {error && (
           <p
             id={`${inputId}-error`}
-            className="mt-1 text-sm text-red-600 dark:text-red-500"
+            className="mt-1 text-sm text-theme-status-error-text"
             role="alert"
           >
             {error}

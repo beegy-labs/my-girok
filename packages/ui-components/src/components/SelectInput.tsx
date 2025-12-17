@@ -76,7 +76,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
       'border border-theme-border-default focus:ring-theme-primary';
 
     const errorClasses = error
-      ? 'border-red-500 focus:ring-red-500'
+      ? 'border-theme-status-error-border focus:ring-theme-status-error-text'
       : defaultBorderClasses;
 
     const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -91,7 +91,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
             className="block text-sm font-semibold text-theme-text-secondary mb-2"
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-theme-status-error-text ml-1">*</span>}
           </label>
         )}
 
@@ -117,7 +117,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
         {error && (
           <p
             id={`${selectId}-error`}
-            className="mt-1 text-sm text-red-600 dark:text-red-500"
+            className="mt-1 text-sm text-theme-status-error-text"
             role="alert"
           >
             {error}
