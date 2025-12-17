@@ -674,9 +674,9 @@ Standard page layout for resume preview pages:
 
 ## Mobile Design Consistency Standards
 
-### Core Design Tokens (MUST USE)
+### Core Design Tokens
 
-All resume edit components MUST use these consistent values from `src/styles/design-tokens.ts`:
+Use these consistent Tailwind classes across all resume edit components:
 
 | Element | Mobile | Tablet (sm:) | Desktop (lg:) |
 |---------|--------|--------------|---------------|
@@ -699,16 +699,14 @@ All resume edit components MUST use these consistent values from `src/styles/des
 ### Usage Example
 
 ```tsx
-// ❌ DON'T: Inconsistent inline styles
-<div className="p-4 sm:p-6 lg:p-8 rounded-2xl">
+// ❌ DON'T: Inconsistent or arbitrary values
+<div className="p-[18px] rounded-[14px]">
   <h2 className="text-lg font-bold">Title</h2>
 </div>
 
-// ✅ DO: Use design tokens
-import { spacing, typography, radius } from '../../styles/design-tokens';
-
-<div className={`${spacing.card.all} ${radius.lg}`}>
-  <h2 className={typography.sectionTitle.all}>Title</h2>
+// ✅ DO: Use consistent Tailwind classes with theme tokens
+<div className="p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl bg-theme-bg-card">
+  <h2 className="text-base sm:text-lg lg:text-xl font-bold text-theme-text-primary">Title</h2>
 </div>
 ```
 
@@ -720,7 +718,7 @@ import { spacing, typography, radius } from '../../styles/design-tokens';
 - [ ] Body text: `text-xs sm:text-sm`
 - [ ] Button touch target: min 44x44px (use `py-2.5 px-4` or larger)
 - [ ] Border radius: `rounded-xl sm:rounded-2xl`
-- [ ] Import design tokens instead of hardcoding
+- [ ] Use theme tokens: `bg-theme-*`, `text-theme-*`, `border-theme-*`
 
 ## Mobile Edit Patterns (Resume)
 

@@ -744,7 +744,7 @@ function HierarchicalAchievement({
           marginLeft: `${(depth - 1) * 0.75}rem`,
         }}>
           <div className="flex items-center gap-1 min-w-[30px] flex-shrink-0">
-            <span className="theme-text-secondary font-bold text-sm select-none">
+            <span className="text-theme-text-secondary font-bold text-sm select-none">
               {getBulletSymbol(depth)}
             </span>
           </div>
@@ -795,7 +795,7 @@ function HierarchicalAchievement({
         {/* Mobile: compact layout with inline action buttons */}
         <div className="sm:hidden">
           <div className="flex items-center gap-1.5">
-            <span className="theme-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
+            <span className="text-theme-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
               {getBulletSymbol(depth)}
             </span>
             <input
@@ -971,7 +971,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
   };
 
   return (
-    <div className="theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between mb-3 sm:mb-6 lg:mb-8">
         <div className="min-w-0">
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary flex items-center gap-2 transition-colors duration-200">

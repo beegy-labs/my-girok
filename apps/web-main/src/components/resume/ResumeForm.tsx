@@ -724,7 +724,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   onChange={e => setFormData({ ...formData, militaryServiceStartDate: e.target.value })}
                   className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
-                <span className="theme-text-tertiary text-sm">~</span>
+                <span className="text-theme-text-tertiary text-sm">~</span>
                 <input
                   type="month"
                   value={formData.militaryServiceEndDate || ''}
