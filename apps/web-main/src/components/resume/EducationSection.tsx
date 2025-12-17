@@ -18,7 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Education, DegreeType, GpaFormat } from '../../api/resume';
-import { TextInput, Select, PrimaryButton, DestructiveButton } from '../ui';
+import { TextInput, SelectInput, Button } from '@my-girok/ui-components';
 
 interface EducationSectionProps {
   educations: Education[];
@@ -110,9 +110,9 @@ function SortableEducationCard({
           </button>
 
           {/* Desktop delete button */}
-          <DestructiveButton onClick={onRemove} size="sm" className="hidden sm:flex flex-shrink-0">
+          <Button variant="danger" onClick={onRemove} size="sm" className="hidden sm:flex flex-shrink-0">
             Remove
-          </DestructiveButton>
+          </Button>
         </div>
       </div>
 
@@ -120,9 +120,9 @@ function SortableEducationCard({
       <div className={`${isExpanded ? 'block' : 'hidden'} sm:block p-3 sm:p-4`}>
         {/* Mobile delete button */}
         <div className="sm:hidden flex justify-end mb-2">
-          <DestructiveButton onClick={onRemove} size="sm" className="text-xs py-1.5 px-2 touch-manipulation">
-            ✕ 삭제
-          </DestructiveButton>
+          <Button variant="danger" onClick={onRemove} size="sm" className="text-xs py-1.5 px-2 touch-manipulation">
+            ✕ {t('common.delete')}
+          </Button>
         </div>
 
         {/* School and Major */}
@@ -130,7 +130,7 @@ function SortableEducationCard({
           <TextInput
             label="School"
             value={education.school}
-            onChange={value => onUpdate({ ...education, school: value })}
+            onChange={(value: string) => onUpdate({ ...education, school: value })}
             placeholder="University name"
             required
           />
@@ -138,7 +138,7 @@ function SortableEducationCard({
           <TextInput
             label="Major"
             value={education.major}
-            onChange={value => onUpdate({ ...education, major: value })}
+            onChange={(value: string) => onUpdate({ ...education, major: value })}
             placeholder="e.g., Computer Science"
             required
           />
@@ -146,10 +146,10 @@ function SortableEducationCard({
 
         {/* Degree and GPA Format */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3">
-          <Select
+          <SelectInput
             label="Degree"
             value={education.degree || ''}
-            onChange={value => onUpdate({ ...education, degree: value as DegreeType || undefined })}
+            onChange={(value: string) => onUpdate({ ...education, degree: value as DegreeType || undefined })}
             options={[
               { value: '', label: 'Select degree' },
               ...degreeTypes.map(degreeType => ({
@@ -159,10 +159,10 @@ function SortableEducationCard({
             ]}
           />
 
-          <Select
+          <SelectInput
             label="GPA Format"
             value={education.gpaFormat || GpaFormat.SCALE_4_0}
-            onChange={value => onUpdate({ ...education, gpaFormat: value as GpaFormat })}
+            onChange={(value: string) => onUpdate({ ...education, gpaFormat: value as GpaFormat })}
             options={gpaFormats.map(format => ({
               value: format,
               label: t(`resume.gpaFormats.${format}`)
@@ -175,7 +175,7 @@ function SortableEducationCard({
           <TextInput
             label="GPA"
             value={education.gpa || ''}
-            onChange={value => onUpdate({ ...education, gpa: value })}
+            onChange={(value: string) => onUpdate({ ...education, gpa: value })}
             placeholder={
               education.gpaFormat === GpaFormat.SCALE_4_5 ? 'e.g., 4.2/4.5' :
               education.gpaFormat === GpaFormat.SCALE_100 ? 'e.g., 85/100' :
@@ -188,9 +188,9 @@ function SortableEducationCard({
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
-              <span className="hidden sm:inline">Start Date</span>
-              <span className="sm:hidden">시작일</span>
-              <span className="text-red-500 ml-0.5">*</span>
+              <span className="hidden sm:inline">{t('resume.experienceForm.startDate')}</span>
+              <span className="sm:hidden">{t('common.startDate')}</span>
+              <span className="text-theme-status-error-text ml-0.5">*</span>
             </label>
             <input
               type="month"
@@ -202,8 +202,8 @@ function SortableEducationCard({
 
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
-              <span className="hidden sm:inline">End Date</span>
-              <span className="sm:hidden">종료일</span>
+              <span className="hidden sm:inline">{t('resume.experienceForm.endDate')}</span>
+              <span className="sm:hidden">{t('common.endDate')}</span>
             </label>
             <input
               type="month"
@@ -275,9 +275,9 @@ export default function EducationSection({ educations, onChange, t }: EducationS
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
           <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary transition-colors duration-200 hidden sm:block">{t('resume.descriptions.education')}</p>
         </div>
-        <PrimaryButton onClick={handleAdd} className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation">
-          + <span className="hidden sm:inline">Add Education</span><span className="sm:hidden">추가</span>
-        </PrimaryButton>
+        <Button variant="primary" onClick={handleAdd} className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation">
+          + <span className="hidden sm:inline">Add Education</span><span className="sm:hidden">{t('common.add')}</span>
+        </Button>
       </div>
 
       {educations.length > 0 ? (
@@ -299,8 +299,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
         </DndContext>
       ) : (
         <div className="text-center py-6 sm:py-8 text-theme-text-tertiary transition-colors duration-200 text-xs sm:text-base">
-          <span className="hidden sm:inline">No education entries yet. Click "+ Add Education" to add one.</span>
-          <span className="sm:hidden">학력 정보가 없습니다. "+ 추가"를 눌러 추가하세요.</span>
+          {t('resume.emptyStates.education')}
         </div>
       )}
     </div>

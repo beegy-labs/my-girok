@@ -19,16 +19,23 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 COPY apps/web-main/package.json ./apps/web-main/
 COPY packages/types/package.json ./packages/types/
 COPY packages/types/tsconfig.json ./packages/types/
+COPY packages/ui-components/package.json ./packages/ui-components/
+COPY packages/ui-components/tsconfig.json ./packages/ui-components/
 
 # Install dependencies including devDependencies for build
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY packages/types ./packages/types
+COPY packages/ui-components ./packages/ui-components
 COPY apps/web-main ./apps/web-main
 
 # Build shared packages first
 WORKDIR /app/packages/types
+RUN pnpm build
+
+# Build UI components
+WORKDIR /app/packages/ui-components
 RUN pnpm build
 
 # Generate Prisma client types if needed (for future use)

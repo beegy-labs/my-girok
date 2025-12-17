@@ -51,7 +51,7 @@ export interface CollapsibleSectionProps {
  * </CollapsibleSection>
  * ```
  */
-export default function CollapsibleSection({
+export function CollapsibleSection({
   title,
   icon,
   defaultExpanded = true,
@@ -84,14 +84,10 @@ export default function CollapsibleSection({
     (e: React.KeyboardEvent) => {
       if (collapsible && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
-        if (isControlled && onToggle) {
-          onToggle();
-        } else {
-          setInternalExpanded((prev) => !prev);
-        }
+        handleToggle();
       }
     },
-    [collapsible, isControlled, onToggle]
+    [collapsible, handleToggle]
   );
 
   // Theme: Semantic theme tokens (auto-switch via data-theme)

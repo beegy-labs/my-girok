@@ -68,7 +68,7 @@ const paddingClasses = {
  * </PageContainer>
  * ```
  */
-export default function PageContainer({
+export function PageContainer({
   children,
   maxWidth = 'xl',
   padding = 'default',

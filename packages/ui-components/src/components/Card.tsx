@@ -30,7 +30,7 @@ export interface CardProps {
  * </Card>
  * ```
  */
-export default function Card({
+export function Card({
   children,
   variant = 'primary',
   interactive = false,
@@ -38,6 +38,12 @@ export default function Card({
   className = '',
   onClick,
 }: CardProps) {
+  // Focus indicator for interactive cards (keyboard navigation)
+  // Note: ring-offset uses white/slate for consistent visibility across themes
+  const focusClasses = interactive
+    ? 'focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900'
+    : '';
+
   // Theme: Semantic theme tokens (auto-switch via data-theme)
   const variantClasses = {
     primary: `
@@ -45,18 +51,21 @@ export default function Card({
       border border-theme-border-subtle
       shadow-theme-md
       ${interactive ? 'hover:shadow-theme-lg hover:border-theme-border-default cursor-pointer' : ''}
+      ${focusClasses}
     `,
     secondary: `
       bg-theme-bg-card
       border border-theme-border-default
       shadow-theme-sm
       ${interactive ? 'hover:shadow-theme-md hover:border-theme-border-strong cursor-pointer' : ''}
+      ${focusClasses}
     `,
     elevated: `
       bg-theme-bg-elevated
       border border-theme-border-subtle
       shadow-theme-lg
       ${interactive ? 'hover:shadow-theme-xl hover:border-theme-border-default cursor-pointer' : ''}
+      ${focusClasses}
     `,
   };
 
@@ -75,7 +84,7 @@ export default function Card({
         ${variantClasses[variant]}
         ${paddingClasses[padding]}
         rounded-2xl
-        transition-all duration-200
+        transition duration-200
         ${className}
       `}
       role={interactive ? 'button' : undefined}

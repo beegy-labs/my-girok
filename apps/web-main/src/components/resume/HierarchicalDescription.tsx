@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext,
   closestCenter,
@@ -21,10 +22,10 @@ import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 
 // Depth colors for visual hierarchy
 const DEPTH_COLORS = {
-  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
-  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
-  3: { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-l-purple-500' },
-  4: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-l-orange-500' },
+  1: { bg: 'bg-theme-level-1-bg', border: 'border-l-theme-level-1-border' },
+  2: { bg: 'bg-theme-level-2-bg', border: 'border-l-theme-level-2-border' },
+  3: { bg: 'bg-theme-level-3-bg', border: 'border-l-theme-level-3-border' },
+  4: { bg: 'bg-theme-level-4-bg', border: 'border-l-theme-level-4-border' },
 } as const;
 
 // Generic type for hierarchical descriptions
@@ -52,6 +53,7 @@ function HierarchicalItemComponent({
   onRemove,
   onAddChild,
   maxDepth = 4,
+  t,
 }: {
   item: HierarchicalItem;
   depth: number;
@@ -59,6 +61,7 @@ function HierarchicalItemComponent({
   onRemove: () => void;
   onAddChild: () => void;
   maxDepth?: number;
+  t: (key: string) => string;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -121,7 +124,7 @@ function HierarchicalItemComponent({
             onChange={e => onUpdate({ ...item, content: e.target.value })}
             className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
-            placeholder="설명을 입력하세요..."
+            placeholder={t('resume.hierarchical.enterDescription')}
           />
 
           <div className="flex items-center gap-1 flex-shrink-0">
@@ -129,10 +132,10 @@ function HierarchicalItemComponent({
               <button
                 type="button"
                 onClick={onAddChild}
-                className="px-2 py-1 bg-green-50 border border-green-300 text-green-700 text-xs rounded hover:bg-green-100 transition-all font-semibold whitespace-nowrap touch-manipulation"
+                className="px-2 py-1 bg-theme-status-success-bg border border-theme-status-success-border text-theme-status-success-text text-xs rounded hover:opacity-80 transition-all font-semibold whitespace-nowrap touch-manipulation"
                 title="Add sub-item"
               >
-                + 하위
+                {t('resume.hierarchical.addSubItem')}
               </button>
             )}
 
@@ -150,7 +153,7 @@ function HierarchicalItemComponent({
             <button
               type="button"
               onClick={onRemove}
-              className="text-red-600 hover:text-red-700 text-xs font-semibold transition-colors duration-200 touch-manipulation"
+              className="text-theme-status-error-text hover:opacity-80 text-xs font-semibold transition-colors duration-200 touch-manipulation"
               title="Remove"
             >
               ✕
@@ -169,7 +172,7 @@ function HierarchicalItemComponent({
               value={item.content}
               onChange={e => onUpdate({ ...item, content: e.target.value })}
               className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
-              placeholder="설명 입력..."
+              placeholder={t('resume.hierarchical.enterDescription')}
             />
             {/* Inline action buttons for mobile */}
             <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -177,7 +180,7 @@ function HierarchicalItemComponent({
                 <button
                   type="button"
                   onClick={onAddChild}
-                  className="w-6 h-6 flex items-center justify-center bg-green-100 text-green-700 text-[10px] rounded hover:bg-green-200 transition-colors duration-200 touch-manipulation"
+                  className="w-6 h-6 flex items-center justify-center bg-theme-status-success-bg text-theme-status-success-text text-[10px] rounded hover:opacity-80 transition-colors duration-200 touch-manipulation"
                   title="Add sub-item"
                 >
                   +
@@ -197,7 +200,7 @@ function HierarchicalItemComponent({
               <button
                 type="button"
                 onClick={onRemove}
-                className="w-6 h-6 flex items-center justify-center text-red-600 hover:bg-red-50 rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
+                className="w-6 h-6 flex items-center justify-center text-theme-status-error-text hover:bg-theme-status-error-bg rounded text-[10px] font-semibold transition-colors duration-200 touch-manipulation"
               >
                 ✕
               </button>
@@ -218,6 +221,7 @@ function HierarchicalItemComponent({
               onRemove={() => handleRemoveChild(childIndex)}
               onAddChild={() => handleAddChildToChild(childIndex)}
               maxDepth={maxDepth}
+              t={t}
             />
           ))}
         </div>
@@ -234,6 +238,7 @@ function SortableHierarchicalItem({
   onRemove,
   onAddChild,
   maxDepth,
+  t,
 }: {
   item: HierarchicalItem;
   itemIndex: number;
@@ -241,6 +246,7 @@ function SortableHierarchicalItem({
   onRemove: () => void;
   onAddChild: () => void;
   maxDepth: number;
+  t: (key: string) => string;
 }) {
   const {
     attributes,
@@ -280,6 +286,7 @@ function SortableHierarchicalItem({
             onRemove={onRemove}
             onAddChild={onAddChild}
             maxDepth={maxDepth}
+            t={t}
           />
         </div>
       </div>
@@ -291,10 +298,14 @@ function SortableHierarchicalItem({
 export default function HierarchicalDescription({
   items,
   onChange,
-  label = "설명",
-  placeholder = "설명을 추가하려면 아래 버튼을 클릭하세요",
+  label,
+  placeholder,
   maxDepth = 4,
 }: HierarchicalDescriptionProps) {
+  const { t } = useTranslation();
+  const displayLabel = label || t('resume.hierarchical.description');
+  const displayPlaceholder = placeholder || t('resume.hierarchical.placeholder');
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
@@ -342,15 +353,15 @@ export default function HierarchicalDescription({
     <div className="border-t border-theme-border-default pt-4 transition-colors duration-200">
       <div className="flex items-center justify-between mb-3">
         <label className="text-sm font-bold text-theme-text-accent flex items-center gap-2">
-          ⭐ {label}
-          <span className="text-xs text-theme-text-tertiary font-normal">(최대 {maxDepth}단계)</span>
+          ⭐ {displayLabel}
+          <span className="text-xs text-theme-text-tertiary font-normal">{t('resume.hierarchical.maxDepth', { depth: maxDepth })}</span>
         </label>
         <button
           type="button"
           onClick={addItem}
           className="px-2 py-1 bg-theme-primary text-white text-xs rounded-lg hover:bg-theme-primary-light transition-all transition-colors duration-200"
         >
-          + 추가
+          + {t('common.add')}
         </button>
       </div>
 
@@ -385,13 +396,14 @@ export default function HierarchicalDescription({
                     });
                   }}
                   maxDepth={maxDepth}
+                  t={t}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       ) : (
-        <p className="text-xs text-theme-text-tertiary italic">{placeholder}</p>
+        <p className="text-xs text-theme-text-tertiary italic">{displayPlaceholder}</p>
       )}
     </div>
   );

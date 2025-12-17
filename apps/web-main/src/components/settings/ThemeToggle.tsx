@@ -38,13 +38,13 @@ export default function ThemeToggle() {
         onClick={handleToggle}
         className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
           currentTheme === Theme.DARK
-            ? 'bg-amber-600'
+            ? 'bg-theme-primary'
             : 'bg-theme-border-default'
         }`}
         aria-label="Toggle theme"
       >
         <span
-          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+          className={`inline-block h-6 w-6 transform rounded-full bg-theme-bg-elevated shadow-sm transition-transform ${
             currentTheme === Theme.DARK
               ? 'translate-x-7'
               : 'translate-x-1'

@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { CharacterMessage } from '../components/characters';
 import { useTranslation } from 'react-i18next';
-import { PrimaryButton } from '../components/ui';
+import { Button } from '@my-girok/ui-components';
 
 export default function NotFoundPage() {
   const { t } = useTranslation();
@@ -13,9 +13,9 @@ export default function NotFoundPage() {
         size={150}
         action={
           <Link to="/">
-            <PrimaryButton size="lg">
+            <Button variant="primary" size="lg">
               {t('common.backToHome')}
-            </PrimaryButton>
+            </Button>
           </Link>
         }
       />

@@ -256,140 +256,112 @@ interface AuthState {
 
 ## UI Component Library
 
-**Location**: `apps/web-main/src/components/ui/`
+**Location**: `packages/ui-components/src/`
 
-### Available Components (10 Total)
+### Available Components
 
-**Form Components (4)**:
+**Form Components**:
 ```typescript
-import { TextInput, Select, TextArea, FileUpload } from '../../components/ui';
+import { Button, TextInput, SelectInput, TextArea, FileUpload } from '@my-girok/ui-components';
 
 // TextInput - Single-line text input
 <TextInput
   label="Email"
   value={email}
-  onChange={(value) => setEmail(value)}
+  onChange={setEmail} // Direct value handler
   type="email"
-  placeholder="your@email.com"
-  required
-  error={errors.email}
-  hint="We'll never share your email"
 />
 
-// Select - Dropdown
-<Select
+// SelectInput - Dropdown
+<SelectInput
   label="Country"
   value={country}
-  onChange={(value) => setCountry(value)}
-  options={[
-    { value: 'kr', label: '한국' },
-    { value: 'us', label: 'United States' },
-  ]}
-  required
+  onChange={setCountry} // Direct value handler
+  options={[{ value: 'kr', label: '한국' }]}
 />
 
 // TextArea - Multi-line text
 <TextArea
   label="Description"
   value={description}
-  onChange={(value) => setDescription(value)}
+  onChange={setDescription} // Direct value handler
   rows={4}
-  maxLength={500}
-/>
-
-// FileUpload - Drag-and-drop file upload
-<FileUpload
-  label="Profile Photo"
-  accept="image/*"
-  maxSize={5 * 1024 * 1024} // 5MB
-  onUpload={(file) => handleUpload(file)}
 />
 ```
 
-**Button Components (3)**:
+**Button Component**:
 ```typescript
-import { PrimaryButton, SecondaryButton, DestructiveButton } from '../../components/ui';
+import { Button } from '@my-girok/ui-components';
 
-// PrimaryButton - Main actions
-<PrimaryButton onClick={handleSubmit} disabled={loading}>
+// Primary Button - Main actions
+<Button variant="primary" onClick={handleSubmit} disabled={loading}>
   Save Changes
-</PrimaryButton>
+</Button>
 
-// SecondaryButton - Secondary actions
-<SecondaryButton onClick={handleCancel}>
+// Secondary Button - Secondary actions
+<Button variant="secondary" onClick={handleCancel}>
   Cancel
-</SecondaryButton>
+</Button>
 
-// DestructiveButton - Delete/remove actions
-<DestructiveButton onClick={handleDelete}>
+// Danger Button - Delete/remove actions
+<Button variant="danger" onClick={handleDelete}>
   Delete Resume
-</DestructiveButton>
+</Button>
 
 // Button sizes
-<PrimaryButton size="sm">Small</PrimaryButton>
-<PrimaryButton>Default</PrimaryButton>
-<PrimaryButton size="lg">Large</PrimaryButton>
+<Button size="sm">Small</Button>
+<Button>Default</Button>
+<Button size="lg">Large</Button>
 ```
 
-**Layout & Feedback (3)**:
+**Layout & Feedback**:
 ```typescript
-import { Card, Alert, LoadingSpinner } from '../../components/ui';
+import { Card, Alert, LoadingSpinner } from '@my-girok/ui-components';
 
 // Card - Content container
 <Card variant="primary">
   <h2>Card Title</h2>
-  <p>Card content...</p>
 </Card>
 
 // Alert - Status messages
-<Alert type="success">Resume saved successfully!</Alert>
-<Alert type="error">Failed to save resume</Alert>
+<Alert variant="success">Resume saved successfully!</Alert>
 
 // LoadingSpinner - Loading states
-<LoadingSpinner />
-<LoadingSpinner fullScreen message="Loading resume..." />
+<LoadingSpinner fullScreen />
 ```
 
 ### Component Structure
 
 ```
-apps/web-main/src/components/ui/
-├── index.ts              # Barrel exports
-├── Form/
-│   ├── TextInput.tsx
-│   ├── Select.tsx
-│   ├── TextArea.tsx
-│   └── FileUpload.tsx
-├── Button/
-│   ├── PrimaryButton.tsx
-│   ├── SecondaryButton.tsx
-│   └── DestructiveButton.tsx
-└── Layout/
-    ├── Card.tsx
-    ├── Alert.tsx
-    └── LoadingSpinner.tsx
+packages/ui-components/src/components/
+├── Alert.tsx
+├── Button.tsx
+├── Card.tsx
+├── CollapsibleSection.tsx
+├── index.ts
+├── PageContainer.tsx
+├── PageHeader.tsx
+├── SectionHeader.tsx
+├── SelectInput.tsx
+├── SortableItem.tsx
+├── SortableList.tsx
+└── TextInput.tsx
 ```
 
 ### Usage Guidelines
 
 **Import Pattern**:
 ```typescript
-// ✅ DO - Use barrel imports
-import { TextInput, PrimaryButton, Card } from '../../components/ui';
+// ✅ DO - Use barrel imports from the package
+import { Button, Card, TextInput } from '@my-girok/ui-components';
 
-// ❌ DON'T - Direct imports
-import TextInput from '../../components/ui/Form/TextInput';
+// ❌ DON'T - Use relative paths or old paths
+import Card from '../../components/ui/Layout/Card';
 ```
 
-**Common Props**:
-- All form inputs: `value`, `onChange`, `error`, `hint`, `disabled`, `required`
-- All buttons: `onClick`, `disabled`, `size`, `className`
-- Consistent API across components
-
 **Theme Support**:
-- All components use semantic theme tokens (`theme-*`)
-- Automatically adapts via `data-theme` attribute
-- See "Scalable Theme Architecture" section below
+- All components use semantic theme tokens (`theme-*`) and automatically adapt to light/dark mode.
+- See `/docs/DESIGN_SYSTEM.md` for full design guidelines.
 
 ## Design System
 
@@ -702,9 +674,9 @@ Standard page layout for resume preview pages:
 
 ## Mobile Design Consistency Standards
 
-### Core Design Tokens (MUST USE)
+### Core Design Tokens
 
-All resume edit components MUST use these consistent values from `src/styles/design-tokens.ts`:
+Use these consistent Tailwind classes across all resume edit components:
 
 | Element | Mobile | Tablet (sm:) | Desktop (lg:) |
 |---------|--------|--------------|---------------|
@@ -727,16 +699,14 @@ All resume edit components MUST use these consistent values from `src/styles/des
 ### Usage Example
 
 ```tsx
-// ❌ DON'T: Inconsistent inline styles
-<div className="p-4 sm:p-6 lg:p-8 rounded-2xl">
+// ❌ DON'T: Inconsistent or arbitrary values
+<div className="p-[18px] rounded-[14px]">
   <h2 className="text-lg font-bold">Title</h2>
 </div>
 
-// ✅ DO: Use design tokens
-import { spacing, typography, radius } from '../../styles/design-tokens';
-
-<div className={`${spacing.card.all} ${radius.lg}`}>
-  <h2 className={typography.sectionTitle.all}>Title</h2>
+// ✅ DO: Use consistent Tailwind classes with theme tokens
+<div className="p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl bg-theme-bg-card">
+  <h2 className="text-base sm:text-lg lg:text-xl font-bold text-theme-text-primary">Title</h2>
 </div>
 ```
 
@@ -748,7 +718,7 @@ import { spacing, typography, radius } from '../../styles/design-tokens';
 - [ ] Body text: `text-xs sm:text-sm`
 - [ ] Button touch target: min 44x44px (use `py-2.5 px-4` or larger)
 - [ ] Border radius: `rounded-xl sm:rounded-2xl`
-- [ ] Import design tokens instead of hardcoding
+- [ ] Use theme tokens: `bg-theme-*`, `text-theme-*`, `border-theme-*`
 
 ## Mobile Edit Patterns (Resume)
 

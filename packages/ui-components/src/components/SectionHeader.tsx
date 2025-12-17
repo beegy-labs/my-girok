@@ -37,7 +37,7 @@ export interface SectionHeaderProps {
  * />
  * ```
  */
-export default function SectionHeader({
+export function SectionHeader({
   title,
   icon,
   action,
