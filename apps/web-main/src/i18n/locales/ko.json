@@ -33,13 +33,26 @@
     "changePassword": "비밀번호 변경"
   },
   "home": {
-    "title": "My-Girok에 오신 것을 환영합니다",
+    "title": "나의 기록을 정리하는 공간",
     "subtitle": "나만의 프로필을 관리하세요",
-    "description": "My-Girok은 이력서, 블로그, 예산 관리를 한 곳에서 할 수 있는 플랫폼입니다.",
+    "description": "girok은 이력서, 기록, 자산 관리를 한 곳에서 할 수 있는 플랫폼입니다.",
     "myApps": "나의 앱",
+    "welcomeSuffix": "",
+    "records": {
+      "title": "기록장",
+      "description": "일상과 생각을 기록하고 정리하세요"
+    },
     "resume": {
       "title": "이력서",
       "description": "전문적인 이력서를 작성하고 관리하세요"
+    },
+    "assets": {
+      "title": "자산",
+      "description": "수입과 지출, 자산을 관리하세요"
+    },
+    "settings": {
+      "title": "설정",
+      "description": "앱 환경설정과 계정을 관리하세요"
     },
     "blog": {
       "title": "블로그",

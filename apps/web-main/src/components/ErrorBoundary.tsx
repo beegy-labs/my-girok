@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { CharacterMessage } from './characters';
+import StatusMessage from './StatusMessage';
+import { Button } from '@my-girok/ui-components';
 import i18n from '../i18n/config';
 
 interface Props {
@@ -13,7 +14,7 @@ interface State {
 }
 
 /**
- * ErrorBoundary - Catches React errors and displays character error message
+ * ErrorBoundary - Catches React errors and displays WCAG-compliant error message
  *
  * Usage:
  * <ErrorBoundary>
@@ -47,20 +48,12 @@ export default class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="min-h-screen flex items-center justify-center bg-theme-bg-page">
-          <CharacterMessage
+          <StatusMessage
             type="error"
-            size={150}
             action={
-              <button
-                onClick={this.handleReset}
-                className="bg-gradient-to-r from-theme-primary-dark to-theme-primary
-                           hover:from-theme-primary hover:to-theme-primary-light
-                           text-white px-6 py-3 rounded-lg font-semibold
-                           shadow-lg shadow-theme-primary/30
-                           transform hover:scale-105 transition-all"
-              >
+              <Button variant="primary" size="lg" onClick={this.handleReset}>
                 {i18n.t('common.backToHome')}
-              </button>
+              </Button>
             }
           />
         </div>

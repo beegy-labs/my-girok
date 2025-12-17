@@ -36,7 +36,14 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 }
 
 /**
- * Reusable text input component with consistent styling
+ * Accessible text input component with WCAG 2.1 AA compliance
+ *
+ * Features:
+ * - Minimum 44px touch target height (WCAG 2.5.5)
+ * - Proper label association with htmlFor
+ * - Error states with aria-invalid and role="alert"
+ * - High contrast focus ring for keyboard navigation
+ * - 16px minimum font size for optimal readability
  *
  * @example
  * ```tsx
@@ -67,14 +74,24 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     const finalContainerClassName = containerClassName || className;
     const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
 
-    const baseInputClasses =
-      'w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted';
+    // Base input classes with WCAG compliance:
+    // - min-h-[48px] for touch target (WCAG 2.5.5)
+    // - text-base (16px) for readability
+    // - focus-visible for keyboard navigation
+    const baseInputClasses = `
+      w-full min-h-[48px] px-4 py-3
+      text-base rounded-xl
+      bg-theme-bg-input text-theme-text-primary
+      placeholder:text-theme-text-muted
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+      focus-visible:ring-theme-focus-ring focus-visible:border-transparent
+      transition-all duration-200
+    `.trim().replace(/\s+/g, ' ');
 
-    const defaultBorderClasses =
-      'border border-theme-border-default focus:ring-theme-primary';
+    const defaultBorderClasses = 'border border-theme-border-default';
 
     const errorClasses = error
-      ? 'border-theme-status-error-text focus:ring-theme-status-error-text'
+      ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'
       : defaultBorderClasses;
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -86,10 +103,13 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-semibold text-theme-text-secondary mb-2"
+            className="block text-base font-semibold text-theme-text-secondary mb-2"
           >
             {label}
-            {required && <span className="text-theme-status-error-text ml-1">*</span>}
+            {required && (
+              <span className="text-theme-status-error-text ml-1" aria-hidden="true">*</span>
+            )}
+            {required && <span className="sr-only">(required)</span>}
           </label>
         )}
 
@@ -100,13 +120,14 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           onChange={handleChange}
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+          aria-required={required}
           {...props}
         />
 
         {error && (
           <p
             id={`${inputId}-error`}
-            className="mt-1 text-sm text-theme-status-error-text"
+            className="mt-2 text-base text-theme-status-error-text"
             role="alert"
           >
             {error}
@@ -115,7 +136,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         {!error && hint && (
           <p
             id={`${inputId}-hint`}
-            className="mt-1 text-sm text-theme-text-tertiary"
+            className="mt-2 text-base text-theme-text-tertiary"
           >
             {hint}
           </p>

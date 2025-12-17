@@ -1,15 +1,20 @@
 import { useTranslation } from 'react-i18next';
-import { CharacterLoader } from './characters';
+import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
   message?: string;
-  size?: number;
+  size?: 'sm' | 'md' | 'lg';
   fullScreen?: boolean;
   className?: string;
 }
 
 /**
- * LoadingSpinner - Reusable loading component with theme-aware character
+ * LoadingSpinner - WCAG-compliant loading component
+ *
+ * Features:
+ * - Accessible with aria-live for screen readers
+ * - Simple, professional design without mascots
+ * - Lucide-React icon for consistency
  *
  * Usage:
  * <LoadingSpinner />
@@ -18,21 +23,31 @@ interface LoadingSpinnerProps {
  */
 export default function LoadingSpinner({
   message,
-  size = 120,
+  size = 'md',
   fullScreen = false,
   className = '',
 }: LoadingSpinnerProps) {
   const { t } = useTranslation();
-  const isDark = document.documentElement.classList.contains('dark');
 
-  const defaultMessage = isDark
-    ? t('loading.darkMode')
-    : t('loading.lightMode');
+  const defaultMessage = t('common.loading');
+
+  const sizeClasses = {
+    sm: 'w-6 h-6',
+    md: 'w-10 h-10',
+    lg: 'w-16 h-16',
+  };
 
   const content = (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      <CharacterLoader state="loading" size={size} />
-      <p className="mt-6 text-base font-medium text-theme-text-secondary">
+    <div
+      className={`flex flex-col items-center justify-center gap-4 ${className}`}
+      role="status"
+      aria-live="polite"
+    >
+      <Loader2
+        className={`${sizeClasses[size]} text-theme-primary animate-spin`}
+        aria-hidden="true"
+      />
+      <p className="text-base font-medium text-theme-text-secondary">
         {message || defaultMessage}
       </p>
     </div>

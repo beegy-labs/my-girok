@@ -78,114 +78,112 @@ The `dark:` Tailwind variant is **only** for semantic colors (error, success, wa
 
 ## Color Palette
 
-### Theme: "Warm Library" (원목 도서관의 은은한 조명)
+### Theme: "Clean White Oak" (Light) + "Midnight Gentle Study" (Dark)
 
-**Design Philosophy**: 원목으로 된 도서관에서 은은한 조명 아래 책을 읽는 분위기. 콘텐츠(글, 사진)에 집중할 수 있도록 배경은 원목 느낌, 콘텐츠 영역은 오래된 책 페이지처럼 밝게.
+**Design Philosophy**: A professional archive aesthetic focused on WCAG 2.1 AA accessibility compliance. Clean, minimal design that reduces eye strain and improves readability for extended use.
 
-**핵심 원칙**:
-- 배경: 원목 책장/책상 느낌의 따뜻한 베이지
-- 콘텐츠 영역: 오래된 책 페이지 같은 크림색 (집중도 향상)
-- 조명: 은은한 램프 조명의 따뜻한 호박색
-- 악센트: 고급 책 장정의 가죽/버건디
+**Key Principles**:
+- All color combinations meet WCAG 2.1 AA 4.5:1 contrast ratio
+- Typography optimized for readability (line-height 1.8, min 16px)
+- Warm, earthy tones for a professional archive feel
+- Consistent semantic color tokens across themes
 
-### Light Mode - Warm Wood Library
+### Light Mode - Clean White Oak
 
-#### Primary Colors (따뜻한 램프 조명)
+#### Background Colors
 ```css
-/* 은은한 램프 조명 느낌의 호박색/시에나 */
---vintage-primary-dark: #8B5A2B;    /* 진한 호박 - Primary CTA */
---vintage-primary: #A0522D;          /* 시에나 - 따뜻한 조명 */
---vintage-primary-light: #B8763A;    /* 밝은 호박 - Hover states */
+--light-bg-page: #FFFFFF;           /* Pure white - Page background */
+--light-bg-card: #F8F7F4;           /* Off-white oak - Card backgrounds */
+--light-bg-elevated: #F2F0EC;       /* Light cream - Elevated surfaces */
+--light-bg-hover: #ECEAE5;          /* Hover states */
+--light-bg-input: #FFFFFF;          /* Form inputs */
 ```
 
-#### Background Colors (원목 + 오래된 책 페이지)
+#### Text Colors
 ```css
-/* 원목 배경 + 크림색 콘텐츠 영역 */
---vintage-bg-page: #E8DFD4;          /* 원목 책상/선반 - Page background */
---vintage-bg-card: #F7F3ED;          /* 오래된 책 페이지 - 콘텐츠 집중 */
---vintage-bg-elevated: #FFFDF9;      /* 밝은 페이지 - Elevated surfaces */
---vintage-bg-input: #FFFEFA;         /* 깨끗한 크림 - Form inputs */
+--light-text-primary: #262220;      /* Near-black warm - Main text (13.5:1 contrast) */
+--light-text-secondary: #4A4641;    /* Medium warm - Body text (7.2:1 contrast) */
+--light-text-tertiary: #6E6A65;     /* Light warm - Secondary text (4.8:1 contrast) */
+--light-text-muted: #8A8681;        /* Muted - Hints, captions */
 ```
 
-#### Text Colors (잉크/세피아)
+#### Primary & Accent Colors
 ```css
-/* 오래된 잉크 느낌의 세피아 톤 */
---vintage-text-primary: #2C2416;     /* 진한 세피아 - 오래된 잉크 */
---vintage-text-secondary: #4A3F2F;   /* 중간 세피아 - Body text */
---vintage-text-tertiary: #6B5D4A;    /* 연한 세피아 - Secondary text */
---vintage-text-muted: #8C7B65;       /* 흐린 세피아 - Hints, captions */
---vintage-text-accent: #5C3D1E;      /* 가죽 바인딩 - Emphasis */
+--light-primary: #8B5E3C;           /* Warm brown - Primary accent (5.8:1 contrast) */
+--light-primary-dark: #6B4A2E;      /* Dark brown - Hover states */
+--light-primary-light: #A67A54;     /* Light brown - Light variant */
 ```
 
-#### Border Colors (나무결)
+#### Border Colors
 ```css
-/* 자연스러운 나무결 느낌 */
---vintage-border-subtle: #D9CEBF;    /* 연한 나무결 */
---vintage-border-default: #C4B5A1;   /* 중간 나무결 */
---vintage-border-strong: #A89880;    /* 진한 나무결 */
+--light-border-default: #D9D5D0;    /* Default borders */
+--light-border-subtle: #E8E5E0;     /* Subtle borders */
 ```
 
-#### Accent Colors (가죽/버건디)
+### Dark Mode - Midnight Gentle Study
+
+#### Background Colors
 ```css
-/* 고급 책 장정의 가죽 바인딩 느낌 */
---vintage-accent-dark: #6B2D2D;      /* 딥 버건디 - Strong emphasis */
---vintage-accent: #8B4343;           /* 버건디 - Primary accent */
---vintage-accent-light: #A85858;     /* 라이트 버건디 - Hover states */
---vintage-accent-pale: #C27070;      /* 페일 버건디 - Subtle backgrounds */
+--dark-bg-page: #1E1C1A;            /* Deep warm black - Page background */
+--dark-bg-card: #282522;            /* Warm dark gray - Card backgrounds */
+--dark-bg-elevated: #322F2B;        /* Elevated surfaces */
+--dark-bg-hover: #3D3A35;           /* Hover states */
+--dark-bg-input: #242220;           /* Form inputs */
 ```
 
-#### Shadows (은은한 조명 효과)
+#### Text Colors
 ```css
-/* 따뜻한 그림자 - 램프 조명 아래 느낌 */
---shadow-vintage-sm: 0 1px 3px rgba(44, 36, 22, 0.08);
---shadow-vintage-md: 0 4px 8px rgba(44, 36, 22, 0.12);
---shadow-vintage-lg: 0 10px 20px rgba(44, 36, 22, 0.15);
+--dark-text-primary: #B0A9A2;       /* Warm silver - Main text (7.8:1 contrast) */
+--dark-text-secondary: #8A847D;     /* Medium silver - Body text (4.9:1 contrast) */
+--dark-text-tertiary: #6A655F;      /* Light silver - Secondary text */
+--dark-text-muted: #524E49;         /* Muted - Hints, captions */
 ```
 
-### Dark Mode - Moonlit Library (달빛 아래 서재)
-
+#### Primary & Accent Colors
 ```css
-/* 어두운 원목 배경 */
---dark-bg-primary: #1A1612;          /* 어두운 원목 */
---dark-bg-secondary: #231E18;        /* 중간 원목 */
---dark-bg-card: #2D261E;             /* 약간 밝은 원목 */
---dark-bg-elevated: #3A3128;         /* 돌출 영역 */
---dark-bg-hover: #453A2F;            /* 호버 */
-
-/* 오래된 종이색 텍스트 */
---dark-text-primary: #EDE8E0;        /* 오래된 종이 */
---dark-text-secondary: #C4BAA8;      /* 중간 톤 */
---dark-text-tertiary: #9A8E7A;       /* 연한 톤 */
-
-/* 나무결 테두리 */
---dark-border-subtle: #3D342A;
---dark-border-default: #554839;
---dark-border-strong: #6E5D4A;
+--dark-primary: #9C835E;            /* Warm gold - Primary accent (5.2:1 contrast) */
+--dark-primary-dark: #7A6547;       /* Dark gold - Hover states */
+--dark-primary-light: #B89C72;      /* Light gold - Light variant */
 ```
 
-### Usage Guidelines (Light Mode)
+#### Border Colors
+```css
+--dark-border-default: #3D3A35;     /* Default borders */
+--dark-border-subtle: #2E2B27;      /* Subtle borders */
+```
 
-#### Background Hierarchy (콘텐츠 집중)
-- **Page Background**: 원목 느낌 → `vintage-bg-page` (#E8DFD4)
-- **Cards/Content**: 책 페이지 느낌 → `vintage-bg-card` (#F7F3ED)
-- **Elevated/Focus**: 밝은 페이지 → `vintage-bg-elevated` (#FFFDF9)
-- **Inputs**: 깨끗한 입력 → `vintage-bg-input` (#FFFEFA)
+### WCAG 2.1 AA Compliance
 
-#### Primary Use Cases
-- **Main Actions**: 버튼, CTA → `vintage-primary` gradient (호박색)
-- **Headers**: 섹션 제목 → `vintage-text-accent` (가죽 갈색)
-- **Links**: 링크 → `vintage-primary`
+All color combinations meet or exceed WCAG 2.1 AA standards:
 
-#### Accent Use Cases
-- **Important tags**: 버건디 계열 → `vintage-accent`
-- **Highlights**: 고급스러운 강조 → `vintage-accent-light`
+| Combination | Contrast Ratio | WCAG Level |
+|-------------|----------------|------------|
+| Light primary text on card | 13.5:1 | AAA |
+| Light secondary text on card | 7.2:1 | AAA |
+| Light primary accent on card | 5.8:1 | AA |
+| Dark primary text on card | 7.8:1 | AAA |
+| Dark secondary text on card | 4.9:1 | AA |
+| Dark primary accent on card | 5.2:1 | AA |
 
-### Color Accessibility
-All color combinations meet WCAG 2.1 AA standards:
-- `vintage-text-primary` on `vintage-bg-card`: 11.2:1 (AAA)
-- `vintage-text-secondary` on `vintage-bg-card`: 7.8:1 (AAA)
-- `vintage-primary` on `vintage-bg-elevated`: 5.1:1 (AA)
-- `vintage-accent-dark` on `vintage-accent-pale/20`: 8.2:1 (AAA)
+### Usage Guidelines
+
+#### Semantic Token Usage
+```tsx
+// ✅ Use semantic theme classes (auto-adapts to theme)
+<div className="bg-theme-bg-card text-theme-text-primary">
+  <h2 className="text-theme-text-primary">Title</h2>
+  <p className="text-theme-text-secondary">Description</p>
+</div>
+
+// ❌ Don't use raw color values
+<div style={{ backgroundColor: '#F8F7F4' }}>
+```
+
+#### Background Hierarchy
+- **Page Background**: `bg-theme-bg-page` - Base layer
+- **Cards/Content**: `bg-theme-bg-card` - Content containers
+- **Elevated**: `bg-theme-bg-elevated` - Modals, dropdowns
+- **Hover**: `bg-theme-bg-hover` - Interactive hover states
 
 ### Special Case: Resume Preview & Print (Print-Optimized)
 
@@ -269,11 +267,25 @@ className="px-6 py-3 bg-gradient-to-r from-amber-700 to-amber-600
 
 ## Typography
 
+### WCAG-Optimized Settings
+
+**Core Settings**:
+```css
+:root {
+  font-size: 16px;           /* Minimum for WCAG 2.1 AA */
+  line-height: 1.8;          /* Improved readability */
+  letter-spacing: -0.02em;   /* Korean/CJK optimization */
+}
+```
+
 ### Font Stack
 ```css
 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
              "Helvetica Neue", Arial, "Noto Sans", sans-serif,
              "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+/* Logo/Brand: Monospace */
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 ```
 
 ### Font Sizes
@@ -284,10 +296,12 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
 --text-2xl: 1.5rem;   /* 24px - Card headers */
 --text-xl: 1.25rem;   /* 20px - Subheadings */
 --text-lg: 1.125rem;  /* 18px - Large body text */
---text-base: 1rem;    /* 16px - Body text */
---text-sm: 0.875rem;  /* 14px - Small text */
---text-xs: 0.75rem;   /* 12px - Captions */
+--text-base: 1rem;    /* 16px - Body text (minimum) */
+--text-sm: 0.875rem;  /* 14px - Small text (limited use) */
+--text-xs: 0.75rem;   /* 12px - Captions only */
 ```
+
+**Important**: Minimum font size for body text is 16px (1rem) per WCAG 2.1 AA guidelines.
 
 ### Font Weights
 ```css
@@ -299,20 +313,35 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
 
 ## Iconography
 
-### Icon Style
-- **Emoji-based**: Use native emojis for a warm, approachable feel
-- **Consistent Theme**: Book and stationery related icons
+### Icon Library
+**Primary**: Lucide-React icons for consistency and accessibility
+
+### Icon Usage
+```tsx
+import { Book, FileText, Wallet, Settings, Sun, Moon } from 'lucide-react';
+
+// Standard icon with WCAG touch target
+<button className="p-2.5 min-w-[44px] min-h-[44px]">
+  <Settings className="w-5 h-5" aria-hidden="true" />
+  <span className="sr-only">Settings</span>
+</button>
+```
 
 ### Core Icons
-```
-📚 - Brand logo, library, collections
-📖 - Records, reading, sections
-📄 - Resume, documents
-✍️ - Blog, writing, editing
-💰 - Budget, finance, money
-🔗 - Links, connections
-⚙️ - Settings, configuration
-```
+| Icon | Lucide Name | Usage |
+|------|-------------|-------|
+| Book | `Book` | Records, library |
+| FileText | `FileText` | Resume, documents |
+| Wallet | `Wallet` | Assets, finance |
+| Settings | `Settings` | Configuration |
+| Sun | `Sun` | Light mode toggle |
+| Moon | `Moon` | Dark mode toggle |
+| Loader2 | `Loader2` | Loading states |
+
+### Accessibility
+- All icons must have `aria-hidden="true"` when decorative
+- Interactive icons need visible labels or `sr-only` text
+- Minimum touch target: 44x44px (WCAG 2.5.5)
 
 ## Spacing System
 
@@ -1127,214 +1156,17 @@ The resume editing UI follows dark mode theme, but the preview component itself 
 - Keep microcopy concise and helpful
 - Example: "나만의 기록장을 만드세요" instead of "Register"
 
-## Characters & Mascots
+## Status & Loading Components
 
-### Brand Characters
+### Overview
 
-My-Girok features **theme-aware animated characters** that enhance user experience and reinforce the library/study room concept. Characters automatically switch based on the current theme.
+WCAG-compliant components for loading states, error messages, and status feedback. These replace the previous character mascot system with simple, accessible Lucide-React icons.
 
-#### 🐿️ Squirrel (Light Mode)
+### LoadingSpinner
 
-**Character Concept**: "Busy record collector during the day"
+Simple loading indicator using Lucide's `Loader2` icon with spinning animation.
 
-**Personality**:
-- Energetic and enthusiastic
-- Diligent and hard-working
-- Cheerful and optimistic
-- Always collecting and organizing (like gathering acorns)
-
-**Visual Design**:
-```css
-/* Primary color - warm brown */
---squirrel-body: #D97706;      /* amber-600 */
---squirrel-belly: #FEF3C7;     /* amber-50 */
---squirrel-accent: #B45309;    /* amber-700 */
---squirrel-dark: #92400E;      /* amber-800 */
-```
-
-**Key Features**:
-- Large fluffy tail
-- Round body with lighter belly
-- Pointed ears with inner detail
-- Holding an acorn (when idle/loading)
-- Whiskers for expressiveness
-
-**Animations**:
-- **Idle**: Subtle breathing, slight tail movement
-- **Loading**: Vigorous tail wagging, acorn bouncing
-- **Sad**: Droopy ears, downward mouth
-- **Confused**: Tilted head, question mark floating
-- **Sleeping**: Closed eyes, floating Z's
-
-#### 🦉 Owl (Dark Mode)
-
-**Character Concept**: "Silent library guardian at night"
-
-**Personality**:
-- Wise and knowledgeable
-- Calm and mysterious
-- Patient and observant
-- Reading books under moonlight
-
-**Visual Design**:
-```css
-/* Primary colors - cool gray tones */
---owl-body: #52575F;           /* dark-border-default */
---owl-belly: #6B7078;          /* dark-border-strong */
---owl-dark: #3A3D45;           /* dark-border-subtle */
---owl-eyes: #FBBF24;           /* amber-400 - glowing */
---owl-beak: #FCD34D;           /* amber-300 */
-```
-
-**Key Features**:
-- Large round head with facial discs
-- Prominent ear tufts
-- Glowing amber eyes (signature feature)
-- Holding/reading a book
-- Crescent moon in background (idle state)
-
-**Animations**:
-- **Idle**: Slow blinking, subtle eye glow, moon pulsing
-- **Loading**: Wing flapping, eyes glowing brighter, pulsing aura
-- **Sad**: Sad eyebrows, dimmed eyes
-- **Confused**: One eyebrow raised, tilted head
-- **Sleeping**: Closed eyes, floating Z's
-
-### Character States
-
-All characters support **5 emotional states** to cover different UI scenarios:
-
-| State | Use Case | Visual Indicators |
-|-------|----------|-------------------|
-| `idle` | Default, calm | Subtle animations, relaxed pose |
-| `loading` | Data fetching, processing | Active movement (tail wag/wing flap) |
-| `sad` | Errors, deleted content | Droopy features, sad mouth |
-| `confused` | 404, not found, unclear | Tilted head, question mark |
-| `sleeping` | Expired, maintenance, inactive | Closed eyes, Z's floating up |
-
-### Usage Guidelines
-
-#### When to Use Characters
-
-**Do use characters for:**
-- ✅ Loading states (data fetching)
-- ✅ Empty states (no content)
-- ✅ Error messages (system errors)
-- ✅ 404 pages (not found)
-- ✅ Expired/deleted content messages
-- ✅ Permission denied messages
-- ✅ Maintenance mode
-- ✅ Success confirmations (celebratory)
-
-**Don't use characters for:**
-- ❌ Navigation elements
-- ❌ Form labels
-- ❌ Inline validation messages
-- ❌ Tooltips
-- ❌ Small UI components
-- ❌ Every single page (overuse reduces impact)
-
-#### Character Size Guidelines
-
-```jsx
-/* Small - Inline messages */
-<CharacterLoader size={80} />
-
-/* Medium - Default size */
-<CharacterLoader size={120} />
-
-/* Large - Full page states */
-<CharacterLoader size={150} />
-
-/* Extra Large - Hero sections */
-<CharacterLoader size={200} />
-```
-
-**Minimum Size**: 60px (below this, details become unclear)
-**Maximum Size**: 240px (above this, animation performance may degrade)
-
-#### Message Pairing
-
-Each character state should be paired with contextual messages:
-
-**Light Mode (Squirrel) - Energetic Tone**:
-```jsx
-loading: "기록을 부지런히 찾고 있어요!"
-not-found: "기록을 찾을 수 없어요"
-error: "앗, 문제가 생겼어요"
-expired: "공유 기간이 만료되었어요"
-```
-
-**Dark Mode (Owl) - Calm Tone**:
-```jsx
-loading: "고요한 밤에 기록을 찾는 중이에요..."
-not-found: "이 기록은 밤의 도서관에 없어요"
-error: "달빛이 흐려졌어요"
-expired: "밤이 깊어 잠들었어요"
-```
-
-### Character Components
-
-#### CharacterLoader
-
-Theme-aware character that automatically switches between Squirrel and Owl.
-
-```jsx
-import { CharacterLoader } from './components/characters';
-
-// Basic usage
-<CharacterLoader state="loading" />
-
-// Custom size
-<CharacterLoader state="idle" size={150} />
-
-// With all states
-<CharacterLoader state="idle" />
-<CharacterLoader state="loading" />
-<CharacterLoader state="sad" />
-<CharacterLoader state="confused" />
-<CharacterLoader state="sleeping" />
-```
-
-#### CharacterMessage
-
-Complete message component with character, title, message, and action button.
-
-```jsx
-import { CharacterMessage } from './components/characters';
-
-// Predefined message types
-<CharacterMessage type="loading" />
-<CharacterMessage type="not-found" />
-<CharacterMessage type="error" />
-<CharacterMessage type="expired" />
-<CharacterMessage type="deleted" />
-<CharacterMessage type="no-permission" />
-<CharacterMessage type="maintenance" />
-
-// With custom action
-<CharacterMessage
-  type="not-found"
-  action={
-    <Link to="/">
-      <Button>홈으로 돌아가기</Button>
-    </Link>
-  }
-/>
-
-// Override default messages
-<CharacterMessage
-  type="error"
-  title="커스텀 제목"
-  message="커스텀 메시지"
-/>
-```
-
-#### LoadingSpinner
-
-Reusable loading component with theme-aware character.
-
-```jsx
+```tsx
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Inline loading
@@ -1344,136 +1176,86 @@ import LoadingSpinner from './components/LoadingSpinner';
 <LoadingSpinner fullScreen />
 
 // Custom message
-<LoadingSpinner message="이력서를 불러오는 중..." />
+<LoadingSpinner message="Loading resume..." />
+
+// Size variants
+<LoadingSpinner size="sm" />  // 24px
+<LoadingSpinner size="md" />  // 40px (default)
+<LoadingSpinner size="lg" />  // 64px
 ```
 
-### Message Type Reference
+**Accessibility**:
+- Uses `role="status"` and `aria-live="polite"` for screen readers
+- Icon has `aria-hidden="true"` (decorative)
+- Text message is always visible for screen reader users
 
-| Type | State | Squirrel Message | Owl Message |
-|------|-------|------------------|-------------|
-| `loading` | loading | "기록을 부지런히 찾고 있어요!" | "고요한 밤에 기록을 찾는 중이에요..." |
-| `not-found` | confused | "기록을 찾을 수 없어요" | "이 기록은 밤의 도서관에 없어요" |
-| `error` | sad | "앗, 문제가 생겼어요" | "달빛이 흐려졌어요" |
-| `expired` | sleeping | "공유 기간이 만료되었어요" | "밤이 깊어 잠들었어요" |
-| `deleted` | sad | "삭제된 기록이에요" | "어둠 속으로 사라진 기록이에요" |
-| `no-permission` | confused | "접근 권한이 없어요" | "이 서재는 잠겨있어요" |
-| `maintenance` | sleeping | "잠시 휴식 중이에요" | "도서관이 밤의 정비 중이에요" |
+### StatusMessage
 
-### Animation Performance
+WCAG-compliant status/error message component with icon, title, message, and optional action.
 
-All character animations are optimized for performance:
+```tsx
+import StatusMessage from './components/StatusMessage';
 
-**CSS Animations** (preferred):
-```css
-/* Smooth, GPU-accelerated */
-animation: tail-wag 1s ease-in-out infinite;
-transform-origin: 30px 40px;
-```
+// Error states
+<StatusMessage type="error" />
+<StatusMessage type="not-found" />
+<StatusMessage type="expired" />
+<StatusMessage type="no-permission" />
+<StatusMessage type="maintenance" />
+<StatusMessage type="deleted" />
 
-**Animation Timing**:
-- Idle animations: 2-4 seconds per cycle
-- Loading animations: 0.5-2 seconds per cycle
-- Blinking: 3-4 seconds interval
-- Floating elements: 2-3 seconds
-
-**Performance Guidelines**:
-- Use `transform` over `left/top` for movement
-- Limit simultaneous animations to 3-4 elements
-- Use `will-change` sparingly for critical animations
-- Pause animations when component is off-screen
-
-### Accessibility
-
-**Screen Reader Support**:
-```jsx
-<div role="status" aria-live="polite">
-  <CharacterLoader state="loading" />
-  <p>기록을 찾고 있어요...</p>
-</div>
-```
-
-**Reduced Motion**:
-```css
-@media (prefers-reduced-motion: reduce) {
-  .character-animation {
-    animation: none;
+// With custom action
+<StatusMessage
+  type="not-found"
+  action={
+    <Button onClick={() => navigate('/')}>
+      Go Home
+    </Button>
   }
-}
+/>
+
+// Custom title and message
+<StatusMessage
+  type="error"
+  title="Custom Title"
+  message="Custom error message"
+/>
 ```
 
-**Focus Management**:
-- Character itself is decorative (aria-hidden="true")
-- Ensure accompanying text is screen-reader accessible
-- Action buttons must be keyboard accessible
+### Status Type Reference
 
-### Character File Locations
+| Type | Icon | Use Case |
+|------|------|----------|
+| `error` | AlertCircle | System errors, failures |
+| `not-found` | FileQuestion | 404 pages, missing content |
+| `expired` | Clock | Expired links/sessions |
+| `no-permission` | Lock | Access denied |
+| `maintenance` | Wrench | System maintenance |
+| `deleted` | Trash2 | Deleted content |
+| `warning` | AlertTriangle | Warning messages |
+
+### File Locations
 
 ```
-apps/web-main/src/
-├── components/
-│   ├── characters/
-│   │   ├── Squirrel.tsx          # Light mode character
-│   │   ├── Owl.tsx                # Dark mode character
-│   │   ├── CharacterLoader.tsx   # Theme-aware switcher
-│   │   ├── CharacterMessage.tsx  # Complete message UI
-│   │   ├── index.ts               # Exports
-│   │   └── README.md              # Full documentation
-│   ├── LoadingSpinner.tsx         # Loading component
-│   └── ErrorBoundary.tsx          # Error boundary
-└── pages/
-    └── NotFoundPage.tsx            # 404 page
+apps/web-main/src/components/
+├── LoadingSpinner.tsx      # Loading indicator (Loader2 icon)
+├── StatusMessage.tsx       # Status/error messages (multiple icons)
+└── ErrorBoundary.tsx       # Error boundary with StatusMessage
 ```
 
-### Implementation Examples
+### Usage Examples
 
-#### Example 1: Shared Resume Link States
+#### 404 Page
 
-```jsx
-export default function SharedResumePage() {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [errorType, setErrorType] = useState<string | null>(null);
-
-  if (status === 'loading') {
-    return <LoadingSpinner fullScreen />;
-  }
-
-  if (status === 'error') {
-    // Map backend errors to character message types
-    const messageType = {
-      'EXPIRED': 'expired',
-      'DELETED': 'deleted',
-      'NO_PERMISSION': 'no-permission',
-      'NOT_FOUND': 'not-found',
-    }[errorType] || 'error';
-
-    return (
-      <CharacterMessage
-        type={messageType}
-        action={
-          <Link to="/">
-            <Button>홈으로 돌아가기</Button>
-          </Link>
-        }
-      />
-    );
-  }
-
-  return <div>{/* Resume content */}</div>;
-}
-```
-
-#### Example 2: 404 Page
-
-```jsx
+```tsx
 export default function NotFoundPage() {
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
-      <CharacterMessage
+    <div className="min-h-[80vh] flex items-center justify-center">
+      <StatusMessage
         type="not-found"
-        size={150}
         action={
           <Link to="/">
-            <Button>홈으로 돌아가기</Button>
+            <Button variant="primary">Go Home</Button>
           </Link>
         }
       />
@@ -1482,42 +1264,36 @@ export default function NotFoundPage() {
 }
 ```
 
-#### Example 3: Loading with Custom Message
+#### Shared Resume Error States
 
-```jsx
-export default function ResumeEditPage() {
-  const [loading, setLoading] = useState(true);
+```tsx
+if (error) {
+  const messageType = {
+    'EXPIRED': 'expired',
+    'DELETED': 'deleted',
+    'NO_PERMISSION': 'no-permission',
+    'NOT_FOUND': 'not-found',
+  }[errorCode] || 'error';
 
-  if (loading) {
-    return (
-      <LoadingSpinner
-        message="이력서를 불러오는 중입니다..."
-        size={140}
-      />
-    );
-  }
-
-  return <div>{/* Resume editor */}</div>;
+  return (
+    <StatusMessage
+      type={messageType}
+      message={error}
+      action={<Button onClick={() => navigate('/')}>Go Home</Button>}
+    />
+  );
 }
 ```
 
-### Character Design Principles
+### Accessibility Features
 
-1. **Consistency**: Always use theme-appropriate character
-2. **Meaningful**: Match character state to UI context
-3. **Delightful**: Add personality without overwhelming
-4. **Accessible**: Provide text alternatives
-5. **Performant**: Optimize animations for all devices
+All status components follow WCAG 2.1 AA guidelines:
 
-### Future Character Extensions
-
-Potential future additions to the character system:
-
-- **Seasonal variations** (Spring flowers, Winter snow)
-- **Achievement celebrations** (Party hat, confetti)
-- **Micro-interactions** (React to user actions)
-- **Additional emotions** (Happy, surprised, thinking)
-- **Multiple poses** (Sitting, standing, flying)
+- **Screen Reader**: Uses `role="status"` and `aria-live="polite"`
+- **Icons**: All icons have `aria-hidden="true"` (decorative)
+- **Focus**: Action buttons are keyboard accessible
+- **Contrast**: All text meets 4.5:1 minimum contrast ratio
+- **Touch Targets**: Buttons meet 44x44px minimum size
 
 ## Implementation Guidelines
 

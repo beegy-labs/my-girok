@@ -37,9 +37,21 @@
     "subtitle": "Manage Your Professional Profile",
     "description": "My-Girok is a platform for managing your resume, blog, and budget all in one place.",
     "myApps": "My Apps",
+    "records": {
+      "title": "Records",
+      "description": "Document and organize your daily life and thoughts"
+    },
     "resume": {
       "title": "Resume",
       "description": "Create and manage your professional resume"
+    },
+    "assets": {
+      "title": "Assets",
+      "description": "Manage your income, expenses, and assets"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Configure app preferences and account settings"
     },
     "blog": {
       "title": "Blog",
@@ -49,6 +61,7 @@
       "title": "Budget",
       "description": "Track your income and expenses"
     },
+    "welcomeSuffix": "",
     "getStarted": "Get Started",
     "recordType": "Record Types",
     "recordStart": "Start your recording journey",

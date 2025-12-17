@@ -5,7 +5,7 @@ import { getUserResume, Resume } from '../../api/resume';
 import { useAuthStore } from '../../stores/authStore';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { CharacterMessage } from '../../components/characters';
+import StatusMessage from '../../components/StatusMessage';
 import { Button } from '@my-girok/ui-components';
 
 export default function PublicResumePage() {
@@ -58,7 +58,7 @@ export default function PublicResumePage() {
 
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <CharacterMessage
+        <StatusMessage
           type={isNotFound ? 'not-found' : 'error'}
           title={isNotFound ? t('resume.preview.notFoundTitle') : undefined}
           message={isNotFound ? t('resume.preview.notFoundMessage') : error}

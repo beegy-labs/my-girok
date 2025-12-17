@@ -29,8 +29,11 @@ apps/web-main/src/
 │       ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
 │       └── SharedResumePage.tsx  # Shared view (/shared/:token)
 ├── components/
-│   ├── Navbar.tsx
+│   ├── Navbar.tsx               # Text-only 'girok' logo, Lucide icons
 │   ├── PrivateRoute.tsx
+│   ├── LoadingSpinner.tsx       # WCAG-compliant loading (Lucide icon)
+│   ├── StatusMessage.tsx        # WCAG-compliant status/error messages
+│   ├── ErrorBoundary.tsx        # Error boundary with StatusMessage
 │   └── resume/
 │       ├── ResumeForm.tsx
 │       ├── ResumePreview.tsx
@@ -316,19 +319,32 @@ import { Button } from '@my-girok/ui-components';
 
 **Layout & Feedback**:
 ```typescript
-import { Card, Alert, LoadingSpinner } from '@my-girok/ui-components';
+import { Card, Alert } from '@my-girok/ui-components';
+import LoadingSpinner from '../components/LoadingSpinner';
+import StatusMessage from '../components/StatusMessage';
 
-// Card - Content container
-<Card variant="primary">
+// Card - Content container with 36px radius option
+<Card variant="primary" radius="lg">
   <h2>Card Title</h2>
 </Card>
 
 // Alert - Status messages
 <Alert variant="success">Resume saved successfully!</Alert>
 
-// LoadingSpinner - Loading states
-<LoadingSpinner fullScreen />
+// LoadingSpinner - WCAG-compliant loading (Lucide Loader2 icon)
+<LoadingSpinner fullScreen message="Loading..." />
+
+// StatusMessage - WCAG-compliant status/error messages (replaced CharacterMessage)
+<StatusMessage type="not-found" action={<Button>Go Back</Button>} />
 ```
+
+**StatusMessage Types**:
+- `error` - System errors (AlertCircle icon)
+- `not-found` - 404 pages (FileQuestion icon)
+- `expired` - Expired content (Clock icon)
+- `no-permission` - Access denied (Lock icon)
+- `maintenance` - System maintenance (Wrench icon)
+- `deleted` - Deleted content (Trash2 icon)
 
 ### Component Structure
 
@@ -365,7 +381,32 @@ import Card from '../../components/ui/Layout/Card';
 
 ## Design System
 
-**Color Theme**: "Wood Library" (Vintage) + "Moonlit Library" (Dark)
+**Color Theme**: "Clean White Oak" (Light) + "Midnight Gentle Study" (Dark)
+
+### WCAG 2.1 AA Compliance
+
+All color combinations meet WCAG 2.1 AA standards with 4.5:1 minimum contrast ratio.
+
+**Light Mode (Clean White Oak)**:
+| Token | Value | Usage |
+|-------|-------|-------|
+| Page BG | #FFFFFF | Page background |
+| Card BG | #F8F7F4 | Card backgrounds |
+| Primary Text | #262220 | Main text |
+| Primary Accent | #8B5E3C | Buttons, links |
+
+**Dark Mode (Midnight Gentle Study)**:
+| Token | Value | Usage |
+|-------|-------|-------|
+| Page BG | #1E1C1A | Page background |
+| Card BG | #282522 | Card backgrounds |
+| Primary Text | #B0A9A2 | Main text |
+| Primary Accent | #9C835E | Buttons, links |
+
+### Typography (WCAG Optimized)
+- **Line Height**: 1.8 (improved readability)
+- **Letter Spacing**: -0.02em (Korean optimization)
+- **Minimum Font Size**: 16px (WCAG 2.1 AA)
 
 ### Scalable Theme Architecture (2025-12)
 

@@ -6,6 +6,7 @@ import { logout } from '../api/auth';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useTheme } from '../hooks/useTheme';
 import { Button } from '@my-girok/ui-components';
+import { Sun, Moon, ChevronDown, KeyRound, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -50,57 +51,41 @@ export default function Navbar() {
   }, [isDropdownOpen]);
 
   return (
-    <nav className="bg-theme-bg-elevated border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200">
+    <nav
+      className="bg-theme-bg-elevated border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200"
+      role="navigation"
+      aria-label="Main navigation"
+    >
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-14 sm:h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            <span className="text-xl sm:text-2xl">📚</span>
-            <span className="text-lg sm:text-2xl font-bold text-theme-text-accent">My-Girok</span>
+          {/* Logo - Text only, professional archive style */}
+          <Link
+            to="/"
+            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2 rounded-lg"
+            aria-label="Go to homepage"
+          >
+            <span className="text-xl sm:text-2xl font-bold font-mono text-theme-text-primary tracking-tight">
+              girok
+            </span>
           </Link>
 
           {/* Right side menu */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Theme toggle button */}
             <button
               onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="p-2 rounded-lg hover:bg-theme-bg-hover transition-colors"
-              title={effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="p-2.5 sm:p-3 rounded-lg hover:bg-theme-bg-hover transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
             >
               {effectiveTheme === 'dark' ? (
-                // Sun icon for light mode
-                <svg
-                  className="w-5 h-5 text-theme-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
+                <Sun className="w-5 h-5 text-theme-primary" aria-hidden="true" />
               ) : (
-                // Moon icon for dark mode
-                <svg
-                  className="w-5 h-5 text-theme-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                  />
-                </svg>
+                <Moon className="w-5 h-5 text-theme-primary" aria-hidden="true" />
               )}
             </button>
+
             <LanguageSwitcher />
+
             {isAuthenticated ? (
               <div className="relative" ref={dropdownRef}>
                 {/* User button */}
@@ -108,10 +93,11 @@ export default function Navbar() {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-theme-bg-hover transition-colors"
+                  aria-label="User menu"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg hover:bg-theme-bg-hover transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
                 >
                   <div className="text-right">
-                    <p className="text-xs sm:text-sm font-semibold text-theme-text-primary">
+                    <p className="text-sm sm:text-base font-semibold text-theme-text-primary">
                       {user?.name || user?.email}
                     </p>
                     {/* Only show role for ADMIN */}
@@ -121,24 +107,26 @@ export default function Navbar() {
                       </p>
                     )}
                   </div>
-                  <svg
+                  <ChevronDown
                     className={`w-4 h-4 text-theme-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                    aria-hidden="true"
+                  />
                 </button>
 
                 {/* Dropdown menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-theme-bg-elevated rounded-lg shadow-theme-lg border border-theme-border-subtle py-1 z-50">
+                  <div
+                    className="absolute right-0 mt-2 w-48 bg-theme-bg-elevated rounded-xl shadow-theme-lg border border-theme-border-subtle py-1 z-50"
+                    role="menu"
+                    aria-orientation="vertical"
+                  >
                     <Link
                       to="/change-password"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="block w-full text-left px-4 py-2 text-sm text-theme-text-secondary hover:bg-theme-bg-hover transition-colors"
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-base text-theme-text-secondary hover:bg-theme-bg-hover transition-colors min-h-[44px]"
+                      role="menuitem"
                     >
+                      <KeyRound className="w-4 h-4" aria-hidden="true" />
                       {t('nav.changePassword')}
                     </Link>
                     <hr className="my-1 border-theme-border-subtle" />
@@ -147,25 +135,27 @@ export default function Navbar() {
                         setIsDropdownOpen(false);
                         handleLogout();
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg transition-colors"
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-base text-theme-status-error-text hover:bg-theme-status-error-bg transition-colors min-h-[44px]"
+                      role="menuitem"
                     >
+                      <LogOut className="w-4 h-4" aria-hidden="true" />
                       {t('nav.logout')}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Link
                   to="/login"
-                  className="text-theme-primary hover:text-theme-primary-light px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors"
+                  className="px-3 sm:px-4 py-2.5 text-base font-medium text-theme-primary hover:text-theme-primary-light transition-colors min-h-[44px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded-lg"
                 >
                   {t('nav.login')}
                 </Link>
                 <Link to="/register" className="flex items-center">
-                  <Button size="sm">{t('nav.register')}</Button>
+                  <Button size="md">{t('nav.register')}</Button>
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>
