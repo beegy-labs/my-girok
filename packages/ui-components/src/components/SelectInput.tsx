@@ -34,10 +34,6 @@ export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectEl
    * Additional CSS classes for the select element
    */
   selectClassName?: string;
-  /**
-   * Color variant for the select
-   */
-  variant?: 'amber' | 'gray';
 }
 
 /**
@@ -63,29 +59,27 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
     placeholder,
     containerClassName = '',
     selectClassName = '',
-    variant = 'gray',
     id,
     ...props
   }, ref) => {
     const selectId = id || `select-${label?.toLowerCase().replace(/\s+/g, '-')}`;
 
-    const baseSelectClasses = 'w-full px-4 py-3 bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900';
+    const baseSelectClasses =
+      'w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted';
 
-    const variantClasses = {
-      amber: 'border border-amber-200 focus:ring-amber-400',
-      gray: 'border border-gray-300 focus:ring-amber-400',
-    };
+    const defaultBorderClasses =
+      'border border-theme-border-default focus:ring-theme-primary';
 
     const errorClasses = error
       ? 'border-red-500 focus:ring-red-500'
-      : variantClasses[variant];
+      : defaultBorderClasses;
 
     return (
       <div className={containerClassName}>
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-sm font-semibold text-gray-700 mb-2"
+            className="block text-sm font-semibold text-theme-text-secondary mb-2"
           >
             {label}
             {required && <span className="text-red-500 ml-1">*</span>}
@@ -113,7 +107,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
         {error && (
           <p
             id={`${selectId}-error`}
-            className="mt-1 text-sm text-red-600"
+            className="mt-1 text-sm text-red-600 dark:text-red-500"
             role="alert"
           >
             {error}

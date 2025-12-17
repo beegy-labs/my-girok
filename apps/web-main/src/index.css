@@ -7,188 +7,161 @@
    - Layer 1: Palette (raw colors, never use directly)
    - Layer 2: Semantic Tokens (theme-switchable via data-theme)
    - Layer 3: Tailwind Integration (@theme directive)
-
-   To add a new theme:
-   1. Add palette colors if needed
-   2. Add [data-theme="newtheme"] override block
-   3. Done! All components auto-adapt
    ============================================ */
 
 /* ============================================
    LAYER 1: COLOR PALETTE
-   Raw color values - never use directly in components
    ============================================ */
-
 :root {
-  /* Wood Library Palette (Vintage Theme) */
-  --palette-wood-900: #1A1612;
-  --palette-wood-800: #231E18;
-  --palette-wood-700: #2D261E;
-  --palette-wood-600: #3A3128;
-  --palette-wood-500: #453A2F;
+  /* Theme: "Warm Library" (Light Mode) */
+  --vintage-primary-dark: #8B5A2B;
+  --vintage-primary: #A0522D;
+  --vintage-primary-light: #B8763A;
+  --vintage-bg-page: #E8DFD4;
+  --vintage-bg-card: #F7F3ED;
+  --vintage-bg-elevated: #FFFDF9;
+  --vintage-bg-input: #FFFEFA;
+  --vintage-text-primary: #2C2416;
+  --vintage-text-secondary: #4A3F2F;
+  --vintage-text-tertiary: #6B5D4A;
+  --vintage-text-muted: #8C7B65;
+  --vintage-text-accent: #5C3D1E;
+  --vintage-border-subtle: #D9CEBF;
+  --vintage-border-default: #C4B5A1;
+  --vintage-border-strong: #A89880;
+  --vintage-accent-dark: #6B2D2D;
+  --vintage-accent: #8B4343;
+  --vintage-accent-light: #A85858;
+  --vintage-accent-pale: #C27070;
 
-  --palette-paper-100: #EDE8E0;
-  --palette-paper-200: #C4BAA8;
-  --palette-paper-300: #9A8E7A;
-  --palette-paper-400: #6B6055;
-
-  --palette-grain-300: #3D342A;
-  --palette-grain-400: #554839;
-  --palette-grain-500: #6E5D4A;
-
-  --palette-amber-700: #8B5A2B;
-  --palette-amber-600: #A0522D;
-  --palette-amber-500: #B8763A;
-
-  --palette-burgundy-700: #6B2D2D;
-  --palette-burgundy-600: #8B4343;
-  --palette-burgundy-500: #A85858;
-  --palette-burgundy-400: #C27070;
-
-  /* Moonlit Library Palette (Dark Theme) */
-  --palette-slate-900: #0F1419;
-  --palette-slate-800: #1A1D23;
-  --palette-slate-700: #242830;
-  --palette-slate-600: #2D3139;
-  --palette-slate-500: #353A42;
-
-  --palette-silver-100: #E8E6E3;
-  --palette-silver-200: #B8B5B2;
-  --palette-silver-300: #8B8885;
-  --palette-silver-400: #5A5856;
-
-  --palette-steel-300: #3A3D45;
-  --palette-steel-400: #52575F;
-  --palette-steel-500: #6B7078;
+  /* Theme: "Moonlit Library" (Dark Mode) - Improved Palette */
+  --dark-bg-primary: #1c1917; /* Warm dark brown */
+  --dark-bg-secondary: #2a2724; /* Warm dark gray */
+  --dark-bg-card: #2a2724;
+  --dark-bg-elevated: #3a3633;
+  --dark-bg-hover: #4a4542;
+  --dark-text-primary: #E8E6E3;
+  --dark-text-secondary: #B8B5B2;
+  --dark-text-tertiary: #8B8885;
+  --dark-text-disabled: #5A5856;
+  --dark-accent-golden: #F5B841; /* Softer, golden amber */
+  --dark-accent-golden-light: #FCD34D;
+  --dark-accent-golden-dark: #E49B0F;
+  --dark-border-subtle: #3a3633;
+  --dark-border-default: #544f4b;
+  --dark-border-strong: #6f6a65;
 }
 
 /* ============================================
    LAYER 2: SEMANTIC THEME TOKENS
-   Default = vintage theme
-   Override with [data-theme="..."] selector
    ============================================ */
 
-:root {
-  /* Background */
-  --theme-bg-page: var(--palette-wood-900);
-  --theme-bg-secondary: var(--palette-wood-800);
-  --theme-bg-card: var(--palette-wood-700);
-  --theme-bg-elevated: var(--palette-wood-600);
-  --theme-bg-input: var(--palette-wood-800);
-  --theme-bg-hover: var(--palette-wood-500);
+/* Default Theme: Light Mode ("Warm Library") */
+:root,
+[data-theme="light"] {
+  --theme-bg-page: var(--vintage-bg-page);
+  --theme-bg-card: var(--vintage-bg-card);
+  --theme-bg-elevated: var(--vintage-bg-elevated);
+  --theme-bg-input: var(--vintage-bg-input);
+  --theme-bg-hover: var(--vintage-bg-card); /* Hover can be subtle on light */
 
-  /* Text */
-  --theme-text-primary: var(--palette-paper-100);
-  --theme-text-secondary: var(--palette-paper-200);
-  --theme-text-tertiary: var(--palette-paper-300);
-  --theme-text-muted: var(--palette-paper-400);
-  --theme-text-accent: var(--palette-amber-700);
+  --theme-text-primary: var(--vintage-text-primary);
+  --theme-text-secondary: var(--vintage-text-secondary);
+  --theme-text-tertiary: var(--vintage-text-tertiary);
+  --theme-text-muted: var(--vintage-text-muted);
+  --theme-text-accent: var(--vintage-text-accent);
+  --theme-text-disabled: var(--vintage-text-muted);
 
-  /* Border */
-  --theme-border-subtle: var(--palette-grain-300);
-  --theme-border-default: var(--palette-grain-400);
-  --theme-border-strong: var(--palette-grain-500);
-
-  /* Primary (amber tones) */
-  --theme-primary-dark: var(--palette-amber-700);
-  --theme-primary: var(--palette-amber-600);
-  --theme-primary-light: var(--palette-amber-500);
-
-  /* Accent (burgundy tones) */
-  --theme-accent-dark: var(--palette-burgundy-700);
-  --theme-accent: var(--palette-burgundy-600);
-  --theme-accent-light: var(--palette-burgundy-500);
-  --theme-accent-pale: var(--palette-burgundy-400);
-
-  /* Shadows */
-  --theme-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --theme-shadow-md: 0 4px 10px rgba(0, 0, 0, 0.5);
-  --theme-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
-  --theme-shadow-xl: 0 15px 35px rgba(0, 0, 0, 0.7);
-  --theme-shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.8);
-  --theme-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-  --theme-shadow-glow: 0 4px 15px rgba(160, 82, 45, 0.25);
+  --theme-border-subtle: var(--vintage-border-subtle);
+  --theme-border-default: var(--vintage-border-default);
+  --theme-border-strong: var(--vintage-border-strong);
+  
+  --theme-primary: var(--vintage-primary);
+  --theme-primary-light: var(--vintage-primary-light);
+  --theme-primary-dark: var(--vintage-primary-dark);
+  
+  --theme-accent: var(--vintage-accent);
+  --theme-accent-light: var(--vintage-accent-light);
+  --theme-accent-dark: var(--vintage-accent-dark);
+  --theme-accent-pale: var(--vintage-accent-pale);
+  
+  --theme-shadow-sm: 0 1px 3px rgba(44, 36, 22, 0.08);
+  --theme-shadow-md: 0 4px 8px rgba(44, 36, 22, 0.12);
+  --theme-shadow-lg: 0 10px 20px rgba(44, 36, 22, 0.15);
+  --theme-shadow-glow: 0 4px 12px rgba(160, 82, 45, 0.15);
 }
 
 /* Dark Theme Override */
 [data-theme="dark"] {
-  --theme-bg-page: var(--palette-slate-900);
-  --theme-bg-secondary: var(--palette-slate-800);
-  --theme-bg-card: var(--palette-slate-700);
-  --theme-bg-elevated: var(--palette-slate-600);
-  --theme-bg-input: var(--palette-slate-800);
-  --theme-bg-hover: var(--palette-slate-500);
+  --theme-bg-page: var(--dark-bg-primary);
+  --theme-bg-secondary: var(--dark-bg-secondary);
+  --theme-bg-card: var(--dark-bg-card);
+  --theme-bg-elevated: var(--dark-bg-elevated);
+  --theme-bg-hover: var(--dark-bg-hover);
+  --theme-bg-input: var(--dark-bg-secondary);
 
-  --theme-text-primary: var(--palette-silver-100);
-  --theme-text-secondary: var(--palette-silver-200);
-  --theme-text-tertiary: var(--palette-silver-300);
-  --theme-text-muted: var(--palette-silver-400);
-  --theme-text-accent: #78350F;
+  --theme-text-primary: var(--dark-text-primary);
+  --theme-text-secondary: var(--dark-text-secondary);
+  --theme-text-tertiary: var(--dark-text-tertiary);
+  --theme-text-disabled: var(--dark-text-disabled);
+  
+  --theme-primary: var(--dark-accent-golden);
+  --theme-primary-light: var(--dark-accent-golden-light);
+  --theme-primary-dark: var(--dark-accent-golden-dark);
 
-  --theme-border-subtle: var(--palette-steel-300);
-  --theme-border-default: var(--palette-steel-400);
-  --theme-border-strong: var(--palette-steel-500);
-
+  --theme-border-subtle: var(--dark-border-subtle);
+  --theme-border-default: var(--dark-border-default);
+  --theme-border-strong: var(--dark-border-strong);
+  
   --theme-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --theme-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
   --theme-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
-  --theme-shadow-xl: 0 15px 30px rgba(0, 0, 0, 0.6);
-  --theme-shadow-2xl: 0 20px 40px rgba(0, 0, 0, 0.7);
-  --theme-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-  --theme-shadow-glow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  --theme-shadow-glow: 0 4px 12px rgba(245, 184, 65, 0.15);
 }
 
 /* ============================================
    LAYER 3: TAILWIND INTEGRATION
-   Maps CSS variables to Tailwind utilities
    ============================================ */
 
 @theme {
-  /* ============================================
-     NEW SEMANTIC THEME TOKENS (theme-*)
-     Use these in new/migrated components
-     ============================================ */
-
-  /* Background utilities: bg-theme-bg-page, bg-theme-bg-card, etc. */
+  /* Background */
   --color-theme-bg-page: var(--theme-bg-page);
-  --color-theme-bg-secondary: var(--theme-bg-secondary);
   --color-theme-bg-card: var(--theme-bg-card);
   --color-theme-bg-elevated: var(--theme-bg-elevated);
   --color-theme-bg-input: var(--theme-bg-input);
   --color-theme-bg-hover: var(--theme-bg-hover);
+  --color-theme-bg-secondary: var(--theme-bg-secondary);
 
-  /* Text utilities: text-theme-text-primary, etc. */
+  /* Text */
   --color-theme-text-primary: var(--theme-text-primary);
   --color-theme-text-secondary: var(--theme-text-secondary);
   --color-theme-text-tertiary: var(--theme-text-tertiary);
   --color-theme-text-muted: var(--theme-text-muted);
   --color-theme-text-accent: var(--theme-text-accent);
+  --color-theme-text-disabled: var(--theme-text-disabled);
 
-  /* Border utilities: border-theme-border-subtle, etc. */
+  /* Border */
   --color-theme-border-subtle: var(--theme-border-subtle);
   --color-theme-border-default: var(--theme-border-default);
   --color-theme-border-strong: var(--theme-border-strong);
+  --color-theme-border-accent: var(--theme-accent);
 
-  /* Primary utilities: bg-theme-primary, text-theme-primary, etc. */
-  --color-theme-primary-dark: var(--theme-primary-dark);
+  /* Primary */
   --color-theme-primary: var(--theme-primary);
   --color-theme-primary-light: var(--theme-primary-light);
+  --color-theme-primary-dark: var(--theme-primary-dark);
 
-  /* Accent utilities: bg-theme-accent, text-theme-accent, etc. */
-  --color-theme-accent-dark: var(--theme-accent-dark);
+  /* Accent */
   --color-theme-accent: var(--theme-accent);
   --color-theme-accent-light: var(--theme-accent-light);
+  --color-theme-accent-dark: var(--theme-accent-dark);
   --color-theme-accent-pale: var(--theme-accent-pale);
 
-  /* Shadow utilities: shadow-theme-sm, shadow-theme-lg, etc. */
+  /* Shadows */
   --shadow-theme-sm: var(--theme-shadow-sm);
   --shadow-theme-md: var(--theme-shadow-md);
   --shadow-theme-lg: var(--theme-shadow-lg);
-  --shadow-theme-xl: var(--theme-shadow-xl);
-  --shadow-theme-2xl: var(--theme-shadow-2xl);
-  --shadow-theme-inner: var(--theme-shadow-inner);
   --shadow-theme-glow: var(--theme-shadow-glow);
-
 }
 
 /* ============================================
@@ -196,13 +169,11 @@
    ============================================ */
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -214,11 +185,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
+  background-color: var(--theme-bg-page);
+  color: var(--theme-text-secondary);
+  transition: background-color 0.2s ease-in-out, color 0.3s ease-in-out;
 }

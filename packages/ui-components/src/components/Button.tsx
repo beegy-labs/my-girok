@@ -53,13 +53,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     disabled,
     ...props
   }, ref) => {
-    const baseClasses = 'font-semibold rounded-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-offset-2';
+    const baseClasses = 'font-semibold rounded-lg transition transform focus:outline-none focus:ring-2 focus:ring-opacity-50';
 
     const variantClasses = {
-      primary: 'bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white shadow-lg shadow-amber-700/30 focus:ring-amber-500 hover:scale-[1.02] active:scale-[0.98]',
-      secondary: 'bg-white border-2 border-amber-700 text-amber-700 hover:bg-amber-50 focus:ring-amber-500',
-      danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-      ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+      primary:
+        'bg-gradient-to-r from-theme-primary-dark to-theme-primary text-white shadow-lg shadow-theme-primary/30 focus:ring-theme-primary hover:scale-[1.02] active:scale-[0.98] dark:from-theme-primary-light dark:to-theme-primary dark:text-gray-900 dark:shadow-theme-primary/20',
+      secondary:
+        'bg-theme-bg-card border border-theme-primary text-theme-primary hover:bg-theme-bg-elevated focus:ring-theme-primary dark:bg-theme-bg-secondary dark:border-theme-primary dark:text-theme-primary dark:hover:bg-theme-bg-card hover:scale-[1.01] active:scale-[0.99]',
+      danger:
+        'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 dark:bg-red-700 dark:hover:bg-red-800',
+      ghost:
+        'text-theme-text-primary hover:bg-theme-bg-elevated focus:ring-theme-primary dark:text-theme-text-primary dark:hover:bg-theme-bg-hover',
     };
 
     const sizeClasses = {
