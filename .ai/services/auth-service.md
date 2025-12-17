@@ -6,12 +6,27 @@
 
 Handles user authentication, session management, and access control.
 
+## Implementation Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| REST API | ✅ Implemented | External-facing API |
+| gRPC API | 🔲 Planned | For internal BFF communication |
+| Rust Migration | 🔲 Planned | Target: Rust + Axum + Tonic |
+
 ## Tech Stack
 
-- **Framework**: NestJS 11 + TypeScript 5.7
+**Current:**
+- **Framework**: NestJS 11 + TypeScript 5.9
 - **Database**: PostgreSQL 16 + Prisma 6
 - **Auth**: Passport.js + JWT
-- **Protocols**: REST + GraphQL (both available)
+- **Protocols**: REST (external)
+
+**Planned (Future):**
+- **Framework**: Rust + Axum (REST) + Tonic (gRPC)
+- **Database**: PostgreSQL + SQLx
+- **Protocols**: REST :3002 (external) + gRPC :50051 (internal)
+- **Events**: NATS JetStream (publish)
 
 ## API Endpoints
 
@@ -88,44 +103,110 @@ Auth Service: /v1/auth/register
 - Profile: `https://my-api-dev.girok.dev/auth/v1/users/me`
 - Health: `https://my-api-dev.girok.dev/auth/health` (no /v1 prefix)
 
-### GraphQL API (`/graphql`)
+### gRPC API (Internal - Port 50051) 🔲 PLANNED
 
-```graphql
-# Queries
-type Query {
-  me: User!
-  user(id: ID!): User
+> **Note**: gRPC will be implemented during Rust migration or when GraphQL BFF is added.
+
+```protobuf
+// proto/auth.proto (planned)
+syntax = "proto3";
+
+package auth;
+
+service AuthService {
+  // Authentication
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // User management
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc GetUserByUsername(GetUserByUsernameRequest) returns (User);
+  rpc GetUsersByIds(GetUsersByIdsRequest) returns (UsersResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+
+  // Health
+  rpc Health(Empty) returns (HealthResponse);
 }
 
-# Mutations
-type Mutation {
-  register(input: RegisterInput!): AuthPayload!
-  login(email: String!, password: String!): AuthPayload!
-  refreshToken(refreshToken: String!): AuthPayload!
-  updateProfile(input: UpdateProfileInput!): User!
-  grantDomainAccess(input: DomainAccessInput!): DomainAccessPayload!
+message LoginRequest {
+  string email = 1;
+  string password = 2;
 }
 
-# Types
-type User {
-  id: ID!
-  email: String!
-  name: String
-  avatar: String
-  role: Role!
-  emailVerified: Boolean!
-  createdAt: DateTime!
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  User user = 3;
 }
 
-type AuthPayload {
-  user: User!
-  accessToken: String!
-  refreshToken: String!
+message ValidateTokenRequest {
+  string token = 1;
 }
 
-enum Role {
-  USER
-  ADMIN
+message ValidateTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string email = 3;
+  string role = 4;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string name = 4;
+  string avatar = 5;
+  string role = 6;
+  string provider = 7;
+  string created_at = 8;
+}
+```
+
+**gRPC Controller (Planned):**
+
+```typescript
+// src/auth/auth.grpc.controller.ts (planned implementation)
+@Controller()
+export class AuthGrpcController {
+  constructor(private readonly authService: AuthService) {}
+
+  @GrpcMethod('AuthService', 'Login')
+  async login(data: LoginRequest): Promise<LoginResponse> {
+    const { user, accessToken, refreshToken } = await this.authService.login(
+      data.email,
+      data.password,
+    );
+
+    // Publish login event
+    await this.natsService.publish('auth.user.logged_in', {
+      userId: user.id,
+      timestamp: new Date(),
+    });
+
+    return { user, accessToken, refreshToken };
+  }
+
+  @GrpcMethod('AuthService', 'ValidateToken')
+  async validateToken(data: ValidateTokenRequest): Promise<ValidateTokenResponse> {
+    try {
+      const payload = await this.jwtService.verifyAsync(data.token);
+      return {
+        valid: true,
+        userId: payload.sub,
+        email: payload.email,
+        role: payload.role,
+      };
+    } catch {
+      return { valid: false };
+    }
+  }
+
+  @GrpcMethod('AuthService', 'GetUser')
+  async getUser(data: GetUserRequest): Promise<User> {
+    return this.usersService.findById(data.userId);
+  }
 }
 ```
 
@@ -308,14 +389,28 @@ getAllUsers() {
 
 ## Integration Points
 
-### Outgoing (This service calls)
-- None (auth service is independent)
+### Current (REST)
+- **web-main**: Direct REST calls for auth (login, register, profile)
+- **personal-service**: No direct integration (same DB user ID)
 
-### Incoming (Other services call)
-- **web-bff**: Calls REST API for login/register/profile
-- **mobile-bff**: Calls REST API for authentication
-- **content-api**: Validates JWT tokens (via Gateway)
-- **api-gateway**: Routes auth requests here
+### Planned (gRPC) 🔲
+- **graphql-bff**: Login, register, token validation, user lookup
+- **ws-gateway**: Token validation for WebSocket auth
+- **personal-service**: User lookup
+
+### Events (NATS) 🔲 Planned
+- Publish: `auth.user.registered`, `auth.user.logged_in`, `auth.user.password_changed`
+- Subscribe: None
+
+### NATS Events Published (Planned) 🔲
+
+```typescript
+// Will be implemented with NATS JetStream
+'auth.user.registered' -> { userId, email, provider }
+'auth.user.logged_in' -> { userId, timestamp }
+'auth.user.password_changed' -> { userId }
+'auth.user.profile_updated' -> { userId, fields }
+```
 
 ## Environment Variables
 

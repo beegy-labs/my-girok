@@ -1,6 +1,6 @@
 # Deployment Guide
 
-> Kubernetes-based deployment guidelines
+> Kubernetes-based deployment with Cilium Gateway API
 
 ## Deployment Environment
 
@@ -16,27 +16,72 @@ Deployment Environment (Kubernetes):
 - Production: Kubernetes cluster
 ```
 
+## Architecture Overview
+
+### 2025 Architecture Components
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Cilium Gateway API                           │
+│  api.girok.dev    ws.girok.dev    auth.girok.dev    s3.girok.dev   │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │
+        ┌────────────────────────┼────────────────────────┐
+        │                        │                        │
+        ▼                        ▼                        ▼
+┌───────────────┐      ┌─────────────────┐      ┌────────────────┐
+│  GraphQL BFF  │      │   WS Gateway    │      │  Auth Service  │
+│ (Apollo Fed)  │      │  (Socket.io)    │      │  (REST+gRPC)   │
+└───────┬───────┘      └────────┬────────┘      └────────────────┘
+        │ gRPC                  │ NATS
+        ▼                       ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Domain Services (gRPC)                      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
+│  │Personal  │  │  Feed    │  │  Chat    │  │ Matching │           │
+│  │PostgreSQL│  │ MongoDB  │  │ MongoDB  │  │ Valkey   │           │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘           │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 ## Kubernetes Structure
 
 ### Namespace Strategy
 
 ```yaml
-# Separate namespaces by environment
+# Functional namespace separation
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mygirok-staging
+  name: gateway        # Cilium Gateway, GraphQL BFF, WS Gateway
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mygirok-production
+  name: services       # Domain services (auth, personal, feed, etc.)
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data           # PostgreSQL, MongoDB, Valkey, NATS
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: realtime       # LiveKit, additional WebSocket services
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability  # Prometheus, Grafana, Jaeger
 ```
 
 **Namespace Rules:**
-- `mygirok-staging`: Staging environment
-- `mygirok-production`: Production environment
-- Additional service-specific namespaces possible (optional)
+- `gateway`: Edge routing and BFF layer
+- `services`: All domain microservices
+- `data`: Databases and message brokers
+- `realtime`: Video/audio communication
+- `observability`: Monitoring and tracing
 
 ### Project Structure
 
@@ -45,31 +90,48 @@ my-girok/
 ├── k8s/
 │   ├── base/                          # Common Kustomize base
 │   │   ├── kustomization.yaml
-│   │   ├── namespace.yaml
+│   │   ├── namespaces.yaml
 │   │   └── services/
+│   │       ├── gateway/
+│   │       │   ├── graphql-bff/
+│   │       │   │   ├── deployment.yaml
+│   │       │   │   ├── service.yaml
+│   │       │   │   └── hpa.yaml
+│   │       │   └── ws-gateway/
+│   │       │       ├── deployment.yaml
+│   │       │       ├── service.yaml
+│   │       │       └── hpa.yaml
 │   │       ├── auth-service/
 │   │       │   ├── deployment.yaml
 │   │       │   ├── service.yaml
-│   │       │   └── hpa.yaml           # Horizontal Pod Autoscaler
-│   │       ├── content-api/
-│   │       ├── web-bff/
-│   │       ├── mobile-bff/
-│   │       └── api-gateway/
+│   │       │   └── hpa.yaml
+│   │       ├── personal-service/
+│   │       ├── feed-service/
+│   │       ├── chat-service/
+│   │       ├── matching-service/
+│   │       └── media-service/
 │   │
 │   ├── overlays/
 │   │   ├── staging/
 │   │   │   ├── kustomization.yaml
 │   │   │   ├── configmap.yaml
-│   │   │   └── ingress.yaml
+│   │   │   └── httproute.yaml
 │   │   └── production/
 │   │       ├── kustomization.yaml
 │   │       ├── configmap.yaml
-│   │       ├── ingress.yaml
+│   │       ├── httproute.yaml
 │   │       └── hpa-overrides.yaml
 │   │
-│   ├── secrets/                       # ⚠️ DO NOT commit to Git
+│   ├── gateway/                       # Cilium Gateway API
+│   │   ├── gateway.yaml
+│   │   ├── httproute-graphql.yaml
+│   │   ├── httproute-websocket.yaml
+│   │   ├── httproute-auth.yaml
+│   │   └── ratelimit.yaml
+│   │
+│   ├── secrets/                       # Sealed Secrets (encrypted)
 │   │   ├── staging/
-│   │   │   └── sealed-secrets.yaml   # Use Sealed Secrets
+│   │   │   └── sealed-secrets.yaml
 │   │   └── production/
 │   │       └── sealed-secrets.yaml
 │   │
@@ -77,14 +139,175 @@ my-girok/
 │       ├── postgres/
 │       │   ├── statefulset.yaml
 │       │   ├── service.yaml
-│       │   └── pvc.yaml               # Persistent Volume Claim
-│       └── redis/
-│           ├── deployment.yaml
+│       │   └── pvc.yaml
+│       ├── mongodb/
+│       │   ├── statefulset.yaml
+│       │   └── service.yaml
+│       ├── valkey/
+│       │   ├── deployment.yaml
+│       │   └── service.yaml
+│       └── nats/
+│           ├── statefulset.yaml
 │           └── service.yaml
 │
 ├── apps/
 ├── services/
 └── packages/
+```
+
+## Cilium Gateway API
+
+### Gateway Definition
+
+```yaml
+# k8s/gateway/gateway.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: mygirok-gateway
+  namespace: gateway
+spec:
+  gatewayClassName: cilium
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: "*.girok.dev"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: girok-tls-cert
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: websocket
+      protocol: HTTPS
+      port: 443
+      hostname: "ws.girok.dev"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: girok-tls-cert
+```
+
+### HTTPRoute for GraphQL BFF
+
+```yaml
+# k8s/gateway/httproute-graphql.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: graphql-route
+  namespace: gateway
+spec:
+  parentRefs:
+    - name: mygirok-gateway
+      namespace: gateway
+  hostnames:
+    - "api.girok.dev"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /graphql
+      backendRefs:
+        - name: graphql-bff
+          port: 4000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: graphql-bff
+          port: 4000
+```
+
+### HTTPRoute for WebSocket Gateway
+
+```yaml
+# k8s/gateway/httproute-websocket.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: websocket-route
+  namespace: gateway
+spec:
+  parentRefs:
+    - name: mygirok-gateway
+      namespace: gateway
+  hostnames:
+    - "ws.girok.dev"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /socket.io
+      backendRefs:
+        - name: ws-gateway
+          port: 3001
+```
+
+### HTTPRoute for Auth Service (Direct REST)
+
+```yaml
+# k8s/gateway/httproute-auth.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: auth-route
+  namespace: gateway
+spec:
+  parentRefs:
+    - name: mygirok-gateway
+      namespace: gateway
+  hostnames:
+    - "auth.girok.dev"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/auth
+      backendRefs:
+        - name: auth-service
+          namespace: services
+          port: 3002
+```
+
+### Rate Limiting
+
+```yaml
+# k8s/gateway/ratelimit.yaml
+apiVersion: cilium.io/v2
+kind: CiliumEnvoyConfig
+metadata:
+  name: rate-limit-config
+  namespace: gateway
+spec:
+  services:
+    - name: graphql-bff
+      namespace: gateway
+  backendServices:
+    - name: graphql-bff
+      namespace: gateway
+  resources:
+    - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+      name: rate_limit_listener
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                http_filters:
+                  - name: envoy.filters.http.local_ratelimit
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                      stat_prefix: http_local_rate_limiter
+                      token_bucket:
+                        max_tokens: 100
+                        tokens_per_fill: 100
+                        fill_interval: 60s
 ```
 
 ## Secrets Management (CRITICAL)
@@ -103,8 +326,6 @@ kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/downloa
 
 # Install kubeseal CLI
 brew install kubeseal  # macOS
-# or
-wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.24.0/kubeseal-linux-amd64
 ```
 
 **Create and seal secrets:**
@@ -136,7 +357,7 @@ apiVersion: bitnami.com/v1alpha1
 kind: SealedSecret
 metadata:
   name: auth-secrets
-  namespace: mygirok-production
+  namespace: services
 spec:
   encryptedData:
     JWT_SECRET: AgBg8F7X... # Encrypted data
@@ -145,168 +366,76 @@ spec:
   template:
     metadata:
       name: auth-secrets
-      namespace: mygirok-production
+      namespace: services
 ```
 
-**Usage in Deployment:**
+#### 2. HashiCorp Vault (Alternative)
 
 ```yaml
-# k8s/base/services/auth-service/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: auth-service
-spec:
-  template:
-    spec:
-      containers:
-      - name: auth-service
-        image: mygirok/auth-service:latest
-        env:
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: auth-secrets
-              key: JWT_SECRET
-        - name: GOOGLE_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: auth-secrets
-              key: GOOGLE_CLIENT_ID
-        - name: GOOGLE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: auth-secrets
-              key: GOOGLE_CLIENT_SECRET
-```
-
-#### 2. External Secrets Operator (Alternative)
-
-**Integration with AWS Secrets Manager, Google Secret Manager, HashiCorp Vault:**
-
-```yaml
-# Install External Secrets
-helm repo add external-secrets https://charts.external-secrets.io
-helm install external-secrets external-secrets/external-secrets -n external-secrets-system --create-namespace
-
-# SecretStore definition (AWS Secrets Manager example)
+# External Secrets with Vault
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
-  name: aws-secretstore
-  namespace: mygirok-production
+  name: vault-secretstore
+  namespace: services
 spec:
   provider:
-    aws:
-      service: SecretsManager
-      region: ap-northeast-2
+    vault:
+      server: "https://vault.girok.dev"
+      path: "secret"
+      version: "v2"
       auth:
-        jwt:
-          serviceAccountRef:
-            name: external-secrets-sa
-
-# ExternalSecret definition
-apiVersion: external-secrets.io/v1beta1
-kind: ExternalSecret
-metadata:
-  name: auth-secrets
-  namespace: mygirok-production
-spec:
-  refreshInterval: 1h
-  secretStoreRef:
-    name: aws-secretstore
-    kind: SecretStore
-  target:
-    name: auth-secrets
-    creationPolicy: Owner
-  data:
-  - secretKey: JWT_SECRET
-    remoteRef:
-      key: mygirok/production/auth
-      property: jwt_secret
-  - secretKey: GOOGLE_CLIENT_ID
-    remoteRef:
-      key: mygirok/production/auth
-      property: google_client_id
-```
-
-#### 3. ConfigMap vs Secret
-
-**ConfigMap**: Non-sensitive configuration
-**Secret**: Sensitive information (encrypted)
-
-```yaml
-# ConfigMap - Public configuration
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-  namespace: mygirok-production
-data:
-  NODE_ENV: "production"
-  LOG_LEVEL: "info"
-  API_VERSION: "v1"
-  REDIS_HOST: "redis-service"
-  DATABASE_HOST: "postgres-service"
-
----
-# Secret - Sensitive information (managed with Sealed Secrets)
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database-credentials
-  namespace: mygirok-production
-type: Opaque
-stringData:
-  DATABASE_URL: "postgresql://user:password@postgres-service:5432/mygirok"
-  REDIS_PASSWORD: "redis-secret-password"
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "mygirok-services"
 ```
 
 ### Secrets Management Best Practices
 
 **DO:**
-- ✅ Use Sealed Secrets or External Secrets Operator
-- ✅ Use different secrets per environment (staging/production)
-- ✅ Automate secret rotation (every 90 days)
-- ✅ Control secret access with RBAC
-- ✅ Enable audit logging
+- Use Sealed Secrets or External Secrets Operator
+- Use different secrets per environment (staging/production)
+- Automate secret rotation (every 90 days)
+- Control secret access with RBAC
+- Enable audit logging
 
 **DON'T:**
-- ❌ Commit plain text Secrets to Git
-- ❌ Store sensitive info in ConfigMap
-- ❌ Share same secrets across environments
-- ❌ Output secrets to logs
-- ❌ Include secrets in container images
+- Commit plain text Secrets to Git
+- Store sensitive info in ConfigMap
+- Share same secrets across environments
+- Output secrets to logs
+- Include secrets in container images
 
 ## Deployment Examples
 
-### Service Deployment
+### GraphQL BFF Deployment
 
 ```yaml
-# k8s/base/services/auth-service/deployment.yaml
+# k8s/base/services/gateway/graphql-bff/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-service
+  name: graphql-bff
+  namespace: gateway
   labels:
-    app: auth-service
+    app: graphql-bff
     version: v1
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: auth-service
+      app: graphql-bff
   template:
     metadata:
       labels:
-        app: auth-service
+        app: graphql-bff
         version: v1
     spec:
       containers:
-      - name: auth-service
-        image: mygirok/auth-service:latest
+      - name: graphql-bff
+        image: mygirok/graphql-bff:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 4000
           name: http
         env:
         # From ConfigMap
@@ -316,16 +445,18 @@ spec:
               name: app-config
               key: NODE_ENV
         # From Secret
-        - name: DATABASE_URL
+        - name: SESSION_SECRET
           valueFrom:
             secretKeyRef:
-              name: database-credentials
-              key: DATABASE_URL
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: auth-secrets
-              key: JWT_SECRET
+              name: bff-secrets
+              key: SESSION_SECRET
+        # gRPC endpoints
+        - name: AUTH_GRPC_URL
+          value: "auth-service.services.svc.cluster.local:50051"
+        - name: PERSONAL_GRPC_URL
+          value: "personal-service.services.svc.cluster.local:50052"
+        - name: FEED_GRPC_URL
+          value: "feed-service.services.svc.cluster.local:50053"
         resources:
           requests:
             memory: "256Mi"
@@ -336,45 +467,178 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 3000
+            port: 4000
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready
-            port: 3000
+            path: /health/ready
+            port: 4000
           initialDelaySeconds: 5
           periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  name: graphql-bff
+  namespace: gateway
+spec:
+  selector:
+    app: graphql-bff
+  ports:
+  - port: 4000
+    targetPort: 4000
+    name: http
+  type: ClusterIP
+```
+
+### WebSocket Gateway Deployment
+
+```yaml
+# k8s/base/services/gateway/ws-gateway/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-gateway
+  namespace: gateway
+  labels:
+    app: ws-gateway
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ws-gateway
+  template:
+    metadata:
+      labels:
+        app: ws-gateway
+    spec:
+      containers:
+      - name: ws-gateway
+        image: mygirok/ws-gateway:latest
+        ports:
+        - containerPort: 3001
+          name: http
+        env:
+        - name: VALKEY_URL
+          value: "redis://valkey-adapter.data.svc.cluster.local:6379"
+        - name: NATS_URL
+          value: "nats://nats.data.svc.cluster.local:4222"
+        - name: AUTH_GRPC_URL
+          value: "auth-service.services.svc.cluster.local:50051"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ws-gateway
+  namespace: gateway
+spec:
+  selector:
+    app: ws-gateway
+  ports:
+  - port: 3001
+    targetPort: 3001
+    name: http
+  type: ClusterIP
+```
+
+### Domain Service Deployment (Auth)
+
+```yaml
+# k8s/base/services/auth-service/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: auth-service
+  namespace: services
+  labels:
+    app: auth-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        image: mygirok/auth-service:latest
+        ports:
+        - containerPort: 3002
+          name: http
+        - containerPort: 50051
+          name: grpc
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: auth-secrets
+              key: DATABASE_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-secrets
+              key: JWT_SECRET
+        - name: NATS_URL
+          value: "nats://nats.data.svc.cluster.local:4222"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: services
 spec:
   selector:
     app: auth-service
   ports:
-  - port: 80
-    targetPort: 3000
+  - port: 3002
+    targetPort: 3002
     name: http
+  - port: 50051
+    targetPort: 50051
+    name: grpc
   type: ClusterIP
 ```
 
 ### Horizontal Pod Autoscaler
 
 ```yaml
-# k8s/base/services/auth-service/hpa.yaml
+# k8s/base/services/gateway/graphql-bff/hpa.yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: auth-service-hpa
+  name: graphql-bff-hpa
+  namespace: gateway
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: auth-service
+    name: graphql-bff
   minReplicas: 3
-  maxReplicas: 10
+  maxReplicas: 20
   metrics:
   - type: Resource
     resource:
@@ -390,209 +654,7 @@ spec:
         averageUtilization: 80
 ```
 
-### Ingress
-
-```yaml
-# k8s/overlays/production/ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: mygirok-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/rate-limit: "100"
-spec:
-  ingressClassName: nginx
-  tls:
-  - hosts:
-    - api.mygirok.dev
-    - mygirok.dev
-    secretName: mygirok-tls
-  rules:
-  - host: api.mygirok.dev
-    http:
-      paths:
-      - path: /api/auth
-        pathType: Prefix
-        backend:
-          service:
-            name: auth-service
-            port:
-              number: 80
-      - path: /api/content
-        pathType: Prefix
-        backend:
-          service:
-            name: content-api
-            port:
-              number: 80
-  - host: mygirok.dev
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: web-app
-            port:
-              number: 80
-```
-
-## Using Kustomize
-
-### Base Configuration
-
-```yaml
-# k8s/base/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: mygirok-production
-
-resources:
-- namespace.yaml
-- services/auth-service/deployment.yaml
-- services/auth-service/service.yaml
-- services/auth-service/hpa.yaml
-- services/content-api/deployment.yaml
-- services/content-api/service.yaml
-- services/web-bff/deployment.yaml
-- services/web-bff/service.yaml
-- databases/postgres/statefulset.yaml
-- databases/redis/deployment.yaml
-
-commonLabels:
-  app.kubernetes.io/name: mygirok
-  app.kubernetes.io/managed-by: kustomize
-```
-
-### Production Overlay
-
-```yaml
-# k8s/overlays/production/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: mygirok-production
-
-bases:
-- ../../base
-
-resources:
-- ingress.yaml
-- sealed-secrets.yaml
-
-configMapGenerator:
-- name: app-config
-  literals:
-  - NODE_ENV=production
-  - LOG_LEVEL=info
-  - API_VERSION=v1
-
-patchesStrategicMerge:
-- hpa-overrides.yaml
-
-images:
-- name: mygirok/auth-service
-  newTag: v1.2.3
-- name: mygirok/content-api
-  newTag: v1.2.3
-```
-
-### Deployment Commands
-
-```bash
-# Deploy to staging
-kubectl apply -k k8s/overlays/staging
-
-# Deploy to production
-kubectl apply -k k8s/overlays/production
-
-# Restart specific service
-kubectl rollout restart deployment/auth-service -n mygirok-production
-
-# Check deployment status
-kubectl rollout status deployment/auth-service -n mygirok-production
-
-# Rollback
-kubectl rollout undo deployment/auth-service -n mygirok-production
-```
-
-## CI/CD Pipeline
-
-### GitHub Actions Example
-
-```yaml
-# .github/workflows/deploy-production.yml
-name: Deploy to Production
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'services/**'
-      - 'k8s/**'
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./services/auth-service
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/auth-service:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/auth-service:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Configure kubectl
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
-          export KUBECONFIG=kubeconfig
-
-      - name: Deploy to Kubernetes
-        run: |
-          export KUBECONFIG=kubeconfig
-          kubectl apply -k k8s/overlays/production
-          kubectl rollout status deployment/auth-service -n mygirok-production
-
-      - name: Verify deployment
-        run: |
-          export KUBECONFIG=kubeconfig
-          kubectl get pods -n mygirok-production
-          kubectl get services -n mygirok-production
-```
-
-## Database Management
+## Database Deployments
 
 ### PostgreSQL StatefulSet
 
@@ -602,6 +664,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
+  namespace: data
 spec:
   serviceName: postgres
   replicas: 1
@@ -652,68 +715,298 @@ spec:
           storage: 20Gi
 ```
 
-### Migration Job
+### MongoDB StatefulSet
 
 ```yaml
-# k8s/jobs/migration.yaml
-apiVersion: batch/v1
-kind: Job
+# k8s/databases/mongodb/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: prisma-migrate
+  name: mongodb
+  namespace: data
 spec:
+  serviceName: mongodb
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongodb
   template:
+    metadata:
+      labels:
+        app: mongodb
     spec:
       containers:
-      - name: migrate
-        image: mygirok/auth-service:latest
-        command: ["pnpm", "prisma", "migrate", "deploy"]
+      - name: mongodb
+        image: mongo:8.0
+        ports:
+        - containerPort: 27017
+          name: mongodb
         env:
-        - name: DATABASE_URL
+        - name: MONGO_INITDB_ROOT_USERNAME
           valueFrom:
             secretKeyRef:
-              name: database-credentials
-              key: DATABASE_URL
-      restartPolicy: OnFailure
-  backoffLimit: 3
+              name: mongodb-credentials
+              key: MONGO_USER
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: MONGO_PASSWORD
+        volumeMounts:
+        - name: mongodb-storage
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+```
+
+### NATS JetStream
+
+```yaml
+# k8s/databases/nats/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nats
+  namespace: data
+spec:
+  serviceName: nats
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - name: nats
+        image: nats:2.10-alpine
+        args:
+          - "--jetstream"
+          - "--cluster_name=mygirok-nats"
+          - "--cluster=nats://0.0.0.0:6222"
+          - "--routes=nats://nats-0.nats:6222,nats://nats-1.nats:6222,nats://nats-2.nats:6222"
+        ports:
+        - containerPort: 4222
+          name: client
+        - containerPort: 6222
+          name: cluster
+        - containerPort: 8222
+          name: monitor
+        volumeMounts:
+        - name: nats-storage
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: nats-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+```
+
+## Using Kustomize
+
+### Base Configuration
+
+```yaml
+# k8s/base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- namespaces.yaml
+- services/gateway/graphql-bff/deployment.yaml
+- services/gateway/graphql-bff/service.yaml
+- services/gateway/graphql-bff/hpa.yaml
+- services/gateway/ws-gateway/deployment.yaml
+- services/gateway/ws-gateway/service.yaml
+- services/auth-service/deployment.yaml
+- services/auth-service/service.yaml
+- services/personal-service/deployment.yaml
+- services/feed-service/deployment.yaml
+- services/chat-service/deployment.yaml
+- services/matching-service/deployment.yaml
+
+commonLabels:
+  app.kubernetes.io/name: mygirok
+  app.kubernetes.io/managed-by: kustomize
+```
+
+### Production Overlay
+
+```yaml
+# k8s/overlays/production/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+- ../../gateway/gateway.yaml
+- ../../gateway/httproute-graphql.yaml
+- ../../gateway/httproute-websocket.yaml
+- ../../gateway/httproute-auth.yaml
+- sealed-secrets.yaml
+
+configMapGenerator:
+- name: app-config
+  literals:
+  - NODE_ENV=production
+  - LOG_LEVEL=info
+
+patchesStrategicMerge:
+- hpa-overrides.yaml
+
+images:
+- name: mygirok/graphql-bff
+  newTag: v1.2.3
+- name: mygirok/ws-gateway
+  newTag: v1.2.3
+- name: mygirok/auth-service
+  newTag: v1.2.3
+```
+
+### Deployment Commands
+
+```bash
+# Deploy to staging
+kubectl apply -k k8s/overlays/staging
+
+# Deploy to production
+kubectl apply -k k8s/overlays/production
+
+# Restart specific service
+kubectl rollout restart deployment/graphql-bff -n gateway
+
+# Check deployment status
+kubectl rollout status deployment/graphql-bff -n gateway
+
+# Rollback
+kubectl rollout undo deployment/graphql-bff -n gateway
+```
+
+## CI/CD Pipeline
+
+### GitHub Actions Example
+
+```yaml
+# .github/workflows/deploy-production.yml
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/**'
+      - 'k8s/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push GraphQL BFF
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/gateway/graphql-bff
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/graphql-bff:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/graphql-bff:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy to Kubernetes
+        run: |
+          export KUBECONFIG=kubeconfig
+          kubectl apply -k k8s/overlays/production
+          kubectl rollout status deployment/graphql-bff -n gateway
+          kubectl rollout status deployment/ws-gateway -n gateway
+
+      - name: Verify deployment
+        run: |
+          export KUBECONFIG=kubeconfig
+          kubectl get pods -n gateway
+          kubectl get pods -n services
 ```
 
 ## Monitoring & Logging
 
-### Prometheus & Grafana
+### Prometheus ServiceMonitor
 
 ```yaml
-# Prometheus ServiceMonitor
+# Service monitoring
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: auth-service-monitor
+  name: graphql-bff-monitor
+  namespace: observability
 spec:
   selector:
     matchLabels:
-      app: auth-service
+      app: graphql-bff
+  namespaceSelector:
+    matchNames:
+      - gateway
   endpoints:
   - port: http
     path: /metrics
     interval: 30s
 ```
 
-### Fluentd for Logging
+### Distributed Tracing (Jaeger)
 
 ```yaml
-# Log collection for all Pods
-apiVersion: v1
-kind: ConfigMap
+# Jaeger for distributed tracing
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
 metadata:
-  name: fluentd-config
-data:
-  fluent.conf: |
-    <source>
-      @type tail
-      path /var/log/containers/*.log
-      pos_file /var/log/fluentd-containers.log.pos
-      tag kubernetes.*
-      format json
-    </source>
+  name: mygirok-jaeger
+  namespace: observability
+spec:
+  strategy: production
+  storage:
+    type: elasticsearch
+    options:
+      es:
+        server-urls: http://elasticsearch:9200
 ```
 
 ## Deployment Checklist
@@ -725,19 +1018,22 @@ data:
 - [ ] Prepare database migrations
 - [ ] Validate ConfigMap values
 - [ ] Verify resource limits
+- [ ] Configure Cilium Gateway routes
 
 ### During Deployment
 - [ ] Run kubectl apply -k
 - [ ] Monitor rollout status
-- [ ] Check pod status
-- [ ] Test service endpoints
+- [ ] Check pod status across namespaces
+- [ ] Test GraphQL endpoint
+- [ ] Test WebSocket connection
 - [ ] Verify health checks pass
 
 ### After Deployment
 - [ ] Verify application functionality
 - [ ] Check logs (no errors)
 - [ ] Monitor metrics (CPU, memory)
-- [ ] Test API responses
+- [ ] Test gRPC connections between services
+- [ ] Verify NATS event flow
 - [ ] Prepare rollback plan
 
 ## Troubleshooting
@@ -746,52 +1042,58 @@ data:
 
 ```bash
 # Check pod status
-kubectl get pods -n mygirok-production
+kubectl get pods -n gateway
+kubectl get pods -n services
 
 # Get detailed info
-kubectl describe pod <pod-name> -n mygirok-production
+kubectl describe pod <pod-name> -n gateway
 
 # Check logs
-kubectl logs <pod-name> -n mygirok-production
+kubectl logs <pod-name> -n gateway
 
 # Check previous container logs (if restarted)
-kubectl logs <pod-name> -n mygirok-production --previous
+kubectl logs <pod-name> -n gateway --previous
 ```
 
-### Secret-Related Issues
+### gRPC Connection Issues
 
 ```bash
-# Check if secret exists
-kubectl get secrets -n mygirok-production
+# Test gRPC connectivity from within cluster
+kubectl run -it --rm grpc-debug --image=fullstorydev/grpcurl --restart=Never -- \
+  -plaintext auth-service.services.svc.cluster.local:50051 list
 
-# View secret contents (base64 decoded)
-kubectl get secret auth-secrets -n mygirok-production -o jsonpath='{.data.JWT_SECRET}' | base64 -d
-
-# Recreate Sealed Secret
-kubeseal --format yaml < secret.yaml > sealed-secret.yaml
+# Check service endpoints
+kubectl get endpoints -n services
 ```
 
-### Networking Issues
+### Cilium Gateway Issues
 
 ```bash
-# Check services
-kubectl get svc -n mygirok-production
+# Check Gateway status
+kubectl get gateway -n gateway
 
-# Check endpoints
-kubectl get endpoints -n mygirok-production
+# Check HTTPRoute status
+kubectl get httproute -n gateway
 
-# Check ingress
-kubectl describe ingress mygirok-ingress -n mygirok-production
+# Check Cilium envoy config
+kubectl get ciliumenvoyconfig -n gateway
+```
 
-# Test DNS (create temporary pod)
-kubectl run -it --rm debug --image=alpine --restart=Never -- sh
-# Inside: apk add curl && curl http://auth-service.mygirok-production.svc.cluster.local
+### NATS Connection Issues
+
+```bash
+# Check NATS cluster status
+kubectl exec -it nats-0 -n data -- nats server info
+
+# Check JetStream status
+kubectl exec -it nats-0 -n data -- nats stream list
 ```
 
 ## References
 
 - [Kubernetes Official Docs](https://kubernetes.io/docs/)
+- [Cilium Gateway API](https://docs.cilium.io/en/stable/network/servicemesh/gateway-api/)
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
-- [External Secrets Operator](https://external-secrets.io/)
 - [Kustomize](https://kustomize.io/)
+- [NATS JetStream](https://docs.nats.io/nats-concepts/jetstream)
 - [SECURITY.md](SECURITY.md) - Security policies
