@@ -56,6 +56,49 @@
   --color-danger-bg: #dc2626; /* red-600 */
   --color-danger-bg-hover: #b91c1c; /* red-700 */
   --color-danger-text: white;
+
+  /* Status Colors - Light Mode */
+  --status-success-bg: #dcfce7;
+  --status-success-border: #bbf7d0;
+  --status-success-text: #166534;
+  --status-error-bg: #fef2f2;
+  --status-error-border: #fecaca;
+  --status-error-text: #dc2626;
+  --status-warning-bg: #fef9c3;
+  --status-warning-border: #fde047;
+  --status-warning-text: #854d0e;
+  --status-info-bg: #dbeafe;
+  --status-info-border: #bfdbfe;
+  --status-info-text: #1e40af;
+
+  /* Status Colors - Dark Mode */
+  --status-success-bg-dark: rgba(34, 197, 94, 0.2);
+  --status-success-border-dark: rgba(34, 197, 94, 0.3);
+  --status-success-text-dark: #86efac;
+  --status-error-bg-dark: rgba(239, 68, 68, 0.2);
+  --status-error-border-dark: rgba(239, 68, 68, 0.3);
+  --status-error-text-dark: #fca5a5;
+  --status-warning-bg-dark: rgba(234, 179, 8, 0.2);
+  --status-warning-border-dark: rgba(234, 179, 8, 0.3);
+  --status-warning-text-dark: #fde047;
+  --status-info-bg-dark: rgba(59, 130, 246, 0.2);
+  --status-info-border-dark: rgba(59, 130, 246, 0.3);
+  --status-info-text-dark: #93c5fd;
+
+  /* Level Colors (for nested items) */
+  --level-1-bg: #eff6ff;
+  --level-1-border: #3b82f6;
+  --level-2-bg: #f0fdf4;
+  --level-2-border: #22c55e;
+  --level-3-bg: #faf5ff;
+  --level-3-border: #a855f7;
+  --level-4-bg: #fff7ed;
+  --level-4-border: #f97316;
+
+  --level-1-bg-dark: rgba(59, 130, 246, 0.15);
+  --level-2-bg-dark: rgba(34, 197, 94, 0.15);
+  --level-3-bg-dark: rgba(168, 85, 247, 0.15);
+  --level-4-bg-dark: rgba(249, 115, 22, 0.15);
 }
 
 /* ============================================
@@ -113,6 +156,30 @@
   --btn-danger-bg: var(--color-danger-bg);
   --btn-danger-bg-hover: var(--color-danger-bg-hover);
   --btn-danger-text: var(--color-danger-text);
+
+  /* Status Semantic Tokens */
+  --theme-status-success-bg: var(--status-success-bg);
+  --theme-status-success-border: var(--status-success-border);
+  --theme-status-success-text: var(--status-success-text);
+  --theme-status-error-bg: var(--status-error-bg);
+  --theme-status-error-border: var(--status-error-border);
+  --theme-status-error-text: var(--status-error-text);
+  --theme-status-warning-bg: var(--status-warning-bg);
+  --theme-status-warning-border: var(--status-warning-border);
+  --theme-status-warning-text: var(--status-warning-text);
+  --theme-status-info-bg: var(--status-info-bg);
+  --theme-status-info-border: var(--status-info-border);
+  --theme-status-info-text: var(--status-info-text);
+
+  /* Level Semantic Tokens */
+  --theme-level-1-bg: var(--level-1-bg);
+  --theme-level-1-border: var(--level-1-border);
+  --theme-level-2-bg: var(--level-2-bg);
+  --theme-level-2-border: var(--level-2-border);
+  --theme-level-3-bg: var(--level-3-bg);
+  --theme-level-3-border: var(--level-3-border);
+  --theme-level-4-bg: var(--level-4-bg);
+  --theme-level-4-border: var(--level-4-border);
 }
 
 /* Dark Theme Override */
@@ -165,6 +232,26 @@
   --btn-danger-bg: #b91c1c; /* red-700 */
   --btn-danger-bg-hover: #991b1b; /* red-800 */
   --btn-danger-text: var(--color-danger-text);
+
+  /* Status Semantic Tokens - Dark Override */
+  --theme-status-success-bg: var(--status-success-bg-dark);
+  --theme-status-success-border: var(--status-success-border-dark);
+  --theme-status-success-text: var(--status-success-text-dark);
+  --theme-status-error-bg: var(--status-error-bg-dark);
+  --theme-status-error-border: var(--status-error-border-dark);
+  --theme-status-error-text: var(--status-error-text-dark);
+  --theme-status-warning-bg: var(--status-warning-bg-dark);
+  --theme-status-warning-border: var(--status-warning-border-dark);
+  --theme-status-warning-text: var(--status-warning-text-dark);
+  --theme-status-info-bg: var(--status-info-bg-dark);
+  --theme-status-info-border: var(--status-info-border-dark);
+  --theme-status-info-text: var(--status-info-text-dark);
+
+  /* Level Semantic Tokens - Dark Override */
+  --theme-level-1-bg: var(--level-1-bg-dark);
+  --theme-level-2-bg: var(--level-2-bg-dark);
+  --theme-level-3-bg: var(--level-3-bg-dark);
+  --theme-level-4-bg: var(--level-4-bg-dark);
 }
 
 /* ============================================
@@ -225,6 +312,30 @@
   --color-btn-danger-bg: var(--btn-danger-bg);
   --color-btn-danger-bg-hover: var(--btn-danger-bg-hover);
   --color-btn-danger-text: var(--btn-danger-text);
+
+  /* Status Colors */
+  --color-theme-status-success-bg: var(--theme-status-success-bg);
+  --color-theme-status-success-border: var(--theme-status-success-border);
+  --color-theme-status-success-text: var(--theme-status-success-text);
+  --color-theme-status-error-bg: var(--theme-status-error-bg);
+  --color-theme-status-error-border: var(--theme-status-error-border);
+  --color-theme-status-error-text: var(--theme-status-error-text);
+  --color-theme-status-warning-bg: var(--theme-status-warning-bg);
+  --color-theme-status-warning-border: var(--theme-status-warning-border);
+  --color-theme-status-warning-text: var(--theme-status-warning-text);
+  --color-theme-status-info-bg: var(--theme-status-info-bg);
+  --color-theme-status-info-border: var(--theme-status-info-border);
+  --color-theme-status-info-text: var(--theme-status-info-text);
+
+  /* Level Colors (for nested items) */
+  --color-theme-level-1-bg: var(--theme-level-1-bg);
+  --color-theme-level-1-border: var(--theme-level-1-border);
+  --color-theme-level-2-bg: var(--theme-level-2-bg);
+  --color-theme-level-2-border: var(--theme-level-2-border);
+  --color-theme-level-3-bg: var(--theme-level-3-bg);
+  --color-theme-level-3-border: var(--theme-level-3-border);
+  --color-theme-level-4-bg: var(--theme-level-4-bg);
+  --color-theme-level-4-border: var(--theme-level-4-border);
 }
 
 /* ============================================
