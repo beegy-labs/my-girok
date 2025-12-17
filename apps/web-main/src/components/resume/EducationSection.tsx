@@ -130,7 +130,7 @@ function SortableEducationCard({
           <TextInput
             label="School"
             value={education.school}
-            onChange={value => onUpdate({ ...education, school: value })}
+            onChange={(value: string) => onUpdate({ ...education, school: value })}
             placeholder="University name"
             required
           />
@@ -138,7 +138,7 @@ function SortableEducationCard({
           <TextInput
             label="Major"
             value={education.major}
-            onChange={value => onUpdate({ ...education, major: value })}
+            onChange={(value: string) => onUpdate({ ...education, major: value })}
             placeholder="e.g., Computer Science"
             required
           />
@@ -175,7 +175,7 @@ function SortableEducationCard({
           <TextInput
             label="GPA"
             value={education.gpa || ''}
-            onChange={value => onUpdate({ ...education, gpa: value })}
+            onChange={(value: string) => onUpdate({ ...education, gpa: value })}
             placeholder={
               education.gpaFormat === GpaFormat.SCALE_4_5 ? 'e.g., 4.2/4.5' :
               education.gpaFormat === GpaFormat.SCALE_100 ? 'e.g., 85/100' :

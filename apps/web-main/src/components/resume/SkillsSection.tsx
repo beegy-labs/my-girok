@@ -192,7 +192,7 @@ function SkillCategory({
         <TextInput
           label={t('resume.form.categoryName')}
           value={skill.category}
-          onChange={(value) => onCategoryChange(skillIndex, value)}
+          onChange={(value: string) => onCategoryChange(skillIndex, value)}
           placeholder={t('resume.form.categoryPlaceholder')}
           required
         />
@@ -313,7 +313,7 @@ function SkillItemCard({
         <TextInput
           label={t('resume.form.skillName')}
           value={itemData.name}
-          onChange={(value) => onSkillItemNameChange(skillIndex, itemIndex, value)}
+          onChange={(value: string) => onSkillItemNameChange(skillIndex, itemIndex, value)}
           placeholder={t('resume.form.skillPlaceholder')}
           required
         />

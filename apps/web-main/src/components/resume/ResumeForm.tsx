@@ -451,7 +451,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <TextInput
             label={t('resume.form.resumeTitle')}
             value={formData.title}
-            onChange={(value) => setFormData({ ...formData, title: value })}
+            onChange={(value: string) => setFormData({ ...formData, title: value })}
             required
             placeholder={t('resume.form.resumeTitlePlaceholder')}
             className="mb-0"
@@ -471,7 +471,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <TextInput
             label={t('resume.form.description')}
             value={formData.description || ''}
-            onChange={(value) => setFormData({ ...formData, description: value })}
+            onChange={(value: string) => setFormData({ ...formData, description: value })}
             placeholder={t('resume.form.descriptionPlaceholder')}
             className="mb-0"
           />
@@ -490,7 +490,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <TextInput
             label={t('resume.form.name')}
             value={formData.name}
-            onChange={(value) => setFormData({ ...formData, name: value })}
+            onChange={(value: string) => setFormData({ ...formData, name: value })}
             required
             placeholder={t('resume.form.namePlaceholder')}
             className="mb-0"
@@ -499,7 +499,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.email')}
             type="email"
             value={formData.email}
-            onChange={(value) => setFormData({ ...formData, email: value })}
+            onChange={(value: string) => setFormData({ ...formData, email: value })}
             required
             placeholder={t('resume.form.emailPlaceholder')}
             className="mb-0"
@@ -508,14 +508,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.phone')}
             type="tel"
             value={formData.phone || ''}
-            onChange={(value) => setFormData({ ...formData, phone: value })}
+            onChange={(value: string) => setFormData({ ...formData, phone: value })}
             placeholder={t('resume.form.phonePlaceholder')}
             className="mb-0"
           />
           <TextInput
             label={t('resume.address')}
             value={formData.address || ''}
-            onChange={(value) => setFormData({ ...formData, address: value })}
+            onChange={(value: string) => setFormData({ ...formData, address: value })}
             placeholder={t('resume.form.addressPlaceholder')}
             hint={t('resume.form.addressHint')}
             className="mb-0"
@@ -524,7 +524,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.github')}
             type="url"
             value={formData.github || ''}
-            onChange={(value) => setFormData({ ...formData, github: value })}
+            onChange={(value: string) => setFormData({ ...formData, github: value })}
             placeholder={t('resume.form.githubPlaceholder')}
             className="mb-0"
           />
@@ -532,7 +532,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.blog')}
             type="url"
             value={formData.blog || ''}
-            onChange={(value) => setFormData({ ...formData, blog: value })}
+            onChange={(value: string) => setFormData({ ...formData, blog: value })}
             placeholder={t('resume.form.blogPlaceholder')}
             className="mb-0"
           />
@@ -540,7 +540,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.linkedin')}
             type="url"
             value={formData.linkedin || ''}
-            onChange={(value) => setFormData({ ...formData, linkedin: value })}
+            onChange={(value: string) => setFormData({ ...formData, linkedin: value })}
             placeholder={t('resume.form.linkedinPlaceholder')}
             className="mb-0"
           />
@@ -744,7 +744,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <TextArea
             label={t('resume.form.summary')}
             value={formData.summary || ''}
-            onChange={value => setFormData({ ...formData, summary: value })}
+            onChange={(value: string) => setFormData({ ...formData, summary: value })}
             rows={4}
             placeholder={t('resume.form.summaryPlaceholder')}
           />
@@ -764,7 +764,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <div className="flex-1">
                   <TextArea
                     value={achievement}
-                    onChange={value => {
+                    onChange={(value: string) => {
                       const newAchievements = [...(formData.keyAchievements || [])];
                       newAchievements[index] = value;
                       setFormData({ ...formData, keyAchievements: newAchievements });
@@ -812,7 +812,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       >
         <TextArea
           value={formData.applicationReason || ''}
-          onChange={value => setFormData({ ...formData, applicationReason: value })}
+          onChange={(value: string) => setFormData({ ...formData, applicationReason: value })}
           rows={4}
           placeholder={t('resume.form.applicationReasonPlaceholder')}
           hint={t('resume.form.applicationReasonHint')}
@@ -904,7 +904,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   <TextInput
                     label={t('resume.form.certificateName')}
                     value={cert.name}
-                    onChange={value => {
+                    onChange={(value: string) => {
                       const newCertificates = [...(formData.certificates || [])];
                       newCertificates[index] = { ...newCertificates[index], name: value };
                       setFormData({ ...formData, certificates: newCertificates });
@@ -916,7 +916,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   <TextInput
                     label={t('resume.form.issuer')}
                     value={cert.issuer}
-                    onChange={value => {
+                    onChange={(value: string) => {
                       const newCertificates = [...(formData.certificates || [])];
                       newCertificates[index] = { ...newCertificates[index], issuer: value };
                       setFormData({ ...formData, certificates: newCertificates });
@@ -929,7 +929,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     label={t('resume.form.issueDate')}
                     type="month"
                     value={cert.issueDate}
-                    onChange={value => {
+                    onChange={(value: string) => {
                       const newCertificates = [...(formData.certificates || [])];
                       newCertificates[index] = { ...newCertificates[index], issueDate: value };
                       setFormData({ ...formData, certificates: newCertificates });
@@ -941,7 +941,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     label={t('resume.form.expiryDate')}
                     type="month"
                     value={cert.expiryDate || ''}
-                    onChange={value => {
+                    onChange={(value: string) => {
                       const newCertificates = [...(formData.certificates || [])];
                       newCertificates[index] = { ...newCertificates[index], expiryDate: value };
                       setFormData({ ...formData, certificates: newCertificates });
@@ -952,7 +952,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   <TextInput
                     label={t('resume.form.credentialIdLabel')}
                     value={cert.credentialId || ''}
-                    onChange={value => {
+                    onChange={(value: string) => {
                       const newCertificates = [...(formData.certificates || [])];
                       newCertificates[index] = { ...newCertificates[index], credentialId: value };
                       setFormData({ ...formData, certificates: newCertificates });
@@ -964,7 +964,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     label={t('resume.form.credentialUrl')}
                     type="url"
                     value={cert.credentialUrl || ''}
-                    onChange={value => {
+                    onChange={(value: string) => {
                       const newCertificates = [...(formData.certificates || [])];
                       newCertificates[index] = { ...newCertificates[index], credentialUrl: value };
                       setFormData({ ...formData, certificates: newCertificates });
