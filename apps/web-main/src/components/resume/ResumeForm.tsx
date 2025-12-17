@@ -984,15 +984,15 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       {/* Attachments Section */}
       <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-theme-sm transition-colors duration-200 p-3 sm:p-6 lg:p-8">
-        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-1 sm:mb-2 lg:mb-4">📎 Attachments</h2>
+        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-1 sm:mb-2 lg:mb-4">📎 {t('resume.form.attachments')}</h2>
         <p className="text-xs sm:text-sm text-theme-text-secondary mb-3 sm:mb-4">
-          Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.
+          {t('resume.form.attachmentsDesc')}
         </p>
 
         {!resume?.id && (
           <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-lg p-4 mb-4">
             <p className="text-theme-status-info-text text-sm">
-              💡 Please save your resume first to enable file uploads.
+              💡 {t('resume.form.saveFirst')}
             </p>
           </div>
         )}
@@ -1007,9 +1007,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
         {/* Profile Photo */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">📷 Profile Photo</h3>
+          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">📷 {t('resume.form.profilePhotoSection')}</h3>
           <p className="text-sm text-theme-text-secondary mb-3">
-            Professional photo (automatically converted to grayscale)
+            {t('resume.form.profilePhotoDesc')}
           </p>
           <div className="space-y-3">
             {getAttachmentsByType(AttachmentType.PROFILE_PHOTO).map(attachment => (
@@ -1032,7 +1032,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   onClick={() => handleDeleteAttachment(attachment.id)}
                   className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
-                  Delete
+                  {t('common.delete')}
                 </button>
               </div>
             ))}
@@ -1181,7 +1181,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <button
           type="button"
           onClick={handleClearDraft}
-          className="hidden sm:block px-4 py-2 text-sm text-theme-text-secondary hover:theme-text-primary underline transition-all"
+          className="hidden sm:block px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary underline transition-all"
         >
           {t('resume.form.deleteDraft')}
         </button>
@@ -1215,7 +1215,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         <button
           type="button"
           onClick={handleClearDraft}
-          className="sm:hidden w-full px-4 py-2 text-xs text-theme-text-tertiary hover:theme-text-secondary transition-all"
+          className="sm:hidden w-full px-4 py-2 text-xs text-theme-text-tertiary hover:text-theme-text-secondary transition-all"
         >
           {t('resume.form.deleteDraft')}
         </button>
