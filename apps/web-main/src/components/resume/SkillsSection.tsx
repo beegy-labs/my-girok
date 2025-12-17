@@ -116,7 +116,7 @@ export default function SkillsSection({ skills, onChange, t }: SkillsSectionProp
         </Button>
       }
     >
-      <p className="text-xs sm:text-sm theme-text-secondary mb-3 sm:mb-4">
+      <p className="text-xs sm:text-sm text-theme-text-secondary mb-3 sm:mb-4">
         {t('resume.descriptions.skills')}
       </p>
 
@@ -139,7 +139,7 @@ export default function SkillsSection({ skills, onChange, t }: SkillsSectionProp
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 theme-text-tertiary">
+        <div className="text-center py-8 text-theme-text-tertiary">
           <p>{t('resume.form.clickToAddCategory')}</p>
         </div>
       )}
@@ -175,7 +175,7 @@ function SkillCategory({
   return (
     <div className="border border-theme-border-default rounded-lg p-3 sm:p-5 bg-theme-bg-hover transition-colors duration-200">
       <div className="flex justify-between items-center mb-3 sm:mb-4">
-        <h3 className="text-sm sm:text-lg font-semibold theme-text-primary">
+        <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">
           {t('resume.form.categoryNumber', { index: skillIndex + 1 })}
         </h3>
         <button
@@ -201,7 +201,7 @@ function SkillCategory({
       {/* Skill Items */}
       <div className="space-y-2 sm:space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <label className="text-xs sm:text-sm font-semibold theme-text-secondary">
+          <label className="text-xs sm:text-sm font-semibold text-theme-text-secondary">
             {t('resume.form.skillStack')}
           </label>
           <Button
@@ -267,7 +267,7 @@ function SkillItemCard({
   const itemData = typeof item === 'string' ? { name: item, description: '' } : item;
 
   return (
-    <div className="border theme-border-subtle rounded-lg p-2 sm:p-4 theme-bg-card transition-colors duration-200">
+    <div className="border border-theme-border-subtle rounded-lg p-2 sm:p-4 bg-theme-bg-card transition-colors duration-200">
       <div className="flex justify-between items-center mb-2 sm:mb-3">
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Move buttons - stacked vertically */}
@@ -293,7 +293,7 @@ function SkillItemCard({
               </button>
             )}
           </div>
-          <span className="text-xs sm:text-sm font-semibold theme-text-secondary">
+          <span className="text-xs sm:text-sm font-semibold text-theme-text-secondary">
             {t('resume.form.skillNumber', { index: itemIndex + 1 })}
           </span>
         </div>
