@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import { generateWebsiteSchema } from '../utils/structuredData';
-import { PageHeader, SectionHeader, Card, PrimaryButton, SecondaryButton } from '../components/ui';
+import { PageHeader, SectionHeader, Card, Button } from '@my-girok/ui-components';
 
 interface AppCard {
   id: string;
@@ -11,7 +11,6 @@ interface AppCard {
   descriptionKey: string;
   icon: string;
   route: string;
-  color: string;
   status: 'active' | 'coming-soon';
 }
 
@@ -26,7 +25,6 @@ export default function HomePage() {
       descriptionKey: 'home.resume.description',
       icon: '📄',
       route: '/resume/my',
-      color: 'bg-amber-700',
       status: 'active',
     },
     {
@@ -35,7 +33,6 @@ export default function HomePage() {
       descriptionKey: 'home.blog.description',
       icon: '✍️',
       route: '/apps/blog',
-      color: 'bg-amber-600',
       status: 'coming-soon',
     },
     {
@@ -44,7 +41,6 @@ export default function HomePage() {
       descriptionKey: 'home.budget.description',
       icon: '💰',
       route: '/apps/budget',
-      color: 'bg-amber-800',
       status: 'coming-soon',
     },
   ];
@@ -67,7 +63,7 @@ export default function HomePage() {
         type="website"
         structuredData={generateWebsiteSchema()}
       />
-      <div className="min-h-screen theme-bg-page transition-colors duration-200">
+      <div className="min-h-screen bg-theme-bg-page transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {isAuthenticated ? (
         <div className="space-y-6 sm:space-y-8">
@@ -86,7 +82,7 @@ export default function HomePage() {
                 <Link
                   key={app.id}
                   to={app.status === 'active' ? app.route : '#'}
-                  className={`block theme-bg-card border border-theme-border-subtle rounded-2xl shadow-theme-md p-4 sm:p-6 transition-all ${
+                  className={`block bg-theme-bg-card border border-theme-border-subtle rounded-2xl shadow-theme-md p-4 sm:p-6 transition-all ${
                     app.status === 'coming-soon'
                       ? 'opacity-60 cursor-not-allowed'
                       : 'hover:shadow-theme-xl hover:-translate-y-1 hover:border-theme-primary'
@@ -153,14 +149,14 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <Link to="/register">
-                  <PrimaryButton size="lg" className="w-full sm:w-auto">
+                  <Button variant="primary" size="lg" className="w-full sm:w-auto">
                     {t('home.createRecordBook')}
-                  </PrimaryButton>
+                  </Button>
                 </Link>
                 <Link to="/login">
-                  <SecondaryButton size="lg" className="w-full sm:w-auto">
+                  <Button variant="secondary" size="lg" className="w-full sm:w-auto">
                     {t('nav.login')}
-                  </SecondaryButton>
+                  </Button>
                 </Link>
               </div>
             </div>

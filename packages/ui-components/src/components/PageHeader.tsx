@@ -1,77 +1,18 @@
 import React from 'react';
-import { Link } from 'react-router';
 
 export interface PageHeaderProps {
-  /**
-   * Page title
-   */
   title: string;
-  /**
-   * Optional subtitle/description
-   */
   subtitle?: string;
-  /**
-   * Optional emoji icon
-   */
   icon?: string;
-  /**
-   * Back link URL (shows back button if provided)
-   */
   backLink?: string;
-  /**
-   * Back button text (default: "< Back")
-   */
   backText?: string;
-  /**
-   * Right-side action button/element
-   */
   action?: React.ReactNode;
-  /**
-   * Size variant
-   * - lg: Large header (main pages like Home, My Resume)
-   * - md: Medium header (standard pages)
-   * - sm: Small header (modal headers, sub-sections)
-   */
   size?: 'sm' | 'md' | 'lg';
-  /**
-   * Additional CSS classes
-   */
   className?: string;
+  backLinkComponent?: React.ElementType<{ to: string; className?: string; children: React.ReactNode }>;
 }
 
-/**
- * PageHeader Component
- *
- * Consistent header pattern for all pages with responsive sizing
- * and optional back navigation.
- *
- * Features:
- * - Responsive typography
- * - Optional icon support
- * - Back navigation link
- * - Right-side action slot
- * - Dark mode support
- * - Amber card styling
- *
- * @example
- * ```tsx
- * // Main page header
- * <PageHeader
- *   icon="..."
- *   title="My Resumes"
- *   subtitle="Manage your professional resumes"
- *   action={<PrimaryButton>Create New</PrimaryButton>}
- * />
- *
- * // Page with back navigation
- * <PageHeader
- *   backLink="/"
- *   backText="Back to Home"
- *   title="Settings"
- * />
- * ```
- */
-export default function PageHeader({
+export function PageHeader({
   title,
   subtitle,
   icon,
@@ -80,6 +21,7 @@ export default function PageHeader({
   action,
   size = 'lg',
   className = '',
+  backLinkComponent: BackLinkComponent,
 }: PageHeaderProps) {
   const sizeClasses = {
     sm: {
@@ -107,6 +49,12 @@ export default function PageHeader({
 
   const styles = sizeClasses[size];
 
+  const backLinkContent = (
+    <span className="inline-flex items-center text-theme-primary hover:text-theme-primary-light mb-3 sm:mb-4 text-sm sm:text-base transition-colors">
+      {backText}
+    </span>
+  );
+
   return (
     <div
       className={`
@@ -121,12 +69,15 @@ export default function PageHeader({
     >
       {/* Back Link */}
       {backLink && (
-        <Link
-          to={backLink}
-          className="inline-flex items-center text-theme-primary hover:text-theme-primary-light mb-3 sm:mb-4 text-sm sm:text-base transition-colors"
-        >
-          {backText}
-        </Link>
+        BackLinkComponent ? (
+          <BackLinkComponent to={backLink} className="no-underline">
+            {backLinkContent}
+          </BackLinkComponent>
+        ) : (
+          <a href={backLink}>
+            {backLinkContent}
+          </a>
+        )
       )}
 
       {/* Header Content */}

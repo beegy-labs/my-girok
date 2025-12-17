@@ -137,11 +137,11 @@ export default function ResumePreview({
                     Letter
                   </button>
                 </div>
-                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg px-2 py-1 text-xs text-blue-700 dark:text-blue-300">
+                <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-lg px-2 py-1 text-xs text-theme-status-info-text">
                   {Math.round(scale * 100)}%
                 </div>
                 {numPages > 0 && (
-                  <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg px-2 py-1 text-xs text-green-700 dark:text-green-300">
+                  <div className="bg-theme-status-success-bg border border-theme-status-success-border rounded-lg px-2 py-1 text-xs text-theme-status-success-text">
                     {numPages} {t('resume.preview.pages', { defaultValue: 'pages' })}
                   </div>
                 )}
@@ -194,11 +194,11 @@ export default function ResumePreview({
       <div className="flex flex-col items-center">
         {instance.loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary"></div>
             <span className="ml-3 text-theme-text-secondary">{t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}</span>
           </div>
         ) : instance.error ? (
-          <div className="flex items-center justify-center py-20 text-red-600">
+          <div className="flex items-center justify-center py-20 text-theme-status-error-text">
             <span>{t('resume.preview.error', { defaultValue: 'Error generating PDF' })}: {instance.error}</span>
           </div>
         ) : instance.blob ? (
@@ -232,11 +232,11 @@ export default function ResumePreview({
               onLoadSuccess={onDocumentLoadSuccess}
               loading={
                 <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
                 </div>
               }
               error={
-                <div className="flex items-center justify-center py-20 text-red-600">
+                <div className="flex items-center justify-center py-20 text-theme-status-error-text">
                   {t('resume.preview.loadError', { defaultValue: 'Failed to load PDF' })}
                 </div>
               }

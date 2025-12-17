@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { getResume, createResume, updateResume, CreateResumeDto, Resume, SectionType } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
-import { PrimaryButton, SecondaryButton, PageHeader, Alert, LoadingSpinner, Card } from '../../components/ui';
+import { Button, PageHeader, Alert, Card } from '@my-girok/ui-components';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function ResumeEditPage() {
   const { t } = useTranslation();
@@ -24,7 +25,8 @@ export default function ResumeEditPage() {
       const data = await getResume(resumeId);
       setResume(data);
       setPreviewData(data);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
       if (err.response?.status === 404) {
         setError(t('resume.errors.resumeNotFound'));
       } else {
@@ -114,9 +116,10 @@ export default function ResumeEditPage() {
         // Direct navigation - React Router v7 supports this without issues
         navigate(`/resume/preview/${created.id}`);
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
       // Log detailed error for debugging
-      console.error('Resume save failed:', err);
+      console.error('Resume save failed:', error);
+      const err = error as { response?: { data?: { message?: string | string[] } } };
       if (err.response?.data?.message) {
         console.error('Server error message:', err.response.data.message);
         // Show specific validation errors if available
@@ -139,20 +142,22 @@ export default function ResumeEditPage() {
       {/* Mobile: Fixed bottom navigation bar for preview toggle */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card border-t border-theme-border-default p-3 lg:hidden safe-area-bottom">
         <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
-          <SecondaryButton
+          <Button
+            variant="secondary"
             onClick={() => navigate(-1)}
             size="sm"
             className="flex-1 py-3 text-sm"
           >
             ← {t('common.back')}
-          </SecondaryButton>
-          <PrimaryButton
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => setShowPreview(!showPreview)}
             size="sm"
             className="flex-1 py-3 text-sm"
           >
             {showPreview ? '📝 ' + t('edit.showForm') : '👁️ ' + t('edit.showPreview')}
-          </PrimaryButton>
+          </Button>
         </div>
       </div>
 
@@ -164,18 +169,19 @@ export default function ResumeEditPage() {
           subtitle={resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
           size="md"
           action={
-            <PrimaryButton
+            <Button
+              variant="primary"
               onClick={() => setShowPreview(!showPreview)}
               size="sm"
               className="hidden lg:flex"
             >
               {showPreview ? t('edit.showForm') : t('edit.showPreview')}
-            </PrimaryButton>
+            </Button>
           }
         />
 
         {error && (
-          <Alert type="error" message={`${t('edit.error')} ${error}`} className="mb-4 sm:mb-6" />
+          <Alert variant="error" className="mb-4 sm:mb-6">{t('edit.error')} {error}</Alert>
         )}
 
         {/* Side-by-side layout */}

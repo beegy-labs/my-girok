@@ -1,6 +1,6 @@
-import { forwardRef, InputHTMLAttributes } from 'react';
+import { forwardRef, InputHTMLAttributes, ChangeEvent } from 'react';
 
-export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> {
+export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   /**
    * Label text displayed above the input
    */
@@ -9,6 +9,14 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
    * Error message displayed below the input
    */
   error?: string;
+  /**
+   * Helper text displayed below the input
+   */
+  hint?: string;
+  /**
+   * The callback fired when the value changes.
+   */
+  onChange: (value: string) => void;
   /**
    * Shows red asterisk next to label
    */
@@ -22,9 +30,9 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
    */
   inputClassName?: string;
   /**
-   * Color variant for the input
+   * Additional CSS classes (alias for containerClassName for backwards compatibility)
    */
-  variant?: 'amber' | 'gray';
+  className?: string;
 }
 
 /**
@@ -36,7 +44,7 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
  *   label="Email Address"
  *   type="email"
  *   value={email}
- *   onChange={(e) => setEmail(e.target.value)}
+ *   onChange={setEmail}
  *   placeholder="you@example.com"
  *   required
  * />
@@ -46,35 +54,42 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   ({
     label,
     error,
+    hint,
     required,
     containerClassName = '',
     inputClassName = '',
-    variant = 'gray',
+    className = '',
     id,
+    onChange,
     ...props
   }, ref) => {
+    // className is an alias for containerClassName for backwards compatibility
+    const finalContainerClassName = containerClassName || className;
     const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
 
-    const baseInputClasses = 'w-full px-4 py-3 bg-white rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all text-gray-900';
+    const baseInputClasses =
+      'w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted';
 
-    const variantClasses = {
-      amber: 'border border-amber-200 focus:ring-amber-400',
-      gray: 'border border-gray-300 focus:ring-amber-400',
-    };
+    const defaultBorderClasses =
+      'border border-theme-border-default focus:ring-theme-primary';
 
     const errorClasses = error
-      ? 'border-red-500 focus:ring-red-500'
-      : variantClasses[variant];
+      ? 'border-theme-status-error-text focus:ring-theme-status-error-text'
+      : defaultBorderClasses;
+
+    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+      onChange(event.target.value);
+    };
 
     return (
-      <div className={containerClassName}>
+      <div className={finalContainerClassName}>
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-semibold text-gray-700 mb-2"
+            className="block text-sm font-semibold text-theme-text-secondary mb-2"
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-theme-status-error-text ml-1">*</span>}
           </label>
         )}
 
@@ -82,18 +97,27 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           ref={ref}
           id={inputId}
           className={`${baseInputClasses} ${errorClasses} ${inputClassName}`}
+          onChange={handleChange}
           aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${inputId}-error` : undefined}
+          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           {...props}
         />
 
         {error && (
           <p
             id={`${inputId}-error`}
-            className="mt-1 text-sm text-red-600"
+            className="mt-1 text-sm text-theme-status-error-text"
             role="alert"
           >
             {error}
+          </p>
+        )}
+        {!error && hint && (
+          <p
+            id={`${inputId}-hint`}
+            className="mt-1 text-sm text-theme-text-tertiary"
+          >
+            {hint}
           </p>
         )}
       </div>

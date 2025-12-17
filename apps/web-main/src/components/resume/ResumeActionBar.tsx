@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Resume } from '../../api/resume';
 import { exportResumeToPDF, printResumePDF } from '../../utils/pdf';
-import { PrimaryButton, SecondaryButton } from '../ui';
+import { Button } from '@my-girok/ui-components';
 import ShareLinkModal from './ShareLinkModal';
 
 export interface ResumeActionBarProps {
@@ -69,18 +69,18 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
   };
 
   const badgeColorClasses = {
-    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-    green: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    blue: 'bg-theme-status-info-bg text-theme-status-info-text',
+    green: 'bg-theme-status-success-bg text-theme-status-success-text',
   };
 
   return (
     <>
       <div className="print:hidden px-4 pt-4 sm:pt-6">
-        <div className="max-w-5xl mx-auto theme-bg-card border theme-border-subtle rounded-xl sm:rounded-2xl shadow-theme-sm px-4 py-3 sm:py-4 transition-colors duration-200">
+        <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl shadow-theme-sm px-4 py-3 sm:py-4 transition-colors duration-200">
           {/* Header - Stack on mobile, side-by-side on larger screens */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold theme-text-primary">
+              <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
                 📄 {isOwner
                   ? t('resume.preview.title', { name: resume.name })
                   : t('resume.shared.resumeTitle', { name: resume.name })}
@@ -92,39 +92,43 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
               </div>
             </div>
             {isOwner && (
-              <SecondaryButton
+              <Button
+                variant="secondary"
                 onClick={() => navigate(`/resume/edit/${resume.id}`)}
                 size="sm"
                 className="self-start sm:self-auto"
               >
                 ✍️ {t('resume.preview.edit')}
-              </SecondaryButton>
+              </Button>
             )}
           </div>
 
           {/* Action Buttons - Responsive grid on mobile, flex on larger screens */}
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2 sm:gap-3">
-            <PrimaryButton
+            <Button
+              variant="primary"
               onClick={handleExportPDF}
               loading={exporting}
               className="flex-1 whitespace-nowrap"
             >
               📥 {t('resume.preview.downloadPdf')}
-            </PrimaryButton>
-            <SecondaryButton
+            </Button>
+            <Button
+              variant="secondary"
               onClick={handlePrint}
               loading={printing}
               className="flex-1 whitespace-nowrap"
             >
               🖨️ {t('resume.preview.print')}
-            </SecondaryButton>
+            </Button>
             {isOwner && (
-              <SecondaryButton
+              <Button
+                variant="secondary"
                 onClick={() => setShowShareModal(true)}
                 className="col-span-2 sm:col-span-1 flex-1 whitespace-nowrap"
               >
                 🔗 {t('resume.preview.shareLink')}
-              </SecondaryButton>
+              </Button>
             )}
           </div>
         </div>

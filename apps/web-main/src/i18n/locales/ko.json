@@ -14,7 +14,17 @@
     "confirm": "확인하시겠습니까?",
     "default": "기본",
     "active": "활성",
-    "inactive": "비활성"
+    "inactive": "비활성",
+    "add": "추가",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "present": "현재",
+    "currentlyWorking": "현재 재직 중",
+    "showInPreview": "미리보기에 표시"
+  },
+  "loading": {
+    "darkMode": "고요한 밤에 기록을 찾는 중이에요...",
+    "lightMode": "기록을 부지런히 찾고 있어요..."
   },
   "nav": {
     "login": "로그인",
@@ -121,6 +131,19 @@
       "skills": "보유 기술을 카테고리별로 정리하세요",
       "education": "학교와 전공을 추가하세요",
       "certifications": "보유한 자격증과 수상 경력을 추가하세요"
+    },
+    "emptyStates": {
+      "education": "학력 정보가 없습니다. \"+ 추가\"를 눌러 추가하세요.",
+      "experience": "경력 정보가 없습니다. \"+ 추가\"를 눌러 추가하세요.",
+      "skills": "기술이 없습니다. \"+ 추가\"를 눌러 추가하세요.",
+      "projects": "프로젝트가 없습니다. \"+ 추가\"를 눌러 추가하세요."
+    },
+    "hierarchical": {
+      "description": "설명",
+      "enterDescription": "설명을 입력하세요...",
+      "addSubItem": "+ 하위",
+      "maxDepth": "(최대 {{depth}}단계)",
+      "placeholder": "설명을 추가하려면 아래 버튼을 클릭하세요"
     },
     "militaryService": {
       "title": "병역사항",
@@ -229,6 +252,9 @@
       "print": "인쇄",
       "resumeTitle": "{{name}}님의 이력서"
     },
+    "public": {
+      "yourProfile": "내 프로필"
+    },
     "myResumes": "나의 이력서",
     "manageResumes": "이력서를 관리하고 공유하세요",
     "createNewResume": "✍️ 새 이력서 만들기",
@@ -303,6 +329,7 @@
       "moveUp": "위로 이동",
       "moveDown": "아래로 이동",
       "experience": "활용 경험 / 세부 설명",
+      "experiencePlaceholder": "활용 경험이나 세부 설명을 추가하려면 '+ 추가' 버튼을 클릭하세요",
       "addCertificate": "Add Certificate",
       "certificateName": "Certificate Name",
       "issuer": "Issuer",
@@ -436,7 +463,14 @@
       "rolePlaceholder": "예: 리드 백엔드 개발자",
       "techStackPlaceholder": "예: NestJS, React, PostgreSQL",
       "urlPlaceholder": "https://...",
-      "githubUrlPlaceholder": "https://github.com/..."
+      "githubUrlPlaceholder": "https://github.com/...",
+      "salary": "연봉",
+      "salaryOptional": "연봉 (선택)",
+      "salaryUnits": {
+        "manwon": "만원"
+      },
+      "showSalaryInPreview": "미리보기에 표시",
+      "projectsCount": "프로젝트 ({{count}})"
     },
     "militaryRanks": {
       "sergeant": "병장 (Sergeant)",
@@ -545,14 +579,34 @@
     "emailPlaceholder": "your@email.com"
   },
   "edit": {
-    "editResume": "Edit Resume",
-    "createNewResume": "Create New Resume",
-    "updateInfo": "Update your resume information",
-    "fillInfo": "Fill in your information to create a new resume",
-    "showForm": "Show Form",
-    "showPreview": "Show Preview",
-    "livePreview": "Live Preview",
-    "previewDescription": "This is how your resume will look. Changes appear instantly.",
-    "error": "Error:"
+    "editResume": "이력서 수정",
+    "createNewResume": "새 이력서 만들기",
+    "updateInfo": "이력서 정보를 업데이트하세요",
+    "fillInfo": "새 이력서를 만들기 위해 정보를 입력하세요",
+    "showForm": "양식 보기",
+    "showPreview": "미리보기",
+    "livePreview": "실시간 미리보기",
+    "previewDescription": "이력서가 이렇게 보여집니다. 변경사항이 즉시 반영됩니다.",
+    "error": "오류:"
+  },
+  "share": {
+    "title": "이력서 공유",
+    "description": "만료 기간을 설정하여 공유 링크를 생성하세요",
+    "createNew": "새 공유 링크 만들기",
+    "createDescription": "다른 사람이 이력서를 볼 수 있는 공유 링크를 생성합니다",
+    "expirationPeriod": "만료 기간",
+    "customDate": "직접 설정",
+    "customExpirationDate": "만료 날짜 직접 설정",
+    "selectCustomDate": "만료 날짜를 선택해주세요.",
+    "creating": "생성 중...",
+    "createLink": "링크 생성",
+    "yourLinks": "내 공유 링크",
+    "loadingLinks": "공유 링크를 불러오는 중...",
+    "noLinksYet": "공유 링크가 없습니다",
+    "createFirstLink": "위에서 첫 번째 링크를 만들어보세요",
+    "lastViewed": "마지막 조회",
+    "deactivate": "비활성화",
+    "activate": "활성화",
+    "updateFailed": "공유 링크 업데이트에 실패했습니다. 다시 시도해주세요."
   }
 }

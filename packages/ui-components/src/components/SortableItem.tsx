@@ -1,6 +1,8 @@
 import { ReactNode, CSSProperties } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
+import type { DraggableAttributes } from '@dnd-kit/core';
 
 export interface SortableItemProps {
   /**
@@ -27,7 +29,10 @@ export interface SortableItemProps {
   /**
    * Custom drag handle element (optional)
    */
-  renderDragHandle?: (listeners: any, attributes: any) => ReactNode;
+  renderDragHandle?: (
+    listeners: SyntheticListenerMap | undefined,
+    attributes: DraggableAttributes
+  ) => ReactNode;
 }
 
 /**
@@ -95,6 +100,12 @@ export function SortableItem({
   );
 }
 
+export interface DragHandleProps {
+  listeners: SyntheticListenerMap | undefined;
+  attributes: DraggableAttributes;
+  className?: string;
+}
+
 /**
  * Default drag handle component
  *
@@ -115,17 +126,13 @@ export function DragHandle({
   listeners,
   attributes,
   className = '',
-}: {
-  listeners: any;
-  attributes: any;
-  className?: string;
-}) {
+}: DragHandleProps) {
   return (
     <button
       type="button"
       {...attributes}
       {...listeners}
-      className={`cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 ${className}`}
+      className={`cursor-grab active:cursor-grabbing text-theme-text-muted hover:text-theme-text-secondary ${className}`}
       aria-label="Drag to reorder"
     >
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

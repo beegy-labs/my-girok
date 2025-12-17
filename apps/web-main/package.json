@@ -17,6 +17,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@my-girok/types": "workspace:*",
+    "@my-girok/ui-components": "workspace:*",
     "@react-pdf/renderer": "^4.3.1",
     "axios": "^1.13.2",
     "i18next": "^25.7.2",

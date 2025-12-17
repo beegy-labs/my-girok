@@ -375,7 +375,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
             <p className="text-sm text-gray-700 italic">{exp.jobTitle}</p>
             {exp.showSalary && exp.salary && (
               <p className="text-sm text-gray-600 mt-1">
-                <span className="font-semibold">Salary:</span> {exp.salary.toLocaleString()} {exp.salaryUnit || '만원'}
+                <span className="font-semibold">{t('resume.experienceForm.salary')}:</span> {exp.salary.toLocaleString()} {exp.salaryUnit || t('resume.experienceForm.salaryUnits.manwon')}
               </p>
             )}
           </div>

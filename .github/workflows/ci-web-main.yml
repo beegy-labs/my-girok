@@ -31,7 +31,9 @@ jobs:
           restore-keys: ${{ runner.os }}-pnpm-store-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - run: pnpm --filter @my-girok/types build
-      - run: cd apps/web-main && pnpm lint & pnpm type-check & wait
+      - name: Lint and type-check
+        working-directory: apps/web-main
+        run: pnpm lint & pnpm type-check & wait
 
   build:
     name: Build

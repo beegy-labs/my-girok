@@ -15,7 +15,8 @@ export default function ResumeList() {
       setError(null);
       const data = await getAllResumes();
       setResumes(data);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || t('resume.list.loadFailed'));
     } finally {
       setLoading(false);
@@ -32,7 +33,8 @@ export default function ResumeList() {
     try {
       await deleteResume(resumeId);
       await loadResumes();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || t('resume.list.deleteFailed'));
     }
   };
@@ -41,7 +43,8 @@ export default function ResumeList() {
     try {
       await setDefaultResume(resumeId);
       await loadResumes();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || t('resume.list.setDefaultFailed'));
     }
   };
@@ -53,7 +56,8 @@ export default function ResumeList() {
       await copyResume(resumeId);
       await loadResumes();
       alert(t('resume.list.copySuccess'));
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || t('resume.list.copyFailed'));
     }
   };
@@ -69,7 +73,7 @@ export default function ResumeList() {
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-red-600">{error}</div>
+        <div className="text-theme-status-error-text">{error}</div>
       </div>
     );
   }
@@ -155,7 +159,7 @@ export default function ResumeList() {
                   )}
                   <button
                     onClick={() => handleDelete(resume.id)}
-                    className="px-4 py-2 text-sm bg-red-50 text-red-700 rounded hover:bg-red-100 transition"
+                    className="px-4 py-2 text-sm bg-theme-status-error-bg text-theme-status-error-text rounded hover:opacity-80 transition"
                   >
                     {t('resume.list.delete')}
                   </button>

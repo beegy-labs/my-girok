@@ -14,7 +14,17 @@
     "confirm": "よろしいですか？",
     "default": "デフォルト",
     "active": "有効",
-    "inactive": "無効"
+    "inactive": "無効",
+    "add": "追加",
+    "startDate": "開始",
+    "endDate": "終了",
+    "present": "現在",
+    "currentlyWorking": "在職中",
+    "showInPreview": "プレビューに表示"
+  },
+  "loading": {
+    "darkMode": "静かな夜に記録を探しています...",
+    "lightMode": "記録を探しています..."
   },
   "nav": {
     "login": "ログイン",
@@ -121,6 +131,19 @@
       "skills": "技術スキルをカテゴリ別に整理してください",
       "education": "学歴を追加してください",
       "certifications": "保有資格と受賞歴を追加してください"
+    },
+    "emptyStates": {
+      "education": "学歴がありません。「+ 追加」をクリックして追加してください。",
+      "experience": "職歴がありません。「+ 追加」をクリックして追加してください。",
+      "skills": "スキルがありません。「+ 追加」をクリックして追加してください。",
+      "projects": "プロジェクトがありません。「+ 追加」をクリックして追加してください。"
+    },
+    "hierarchical": {
+      "description": "説明",
+      "enterDescription": "説明を入力してください...",
+      "addSubItem": "+ 下位",
+      "maxDepth": "(最大{{depth}}レベル)",
+      "placeholder": "下のボタンをクリックして説明を追加してください"
     },
     "militaryService": {
       "title": "兵役",
@@ -229,6 +252,9 @@
       "print": "印刷",
       "resumeTitle": "{{name}}さんの履歴書"
     },
+    "public": {
+      "yourProfile": "あなたのプロフィール"
+    },
     "myResumes": "履歴書リスト",
     "manageResumes": "履歴書を管理・共有する",
     "createNewResume": "✍️ 新しい履歴書を作成",
@@ -303,6 +329,7 @@
       "moveUp": "上に移動",
       "moveDown": "下に移動",
       "experience": "経験 / 詳細",
+      "experiencePlaceholder": "「+ 追加」ボタンをクリックして経験や詳細を追加してください",
       "addCertificate": "資格追加",
       "certificateName": "資格名",
       "issuer": "発行者",
@@ -436,7 +463,14 @@
       "rolePlaceholder": "例：リードバックエンド開発者",
       "techStackPlaceholder": "例：NestJS, React, PostgreSQL",
       "urlPlaceholder": "https://...",
-      "githubUrlPlaceholder": "https://github.com/..."
+      "githubUrlPlaceholder": "https://github.com/...",
+      "salary": "年収",
+      "salaryOptional": "年収（任意）",
+      "salaryUnits": {
+        "manwon": "万ウォン"
+      },
+      "showSalaryInPreview": "プレビューに表示",
+      "projectsCount": "プロジェクト ({{count}})"
     },
     "militaryRanks": {
       "sergeant": "軍曹",
@@ -554,5 +588,25 @@
     "livePreview": "ライブプレビュー",
     "previewDescription": "履歴書の表示イメージです。変更は即座に反映されます。",
     "error": "エラー:"
+  },
+  "share": {
+    "title": "履歴書を共有",
+    "description": "有効期限付きの共有リンクを作成",
+    "createNew": "新しい共有リンクを作成",
+    "createDescription": "他の人があなたの履歴書を閲覧できる共有リンクを生成します",
+    "expirationPeriod": "有効期限",
+    "customDate": "カスタム日付",
+    "customExpirationDate": "カスタム有効期限",
+    "selectCustomDate": "有効期限を選択してください。",
+    "creating": "作成中...",
+    "createLink": "リンク作成",
+    "yourLinks": "あなたの共有リンク",
+    "loadingLinks": "共有リンクを読み込み中...",
+    "noLinksYet": "共有リンクはまだありません",
+    "createFirstLink": "上のボタンで最初のリンクを作成",
+    "lastViewed": "最終閲覧",
+    "deactivate": "無効化",
+    "activate": "有効化",
+    "updateFailed": "共有リンクの更新に失敗しました。もう一度お試しください。"
   }
 }
