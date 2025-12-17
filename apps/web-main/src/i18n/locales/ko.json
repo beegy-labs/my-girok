@@ -14,7 +14,17 @@
     "confirm": "확인하시겠습니까?",
     "default": "기본",
     "active": "활성",
-    "inactive": "비활성"
+    "inactive": "비활성",
+    "add": "추가",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "present": "현재",
+    "currentlyWorking": "현재 재직 중",
+    "showInPreview": "미리보기에 표시"
+  },
+  "loading": {
+    "darkMode": "고요한 밤에 기록을 찾는 중이에요...",
+    "lightMode": "기록을 부지런히 찾고 있어요..."
   },
   "nav": {
     "login": "로그인",
@@ -121,6 +131,19 @@
       "skills": "보유 기술을 카테고리별로 정리하세요",
       "education": "학교와 전공을 추가하세요",
       "certifications": "보유한 자격증과 수상 경력을 추가하세요"
+    },
+    "emptyStates": {
+      "education": "학력 정보가 없습니다. \"+ 추가\"를 눌러 추가하세요.",
+      "experience": "경력 정보가 없습니다. \"+ 추가\"를 눌러 추가하세요.",
+      "skills": "기술이 없습니다. \"+ 추가\"를 눌러 추가하세요.",
+      "projects": "프로젝트가 없습니다. \"+ 추가\"를 눌러 추가하세요."
+    },
+    "hierarchical": {
+      "description": "설명",
+      "enterDescription": "설명을 입력하세요...",
+      "addSubItem": "+ 하위",
+      "maxDepth": "(최대 {{depth}}단계)",
+      "placeholder": "설명을 추가하려면 아래 버튼을 클릭하세요"
     },
     "militaryService": {
       "title": "병역사항",
@@ -306,6 +329,7 @@
       "moveUp": "위로 이동",
       "moveDown": "아래로 이동",
       "experience": "활용 경험 / 세부 설명",
+      "experiencePlaceholder": "활용 경험이나 세부 설명을 추가하려면 '+ 추가' 버튼을 클릭하세요",
       "addCertificate": "Add Certificate",
       "certificateName": "Certificate Name",
       "issuer": "Issuer",
@@ -439,7 +463,14 @@
       "rolePlaceholder": "예: 리드 백엔드 개발자",
       "techStackPlaceholder": "예: NestJS, React, PostgreSQL",
       "urlPlaceholder": "https://...",
-      "githubUrlPlaceholder": "https://github.com/..."
+      "githubUrlPlaceholder": "https://github.com/...",
+      "salary": "연봉",
+      "salaryOptional": "연봉 (선택)",
+      "salaryUnits": {
+        "manwon": "만원"
+      },
+      "showSalaryInPreview": "미리보기에 표시",
+      "projectsCount": "프로젝트 ({{count}})"
     },
     "militaryRanks": {
       "sergeant": "병장 (Sergeant)",

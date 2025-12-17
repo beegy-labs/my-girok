@@ -516,7 +516,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.address')}
             value={formData.address || ''}
             onChange={(value) => setFormData({ ...formData, address: value })}
-            placeholder="서울특별시 강남구"
+            placeholder={t('resume.form.addressPlaceholder')}
             hint={t('resume.form.addressHint')}
             className="mb-0"
           />
@@ -782,7 +782,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   className="self-end sm:self-start py-2 touch-manipulation"
                 >
                   <span className="hidden sm:inline">{t('resume.form.remove')}</span>
-                  <span className="sm:hidden">✕ 삭제</span>
+                  <span className="sm:hidden">✕ {t('common.delete')}</span>
                 </Button>
               </div>
             </div>

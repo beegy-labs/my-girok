@@ -14,7 +14,17 @@
     "confirm": "Are you sure?",
     "default": "Default",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "add": "Add",
+    "startDate": "Start",
+    "endDate": "End",
+    "present": "Present",
+    "currentlyWorking": "Currently working",
+    "showInPreview": "Show in preview"
+  },
+  "loading": {
+    "darkMode": "Searching through the quiet night...",
+    "lightMode": "Diligently searching for records..."
   },
   "nav": {
     "login": "Login",
@@ -121,6 +131,19 @@
       "skills": "Organize your technical skills by category",
       "education": "Add your educational background",
       "certifications": "Add professional certifications and awards"
+    },
+    "emptyStates": {
+      "education": "No education entries yet. Click \"+ Add\" to add one.",
+      "experience": "No experience entries yet. Click \"+ Add\" to add one.",
+      "skills": "No skills added yet. Click \"+ Add\" to add one.",
+      "projects": "No projects added yet. Click \"+ Add\" to add one."
+    },
+    "hierarchical": {
+      "description": "Description",
+      "enterDescription": "Enter description...",
+      "addSubItem": "+ Sub",
+      "maxDepth": "(max {{depth}} levels)",
+      "placeholder": "Click the button below to add a description"
     },
     "militaryService": {
       "title": "Military Service",
@@ -306,6 +329,7 @@
       "moveUp": "Move Up",
       "moveDown": "Move Down",
       "experience": "Experience / Details",
+      "experiencePlaceholder": "Click '+ Add' button to add usage experience or detailed description",
       "addCertificate": "Add Certificate",
       "certificateName": "Certificate Name",
       "issuer": "Issuer",
@@ -439,7 +463,14 @@
       "rolePlaceholder": "e.g., Lead Backend Developer",
       "techStackPlaceholder": "e.g., NestJS, React, PostgreSQL",
       "urlPlaceholder": "https://...",
-      "githubUrlPlaceholder": "https://github.com/..."
+      "githubUrlPlaceholder": "https://github.com/...",
+      "salary": "Salary",
+      "salaryOptional": "Salary (Optional)",
+      "salaryUnits": {
+        "manwon": "10K KRW"
+      },
+      "showSalaryInPreview": "Show salary in preview",
+      "projectsCount": "Projects ({{count}})"
     },
     "militaryRanks": {
       "sergeant": "Sergeant",

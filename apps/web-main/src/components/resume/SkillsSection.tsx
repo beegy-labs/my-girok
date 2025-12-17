@@ -323,8 +323,8 @@ function SkillItemCard({
       <HierarchicalDescription
         items={(itemData.descriptions || []) as HierarchicalItem[]}
         onChange={(descriptions) => onSkillItemDescriptionsChange(skillIndex, itemIndex, descriptions)}
-        label="활용 경험 / 세부 설명"
-        placeholder="활용 경험이나 세부 설명을 추가하려면 '+ 추가' 버튼을 클릭하세요"
+        label={t('resume.form.experience')}
+        placeholder={t('resume.form.experiencePlaceholder')}
         maxDepth={4}
       />
 
