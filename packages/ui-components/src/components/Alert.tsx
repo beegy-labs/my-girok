@@ -97,7 +97,7 @@ export function Alert({
         <button
           type="button"
           onClick={onClose}
-          className="flex-shrink-0 ml-2 -mr-1 p-0.5 rounded hover:bg-current/10 transition-colors"
+          className="flex-shrink-0 ml-2 -mr-1 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
           aria-label="Close alert"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

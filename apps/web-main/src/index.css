@@ -50,6 +50,11 @@
   --dark-border-subtle: #3a3633;
   --dark-border-default: #544f4b;
   --dark-border-strong: #6f6a65;
+  
+  /* Semantic Colors */
+  --color-danger-bg: #dc2626; /* red-600 */
+  --color-danger-bg-hover: #b91c1c; /* red-700 */
+  --color-danger-text: white;
 }
 
 /* ============================================
@@ -62,6 +67,7 @@
   /* Global Semantic Tokens */
   --theme-bg-page: var(--vintage-bg-page);
   --theme-bg-card: var(--vintage-bg-card);
+  --theme-bg-secondary: var(--vintage-bg-card); /* Added */
   --theme-bg-elevated: var(--vintage-bg-elevated);
   --theme-bg-input: var(--vintage-bg-input);
   --theme-bg-hover: var(--vintage-bg-card);
@@ -101,6 +107,11 @@
   --btn-secondary-text: var(--theme-primary);
   --btn-secondary-border: var(--theme-primary);
   --btn-secondary-bg-hover: var(--theme-bg-elevated);
+
+  /* Component: Button Danger */
+  --btn-danger-bg: var(--color-danger-bg);
+  --btn-danger-bg-hover: var(--color-danger-bg-hover);
+  --btn-danger-text: var(--color-danger-text);
 }
 
 /* Dark Theme Override */
@@ -116,11 +127,18 @@
   --theme-text-primary: var(--dark-text-primary);
   --theme-text-secondary: var(--dark-text-secondary);
   --theme-text-tertiary: var(--dark-text-tertiary);
+  --theme-text-muted: var(--dark-text-disabled); /* Added */
+  --theme-text-accent: var(--dark-accent-golden-dark); /* Added */
   --theme-text-disabled: var(--dark-text-disabled);
   
   --theme-primary: var(--dark-accent-golden);
   --theme-primary-light: var(--dark-accent-golden-light);
   --theme-primary-dark: var(--dark-accent-golden-dark);
+
+  --theme-accent: var(--dark-accent-golden); /* Added */
+  --theme-accent-light: var(--dark-accent-golden-light); /* Added */
+  --theme-accent-dark: var(--dark-accent-golden-dark); /* Added */
+  --theme-accent-pale: var(--dark-accent-golden-dark); /* Added */
 
   --theme-border-subtle: var(--dark-border-subtle);
   --theme-border-default: var(--dark-border-default);
@@ -141,6 +159,11 @@
   --btn-secondary-text: var(--theme-primary);
   --btn-secondary-border: var(--theme-primary);
   --btn-secondary-bg-hover: var(--theme-bg-card);
+
+  /* Component: Button Danger */
+  --btn-danger-bg: #b91c1c; /* red-700 */
+  --btn-danger-bg-hover: #991b1b; /* red-800 */
+  --btn-danger-text: var(--color-danger-text);
 }
 
 /* ============================================
@@ -198,6 +221,9 @@
   --color-btn-secondary-text: var(--btn-secondary-text);
   --color-btn-secondary-border: var(--btn-secondary-border);
   --color-btn-secondary-bg-hover: var(--btn-secondary-bg-hover);
+  --color-btn-danger-bg: var(--btn-danger-bg);
+  --color-btn-danger-bg-hover: var(--btn-danger-bg-hover);
+  --color-btn-danger-text: var(--btn-danger-text);
 }
 
 /* ============================================
