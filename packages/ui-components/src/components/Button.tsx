@@ -1,4 +1,4 @@
-import { forwardRef, ButtonHTMLAttributes, ReactNode } from 'react';
+import { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
   /**
@@ -25,6 +25,10 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
    * Additional CSS classes
    */
   className?: string;
+  /**
+   * Ref for the button element (React 19 style - ref as prop)
+   */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -35,6 +39,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
  * - High contrast focus ring for keyboard navigation
  * - Proper disabled states
  * - Loading state with spinner
+ * - React 19 compatible (ref as prop)
  *
  * @example
  * ```tsx
@@ -47,18 +52,18 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
  * </Button>
  * ```
  */
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({
-    variant = 'primary',
-    size = 'md',
-    loading = false,
-    fullWidth = false,
-    icon,
-    className = '',
-    children,
-    disabled,
-    ...props
-  }, ref) => {
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  fullWidth = false,
+  icon,
+  className = '',
+  children,
+  disabled,
+  ref,
+  ...props
+}: ButtonProps) {
     // Base classes with WCAG focus ring
     const baseClasses = `
       font-semibold rounded-xl transition-all duration-200
@@ -144,7 +149,4 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         </span>
       </button>
     );
-  }
-);
-
-Button.displayName = 'Button';
+}

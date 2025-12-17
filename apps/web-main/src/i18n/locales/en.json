@@ -534,48 +534,38 @@
     },
     "success": "Password changed successfully!"
   },
-  "character": {
+  "status": {
     "loading": {
-      "light": "Searching for records",
-      "dark": "Searching for records in the quiet night",
-      "messageLight": "Please wait...",
-      "messageDark": "Looking through books under the moonlight..."
+      "title": "Loading",
+      "message": "Please wait..."
     },
     "notFound": {
-      "light": "Record not found",
-      "dark": "This record is not in the night library",
-      "messageLight": "The requested page could not be found",
-      "messageDark": "Cannot find this record even in the darkness"
+      "title": "Page Not Found",
+      "message": "The requested page does not exist or has been deleted"
     },
     "error": {
-      "light": "Oops, something went wrong",
-      "dark": "The moonlight has dimmed",
-      "messageLight": "A temporary error occurred. Please try again later",
-      "messageDark": "Clouds have covered the night sky. Please try again later"
+      "title": "Something Went Wrong",
+      "message": "A temporary error occurred. Please try again later"
+    },
+    "warning": {
+      "title": "Attention Required",
+      "message": "Please review before continuing"
     },
     "expired": {
-      "light": "Share period has expired",
-      "dark": "Deep night has fallen asleep",
-      "messageLight": "This share link is no longer valid",
-      "messageDark": "The moon has set and the link has fallen asleep"
+      "title": "Share Link Expired",
+      "message": "This share link is no longer valid"
     },
     "deleted": {
-      "light": "Deleted record",
-      "dark": "Record disappeared into the darkness",
-      "messageLight": "This record has been deleted by the owner",
-      "messageDark": "Record disappeared into the night fog"
+      "title": "Item Deleted",
+      "message": "This item has been deleted by the owner"
     },
     "noPermission": {
-      "light": "No access permission",
-      "dark": "This library is locked",
-      "messageLight": "You don't have permission to view this record",
-      "messageDark": "A secret library that even moonlight cannot illuminate"
+      "title": "Access Denied",
+      "message": "You don't have permission to view this page"
     },
     "maintenance": {
-      "light": "Taking a break",
-      "dark": "Library is under night maintenance",
-      "messageLight": "System under maintenance. Please wait",
-      "messageDark": "Organizing the library under the starlight"
+      "title": "System Maintenance",
+      "message": "Please wait. Service will be restored shortly"
     }
   },
   "errors": {

@@ -1,4 +1,4 @@
-import { forwardRef, InputHTMLAttributes, ChangeEvent } from 'react';
+import { InputHTMLAttributes, ChangeEvent, Ref } from 'react';
 
 export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   /**
@@ -33,6 +33,10 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
    * Additional CSS classes (alias for containerClassName for backwards compatibility)
    */
   className?: string;
+  /**
+   * Ref for the input element (React 19 style - ref as prop)
+   */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -44,6 +48,7 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
  * - Error states with aria-invalid and role="alert"
  * - High contrast focus ring for keyboard navigation
  * - 16px minimum font size for optimal readability
+ * - React 19 compatible (ref as prop)
  *
  * @example
  * ```tsx
@@ -57,19 +62,19 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
  * />
  * ```
  */
-export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
-  ({
-    label,
-    error,
-    hint,
-    required,
-    containerClassName = '',
-    inputClassName = '',
-    className = '',
-    id,
-    onChange,
-    ...props
-  }, ref) => {
+export function TextInput({
+  label,
+  error,
+  hint,
+  required,
+  containerClassName = '',
+  inputClassName = '',
+  className = '',
+  id,
+  onChange,
+  ref,
+  ...props
+}: TextInputProps) {
     // className is an alias for containerClassName for backwards compatibility
     const finalContainerClassName = containerClassName || className;
     const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
@@ -142,8 +147,5 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           </p>
         )}
       </div>
-    );
-  }
-);
-
-TextInput.displayName = 'TextInput';
+  );
+}
