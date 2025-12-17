@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
 import { mapPreferenceToTheme, type Theme, type ThemeName } from '../types/theme';
 
 interface ThemeContextType {
@@ -13,6 +13,23 @@ export const ThemeContext = createContext<ThemeContextType | undefined>(undefine
 
 interface ThemeProviderProps {
   children: React.ReactNode;
+}
+
+// Cookie helpers for theme storage (SSR-compatible)
+const THEME_COOKIE_NAME = 'theme';
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year in seconds
+
+function getThemeFromCookie(): Theme | null {
+  const match = document.cookie.match(new RegExp(`(^| )${THEME_COOKIE_NAME}=([^;]+)`));
+  const value = match?.[2];
+  if (value === 'light' || value === 'dark' || value === 'system') {
+    return value;
+  }
+  return null;
+}
+
+function setThemeCookie(theme: Theme): void {
+  document.cookie = `${THEME_COOKIE_NAME}=${theme}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
 }
 
 /**
@@ -30,8 +47,19 @@ function applyTheme(effectiveTheme: 'light' | 'dark') {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
+    // Try cookie first (SSR-compatible), fallback to localStorage for migration
+    const cookieTheme = getThemeFromCookie();
+    if (cookieTheme) return cookieTheme;
+
+    // Migration: check localStorage and migrate to cookie
     const stored = localStorage.getItem('theme') as Theme | null;
-    return stored || 'system';
+    if (stored && (stored === 'light' || stored === 'dark' || stored === 'system')) {
+      setThemeCookie(stored);
+      localStorage.removeItem('theme'); // Clean up old storage
+      return stored;
+    }
+
+    return 'system';
   });
 
   const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
@@ -71,12 +99,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
-  };
+    setThemeCookie(newTheme);
+  }, []);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     if (theme === 'light') {
       setTheme('dark');
     } else if (theme === 'dark') {
@@ -85,7 +113,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       // If system, toggle to the opposite of current effective theme
       setTheme(effectiveTheme === 'light' ? 'dark' : 'light');
     }
-  };
+  }, [theme, effectiveTheme, setTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, effectiveTheme, themeName, setTheme, toggleTheme }}>

@@ -38,6 +38,11 @@ export function Card({
   className = '',
   onClick,
 }: CardProps) {
+  // Focus indicator for interactive cards (keyboard navigation)
+  const focusClasses = interactive
+    ? 'focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 focus-visible:ring-offset-theme-bg-primary'
+    : '';
+
   // Theme: Semantic theme tokens (auto-switch via data-theme)
   const variantClasses = {
     primary: `
@@ -45,18 +50,21 @@ export function Card({
       border border-theme-border-subtle
       shadow-theme-md
       ${interactive ? 'hover:shadow-theme-lg hover:border-theme-border-default cursor-pointer' : ''}
+      ${focusClasses}
     `,
     secondary: `
       bg-theme-bg-card
       border border-theme-border-default
       shadow-theme-sm
       ${interactive ? 'hover:shadow-theme-md hover:border-theme-border-strong cursor-pointer' : ''}
+      ${focusClasses}
     `,
     elevated: `
       bg-theme-bg-elevated
       border border-theme-border-subtle
       shadow-theme-lg
       ${interactive ? 'hover:shadow-theme-xl hover:border-theme-border-default cursor-pointer' : ''}
+      ${focusClasses}
     `,
   };
 
