@@ -1,389 +1,381 @@
-# Architecture Roadmap (2025)
+# Architecture 2025 (확정)
 
-> 추후 구현 시 참고용 설계 문서
+> 최종 아키텍처 설계 문서
 
-## 현재 구현 상태
+## 확정된 통신 전략
 
-### Implemented
-- **auth-service** - NestJS, PostgreSQL, REST + gRPC
-- **personal-service** - NestJS, PostgreSQL, REST + gRPC
-- **web-main** - React 19.2, Vite, Tailwind CSS
+### 하이브리드 (REST + gRPC + GraphQL)
 
-### Planned (Not Implemented)
-아래는 추후 구현 예정인 서비스들의 설계 참고 내역입니다.
+| 구간 | 프로토콜 | 용도 |
+|------|----------|------|
+| **Client → BFF** | GraphQL | 메인 API, 유연한 쿼리 |
+| **Client → Service** | REST | OAuth 콜백, 단순 API |
+| **BFF → Service** | gRPC | 내부 통신 |
+| **Service → Service** | gRPC | 내부 통신 |
+| **Event** | NATS JetStream | 비동기 이벤트 |
 
 ---
 
-## 1. GraphQL BFF (Gateway)
+## 전체 구조
 
-### 목적
-- Full BFF Pattern (IETF 권장)
-- 세션 기반 인증 (HttpOnly 쿠키)
-- GraphQL Federation으로 서비스 통합
-
-### 기술 스택
 ```
-NestJS 11 + Apollo Federation + @nestjs/graphql
-Port: 4000
+┌─────────────────────────────────────────────────────────────┐
+│                         Client                               │
+│                    (Web, iOS, Android)                       │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+         ┌────────────────┼────────────────┐
+         │ GraphQL        │ REST           │
+         ▼                ▼                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ GraphQL BFF │    │Auth Service │    │   MinIO     │
+│  (NestJS)   │    │   (Rust)    │    │   (S3)      │
+│   :4000     │    │ REST :3002  │    │   :9000     │
+└──────┬──────┘    └─────────────┘    └─────────────┘
+       │
+       │ gRPC (내부 통신)
+       │
+┌──────┴──────────────────────────────────────────────────────┐
+│                      Domain Services                         │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│  │  Auth    │  │ Personal │  │   Feed   │  │   Chat   │    │
+│  │  (Rust)  │  │ (NestJS) │  │ (NestJS) │  │ (NestJS) │    │
+│  │ gRPC     │  │ gRPC     │  │ gRPC     │  │ gRPC     │    │
+│  │ :50051   │  │ :50052   │  │ :50053   │  │ :50054   │    │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐                                 │
+│  │ Matching │  │  Media   │                                 │
+│  │ (NestJS) │  │ (NestJS) │                                 │
+│  │ gRPC     │  │ gRPC     │                                 │
+│  │ :50055   │  │ :50056   │                                 │
+│  └──────────┘  └──────────┘                                 │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    NATS JetStream                            │
+│              (이벤트 기반 비동기 통신)                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 핵심 설계
+---
+
+## 현재 구현 상태
+
+| 서비스 | 상태 | 기술 |
+|--------|------|------|
+| auth-service | ✅ 구현됨 | NestJS, REST |
+| personal-service | ✅ 구현됨 | NestJS, REST |
+| web-main | ✅ 구현됨 | React 19.2, Vite |
+
+---
+
+## 서비스별 상세
+
+### 1. Auth Service
+
+**현재:** NestJS + REST
+**목표:** Rust + REST + gRPC
+
+| 포트 | 프로토콜 | 용도 |
+|------|----------|------|
+| :3002 | REST | 외부 (OAuth, 로그인, 프로필) |
+| :50051 | gRPC | 내부 (토큰 검증, 사용자 조회) |
+
+**REST API (외부 - 유지):**
+```
+POST   /v1/auth/register
+POST   /v1/auth/login
+POST   /v1/auth/refresh
+POST   /v1/auth/logout
+GET    /v1/auth/google
+GET    /v1/auth/google/callback
+GET    /v1/auth/kakao
+GET    /v1/auth/kakao/callback
+GET    /v1/auth/naver
+GET    /v1/auth/naver/callback
+GET    /v1/users/me
+PATCH  /v1/users/me
+POST   /v1/users/me/change-password
+```
+
+**gRPC API (내부 - 추가 예정):**
+```protobuf
+service AuthService {
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc GetUserByUsername(GetUserByUsernameRequest) returns (User);
+  rpc GetUsersByIds(GetUsersByIdsRequest) returns (UsersResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+}
+```
+
+**기술 스택 (목표):**
+- Rust + Axum (REST)
+- Rust + Tonic (gRPC)
+- PostgreSQL + SQLx
+- JWT + bcrypt
+
+---
+
+### 2. Personal Service
+
+**현재:** NestJS + REST
+**목표:** NestJS + REST + gRPC
+
+| 포트 | 프로토콜 | 용도 |
+|------|----------|------|
+| :3003 | REST | 외부 (공개 프로필) |
+| :50052 | gRPC | 내부 (BFF 연동) |
+
+**gRPC API (추가 예정):**
+```protobuf
+service PersonalService {
+  rpc GetResume(GetResumeRequest) returns (Resume);
+  rpc GetResumesByUserId(GetResumesByUserIdRequest) returns (ResumesResponse);
+  rpc GetPublicResume(GetPublicResumeRequest) returns (Resume);
+  rpc CreateResume(CreateResumeRequest) returns (Resume);
+  rpc UpdateResume(UpdateResumeRequest) returns (Resume);
+}
+```
+
+---
+
+### 3. GraphQL BFF (미구현)
+
+**역할:** 클라이언트 단일 진입점, 세션 관리
+
+| 포트 | 프로토콜 | 용도 |
+|------|----------|------|
+| :4000 | GraphQL | 외부 (클라이언트) |
+| - | gRPC Client | 내부 서비스 호출 |
+
+**핵심 설계:**
 ```typescript
-// 세션 기반 인증 - 토큰을 브라우저에 노출하지 않음
+// 세션 기반 인증 (Full BFF Pattern)
 @Mutation(() => AuthResponse)
 async login(@Args('input') input: LoginInput, @Context() ctx: GqlContext) {
+  // 1. Auth Service gRPC 호출
   const tokens = await this.authGrpc.login(input);
 
-  // 세션에 토큰 저장 (서버 사이드)
+  // 2. 세션 생성 (서버 사이드 토큰 저장)
   const sessionId = await this.sessionService.create({
     userId: tokens.userId,
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
   });
 
-  // HttpOnly 쿠키로 세션 ID만 전달
+  // 3. HttpOnly 쿠키 설정 (토큰 노출 안함)
   ctx.res.cookie('session_id', sessionId, {
     httpOnly: true,
     secure: true,
     sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
   });
 
   return { success: true };
 }
 ```
 
-### 참고 URL
-- https://api.girok.dev/graphql
+---
+
+### 4. WebSocket Gateway (미구현)
+
+**역할:** 실시간 이벤트
+
+| 포트 | 프로토콜 | 용도 |
+|------|----------|------|
+| :3001 | WebSocket | 외부 (클라이언트) |
+
+**네임스페이스:**
+```
+/chat          → 채팅 메시지
+/feed          → 피드 업데이트
+/notifications → 알림
+/matching      → 매칭 상태
+```
+
+**기술 스택:**
+- NestJS 11 + Socket.io
+- Valkey Adapter (Pod 간 브로드캐스팅)
+- NATS 구독 → 클라이언트 push
 
 ---
 
-## 2. WebSocket Gateway
+### 5. Feed Service (미구현)
 
-### 목적
-- 실시간 이벤트 브로드캐스팅
-- 채팅, 알림, 피드 업데이트
+| 포트 | 프로토콜 |
+|------|----------|
+| :50053 | gRPC |
 
-### 기술 스택
-```
-NestJS 11 + Socket.io + Valkey Adapter
-Port: 3001
-```
-
-### 핵심 설계
-```typescript
-// Socket.io 네임스페이스
-const namespaces = {
-  '/chat': '채팅 메시지',
-  '/feed': '피드 업데이트',
-  '/notifications': '알림',
-  '/matching': '랜덤 매칭',
-};
-
-// Valkey Adapter로 Pod 간 브로드캐스팅
-@WebSocketGateway({ namespace: '/chat' })
-export class ChatGateway {
-  @SubscribeMessage('join_room')
-  handleJoinRoom(client: Socket, roomId: string) {
-    client.join(`room:${roomId}`);
-  }
-}
-
-// NATS 이벤트 → WebSocket 브로드캐스팅
-@NatsSubscribe('chat.message.sent')
-async handleMessageSent(data: MessageEvent) {
-  this.server.to(`room:${data.roomId}`).emit('new_message', data);
+**gRPC API:**
+```protobuf
+service FeedService {
+  rpc GetTimeline(GetTimelineRequest) returns (TimelineResponse);
+  rpc CreatePost(CreatePostRequest) returns (Post);
+  rpc GetPost(GetPostRequest) returns (Post);
+  rpc LikePost(LikePostRequest) returns (LikeResponse);
 }
 ```
 
-### 참고 URL
-- wss://ws.girok.dev
+**기술 스택:** NestJS + MongoDB + Fan-out on Write
 
 ---
 
-## 3. Feed Service
+### 6. Chat Service (미구현)
 
-### 목적
-- 타임라인, 포스트 관리
-- Fan-out on Write 패턴
+| 포트 | 프로토콜 |
+|------|----------|
+| :50054 | gRPC |
 
-### 기술 스택
-```
-NestJS 11 + MongoDB + gRPC
-Port: 50053
-```
-
-### 핵심 설계 (MongoDB Schema)
-```typescript
-// Post 컬렉션
-{
-  _id: ObjectId,
-  authorId: string,
-  content: string,
-  mediaUrls: string[],
-  likesCount: number,
-  commentsCount: number,
-  createdAt: Date,
-}
-
-// Timeline 컬렉션 (Fan-out)
-{
-  _id: ObjectId,
-  userId: string,        // 타임라인 소유자
-  postId: ObjectId,      // 포스트 참조
-  authorId: string,      // 작성자
-  score: number,         // 정렬용 (timestamp)
-  createdAt: Date,
+**gRPC API:**
+```protobuf
+service ChatService {
+  rpc GetRooms(GetRoomsRequest) returns (RoomsResponse);
+  rpc GetMessages(GetMessagesRequest) returns (MessagesResponse);
+  rpc SendMessage(SendMessageRequest) returns (Message);
+  rpc CreateRoom(CreateRoomRequest) returns (Room);
 }
 ```
 
-### NATS 이벤트
-```
-feed.post.created → Timeline Fan-out 트리거
-feed.post.liked → 좋아요 카운터 업데이트
-```
+**기술 스택:** NestJS + MongoDB + TTL Index
 
 ---
 
-## 4. Chat Service
+### 7. Matching Service (미구현)
 
-### 목적
-- 1:1, 그룹, 랜덤 채팅
-- 메시지 저장 및 조회
+| 포트 | 프로토콜 |
+|------|----------|
+| :50055 | gRPC |
 
-### 기술 스택
-```
-NestJS 11 + MongoDB + gRPC
-Port: 50054
-```
-
-### 핵심 설계 (MongoDB Schema)
-```typescript
-// Room 컬렉션
-{
-  _id: ObjectId,
-  type: 'direct' | 'group' | 'random',
-  memberIds: string[],
-  lastMessageAt: Date,
-  // random인 경우 TTL 인덱스로 24시간 후 자동 삭제
-  expiresAt: Date,
-}
-
-// Message 컬렉션
-{
-  _id: ObjectId,
-  roomId: ObjectId,
-  authorId: string,
-  content: string,
-  type: 'text' | 'image' | 'system',
-  createdAt: Date,
+**gRPC API:**
+```protobuf
+service MatchingService {
+  rpc JoinQueue(JoinQueueRequest) returns (QueueResponse);
+  rpc LeaveQueue(LeaveQueueRequest) returns (Empty);
+  rpc SkipUser(SkipUserRequest) returns (Empty);
 }
 ```
 
-### NATS 이벤트
-```
-chat.message.sent → WS Gateway로 실시간 전달
-chat.room.created → 알림 서비스
-```
+**기술 스택:** NestJS + Valkey (Sorted Set)
 
 ---
 
-## 5. Matching Service
+### 8. Media Service (미구현)
 
-### 목적
-- 랜덤 채팅 매칭
-- 대기열 관리
+| 포트 | 프로토콜 |
+|------|----------|
+| :50056 | gRPC |
 
-### 기술 스택
-```
-NestJS 11 + Valkey + gRPC
-Port: 50055
-```
-
-### 핵심 설계 (Valkey)
-```typescript
-// 대기열: Sorted Set (score = timestamp)
-ZADD matching:queue <timestamp> <userId>
-
-// 매칭 로직
-const [user1, user2] = await redis.zpopmin('matching:queue', 2);
-if (user1 && user2) {
-  // Chat Service에 방 생성 요청
-  const room = await this.chatGrpc.createRoom({
-    type: 'random',
-    memberIds: [user1, user2],
-  });
-
-  // NATS로 매칭 결과 발행
-  await this.nats.publish('matching.matched', { roomId: room.id, users: [user1, user2] });
-}
-
-// 스킵 히스토리: Set with TTL
-SADD skip:<userId> <skippedUserId>
-EXPIRE skip:<userId> 86400  // 24시간
-```
-
----
-
-## 6. Media Service
-
-### 목적
-- 이미지 업로드, 리사이징
-- S3 호환 스토리지 (MinIO)
-
-### 기술 스택
-```
-NestJS 11 + MinIO + Sharp + gRPC
-Port: 50056
-```
-
-### 핵심 설계
-```typescript
-// Presigned URL 발급
-async getPresignedUrl(folder: string, filename: string) {
-  const key = `${folder}/${userId}/${Date.now()}-${filename}`;
-  const url = await this.minio.presignedPutObject(bucket, key, 3600);
-  return { uploadUrl: url, publicUrl: `https://s3.girok.dev/${bucket}/${key}` };
-}
-
-// 이미지 처리 (BullMQ)
-@Process('resize')
-async handleResize(job: Job) {
-  const variants = [
-    { name: 'thumb', width: 200, height: 200 },
-    { name: 'medium', width: 800, height: 800 },
-  ];
-
-  for (const v of variants) {
-    const buffer = await sharp(original).resize(v.width, v.height).webp().toBuffer();
-    await this.minio.putObject(bucket, `${key}_${v.name}.webp`, buffer);
-  }
+**gRPC API:**
+```protobuf
+service MediaService {
+  rpc GetUploadUrl(GetUploadUrlRequest) returns (UploadUrlResponse);
+  rpc ProcessImage(ProcessImageRequest) returns (ProcessedImageResponse);
+  rpc DeleteFile(DeleteFileRequest) returns (Empty);
 }
 ```
 
----
-
-## 7. LLM API
-
-### 목적
-- AI 기능 (요약, 추천, 생성)
-
-### 기술 스택
-```
-Python 3.13 + FastAPI + LangChain
-Port: 8000
-```
-
-### 핵심 설계
-```python
-@app.post("/v1/summarize")
-async def summarize(request: SummarizeRequest):
-    chain = load_summarize_chain(llm, chain_type="stuff")
-    result = await chain.arun(request.text)
-    return {"summary": result}
-
-@app.post("/v1/chat")
-async def chat(request: ChatRequest):
-    messages = [HumanMessage(content=request.message)]
-    response = await llm.agenerate([messages])
-    return {"response": response.generations[0][0].text}
-```
+**기술 스택:** NestJS + MinIO + Sharp + BullMQ
 
 ---
 
-## 8. NATS JetStream 이벤트
+### 9. LLM API (미구현)
+
+| 포트 | 프로토콜 |
+|------|----------|
+| :8000 | REST |
+
+**기술 스택:** Python 3.13 + FastAPI + LangChain
+
+---
+
+## NATS JetStream 이벤트
 
 ### 스트림 설계
 ```yaml
-streams:
-  - name: AUTH
-    subjects: ["auth.>"]
-    retention: limits
-    max_age: 7d
-
-  - name: FEED
-    subjects: ["feed.>"]
-    retention: limits
-    max_age: 30d
-
-  - name: CHAT
-    subjects: ["chat.>"]
-    retention: limits
-    max_age: 7d
-
-  - name: MATCHING
-    subjects: ["matching.>"]
-    retention: limits
-    max_age: 1d
+AUTH:     subjects: ["auth.>"],     max_age: 7d
+FEED:     subjects: ["feed.>"],     max_age: 30d
+CHAT:     subjects: ["chat.>"],     max_age: 7d
+MATCHING: subjects: ["matching.>"], max_age: 1d
 ```
 
 ### 이벤트 목록
 ```
-# Auth
-auth.user.registered    → Feed에 기본 타임라인 생성
-auth.user.logged_in     → 활동 로그
-
-# Feed
-feed.post.created       → Timeline fan-out, WS 브로드캐스트
-feed.post.liked         → 알림, 카운터 업데이트
-
-# Chat
-chat.message.sent       → WS 브로드캐스트, 읽지 않음 카운터
-chat.room.created       → 참여자에게 알림
-
-# Matching
-matching.user.joined    → 대기열 추가
-matching.matched        → 방 생성, WS 알림
+auth.user.registered  → 기본 데이터 생성
+auth.user.logged_in   → 활동 로그
+feed.post.created     → Timeline fan-out, WS 브로드캐스트
+feed.post.liked       → 알림, 카운터 업데이트
+chat.message.sent     → WS 브로드캐스트
+chat.room.created     → 참여자 알림
+matching.matched      → 방 생성, WS 알림
 ```
 
 ---
 
-## 9. Cilium Gateway API
+## Kubernetes 구조
 
-### HTTPRoute 설계
+### Namespace
+```
+gateway:       Cilium Gateway, GraphQL BFF, WS Gateway
+services:      auth, personal, feed, chat, matching, media
+data:          PostgreSQL, MongoDB, Valkey, NATS, MinIO
+observability: Prometheus, Grafana, Jaeger
+```
+
+### Cilium Gateway API
 ```yaml
-# GraphQL BFF
-- host: api.girok.dev
-  path: /graphql
-  backend: graphql-bff:4000
-
-# WebSocket
-- host: ws.girok.dev
-  path: /socket.io
-  backend: ws-gateway:3001
-
-# Auth (Direct REST)
-- host: auth.girok.dev
-  path: /v1/auth
-  backend: auth-service:3002
-
-# Media
-- host: s3.girok.dev
-  backend: minio:9000
+api.girok.dev   → graphql-bff:4000
+ws.girok.dev    → ws-gateway:3001
+auth.girok.dev  → auth-service:3002
+my.girok.dev    → personal-service:3003
+s3.girok.dev    → minio:9000
 ```
 
 ---
 
-## 10. Kubernetes Namespace
+## Proto 파일 위치
 
-```yaml
-gateway:        # Cilium, GraphQL BFF, WS Gateway
-services:       # auth, personal, feed, chat, matching, media
-data:           # PostgreSQL, MongoDB, Valkey, NATS, MinIO
-realtime:       # LiveKit
-observability:  # Prometheus, Grafana, Jaeger
+```
+packages/proto/
+├── auth.proto
+├── personal.proto
+├── feed.proto
+├── chat.proto
+├── matching.proto
+├── media.proto
+└── common.proto
 ```
 
 ---
 
-## 구현 우선순위 (권장)
+## 구현 우선순위
 
-1. **GraphQL BFF** - 프론트엔드 통합 포인트
-2. **WS Gateway** - 실시간 기능 기반
-3. **Feed Service** - 핵심 소셜 기능
-4. **Chat Service** - 채팅 기능
-5. **Matching Service** - 랜덤 채팅
-6. **Media Service** - 이미지 처리
-7. **LLM API** - AI 기능
+| 순서 | 서비스 | 현재 상태 | 다음 작업 |
+|------|--------|-----------|-----------|
+| 1 | auth-service | NestJS 구현됨 | Rust + gRPC 전환 |
+| 2 | personal-service | NestJS 구현됨 | gRPC 추가 |
+| 3 | graphql-bff | 미구현 | 신규 개발 |
+| 4 | ws-gateway | 미구현 | 신규 개발 |
+| 5 | feed-service | 미구현 | 신규 개발 |
+| 6 | chat-service | 미구현 | 신규 개발 |
+| 7 | matching-service | 미구현 | 신규 개발 |
+| 8 | media-service | 미구현 | 신규 개발 |
+| 9 | llm-api | 미구현 | 신규 개발 |
 
-각 서비스 구현 시 이 문서의 설계를 참고하세요.
+---
+
+## 기술 스택 요약
+
+| 분류 | 기술 |
+|------|------|
+| **Gateway** | Cilium Gateway API |
+| **BFF** | NestJS + Apollo Federation |
+| **Auth** | Rust + Axum + Tonic |
+| **Services** | NestJS + @grpc/grpc-js |
+| **Database** | PostgreSQL, MongoDB, Valkey |
+| **Event** | NATS JetStream |
+| **Storage** | MinIO (S3) |
+| **WebSocket** | Socket.io + Valkey Adapter |
+| **Frontend** | React 19.2, iOS (Swift), Android (Kotlin) |

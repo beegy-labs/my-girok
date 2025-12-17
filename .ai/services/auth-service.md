@@ -6,12 +6,26 @@
 
 Handles user authentication, session management, and access control.
 
+## Implementation Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| REST API | ✅ Implemented | External-facing API |
+| gRPC API | 🔲 Planned | For internal BFF communication |
+| Rust Migration | 🔲 Planned | Target: Rust + Axum + Tonic |
+
 ## Tech Stack
 
+**Current:**
 - **Framework**: NestJS 11 + TypeScript 5.9
 - **Database**: PostgreSQL 16 + Prisma 6
 - **Auth**: Passport.js + JWT
-- **Protocols**: REST (external) + gRPC (internal)
+- **Protocols**: REST (external)
+
+**Planned (Future):**
+- **Framework**: Rust + Axum (REST) + Tonic (gRPC)
+- **Database**: PostgreSQL + SQLx
+- **Protocols**: REST :3002 (external) + gRPC :50051 (internal)
 - **Events**: NATS JetStream (publish)
 
 ## API Endpoints
@@ -89,10 +103,12 @@ Auth Service: /v1/auth/register
 - Profile: `https://my-api-dev.girok.dev/auth/v1/users/me`
 - Health: `https://my-api-dev.girok.dev/auth/health` (no /v1 prefix)
 
-### gRPC API (Internal - Port 50051)
+### gRPC API (Internal - Port 50051) 🔲 PLANNED
+
+> **Note**: gRPC will be implemented during Rust migration or when GraphQL BFF is added.
 
 ```protobuf
-// proto/auth.proto
+// proto/auth.proto (planned)
 syntax = "proto3";
 
 package auth;
@@ -107,6 +123,7 @@ service AuthService {
   // User management
   rpc GetUser(GetUserRequest) returns (User);
   rpc GetUserByUsername(GetUserByUsernameRequest) returns (User);
+  rpc GetUsersByIds(GetUsersByIdsRequest) returns (UsersResponse);
   rpc UpdateUser(UpdateUserRequest) returns (User);
 
   // Health
@@ -147,10 +164,10 @@ message User {
 }
 ```
 
-**gRPC Controller:**
+**gRPC Controller (Planned):**
 
 ```typescript
-// src/auth/auth.grpc.controller.ts
+// src/auth/auth.grpc.controller.ts (planned implementation)
 @Controller()
 export class AuthGrpcController {
   constructor(private readonly authService: AuthService) {}
@@ -372,18 +389,23 @@ getAllUsers() {
 
 ## Integration Points
 
-### Incoming (gRPC)
+### Current (REST)
+- **web-main**: Direct REST calls for auth (login, register, profile)
+- **personal-service**: No direct integration (same DB user ID)
+
+### Planned (gRPC) 🔲
 - **graphql-bff**: Login, register, token validation, user lookup
 - **ws-gateway**: Token validation for WebSocket auth
 - **personal-service**: User lookup
 
-### Events (NATS)
+### Events (NATS) 🔲 Planned
 - Publish: `auth.user.registered`, `auth.user.logged_in`, `auth.user.password_changed`
 - Subscribe: None
 
-### NATS Events Published
+### NATS Events Published (Planned) 🔲
 
 ```typescript
+// Will be implemented with NATS JetStream
 'auth.user.registered' -> { userId, email, provider }
 'auth.user.logged_in' -> { userId, timestamp }
 'auth.user.password_changed' -> { userId }

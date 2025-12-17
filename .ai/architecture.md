@@ -1,6 +1,16 @@
 # Architecture Patterns (2025)
 
-> **Full BFF + GraphQL Federation + gRPC + Event-Driven Architecture**
+> **Hybrid Communication: REST + gRPC + GraphQL | Event-Driven Architecture**
+
+## Confirmed Communication Strategy
+
+| Direction | Protocol | Use Case |
+|-----------|----------|----------|
+| **Client → BFF** | GraphQL | Main API, flexible queries |
+| **Client → Service** | REST | OAuth callbacks, simple APIs |
+| **BFF → Service** | gRPC | Internal high-performance |
+| **Service → Service** | gRPC | Internal communication |
+| **Async Events** | NATS JetStream | Decoupled messaging |
 
 ## Core Principle
 
@@ -11,38 +21,64 @@
 - **Data Layer**: Polyglot persistence (PostgreSQL, MongoDB, Valkey)
 - **Messaging Layer**: NATS JetStream (events, async communication)
 
+## Tech Stack (Extensible)
+
+> **Note**: Tech stack is designed to be extensible. New languages/frameworks can be added as needed.
+
+| Category | Current | Planned/Extensible |
+|----------|---------|-------------------|
+| **Backend** | NestJS (TypeScript) | Rust, Python, Go, ... |
+| **Frontend** | React 19.2 + Vite | Next.js, Swift, Kotlin, Flutter, ... |
+| **Database** | PostgreSQL, Valkey | MongoDB, ClickHouse, ... |
+| **AI/ML** | - | Python (FastAPI, LangChain), ... |
+| **Protocol** | REST | gRPC, GraphQL, WebSocket, ... |
+
+**Language per Service (Polyglot):**
+- **auth-service**: NestJS → Rust (planned)
+- **personal-service**: NestJS
+- **feed-service**: NestJS (planned)
+- **chat-service**: NestJS (planned)
+- **llm-api**: Python FastAPI (planned)
+- **...**
+
 ## Architecture Diagram
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                              Cilium Gateway API                                       │
-│                     (TLS Termination, L7 Routing, AutoScaling)                        │
-│  ┌──────────────────────────────────────────────────────────────────────────────────┐│
-│  │ my-dev.girok.dev   │ api.girok.dev        │ ws.girok.dev │ rtc.girok.dev         ││
-│  │      (Web SPA)     │  (GraphQL BFF)       │  (WebSocket) │    (LiveKit)          ││
-│  └──────────────────────────────────────────────────────────────────────────────────┘│
-└───────────┬────────────────────┬─────────────────────┬─────────────────┬─────────────┘
-            │                    │                     │                 │
-            ▼                    ▼                     ▼                 ▼
-     ┌────────────┐      ┌─────────────────┐   ┌─────────────┐   ┌─────────────┐
-     │  Web Main  │      │   GraphQL BFF   │   │     WS      │   │   LiveKit   │
-     │   (SPA)    │      │   (Federation)  │   │   Gateway   │   │     SFU     │
-     └────────────┘      └────────┬────────┘   └──────┬──────┘   └──────┬──────┘
-                                  │                   │                 │
-                                  │    gRPC (Internal Communication)    │
-    ┌─────────────────────────────┼───────────────────┴─────────────────┼─────────────┐
-    ▼             ▼               ▼                                     ▼             ▼
-┌────────┐ ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌─────┐
-│  Auth  │ │ Personal │ │   Feed    │ │   Chat    │ │ Matching  │ │   Media   │ │ LLM │
-│Service │ │ Service  │ │  Service  │ │  Service  │ │  Service  │ │  Service  │ │ API │
-├────────┤ ├──────────┤ ├───────────┤ ├───────────┤ ├───────────┤ ├───────────┤ ├─────┤
-│  PG    │ │    PG    │ │  MongoDB  │ │  MongoDB  │ │  Valkey   │ │   MinIO   │ │ --- │
-└────────┘ └──────────┘ └───────────┘ └───────────┘ └───────────┘ └───────────┘ └─────┘
-                                       │
-                           ┌───────────────────────┐
-                           │    NATS JetStream     │
-                           │  (Event Sourcing)     │
-                           └───────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                       Cilium Gateway API                             │
+│                (TLS Termination, L7 Routing)                         │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │ my.girok.dev │ api.girok.dev │ auth.girok.dev │ ws.girok.dev   ││
+│  │   (Web SPA)  │ (GraphQL BFF) │  (Auth REST)   │  (WebSocket)   ││
+│  └─────────────────────────────────────────────────────────────────┘│
+└─────────┬──────────────┬──────────────┬──────────────┬──────────────┘
+          │              │              │              │
+          ▼              ▼              ▼              ▼
+   ┌────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+   │  Web Main  │ │ GraphQL BFF │ │Auth Service │ │     WS      │
+   │   (SPA)    │ │   (NestJS)  │ │(REST+gRPC)  │ │   Gateway   │
+   │    ✅      │ │    🔲       │ │  REST: ✅   │ │     🔲      │
+   └────────────┘ └──────┬──────┘ │  gRPC: 🔲   │ └──────┬──────┘
+                         │        └─────────────┘        │
+                         │ gRPC (Internal Communication) │
+   ┌─────────────────────┼───────────────────────────────┼──────────┐
+   │                     ▼                               ▼          │
+   │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
+   │  │ Personal │  │   Feed   │  │   Chat   │  │ Matching │  ...  │
+   │  │ Service  │  │ Service  │  │ Service  │  │ Service  │       │
+   │  │ REST: ✅ │  │   🔲     │  │    🔲    │  │    🔲    │       │
+   │  │ gRPC: 🔲 │  │          │  │          │  │          │       │
+   │  ├──────────┤  ├──────────┤  ├──────────┤  ├──────────┤       │
+   │  │PostgreSQL│  │ MongoDB  │  │ MongoDB  │  │  Valkey  │       │
+   │  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+   └───────────────────────────────┬────────────────────────────────┘
+                                   │
+                       ┌───────────────────────┐
+                       │    NATS JetStream     │
+                       │    (Async Events)     │
+                       └───────────────────────┘
+
+✅ = Implemented | 🔲 = Planned
 ```
 
 ## Project Structure
@@ -50,32 +86,36 @@
 ```
 my-girok/
 ├── apps/                        # Client Applications
-│   ├── web-main/               # React 19.2 + Vite (Main app)
-│   ├── web-admin/              # Next.js 15 (Admin)
-│   └── mobile-flutter/         # Flutter (iOS + Android)
+│   ├── web-main/               # ✅ React 19.2 + Vite
+│   ├── web-admin/              # 🔲 Admin dashboard
+│   ├── ios/                    # 🔲 Swift iOS app
+│   └── android/                # 🔲 Kotlin Android app
 │
-├── services/
+├── services/                    # ✅ = Implemented, 🔲 = Planned
 │   ├── gateway/
-│   │   ├── graphql-bff/        # GraphQL Federation Gateway (NestJS)
-│   │   └── ws-gateway/         # WebSocket Gateway (Socket.io)
+│   │   ├── graphql-bff/        # 🔲 GraphQL Federation (NestJS)
+│   │   └── ws-gateway/         # 🔲 WebSocket (Socket.io)
 │   │
-│   ├── auth-service/           # Authentication (REST + gRPC)
-│   ├── personal-service/       # Resume, Profile (REST + gRPC)
-│   ├── feed-service/           # Timeline, Posts (gRPC)
-│   ├── chat-service/           # Messages, Rooms (gRPC)
-│   ├── matching-service/       # Random matching (gRPC)
-│   ├── media-service/          # Image processing (REST + gRPC)
-│   └── llm-api/                # AI features (Python FastAPI)
+│   ├── auth-service/           # ✅ REST | 🔲 gRPC (→ Rust planned)
+│   ├── personal-service/       # ✅ REST | 🔲 gRPC
+│   ├── feed-service/           # 🔲 gRPC + MongoDB
+│   ├── chat-service/           # 🔲 gRPC + MongoDB
+│   ├── matching-service/       # 🔲 gRPC + Valkey
+│   ├── media-service/          # 🔲 gRPC + MinIO
+│   └── llm-api/                # 🔲 Python FastAPI
 │
 ├── packages/                    # Shared Packages
-│   ├── types/                  # TypeScript + Protobuf types
-│   ├── nest-common/            # NestJS utilities
-│   ├── ui-components/          # React components
-│   └── proto/                  # Protobuf definitions
+│   ├── types/                  # ✅ TypeScript types
+│   ├── nest-common/            # ✅ NestJS utilities
+│   ├── ui-components/          # 🔲 React components
+│   └── proto/                  # 🔲 Protobuf definitions
 │
-└── infra/                       # Infrastructure
-    └── k8s/                    # Kubernetes manifests
+└── k8s/                         # Kubernetes manifests
+    ├── base/                   # Kustomize base
+    └── overlays/               # staging, production
 ```
+
+> **Note**: New services/apps can be added as the project grows. This structure is not fixed.
 
 ## Layer Responsibilities
 
@@ -155,12 +195,18 @@ export class AuthResolver {
 
 ### 3. Service Layer: Domain Microservices
 
-**Communication Protocols:**
+**Communication Protocols (Hybrid Strategy):**
 | Direction | Protocol | Use Case |
 |-----------|----------|----------|
+| Client → BFF | GraphQL | Main API, flexible queries |
+| Client → Service | REST | OAuth callbacks, simple APIs, health checks |
 | BFF → Service | gRPC | High performance, type-safe |
 | Service → Service | gRPC | Internal communication |
-| External → Service | REST | Health checks, webhooks |
+
+**Why Hybrid?**
+- REST for external-facing APIs (OAuth, webhooks) - browser/ecosystem compatibility
+- gRPC for internal communication - 3-10x faster, type-safe, streaming
+- GraphQL for client aggregation - flexible queries, single endpoint
 
 **gRPC Service Example:**
 ```protobuf
@@ -351,12 +397,13 @@ realtime/           # LiveKit SFU
 
 ## URL Mapping
 
-| URL | Service | Protocol |
-|-----|---------|----------|
-| `my-dev.girok.dev` | web-main | SPA (static) |
-| `api.girok.dev/graphql` | graphql-bff | GraphQL |
-| `ws.girok.dev` | ws-gateway | WebSocket |
-| `rtc.girok.dev` | livekit | WebRTC |
+| URL | Service | Protocol | Status |
+|-----|---------|----------|--------|
+| `my.girok.dev` | web-main | SPA (static) | ✅ |
+| `api.girok.dev/graphql` | graphql-bff | GraphQL | 🔲 |
+| `auth.girok.dev` | auth-service | REST | ✅ |
+| `ws.girok.dev` | ws-gateway | WebSocket | 🔲 |
+| `s3.girok.dev` | minio | S3 | ✅ |
 
 ## Shared Packages Usage
 
@@ -415,11 +462,14 @@ const posts = await feedClient.getTimeline({ userId, limit: 20 });
 
 ## Key Takeaways
 
-1. **Full BFF Pattern** - Tokens never exposed to browser
-2. **GraphQL Federation** - Single endpoint, federated subgraphs
-3. **gRPC Internal** - Type-safe, high-performance service calls
-4. **NATS Events** - Async communication, event sourcing
-5. **Polyglot Persistence** - Right database for each domain
-6. **Cilium Gateway** - TLS, routing, autoscaling at edge
+1. **Hybrid Communication** - REST (external) + gRPC (internal) + GraphQL (BFF)
+2. **Full BFF Pattern** - Session-based auth, tokens never exposed to browser
+3. **GraphQL Federation** - Single endpoint, federated subgraphs (planned)
+4. **gRPC Internal** - Type-safe, high-performance service calls
+5. **NATS Events** - Async communication, event sourcing
+6. **Polyglot Persistence** - Right database for each domain
+7. **Extensible Stack** - New languages/frameworks can be added (Rust, Python, Go, ...)
+8. **Cilium Gateway** - TLS, routing at edge
 
 **For specific service APIs, see `.ai/services/`**
+**For detailed architecture roadmap, see `docs/ARCHITECTURE_ROADMAP.md`**

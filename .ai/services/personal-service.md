@@ -6,14 +6,27 @@
 
 Manages user resumes, profiles, and share links. Primary service for the resume builder feature. Uses PostgreSQL for complex queries and relational data.
 
+## Implementation Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| REST API | ✅ Implemented | External-facing API |
+| gRPC API | 🔲 Planned | For internal BFF communication |
+| MinIO Storage | ✅ Implemented | File storage |
+| PDF Generation | 🔲 Planned | BullMQ queue |
+
 ## Tech Stack
 
-- **Framework**: NestJS 11
-- **Language**: TypeScript 5.9
+**Current:**
+- **Framework**: NestJS 11 + TypeScript 5.9
 - **Database**: PostgreSQL 16 + Prisma 6
 - **Storage**: MinIO (files)
-- **Protocol**: REST (current) + gRPC (planned)
+- **Protocol**: REST :3003 (external)
+
+**Planned (Future):**
+- **Protocol**: REST :3003 (external) + gRPC :50052 (internal)
 - **Queue**: BullMQ (PDF generation)
+- **Events**: NATS JetStream (publish)
 
 ## Database Schema (Prisma)
 
@@ -327,20 +340,23 @@ export class ShareService {
 }
 ```
 
-## gRPC Service (Planned)
+## gRPC Service 🔲 PLANNED
+
+> **Note**: gRPC will be implemented when GraphQL BFF is added.
 
 ```protobuf
-// proto/personal.proto
+// proto/personal.proto (planned)
 syntax = "proto3";
 
 package personal;
 
 service PersonalService {
   rpc GetResume(GetResumeRequest) returns (Resume);
-  rpc GetUserResumes(GetUserResumesRequest) returns (ResumesResponse);
+  rpc GetResumesByUserId(GetResumesByUserIdRequest) returns (ResumesResponse);
   rpc GetPublicResume(GetPublicResumeRequest) returns (Resume);
   rpc CreateResume(CreateResumeRequest) returns (Resume);
   rpc UpdateResume(UpdateResumeRequest) returns (Resume);
+  rpc DeleteResume(DeleteResumeRequest) returns (Empty);
   rpc Health(Empty) returns (HealthResponse);
 }
 ```
@@ -369,13 +385,15 @@ JWT_SECRET=xxx
 
 ## Integration Points
 
-### Incoming
-- **graphql-bff**: Resume CRUD, share links
-- **web-main**: Direct REST API (legacy)
+### Current (REST)
+- **web-main**: Direct REST calls for resume management
+
+### Planned (gRPC) 🔲
+- **graphql-bff**: Resume CRUD, share links via gRPC
 
 ### Outgoing
-- **auth-service**: User lookup (HTTP/gRPC)
-- **MinIO**: File storage
+- **auth-service**: User lookup (currently none, planned gRPC)
+- **MinIO**: File storage ✅
 
 ## File Upload (MinIO)
 
