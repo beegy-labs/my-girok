@@ -53,7 +53,8 @@ export default function LoginPage() {
       const response = await login({ email, password });
       setAuth(response.user, response.accessToken, response.refreshToken);
       setLoginSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || t('errors.loginFailed'));
     } finally {
       setLoading(false);

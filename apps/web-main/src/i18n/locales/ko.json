@@ -229,6 +229,9 @@
       "print": "인쇄",
       "resumeTitle": "{{name}}님의 이력서"
     },
+    "public": {
+      "yourProfile": "내 프로필"
+    },
     "myResumes": "나의 이력서",
     "manageResumes": "이력서를 관리하고 공유하세요",
     "createNewResume": "✍️ 새 이력서 만들기",
@@ -545,14 +548,34 @@
     "emailPlaceholder": "your@email.com"
   },
   "edit": {
-    "editResume": "Edit Resume",
-    "createNewResume": "Create New Resume",
-    "updateInfo": "Update your resume information",
-    "fillInfo": "Fill in your information to create a new resume",
-    "showForm": "Show Form",
-    "showPreview": "Show Preview",
-    "livePreview": "Live Preview",
-    "previewDescription": "This is how your resume will look. Changes appear instantly.",
-    "error": "Error:"
+    "editResume": "이력서 수정",
+    "createNewResume": "새 이력서 만들기",
+    "updateInfo": "이력서 정보를 업데이트하세요",
+    "fillInfo": "새 이력서를 만들기 위해 정보를 입력하세요",
+    "showForm": "양식 보기",
+    "showPreview": "미리보기",
+    "livePreview": "실시간 미리보기",
+    "previewDescription": "이력서가 이렇게 보여집니다. 변경사항이 즉시 반영됩니다.",
+    "error": "오류:"
+  },
+  "share": {
+    "title": "이력서 공유",
+    "description": "만료 기간을 설정하여 공유 링크를 생성하세요",
+    "createNew": "새 공유 링크 만들기",
+    "createDescription": "다른 사람이 이력서를 볼 수 있는 공유 링크를 생성합니다",
+    "expirationPeriod": "만료 기간",
+    "customDate": "직접 설정",
+    "customExpirationDate": "만료 날짜 직접 설정",
+    "selectCustomDate": "만료 날짜를 선택해주세요.",
+    "creating": "생성 중...",
+    "createLink": "링크 생성",
+    "yourLinks": "내 공유 링크",
+    "loadingLinks": "공유 링크를 불러오는 중...",
+    "noLinksYet": "공유 링크가 없습니다",
+    "createFirstLink": "위에서 첫 번째 링크를 만들어보세요",
+    "lastViewed": "마지막 조회",
+    "deactivate": "비활성화",
+    "activate": "활성화",
+    "updateFailed": "공유 링크 업데이트에 실패했습니다. 다시 시도해주세요."
   }
 }

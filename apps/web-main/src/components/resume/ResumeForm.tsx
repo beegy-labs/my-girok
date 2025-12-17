@@ -240,8 +240,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     try {
       const attachment = await uploadAttachment(resume.id, file, type);
       setAttachments([...attachments, attachment]);
-    } catch (error: any) {
-      setUploadError(error.response?.data?.message || t('resume.form.uploadFailed'));
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setUploadError(err.response?.data?.message || t('resume.form.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -319,9 +320,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
 
       setProfilePhotoTempKey(result.tempKey);
       setProfilePhotoPreview(result.previewUrl);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upload to temp storage:', error);
-      setUploadError(error.response?.data?.message || t('resume.form.photoUploadFailed'));
+      const err = error as { response?: { data?: { message?: string } } };
+      setUploadError(err.response?.data?.message || t('resume.form.photoUploadFailed'));
     } finally {
       setUploading(false);
     }

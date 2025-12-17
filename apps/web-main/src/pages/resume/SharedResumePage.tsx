@@ -18,7 +18,8 @@ export default function SharedResumePage() {
     try {
       const data = await getPublicResume(shareToken);
       setResume(data);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
       if (err.response?.status === 404) {
         setError(t('resume.shared.notFound'));
       } else if (err.response?.status === 410) {

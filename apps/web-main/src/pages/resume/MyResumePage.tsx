@@ -37,7 +37,7 @@ export default function MyResumePage() {
       ]);
       setResumes(resumesData);
       setShareLinks(shareLinksData);
-    } catch (_err: any) {
+    } catch (_err: unknown) {
       setError(t('resume.errors.loadFailed'));
     } finally {
       setLoading(false);

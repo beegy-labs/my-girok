@@ -51,7 +51,8 @@ export default function ChangePasswordPage() {
       setNewPassword('');
       setConfirmPassword('');
       setChangeSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || t('changePassword.errors.failed'));
     } finally {
       setLoading(false);
