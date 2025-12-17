@@ -1,9 +1,9 @@
 import { useAuthStore } from '../stores/authStore';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import { generateWebsiteSchema } from '../utils/structuredData';
-import { PageHeader, SectionHeader, Card, PrimaryButton, SecondaryButton } from '../components/ui';
+import { PageHeader, SectionHeader, Card, Button } from '@my-girok/ui-components';
 
 interface AppCard {
   id: string;
@@ -153,14 +153,14 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <Link to="/register">
-                  <PrimaryButton size="lg" className="w-full sm:w-auto">
+                  <Button variant="primary" size="lg" className="w-full sm:w-auto">
                     {t('home.createRecordBook')}
-                  </PrimaryButton>
+                  </Button>
                 </Link>
                 <Link to="/login">
-                  <SecondaryButton size="lg" className="w-full sm:w-auto">
+                  <Button variant="secondary" size="lg" className="w-full sm:w-auto">
                     {t('nav.login')}
-                  </SecondaryButton>
+                  </Button>
                 </Link>
               </div>
             </div>

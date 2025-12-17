@@ -1,11 +1,11 @@
-import { forwardRef, SelectHTMLAttributes } from 'react';
+import { forwardRef, SelectHTMLAttributes, ChangeEvent } from 'react';
 
 export interface SelectOption {
   value: string;
   label: string;
 }
 
-export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className'> {
+export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className' | 'onChange'> {
   /**
    * Label text displayed above the select
    */
@@ -14,6 +14,10 @@ export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectEl
    * Error message displayed below the select
    */
   error?: string;
+  /**
+   * The callback fired when the value changes.
+   */
+  onChange: (value: string) => void;
   /**
    * Shows red asterisk next to label
    */
@@ -45,7 +49,7 @@ export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectEl
  *   label="Degree"
  *   options={degreeOptions}
  *   value={degree}
- *   onChange={(e) => setDegree(e.target.value)}
+ *   onChange={setDegree}
  *   placeholder="Select degree"
  * />
  * ```
@@ -60,6 +64,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
     containerClassName = '',
     selectClassName = '',
     id,
+    onChange,
     ...props
   }, ref) => {
     const selectId = id || `select-${label?.toLowerCase().replace(/\s+/g, '-')}`;
@@ -73,6 +78,10 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
     const errorClasses = error
       ? 'border-red-500 focus:ring-red-500'
       : defaultBorderClasses;
+
+    const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
+      onChange(event.target.value);
+    };
 
     return (
       <div className={containerClassName}>
@@ -90,6 +99,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
           ref={ref}
           id={selectId}
           className={`${baseSelectClasses} ${errorClasses} ${selectClassName}`}
+          onChange={handleChange}
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={error ? `${selectId}-error` : undefined}
           {...props}

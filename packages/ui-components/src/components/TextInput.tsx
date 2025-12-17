@@ -1,6 +1,6 @@
-import { forwardRef, InputHTMLAttributes } from 'react';
+import { forwardRef, InputHTMLAttributes, ChangeEvent } from 'react';
 
-export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> {
+export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'onChange'> {
   /**
    * Label text displayed above the input
    */
@@ -9,6 +9,14 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
    * Error message displayed below the input
    */
   error?: string;
+  /**
+   * Helper text displayed below the input
+   */
+  hint?: string;
+  /**
+   * The callback fired when the value changes.
+   */
+  onChange: (value: string) => void;
   /**
    * Shows red asterisk next to label
    */
@@ -32,7 +40,7 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
  *   label="Email Address"
  *   type="email"
  *   value={email}
- *   onChange={(e) => setEmail(e.target.value)}
+ *   onChange={setEmail}
  *   placeholder="you@example.com"
  *   required
  * />
@@ -42,10 +50,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   ({
     label,
     error,
+    hint,
     required,
     containerClassName = '',
     inputClassName = '',
     id,
+    onChange,
     ...props
   }, ref) => {
     const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
@@ -59,6 +69,10 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     const errorClasses = error
       ? 'border-red-500 focus:ring-red-500'
       : defaultBorderClasses;
+
+    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+      onChange(event.target.value);
+    };
 
     return (
       <div className={containerClassName}>
@@ -76,8 +90,9 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           ref={ref}
           id={inputId}
           className={`${baseInputClasses} ${errorClasses} ${inputClassName}`}
+          onChange={handleChange}
           aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${inputId}-error` : undefined}
+          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           {...props}
         />
 
@@ -88,6 +103,14 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             role="alert"
           >
             {error}
+          </p>
+        )}
+        {!error && hint && (
+          <p
+            id={`${inputId}-hint`}
+            className="mt-1 text-sm text-theme-text-tertiary"
+          >
+            {hint}
           </p>
         )}
       </div>
