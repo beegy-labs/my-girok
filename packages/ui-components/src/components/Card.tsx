@@ -39,8 +39,9 @@ export function Card({
   onClick,
 }: CardProps) {
   // Focus indicator for interactive cards (keyboard navigation)
+  // Note: ring-offset uses white/slate for consistent visibility across themes
   const focusClasses = interactive
-    ? 'focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 focus-visible:ring-offset-theme-bg-primary'
+    ? 'focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900'
     : '';
 
   // Theme: Semantic theme tokens (auto-switch via data-theme)

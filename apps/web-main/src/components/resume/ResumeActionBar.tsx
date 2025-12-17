@@ -76,11 +76,11 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
   return (
     <>
       <div className="print:hidden px-4 pt-4 sm:pt-6">
-        <div className="max-w-5xl mx-auto theme-bg-card border theme-border-subtle rounded-xl sm:rounded-2xl shadow-theme-sm px-4 py-3 sm:py-4 transition-colors duration-200">
+        <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl shadow-theme-sm px-4 py-3 sm:py-4 transition-colors duration-200">
           {/* Header - Stack on mobile, side-by-side on larger screens */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold theme-text-primary">
+              <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
                 📄 {isOwner
                   ? t('resume.preview.title', { name: resume.name })
                   : t('resume.shared.resumeTitle', { name: resume.name })}
