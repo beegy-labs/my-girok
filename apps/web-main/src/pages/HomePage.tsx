@@ -11,7 +11,6 @@ interface AppCard {
   descriptionKey: string;
   icon: string;
   route: string;
-  color: string;
   status: 'active' | 'coming-soon';
 }
 
@@ -26,7 +25,6 @@ export default function HomePage() {
       descriptionKey: 'home.resume.description',
       icon: '📄',
       route: '/resume/my',
-      color: 'bg-amber-700',
       status: 'active',
     },
     {
@@ -35,7 +33,6 @@ export default function HomePage() {
       descriptionKey: 'home.blog.description',
       icon: '✍️',
       route: '/apps/blog',
-      color: 'bg-amber-600',
       status: 'coming-soon',
     },
     {
@@ -44,7 +41,6 @@ export default function HomePage() {
       descriptionKey: 'home.budget.description',
       icon: '💰',
       route: '/apps/budget',
-      color: 'bg-amber-800',
       status: 'coming-soon',
     },
   ];

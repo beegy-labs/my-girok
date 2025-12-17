@@ -181,7 +181,7 @@ function SortableExperienceCard({
   return (
     <div ref={setNodeRef} style={style} className="border theme-border-default rounded-xl overflow-hidden bg-theme-bg-hover transition-colors duration-200">
       {/* Mobile-optimized Company Header */}
-      <div className="bg-gradient-to-r from-theme-bg-hover to-theme-bg-card dark:from-theme-primary/20 dark:to-theme-primary/10 p-3 sm:p-4">
+      <div className="bg-gradient-to-r from-theme-bg-elevated to-theme-bg-card p-3 sm:p-4">
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Drag Handle - larger touch target */}
           <button

@@ -74,7 +74,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       'border border-theme-border-default focus:ring-theme-primary';
 
     const errorClasses = error
-      ? 'border-red-500 focus:ring-red-500'
+      ? 'border-theme-status-error-text focus:ring-theme-status-error-text'
       : defaultBorderClasses;
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {

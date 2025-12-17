@@ -194,7 +194,7 @@ export default function ResumePreview({
       <div className="flex flex-col items-center">
         {instance.loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary"></div>
             <span className="ml-3 text-theme-text-secondary">{t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}</span>
           </div>
         ) : instance.error ? (
@@ -232,7 +232,7 @@ export default function ResumePreview({
               onLoadSuccess={onDocumentLoadSuccess}
               loading={
                 <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
                 </div>
               }
               error={

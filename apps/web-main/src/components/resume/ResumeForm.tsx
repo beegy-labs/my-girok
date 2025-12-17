@@ -615,7 +615,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               <img
                 src={formData.profileImage}
                 alt="Profile"
-                className="w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-amber-300 dark:border-amber-600"
+                className="w-16 h-16 sm:w-24 sm:h-24 object-cover rounded-full border-2 border-theme-primary"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23e5e7eb"/><text x="50%" y="50%" font-size="14" text-anchor="middle" dy=".3em" fill="%239ca3af">No Image</text></svg>';
                 }}

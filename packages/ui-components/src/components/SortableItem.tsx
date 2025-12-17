@@ -125,7 +125,7 @@ export function DragHandle({
       type="button"
       {...attributes}
       {...listeners}
-      className={`cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 ${className}`}
+      className={`cursor-grab active:cursor-grabbing text-theme-text-muted hover:text-theme-text-secondary ${className}`}
       aria-label="Drag to reorder"
     >
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
