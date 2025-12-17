@@ -443,8 +443,9 @@ All components now use unified `theme-*` tokens.
 ## Environment Variables
 
 ```bash
-VITE_WEB_BFF_URL=https://web-bff.mygirok.dev
-VITE_PERSONAL_API_URL=https://personal.mygirok.dev
+VITE_GRAPHQL_URL=https://api.girok.dev/graphql
+VITE_WS_URL=wss://ws.girok.dev
+VITE_AUTH_API_URL=https://api.girok.dev  # REST fallback for auth
 ```
 
 ## Common Patterns
