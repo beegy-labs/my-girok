@@ -20,14 +20,23 @@
 **Working on authentication?**
 → Read: `.ai/rules.md` + `.ai/services/auth-service.md`
 
-**Working on content (posts/notes)?**
-→ Read: `.ai/rules.md` + `.ai/services/content-api.md`
+**Working on GraphQL BFF?**
+→ Read: `.ai/rules.md` + `.ai/architecture.md` + `.ai/services/graphql-bff.md`
 
-**Working on BFF layer?**
-→ Read: `.ai/rules.md` + `.ai/architecture.md` + `.ai/services/web-bff.md` or `.ai/services/mobile-bff.md`
+**Working on WebSocket/real-time?**
+→ Read: `.ai/rules.md` + `.ai/services/ws-gateway.md`
 
-**Working on API Gateway?**
-→ Read: `.ai/rules.md` + `.ai/services/api-gateway.md`
+**Working on feed/timeline?**
+→ Read: `.ai/rules.md` + `.ai/services/feed-service.md`
+
+**Working on chat?**
+→ Read: `.ai/rules.md` + `.ai/services/chat-service.md`
+
+**Working on random matching?**
+→ Read: `.ai/rules.md` + `.ai/services/matching-service.md`
+
+**Working on resume/profile?**
+→ Read: `.ai/rules.md` + `.ai/services/personal-service.md`
 
 **Working on AI features?**
 → Read: `.ai/rules.md` + `.ai/services/llm-api.md`
@@ -53,14 +62,21 @@ my-girok/
 ├── .ai/                      # 🤖 LLM-optimized docs (~10K tokens)
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
-│   ├── architecture.md       # Architecture patterns
+│   ├── architecture.md       # Architecture patterns (2025)
 │   ├── services/             # Backend service APIs
-│   │   ├── auth-service.md
-│   │   ├── content-api.md
-│   │   ├── web-bff.md
-│   │   ├── mobile-bff.md
-│   │   ├── api-gateway.md
-│   │   └── llm-api.md
+│   │   ├── graphql-bff.md    # GraphQL Federation Gateway
+│   │   ├── ws-gateway.md     # WebSocket Gateway
+│   │   ├── auth-service.md   # Authentication (REST + gRPC)
+│   │   ├── personal-service.md # Resume, Profile
+│   │   ├── feed-service.md   # Timeline, Posts
+│   │   ├── chat-service.md   # Messages, Rooms
+│   │   ├── matching-service.md # Random matching
+│   │   ├── media-service.md  # Image processing
+│   │   └── llm-api.md        # AI features
+│   ├── packages/             # Shared packages
+│   │   ├── nest-common.md
+│   │   ├── types.md
+│   │   └── ui-components.md
 │   └── apps/                 # Frontend app guides
 │       ├── web-main.md
 │       ├── web-admin.md
@@ -68,11 +84,7 @@ my-girok/
 │
 └── docs/                     # 📚 Human-readable docs (~73K tokens)
     ├── policies/             # Detailed policies
-    │   ├── SECURITY.md
-    │   ├── TESTING.md
-    │   ├── PERFORMANCE.md
-    │   └── DEPLOYMENT.md
-    ├── guides/               # Tutorials
+    ├── guides/               # Tutorials (GraphQL, gRPC, NATS)
     └── api/                  # API specs
 ```
 
@@ -104,9 +116,11 @@ feat/* ──squash──▶ develop ──merge──▶ release ──merge─
 - Keep commits professional and focused on the change itself
 
 ### Architecture
-- Flexible multi-pattern (Gateway, BFF, REST, GraphQL coexist)
-- Everything is optional and composable
-- Services are independent
+- Full BFF Pattern (IETF recommended, session-based auth)
+- GraphQL Federation for API aggregation
+- gRPC for internal service communication
+- NATS JetStream for event-driven messaging
+- Cilium Gateway API for edge routing
 
 ### Development
 - Types first (`packages/types`)
