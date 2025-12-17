@@ -402,10 +402,45 @@ All components now use unified `theme-*` tokens.
 |-------|-------|
 | `bg-theme-bg-page` | Page background |
 | `bg-theme-bg-card` | Card backgrounds |
+| `bg-theme-bg-elevated` | Elevated surfaces |
+| `bg-theme-bg-input` | Form input backgrounds |
 | `text-theme-text-primary` | Primary text |
 | `text-theme-text-secondary` | Secondary text |
+| `text-theme-text-tertiary` | Muted text |
 | `border-theme-border-subtle` | Subtle borders |
-| `shadow-theme-lg` | Large shadows |
+| `border-theme-border-default` | Default borders |
+
+### Shadow Classes
+
+| Token | Usage |
+|-------|-------|
+| `shadow-theme-sm` | Small shadows (inputs) |
+| `shadow-theme-md` | Medium shadows (cards) |
+| `shadow-theme-lg` | Large shadows (modals) |
+| `shadow-theme-xl` | Extra large shadows |
+| `shadow-theme-2xl` | 2X large shadows |
+| `shadow-theme-glow` | Glowing accent effect |
+
+### Theme Context & Hook
+
+```typescript
+import { useTheme } from '../contexts/ThemeContext';
+
+// Theme types
+type Theme = 'light' | 'dark' | 'system';
+type ThemeName = 'vintage' | 'dark';  // Maps to data-theme attribute
+
+// useTheme() hook
+const {
+  theme,           // User preference: 'light' | 'dark' | 'system'
+  effectiveTheme,  // Computed: 'light' | 'dark'
+  themeName,       // CSS attribute: 'vintage' | 'dark'
+  setTheme,        // Set theme preference
+  toggleTheme      // Toggle between light/dark
+} = useTheme();
+```
+
+**Theme Storage**: Cookie-based (`user-theme`) for SSR compatibility.
 
 **See**:
 - **Component Library** (above) - Ready-to-use UI components

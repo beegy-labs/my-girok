@@ -375,15 +375,55 @@ pnpm add @my-girok/ui-components --filter @my-girok/web-main
 
 ## Theme Tokens
 
-Components use semantic theme tokens that adapt to light/dark mode:
+Components use semantic theme tokens that auto-adapt to light/dark mode via `[data-theme]` attribute.
 
-| Token | Usage |
+### Background Tokens
+
+| Class | Usage |
 |-------|-------|
-| `theme-bg-primary` | Primary backgrounds |
-| `theme-bg-secondary` | Secondary backgrounds |
-| `theme-text-primary` | Primary text |
-| `theme-text-secondary` | Secondary text |
-| `theme-border-subtle` | Subtle borders |
-| `theme-accent-primary` | Primary accent color |
+| `bg-theme-bg-page` | Page background |
+| `bg-theme-bg-card` | Card backgrounds |
+| `bg-theme-bg-elevated` | Elevated surfaces |
+| `bg-theme-bg-input` | Form input backgrounds |
+| `bg-theme-bg-hover` | Hover states |
+
+### Text Tokens
+
+| Class | Usage |
+|-------|-------|
+| `text-theme-text-primary` | Primary text |
+| `text-theme-text-secondary` | Secondary text |
+| `text-theme-text-tertiary` | Muted text |
+| `text-theme-primary` | Primary accent color |
+
+### Border Tokens
+
+| Class | Usage |
+|-------|-------|
+| `border-theme-border-subtle` | Subtle borders |
+| `border-theme-border-default` | Default borders |
+| `border-theme-border-strong` | Strong borders |
+
+### Shadow Tokens
+
+| Class | Usage |
+|-------|-------|
+| `shadow-theme-sm` | Small shadows |
+| `shadow-theme-md` | Medium shadows |
+| `shadow-theme-lg` | Large shadows |
+| `shadow-theme-xl` | Extra large shadows |
+| `shadow-theme-2xl` | 2X large shadows |
+| `shadow-theme-glow` | Glowing accent effect |
+
+### Status Color Tokens
+
+| Class | Usage |
+|-------|-------|
+| `bg-theme-status-success-bg` | Success background |
+| `text-theme-status-success-text` | Success text |
+| `bg-theme-status-error-bg` | Error background |
+| `text-theme-status-error-text` | Error text |
+| `bg-theme-status-warning-bg` | Warning background |
+| `text-theme-status-warning-text` | Warning text |
 
 See `apps/web-main/src/index.css` for token definitions.

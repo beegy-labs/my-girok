@@ -57,11 +57,35 @@ Then update `apps/web-main/src/types/theme.ts` to include the new theme name.
 | `bg-theme-bg-page` | Page background |
 | `bg-theme-bg-card` | Card backgrounds |
 | `bg-theme-bg-elevated` | Elevated surfaces |
+| `bg-theme-bg-input` | Form input backgrounds |
 | `text-theme-text-primary` | Primary text |
 | `text-theme-text-secondary` | Secondary text |
+| `text-theme-text-tertiary` | Tertiary/muted text |
 | `border-theme-border-subtle` | Subtle borders |
-| `shadow-theme-lg` | Large shadows |
+| `border-theme-border-default` | Default borders |
 | `text-theme-primary` | Primary accent color |
+
+### Shadow Tokens
+
+| Token | Usage |
+|-------|-------|
+| `shadow-theme-sm` | Small shadows (1-3px) |
+| `shadow-theme-md` | Medium shadows (4-8px) |
+| `shadow-theme-lg` | Large shadows (10-20px) |
+| `shadow-theme-xl` | Extra large shadows (20-25px) |
+| `shadow-theme-2xl` | 2X large shadows (25-50px) |
+| `shadow-theme-glow` | Glowing effect for accents |
+
+### Status Color Tokens
+
+| Token | Usage |
+|-------|-------|
+| `bg-theme-status-success-bg` | Success background |
+| `text-theme-status-success-text` | Success text |
+| `bg-theme-status-error-bg` | Error background |
+| `text-theme-status-error-text` | Error text |
+| `bg-theme-status-warning-bg` | Warning background |
+| `text-theme-status-warning-text` | Warning text |
 
 ### When to Use `dark:` Variant
 

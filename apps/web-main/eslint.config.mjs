@@ -45,6 +45,22 @@ export default [
       'react/jsx-uses-react': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      // Prevent hardcoded colors - use theme tokens instead
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=/^#[0-9a-fA-F]{3,8}$/]',
+          message: 'Avoid hardcoded hex colors. Use theme tokens (e.g., bg-theme-*, text-theme-*) instead.',
+        },
+        {
+          selector: 'Literal[value=/^rgb\\(/]',
+          message: 'Avoid hardcoded rgb colors. Use theme tokens instead.',
+        },
+        {
+          selector: 'Literal[value=/^rgba\\(/]',
+          message: 'Avoid hardcoded rgba colors. Use theme tokens instead.',
+        },
+      ],
     },
   },
   {

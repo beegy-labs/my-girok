@@ -139,6 +139,8 @@
   --theme-shadow-sm: 0 1px 3px rgba(44, 36, 22, 0.08);
   --theme-shadow-md: 0 4px 8px rgba(44, 36, 22, 0.12);
   --theme-shadow-lg: 0 10px 20px rgba(44, 36, 22, 0.15);
+  --theme-shadow-xl: 0 20px 25px -5px rgba(44, 36, 22, 0.1), 0 10px 10px -5px rgba(44, 36, 22, 0.04);
+  --theme-shadow-2xl: 0 25px 50px -12px rgba(44, 36, 22, 0.25);
   --theme-shadow-glow: 0 4px 12px rgba(160, 82, 45, 0.15);
 
   /* Component: Button Primary */
@@ -215,6 +217,8 @@
   --theme-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --theme-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
   --theme-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.5);
+  --theme-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --theme-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   --theme-shadow-glow: 0 4px 12px rgba(245, 184, 65, 0.15);
 
   /* Component: Button Primary */
@@ -296,9 +300,9 @@
   --shadow-theme-sm: var(--theme-shadow-sm);
   --shadow-theme-md: var(--theme-shadow-md);
   --shadow-theme-lg: var(--theme-shadow-lg);
-  --shadow-theme-xl: var(--theme-shadow-lg); /* Restored */
-  --shadow-theme-2xl: var(--theme-shadow-lg); /* Restored */
-  --shadow-theme-inner: inset 0 2px 4px rgba(0,0,0,0.06); /* Restored */
+  --shadow-theme-xl: var(--theme-shadow-xl);
+  --shadow-theme-2xl: var(--theme-shadow-2xl);
+  --shadow-theme-inner: inset 0 2px 4px rgba(0,0,0,0.06);
   --shadow-theme-glow: var(--theme-shadow-glow);
 
   /* Component Tokens: Button */
