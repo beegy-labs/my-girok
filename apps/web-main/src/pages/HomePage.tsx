@@ -40,7 +40,7 @@ interface MenuItem {
   status: 'active' | 'coming-soon';
 }
 
-// 9 Menu Functions - Editorial Archive Style (V25.8 AAA Workstation)
+// 9 Menu Functions - Editorial Archive Style (V0.0.1 AAA Workstation)
 const MENU_ITEMS: MenuItem[] = [
   {
     id: 'journal',
@@ -119,7 +119,7 @@ const MENU_ITEMS: MenuItem[] = [
 // Widget-enabled menu IDs (can be pinned to top)
 const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
 
-// Promo slides - V25.8 mockup style
+// Promo slides - V0.0.1 mockup style
 const PROMOS = [
   {
     tag: 'Premium',
@@ -142,7 +142,7 @@ const PROMOS = [
 ];
 
 /**
- * HomePage - V25.8 AAA Workstation Design
+ * HomePage - V0.0.1 AAA Workstation Design
  * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
  */
 export default function HomePage() {
@@ -220,9 +220,9 @@ export default function HomePage() {
         role="main"
       >
         {isAuthenticated ? (
-          /* Authenticated Dashboard - V25.8 Style */
+          /* Authenticated Dashboard - V0.0.1 Style */
           <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-16">
-            {/* Promo Carousel Section - V25.8 Style */}
+            {/* Promo Carousel Section - V0.0.1 Style */}
             <section className="mb-16" aria-label="Featured Promotions">
               <div className="relative group w-full h-[300px] rounded-[56px] border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-4 focus-within:ring-theme-primary">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
@@ -267,7 +267,7 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* Workstation Section - V25.8 Style */}
+            {/* Workstation Section - V0.0.1 Style */}
             <section className="mb-20" aria-label="Workstation Controls">
               <div className="p-10 md:p-14 rounded-[64px] bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
                 {/* Workstation Header */}
@@ -302,7 +302,7 @@ export default function HomePage() {
                   </Button>
                 </div>
 
-                {/* Widget Grid - V25.8 Style */}
+                {/* Widget Grid - V0.0.1 Style */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {/* Today Widget - Active */}
                   <article className="bg-theme-bg-card rounded-[48px] border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-4 focus-within:ring-theme-primary">
@@ -448,9 +448,9 @@ export default function HomePage() {
               </section>
             )}
 
-            {/* Index Section - V25.8 Style */}
+            {/* Index Section - V0.0.1 Style */}
             <section className="mb-24" aria-label={t('aria.mainMenu')}>
-              {/* Section Header with View Toggle - V25.8 Style */}
+              {/* Section Header with View Toggle - V0.0.1 Style */}
               <div className="flex items-center justify-between mb-14 border-b-4 border-theme-text-primary pb-10 px-6">
                 <h2
                   className="text-4xl text-theme-text-primary tracking-tight"
@@ -531,7 +531,7 @@ export default function HomePage() {
               )}
             </section>
 
-            {/* Archive Support Banner - V25.8 Style */}
+            {/* Archive Support Banner - V0.0.1 Style */}
             <section className="mt-12 sm:mt-16">
               <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-8 sm:p-10 text-center font-medium">
                 <SectionBadge className="mb-4">{t('badge.archiveSupport')}</SectionBadge>
@@ -544,10 +544,10 @@ export default function HomePage() {
             </section>
           </div>
         ) : (
-          /* Landing Page - V25.8 Hero Style */
+          /* Landing Page - V0.0.1 Hero Style */
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
             <div className="text-center">
-              {/* Giant Brand Title - V25.8 Style */}
+              {/* Giant Brand Title - V0.0.1 Style */}
               <h1
                 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-tighter italic"
                 style={{ fontFamily: 'var(--font-family-serif-title)' }}
@@ -555,7 +555,7 @@ export default function HomePage() {
                 girok<span className="text-theme-primary">.</span>
               </h1>
 
-              {/* Enter Button - V25.8 Style */}
+              {/* Enter Button - V0.0.1 Style */}
               <Link to="/login">
                 <Button
                   variant="primary"

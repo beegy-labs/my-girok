@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
 /**
- * Footer - V25.8 AAA Workstation Design
+ * Footer - V0.0.1 AAA Workstation Design
  * WCAG 2.1 AAA compliant with proper touch targets
  */
 export default function Footer() {
@@ -26,11 +26,11 @@ export default function Footer() {
               className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-widest"
               style={{ fontFamily: 'var(--font-family-mono-brand)' }}
             >
-              System V25.8 AAA Enhanced
+              System V0.0.1 AAA Enhanced
             </p>
           </div>
 
-          {/* Links - V25.8 Style */}
+          {/* Links - V0.0.1 Style */}
           <nav
             className="flex gap-8 sm:gap-12 text-[13px] font-black uppercase tracking-[0.25em] text-theme-text-secondary"
             aria-label={t('aria.footerNavigation')}

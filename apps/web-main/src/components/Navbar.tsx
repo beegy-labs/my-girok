@@ -50,7 +50,7 @@ export default function Navbar() {
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-8 h-full">
         <div className="flex justify-between items-center h-full">
-          {/* Logo - V25.8 Editorial monospace style with accent dot */}
+          {/* Logo - V0.0.1 Editorial monospace style with accent dot */}
           <Link
             to="/"
             className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
@@ -64,9 +64,9 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Right side menu - V25.8 Style */}
+          {/* Right side menu - V0.0.1 Style */}
           <div className="flex items-center gap-2">
-            {/* User profile (authenticated) - V25.8 Style */}
+            {/* User profile (authenticated) - V0.0.1 Style */}
             {isAuthenticated && (
               <>
                 <div className="flex items-center gap-3 px-4 py-2 hover:bg-theme-bg-secondary rounded-2xl transition-colors cursor-default group border border-transparent hover:border-theme-border-default">
@@ -86,7 +86,7 @@ export default function Navbar() {
               </>
             )}
 
-            {/* Theme toggle button - V25.8 48px touch target */}
+            {/* Theme toggle button - V0.0.1 48px touch target */}
             <button
               onClick={toggleTheme}
               aria-label={
@@ -105,7 +105,7 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <div className="relative" ref={dropdownRef}>
-                {/* Auth action button - V25.8 Icon style */}
+                {/* Auth action button - V0.0.1 Icon style */}
                 <button
                   onClick={handleToggleDropdown}
                   aria-expanded={isDropdownOpen}
@@ -145,7 +145,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              /* Login button - V25.8 Icon style */
+              /* Login button - V0.0.1 Icon style */
               <Link
                 to="/login"
                 className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"

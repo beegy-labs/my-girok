@@ -24,7 +24,7 @@ export interface BadgeProps {
 }
 
 // Static variant classes
-// V25.8 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System
 const variantClasses = {
   default: 'bg-theme-bg-secondary text-theme-text-secondary border-theme-border-default',
   success:
@@ -49,7 +49,7 @@ const roundedClasses = {
 
 /**
  * Badge Component for status indicators and labels
- * V25.8 AAA Workstation Design System
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Multiple color variants (default, success, warning, error, info, accent)
@@ -93,7 +93,7 @@ export interface SectionBadgeProps {
 
 /**
  * Section Badge for editorial-style section headers
- * V25.8 AAA Workstation Design System
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Uppercase text with wide letter-spacing (0.3em)

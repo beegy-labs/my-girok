@@ -32,7 +32,7 @@ export interface TopWidgetProps {
 }
 
 // Static class definitions (2025 best practice - outside component)
-// V25.8 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System
 const containerClasses =
   'p-10 sm:p-12 rounded-[48px] bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
 
@@ -44,7 +44,7 @@ const iconContainerClasses =
 
 /**
  * TopWidget Component - Pinned Widget for Dashboard (2025 Accessible Pattern)
- * V25.8 AAA Workstation Design System
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Displays a pinned widget at the top of the dashboard

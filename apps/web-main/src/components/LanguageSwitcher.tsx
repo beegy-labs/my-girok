@@ -32,12 +32,12 @@ export default function LanguageSwitcher() {
   // Close dropdown when clicking outside or pressing Escape
   useClickOutside(dropdownRef, isOpen, handleClose);
 
-  // V25.8 Style: Simple 2-letter code (KO, EN, JA)
+  // V0.0.1 Style: Simple 2-letter code (KO, EN, JA)
   const langCode = i18n.language?.toUpperCase().slice(0, 2) || 'KO';
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* V25.8: 48px touch target, font-black uppercase */}
+      {/* V0.0.1: 48px touch target, font-black uppercase */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={t('aria.selectLanguage', { current: currentLanguage.label })}

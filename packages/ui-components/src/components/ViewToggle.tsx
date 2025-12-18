@@ -18,7 +18,7 @@ export interface ViewToggleProps {
 }
 
 // Static class definitions (2025 best practice - outside component)
-// V25.8 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
@@ -33,7 +33,7 @@ const buttonInactiveClasses =
 
 /**
  * View Toggle Component for switching between Grid and List views (2025 Accessible Pattern)
- * V25.8 AAA Workstation Design System
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Toggle between grid (2-column cards) and list (compact rows) views

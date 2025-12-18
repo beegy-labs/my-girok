@@ -36,7 +36,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 }
 
 // Static class definitions (defined outside component for performance)
-// V25.8 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System
 // tracking-wide improves readability for long button text (WCAG AAA)
 const baseClasses =
   'font-bold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-offset-4 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
@@ -52,7 +52,7 @@ const variantClasses = {
 } as const;
 
 // All sizes meet WCAG 44x44px minimum touch target
-// V25.8 Editorial sizes: lg (56px) and xl (64px) have editorial typography
+// V0.0.1 Editorial sizes: lg (56px) and xl (64px) have editorial typography
 const sizeClasses = {
   sm: 'min-h-[44px] px-4 py-2.5 text-sm',
   md: 'min-h-[44px] px-5 py-3 text-base',
@@ -61,7 +61,7 @@ const sizeClasses = {
 } as const;
 
 // Border radius options
-// V25.8: default (16px) for secondary, editorial (24px) for primary
+// V0.0.1: default (16px) for secondary, editorial (24px) for primary
 const roundedClasses = {
   default: 'rounded-2xl',
   editorial: 'rounded-[24px]',
@@ -70,14 +70,14 @@ const roundedClasses = {
 
 /**
  * Accessible button component with WCAG 2.1 AAA compliance
- * V25.8 AAA Workstation Design System
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Minimum 44x44px touch target (WCAG 2.5.5)
  * - High contrast focus ring for keyboard navigation
  * - Proper disabled states
  * - Loading state with spinner
- * - Editorial radius option (24px) for V25.8 styling
+ * - Editorial radius option (24px) for V0.0.1 styling
  * - React 19 compatible (ref as prop)
  *
  * @example

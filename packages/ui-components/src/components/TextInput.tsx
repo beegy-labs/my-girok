@@ -51,7 +51,7 @@ export interface TextInputProps extends Omit<
 }
 
 // Static class definitions (defined outside component for performance)
-// V25.8 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System
 // Base input classes with WCAG compliance:
 // - min-h-[48px] for touch target (WCAG 2.5.5)
 // - text-base (16px) for readability
@@ -71,7 +71,7 @@ const focusClasses =
 
 /**
  * Accessible text input component with WCAG 2.1 AAA compliance
- * V25.8 AAA Workstation Design System
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Minimum 48px touch target height (WCAG 2.5.5)

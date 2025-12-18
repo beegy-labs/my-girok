@@ -11,7 +11,7 @@ const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
 const COOKIE_EXPIRY_DAYS = 30;
 
 /**
- * LoginPage - V25.8 AAA Workstation Design
+ * LoginPage - V0.0.1 AAA Workstation Design
  * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
  */
 export default function LoginPage() {
@@ -73,7 +73,7 @@ export default function LoginPage() {
     >
       <main className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
         <div className="w-full max-w-md">
-          {/* Header - V25.8 Editorial Style */}
+          {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
             <h1
               className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic"
@@ -89,7 +89,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Form Card - V25.8 Editorial Style */}
+          {/* Form Card - V0.0.1 Editorial Style */}
           <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[48px] p-10 md:p-14 shadow-theme-lg">
             {error && (
               <Alert variant="error" className="mb-6">
@@ -173,7 +173,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Secondary Actions - V25.8 Style */}
+            {/* Secondary Actions - V0.0.1 Style */}
             <div className="mt-8 flex flex-col gap-3">
               <Link to="/register" className="block">
                 <Button variant="secondary" size="lg" rounded="default" fullWidth>

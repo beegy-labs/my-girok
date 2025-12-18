@@ -5,7 +5,7 @@ import { TextInput, Button, Alert } from '@my-girok/ui-components';
 import { Mail, Key, ArrowLeft } from 'lucide-react';
 
 /**
- * ForgotPasswordPage - V25.8 AAA Workstation Design
+ * ForgotPasswordPage - V0.0.1 AAA Workstation Design
  * UI-only implementation (API connection pending)
  */
 export default function ForgotPasswordPage() {
@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
     >
       <main className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
         <div className="w-full max-w-md">
-          {/* Header - V25.8 Editorial Style */}
+          {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
             <h1
               className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic"
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          {/* Form Card - V25.8 Editorial Style */}
+          {/* Form Card - V0.0.1 Editorial Style */}
           <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[48px] p-10 md:p-14 shadow-theme-lg">
             {error && (
               <Alert variant="error" className="mb-6">

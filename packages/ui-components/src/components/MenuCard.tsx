@@ -53,7 +53,7 @@ const ChevronRightIcon = () => (
 );
 
 // Static class definitions (defined outside component for performance - 2025 best practice)
-// V25.8 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 

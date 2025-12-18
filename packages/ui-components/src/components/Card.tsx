@@ -9,7 +9,7 @@ export interface CardProps {
    */
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'responsive';
   /**
-   * Border radius - multiple options for V25.8 editorial design
+   * Border radius - multiple options for V0.0.1 editorial design
    */
   radius?: 'default' | 'lg' | 'xl' | '2xl';
   className?: string;
@@ -21,7 +21,7 @@ export interface CardProps {
 }
 
 // Static class definitions (defined outside component for performance)
-// V25.8 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
@@ -46,7 +46,7 @@ const paddingClasses = {
   responsive: 'p-4 sm:p-6 lg:p-8', // Mobile-first responsive padding
 } as const;
 
-// V25.8 Editorial radius options
+// V0.0.1 Editorial radius options
 const radiusClasses = {
   default: 'rounded-2xl', // 16px
   lg: 'rounded-[40px]', // 40px - editorial standard
@@ -56,13 +56,13 @@ const radiusClasses = {
 
 /**
  * Accessible Card Component with WCAG 2.1 AAA compliance
- * V25.8 AAA Workstation Design System
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Multiple variants (primary, secondary, elevated)
  * - Interactive mode with proper keyboard and focus support
  * - Configurable padding and border radius
- * - Editorial radius options (40px, 48px, 64px) for V25.8 design
+ * - Editorial radius options (40px, 48px, 64px) for V0.0.1 design
  * - High contrast focus ring for keyboard navigation
  * - border-2 for modern aesthetic
  *
