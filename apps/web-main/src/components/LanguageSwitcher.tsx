@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check } from 'lucide-react';
+import { useClickOutside } from '@my-girok/ui-components';
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
@@ -13,38 +14,23 @@ export default function LanguageSwitcher() {
     { code: 'ja', label: '日本語', flag: '🇯🇵' },
   ];
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0];
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-    localStorage.setItem('language', lng);
+  const handleClose = useCallback(() => {
     setIsOpen(false);
-  };
+  }, []);
+
+  const changeLanguage = useCallback(
+    (lng: string) => {
+      i18n.changeLanguage(lng);
+      localStorage.setItem('language', lng);
+      setIsOpen(false);
+    },
+    [i18n],
+  );
 
   // Close dropdown when clicking outside or pressing Escape
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen]);
+  useClickOutside(dropdownRef, isOpen, handleClose);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -56,7 +42,9 @@ export default function LanguageSwitcher() {
         aria-haspopup="listbox"
         className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-theme-primary hover:text-theme-primary-light hover:bg-theme-bg-hover rounded-lg transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
       >
-        <span className="text-lg" aria-hidden="true">{currentLanguage.flag}</span>
+        <span className="text-lg" aria-hidden="true">
+          {currentLanguage.flag}
+        </span>
         <span className="hidden sm:inline">{currentLanguage.label}</span>
         <ChevronDown
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -82,7 +70,9 @@ export default function LanguageSwitcher() {
                   : 'text-theme-text-secondary hover:bg-theme-bg-hover'
               }`}
             >
-              <span className="text-xl" aria-hidden="true">{lang.flag}</span>
+              <span className="text-xl" aria-hidden="true">
+                {lang.flag}
+              </span>
               <span>{lang.label}</span>
               {i18n.language === lang.code && (
                 <Check className="w-4 h-4 ml-auto text-theme-primary" aria-hidden="true" />

@@ -31,6 +31,26 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   ref?: Ref<HTMLButtonElement>;
 }
 
+// Static class definitions (defined outside component for performance)
+const baseClasses =
+  'font-semibold rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
+
+const variantClasses = {
+  primary:
+    'bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text shadow-theme-md hover:shadow-theme-lg hover:scale-[1.02] active:scale-[0.98]',
+  secondary:
+    'bg-btn-secondary-bg border border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover hover:scale-[1.01] active:scale-[0.99]',
+  danger: 'bg-btn-danger-bg text-btn-danger-text hover:bg-btn-danger-bg-hover active:scale-[0.98]',
+  ghost: 'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover',
+} as const;
+
+// All sizes meet WCAG 44x44px minimum touch target
+const sizeClasses = {
+  sm: 'min-h-[44px] px-4 py-2.5 text-sm',
+  md: 'min-h-[44px] px-5 py-3 text-base',
+  lg: 'min-h-[48px] px-6 py-3.5 text-lg',
+} as const;
+
 /**
  * Accessible button component with WCAG 2.1 AA compliance
  *
@@ -64,89 +84,39 @@ export function Button({
   ref,
   ...props
 }: ButtonProps) {
-    // Base classes with WCAG focus ring
-    const baseClasses = `
-      font-semibold rounded-xl transition-all duration-200
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-      focus-visible:ring-theme-focus-ring
-      disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-    `.trim().replace(/\s+/g, ' ');
+  const widthClass = fullWidth ? 'w-full' : '';
 
-    const variantClasses = {
-      primary: `
-        bg-gradient-to-r from-btn-primary-from to-btn-primary-to
-        text-btn-primary-text shadow-theme-md
-        hover:shadow-theme-lg hover:scale-[1.02]
-        active:scale-[0.98]
-      `.trim().replace(/\s+/g, ' '),
-      secondary: `
-        bg-btn-secondary-bg border border-btn-secondary-border
-        text-btn-secondary-text
-        hover:bg-btn-secondary-bg-hover hover:scale-[1.01]
-        active:scale-[0.99]
-      `.trim().replace(/\s+/g, ' '),
-      danger: `
-        bg-btn-danger-bg text-btn-danger-text
-        hover:bg-btn-danger-bg-hover
-        active:scale-[0.98]
-      `.trim().replace(/\s+/g, ' '),
-      ghost: `
-        text-theme-text-primary bg-transparent
-        hover:bg-theme-bg-hover
-      `.trim().replace(/\s+/g, ' '),
-    };
+  return (
+    <button
+      ref={ref}
+      disabled={disabled || loading}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
+      {...props}
+    >
+      <span className="flex items-center justify-center gap-2">
+        {loading && <LoadingSpinner />}
+        {!loading && icon && <span aria-hidden="true">{icon}</span>}
+        {children}
+      </span>
+    </button>
+  );
+}
 
-    // All sizes meet WCAG 44x44px minimum touch target
-    const sizeClasses = {
-      sm: 'min-h-[44px] px-4 py-2.5 text-sm',
-      md: 'min-h-[44px] px-5 py-3 text-base',
-      lg: 'min-h-[48px] px-6 py-3.5 text-lg',
-    };
-
-    const widthClass = fullWidth ? 'w-full' : '';
-
-    const LoadingSpinner = () => (
-      <svg
-        className="animate-spin -ml-1 mr-2 h-5 w-5"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        />
-      </svg>
-    );
-
-    return (
-      <button
-        ref={ref}
-        disabled={disabled || loading}
-        className={`
-          ${baseClasses}
-          ${variantClasses[variant]}
-          ${sizeClasses[size]}
-          ${widthClass}
-          ${className}
-        `.trim().replace(/\s+/g, ' ')}
-        {...props}
-      >
-        <span className="flex items-center justify-center gap-2">
-          {loading && <LoadingSpinner />}
-          {!loading && icon && <span aria-hidden="true">{icon}</span>}
-          {children}
-        </span>
-      </button>
-    );
+function LoadingSpinner() {
+  return (
+    <svg
+      className="animate-spin -ml-1 mr-2 h-5 w-5"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
 }

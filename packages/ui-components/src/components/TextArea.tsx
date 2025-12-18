@@ -74,19 +74,8 @@ export function TextArea({
   // - min-h for adequate touch target
   // - text-base (16px) for readability
   // - focus-visible for keyboard navigation
-  const baseTextareaClasses = `
-    w-full min-h-[120px] px-4 py-3
-    text-base rounded-xl
-    bg-theme-bg-input text-theme-text-primary
-    placeholder:text-theme-text-muted
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-    focus-visible:ring-theme-focus-ring focus-visible:border-transparent
-    disabled:opacity-50 disabled:cursor-not-allowed
-    transition-all duration-200
-    resize-y
-  `
-    .trim()
-    .replace(/\s+/g, ' ');
+  const baseTextareaClasses =
+    'w-full min-h-[120px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 resize-y';
 
   const defaultBorderClasses = 'border border-theme-border-default';
 
@@ -113,7 +102,7 @@ export function TextArea({
       <textarea
         ref={ref}
         id={inputId}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={error ? 'true' : 'false'}
         aria-describedby={ariaDescribedBy}
         aria-required={props.required}
         onChange={(e) => onChange?.(e.target.value)}

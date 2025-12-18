@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { logout } from '../api/auth';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useTheme } from '../hooks/useTheme';
-import { Button } from '@my-girok/ui-components';
+import { Button, useClickOutside } from '@my-girok/ui-components';
 import { Sun, Moon, ChevronDown, KeyRound, LogOut } from 'lucide-react';
 
 export default function Navbar() {
@@ -16,39 +16,21 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { effectiveTheme, toggleTheme } = useTheme();
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await logout();
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
     }
-  };
+  }, [navigate]);
+
+  const handleCloseDropdown = useCallback(() => {
+    setIsDropdownOpen(false);
+  }, []);
 
   // Close dropdown when clicking outside or pressing Escape
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isDropdownOpen]);
+  useClickOutside(dropdownRef, isDropdownOpen, handleCloseDropdown);
 
   return (
     <nav
@@ -74,7 +56,9 @@ export default function Navbar() {
             {/* Theme toggle button */}
             <button
               onClick={toggleTheme}
-              aria-label={effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={
+                effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+              }
               className="p-2.5 sm:p-3 rounded-lg hover:bg-theme-bg-hover transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
             >
               {effectiveTheme === 'dark' ? (
@@ -102,9 +86,7 @@ export default function Navbar() {
                     </p>
                     {/* Only show role for ADMIN */}
                     {user?.role === 'ADMIN' && (
-                      <p className="text-xs text-theme-primary font-medium">
-                        {user.role}
-                      </p>
+                      <p className="text-xs text-theme-primary font-medium">{user.role}</p>
                     )}
                   </div>
                   <ChevronDown
@@ -122,7 +104,7 @@ export default function Navbar() {
                   >
                     <Link
                       to="/change-password"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={handleCloseDropdown}
                       className="flex items-center gap-3 w-full text-left px-4 py-3 text-base text-theme-text-secondary hover:bg-theme-bg-hover transition-colors min-h-[44px]"
                       role="menuitem"
                     >
@@ -132,7 +114,7 @@ export default function Navbar() {
                     <hr className="my-1 border-theme-border-subtle" />
                     <button
                       onClick={() => {
-                        setIsDropdownOpen(false);
+                        handleCloseDropdown();
                         handleLogout();
                       }}
                       className="flex items-center gap-3 w-full text-left px-4 py-3 text-base text-theme-status-error-text hover:bg-theme-status-error-bg transition-colors min-h-[44px]"
