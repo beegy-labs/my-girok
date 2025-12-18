@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 export interface BadgeProps {
   /**
@@ -50,7 +50,12 @@ const sizeClasses = {
  * <Badge variant="warning" size="sm">Pending</Badge>
  * ```
  */
-export function Badge({ children, variant = 'default', size = 'md', className = '' }: BadgeProps) {
+export const Badge = memo(function Badge({
+  children,
+  variant = 'default',
+  size = 'md',
+  className = '',
+}: BadgeProps) {
   return (
     <span
       className={`inline-flex items-center font-medium rounded-full border tracking-wide ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
@@ -58,7 +63,7 @@ export function Badge({ children, variant = 'default', size = 'md', className = 
       {children}
     </span>
   );
-}
+});
 
 export interface SectionBadgeProps {
   /**
@@ -84,7 +89,10 @@ export interface SectionBadgeProps {
  * <SectionBadge>MY ARCHIVE</SectionBadge>
  * ```
  */
-export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
+export const SectionBadge = memo(function SectionBadge({
+  children,
+  className = '',
+}: SectionBadgeProps) {
   return (
     <span
       className={`inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-[0.25em] text-theme-text-muted bg-theme-bg-card border border-theme-border-default rounded-full ${className}`}
@@ -93,4 +101,4 @@ export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
       {children}
     </span>
   );
-}
+});
