@@ -23,6 +23,7 @@
 | `--font-family-serif-title` | Playfair Display             | Page titles, headings     |
 | `--font-family-mono-brand`  | System monospace             | Brand "Girok", badges     |
 | `--radius-editorial`        | 40px                         | MenuCard, Editorial cards |
+| `--spacing-editorial`       | 40px                         | Card padding (p-10)       |
 | `--nav-height-editorial`    | 80px                         | Fixed navbar height       |
 | `--ease-editorial`          | cubic-bezier(0.2, 1, 0.3, 1) | Smooth transitions        |
 
