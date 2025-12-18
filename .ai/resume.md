@@ -187,7 +187,7 @@ for (const skill of skills) {
 - Remove button: Clears profileImage field (destructive action, red color)
 - Input field: Text input for image URL (file upload not implemented)
 
-### Theme Styling (WCAG 2.1 AA)
+### Theme Styling (WCAG 2.1 AAA)
 
 **Project Cards**:
 
@@ -294,7 +294,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - **Content**: Uses grayscale (gray-50 ~ gray-900) for text and layout
 - **Profile Photos**: Show in color by default, optional grayscale toggle
 - **Grayscale Toggle**: 🎨/🖤 button lets users switch to full B&W mode
-- **Editing UI**: Uses Oak Brown theme (WCAG 2.1 AA compliant)
+- **Editing UI**: Uses Oak Brown theme (WCAG 2.1 AAA compliant)
 - **Multi-Page**: Supports both A4 (21cm × 29.7cm) and Letter (21.59cm × 27.94cm)
 - **Page Separation**: Visual shadows between pages, page numbers on screen
 - **Print-Friendly**: Automatic page breaks, cost-effective, ATS-compatible
@@ -846,4 +846,4 @@ const handleSubmit = async (data) => {
 - HierarchicalDescription.tsx (reusable, 4 depth)
 - Backward compatible
 
-**Stack**: Oak Brown theme (WCAG 2.1 AA), i18n (KR/EN/JA), Vitest
+**Stack**: Oak Brown theme (WCAG 2.1 AAA), i18n (KR/EN/JA), Vitest

@@ -38,7 +38,7 @@
 
 ### Shared Packages
 
-- **[packages/design-tokens.md](packages/design-tokens.md)** - WCAG 2.1 AA design tokens (SSOT)
+- **[packages/design-tokens.md](packages/design-tokens.md)** - WCAG 2.1 AAA design tokens (SSOT)
 - **[packages/nest-common.md](packages/nest-common.md)** - Shared NestJS utilities (guards, decorators, gRPC)
 - **[packages/types.md](packages/types.md)** - TypeScript types + Protobuf
 - **[packages/ui-components.md](packages/ui-components.md)** - React UI components
