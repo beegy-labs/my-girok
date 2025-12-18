@@ -4,7 +4,7 @@ import { ChevronDown, Check } from 'lucide-react';
 import { useClickOutside } from '@my-girok/ui-components';
 
 export default function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +37,7 @@ export default function LanguageSwitcher() {
       {/* WCAG: min 44x44px touch target, aria-label, focus-visible ring */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        aria-label={`Select language. Current: ${currentLanguage.label}`}
+        aria-label={t('aria.selectLanguage', { current: currentLanguage.label })}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-theme-primary hover:text-theme-primary-light hover:bg-theme-bg-hover rounded-lg transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
@@ -56,7 +56,7 @@ export default function LanguageSwitcher() {
         <div
           className="absolute right-0 mt-2 w-48 bg-theme-bg-elevated border border-theme-border-subtle rounded-xl shadow-theme-lg overflow-hidden z-50"
           role="listbox"
-          aria-label="Language options"
+          aria-label={t('aria.languageOptions')}
         >
           {languages.map((lang) => (
             <button

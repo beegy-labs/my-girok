@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,12 +12,14 @@ import {
   ShareLink,
   ShareDuration,
 } from '../../api/resume';
-import { Button, PageContainer, PageHeader, SectionHeader, Card, Alert } from '@my-girok/ui-components';
+import { Button, Card, Alert, SectionBadge } from '@my-girok/ui-components';
+import Footer from '../../components/Footer';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function MyResumePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const shareModalTitleId = useId();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,10 +33,7 @@ export default function MyResumePage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [resumesData, shareLinksData] = await Promise.all([
-        getAllResumes(),
-        getMyShareLinks(),
-      ]);
+      const [resumesData, shareLinksData] = await Promise.all([getAllResumes(), getMyShareLinks()]);
       setResumes(resumesData);
       setShareLinks(shareLinksData);
     } catch (_err: unknown) {
@@ -53,13 +52,19 @@ export default function MyResumePage() {
     navigate('/resume/edit');
   }, [navigate]);
 
-  const navigateToPreview = useCallback((resumeId: string) => {
-    navigate(`/resume/preview/${resumeId}`);
-  }, [navigate]);
+  const navigateToPreview = useCallback(
+    (resumeId: string) => {
+      navigate(`/resume/preview/${resumeId}`);
+    },
+    [navigate],
+  );
 
-  const navigateToEditResume = useCallback((resumeId: string) => {
-    navigate(`/resume/edit/${resumeId}`);
-  }, [navigate]);
+  const navigateToEditResume = useCallback(
+    (resumeId: string) => {
+      navigate(`/resume/edit/${resumeId}`);
+    },
+    [navigate],
+  );
 
   // Memoize other handlers
   const handleCreateShare = useCallback(async () => {
@@ -75,73 +80,91 @@ export default function MyResumePage() {
     }
   }, [selectedResumeId, shareDuration, loadData, t]);
 
-  const handleDeleteShare = useCallback(async (shareId: string) => {
-    if (!confirm(t('resume.confirm.deleteShare'))) return;
+  const handleDeleteShare = useCallback(
+    async (shareId: string) => {
+      if (!confirm(t('resume.confirm.deleteShare'))) return;
 
-    try {
-      await deleteShareLink(shareId);
-      await loadData();
-    } catch (_err) {
-      setError(t('resume.errors.deleteShareFailed'));
-    }
-  }, [loadData, t]);
+      try {
+        await deleteShareLink(shareId);
+        await loadData();
+      } catch (_err) {
+        setError(t('resume.errors.deleteShareFailed'));
+      }
+    },
+    [loadData, t],
+  );
 
-  const handleDeleteResume = useCallback(async (resumeId: string) => {
-    if (!confirm(t('resume.confirm.deleteResume'))) return;
+  const handleDeleteResume = useCallback(
+    async (resumeId: string) => {
+      if (!confirm(t('resume.confirm.deleteResume'))) return;
 
-    try {
-      await deleteResume(resumeId);
-      await loadData();
-    } catch (_err) {
-      setError(t('resume.errors.deleteFailed'));
-    }
-  }, [loadData, t]);
+      try {
+        await deleteResume(resumeId);
+        await loadData();
+      } catch (_err) {
+        setError(t('resume.errors.deleteFailed'));
+      }
+    },
+    [loadData, t],
+  );
 
-  const handleCopyResume = useCallback(async (resumeId: string) => {
-    if (!confirm(t('resume.confirm.copyResume'))) return;
+  const handleCopyResume = useCallback(
+    async (resumeId: string) => {
+      if (!confirm(t('resume.confirm.copyResume'))) return;
 
-    try {
-      await copyResume(resumeId);
-      await loadData();
-      alert(t('resume.success.copied'));
-    } catch (_err) {
-      setError(t('resume.errors.copyFailed'));
-    }
-  }, [loadData, t]);
+      try {
+        await copyResume(resumeId);
+        await loadData();
+        alert(t('resume.success.copied'));
+      } catch (_err) {
+        setError(t('resume.errors.copyFailed'));
+      }
+    },
+    [loadData, t],
+  );
 
-  const openShareModal = useCallback((resumeId: string) => {
-    const activeLinks = shareLinks.filter(
-      (link) => link.resourceId === resumeId && link.isActive
-    );
-    if (activeLinks.length >= 3) {
-      setError(t('resume.maxShareLinks'));
-      setTimeout(() => setError(null), 3000);
-      return;
-    }
-    setSelectedResumeId(resumeId);
-    setShowShareModal(true);
-  }, [shareLinks, t]);
+  const openShareModal = useCallback(
+    (resumeId: string) => {
+      const activeLinks = shareLinks.filter(
+        (link) => link.resourceId === resumeId && link.isActive,
+      );
+      if (activeLinks.length >= 3) {
+        setError(t('resume.maxShareLinks'));
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+      setSelectedResumeId(resumeId);
+      setShowShareModal(true);
+    },
+    [shareLinks, t],
+  );
 
-  const getResumeShareStatus = useCallback((resumeId: string) => {
-    const activeLinks = shareLinks.filter(
-      (link) => link.resourceId === resumeId && link.isActive
-    );
-    return activeLinks;
-  }, [shareLinks]);
+  const getResumeShareStatus = useCallback(
+    (resumeId: string) => {
+      const activeLinks = shareLinks.filter(
+        (link) => link.resourceId === resumeId && link.isActive,
+      );
+      return activeLinks;
+    },
+    [shareLinks],
+  );
 
-  const copyToClipboard = useCallback(async (text: string, linkId: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedLinkId(linkId);
-      setTimeout(() => setCopiedLinkId(null), 2000);
-    } catch (_err) {
-      setError(t('resume.errors.copyLinkFailed'));
-      setTimeout(() => setError(null), 3000);
-    }
-  }, [t]);
+  const copyToClipboard = useCallback(
+    async (text: string, linkId: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedLinkId(linkId);
+        setTimeout(() => setCopiedLinkId(null), 2000);
+      } catch (_err) {
+        setError(t('resume.errors.copyLinkFailed'));
+        setTimeout(() => setError(null), 3000);
+      }
+    },
+    [t],
+  );
 
   const toggleShareLinks = useCallback((resumeId: string) => {
-    setExpandedResumeId(prev => prev === resumeId ? null : resumeId);
+    setExpandedResumeId((prev) => (prev === resumeId ? null : resumeId));
   }, []);
 
   if (loading) {
@@ -149,116 +172,143 @@ export default function MyResumePage() {
   }
 
   return (
-    <PageContainer maxWidth="xl">
-      {/* Header */}
-      <PageHeader
-        icon="📄"
-        title={t('resume.myResumes')}
-        subtitle={t('resume.manageResumes')}
-        action={
-          <Button variant="primary" onClick={navigateToEdit}>
-            {t('resume.createNewResume')}
-          </Button>
-        }
-      />
-
-      {error && (
-        <Alert variant="error" className="mb-4 sm:mb-6">{error}</Alert>
-      )}
-
-      {/* Resume List */}
-      <div className="mb-6 sm:mb-8">
-        <SectionHeader icon="📋" title={t('resume.list.title')} />
-
-        {resumes.length === 0 ? (
-          <Card variant="primary" padding="lg" className="text-center">
-            <div className="text-5xl sm:text-6xl mb-4">📝</div>
-            <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary mb-2">{t('resume.list.noResumes')}</h3>
-            <p className="text-sm sm:text-base text-theme-text-secondary mb-4">{t('resume.list.createFirst')}</p>
+    <main
+      className="min-h-screen bg-theme-bg-page transition-colors duration-200"
+      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+    >
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Header - Editorial Style */}
+        <header className="mb-12 sm:mb-16">
+          <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1
+                className="text-3xl sm:text-4xl text-theme-text-primary tracking-tight mb-2"
+                style={{ fontFamily: 'var(--font-family-serif-title)' }}
+              >
+                {t('resume.myResumes')}
+              </h1>
+              <p className="text-base text-theme-text-secondary">{t('resume.manageResumes')}</p>
+            </div>
             <Button variant="primary" onClick={navigateToEdit}>
-              {t('resume.list.createNew')}
+              {t('resume.createNewResume')}
             </Button>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {resumes.map((resume) => {
-              const activeShares = getResumeShareStatus(resume.id);
-              const hasActiveShare = activeShares.length > 0;
+          </div>
+        </header>
 
-              return (
-                <Card
-                  key={resume.id}
-                  variant="primary"
-                  padding="none"
-                  interactive
-                  className="overflow-hidden"
-                >
-                  <div className="p-4 sm:p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary">{resume.title}</h3>
-                          {resume.isDefault && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-theme-primary/20 text-theme-primary-light rounded-full">
-                              {t('common.default')}
-                            </span>
-                          )}
-                          {hasActiveShare && (
-                            <span className="px-2 py-0.5 text-xs font-semibold bg-theme-status-success-bg text-theme-status-success-text rounded-full">
-                              {t('resume.sharing')} ({activeShares.length}/3)
-                            </span>
-                          )}
-                        </div>
-                        {resume.description?.trim() && (
-                          <p className="text-theme-text-secondary text-sm mb-3">{resume.description}</p>
-                        )}
-                        <div className="flex flex-col gap-1 text-xs text-theme-text-tertiary">
-                          <span>
-                            {t('resume.lastModified')}: {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
-                          </span>
-                        </div>
-                      </div>
+        {error && (
+          <Alert variant="error" className="mb-6">
+            {error}
+          </Alert>
+        )}
 
-                      {/* Action Buttons - Responsive grid */}
-                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
-                        <Button
-                          variant="secondary"
-                          onClick={() => navigateToPreview(resume.id)}
-                          size="sm"
-                        >
-                          👁️ {t('common.preview')}
-                        </Button>
-                        <Button
-                          variant="primary"
-                          onClick={() => navigateToEditResume(resume.id)}
-                          size="sm"
-                        >
-                          ✍️ {t('common.edit')}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => handleCopyResume(resume.id)}
-                          size="sm"
-                        >
-                          📋 {t('common.copy')}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => openShareModal(resume.id)}
-                          size="sm"
-                        >
-                          🔗 {t('common.share')}
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={() => handleDeleteResume(resume.id)}
-                          size="sm"
-                        >
-                          🗑️ {t('common.delete')}
-                        </Button>
+        {/* Resume List */}
+        <section className="mb-8">
+          <h2
+            className="text-xl sm:text-2xl text-theme-text-primary tracking-tight mb-6"
+            style={{ fontFamily: 'var(--font-family-serif-title)' }}
+          >
+            {t('resume.list.title')}
+          </h2>
+
+          {resumes.length === 0 ? (
+            <Card variant="primary" padding="lg" className="text-center">
+              <div className="text-5xl sm:text-6xl mb-4">📝</div>
+              <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary mb-2">
+                {t('resume.list.noResumes')}
+              </h3>
+              <p className="text-sm sm:text-base text-theme-text-secondary mb-4">
+                {t('resume.list.createFirst')}
+              </p>
+              <Button variant="primary" onClick={navigateToEdit}>
+                {t('resume.list.createNew')}
+              </Button>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {resumes.map((resume) => {
+                const activeShares = getResumeShareStatus(resume.id);
+                const hasActiveShare = activeShares.length > 0;
+
+                return (
+                  <Card
+                    key={resume.id}
+                    variant="primary"
+                    padding="none"
+                    interactive
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 sm:p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary">
+                              {resume.title}
+                            </h3>
+                            {resume.isDefault && (
+                              <span className="px-2 py-0.5 text-xs font-semibold bg-theme-primary/20 text-theme-primary-light rounded-full">
+                                {t('common.default')}
+                              </span>
+                            )}
+                            {hasActiveShare && (
+                              <span className="px-2 py-0.5 text-xs font-semibold bg-theme-status-success-bg text-theme-status-success-text rounded-full">
+                                {t('resume.sharing')} ({activeShares.length}/3)
+                              </span>
+                            )}
+                          </div>
+                          {resume.description?.trim() && (
+                            <p className="text-theme-text-secondary text-sm mb-3">
+                              {resume.description}
+                            </p>
+                          )}
+                          <div className="flex flex-col gap-1 text-xs text-theme-text-tertiary">
+                            <span>
+                              {t('resume.lastModified')}:{' '}
+                              {new Date(resume.updatedAt).toLocaleDateString('ko-KR')}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons - Responsive grid */}
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
+                          <Button
+                            variant="secondary"
+                            onClick={() => navigateToPreview(resume.id)}
+                            size="sm"
+                          >
+                            👁️ {t('common.preview')}
+                          </Button>
+                          <Button
+                            variant="primary"
+                            onClick={() => navigateToEditResume(resume.id)}
+                            size="sm"
+                          >
+                            ✍️ {t('common.edit')}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleCopyResume(resume.id)}
+                            size="sm"
+                          >
+                            📋 {t('common.copy')}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => openShareModal(resume.id)}
+                            size="sm"
+                          >
+                            🔗 {t('common.share')}
+                          </Button>
+                          <Button
+                            variant="danger"
+                            onClick={() => handleDeleteResume(resume.id)}
+                            size="sm"
+                          >
+                            🗑️ {t('common.delete')}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
                     {/* Share Links for this resume */}
                     {hasActiveShare && (
@@ -269,7 +319,9 @@ export default function MyResumePage() {
                         >
                           <span className="flex items-center gap-2">
                             <span>🔗</span>
-                            <span>{t('resume.shareLink')} ({activeShares.length})</span>
+                            <span>
+                              {t('resume.shareLink')} ({activeShares.length})
+                            </span>
                           </span>
                           <span className="text-lg">
                             {expandedResumeId === resume.id ? '▼' : '▶'}
@@ -311,20 +363,27 @@ export default function MyResumePage() {
                                         onClick={() => copyToClipboard(link.shareUrl, link.id)}
                                         size="sm"
                                       >
-                                        {copiedLinkId === link.id ? `✓ ${t('resume.linkCopied')}` : `📋 ${t('resume.copyLink')}`}
+                                        {copiedLinkId === link.id
+                                          ? `✓ ${t('resume.linkCopied')}`
+                                          : `📋 ${t('resume.copyLink')}`}
                                       </Button>
                                     </div>
                                   </div>
                                 </div>
                                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-theme-text-tertiary">
                                   <div className="flex flex-wrap gap-3">
-                                    <span>{t('resume.viewCount')}: {link.viewCount}</span>
+                                    <span>
+                                      {t('resume.viewCount')}: {link.viewCount}
+                                    </span>
                                     {link.expiresAt ? (
                                       <span className="text-theme-status-success-text">
-                                        {t('resume.expires')}: {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
+                                        {t('resume.expires')}:{' '}
+                                        {new Date(link.expiresAt).toLocaleDateString('ko-KR')}
                                       </span>
                                     ) : (
-                                      <span className="text-theme-status-success-text">{t('resume.permanent')}</span>
+                                      <span className="text-theme-status-success-text">
+                                        {t('resume.permanent')}
+                                      </span>
                                     )}
                                   </div>
                                   <Button
@@ -340,56 +399,70 @@ export default function MyResumePage() {
                           </div>
                         )}
                       </div>
-                  )}
-                </Card>
-              );
-            })}
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Share Modal - WCAG AAA accessible dialog */}
+        {showShareModal && (
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={shareModalTitleId}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setShowShareModal(false);
+                setSelectedResumeId(null);
+              }
+            }}
+          >
+            <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-theme-xl">
+              <h2
+                id={shareModalTitleId}
+                className="text-xl sm:text-2xl font-bold text-theme-text-primary mb-4"
+              >
+                {t('resume.shareLinkCreate')}
+              </h2>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-theme-text-secondary mb-2">
+                  {t('resume.shareDuration')}
+                </label>
+                <select
+                  value={shareDuration}
+                  onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-theme-bg-input border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-sm sm:text-base text-theme-text-primary"
+                >
+                  <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
+                  <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
+                  <option value={ShareDuration.THREE_MONTHS}>{t('resume.threeMonths')}</option>
+                  <option value={ShareDuration.PERMANENT}>{t('resume.permanent')}</option>
+                </select>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowShareModal(false);
+                    setSelectedResumeId(null);
+                  }}
+                  className="flex-1"
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button variant="primary" onClick={handleCreateShare} className="flex-1">
+                  {t('common.save')}
+                </Button>
+              </div>
+            </Card>
           </div>
         )}
       </div>
-
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-theme-xl">
-            <h2 className="text-xl sm:text-2xl font-bold text-theme-text-primary mb-4">{t('resume.shareLinkCreate')}</h2>
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-theme-text-secondary mb-2">
-                {t('resume.shareDuration')}
-              </label>
-              <select
-                value={shareDuration}
-                onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-theme-bg-input border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-sm sm:text-base text-theme-text-primary"
-              >
-                <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
-                <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
-                <option value={ShareDuration.THREE_MONTHS}>{t('resume.threeMonths')}</option>
-                <option value={ShareDuration.PERMANENT}>{t('resume.permanent')}</option>
-              </select>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setShowShareModal(false);
-                  setSelectedResumeId(null);
-                }}
-                className="flex-1"
-              >
-                {t('common.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleCreateShare}
-                className="flex-1"
-              >
-                {t('common.save')}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
-    </PageContainer>
+      <Footer />
+    </main>
   );
 }

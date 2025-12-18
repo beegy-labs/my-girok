@@ -51,7 +51,7 @@ const radiusClasses = {
 } as const;
 
 /**
- * Accessible Card Component with WCAG 2.1 AA compliance
+ * Accessible Card Component with WCAG 2.1 AAA compliance
  *
  * Features:
  * - Multiple variants (primary, secondary, elevated)

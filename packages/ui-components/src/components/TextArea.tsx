@@ -27,7 +27,7 @@ export interface TextAreaProps extends Omit<
 }
 
 /**
- * Accessible textarea component with WCAG 2.1 AA compliance
+ * Accessible textarea component with WCAG 2.1 AAA compliance
  *
  * Features:
  * - Minimum 44px touch target height (WCAG 2.5.5)
