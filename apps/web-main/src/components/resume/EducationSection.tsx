@@ -41,16 +41,11 @@ function SortableEducationCard({
   t: (key: string) => string;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const toggleExpand = useCallback(() => setIsExpanded(prev => !prev), []);
+  const toggleExpand = useCallback(() => setIsExpanded((prev) => !prev), []);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: education.id || `edu-${index}` });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: education.id || `edu-${index}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -78,8 +73,18 @@ function SortableEducationCard({
             className="p-1.5 cursor-grab active:cursor-grabbing text-theme-text-tertiary hover:text-theme-text-secondary transition-colors duration-200 touch-manipulation"
             title="Drag to reorder"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+            <svg
+              className="w-4 h-4 sm:w-5 sm:h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 8h16M4 16h16"
+              />
             </svg>
           </button>
 
@@ -105,12 +110,22 @@ function SortableEducationCard({
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
           {/* Desktop delete button */}
-          <Button variant="danger" onClick={onRemove} size="sm" className="hidden sm:flex flex-shrink-0">
+          <Button
+            variant="danger"
+            onClick={onRemove}
+            size="sm"
+            className="hidden sm:flex flex-shrink-0"
+          >
             Remove
           </Button>
         </div>
@@ -120,7 +135,12 @@ function SortableEducationCard({
       <div className={`${isExpanded ? 'block' : 'hidden'} sm:block p-3 sm:p-4`}>
         {/* Mobile delete button */}
         <div className="sm:hidden flex justify-end mb-2">
-          <Button variant="danger" onClick={onRemove} size="sm" className="text-xs py-1.5 px-2 touch-manipulation">
+          <Button
+            variant="danger"
+            onClick={onRemove}
+            size="sm"
+            className="text-xs py-1.5 px-2 touch-manipulation"
+          >
             ✕ {t('common.delete')}
           </Button>
         </div>
@@ -131,7 +151,7 @@ function SortableEducationCard({
             label="School"
             value={education.school}
             onChange={(value: string) => onUpdate({ ...education, school: value })}
-            placeholder="University name"
+            placeholder={t('resume.education.universityPlaceholder')}
             required
           />
 
@@ -139,7 +159,7 @@ function SortableEducationCard({
             label="Major"
             value={education.major}
             onChange={(value: string) => onUpdate({ ...education, major: value })}
-            placeholder="e.g., Computer Science"
+            placeholder={t('resume.education.majorPlaceholder')}
             required
           />
         </div>
@@ -149,13 +169,15 @@ function SortableEducationCard({
           <SelectInput
             label="Degree"
             value={education.degree || ''}
-            onChange={(value: string) => onUpdate({ ...education, degree: value as DegreeType || undefined })}
+            onChange={(value: string) =>
+              onUpdate({ ...education, degree: (value as DegreeType) || undefined })
+            }
             options={[
               { value: '', label: 'Select degree' },
-              ...degreeTypes.map(degreeType => ({
+              ...degreeTypes.map((degreeType) => ({
                 value: degreeType,
-                label: t(`resume.degreeTypes.${degreeType}`)
-              }))
+                label: t(`resume.degreeTypes.${degreeType}`),
+              })),
             ]}
           />
 
@@ -163,9 +185,9 @@ function SortableEducationCard({
             label="GPA Format"
             value={education.gpaFormat || GpaFormat.SCALE_4_0}
             onChange={(value: string) => onUpdate({ ...education, gpaFormat: value as GpaFormat })}
-            options={gpaFormats.map(format => ({
+            options={gpaFormats.map((format) => ({
               value: format,
-              label: t(`resume.gpaFormats.${format}`)
+              label: t(`resume.gpaFormats.${format}`),
             }))}
           />
         </div>
@@ -177,9 +199,11 @@ function SortableEducationCard({
             value={education.gpa || ''}
             onChange={(value: string) => onUpdate({ ...education, gpa: value })}
             placeholder={
-              education.gpaFormat === GpaFormat.SCALE_4_5 ? 'e.g., 4.2/4.5' :
-              education.gpaFormat === GpaFormat.SCALE_100 ? 'e.g., 85/100' :
-              'e.g., 3.8/4.0'
+              education.gpaFormat === GpaFormat.SCALE_4_5
+                ? 'e.g., 4.2/4.5'
+                : education.gpaFormat === GpaFormat.SCALE_100
+                  ? 'e.g., 85/100'
+                  : 'e.g., 3.8/4.0'
             }
           />
         </div>
@@ -195,7 +219,7 @@ function SortableEducationCard({
             <input
               type="month"
               value={education.startDate}
-              onChange={e => onUpdate({ ...education, startDate: e.target.value })}
+              onChange={(e) => onUpdate({ ...education, startDate: e.target.value })}
               className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
@@ -208,7 +232,7 @@ function SortableEducationCard({
             <input
               type="month"
               value={education.endDate || ''}
-              onChange={e => onUpdate({ ...education, endDate: e.target.value })}
+              onChange={(e) => onUpdate({ ...education, endDate: e.target.value })}
               className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
@@ -222,15 +246,19 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = educations.findIndex(edu => (edu.id || `edu-${educations.indexOf(edu)}`) === active.id);
-      const newIndex = educations.findIndex(edu => (edu.id || `edu-${educations.indexOf(edu)}`) === over.id);
+      const oldIndex = educations.findIndex(
+        (edu) => (edu.id || `edu-${educations.indexOf(edu)}`) === active.id,
+      );
+      const newIndex = educations.findIndex(
+        (edu) => (edu.id || `edu-${educations.indexOf(edu)}`) === over.id,
+      );
 
       const reordered = arrayMove(educations, oldIndex, newIndex).map((edu, idx) => ({
         ...edu,
@@ -272,17 +300,29 @@ export default function EducationSection({ educations, onChange, t }: EducationS
     <div className="bg-theme-bg-elevated border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 lg:mb-6">
         <div className="min-w-0">
-          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary transition-colors duration-200">🎓 {t('resume.sections.education')}</h2>
-          <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary transition-colors duration-200 hidden sm:block">{t('resume.descriptions.education')}</p>
+          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary transition-colors duration-200">
+            🎓 {t('resume.sections.education')}
+          </h2>
+          <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary transition-colors duration-200 hidden sm:block">
+            {t('resume.descriptions.education')}
+          </p>
         </div>
-        <Button variant="primary" onClick={handleAdd} className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation">
-          + <span className="hidden sm:inline">Add Education</span><span className="sm:hidden">{t('common.add')}</span>
+        <Button
+          variant="primary"
+          onClick={handleAdd}
+          className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation"
+        >
+          + <span className="hidden sm:inline">Add Education</span>
+          <span className="sm:hidden">{t('common.add')}</span>
         </Button>
       </div>
 
       {educations.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={educations.map((edu, idx) => edu.id || `edu-${idx}`)} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={educations.map((edu, idx) => edu.id || `edu-${idx}`)}
+            strategy={verticalListSortingStrategy}
+          >
             <div className="space-y-3 sm:space-y-4 lg:space-y-6">
               {educations.map((edu, index) => (
                 <SortableEducationCard

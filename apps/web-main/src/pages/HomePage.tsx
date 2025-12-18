@@ -244,6 +244,9 @@ export default function HomePage() {
                   <button
                     type="button"
                     className="text-[12px] font-black uppercase tracking-[0.25em] text-theme-primary border-b-2 border-theme-primary pb-2 hover:opacity-80 transition-all w-fit min-h-[44px]"
+                    aria-label={t('aria.viewPromoDetails', {
+                      defaultValue: `View ${PROMOS[currentPromo].title} details`,
+                    })}
                   >
                     {PROMOS[currentPromo].cta}
                   </button>
@@ -287,7 +290,7 @@ export default function HomePage() {
                         className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-[0.25em] mt-2"
                         style={{ fontFamily: 'var(--font-family-mono-brand)' }}
                       >
-                        Active Workspace
+                        {t('home.activeWorkspace', { defaultValue: 'Active Workspace' })}
                       </p>
                     </div>
                   </div>
@@ -362,7 +365,9 @@ export default function HomePage() {
                       className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-[48px] border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
                       tabIndex={0}
                       role="button"
-                      aria-label={`Empty Slot ${slot}`}
+                      aria-label={t('aria.addWidgetToSlot', {
+                        defaultValue: `Add widget to slot ${slot}`,
+                      })}
                     >
                       <Plus
                         size={32}
@@ -374,7 +379,7 @@ export default function HomePage() {
                         className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-[0.4em]"
                         style={{ fontFamily: 'var(--font-family-mono-brand)' }}
                       >
-                        Empty
+                        {t('home.emptySlot', { defaultValue: 'Empty' })}
                       </span>
                     </div>
                   ))}

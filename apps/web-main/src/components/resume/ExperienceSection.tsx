@@ -17,7 +17,12 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Experience, ExperienceProject, ProjectAchievement, calculateExperienceDuration } from '../../api/resume';
+import {
+  Experience,
+  ExperienceProject,
+  ProjectAchievement,
+  calculateExperienceDuration,
+} from '../../api/resume';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 import { TextInput, TextArea, Button } from '@my-girok/ui-components';
 
@@ -49,14 +54,9 @@ function SortableExperienceCard({
   onRemove: () => void;
   t: (key: string, params?: any) => string;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: experience.id || `exp-${index}` });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: experience.id || `exp-${index}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -72,11 +72,11 @@ function SortableExperienceCard({
   const projects = experience.projects || [];
 
   const toggleCompanyExpand = useCallback(() => {
-    setIsCompanyExpanded(prev => !prev);
+    setIsCompanyExpanded((prev) => !prev);
   }, []);
 
   const toggleProject = (projectIndex: number) => {
-    setExpandedProjects(prev => ({
+    setExpandedProjects((prev) => ({
       ...prev,
       [projectIndex]: !prev[projectIndex],
     }));
@@ -86,8 +86,10 @@ function SortableExperienceCard({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = projects.findIndex(p => (p.id || `proj-${projects.indexOf(p)}`) === active.id);
-    const newIndex = projects.findIndex(p => (p.id || `proj-${projects.indexOf(p)}`) === over.id);
+    const oldIndex = projects.findIndex(
+      (p) => (p.id || `proj-${projects.indexOf(p)}`) === active.id,
+    );
+    const newIndex = projects.findIndex((p) => (p.id || `proj-${projects.indexOf(p)}`) === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const newProjects = arrayMove(projects, oldIndex, newIndex).map((p, idx) => ({
@@ -104,8 +106,12 @@ function SortableExperienceCard({
 
     const project = projects[projectIndex];
     const achievements = project.achievements || [];
-    const oldIndex = achievements.findIndex(a => (a.id || `ach-${achievements.indexOf(a)}`) === active.id);
-    const newIndex = achievements.findIndex(a => (a.id || `ach-${achievements.indexOf(a)}`) === over.id);
+    const oldIndex = achievements.findIndex(
+      (a) => (a.id || `ach-${achievements.indexOf(a)}`) === active.id,
+    );
+    const newIndex = achievements.findIndex(
+      (a) => (a.id || `ach-${achievements.indexOf(a)}`) === over.id,
+    );
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const newAchievements = arrayMove(achievements, oldIndex, newIndex).map((a, idx) => ({
@@ -131,7 +137,7 @@ function SortableExperienceCard({
       order: projects.length,
     };
     onUpdate({ ...experience, projects: [...projects, newProject] });
-    setExpandedProjects(prev => ({ ...prev, [projects.length]: true }));
+    setExpandedProjects((prev) => ({ ...prev, [projects.length]: true }));
   };
 
   const updateProject = (projectIndex: number, project: ExperienceProject) => {
@@ -159,7 +165,11 @@ function SortableExperienceCard({
     });
   };
 
-  const updateAchievement = (projectIndex: number, achievementIndex: number, achievement: ProjectAchievement) => {
+  const updateAchievement = (
+    projectIndex: number,
+    achievementIndex: number,
+    achievement: ProjectAchievement,
+  ) => {
     const project = projects[projectIndex];
     const newAchievements = [...(project.achievements || [])];
     newAchievements[achievementIndex] = achievement;
@@ -175,11 +185,15 @@ function SortableExperienceCard({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border border-theme-border-default rounded-xl overflow-hidden bg-theme-bg-hover transition-colors duration-200">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="border border-theme-border-default rounded-xl overflow-hidden bg-theme-bg-hover transition-colors duration-200"
+    >
       {/* Mobile-optimized Company Header */}
       <div className="bg-gradient-to-r from-theme-bg-elevated to-theme-bg-card p-3 sm:p-4">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -191,8 +205,18 @@ function SortableExperienceCard({
             className="p-2 -m-1 cursor-move text-theme-primary hover:text-theme-primary-light transition-colors duration-200 flex-shrink-0 touch-manipulation"
             title={t('resume.experienceForm.dragToReorder')}
           >
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 8h16M4 16h16"
+              />
             </svg>
           </button>
 
@@ -209,7 +233,8 @@ function SortableExperienceCard({
               {/* Show summary when collapsed on mobile */}
               {!isCompanyExpanded && experience.startDate && (
                 <p className="text-xs text-theme-primary truncate sm:hidden">
-                  {experience.finalPosition} • {experience.startDate} ~ {experience.isCurrentlyWorking ? t('common.present') : experience.endDate}
+                  {experience.finalPosition} • {experience.startDate} ~{' '}
+                  {experience.isCurrentlyWorking ? t('common.present') : experience.endDate}
                 </p>
               )}
             </div>
@@ -220,7 +245,12 @@ function SortableExperienceCard({
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
         </div>
@@ -240,7 +270,12 @@ function SortableExperienceCard({
 
         {/* Mobile: Delete button */}
         <div className="sm:hidden flex justify-end mb-3">
-          <Button variant="danger" onClick={onRemove} size="sm" className="text-xs py-1.5 px-3 touch-manipulation">
+          <Button
+            variant="danger"
+            onClick={onRemove}
+            size="sm"
+            className="text-xs py-1.5 px-3 touch-manipulation"
+          >
             ✕ {t('common.delete')}
           </Button>
         </div>
@@ -266,7 +301,7 @@ function SortableExperienceCard({
               <input
                 type="month"
                 value={experience.startDate}
-                onChange={e => onUpdate({ ...experience, startDate: e.target.value })}
+                onChange={(e) => onUpdate({ ...experience, startDate: e.target.value })}
                 className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               />
             </div>
@@ -279,7 +314,9 @@ function SortableExperienceCard({
               <input
                 type="month"
                 value={experience.endDate || ''}
-                onChange={e => onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })}
+                onChange={(e) =>
+                  onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })
+                }
                 disabled={experience.isCurrentlyWorking}
                 className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
               />
@@ -292,7 +329,13 @@ function SortableExperienceCard({
           <input
             type="checkbox"
             checked={experience.isCurrentlyWorking || false}
-            onChange={e => onUpdate({ ...experience, isCurrentlyWorking: e.target.checked, endDate: e.target.checked ? '' : experience.endDate })}
+            onChange={(e) =>
+              onUpdate({
+                ...experience,
+                isCurrentlyWorking: e.target.checked,
+                endDate: e.target.checked ? '' : experience.endDate,
+              })
+            }
             className="w-5 h-5 text-theme-primary border-theme-border-default rounded focus:ring-theme-primary"
           />
           <span className="ml-3 text-xs sm:text-sm text-theme-text-secondary">
@@ -305,13 +348,17 @@ function SortableExperienceCard({
         {experience.startDate && (
           <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-lg transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-theme-primary-light transition-colors duration-200">
-              {t('resume.experienceForm.experiencePeriod')} {(() => {
+              {t('resume.experienceForm.experiencePeriod')}{' '}
+              {(() => {
                 const duration = calculateExperienceDuration(
                   experience.startDate,
                   experience.endDate,
-                  experience.isCurrentlyWorking
+                  experience.isCurrentlyWorking,
                 );
-                return t('resume.experience.duration', { years: duration.years, months: duration.months });
+                return t('resume.experience.duration', {
+                  years: duration.years,
+                  months: duration.months,
+                });
               })()}
             </span>
           </div>
@@ -346,14 +393,19 @@ function SortableExperienceCard({
             <input
               type="number"
               value={experience.salary || ''}
-              onChange={e => onUpdate({ ...experience, salary: e.target.value ? parseInt(e.target.value) : undefined })}
+              onChange={(e) =>
+                onUpdate({
+                  ...experience,
+                  salary: e.target.value ? parseInt(e.target.value) : undefined,
+                })
+              }
               className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
-              placeholder="5000"
+              placeholder={t('resume.experienceForm.salaryPlaceholder')}
               min="0"
             />
             <select
               value={experience.salaryUnit || 'KRW'}
-              onChange={e => onUpdate({ ...experience, salaryUnit: e.target.value })}
+              onChange={(e) => onUpdate({ ...experience, salaryUnit: e.target.value })}
               className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
             >
               <option value="KRW">{t('resume.experienceForm.salaryUnits.manwon')}</option>
@@ -366,11 +418,13 @@ function SortableExperienceCard({
             <input
               type="checkbox"
               checked={experience.showSalary ?? false}
-              onChange={e => onUpdate({ ...experience, showSalary: e.target.checked })}
+              onChange={(e) => onUpdate({ ...experience, showSalary: e.target.checked })}
               className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
             />
             <span className="ml-2 text-xs sm:text-sm text-theme-text-secondary">
-              <span className="hidden sm:inline">{t('resume.experienceForm.showSalaryInPreview')}</span>
+              <span className="hidden sm:inline">
+                {t('resume.experienceForm.showSalaryInPreview')}
+              </span>
               <span className="sm:hidden">{t('common.showInPreview')}</span>
             </span>
           </label>
@@ -381,9 +435,16 @@ function SortableExperienceCard({
           <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
             <h4 className="text-xs sm:text-md font-bold text-theme-primary-light transition-colors duration-200">
               <span className="hidden sm:inline">{t('resume.experienceForm.projects')}</span>
-              <span className="sm:hidden">📁 {t('resume.experienceForm.projectsCount', { count: projects.length })}</span>
+              <span className="sm:hidden">
+                📁 {t('resume.experienceForm.projectsCount', { count: projects.length })}
+              </span>
             </h4>
-            <Button variant="secondary" onClick={addProject} size="sm" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3 touch-manipulation">
+            <Button
+              variant="secondary"
+              onClick={addProject}
+              size="sm"
+              className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3 touch-manipulation"
+            >
               <span className="hidden sm:inline">{t('resume.experienceForm.addProject')}</span>
               <span className="sm:hidden">+ {t('common.add')}</span>
             </Button>
@@ -410,7 +471,9 @@ function SortableExperienceCard({
                       onUpdate={(p) => updateProject(projectIndex, p)}
                       onRemove={() => removeProject(projectIndex)}
                       onAddAchievement={() => addAchievement(projectIndex)}
-                      onUpdateAchievement={(achIndex, ach) => updateAchievement(projectIndex, achIndex, ach)}
+                      onUpdateAchievement={(achIndex, ach) =>
+                        updateAchievement(projectIndex, achIndex, ach)
+                      }
                       onRemoveAchievement={(achIndex) => removeAchievement(projectIndex, achIndex)}
                       onAchievementDragEnd={(e) => handleAchievementDragEnd(projectIndex, e)}
                       t={t}
@@ -465,14 +528,9 @@ function SortableProject({
     setTechStackInput((project.techStack || []).join(', '));
   }, [project.techStack]);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: project.id || `proj-${projectIndex}` });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: project.id || `proj-${projectIndex}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -483,11 +541,15 @@ function SortableProject({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   return (
-    <div ref={setNodeRef} style={style} className="border border-theme-border-strong rounded-lg bg-theme-bg-card transition-colors duration-200">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="border border-theme-border-strong rounded-lg bg-theme-bg-card transition-colors duration-200"
+    >
       {/* Project Header */}
       <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-theme-bg-hover transition-colors duration-200">
         <button
@@ -498,7 +560,12 @@ function SortableProject({
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 8h16M4 16h16"
+            />
           </svg>
         </button>
 
@@ -509,9 +576,15 @@ function SortableProject({
         >
           <span className="font-semibold text-theme-primary-light flex items-center gap-1 sm:gap-2 transition-colors duration-200 min-w-0">
             <span className="flex-shrink-0">📖</span>
-            <span className="flex-shrink-0 hidden sm:inline">{t('resume.experienceForm.project')}</span>
+            <span className="flex-shrink-0 hidden sm:inline">
+              {t('resume.experienceForm.project')}
+            </span>
             <span className="flex-shrink-0">#{projectIndex + 1}</span>
-            {project.name && <span className="font-normal text-theme-text-secondary transition-colors duration-200 truncate">- {project.name}</span>}
+            {project.name && (
+              <span className="font-normal text-theme-text-secondary transition-colors duration-200 truncate">
+                - {project.name}
+              </span>
+            )}
           </span>
           <svg
             className={`w-5 h-5 text-theme-text-tertiary transition-transform duration-200 flex-shrink-0 ml-1 ${isExpanded ? 'rotate-180' : ''}`}
@@ -545,12 +618,13 @@ function SortableProject({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-semibold text-theme-text-secondary mb-2 transition-colors duration-200">
-                  {t('resume.experienceForm.startDate')} <span className="text-theme-status-error-text">*</span>
+                  {t('resume.experienceForm.startDate')}{' '}
+                  <span className="text-theme-status-error-text">*</span>
                 </label>
                 <input
                   type="month"
                   value={project.startDate}
-                  onChange={e => onUpdate({ ...project, startDate: e.target.value })}
+                  onChange={(e) => onUpdate({ ...project, startDate: e.target.value })}
                   className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                 />
               </div>
@@ -562,7 +636,7 @@ function SortableProject({
                 <input
                   type="month"
                   value={project.endDate || ''}
-                  onChange={e => onUpdate({ ...project, endDate: e.target.value })}
+                  onChange={(e) => onUpdate({ ...project, endDate: e.target.value })}
                   className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                   placeholder={t('resume.experienceForm.ongoingProject')}
                 />
@@ -590,7 +664,10 @@ function SortableProject({
               value={techStackInput}
               onChange={(value: string) => setTechStackInput(value)}
               onBlur={() => {
-                const parsed = techStackInput.split(',').map(s => s.trim()).filter(Boolean);
+                const parsed = techStackInput
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter(Boolean);
                 onUpdate({ ...project, techStack: parsed });
                 setTechStackInput(parsed.join(', '));
               }}
@@ -621,7 +698,9 @@ function SortableProject({
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-bold text-theme-primary-light flex items-center gap-2 transition-colors duration-200">
                 ⭐ {t('resume.experienceForm.keyAchievements')}
-                <span className="text-xs text-theme-text-tertiary font-normal transition-colors duration-200">{t('resume.experienceForm.depthLevels')}</span>
+                <span className="text-xs text-theme-text-tertiary font-normal transition-colors duration-200">
+                  {t('resume.experienceForm.depthLevels')}
+                </span>
               </label>
               <button
                 type="button"
@@ -670,7 +749,9 @@ function SortableProject({
                 </SortableContext>
               </DndContext>
             ) : (
-              <p className="text-xs text-theme-text-tertiary italic transition-colors duration-200">{t('resume.experienceForm.noAchievements')}</p>
+              <p className="text-xs text-theme-text-tertiary italic transition-colors duration-200">
+                {t('resume.experienceForm.noAchievements')}
+              </p>
             )}
           </div>
         </div>
@@ -736,13 +817,16 @@ function HierarchicalAchievement({
         className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
-          maxWidth: `calc(100% - ${mobileMargin}rem)`
+          maxWidth: `calc(100% - ${mobileMargin}rem)`,
         }}
       >
         {/* Desktop: horizontal layout */}
-        <div className="hidden sm:flex items-start gap-2" style={{
-          marginLeft: `${(depth - 1) * 0.75}rem`,
-        }}>
+        <div
+          className="hidden sm:flex items-start gap-2"
+          style={{
+            marginLeft: `${(depth - 1) * 0.75}rem`,
+          }}
+        >
           <div className="flex items-center gap-1 min-w-[30px] flex-shrink-0">
             <span className="text-theme-text-secondary font-bold text-sm select-none">
               {getBulletSymbol(depth)}
@@ -752,7 +836,7 @@ function HierarchicalAchievement({
           <input
             type="text"
             value={achievement.content}
-            onChange={e => onUpdate({ ...achievement, content: e.target.value })}
+            onChange={(e) => onUpdate({ ...achievement, content: e.target.value })}
             className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder={t('resume.experienceForm.achievementPlaceholder')}
@@ -770,12 +854,16 @@ function HierarchicalAchievement({
               </button>
             )}
 
-            {(achievement.children && achievement.children.length > 0) && (
+            {achievement.children && achievement.children.length > 0 && (
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="px-2 py-1 text-xs text-theme-text-secondary hover:text-theme-text-primary transition-colors duration-200"
-                title={isExpanded ? t('resume.experienceForm.collapse') : t('resume.experienceForm.expand')}
+                title={
+                  isExpanded
+                    ? t('resume.experienceForm.collapse')
+                    : t('resume.experienceForm.expand')
+                }
               >
                 {isExpanded ? '▼' : '▶'}
               </button>
@@ -801,7 +889,7 @@ function HierarchicalAchievement({
             <input
               type="text"
               value={achievement.content}
-              onChange={e => onUpdate({ ...achievement, content: e.target.value })}
+              onChange={(e) => onUpdate({ ...achievement, content: e.target.value })}
               className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
               placeholder={t('resume.experienceForm.achievementPlaceholder')}
             />
@@ -818,7 +906,7 @@ function HierarchicalAchievement({
                 </button>
               )}
 
-              {(achievement.children && achievement.children.length > 0) && (
+              {achievement.children && achievement.children.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
@@ -876,14 +964,9 @@ function SortableAchievement({
   onAddChild: () => void;
   t: (key: string) => string;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: achievement.id || `ach-${achIndex}` });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: achievement.id || `ach-${achIndex}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -902,7 +985,12 @@ function SortableAchievement({
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 8h16M4 16h16"
+            />
           </svg>
         </button>
 
@@ -926,15 +1014,19 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = experiences.findIndex(exp => (exp.id || `exp-${experiences.indexOf(exp)}`) === active.id);
-    const newIndex = experiences.findIndex(exp => (exp.id || `exp-${experiences.indexOf(exp)}`) === over.id);
+    const oldIndex = experiences.findIndex(
+      (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === active.id,
+    );
+    const newIndex = experiences.findIndex(
+      (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === over.id,
+    );
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const newExperiences = arrayMove(experiences, oldIndex, newIndex).map((exp, idx) => ({
@@ -977,7 +1069,9 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary flex items-center gap-2 transition-colors duration-200">
             💼 {t('resume.sections.experience')}
           </h2>
-          <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary mt-1 transition-colors duration-200 hidden sm:block">{t('resume.descriptions.experience')}</p>
+          <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary mt-1 transition-colors duration-200 hidden sm:block">
+            {t('resume.descriptions.experience')}
+          </p>
         </div>
         <button
           type="button"
@@ -989,11 +1083,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
       </div>
 
       {experiences && experiences.length > 0 ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
             items={experiences.map((exp, i) => exp.id || `exp-${i}`)}
             strategy={verticalListSortingStrategy}

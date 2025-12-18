@@ -336,6 +336,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   };
 
+  // Memoized back navigation handler (2025 best practice)
+  const handleBack = useCallback(() => {
+    window.history.back();
+  }, []);
+
   // Cancel profile photo selection
   const handleProfilePhotoCancel = useCallback(async () => {
     if (profilePhotoTempKey) {
@@ -1281,7 +1286,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </button>
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={handleBack}
             className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-elevated hover:bg-theme-bg-hover text-theme-text-secondary rounded-lg font-semibold border border-theme-border-default transition-all touch-manipulation text-sm sm:text-base"
           >
             {t('common.cancel')}

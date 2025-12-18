@@ -77,7 +77,7 @@ export default function LoginPage() {
               className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
               style={{ fontFamily: 'var(--font-family-mono-brand)' }}
             >
-              Archive Access
+              {t('auth.archiveAccess', { defaultValue: 'Archive Access' })}
             </p>
           </div>
 
