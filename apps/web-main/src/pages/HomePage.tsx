@@ -159,7 +159,7 @@ export default function HomePage() {
                   className="text-xl sm:text-2xl text-theme-text-primary tracking-tight"
                   style={{ fontFamily: 'var(--font-family-serif-title)' }}
                 >
-                  Archive Functions
+                  {t('home.archiveFunctions')}
                 </h2>
                 <ViewToggle value={viewMode} onChange={setViewMode} />
               </div>

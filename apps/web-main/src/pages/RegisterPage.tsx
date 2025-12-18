@@ -54,7 +54,7 @@ export default function RegisterPage() {
             className="inline-block text-xs tracking-[0.3em] text-theme-text-muted mb-4 uppercase"
             style={{ fontFamily: 'var(--font-family-mono-brand)' }}
           >
-            CREATE YOUR ARCHIVE
+            {t('auth.createAccount')}
           </span>
           <h1
             className="text-3xl sm:text-4xl text-theme-text-primary mb-3 tracking-tight"
