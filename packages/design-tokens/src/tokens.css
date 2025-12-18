@@ -1,10 +1,10 @@
 @import 'tailwindcss';
 
 /* ============================================
-   WCAG 2.1 AA COMPLIANT DESIGN SYSTEM
+   WCAG 2.1 AAA COMPLIANT DESIGN SYSTEM
    "Clean White Oak" (Light) & "Midnight Gentle Study" (Dark)
 
-   All color combinations meet WCAG 2.1 AA standards (4.5:1+)
+   All text color combinations meet WCAG 2.1 AAA standards (7:1+)
 
    Architecture:
    - Layer 0: @property Type Definitions (type safety, smooth animations)
@@ -94,7 +94,7 @@
 @property --theme-focus-ring {
   syntax: '<color>';
   inherits: true;
-  initial-value: #8b5e3c;
+  initial-value: #6b4a2e; /* AAA 7.94:1 */
 }
 
 /* Button Component Colors */
@@ -107,7 +107,7 @@
 @property --btn-primary-gradient-to {
   syntax: '<color>';
   inherits: true;
-  initial-value: #8b5e3c;
+  initial-value: #6d4c30; /* AAA 7.70:1 */
 }
 
 @property --btn-primary-text-color {
@@ -149,11 +149,11 @@
      - Page BG: #FFFFFF (Pure White)
      - Card BG: #F8F7F4 (Beige White)
      - Main Text: #262220 (Deep Coffee - prevents afterimage)
-     - Primary: #8B5E3C (Oak Brown)
-     WCAG Contrast:
-     - #262220 on #FFFFFF = 14.5:1 (AAA)
+     - Primary: #6B4A2E (Oak Brown - AAA compliant)
+     WCAG Contrast (readable text AAA 7:1+):
+     - #262220 on #FFFFFF = 15.76:1 (AAA)
      - #262220 on #F8F7F4 = 13.8:1 (AAA)
-     - #8B5E3C on #FFFFFF = 5.2:1 (AA)
+     - #6B4A2E on #FFFFFF = 7.94:1 (AAA)
   */
   --light-bg-page: #ffffff;
   --light-bg-card: #f8f7f4;
