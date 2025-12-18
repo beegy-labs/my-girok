@@ -1,6 +1,6 @@
 # @my-girok/design-tokens
 
-WCAG 2.1 AA compliant design tokens package with CSS @property type safety.
+WCAG 2.1 AAA compliant design tokens package with CSS @property type safety.
 
 ## Purpose
 
@@ -53,7 +53,7 @@ Key tokens have @property definitions for:
 @property --theme-primary {
   syntax: '<color>';
   inherits: true;
-  initial-value: #8b5e3c;
+  initial-value: #6b4a2e; /* AAA 7.94:1 */
 }
 ```
 
@@ -67,7 +67,21 @@ Key tokens have @property definitions for:
 
 ## WCAG Compliance
 
-All combinations meet 4.5:1+ contrast ratio (AA standard).
+All text combinations meet 7:1+ contrast ratio (AAA standard).
+
+| Element          | Light Mode | Dark Mode                    |
+| ---------------- | ---------- | ---------------------------- |
+| Primary Text     | 15.76:1    | 9.94:1                       |
+| Secondary Text   | 9.23:1     | 7.65:1                       |
+| Tertiary Text    | 7.08:1     | 7.31:1                       |
+| Primary Accent   | 7.94:1     | 8.25:1 (page), 7.41:1 (card) |
+| Primary Button   | 7.70:1+    | 9.46:1+                      |
+| Secondary Button | 7.41:1     | 7.54:1                       |
+| Danger Button    | 9.51:1     | 9.51:1                       |
+| Status Success   | 7.87:1     | 8.44:1                       |
+| Status Error     | 7.77:1     | 7.89:1                       |
+| Status Warning   | 7.59:1     | 13.13:1                      |
+| Status Info      | 8.63:1     | 9.71:1                       |
 
 ## Browser Support
 

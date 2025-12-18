@@ -111,10 +111,10 @@ Skill Category (e.g., "Frontend")
 
 **Concept**: "나의 기록" (My Records) - Personal library for documenting life and career
 
-**Colors** (WCAG 2.1 AA - Oak Brown Theme):
+**Colors** (WCAG AAA text contrast - Oak Brown Theme):
 
-- Primary: `theme-primary` (#8B5E3C) - Headers, CTAs
-- Text: `theme-text-primary` (#262220 light / #B0A9A2 dark)
+- Primary: `theme-primary` (#6B4A2E light / #D0B080 dark) - Headers, CTAs
+- Text: `theme-text-primary` (#262220 light / #CCC5BD dark)
 - Backgrounds: `theme-bg-card` (#F8F7F4 light / #282522 dark)
 - Borders: `theme-border-default`
 - Focus: `theme-focus-ring`
@@ -724,13 +724,14 @@ const handleSubmit = async (data) => {
 - Updated all test expectations to match the corrected calculation
 - All 15 tests passing
 
-**2025-12-18**: WCAG 2.1 AA Design System Refactor
+**2025-12-18**: WCAG 2.1 AAA Text Contrast Upgrade
 
-- Updated from amber theme to Oak Brown (#8B5E3C) theme
+- Updated from amber theme to Oak Brown (#6B4A2E) theme
 - All colors now use `theme-*` CSS tokens for consistency
-- WCAG 2.1 AA compliant (4.5:1+ contrast ratio)
+- WCAG 2.1 AAA text contrast (7:1+ ratio for readability)
 - Uses Lucide-React icons for iconography
 - Removed character mascots, uses StatusMessage component
+- Rebranded to "Girok" (나의 이야기를 기록하다)
 
 **2025-11-14**: Resume list UI improvements with i18n
 

@@ -207,7 +207,7 @@ export default function HomePage() {
               {/* Hero Section - Clean and professional */}
               <header className="text-center py-8 sm:py-12">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-mono text-theme-text-primary mb-4 sm:mb-6 tracking-tight">
-                  girok
+                  Girok
                 </h1>
                 <p className="text-lg sm:text-xl lg:text-2xl text-theme-text-secondary mb-8 sm:mb-10 leading-relaxed max-w-2xl mx-auto">
                   {t('home.title')}

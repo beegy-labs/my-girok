@@ -47,7 +47,7 @@ export default function Navbar() {
             aria-label="Go to homepage"
           >
             <span className="text-xl sm:text-2xl font-bold font-mono text-theme-text-primary tracking-tight">
-              girok
+              Girok
             </span>
           </Link>
 
