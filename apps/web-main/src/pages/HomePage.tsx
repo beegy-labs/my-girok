@@ -181,9 +181,9 @@ export default function HomePage() {
       >
         {isAuthenticated ? (
           /* Authenticated Dashboard */
-          <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10 py-10 sm:py-14">
-            {/* Welcome Section - Editorial Style */}
-            <header className="mb-12 sm:mb-16">
+          <div className="max-w-5xl mx-auto px-8 py-16 sm:py-24">
+            {/* Welcome Section - Editorial Style (V24.5: mb-16) */}
+            <header className="mb-16">
               <SectionBadge className="mb-4">{t('badge.myArchive')}</SectionBadge>
               <h1
                 className="text-3xl sm:text-4xl lg:text-5xl text-theme-text-primary tracking-tight mb-3"
@@ -196,9 +196,9 @@ export default function HomePage() {
               </p>
             </header>
 
-            {/* Top Widget Section (when pinned) */}
+            {/* Top Widget Section (V24.5: mb-16) */}
             {pinnedWidget && (
-              <section className="mb-12 sm:mb-16">
+              <section className="mb-16">
                 <TopWidget
                   icon={
                     pinnedWidget.id === 'schedule' ? (
@@ -275,9 +275,9 @@ export default function HomePage() {
                 <ViewToggle value={viewMode} onChange={setViewMode} />
               </div>
 
-              {/* Grid View - V24.5 Editorial Layout (40px gap per mockup) */}
+              {/* Grid View - V24.5 Editorial Layout (gap-8 = 32px) */}
               {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
@@ -309,9 +309,9 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* List View - V24.5 Editorial Layout (consistent spacing) */}
+              {/* List View - V24.5 Editorial Layout (gap-4 = 16px) */}
               {viewMode === 'list' && (
-                <div className="space-y-5 sm:space-y-6">
+                <div className="flex flex-col gap-4">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';

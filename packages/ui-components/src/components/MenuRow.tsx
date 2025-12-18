@@ -43,9 +43,9 @@ export interface MenuRowProps {
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
-// List row with consistent padding and border
+// List row with consistent padding and border (V24.5 mockup: gap-8 p-8)
 const baseClasses =
-  'w-full flex items-center gap-6 sm:gap-8 p-6 sm:p-8 rounded-3xl border-2 transition-all duration-300 group';
+  'w-full flex items-center gap-8 p-8 rounded-3xl border-2 transition-all duration-300 group';
 
 const defaultClasses = 'bg-theme-bg-card border-theme-border-default';
 
@@ -53,9 +53,9 @@ const enabledClasses = 'cursor-pointer hover:border-theme-primary';
 
 const disabledClasses = 'cursor-not-allowed opacity-50';
 
-// Icon container classes
+// Icon container classes (V24.5: p-4 rounded-xl)
 const iconContainerClasses =
-  'p-3 sm:p-4 rounded-xl bg-theme-bg-secondary text-theme-text-secondary group-hover:text-theme-primary transition-colors';
+  'p-4 rounded-xl bg-theme-bg-secondary text-theme-text-secondary group-hover:text-theme-primary transition-colors';
 
 /**
  * Pin Icon SVG component (inline)
@@ -149,20 +149,18 @@ export const MenuRow = memo(function MenuRow({
       className={`${baseClasses} ${defaultClasses} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
       style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
-      {/* Icon Container */}
+      {/* Icon Container (V24.5: size 24) */}
       <div className={iconContainerClasses}>
-        <span className="block w-5 h-5 sm:w-6 sm:h-6 [&>svg]:w-full [&>svg]:h-full">{icon}</span>
+        <span className="block w-6 h-6 [&>svg]:w-full [&>svg]:h-full [&>svg]:stroke-[2.5]">
+          {icon}
+        </span>
       </div>
 
-      {/* Content - Title and Description */}
+      {/* Content - Title and Description (V24.5: text-xl, text-sm font-bold) */}
       <div className="flex-1 text-left min-w-0">
-        <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary mb-0.5 sm:mb-1 truncate">
-          {title}
-        </h3>
+        <h3 className="text-xl font-bold text-theme-text-primary mb-1 truncate">{title}</h3>
         {description && (
-          <p className="text-xs sm:text-sm font-medium text-theme-text-secondary truncate">
-            {description}
-          </p>
+          <p className="text-sm font-bold text-theme-text-secondary line-clamp-1">{description}</p>
         )}
       </div>
 
