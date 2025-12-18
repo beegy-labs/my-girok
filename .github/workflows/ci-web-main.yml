@@ -3,10 +3,19 @@ name: CI - Web Main
 on:
   push:
     branches: [develop, 'release/**', main]
-    paths: ['apps/web-main/**', 'packages/types/**', '.github/workflows/ci-web-main.yml']
+    paths:
+      - 'apps/web-main/**'
+      - 'packages/types/**'
+      - 'packages/ui-components/**'
+      - 'packages/design-tokens/**'
+      - '.github/workflows/ci-web-main.yml'
   pull_request:
     branches: [develop, 'release/**', main]
-    paths: ['apps/web-main/**', 'packages/types/**']
+    paths:
+      - 'apps/web-main/**'
+      - 'packages/types/**'
+      - 'packages/ui-components/**'
+      - 'packages/design-tokens/**'
   workflow_dispatch:
 
 env:
@@ -30,7 +39,10 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-pnpm-store-
       - run: pnpm install --frozen-lockfile --prefer-offline
-      - run: pnpm --filter @my-girok/types build
+      - name: Build dependencies
+        run: |
+          pnpm --filter @my-girok/types build
+          pnpm --filter @my-girok/ui-components build
       - name: Lint and type-check
         working-directory: apps/web-main
         run: pnpm lint & pnpm type-check & wait
