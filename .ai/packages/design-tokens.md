@@ -83,6 +83,14 @@ All text combinations meet 7:1+ contrast ratio (AAA standard).
 | Status Warning   | 7.59:1     | 13.13:1                      |
 | Status Info      | 8.63:1     | 9.71:1                       |
 
+### Border Contrast (WCAG SC 1.4.11)
+
+| Token            | Light   | Dark    | Ratio | Usage           |
+| ---------------- | ------- | ------- | ----- | --------------- |
+| `border-subtle`  | #D4D2CF | #4A4744 | 1.5:1 | Decorative only |
+| `border-default` | #A09D9A | #6B6663 | 3.0:1 | Interactive ✅  |
+| `border-strong`  | #8A8785 | #8A8583 | 3.8:1 | Emphasis ✅     |
+
 ## Browser Support
 
 - Chrome 85+, Firefox 128+, Safari 15.4+ (for @property)

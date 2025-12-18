@@ -154,6 +154,22 @@ All text color combinations meet WCAG 2.1 AAA standards (7:1+):
 | Status Warning   | 7.59:1     | 13.13:1   | AAA        |
 | Status Info      | 8.63:1     | 9.71:1    | AAA        |
 
+### WCAG SC 1.4.11 Non-text Contrast (Borders)
+
+UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
+
+| Token                    | Light Mode | Dark Mode | Ratio | Usage                   |
+| ------------------------ | ---------- | --------- | ----- | ----------------------- |
+| `--theme-border-subtle`  | #D4D2CF    | #4A4744   | 1.5:1 | Decorative only         |
+| `--theme-border-default` | #A09D9A    | #6B6663   | 3.0:1 | Interactive elements ✅ |
+| `--theme-border-strong`  | #8A8785    | #8A8583   | 3.8:1 | Emphasis ✅             |
+
+**Usage Guidelines**:
+
+- Use `border-subtle` only for purely decorative borders where card separation is already clear via shadows/backgrounds
+- Use `border-default` for interactive elements (buttons, inputs, cards with click handlers)
+- Use `border-strong` for emphasis and high-visibility borders
+
 ## Typography
 
 ### Design Style: Modern Editorial Archive

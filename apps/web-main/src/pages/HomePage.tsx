@@ -10,10 +10,22 @@ import {
   MenuRow,
   ViewToggle,
   SectionBadge,
+  TopWidget,
   type ViewMode,
 } from '@my-girok/ui-components';
 import Footer from '../components/Footer';
-import { Book, FileText, Wallet, Settings, Library, Users, BarChart3, Bell } from 'lucide-react';
+import {
+  Book,
+  Calendar,
+  FileText,
+  Wallet,
+  Settings,
+  Library,
+  Users,
+  BarChart3,
+  Bell,
+  Plus,
+} from 'lucide-react';
 
 interface MenuItem {
   id: string;
@@ -24,7 +36,7 @@ interface MenuItem {
   status: 'active' | 'coming-soon';
 }
 
-// 8 Menu Functions - Editorial Archive Style
+// 9 Menu Functions - Editorial Archive Style (matches mockup V24.5)
 const MENU_ITEMS: MenuItem[] = [
   {
     id: 'journal',
@@ -32,6 +44,14 @@ const MENU_ITEMS: MenuItem[] = [
     descriptionKey: 'home.journal.description',
     icon: Book,
     route: '/journal',
+    status: 'coming-soon',
+  },
+  {
+    id: 'schedule',
+    nameKey: 'home.schedule.title',
+    descriptionKey: 'home.schedule.description',
+    icon: Calendar,
+    route: '/schedule',
     status: 'coming-soon',
   },
   {
@@ -92,11 +112,21 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
+// Widget-enabled menu IDs (can be pinned to top)
+const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
+
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [pinnedWidgetId, setPinnedWidgetId] = useState<string | null>(null);
+
+  // Memoized pinned widget data
+  const pinnedWidget = useMemo(
+    () => MENU_ITEMS.find((item) => item.id === pinnedWidgetId),
+    [pinnedWidgetId],
+  );
 
   // Memoized handler per rules.md: "✅ Memoize handlers with useCallback"
   const handleMenuClick = useCallback(
@@ -108,8 +138,16 @@ export default function HomePage() {
     [navigate],
   );
 
-  // Memoized slice per rules.md: "❌ Objects/arrays inside render → Use useMemo"
-  const featuredMenuItems = useMemo(() => MENU_ITEMS.slice(0, 4), []);
+  // Pin/unpin widget handler
+  const handlePinWidget = useCallback((menuId: string) => {
+    setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
+  }, []);
+
+  // Check if a menu can be pinned as widget
+  const canPinAsWidget = useCallback(
+    (menuId: string) => WIDGET_ENABLED_IDS.includes(menuId as (typeof WIDGET_ENABLED_IDS)[number]),
+    [],
+  );
 
   return (
     <>
@@ -137,7 +175,7 @@ export default function HomePage() {
 
       <main
         id="main-content"
-        className="min-h-screen bg-theme-bg-page transition-colors duration-200"
+        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
         style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
         role="main"
       >
@@ -158,6 +196,72 @@ export default function HomePage() {
               </p>
             </header>
 
+            {/* Top Widget Section (when pinned) */}
+            {pinnedWidget && (
+              <section className="mb-12 sm:mb-16">
+                <TopWidget
+                  icon={
+                    pinnedWidget.id === 'schedule' ? (
+                      <Calendar className="w-6 h-6" />
+                    ) : (
+                      <Wallet className="w-6 h-6" />
+                    )
+                  }
+                  title={t(pinnedWidget.nameKey)}
+                  badgeText={t('badge.activeFocus')}
+                  onChangeFocus={() => setPinnedWidgetId(null)}
+                  changeFocusText={t('widget.changeFocus')}
+                >
+                  {/* Mockup Widget Content */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {pinnedWidget.id === 'schedule' ? (
+                      <>
+                        {/* Schedule Widget Mockup */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page rounded-2xl border border-theme-border-default">
+                            <span className="font-bold text-sm text-theme-text-primary">
+                              14:00 {t('placeholder.schedule').split('.')[0]}
+                            </span>
+                            <span className="text-[10px] font-bold text-theme-primary">
+                              {t('widget.scheduleNow')}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page/50 rounded-2xl border border-theme-border-subtle">
+                            <span className="font-bold text-sm text-theme-text-muted">
+                              16:30 {t('placeholder.schedule').split('.')[0]}
+                            </span>
+                            <span className="text-[10px] font-bold text-theme-text-muted">
+                              {t('widget.scheduleNext')}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col justify-center p-6 bg-theme-primary/5 rounded-3xl border border-theme-primary/20">
+                          <p className="text-sm font-bold text-theme-text-primary mb-2">
+                            {t('widget.scheduleSummary', {
+                              name: user?.name || user?.username,
+                              count: 3,
+                            })}
+                          </p>
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 text-xs font-bold uppercase text-theme-primary min-h-[44px] hover:opacity-80 transition-opacity"
+                            aria-label={t('widget.quickAdd')}
+                          >
+                            {t('widget.quickAdd')} <Plus className="w-4 h-4" strokeWidth={3} />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      /* Finance Widget Mockup */
+                      <div className="col-span-2 text-center py-8 text-theme-text-secondary">
+                        {t('widget.financeLoaded')}
+                      </div>
+                    )}
+                  </div>
+                </TopWidget>
+              </section>
+            )}
+
             {/* Menu Section */}
             <section aria-label={t('aria.mainMenu')}>
               {/* Section Header with View Toggle */}
@@ -177,6 +281,7 @@ export default function HomePage() {
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
+                    const canPin = canPinAsWidget(menu.id);
 
                     return (
                       <MenuCard
@@ -186,6 +291,13 @@ export default function HomePage() {
                         title={t(menu.nameKey)}
                         description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
                         onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
+                        isPinned={pinnedWidgetId === menu.id}
+                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
+                        pinTooltip={
+                          pinnedWidgetId === menu.id
+                            ? t('widget.unpinFromTop')
+                            : t('widget.pinToTop')
+                        }
                         className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                         aria-label={
                           isDisabled
@@ -242,87 +354,56 @@ export default function HomePage() {
             </section>
           </div>
         ) : (
-          /* Landing Page for Non-authenticated Users */
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Hero Section - Editorial Style */}
-            <header className="py-16 sm:py-24 lg:py-32 text-center">
+          /* Landing Page for Non-authenticated Users - Editorial centered style (consistent with LoginPage) */
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+            <div className="w-full max-w-md text-center">
+              {/* Brand Badge */}
               <span
-                className="inline-block text-sm tracking-[0.3em] text-theme-text-muted mb-6 uppercase"
+                className="inline-block text-xs tracking-[0.3em] text-theme-text-muted mb-4 uppercase"
                 style={{ fontFamily: 'var(--font-family-mono-brand)' }}
               >
                 {t('badge.personalArchive')}
               </span>
+
+              {/* Brand Title */}
               <h1
-                className="text-4xl sm:text-5xl lg:text-6xl text-theme-text-primary mb-6 tracking-tight"
+                className="text-3xl sm:text-4xl text-theme-text-primary mb-3 tracking-tight"
                 style={{ fontFamily: 'var(--font-family-serif-title)' }}
               >
                 Girok
               </h1>
-              <p className="text-lg sm:text-xl text-theme-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
+
+              {/* Tagline */}
+              <p className="text-theme-text-secondary text-sm sm:text-base mb-8 leading-relaxed">
                 {t('home.title')}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/register">
-                  <Button variant="primary" size="lg" className="w-full sm:w-auto min-w-[180px]">
-                    {t('home.createRecordBook')}
-                  </Button>
-                </Link>
-                <Link to="/login">
-                  <Button variant="secondary" size="lg" className="w-full sm:w-auto min-w-[180px]">
-                    {t('nav.login')}
-                  </Button>
-                </Link>
-              </div>
-            </header>
 
-            {/* Features Preview - 4 Main Functions */}
-            <section className="py-12 sm:py-16" aria-labelledby="features-heading">
-              <div className="text-center mb-12">
-                <SectionBadge className="mb-4">{t('badge.features')}</SectionBadge>
-                <h2
-                  id="features-heading"
-                  className="text-2xl sm:text-3xl text-theme-text-primary tracking-tight"
-                  style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                >
-                  {t('home.recordingTypes')}
-                </h2>
+              {/* CTA Card - Editorial Style (consistent with LoginPage card) */}
+              <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 shadow-theme-lg">
+                <div className="space-y-4">
+                  <Link to="/register" className="block">
+                    <Button variant="primary" size="lg" fullWidth>
+                      {t('home.createRecordBook')}
+                    </Button>
+                  </Link>
+                  <Link to="/login" className="block">
+                    <Button variant="secondary" size="lg" fullWidth>
+                      {t('nav.login')}
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Divider */}
+                <div className="mt-8 pt-6 border-t border-theme-border-subtle">
+                  <p className="text-sm text-theme-text-muted">{t('home.startToday')}</p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {featuredMenuItems.map((menu, index) => {
-                  const IconComponent = menu.icon;
-                  const isDisabled = menu.status === 'coming-soon';
-
-                  return (
-                    <div
-                      key={menu.id}
-                      className={`bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 ${
-                        isDisabled ? 'opacity-50' : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-6">
-                        <span
-                          className="text-sm tracking-widest text-theme-text-muted"
-                          style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                        >
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <IconComponent className="w-6 h-6 text-theme-text-secondary" />
-                      </div>
-                      <h3
-                        className="text-xl sm:text-2xl text-theme-text-primary mb-3 tracking-tight"
-                        style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                      >
-                        {t(menu.nameKey)}
-                      </h3>
-                      <p className="text-sm text-theme-text-secondary leading-relaxed">
-                        {isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
+              {/* Footer Note */}
+              <p className="text-center text-xs text-theme-text-tertiary mt-6">
+                {t('auth.termsAgreement')}
+              </p>
+            </div>
           </div>
         )}
 

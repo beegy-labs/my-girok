@@ -14,4 +14,5 @@ export * from './SortableItem';
 export * from './SortableList';
 export * from './TextArea';
 export * from './TextInput';
+export * from './TopWidget';
 export * from './ViewToggle';

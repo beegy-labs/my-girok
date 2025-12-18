@@ -14,11 +14,15 @@ import MyResumePage from './pages/resume/MyResumePage';
 import SettingsPage from './pages/settings/SettingsPage';
 // Placeholder pages for upcoming features
 import JournalPage from './pages/JournalPage';
+import SchedulePage from './pages/SchedulePage';
 import FinancePage from './pages/FinancePage';
 import LibraryPage from './pages/LibraryPage';
 import NetworkPage from './pages/NetworkPage';
 import StatsPage from './pages/StatsPage';
 import NotificationsPage from './pages/NotificationsPage';
+// Legal pages
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 export const router = createBrowserRouter([
   // Main layout - standard pages with container constraints
@@ -72,6 +76,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'schedule',
+        element: (
+          <PrivateRoute>
+            <SchedulePage />
+          </PrivateRoute>
+        ),
+      },
+      {
         path: 'finance',
         element: (
           <PrivateRoute>
@@ -110,6 +122,15 @@ export const router = createBrowserRouter([
             <NotificationsPage />
           </PrivateRoute>
         ),
+      },
+      // Legal pages (public)
+      {
+        path: 'privacy',
+        element: <PrivacyPage />,
+      },
+      {
+        path: 'terms',
+        element: <TermsPage />,
       },
       {
         path: '*',

@@ -146,27 +146,27 @@
    "Modern Editorial Archive" / "Sophisticated Classic" style
    ============================================ */
 
-/* Typography Families */
-@property --font-serif-title {
+/* Typography Families - must match :root variable names */
+@property --font-family-serif-title {
   syntax: '*';
   inherits: true;
   initial-value: 'Playfair Display', Georgia, 'Times New Roman', serif;
 }
 
-@property --font-mono-brand {
+@property --font-family-mono-brand {
   syntax: '*';
   inherits: true;
   initial-value: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 }
 
-/* Layout Tokens */
-@property --radius-card-editorial {
+/* Layout Tokens - must match :root variable names */
+@property --radius-editorial {
   syntax: '<length>';
   inherits: true;
   initial-value: 40px;
 }
 
-@property --spacing-card-editorial {
+@property --spacing-editorial {
   syntax: '<length>';
   inherits: true;
   initial-value: 40px;
