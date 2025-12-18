@@ -32,6 +32,12 @@
     "logout": "로그아웃",
     "changePassword": "비밀번호 변경"
   },
+  "aria": {
+    "goToHomepage": "홈페이지로 이동",
+    "switchToLight": "라이트 모드로 전환",
+    "switchToDark": "다크 모드로 전환",
+    "userMenu": "사용자 메뉴"
+  },
   "home": {
     "title": "나의 기록을 정리하는 공간",
     "subtitle": "나만의 프로필을 관리하세요",

@@ -32,6 +32,12 @@
     "logout": "Logout",
     "changePassword": "Change Password"
   },
+  "aria": {
+    "goToHomepage": "Go to homepage",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "userMenu": "User menu"
+  },
   "home": {
     "title": "Welcome to My-Girok",
     "subtitle": "Manage Your Professional Profile",

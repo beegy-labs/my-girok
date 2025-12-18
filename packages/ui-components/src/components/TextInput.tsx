@@ -50,7 +50,7 @@ const baseInputClasses =
 const defaultBorderClasses = 'border border-theme-border-default';
 
 /**
- * Accessible text input component with WCAG 2.1 AA compliance
+ * Accessible text input component with WCAG 2.1 AAA compliance
  *
  * Features:
  * - Minimum 44px touch target height (WCAG 2.5.5)

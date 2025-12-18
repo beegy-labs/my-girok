@@ -45,7 +45,7 @@ export default function Navbar() {
           <Link
             to="/"
             className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
-            aria-label="Go to homepage"
+            aria-label={t('aria.goToHomepage')}
           >
             <span
               className="text-xl sm:text-2xl font-semibold text-theme-text-primary tracking-tight"
@@ -61,7 +61,7 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               aria-label={
-                effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+                effectiveTheme === 'dark' ? t('aria.switchToLight') : t('aria.switchToDark')
               }
               className="p-2.5 sm:p-3 rounded-lg hover:bg-theme-bg-hover transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
             >
@@ -81,7 +81,7 @@ export default function Navbar() {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
-                  aria-label="User menu"
+                  aria-label={t('aria.userMenu')}
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg hover:bg-theme-bg-hover transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
                 >
                   <div className="text-right">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,6 +19,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 export default function MyResumePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const shareModalTitleId = useId();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
   const [loading, setLoading] = useState(true);
@@ -406,11 +407,25 @@ export default function MyResumePage() {
           )}
         </section>
 
-        {/* Share Modal */}
+        {/* Share Modal - WCAG AAA accessible dialog */}
         {showShareModal && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={shareModalTitleId}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setShowShareModal(false);
+                setSelectedResumeId(null);
+              }
+            }}
+          >
             <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-theme-xl">
-              <h2 className="text-xl sm:text-2xl font-bold text-theme-text-primary mb-4">
+              <h2
+                id={shareModalTitleId}
+                className="text-xl sm:text-2xl font-bold text-theme-text-primary mb-4"
+              >
                 {t('resume.shareLinkCreate')}
               </h2>
               <div className="mb-6">

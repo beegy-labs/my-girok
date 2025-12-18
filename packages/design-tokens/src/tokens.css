@@ -126,7 +126,7 @@
 @property --theme-status-error-text {
   syntax: '<color>';
   inherits: true;
-  initial-value: #c62828;
+  initial-value: #a31818; /* AAA 7.77:1 */
 }
 
 @property --theme-status-success-bg {
@@ -138,7 +138,7 @@
 @property --theme-status-success-text {
   syntax: '<color>';
   inherits: true;
-  initial-value: #2e7d32;
+  initial-value: #1b5e20; /* AAA 7.87:1 */
 }
 
 /* ============================================

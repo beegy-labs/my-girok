@@ -32,6 +32,12 @@
     "logout": "ログアウト",
     "changePassword": "パスワード変更"
   },
+  "aria": {
+    "goToHomepage": "ホームページへ移動",
+    "switchToLight": "ライトモードに切り替え",
+    "switchToDark": "ダークモードに切り替え",
+    "userMenu": "ユーザーメニュー"
+  },
   "home": {
     "title": "My-Girokへようこそ",
     "subtitle": "あなたのプロフィールを管理",

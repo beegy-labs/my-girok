@@ -62,7 +62,7 @@ export interface SelectInputProps extends Omit<
 }
 
 /**
- * Accessible select input component with WCAG 2.1 AA compliance
+ * Accessible select input component with WCAG 2.1 AAA compliance
  *
  * Features:
  * - Minimum 48px touch target height (WCAG 2.5.5)
