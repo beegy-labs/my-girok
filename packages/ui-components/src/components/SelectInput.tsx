@@ -5,6 +5,16 @@ export interface SelectOption {
   label: string;
 }
 
+// Static class definitions (defined outside component for performance)
+// Base select classes with WCAG compliance:
+// - min-h-[48px] for touch target (WCAG 2.5.5)
+// - text-base (16px) for readability
+// - focus-visible for keyboard navigation
+const baseSelectClasses =
+  'w-full min-h-[48px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
+
+const defaultBorderClasses = 'border border-theme-border-default';
+
 export interface SelectInputProps extends Omit<
   SelectHTMLAttributes<HTMLSelectElement>,
   'className' | 'onChange'
@@ -88,25 +98,6 @@ export function SelectInput({
   ...props
 }: SelectInputProps) {
   const selectId = id || `select-${label?.toLowerCase().replace(/\s+/g, '-')}`;
-
-  // Base select classes with WCAG compliance:
-  // - min-h-[48px] for touch target (WCAG 2.5.5)
-  // - text-base (16px) for readability
-  // - focus-visible for keyboard navigation
-  const baseSelectClasses = `
-    w-full min-h-[48px] px-4 py-3
-    text-base rounded-xl
-    bg-theme-bg-input text-theme-text-primary
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-    focus-visible:ring-theme-focus-ring focus-visible:border-transparent
-    disabled:opacity-50 disabled:cursor-not-allowed
-    transition-all duration-200
-    cursor-pointer
-  `
-    .trim()
-    .replace(/\s+/g, ' ');
-
-  const defaultBorderClasses = 'border border-theme-border-default';
 
   const errorClasses = error
     ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'

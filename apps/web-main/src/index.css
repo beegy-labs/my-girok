@@ -91,8 +91,10 @@ body {
   transition: top 0.3s ease;
 }
 
-.skip-link:focus {
+.skip-link:focus-visible {
   top: 1rem;
+  outline: 3px solid var(--theme-focus-ring);
+  outline-offset: 2px;
 }
 
 /* Large card grid (36px radius) */

@@ -107,26 +107,9 @@ export default function HomePage() {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
 
-                    return (
-                      <Link
-                        key={menu.id}
-                        to={isDisabled ? '#' : menu.route}
-                        onClick={(e) => isDisabled && e.preventDefault()}
-                        aria-disabled={isDisabled}
-                        aria-label={`${t(menu.nameKey)}${isDisabled ? ' - ' + t('home.comingSoon') : ''}`}
-                        className={`
-                          group relative bg-theme-bg-card border border-theme-border-subtle
-                          rounded-[36px] shadow-theme-md p-6 sm:p-8
-                          transition-all duration-200
-                          min-h-[180px] flex flex-col justify-between
-                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2
-                          ${
-                            isDisabled
-                              ? 'opacity-60 cursor-not-allowed'
-                              : 'hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1 cursor-pointer'
-                          }
-                        `}
-                      >
+                    // Card content shared between Link and disabled div
+                    const cardContent = (
+                      <>
                         {/* Icon and Title */}
                         <div className="flex items-start justify-between">
                           <div
@@ -169,6 +152,32 @@ export default function HomePage() {
                             <ArrowRight className="w-4 h-4" aria-hidden="true" />
                           </div>
                         )}
+                      </>
+                    );
+
+                    const baseCardClasses =
+                      'group relative bg-theme-bg-card border border-theme-border-subtle rounded-[36px] shadow-theme-md p-6 sm:p-8 transition-all duration-200 min-h-[180px] flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2';
+
+                    // Use semantic elements: Link for active, div with proper ARIA for disabled
+                    return isDisabled ? (
+                      <div
+                        key={menu.id}
+                        role="button"
+                        aria-disabled="true"
+                        aria-label={`${t(menu.nameKey)} - ${t('home.comingSoon')}`}
+                        tabIndex={0}
+                        className={`${baseCardClasses} opacity-60 cursor-not-allowed`}
+                      >
+                        {cardContent}
+                      </div>
+                    ) : (
+                      <Link
+                        key={menu.id}
+                        to={menu.route}
+                        aria-label={t(menu.nameKey)}
+                        className={`${baseCardClasses} hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1 cursor-pointer`}
+                      >
+                        {cardContent}
                       </Link>
                     );
                   })}
