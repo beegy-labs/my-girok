@@ -52,16 +52,18 @@ const variantClasses = {
 } as const;
 
 // All sizes meet WCAG 44x44px minimum touch target
+// V25.8 Editorial sizes: lg (56px) and xl (64px) have editorial typography
 const sizeClasses = {
   sm: 'min-h-[44px] px-4 py-2.5 text-sm',
   md: 'min-h-[44px] px-5 py-3 text-base',
-  lg: 'min-h-[48px] px-6 py-3.5 text-lg',
+  lg: 'min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-widest',
   xl: 'min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-[0.3em]',
 } as const;
 
 // Border radius options
+// V25.8: default (16px) for secondary, editorial (24px) for primary
 const roundedClasses = {
-  default: 'rounded-xl',
+  default: 'rounded-2xl',
   editorial: 'rounded-[24px]',
   full: 'rounded-full',
 } as const;

@@ -176,13 +176,13 @@ export default function LoginPage() {
             {/* Secondary Actions - V25.8 Style */}
             <div className="mt-8 flex flex-col gap-3">
               <Link to="/register" className="block">
-                <Button variant="secondary" size="lg" rounded="editorial" fullWidth>
+                <Button variant="secondary" size="lg" rounded="default" fullWidth>
                   <UserPlus size={16} />
                   {t('auth.registerHere')}
                 </Button>
               </Link>
               <Link to="/forgot-password" className="block">
-                <Button variant="ghost" size="lg" rounded="editorial" fullWidth>
+                <Button variant="ghost" size="lg" rounded="default" fullWidth>
                   <Key size={16} />
                   {t('auth.forgotPassword', { defaultValue: 'Forgot Password' })}
                 </Button>

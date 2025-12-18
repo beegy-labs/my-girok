@@ -62,16 +62,16 @@ export interface ButtonProps {
 | ---- | ---------- | --------------------------------------------------- |
 | sm   | 44px       | Standard                                            |
 | md   | 44px       | Standard                                            |
-| lg   | 48px       | Standard                                            |
+| lg   | 56px       | `font-black uppercase tracking-widest text-[11px]`  |
 | xl   | 64px       | `font-black uppercase tracking-[0.3em] text-[14px]` |
 
 **Rounded Options:**
 
-| Option    | Radius | Usage                  |
-| --------- | ------ | ---------------------- |
-| default   | 12px   | Standard buttons       |
-| editorial | 24px   | Form buttons (V0.0.1)  |
-| full      | 50%    | Hero buttons, circular |
+| Option    | Radius | Usage                      |
+| --------- | ------ | -------------------------- |
+| default   | 16px   | Secondary buttons (V0.0.1) |
+| editorial | 24px   | Primary buttons (V0.0.1)   |
+| full      | 50%    | Hero buttons, circular     |
 
 **Usage:**
 
@@ -82,7 +82,7 @@ export interface ButtonProps {
 </Button>
 
 // Secondary action (lg size)
-<Button variant="secondary" size="lg" rounded="editorial">
+<Button variant="secondary" size="lg" rounded="default">
   Create Account
 </Button>
 
@@ -183,7 +183,7 @@ export interface MenuCardProps {
 
 **V0.0.1 Styling:**
 
-- Card: `rounded-[64px] border-2 p-10 md:p-12 min-h-[320px]`
+- Card: `rounded-[64px] border-2 p-10 md:p-12 min-h-[380px]`
 - Icon container: `p-6 rounded-[28px] border-2`
 - Index: `text-[12px] font-black tracking-[0.3em] monospace`
 - Description: `text-[18px] font-bold`

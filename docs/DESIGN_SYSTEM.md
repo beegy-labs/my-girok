@@ -196,17 +196,17 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 
 ## Border Radius Guide (V0.0.1)
 
-| Token            | Size | Usage                              |
-| ---------------- | ---- | ---------------------------------- |
-| `rounded-xl`     | 12px | Inputs (default size), buttons     |
-| `rounded-2xl`    | 16px | Small cards, ViewToggle            |
-| `rounded-3xl`    | 24px | MenuRow                            |
-| `rounded-[24px]` | 24px | Input (lg size), editorial buttons |
-| `rounded-[40px]` | 40px | Archive support banner             |
-| `rounded-[48px]` | 48px | Form cards (Login, Register)       |
-| `rounded-[56px]` | 56px | Promo carousel                     |
-| `rounded-[64px]` | 64px | MenuCard, Workstation section      |
-| `rounded-full`   | 50%  | Circular buttons, hero button      |
+| Token            | Size | Usage                            |
+| ---------------- | ---- | -------------------------------- |
+| `rounded-xl`     | 12px | Inputs (default size)            |
+| `rounded-2xl`    | 16px | Secondary buttons, ViewToggle    |
+| `rounded-3xl`    | 24px | MenuRow                          |
+| `rounded-[24px]` | 24px | Input (lg size), primary buttons |
+| `rounded-[40px]` | 40px | Archive support banner           |
+| `rounded-[48px]` | 48px | Form cards (Login, Register)     |
+| `rounded-[56px]` | 56px | Promo carousel                   |
+| `rounded-[64px]` | 64px | MenuCard, Workstation section    |
+| `rounded-full`   | 50%  | Circular buttons, hero button    |
 
 ## Component Specifications (V0.0.1)
 
@@ -269,8 +269,8 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 // Secondary action button (lg size)
 <Button
   variant="secondary"
-  size="lg"                    // min-h-[48px]
-  rounded="editorial"          // rounded-[24px]
+  size="lg"                    // min-h-[56px], font-black, uppercase
+  rounded="default"            // rounded-2xl (16px)
 >
   <UserPlus size={16} />
   Create Account
@@ -293,7 +293,7 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 | ---- | ---------- | --------------------------------------------------- |
 | sm   | 44px       | Standard body text                                  |
 | md   | 44px       | Standard body text                                  |
-| lg   | 48px       | Larger padding                                      |
+| lg   | 56px       | `font-black uppercase tracking-widest text-[11px]`  |
 | xl   | 64px       | `font-black uppercase tracking-[0.3em] text-[14px]` |
 
 ### MenuCard (Dashboard Grid)
@@ -308,7 +308,7 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 />
 ```
 
-- Card: `rounded-[64px] border-2 p-10 md:p-12 min-h-[320px]`
+- Card: `rounded-[64px] border-2 p-10 md:p-12 min-h-[380px]`
 - Icon container: `p-6 rounded-[28px] border-2`
 - Index badge: `text-[12px] font-black tracking-[0.3em] monospace`
 

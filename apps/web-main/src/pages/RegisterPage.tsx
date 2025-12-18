@@ -152,7 +152,7 @@ export default function RegisterPage() {
             {/* Back to Login - V25.8 Style */}
             <div className="mt-8">
               <Link to="/login" className="block">
-                <Button variant="secondary" size="lg" rounded="editorial" fullWidth>
+                <Button variant="secondary" size="lg" rounded="default" fullWidth>
                   <ArrowLeft size={16} />
                   {t('auth.loginHere')}
                 </Button>

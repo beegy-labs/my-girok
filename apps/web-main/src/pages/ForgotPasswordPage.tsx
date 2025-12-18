@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
                   })}
                 </p>
                 <Link to="/login" className="block">
-                  <Button variant="secondary" size="lg" rounded="editorial" fullWidth>
+                  <Button variant="secondary" size="lg" rounded="default" fullWidth>
                     <ArrowLeft className="w-5 h-5" />
                     {t('forgotPassword.backToLogin', { defaultValue: 'Back to Login' })}
                   </Button>
@@ -124,13 +124,13 @@ export default function ForgotPasswordPage() {
             {!success && (
               <div className="mt-8 flex flex-col gap-3">
                 <Link to="/login" className="block">
-                  <Button variant="secondary" size="lg" rounded="editorial" fullWidth>
+                  <Button variant="secondary" size="lg" rounded="default" fullWidth>
                     <ArrowLeft className="w-4 h-4" />
                     {t('forgotPassword.backToLogin', { defaultValue: 'Back to Login' })}
                   </Button>
                 </Link>
                 <Link to="/register" className="block">
-                  <Button variant="ghost" size="lg" rounded="editorial" fullWidth>
+                  <Button variant="ghost" size="lg" rounded="default" fullWidth>
                     <Key className="w-4 h-4" />
                     {t('auth.registerHere', { defaultValue: 'Create Account' })}
                   </Button>
