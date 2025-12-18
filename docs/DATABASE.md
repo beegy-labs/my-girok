@@ -29,11 +29,11 @@ Complete guide for database setup, migrations, and management across environment
 
 ### Git Branch → Database Mapping
 
-| Git Branch | Database | Namespace | Manual Migration |
-|------------|----------|-----------|------------------|
-| `develop` | `dev_girok_user` | my-girok-dev | ✅ Required |
-| `release/*` | `staging_girok_user` | my-girok-staging | ✅ Required |
-| `main` | `girok_user` | my-girok-prod | ✅ Required |
+| Git Branch  | Database             | Namespace        | Manual Migration |
+| ----------- | -------------------- | ---------------- | ---------------- |
+| `develop`   | `dev_girok_user`     | my-girok-dev     | ✅ Required      |
+| `release/*` | `staging_girok_user` | my-girok-staging | ✅ Required      |
+| `main`      | `girok_user`         | my-girok-prod    | ✅ Required      |
 
 **Note**: All migrations are manual for team collaboration safety.
 
@@ -94,6 +94,7 @@ GRANT ALL PRIVILEGES ON DATABASE girok_user TO girok_user;
 #### Option C: Managed Service (Recommended for Production)
 
 **AWS RDS:**
+
 ```
 Development:  dev-girok.xxxxx.rds.amazonaws.com
 Staging:      staging-girok.xxxxx.rds.amazonaws.com
@@ -122,6 +123,7 @@ DATABASE_URL="postgresql://girok_user:prod_password@localhost:5434/girok_user?sc
 ### Development Environment
 
 **Create migration locally:**
+
 ```bash
 cd services/auth-service
 
@@ -137,6 +139,7 @@ git push
 ```
 
 **Apply migration to server:**
+
 ```bash
 # Run manually after deployment
 kubectl run migration-dev \
@@ -154,6 +157,7 @@ kubectl delete pod migration-dev -n my-girok-dev
 ```
 
 **Quick prototyping (local only):**
+
 ```bash
 # Apply immediately without migration file (Warning: local dev only!)
 pnpm prisma db push
@@ -186,6 +190,7 @@ kubectl delete pod migration-staging -n my-girok-staging
 ```
 
 **Rollback on failure:**
+
 ```bash
 # Rollback migration
 pnpm prisma migrate resolve --rolled-back <migration-name>
@@ -240,6 +245,7 @@ Located at `scripts/sync-staging-db.sh`:
 ```
 
 **Features:**
+
 - Dumps production database
 - Masks sensitive data (emails, names, tokens)
 - Restores to staging
@@ -256,6 +262,7 @@ Located at `scripts/sync-staging-db.sh`:
 #### Data Masking
 
 The script automatically masks:
+
 - User emails: `user_<id>@test.example.com`
 - User names: `Test User <id>`
 - Provider IDs: `masked_<id>`
@@ -280,6 +287,7 @@ export STAGING_DB_USER="staging_girok_user"
 ### Migration Workflow for Teams
 
 **Developer A creates migration:**
+
 ```bash
 # 1. Update develop branch
 git checkout develop
@@ -305,6 +313,7 @@ git push origin feature/add-user-profile
 ```
 
 **Developer B works on different migration simultaneously:**
+
 ```bash
 # 1. Pull latest develop
 git checkout develop
@@ -320,6 +329,7 @@ pnpm prisma migrate dev --name add_oauth_provider_table
 ```
 
 **Resolving migration conflicts:**
+
 ```bash
 # When PR has migration conflicts
 
@@ -345,6 +355,7 @@ git push origin feature/my-feature --force
 ### Migration Review Checklist
 
 When reviewing PRs, check:
+
 - [ ] Migration files are included
 - [ ] Migration name is clear and descriptive
 - [ ] No data loss potential
@@ -425,6 +436,7 @@ model User {
 ```
 
 **Key Points:**
+
 - Always add `@db.Timestamptz(6)` to DateTime fields
 - Use 6 digits of microsecond precision
 - Database timezone is set to `Etc/UTC`
@@ -455,6 +467,7 @@ ALTER TABLE "users"
 #### Application Code Guidelines
 
 **Backend (Node.js/TypeScript):**
+
 ```typescript
 // ✅ Correct: Use Date.now() or new Date()
 const now = Date.now(); // Returns UTC milliseconds
@@ -473,6 +486,7 @@ const date = new Date().toLocaleString('Asia/Seoul'); // Returns string, not Dat
 ```
 
 **Frontend (JavaScript):**
+
 ```typescript
 // ✅ Correct: Let JavaScript handle timezone conversion
 const date = new Date(user.createdAt); // UTC timestamp from server
@@ -494,12 +508,13 @@ Always return timestamps in ISO 8601 format with UTC timezone:
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
   "email": "user@example.com",
-  "createdAt": "2025-01-11T14:40:01.708Z",  // ✅ ISO 8601 with Z (UTC)
+  "createdAt": "2025-01-11T14:40:01.708Z", // ✅ ISO 8601 with Z (UTC)
   "updatedAt": "2025-01-11T14:40:01.708Z"
 }
 ```
 
 **Do NOT:**
+
 - Return timestamps without timezone: `"2025-01-11T14:40:01"` ❌
 - Return in server's local timezone: `"2025-01-11T23:40:01+09:00"` ❌
 - Return as Unix timestamp: `1704983041708` ❌ (unless specifically needed)
@@ -509,6 +524,7 @@ Always return timestamps in ISO 8601 format with UTC timezone:
 Before deploying:
 
 1. **Schema Check**
+
    ```sql
    -- All timestamp columns should be TIMESTAMPTZ
    SELECT table_name, column_name, data_type
@@ -518,6 +534,7 @@ Before deploying:
    ```
 
 2. **Timezone Check**
+
    ```sql
    -- Database timezone should be UTC
    SHOW timezone;  -- Should return: Etc/UTC
@@ -532,6 +549,7 @@ Before deploying:
 #### Common Pitfalls
 
 ❌ **Pitfall 1: Forgetting @db.Timestamptz**
+
 ```prisma
 // Wrong: Missing @db.Timestamptz annotation
 createdAt DateTime @default(now()) @map("created_at")
@@ -541,6 +559,7 @@ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 ```
 
 ❌ **Pitfall 2: Manual Timezone Conversion**
+
 ```typescript
 // Wrong: Manual conversion can introduce bugs
 const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
@@ -550,19 +569,21 @@ const localDate = utcDate.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 ```
 
 ❌ **Pitfall 3: Comparing Timestamps Without Timezone**
+
 ```typescript
 // Wrong: String comparison doesn't work
-if (date1 > date2) { } // May fail if formats differ
+if (date1 > date2) {
+} // May fail if formats differ
 
 // Correct: Compare as Date objects or milliseconds
-if (new Date(date1).getTime() > new Date(date2).getTime()) { }
+if (new Date(date1).getTime() > new Date(date2).getTime()) {
+}
 ```
 
 #### Reference Implementation
 
-See migration: `docs/changelogs/2025-01-11-timezone-migration.md`
-
 Example files:
+
 - `services/auth-service/prisma/schema.prisma`
 - `services/auth-service/src/common/utils/id-generator.ts`
 - `services/auth-service/prisma/migrations/20250111120000_convert_to_timestamptz/`
@@ -572,6 +593,7 @@ Example files:
 ### 1. Migration Safety
 
 ✅ **DO:**
+
 - Always backup before migration
 - Test in staging first
 - Run migrations manually
@@ -580,6 +602,7 @@ Example files:
 - Use descriptive migration names
 
 ❌ **DON'T:**
+
 - Auto-migrate production (team collaboration risk)
 - Skip staging tests
 - Modify existing migrations
@@ -589,6 +612,7 @@ Example files:
 ### 2. Data Security
 
 ✅ **DO:**
+
 - Mask sensitive data in non-production
 - Use SSL/TLS connections
 - Use strong passwords
@@ -596,6 +620,7 @@ Example files:
 - Rotate credentials periodically
 
 ❌ **DON'T:**
+
 - Copy production data without masking
 - Use plain text passwords
 - Expose database to public network
@@ -604,6 +629,7 @@ Example files:
 ### 3. Performance
 
 ✅ **DO:**
+
 - Optimize indexes
 - Use connection pooling
 - Regular VACUUM operations
@@ -611,9 +637,10 @@ Example files:
 - Set appropriate resource limits
 
 ❌ **DON'T:**
+
 - Over-index (slows writes)
 - Skip maintenance
-- Use SELECT * in production
+- Use SELECT \* in production
 - Ignore slow query warnings
 
 ### 4. Monitoring
@@ -737,6 +764,7 @@ pnpm prisma migrate diff \
 ## Support
 
 For database issues:
+
 - Check migration status: `pnpm prisma migrate status`
 - View application logs: `kubectl logs <pod-name> -n <namespace>`
 - Check PostgreSQL logs
