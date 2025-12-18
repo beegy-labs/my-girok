@@ -172,7 +172,12 @@
     "features": "機能",
     "comingSoon": "準備中",
     "environment": "環境設定",
-    "activeFocus": "アクティブフォーカス"
+    "activeFocus": "アクティブフォーカス",
+    "legal": "法的事項"
+  },
+  "legal": {
+    "privacyPlaceholder": "プライバシーポリシーの内容は近日公開予定です。",
+    "termsPlaceholder": "利用規約の内容は近日公開予定です。"
   },
   "widget": {
     "changeFocus": "フォーカス変更",

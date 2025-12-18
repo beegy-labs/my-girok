@@ -172,7 +172,12 @@
     "features": "FEATURES",
     "comingSoon": "COMING SOON",
     "environment": "ENVIRONMENT",
-    "activeFocus": "ACTIVE FOCUS"
+    "activeFocus": "ACTIVE FOCUS",
+    "legal": "LEGAL"
+  },
+  "legal": {
+    "privacyPlaceholder": "Privacy Policy content will be available soon.",
+    "termsPlaceholder": "Terms of Service content will be available soon."
   },
   "widget": {
     "changeFocus": "Change Focus",
