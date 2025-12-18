@@ -51,7 +51,7 @@ export const ViewToggle = memo(function ViewToggle({
 
   return (
     <div
-      className={`inline-flex gap-1 p-1 bg-theme-bg-card border border-theme-border-default rounded-xl ${className}`}
+      className={`inline-flex gap-1 p-1.5 bg-theme-bg-card border border-theme-border-default rounded-2xl ${className}`}
       role="radiogroup"
       aria-label="View mode"
     >

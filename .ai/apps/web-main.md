@@ -12,9 +12,21 @@
 - **API**: Axios 1.13
 - **Testing**: Vitest 4.0 + Playwright 1.57
 
-## Design System: Modern Editorial Archive
+## Design System: Modern Editorial Archive (V24.5)
 
 > "Sophisticated Classic" style - professional archive aesthetic
+
+**Reference**: Based on V24.5 Integrated Showcase mockup
+
+### V24.5 Component Layout
+
+| Component  | Specs                                 |
+| ---------- | ------------------------------------- |
+| MenuCard   | p-10, rounded-[40px], border-2, 320px |
+| MenuRow    | p-8, rounded-3xl, border-2, gap-8     |
+| TopWidget  | p-10, rounded-[48px], border-2        |
+| ViewToggle | p-1.5, rounded-2xl, border-1          |
+| Navbar     | h-20 (80px), backdrop-blur-xl         |
 
 ### Design Tokens
 

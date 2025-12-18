@@ -211,13 +211,24 @@ export interface CardProps {
 - `focus-visible` ring
 - `role="button"` and `tabIndex={0}` for interactive cards
 
-## Editorial Components (Modern Editorial Archive Style)
+## Editorial Components (V24.5 Modern Editorial Archive Style)
 
 > "Sophisticated Classic" design pattern with serif titles, 40px radius, and editorial typography
 
+**Reference**: Based on V24.5 Integrated Showcase mockup
+
+### Component Specifications (V24.5)
+
+| Component  | Padding | Radius         | Border   | Min Height | Icon Size  |
+| ---------- | ------- | -------------- | -------- | ---------- | ---------- |
+| MenuCard   | p-10    | rounded-[40px] | border-2 | 320px      | 32px (w-8) |
+| MenuRow    | p-8     | rounded-3xl    | border-2 | auto       | 24px (w-6) |
+| TopWidget  | p-10    | rounded-[48px] | border-2 | auto       | 28px (w-7) |
+| ViewToggle | p-1.5   | rounded-2xl    | border-1 | 44px       | 18px       |
+
 ### MenuCard
 
-Large navigation card with index number and hover lift effect.
+Large navigation card with index number, pin functionality, and hover lift effect.
 
 ```typescript
 export interface MenuCardProps {
@@ -226,40 +237,52 @@ export interface MenuCardProps {
   title: string;           // Serif font title
   description: string;
   onClick?: () => void;    // undefined = disabled
+  isPinned?: boolean;      // Pinned state for TopWidget
+  onPin?: () => void;      // Pin button handler
+  pinTooltip?: string;     // Pin button tooltip
   'aria-label'?: string;
 }
 
-// Usage
+// Usage with pin functionality
 <MenuCard
   index={1}
-  icon={<Book className="w-6 h-6" />}
+  icon={<Book />}
   title="Personal Journal"
   description="Record your daily thoughts"
   onClick={() => navigate('/journal')}
+  isPinned={pinnedId === 'journal'}
+  onPin={() => setPinnedId('journal')}
+  pinTooltip="Pin to top widget"
 />
 ```
 
-**Features**: 40px radius, hover translateY(-4px), semantic `<button>`, Playfair Display serif
+**Features**: 40px radius, hover translateY(-4px), semantic `<button>`, Playfair Display serif, pin button
 
 ### MenuRow
 
-Compact list row for list view mode.
+Compact list row for list view mode with pin functionality.
 
 ```typescript
 export interface MenuRowProps {
   index: number;
   icon: React.ReactNode;
   title: string;
+  description?: string;    // Optional description
   onClick?: () => void;
+  isPinned?: boolean;      // Pinned state
+  onPin?: () => void;      // Pin button handler
   'aria-label'?: string;
 }
 
-// Usage
+// Usage with pin
 <MenuRow
   index={1}
-  icon={<Book className="w-5 h-5" />}
+  icon={<Book />}
   title="Personal Journal"
+  description="Record your daily thoughts"
   onClick={() => navigate('/journal')}
+  isPinned={pinnedId === 'journal'}
+  onPin={() => setPinnedId('journal')}
 />
 ```
 

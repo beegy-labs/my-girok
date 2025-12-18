@@ -172,9 +172,11 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 
 ## Typography
 
-### Design Style: Modern Editorial Archive
+### Design Style: Modern Editorial Archive (V24.5)
 
 > "Sophisticated Classic" aesthetic with serif titles and editorial layout
+
+**Reference**: Based on V24.5 Integrated Showcase mockup
 
 **Key Characteristics**:
 
@@ -183,6 +185,24 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 - 40px border radius for cards (psychological comfort)
 - 80px fixed navbar with backdrop blur
 - Hover lift effects with smooth easing
+
+### V24.5 Mockup vs Production Implementation
+
+V24.5 목업 원본 색상은 WCAG AAA 최적화를 위해 조정되었습니다:
+
+| Element      | V24.5 Mockup | Production | Reason                       |
+| ------------ | ------------ | ---------- | ---------------------------- |
+| Primary Text | #1A1817      | #262220    | Softer contrast, AAA 15.76:1 |
+| Primary      | #704229      | #6B4A2E    | AAA optimized 7.94:1         |
+| Border       | #D1CDBC      | #A09D9A    | WCAG SC 1.4.11 compliant 3:1 |
+| Card BG      | #F9F8F6      | #F8F7F4    | Nearly identical             |
+| Page BG      | #FFFFFF      | #FFFFFF    | Unchanged                    |
+
+**Design Decisions**:
+
+- 색상 조정은 WCAG AAA (7:1+) 및 SC 1.4.11 (3:1) 준수를 위한 것입니다
+- 전체적인 시각적 느낌은 목업과 동일하게 유지됩니다
+- 사회적 약자 배려를 위한 접근성 우선 정책을 따릅니다
 
 ### Editorial Typography Tokens
 
