@@ -7,10 +7,139 @@
    All color combinations meet WCAG 2.1 AA standards (4.5:1+)
 
    Architecture:
+   - Layer 0: @property Type Definitions (type safety, smooth animations)
    - Layer 1: Palette (raw colors, never use directly)
    - Layer 2: Semantic & Component Tokens (theme-switchable via data-theme)
-   - Layer 3: Tailwind Integration (@theme directive)
+   - Layer 3: Tailwind Integration (@theme inline directive)
    ============================================ */
+
+/* ============================================
+   LAYER 0: CSS @PROPERTY TYPE DEFINITIONS
+   Provides type safety, smooth color transitions,
+   and fallback values for invalid inputs.
+   Browser support: Chrome 85+, Firefox 128+, Safari 15.4+
+   ============================================ */
+
+/* Primary Theme Colors - enables smooth color transitions */
+@property --theme-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #8b5e3c;
+}
+
+@property --theme-primary-light {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #a87b54;
+}
+
+@property --theme-primary-dark {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #6b4a2e;
+}
+
+/* Background Colors */
+@property --theme-bg-page {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --theme-bg-card {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f8f7f4;
+}
+
+@property --theme-bg-elevated {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --theme-bg-hover {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f0efec;
+}
+
+/* Text Colors */
+@property --theme-text-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #262220;
+}
+
+@property --theme-text-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #4a4744;
+}
+
+/* Border Colors */
+@property --theme-border-subtle {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #e8e6e3;
+}
+
+@property --theme-border-default {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #d4d2cf;
+}
+
+/* Focus Ring */
+@property --theme-focus-ring {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #8b5e3c;
+}
+
+/* Button Component Colors */
+@property --btn-primary-gradient-from {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #6b4a2e;
+}
+
+@property --btn-primary-gradient-to {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #8b5e3c;
+}
+
+@property --btn-primary-text-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+/* Status Colors */
+@property --theme-status-error-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffebee;
+}
+
+@property --theme-status-error-text {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #c62828;
+}
+
+@property --theme-status-success-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #e8f5e9;
+}
+
+@property --theme-status-success-text {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #2e7d32;
+}
 
 /* ============================================
    LAYER 1: COLOR PALETTE
@@ -277,9 +406,12 @@
 
 /* ============================================
    LAYER 3: TAILWIND INTEGRATION
+   Using @theme inline for dynamic theming support.
+   This allows CSS variables to be resolved at runtime,
+   enabling smooth theme transitions without page reload.
    ============================================ */
 
-@theme {
+@theme inline {
   /* Background */
   --color-theme-bg-page: var(--theme-bg-page);
   --color-theme-bg-card: var(--theme-bg-card);

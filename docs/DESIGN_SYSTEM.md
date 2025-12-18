@@ -17,13 +17,33 @@ My-Girok is a personal record-keeping platform where users document their life s
 
 ## Scalable Theme Architecture
 
-The theme system uses a 3-layer architecture for easy extensibility:
+The theme system uses a 4-layer architecture for type safety and easy extensibility:
 
 ```
-Layer 1: Palette (--palette-*)  → Raw colors, defined once, never use directly
-Layer 2: Semantic (--theme-*)   → Theme-switchable via [data-theme] attribute
-Layer 3: Tailwind (@theme)      → Maps to utilities (bg-theme-*, text-theme-*)
+Layer 0: @property definitions    → Type safety, smooth animations (CSS Houdini)
+Layer 1: Palette (--palette-*)    → Raw colors, defined once, never use directly
+Layer 2: Semantic (--theme-*)     → Theme-switchable via [data-theme] attribute
+Layer 3: Tailwind (@theme inline) → Maps to utilities (bg-theme-*, text-theme-*)
 ```
+
+### CSS @property Type Safety (2025)
+
+Key tokens use CSS `@property` for type validation and smooth transitions:
+
+```css
+@property --theme-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #8b5e3c;
+}
+```
+
+**Benefits:**
+
+- Type validation prevents invalid values
+- Smooth color interpolation in transitions
+- Fallback values for robustness
+- Browser support: Chrome 85+, Firefox 128+, Safari 15.4+
 
 ### Usage in Components
 
@@ -40,7 +60,7 @@ Layer 3: Tailwind (@theme)      → Maps to utilities (bg-theme-*, text-theme-*)
 
 ### Adding a New Theme
 
-Only modify `apps/web-main/src/index.css`:
+Modify `packages/design-tokens/src/tokens.css`:
 
 ```css
 [data-theme='ocean'] {
@@ -382,7 +402,7 @@ const DEPTH_COLORS = {
 
 ```
 packages/design-tokens/        # SINGLE SOURCE OF TRUTH for design tokens
-├── src/tokens.css            # Theme variables (Layers 1-3)
+├── src/tokens.css            # Theme variables (Layers 0-3 with @property)
 └── README.md                 # Token documentation
 
 packages/ui-components/src/    # Shared UI components (depends on design-tokens)
@@ -398,17 +418,21 @@ apps/web-main/src/
     ├── LoadingSpinner.tsx     # Loading indicator
     ├── StatusMessage.tsx      # Status/error messages
     └── ErrorBoundary.tsx      # Error boundary
+
+pnpm-workspace.yaml            # Centralized version management (catalog:)
 ```
 
 ## References
 
 - **Component API**: `.ai/apps/web-main.md`
 - **Tailwind CSS**: https://tailwindcss.com/docs
+- **CSS @property**: https://developer.mozilla.org/en-US/docs/Web/CSS/@property
 - **WCAG 2.1**: https://www.w3.org/WAI/WCAG21/quickref/
 - **Lucide Icons**: https://lucide.dev/icons
 
 ## Version History
 
+- v2.2.0 (2025-12): Add CSS @property type safety, @theme inline, pnpm catalogs
 - v2.1.0 (2025-12): Extract design tokens to dedicated package (@my-girok/design-tokens)
 - v2.0.0 (2025-12): Consolidated and optimized documentation, removed legacy patterns
 - v1.5.0 (2025-12): Scalable 3-layer theme system
