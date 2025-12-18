@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 export interface MenuCardProps {
   /**
@@ -66,7 +66,11 @@ const disabledClasses = 'cursor-not-allowed opacity-50';
  * />
  * ```
  */
-export function MenuCard({
+/**
+ * React.memo wrapper for list rendering performance
+ * per rules.md: "✅ Use React.memo for list items"
+ */
+export const MenuCard = memo(function MenuCard({
   index,
   icon,
   title,
@@ -113,4 +117,4 @@ export function MenuCard({
       <p className="text-sm text-theme-text-secondary leading-relaxed">{description}</p>
     </button>
   );
-}
+});

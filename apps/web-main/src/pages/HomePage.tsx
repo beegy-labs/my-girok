@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -98,11 +98,18 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  const handleMenuClick = (menu: MenuItem) => {
-    if (menu.status === 'active') {
-      navigate(menu.route);
-    }
-  };
+  // Memoized handler per rules.md: "✅ Memoize handlers with useCallback"
+  const handleMenuClick = useCallback(
+    (menu: MenuItem) => {
+      if (menu.status === 'active') {
+        navigate(menu.route);
+      }
+    },
+    [navigate],
+  );
+
+  // Memoized slice per rules.md: "❌ Objects/arrays inside render → Use useMemo"
+  const featuredMenuItems = useMemo(() => MENU_ITEMS.slice(0, 4), []);
 
   return (
     <>
@@ -282,7 +289,7 @@ export default function HomePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {MENU_ITEMS.slice(0, 4).map((menu, index) => {
+                {featuredMenuItems.map((menu, index) => {
                   const IconComponent = menu.icon;
                   const isDisabled = menu.status === 'coming-soon';
 

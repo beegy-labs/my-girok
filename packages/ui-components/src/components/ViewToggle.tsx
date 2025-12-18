@@ -1,3 +1,5 @@
+import { useCallback, memo } from 'react';
+
 export type ViewMode = 'grid' | 'list';
 
 export interface ViewToggleProps {
@@ -38,7 +40,15 @@ const buttonBaseClasses =
  * <ViewToggle value={viewMode} onChange={setViewMode} />
  * ```
  */
-export function ViewToggle({ value, onChange, className = '' }: ViewToggleProps) {
+export const ViewToggle = memo(function ViewToggle({
+  value,
+  onChange,
+  className = '',
+}: ViewToggleProps) {
+  // Memoized handlers per rules.md: "✅ Memoize handlers with useCallback"
+  const handleGridClick = useCallback(() => onChange('grid'), [onChange]);
+  const handleListClick = useCallback(() => onChange('list'), [onChange]);
+
   return (
     <div
       className={`inline-flex gap-1 p-1 bg-theme-bg-card border border-theme-border-default rounded-xl ${className}`}
@@ -47,7 +57,7 @@ export function ViewToggle({ value, onChange, className = '' }: ViewToggleProps)
     >
       <button
         type="button"
-        onClick={() => onChange('grid')}
+        onClick={handleGridClick}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'grid'
             ? 'bg-theme-primary text-btn-primary-text'
@@ -74,7 +84,7 @@ export function ViewToggle({ value, onChange, className = '' }: ViewToggleProps)
       </button>
       <button
         type="button"
-        onClick={() => onChange('list')}
+        onClick={handleListClick}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'list'
             ? 'bg-theme-primary text-btn-primary-text'
@@ -101,4 +111,4 @@ export function ViewToggle({ value, onChange, className = '' }: ViewToggleProps)
       </button>
     </div>
   );
-}
+});

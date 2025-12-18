@@ -5,6 +5,7 @@
 ## Language Policy (CRITICAL)
 
 **ALL code, documentation, and commits MUST be in English**
+
 - Code comments: English
 - Commit messages: English
 - Documentation: English
@@ -13,6 +14,7 @@
 ## Architecture Rules
 
 ### NEVER
+
 - ❌ Duplicate types → Use `packages/types`
 - ❌ Duplicate NestJS utilities → Use `@my-girok/nest-common`
 - ❌ Duplicate UI components → Use `@my-girok/ui-components`
@@ -37,6 +39,7 @@
 - ❌ **Functions in useEffect deps** → Memoize parent
 
 ### ALWAYS
+
 - ✅ Define types first in `packages/types`
 - ✅ Use `@my-girok/nest-common` for backend services (decorators, guards, filters)
 - ✅ Use `@my-girok/ui-components` for frontend UI (TextInput, Button, Alert, etc.)
@@ -103,6 +106,7 @@ const posts = await prisma.post.findMany({
 ## Authentication
 
 **Multi-provider Strategy Pattern:**
+
 - JWT tokens: Access (15min) + Refresh (7days)
 - Web: HttpOnly cookies + localStorage
 - iOS: Keychain
@@ -111,16 +115,19 @@ const posts = await prisma.post.findMany({
 ## Security
 
 **Secrets Management:**
+
 - Production: Sealed Secrets or External Secrets Operator
 - Never commit plain secrets
 - Rotate JWT secrets every 90 days
 
 **Input Validation:**
+
 - Always use class-validator DTOs
 - Validate file uploads (type, size)
 - Sanitize HTML (DOMPurify)
 
 **CORS for Mobile Browsers:**
+
 ```typescript
 // ✅ REQUIRED: iOS Safari compatibility
 app.enableCors({
@@ -133,6 +140,7 @@ app.enableCors({
   optionsSuccessStatus: 204,
 });
 ```
+
 - iOS Safari requires explicit headers (no wildcards)
 - `maxAge` prevents duplicate OPTIONS requests
 - Without `maxAge`, Safari sends OPTIONS on every request (50% overhead)
@@ -140,11 +148,13 @@ app.enableCors({
 ## Testing
 
 **Coverage Requirements:**
+
 - Unit tests: 80% minimum
 - Integration tests: All critical flows
 - E2E tests: Main user journeys
 
 **Mobile Browser Testing:**
+
 - ✅ Test authenticated endpoints on iOS Safari (real device)
 - ✅ Test authenticated endpoints on Android Chrome (real device)
 - ✅ Verify CORS preflight caching with Network Inspector
@@ -165,6 +175,7 @@ app.enableCors({
 **Types:** feat, fix, refactor, docs, test, chore, perf
 
 **Example:**
+
 ```
 feat(auth): add Google OAuth provider
 
@@ -177,6 +188,7 @@ Closes #123
 ## Deployment
 
 **Environment Strategy:**
+
 - Local dev: Docker Compose
 - Staging/Production: Kubernetes only
 - Use Kustomize for overlays
@@ -199,18 +211,21 @@ Never remove, applies to all environments.
 ## Performance
 
 **Response Time Targets (p95):**
+
 - Simple queries: < 50ms
 - List endpoints: < 200ms
 - Complex queries: < 500ms
 - Mutations: < 300ms
 
 **Backend:**
+
 - Index foreign keys
 - Use cursor pagination for large datasets
 - Cache frequently accessed data (Redis)
 - Use SELECT only needed fields
 
 **Frontend (React):**
+
 ```typescript
 // ❌ DON'T: Inline in map
 {items.map(item => <button onClick={() => handle(item.id)}>X</button>)}
@@ -227,11 +242,49 @@ useEffect(() => { if(nav) navigate(nav) }, [nav]);
 navigate('/path'); // Works in React Router v7
 ```
 
+## Over-Engineering Policy (2025)
+
+**Project prefers over-engineering for production quality code.**
+
+### ALWAYS Apply (Mandatory):
+
+- ✅ `React.memo()` for ALL list item components (MenuCard, MenuRow, etc.)
+- ✅ `useCallback()` for ALL event handlers
+- ✅ `useMemo()` for ALL derived arrays/objects
+- ✅ Static class definitions OUTSIDE component functions
+- ✅ Extract constants to module scope
+- ✅ Comprehensive JSDoc comments with @example
+
+### Performance Patterns:
+
+```typescript
+// ✅ ALWAYS: Memoize list components
+export const ListItem = memo(function ListItem(props) { ... });
+
+// ✅ ALWAYS: Memoize handlers
+const handleClick = useCallback((id) => doSomething(id), []);
+
+// ✅ ALWAYS: Memoize derived data
+const filteredItems = useMemo(() => items.filter(...), [items]);
+
+// ✅ ALWAYS: Static classes outside component
+const baseClasses = 'px-4 py-2 rounded-lg';
+export function Button() { ... }
+```
+
+### Rationale:
+
+- Prevents subtle re-render bugs in complex UIs
+- Enables future scalability without refactoring
+- Maintains consistent code patterns across codebase
+- Target: <16ms render time for all components
+
 ## Common Packages
 
 ### Backend: @my-girok/nest-common
 
 **Use for all NestJS services:**
+
 ```typescript
 // Bootstrap with standard configuration
 import { configureApp } from '@my-girok/nest-common';
@@ -245,6 +298,7 @@ await configureApp(app, {
 ```
 
 **Available utilities:**
+
 - `@Public()` - Mark endpoints as public (skip JWT auth)
 - `@CurrentUser()` - Extract user from request
 - `JwtAuthGuard` - JWT authentication with @Public() support
@@ -257,6 +311,7 @@ await configureApp(app, {
 - `ApiErrorResponse` / `ApiSuccessResponse` - Standard response types
 
 **Health Endpoints (HealthModule):**
+
 - `GET /health` - General health check
 - `GET /health/live` - K8s liveness probe
 - `GET /health/ready` - K8s readiness probe (503 during shutdown)
@@ -264,6 +319,7 @@ await configureApp(app, {
 ### Frontend: @my-girok/ui-components
 
 **Use for all React applications:**
+
 ```typescript
 import {
   TextInput,
@@ -277,21 +333,25 @@ import {
 ```
 
 **Form components:**
+
 - `TextInput` - Text/email/password with validation
 - `SelectInput` - Dropdown with options
 - `Button` - Multi-variant (primary/secondary/danger/ghost) with loading
 - `Alert` - Notifications (success/error/warning/info)
 
 **Drag & Drop:**
+
 - `SortableList` - Sortable container (@dnd-kit wrapper)
 - `SortableItem` - Sortable item with drag handle support
 
 **Hooks:**
+
 - `useAsyncOperation` - Async operations with loading/error states
 
 ## Common Patterns
 
 **New Backend Service:**
+
 1. Add `@my-girok/nest-common` to package.json dependencies
 2. Use `configureApp()` in main.ts for bootstrap
 3. Import `HealthModule` in AppModule for K8s health checks
@@ -306,6 +366,7 @@ import {
 12. Create PR
 
 **New Frontend Feature:**
+
 1. Use `@my-girok/ui-components` for UI
 2. Use shared types from `packages/types`
 3. Use `useAsyncOperation` for API calls
@@ -326,6 +387,7 @@ import {
 ## Documentation Links
 
 **Detailed policies:** See `docs/policies/`
+
 - SECURITY.md - Security policies
 - TESTING.md - Testing standards
 - PERFORMANCE.md - Performance optimization

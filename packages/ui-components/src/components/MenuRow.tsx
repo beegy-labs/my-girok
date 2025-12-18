@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 export interface MenuRowProps {
   /**
@@ -59,7 +59,11 @@ const disabledClasses = 'cursor-not-allowed opacity-50';
  * />
  * ```
  */
-export function MenuRow({
+/**
+ * React.memo wrapper for list rendering performance
+ * per rules.md: "✅ Use React.memo for list items"
+ */
+export const MenuRow = memo(function MenuRow({
   index,
   icon,
   title,
@@ -97,4 +101,4 @@ export function MenuRow({
       <span className="text-theme-text-primary font-medium">{title}</span>
     </button>
   );
-}
+});
