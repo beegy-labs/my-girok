@@ -19,6 +19,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 COPY apps/web-main/package.json ./apps/web-main/
 COPY packages/types/package.json ./packages/types/
 COPY packages/types/tsconfig.json ./packages/types/
+COPY packages/design-tokens/package.json ./packages/design-tokens/
 COPY packages/ui-components/package.json ./packages/ui-components/
 COPY packages/ui-components/tsconfig.json ./packages/ui-components/
 
@@ -27,6 +28,7 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY packages/types ./packages/types
+COPY packages/design-tokens ./packages/design-tokens
 COPY packages/ui-components ./packages/ui-components
 COPY apps/web-main ./apps/web-main
 
