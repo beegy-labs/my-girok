@@ -66,6 +66,8 @@ apps/web-main/src/
 │   ├── NetworkPage.tsx        # Placeholder (Coming Soon)
 │   ├── StatsPage.tsx          # Placeholder (Coming Soon)
 │   ├── NotificationsPage.tsx  # Placeholder (Coming Soon)
+│   ├── PrivacyPage.tsx        # Privacy Policy (Legal)
+│   ├── TermsPage.tsx          # Terms of Service (Legal)
 │   ├── resume/
 │   │   ├── MyResumePage.tsx      # Resume management (/resume/my)
 │   │   ├── PublicResumePage.tsx  # Public view (/resume/:username)
@@ -117,11 +119,17 @@ apps/web-main/src/
 ### Placeholder Routes (Coming Soon)
 
 - `/journal` - Personal Journal
+- `/schedule` - Today's Schedule
 - `/finance` - Financial Ledger
 - `/library` - Global Library
 - `/network` - Network
 - `/stats` - Insight Stats
 - `/notifications` - Notifications
+
+### Legal Pages (Public)
+
+- `/privacy` - Privacy Policy
+- `/terms` - Terms of Service
 
 ## Resume Feature
 

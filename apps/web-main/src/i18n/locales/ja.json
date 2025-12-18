@@ -55,6 +55,10 @@
       "title": "個人日記",
       "description": "日々の思考と反省を記録する"
     },
+    "schedule": {
+      "title": "今日のスケジュール",
+      "description": "時間管理と締め切りをアーカイブ"
+    },
     "career": {
       "title": "キャリアアーカイブ",
       "description": "履歴書とプロフィールを管理"
@@ -153,6 +157,7 @@
   },
   "placeholder": {
     "journal": "日々の経験を書いて振り返りましょう。この機能は近日公開予定です。",
+    "schedule": "スケジュールと締め切りを管理しましょう。この機能は近日公開予定です。",
     "finance": "収入、支出、財務目標を追跡しましょう。この機能は近日公開予定です。",
     "library": "読み物、記事、学習資料を整理しましょう。この機能は近日公開予定です。",
     "network": "専門家やメンターとつながりを築きましょう。この機能は近日公開予定です。",
@@ -166,7 +171,23 @@
     "personalArchive": "パーソナルアーカイブ",
     "features": "機能",
     "comingSoon": "準備中",
-    "environment": "環境設定"
+    "environment": "環境設定",
+    "activeFocus": "アクティブフォーカス",
+    "legal": "法的事項"
+  },
+  "legal": {
+    "privacyPlaceholder": "プライバシーポリシーの内容は近日公開予定です。",
+    "termsPlaceholder": "利用規約の内容は近日公開予定です。"
+  },
+  "widget": {
+    "changeFocus": "フォーカス変更",
+    "pinToTop": "トップに固定",
+    "unpinFromTop": "固定解除",
+    "scheduleNow": "NOW",
+    "scheduleNext": "NEXT",
+    "scheduleSummary": "{{name}}さん、今日は{{count}}件のスケジュールが残っています。",
+    "quickAdd": "クイック追加",
+    "financeLoaded": "家計簿ウィジェットデータが読み込まれました。"
   },
   "resume": {
     "edit": "履歴書編集",

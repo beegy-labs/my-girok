@@ -6,41 +6,49 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-theme-bg-card border-t border-theme-border-subtle">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <span
-              className="text-lg font-semibold text-theme-text-primary tracking-tight"
-              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-            >
-              Girok
-            </span>
-            <span className="text-theme-text-muted text-sm">&copy; {currentYear}</span>
-          </div>
-
-          {/* Links */}
-          <nav className="flex items-center gap-6" aria-label={t('aria.footerNavigation')}>
-            <Link
-              to="/privacy"
-              className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
-            >
-              {t('footer.privacy')}
-            </Link>
-            <Link
-              to="/terms"
-              className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
-            >
-              {t('footer.terms')}
-            </Link>
-          </nav>
-        </div>
-
-        {/* Tagline */}
-        <p className="mt-6 text-center text-xs text-theme-text-muted tracking-wide">
+    <footer className="w-full mt-auto border-t border-theme-border-subtle bg-theme-bg-card">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        {/* Tagline - Editorial serif style */}
+        <p
+          className="text-center text-lg sm:text-xl text-theme-text-secondary mb-8 tracking-tight"
+          style={{ fontFamily: 'var(--font-family-serif-title)' }}
+        >
           {t('footer.tagline')}
         </p>
+
+        {/* Links - centered (using text-secondary for AAA compliance in both modes) */}
+        <nav
+          className="flex items-center justify-center gap-6 mb-8"
+          aria-label={t('aria.footerNavigation')}
+        >
+          <Link
+            to="/privacy"
+            className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
+          >
+            {t('footer.privacy')}
+          </Link>
+          <span className="text-theme-text-muted" aria-hidden="true">
+            ·
+          </span>
+          <Link
+            to="/terms"
+            className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
+          >
+            {t('footer.terms')}
+          </Link>
+        </nav>
+
+        {/* Brand & Copyright - centered minimal */}
+        <div className="text-center">
+          <span
+            className="text-sm text-theme-text-muted tracking-wide"
+            style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+          >
+            Girok
+          </span>
+          <span className="text-theme-text-muted text-sm mx-2">·</span>
+          <span className="text-theme-text-muted text-sm">&copy; {currentYear}</span>
+        </div>
       </div>
     </footer>
   );

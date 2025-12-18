@@ -55,6 +55,10 @@
       "title": "Personal Journal",
       "description": "Record your daily thoughts and reflections"
     },
+    "schedule": {
+      "title": "Today's Schedule",
+      "description": "Archive your time management and deadlines"
+    },
     "career": {
       "title": "Career Archive",
       "description": "Manage your resume and professional profile"
@@ -153,6 +157,7 @@
   },
   "placeholder": {
     "journal": "Write and reflect on your daily experiences. This feature is coming soon.",
+    "schedule": "Manage your schedules and deadlines. This feature is coming soon.",
     "finance": "Track your income, expenses, and financial goals. This feature is coming soon.",
     "library": "Organize your reading lists, articles, and learning materials. This feature is coming soon.",
     "network": "Build connections with professionals and mentors. This feature is coming soon.",
@@ -166,7 +171,23 @@
     "personalArchive": "PERSONAL ARCHIVE",
     "features": "FEATURES",
     "comingSoon": "COMING SOON",
-    "environment": "ENVIRONMENT"
+    "environment": "ENVIRONMENT",
+    "activeFocus": "ACTIVE FOCUS",
+    "legal": "LEGAL"
+  },
+  "legal": {
+    "privacyPlaceholder": "Privacy Policy content will be available soon.",
+    "termsPlaceholder": "Terms of Service content will be available soon."
+  },
+  "widget": {
+    "changeFocus": "Change Focus",
+    "pinToTop": "Pin to top",
+    "unpinFromTop": "Unpin from top",
+    "scheduleNow": "NOW",
+    "scheduleNext": "NEXT",
+    "scheduleSummary": "{{name}}, you have {{count}} schedules remaining today.",
+    "quickAdd": "Quick Add",
+    "financeLoaded": "Financial ledger widget data loaded."
   },
   "resume": {
     "edit": "Edit Resume",
