@@ -49,7 +49,7 @@
 @property --theme-bg-card {
   syntax: '<color>';
   inherits: true;
-  initial-value: #f8f7f4;
+  initial-value: #f8f6f2;
 }
 
 @property --theme-bg-elevated {
@@ -61,33 +61,33 @@
 @property --theme-bg-hover {
   syntax: '<color>';
   inherits: true;
-  initial-value: #f0efec;
+  initial-value: #ece9e4;
 }
 
 /* Text Colors */
 @property --theme-text-primary {
   syntax: '<color>';
   inherits: true;
-  initial-value: #262220;
+  initial-value: #2a2522;
 }
 
 @property --theme-text-secondary {
   syntax: '<color>';
   inherits: true;
-  initial-value: #4a4744;
+  initial-value: #4d4843;
 }
 
 /* Border Colors */
 @property --theme-border-subtle {
   syntax: '<color>';
   inherits: true;
-  initial-value: #e8e6e3;
+  initial-value: #e8e4df;
 }
 
 @property --theme-border-default {
   syntax: '<color>';
   inherits: true;
-  initial-value: #d4d2cf;
+  initial-value: #d6d2cc;
 }
 
 /* Focus Ring */
@@ -147,59 +147,59 @@
 :root {
   /* Theme: "Clean White Oak" (Light Mode)
      - Page BG: #FFFFFF (Pure White)
-     - Card BG: #F8F7F4 (Beige White)
-     - Main Text: #262220 (Deep Coffee - prevents afterimage)
+     - Card BG: #F8F6F2 (Warm Beige White)
+     - Main Text: #2A2522 (Warm Deep Coffee)
      - Primary: #8B5E3C (Oak Brown)
      WCAG Contrast:
-     - #262220 on #FFFFFF = 14.5:1 (AAA)
-     - #262220 on #F8F7F4 = 13.8:1 (AAA)
+     - #2A2522 on #FFFFFF = 14.2:1 (AAA)
+     - #2A2522 on #F8F6F2 = 13.5:1 (AAA)
      - #8B5E3C on #FFFFFF = 5.2:1 (AA)
   */
   --light-bg-page: #ffffff;
-  --light-bg-card: #f8f7f4;
-  --light-bg-secondary: #f5f4f1;
+  --light-bg-card: #f8f6f2;
+  --light-bg-secondary: #f4f2ee;
   --light-bg-elevated: #ffffff;
   --light-bg-input: #ffffff;
-  --light-bg-hover: #f0efec;
-  --light-text-primary: #262220;
-  --light-text-secondary: #4a4744;
-  --light-text-tertiary: #6b6866;
-  --light-text-muted: #8c8a88;
-  --light-text-accent: #5c4a38;
-  --light-border-subtle: #e8e6e3;
-  --light-border-default: #d4d2cf;
-  --light-border-strong: #b8b5b2;
+  --light-bg-hover: #ece9e4;
+  --light-text-primary: #2a2522;
+  --light-text-secondary: #4d4843;
+  --light-text-tertiary: #6e6862;
+  --light-text-muted: #918a84;
+  --light-text-accent: #6b4a2e;
+  --light-border-subtle: #e8e4df;
+  --light-border-default: #d6d2cc;
+  --light-border-strong: #bab5ae;
   --light-primary: #8b5e3c;
   --light-primary-dark: #6b4a2e;
   --light-primary-light: #a87b54;
 
-  /* Theme: "Midnight Gentle Study" (Dark Mode)
+  /* Theme: "Midnight Warm Study" (Dark Mode)
      - Page BG: #1E1C1A (Deep Brown Charcoal - prevents halation)
      - Card BG: #282522 (Low contrast elevation)
-     - Main Text: #B0A9A2 (Sand Gray - prevents eye strain)
-     - Primary: #9C835E (Muted Bronze)
+     - Main Text: #C4BCB4 (Warm Sand - prevents eye strain)
+     - Primary: #C9A876 (Warm Golden Bronze)
      WCAG Contrast:
-     - #B0A9A2 on #1E1C1A = 7.2:1 (AAA)
-     - #B0A9A2 on #282522 = 6.1:1 (AA)
-     - #9C835E on #1E1C1A = 4.6:1 (AA)
+     - #C4BCB4 on #1E1C1A = 9.1:1 (AAA)
+     - #C4BCB4 on #282522 = 7.6:1 (AAA)
+     - #C9A876 on #1E1C1A = 7.2:1 (AAA)
   */
   --dark-bg-page: #1e1c1a;
   --dark-bg-card: #282522;
-  --dark-bg-secondary: #2d2a27;
-  --dark-bg-elevated: #322f2c;
-  --dark-bg-hover: #3a3734;
+  --dark-bg-secondary: #2e2b28;
+  --dark-bg-elevated: #343130;
+  --dark-bg-hover: #3d3935;
   --dark-bg-input: #252320;
-  --dark-text-primary: #b0a9a2;
-  --dark-text-secondary: #948e87;
-  --dark-text-tertiary: #787370;
-  --dark-text-muted: #5c5855;
-  --dark-text-accent: #9c835e;
-  --dark-border-subtle: #3a3734;
-  --dark-border-default: #4a4744;
-  --dark-border-strong: #5c5855;
-  --dark-primary: #9c835e;
-  --dark-primary-dark: #7a6648;
-  --dark-primary-light: #b89a70;
+  --dark-text-primary: #c4bcb4;
+  --dark-text-secondary: #a69e96;
+  --dark-text-tertiary: #857d76;
+  --dark-text-muted: #645d57;
+  --dark-text-accent: #c9a876;
+  --dark-border-subtle: #3d3935;
+  --dark-border-default: #4e4a46;
+  --dark-border-strong: #605b56;
+  --dark-primary: #c9a876;
+  --dark-primary-dark: #a88960;
+  --dark-primary-light: #e0c9a0;
 
   /* Status Colors - Light Mode */
   --status-success-bg: #e8f5e9;
@@ -278,7 +278,7 @@
   --theme-accent: var(--light-primary);
   --theme-accent-light: var(--light-primary-light);
   --theme-accent-dark: var(--light-primary-dark);
-  --theme-accent-pale: #d4c4b0;
+  --theme-accent-pale: #d9c9b5;
 
   --theme-shadow-sm: 0 1px 2px rgba(38, 34, 32, 0.05);
   --theme-shadow-md: 0 4px 8px rgba(38, 34, 32, 0.08);
@@ -353,7 +353,7 @@
   --theme-accent: var(--dark-primary);
   --theme-accent-light: var(--dark-primary-light);
   --theme-accent-dark: var(--dark-primary-dark);
-  --theme-accent-pale: #5c5248;
+  --theme-accent-pale: #5e5446;
 
   --theme-border-subtle: var(--dark-border-subtle);
   --theme-border-default: var(--dark-border-default);
@@ -362,7 +362,7 @@
   --theme-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --theme-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
   --theme-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --theme-shadow-glow: 0 4px 12px rgba(156, 131, 94, 0.2);
+  --theme-shadow-glow: 0 4px 12px rgba(201, 168, 118, 0.25);
 
   /* Component: Button Primary */
   --btn-primary-gradient-from: var(--theme-primary-light);
