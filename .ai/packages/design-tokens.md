@@ -2,6 +2,8 @@
 
 > WCAG 2.1 AAA compliant design tokens - **V0.0.1 AAA Workstation**
 
+**👉 See [ssot.md](../ssot.md) for 2025 Tailwind CSS 4 naming conventions and migration guide.**
+
 ## Purpose
 
 Single source of truth for design tokens, ensuring:
@@ -140,6 +142,28 @@ All text combinations meet 7:1+ contrast ratio (AAA standard).
 
 - Chrome 85+, Firefox 128+, Safari 15.4+ (for @property)
 - Graceful degradation in older browsers
+
+## Migration Status (2025-12)
+
+### ⚠️ Current State (Pre-SSOT)
+
+Current tokens use `--radius-*` naming which does **not** auto-generate Tailwind utilities:
+
+```css
+/* Current - requires hardcoded values in components */
+--radius-editorial: 40px; /* ❌ No utility generated */
+```
+
+### 🎯 Target State (Full SSOT)
+
+Migrate to `--border-radius-*` naming to enable auto-generated utilities:
+
+```css
+/* Target - auto-generates rounded-* utilities */
+--border-radius-editorial: 40px; /* ✅ → rounded-editorial */
+```
+
+**See [ssot.md](../ssot.md) for full migration guide.**
 
 ## Version
 
