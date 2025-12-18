@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 
 export interface MenuRowProps {
   /**
-   * Display index (01, 02, etc.)
+   * Display index (01, 02, etc.) - kept for API consistency with MenuCard
    */
   index: number;
   /**
@@ -43,7 +43,7 @@ export interface MenuRowProps {
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
-// List row with consistent padding and border (V24.5 mockup: gap-8 p-8)
+// V24.5 mockup: gap-8 p-8 rounded-3xl border-2
 const baseClasses =
   'w-full flex items-center gap-8 p-8 rounded-3xl border-2 transition-all duration-300 group';
 
@@ -53,12 +53,12 @@ const enabledClasses = 'cursor-pointer hover:border-theme-primary';
 
 const disabledClasses = 'cursor-not-allowed opacity-50';
 
-// Icon container classes (V24.5: p-4 rounded-xl)
+// V24.5 mockup: icon container p-4 rounded-xl
 const iconContainerClasses =
   'p-4 rounded-xl bg-theme-bg-secondary text-theme-text-secondary group-hover:text-theme-primary transition-colors';
 
 /**
- * Pin Icon SVG component (inline)
+ * Pin Icon SVG component (V24.5: size={18})
  */
 const PinIcon = ({ filled = false }: { filled?: boolean }) => (
   <svg
@@ -78,15 +78,16 @@ const PinIcon = ({ filled = false }: { filled?: boolean }) => (
 );
 
 /**
- * Compact Menu Row Component for list view (2025 Accessible Pattern)
+ * Compact Menu Row Component for list view (V24.5 mockup pattern)
  *
- * Design based on V24.5 mockup - Horizontal layout with icon, title, description.
+ * Structure: <div> container with separate <button> for pin
+ * This pattern avoids nested interactive elements (HTML spec compliant)
  *
  * Features:
  * - Compact horizontal layout
- * - Icon in rounded container on left
+ * - Icon in rounded container on left (p-4 rounded-xl)
  * - Title and description in center (flex-1)
- * - Optional pin button on right
+ * - Optional pin button on right (p-2)
  * - 24px border radius (rounded-3xl)
  * - 2px border for consistency with MenuCard
  * - WCAG 2.1 AAA compliant focus ring
@@ -117,67 +118,74 @@ export const MenuRow = memo(function MenuRow({
 }: MenuRowProps) {
   const isDisabled = !onClick;
 
-  // Memoized pin click handler
+  // Row click handler (for navigation)
+  const handleRowClick = useCallback(() => {
+    if (!isDisabled && onClick) {
+      onClick();
+    }
+  }, [isDisabled, onClick]);
+
+  // Keyboard handler for row (WCAG 2.1)
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !isDisabled && onClick) {
+        e.preventDefault();
+        onClick();
+      }
+    },
+    [isDisabled, onClick],
+  );
+
+  // Pin click handler with stopPropagation
   const handlePinClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      e.preventDefault();
       onPin?.();
     },
     [onPin],
   );
 
-  // Keyboard handler for pin button
-  const handlePinKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.stopPropagation();
-        e.preventDefault();
-        onPin?.();
-      }
-    },
-    [onPin],
-  );
-
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={isDisabled}
-      aria-disabled={isDisabled}
+    // V24.5 mockup: <div> container (not <button>) - avoids nested interactive elements
+    <div
+      role={isDisabled ? undefined : 'button'}
+      tabIndex={isDisabled ? undefined : 0}
+      onClick={handleRowClick}
+      onKeyDown={handleRowKeyDown}
       aria-label={ariaLabel || title}
+      aria-disabled={isDisabled}
       className={`${baseClasses} ${defaultClasses} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
       style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
-      {/* Icon Container (V24.5: size 24) */}
+      {/* Icon Container - V24.5: p-4 rounded-xl, icon size={24} strokeWidth={2.5} */}
       <div className={iconContainerClasses}>
         <span className="block w-6 h-6 [&>svg]:w-full [&>svg]:h-full [&>svg]:stroke-[2.5]">
           {icon}
         </span>
       </div>
 
-      {/* Content - Title and Description (V24.5: text-xl, text-sm font-bold) */}
+      {/* Content - V24.5: text-xl font-bold, text-sm font-bold */}
       <div className="flex-1 text-left min-w-0">
-        <h3 className="text-xl font-bold text-theme-text-primary mb-1 truncate">{title}</h3>
+        <span className="block text-xl font-bold text-theme-text-primary mb-1 truncate">
+          {title}
+        </span>
         {description && (
           <p className="text-sm font-bold text-theme-text-secondary line-clamp-1">{description}</p>
         )}
       </div>
 
-      {/* Pin Button (optional) - min 44x44px for WCAG 2.5.5 touch target */}
+      {/* Pin Button - V24.5 mockup: p-2 (separate <button>) */}
       {onPin && (
-        <span
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={handlePinClick}
-          onKeyDown={handlePinKeyDown}
           aria-label={isPinned ? `Unpin ${title}` : `Pin ${title}`}
           aria-pressed={isPinned}
-          className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${isPinned ? 'text-theme-primary' : 'text-theme-border-default hover:text-theme-text-secondary'} ${focusClasses}`}
+          className={`p-2 rounded-lg transition-colors ${isPinned ? 'text-theme-primary' : 'text-theme-border-default hover:text-theme-text-secondary'} ${focusClasses}`}
         >
           <PinIcon filled={isPinned} />
-        </span>
+        </button>
       )}
-    </button>
+    </div>
   );
 });

@@ -85,11 +85,9 @@ export const TopWidget = memo(function TopWidget({
       {/* Header */}
       <div className="flex justify-between items-start mb-8 sm:mb-10">
         <div className="flex items-center gap-4 sm:gap-5">
-          {/* Icon container */}
-          <div className="p-3 sm:p-4 bg-theme-bg-card rounded-2xl border-2 border-theme-border-default text-theme-primary shadow-sm">
-            <span className="block w-6 h-6 sm:w-7 sm:h-7 [&>svg]:w-full [&>svg]:h-full">
-              {icon}
-            </span>
+          {/* Icon container - V24.5: p-4 rounded-2xl border (not border-2), icon size={28} */}
+          <div className="p-4 bg-theme-bg-card rounded-2xl border border-theme-border-default text-theme-primary shadow-sm">
+            <span className="block w-7 h-7 [&>svg]:w-full [&>svg]:h-full">{icon}</span>
           </div>
           {/* Title and badge */}
           <div>

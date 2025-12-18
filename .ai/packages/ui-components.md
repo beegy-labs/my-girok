@@ -224,7 +224,27 @@ export interface CardProps {
 | MenuCard   | p-10    | rounded-[40px] | border-2 | 320px      | 32px (w-8) |
 | MenuRow    | p-8     | rounded-3xl    | border-2 | auto       | 24px (w-6) |
 | TopWidget  | p-10    | rounded-[48px] | border-2 | auto       | 28px (w-7) |
-| ViewToggle | p-1.5   | rounded-2xl    | border-1 | 44px       | 18px       |
+| ViewToggle | p-1.5   | rounded-2xl    | border   | auto       | 18px       |
+
+### V24.5 Structure Pattern
+
+모든 클릭 가능한 카드는 `<div role="button">` + 별도 `<button>` 패턴 사용:
+
+```tsx
+// ✅ V24.5 mockup pattern - nested interactive 문제 해결
+<div role="button" tabIndex={0} onClick={handleCardClick}>
+  <button onClick={handlePinClick}>  {/* 별도 버튼 */}
+    <PinIcon />
+  </button>
+</div>
+
+// ❌ 이전 패턴 - HTML 명세 위반
+<button onClick={onClick}>
+  <span role="button" onClick={handlePinClick}>  {/* nested interactive */}
+    <PinIcon />
+  </span>
+</button>
+```
 
 ### MenuCard
 
