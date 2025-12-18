@@ -14,6 +14,7 @@ import MyResumePage from './pages/resume/MyResumePage';
 import SettingsPage from './pages/settings/SettingsPage';
 // Placeholder pages for upcoming features
 import JournalPage from './pages/JournalPage';
+import SchedulePage from './pages/SchedulePage';
 import FinancePage from './pages/FinancePage';
 import LibraryPage from './pages/LibraryPage';
 import NetworkPage from './pages/NetworkPage';
@@ -68,6 +69,14 @@ export const router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <JournalPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: 'schedule',
+        element: (
+          <PrivateRoute>
+            <SchedulePage />
           </PrivateRoute>
         ),
       },

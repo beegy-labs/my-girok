@@ -56,6 +56,10 @@
       "title": "개인 일기",
       "description": "일상의 생각과 반성을 기록하세요"
     },
+    "schedule": {
+      "title": "오늘의 일정",
+      "description": "시간 관리와 주요 마감일을 아카이빙합니다"
+    },
     "career": {
       "title": "커리어 아카이브",
       "description": "이력서와 전문 프로필을 관리하세요"
@@ -153,6 +157,7 @@
   },
   "placeholder": {
     "journal": "일상의 경험을 작성하고 되돌아보세요. 이 기능은 곧 출시됩니다.",
+    "schedule": "일정과 마감일을 관리하세요. 이 기능은 곧 출시됩니다.",
     "finance": "수입, 지출, 재정 목표를 추적하세요. 이 기능은 곧 출시됩니다.",
     "library": "읽을거리, 기사, 학습 자료를 정리하세요. 이 기능은 곧 출시됩니다.",
     "network": "전문가 및 멘토와 연결을 구축하세요. 이 기능은 곧 출시됩니다.",
@@ -166,7 +171,18 @@
     "personalArchive": "개인 아카이브",
     "features": "기능",
     "comingSoon": "준비중",
-    "environment": "환경설정"
+    "environment": "환경설정",
+    "activeFocus": "집중 모드"
+  },
+  "widget": {
+    "changeFocus": "집중 변경",
+    "pinToTop": "상단에 고정",
+    "unpinFromTop": "고정 해제",
+    "scheduleNow": "NOW",
+    "scheduleNext": "NEXT",
+    "scheduleSummary": "{{name}}님, 오늘 {{count}}개의 일정이 남았습니다.",
+    "quickAdd": "빠른 추가",
+    "financeLoaded": "가계부 위젯 데이터가 로드되었습니다."
   },
   "resume": {
     "edit": "이력서 편집",

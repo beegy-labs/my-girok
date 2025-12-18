@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -10,10 +10,22 @@ import {
   MenuRow,
   ViewToggle,
   SectionBadge,
+  TopWidget,
   type ViewMode,
 } from '@my-girok/ui-components';
 import Footer from '../components/Footer';
-import { Book, FileText, Wallet, Settings, Library, Users, BarChart3, Bell } from 'lucide-react';
+import {
+  Book,
+  Calendar,
+  FileText,
+  Wallet,
+  Settings,
+  Library,
+  Users,
+  BarChart3,
+  Bell,
+  Plus,
+} from 'lucide-react';
 
 interface MenuItem {
   id: string;
@@ -24,7 +36,7 @@ interface MenuItem {
   status: 'active' | 'coming-soon';
 }
 
-// 8 Menu Functions - Editorial Archive Style
+// 9 Menu Functions - Editorial Archive Style (matches mockup V24.5)
 const MENU_ITEMS: MenuItem[] = [
   {
     id: 'journal',
@@ -32,6 +44,14 @@ const MENU_ITEMS: MenuItem[] = [
     descriptionKey: 'home.journal.description',
     icon: Book,
     route: '/journal',
+    status: 'coming-soon',
+  },
+  {
+    id: 'schedule',
+    nameKey: 'home.schedule.title',
+    descriptionKey: 'home.schedule.description',
+    icon: Calendar,
+    route: '/schedule',
     status: 'coming-soon',
   },
   {
@@ -92,11 +112,21 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
+// Widget-enabled menu IDs (can be pinned to top)
+const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
+
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [pinnedWidgetId, setPinnedWidgetId] = useState<string | null>(null);
+
+  // Memoized pinned widget data
+  const pinnedWidget = useMemo(
+    () => MENU_ITEMS.find((item) => item.id === pinnedWidgetId),
+    [pinnedWidgetId],
+  );
 
   // Memoized handler per rules.md: "✅ Memoize handlers with useCallback"
   const handleMenuClick = useCallback(
@@ -106,6 +136,17 @@ export default function HomePage() {
       }
     },
     [navigate],
+  );
+
+  // Pin/unpin widget handler
+  const handlePinWidget = useCallback((menuId: string) => {
+    setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
+  }, []);
+
+  // Check if a menu can be pinned as widget
+  const canPinAsWidget = useCallback(
+    (menuId: string) => WIDGET_ENABLED_IDS.includes(menuId as (typeof WIDGET_ENABLED_IDS)[number]),
+    [],
   );
 
   return (
@@ -155,6 +196,68 @@ export default function HomePage() {
               </p>
             </header>
 
+            {/* Top Widget Section (when pinned) */}
+            {pinnedWidget && (
+              <section className="mb-12 sm:mb-16">
+                <TopWidget
+                  icon={
+                    pinnedWidget.id === 'schedule' ? (
+                      <Calendar className="w-6 h-6" />
+                    ) : (
+                      <Wallet className="w-6 h-6" />
+                    )
+                  }
+                  title={t(pinnedWidget.nameKey)}
+                  badgeText={t('badge.activeFocus')}
+                  onChangeFocus={() => setPinnedWidgetId(null)}
+                  changeFocusText={t('widget.changeFocus')}
+                >
+                  {/* Mockup Widget Content */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {pinnedWidget.id === 'schedule' ? (
+                      <>
+                        {/* Schedule Widget Mockup */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page rounded-2xl border border-theme-border-default">
+                            <span className="font-bold text-sm text-theme-text-primary">
+                              14:00 {t('placeholder.schedule').split('.')[0]}
+                            </span>
+                            <span className="text-[10px] font-bold text-theme-primary">
+                              {t('widget.scheduleNow')}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page/50 rounded-2xl border border-theme-border-subtle">
+                            <span className="font-bold text-sm text-theme-text-muted">
+                              16:30 {t('placeholder.schedule').split('.')[0]}
+                            </span>
+                            <span className="text-[10px] font-bold text-theme-text-muted">
+                              {t('widget.scheduleNext')}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col justify-center p-6 bg-theme-primary/5 rounded-3xl border border-theme-primary/20">
+                          <p className="text-sm font-bold text-theme-text-primary mb-2">
+                            {t('widget.scheduleSummary', {
+                              name: user?.name || user?.username,
+                              count: 3,
+                            })}
+                          </p>
+                          <button className="flex items-center gap-2 text-xs font-bold uppercase text-theme-primary">
+                            {t('widget.quickAdd')} <Plus className="w-4 h-4" strokeWidth={3} />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      /* Finance Widget Mockup */
+                      <div className="col-span-2 text-center py-8 text-theme-text-secondary">
+                        {t('widget.financeLoaded')}
+                      </div>
+                    )}
+                  </div>
+                </TopWidget>
+              </section>
+            )}
+
             {/* Menu Section */}
             <section aria-label={t('aria.mainMenu')}>
               {/* Section Header with View Toggle */}
@@ -174,6 +277,7 @@ export default function HomePage() {
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
+                    const canPin = canPinAsWidget(menu.id);
 
                     return (
                       <MenuCard
@@ -183,6 +287,13 @@ export default function HomePage() {
                         title={t(menu.nameKey)}
                         description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
                         onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
+                        isPinned={pinnedWidgetId === menu.id}
+                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
+                        pinTooltip={
+                          pinnedWidgetId === menu.id
+                            ? t('widget.unpinFromTop')
+                            : t('widget.pinToTop')
+                        }
                         className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                         aria-label={
                           isDisabled

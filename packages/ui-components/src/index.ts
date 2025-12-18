@@ -15,6 +15,7 @@ export * from './components/SortableItem';
 export * from './components/SortableList';
 export * from './components/TextArea';
 export * from './components/TextInput';
+export * from './components/TopWidget';
 export * from './components/ViewToggle';
 
 // Hooks
@@ -36,6 +37,7 @@ export type {
   CollapsibleSectionProps,
   MenuCardProps,
   MenuRowProps,
+  TopWidgetProps,
   ViewToggleProps,
   ViewMode,
   BadgeProps,
