@@ -29,7 +29,7 @@ apps/web-main/src/
 │       ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
 │       └── SharedResumePage.tsx  # Shared view (/shared/:token)
 ├── components/
-│   ├── Navbar.tsx               # Text-only 'girok' logo, Lucide icons
+│   ├── Navbar.tsx               # Text-only 'Girok' logo, Lucide icons
 │   ├── PrivateRoute.tsx
 │   ├── LoadingSpinner.tsx       # WCAG-compliant loading (Lucide icon)
 │   ├── StatusMessage.tsx        # WCAG-compliant status/error messages

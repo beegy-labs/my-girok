@@ -1,6 +1,6 @@
 # @my-girok/design-tokens
 
-WCAG 2.1 AA compliant design tokens for my-girok applications.
+WCAG 2.1 AAA compliant design tokens for my-girok applications.
 
 ## Architecture (4-Layer)
 
@@ -30,7 +30,7 @@ CSS @property definitions provide:
 @property --theme-primary {
   syntax: '<color>';
   inherits: true;
-  initial-value: #8b5e3c;
+  initial-value: #6b4a2e; /* AAA 7.94:1 */
 }
 ```
 
@@ -90,31 +90,33 @@ Set `data-theme` on `<html>` or any parent element:
 </html>
 ```
 
-## WCAG Compliance
+## WCAG AAA Compliance
 
-All color combinations meet WCAG 2.1 AA standards (4.5:1+ contrast ratio).
+All text color combinations meet WCAG 2.1 AAA standards (7:1+ contrast ratio).
 
-| Theme | Text on Card       | Contrast     |
-| ----- | ------------------ | ------------ |
-| Light | #262220 on #F8F7F4 | 13.8:1 (AAA) |
-| Dark  | #B0A9A2 on #282522 | 6.1:1 (AA)   |
+| Element        | Light Mode | Dark Mode                    |
+| -------------- | ---------- | ---------------------------- |
+| Primary Text   | 15.76:1    | 9.94:1                       |
+| Secondary Text | 9.23:1     | 7.65:1                       |
+| Tertiary Text  | 7.08:1     | 7.31:1                       |
+| Primary Accent | 7.94:1     | 8.25:1 (page), 7.41:1 (card) |
 
 ## Color Palette
 
 ### Light Mode (Clean White Oak)
 
-| Token                  | Value   | Usage            |
-| ---------------------- | ------- | ---------------- |
-| `--light-bg-page`      | #FFFFFF | Page background  |
-| `--light-bg-card`      | #F8F7F4 | Card backgrounds |
-| `--light-text-primary` | #262220 | Primary text     |
-| `--light-primary`      | #8B5E3C | Primary accent   |
+| Token                  | Value   | Contrast | Usage            |
+| ---------------------- | ------- | -------- | ---------------- |
+| `--light-bg-page`      | #FFFFFF | -        | Page background  |
+| `--light-bg-card`      | #F8F7F4 | -        | Card backgrounds |
+| `--light-text-primary` | #262220 | 15.76:1  | Primary text     |
+| `--light-primary`      | #6B4A2E | 7.94:1   | Primary accent   |
 
 ### Dark Mode (Midnight Gentle Study)
 
-| Token                 | Value   | Usage            |
-| --------------------- | ------- | ---------------- |
-| `--dark-bg-page`      | #1E1C1A | Page background  |
-| `--dark-bg-card`      | #282522 | Card backgrounds |
-| `--dark-text-primary` | #B0A9A2 | Primary text     |
-| `--dark-primary`      | #9C835E | Primary accent   |
+| Token                 | Value   | Contrast | Usage            |
+| --------------------- | ------- | -------- | ---------------- |
+| `--dark-bg-page`      | #1E1C1A | -        | Page background  |
+| `--dark-bg-card`      | #282522 | -        | Card backgrounds |
+| `--dark-text-primary` | #CCC5BD | 9.94:1   | Primary text     |
+| `--dark-primary`      | #D0B080 | 8.25:1   | Primary accent   |

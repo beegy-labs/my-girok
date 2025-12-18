@@ -34,7 +34,7 @@ Key tokens use CSS `@property` for type validation and smooth transitions:
 @property --theme-primary {
   syntax: '<color>';
   inherits: true;
-  initial-value: #8b5e3c;
+  initial-value: #6b4a2e; /* AAA 7.94:1 */
 }
 ```
 
