@@ -55,7 +55,8 @@ const defaultClasses = 'bg-theme-bg-card border-theme-border-default';
 
 const pinnedClasses = 'bg-theme-bg-secondary border-theme-primary';
 
-const enabledClasses = 'cursor-pointer hover:border-theme-primary';
+const enabledClasses =
+  'cursor-pointer hover:border-theme-primary hover:shadow-theme-lg hover:-translate-y-1';
 
 const disabledClasses = 'cursor-not-allowed opacity-50';
 
