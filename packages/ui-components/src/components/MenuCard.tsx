@@ -47,22 +47,34 @@ export interface MenuCardProps {
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
+// Fixed height card with flex layout for consistent sizing across languages
 const baseClasses =
-  'w-full text-left bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 transition-all duration-300';
+  'w-full min-h-[320px] text-left rounded-[40px] border-2 p-8 sm:p-10 transition-all duration-500 flex flex-col relative group';
 
-const enabledClasses =
-  'cursor-pointer hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1';
+const defaultClasses = 'bg-theme-bg-card border-theme-border-default';
+
+const pinnedClasses = 'bg-theme-bg-secondary border-theme-primary';
+
+const enabledClasses = 'cursor-pointer hover:border-theme-primary';
 
 const disabledClasses = 'cursor-not-allowed opacity-50';
 
-const pinnedClasses = 'bg-theme-bg-card border-theme-primary';
+// Icon container classes
+const iconContainerBase =
+  'p-5 sm:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all duration-500';
 
-const pinButtonBaseClasses =
-  'p-2 rounded-lg border transition-all min-w-[36px] min-h-[36px] flex items-center justify-center';
+const iconContainerDefault =
+  'bg-theme-bg-secondary border-theme-border-default text-theme-text-secondary group-hover:border-theme-primary';
 
-const pinButtonActiveClasses = 'bg-theme-primary text-btn-primary-text border-theme-primary';
+const iconContainerPinned = 'bg-theme-bg-card border-theme-primary text-theme-primary';
 
-const pinButtonInactiveClasses =
+// Pin button classes
+const pinButtonBase =
+  'w-10 h-10 flex items-center justify-center rounded-xl border transition-all min-w-[40px] min-h-[40px]';
+
+const pinButtonActive = 'bg-theme-primary text-btn-primary-text border-theme-primary';
+
+const pinButtonInactive =
   'bg-transparent border-theme-border-default text-theme-text-secondary hover:text-theme-text-primary hover:border-theme-primary';
 
 /**
@@ -86,17 +98,27 @@ const PinIcon = ({ filled = false }: { filled?: boolean }) => (
 );
 
 /**
+ * Chevron Right Icon for hover effect
+ */
+const ChevronRightIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+/**
  * Editorial-style Menu Card Component (2025 Accessible Pattern)
  *
+ * Design based on V24.5 mockup - Fixed height cards with consistent layout.
+ *
  * Features:
- * - Semantic <button> element for accessibility (WCAG 4.1.2)
- * - Index number display (01, 02, etc.)
- * - Serif title typography (Playfair Display)
- * - 40px border radius for sophisticated look
- * - Hover lift effect with shadow
+ * - Fixed minimum height (320px) for consistent card sizes across languages
+ * - Icon at top-left in bordered container
+ * - Pin button + Index number at top-right
+ * - Title and description at bottom with flex spacing
+ * - Hover arrow animation (ChevronRight)
+ * - 40px border radius, 2px border for sophisticated look
  * - WCAG 2.1 AAA compliant focus ring (7:1+ contrast)
- * - Native keyboard navigation (Enter/Space)
- * - Optional pin button for widget pinning
  *
  * @example
  * ```tsx
@@ -108,13 +130,8 @@ const PinIcon = ({ filled = false }: { filled?: boolean }) => (
  *   onClick={() => navigate('/journal')}
  *   isPinned={pinnedId === 'journal'}
  *   onPin={() => setPinnedId('journal')}
- *   pinTooltip="Pin to top widget"
  * />
  * ```
- */
-/**
- * React.memo wrapper for list rendering performance
- * per rules.md: "✅ Use React.memo for list items"
  */
 export const MenuCard = memo(function MenuCard({
   index,
@@ -160,19 +177,22 @@ export const MenuCard = memo(function MenuCard({
       disabled={isDisabled}
       aria-disabled={isDisabled}
       aria-label={ariaLabel || title}
-      className={`${baseClasses} ${isPinned ? pinnedClasses : ''} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
+      className={`${baseClasses} ${isPinned ? pinnedClasses : defaultClasses} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
       style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
-      {/* Header: Index + Pin + Icon */}
-      <div className="flex items-center justify-between mb-6">
-        <span
-          className="text-sm tracking-widest text-theme-text-muted"
-          style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+      {/* Header Row: Icon (left) + Pin + Index (right) */}
+      <div className="flex justify-between items-start">
+        {/* Icon Container - Left */}
+        <div
+          className={`${iconContainerBase} ${isPinned ? iconContainerPinned : iconContainerDefault}`}
         >
-          {formattedIndex}
-        </span>
-        <div className="flex items-center gap-2">
-          {/* Pin button (optional) */}
+          <span className="block w-6 h-6 sm:w-8 sm:h-8 [&>svg]:w-full [&>svg]:h-full group-hover:scale-110 transition-transform duration-500">
+            {icon}
+          </span>
+        </div>
+
+        {/* Pin + Index - Right */}
+        <div className="flex items-center gap-3">
           {onPin && (
             <span
               role="button"
@@ -182,27 +202,40 @@ export const MenuCard = memo(function MenuCard({
               title={pinTooltip}
               aria-label={isPinned ? `Unpin ${title}` : `Pin ${title}`}
               aria-pressed={isPinned}
-              className={`${pinButtonBaseClasses} ${isPinned ? pinButtonActiveClasses : pinButtonInactiveClasses} ${focusClasses}`}
+              className={`${pinButtonBase} ${isPinned ? pinButtonActive : pinButtonInactive} ${focusClasses}`}
             >
               <PinIcon filled={isPinned} />
             </span>
           )}
-          <span className="text-theme-text-secondary" aria-hidden="true">
-            {icon}
+          <span
+            className="text-xs font-black text-theme-primary opacity-50 group-hover:opacity-100 transition-opacity"
+            style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+          >
+            [{formattedIndex}]
           </span>
         </div>
       </div>
 
-      {/* Title */}
-      <h3
-        className="text-xl sm:text-2xl text-theme-text-primary mb-3 tracking-tight"
-        style={{ fontFamily: 'var(--font-family-serif-title)' }}
-      >
-        {title}
-      </h3>
+      {/* Spacer - pushes content to bottom */}
+      <div className="flex-1 min-h-[48px]" />
 
-      {/* Description */}
-      <p className="text-sm text-theme-text-secondary leading-relaxed">{description}</p>
+      {/* Content - Bottom aligned */}
+      <div className="pr-16 sm:pr-20">
+        <h3
+          className="text-2xl sm:text-3xl text-theme-text-primary mb-3 sm:mb-4 tracking-tight leading-tight"
+          style={{ fontFamily: 'var(--font-family-serif-title)' }}
+        >
+          {title}
+        </h3>
+        <p className="text-sm sm:text-[15px] font-medium text-theme-text-secondary leading-relaxed line-clamp-2 group-hover:text-theme-text-primary transition-colors duration-300">
+          {description}
+        </p>
+      </div>
+
+      {/* Hover Arrow - Bottom Right */}
+      <div className="absolute bottom-8 sm:bottom-10 right-8 sm:right-10 text-theme-text-primary opacity-0 group-hover:opacity-40 transition-all duration-300 -translate-x-3 group-hover:translate-x-0">
+        <ChevronRightIcon />
+      </div>
     </button>
   );
 });

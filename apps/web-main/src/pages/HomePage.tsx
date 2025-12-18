@@ -275,9 +275,9 @@ export default function HomePage() {
                 <ViewToggle value={viewMode} onChange={setViewMode} />
               </div>
 
-              {/* Grid View */}
+              {/* Grid View - V24.5 Editorial Layout */}
               {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
@@ -287,7 +287,7 @@ export default function HomePage() {
                       <MenuCard
                         key={menu.id}
                         index={index + 1}
-                        icon={<IconComponent className="w-6 h-6" />}
+                        icon={<IconComponent />}
                         title={t(menu.nameKey)}
                         description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
                         onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
@@ -298,7 +298,6 @@ export default function HomePage() {
                             ? t('widget.unpinFromTop')
                             : t('widget.pinToTop')
                         }
-                        className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                         aria-label={
                           isDisabled
                             ? `${t(menu.nameKey)} - ${t('home.comingSoon')}`
@@ -310,25 +309,24 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* List View */}
+              {/* List View - V24.5 Editorial Layout */}
               {viewMode === 'list' && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
+                    const canPin = canPinAsWidget(menu.id);
 
                     return (
                       <MenuRow
                         key={menu.id}
                         index={index + 1}
-                        icon={<IconComponent className="w-5 h-5" />}
-                        title={
-                          isDisabled
-                            ? `${t(menu.nameKey)} (${t('home.comingSoon')})`
-                            : t(menu.nameKey)
-                        }
+                        icon={<IconComponent />}
+                        title={t(menu.nameKey)}
+                        description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
                         onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
-                        className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+                        isPinned={pinnedWidgetId === menu.id}
+                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
                         aria-label={
                           isDisabled
                             ? `${t(menu.nameKey)} - ${t('home.comingSoon')}`
@@ -341,11 +339,11 @@ export default function HomePage() {
               )}
             </section>
 
-            {/* Archive Support Banner */}
+            {/* Archive Support Banner - V24.5 Editorial Style */}
             <section className="mt-12 sm:mt-16">
-              <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 text-center">
+              <div className="bg-theme-bg-secondary border-2 border-theme-border-default rounded-[40px] p-8 sm:p-10 text-center">
                 <SectionBadge className="mb-4">{t('badge.archiveSupport')}</SectionBadge>
-                <p className="text-theme-text-secondary text-sm sm:text-base max-w-lg mx-auto">
+                <p className="text-theme-text-secondary text-sm sm:text-base max-w-lg mx-auto font-medium">
                   {t('home.supportMessage', {
                     defaultValue: 'Your archive grows with every story you record.',
                   })}
@@ -378,8 +376,8 @@ export default function HomePage() {
                 {t('home.title')}
               </p>
 
-              {/* CTA Card - Editorial Style (consistent with LoginPage card) */}
-              <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 shadow-theme-lg">
+              {/* CTA Card - V24.5 Editorial Style */}
+              <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-8 sm:p-10 shadow-theme-lg">
                 <div className="space-y-4">
                   <Link to="/register" className="block">
                     <Button variant="primary" size="lg" fullWidth>

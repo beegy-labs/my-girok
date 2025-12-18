@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 
 export interface MenuRowProps {
   /**
@@ -14,9 +14,21 @@ export interface MenuRowProps {
    */
   title: string;
   /**
+   * Row description (optional, shown in list view)
+   */
+  description?: string;
+  /**
    * Click handler - if undefined, row is disabled
    */
   onClick?: () => void;
+  /**
+   * Whether this row is pinned
+   */
+  isPinned?: boolean;
+  /**
+   * Pin button click handler
+   */
+  onPin?: () => void;
   /**
    * Additional CSS classes
    */
@@ -31,23 +43,53 @@ export interface MenuRowProps {
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
+// List row with consistent padding and border
 const baseClasses =
-  'w-full flex items-center gap-4 px-6 py-4 bg-theme-bg-card border border-theme-border-default rounded-2xl transition-all duration-300';
+  'w-full flex items-center gap-6 sm:gap-8 p-6 sm:p-8 rounded-3xl border-2 transition-all duration-300 group';
 
-const enabledClasses =
-  'cursor-pointer hover:bg-theme-bg-hover hover:border-theme-primary hover:-translate-y-0.5';
+const defaultClasses = 'bg-theme-bg-card border-theme-border-default';
+
+const enabledClasses = 'cursor-pointer hover:border-theme-primary';
 
 const disabledClasses = 'cursor-not-allowed opacity-50';
+
+// Icon container classes
+const iconContainerClasses =
+  'p-3 sm:p-4 rounded-xl bg-theme-bg-secondary text-theme-text-secondary group-hover:text-theme-primary transition-colors';
+
+/**
+ * Pin Icon SVG component (inline)
+ */
+const PinIcon = ({ filled = false }: { filled?: boolean }) => (
+  <svg
+    className="w-[18px] h-[18px]"
+    fill={filled ? 'currentColor' : 'none'}
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+    />
+  </svg>
+);
 
 /**
  * Compact Menu Row Component for list view (2025 Accessible Pattern)
  *
+ * Design based on V24.5 mockup - Horizontal layout with icon, title, description.
+ *
  * Features:
- * - Semantic <button> element for accessibility (WCAG 4.1.2)
- * - Compact horizontal layout with index, icon, and title
- * - Subtle hover effect
- * - WCAG 2.1 AAA compliant focus ring (7:1+ contrast)
- * - Native keyboard navigation (Enter/Space)
+ * - Compact horizontal layout
+ * - Icon in rounded container on left
+ * - Title and description in center (flex-1)
+ * - Optional pin button on right
+ * - 24px border radius (rounded-3xl)
+ * - 2px border for consistency with MenuCard
+ * - WCAG 2.1 AAA compliant focus ring
  *
  * @example
  * ```tsx
@@ -55,24 +97,47 @@ const disabledClasses = 'cursor-not-allowed opacity-50';
  *   index={1}
  *   icon={<BookIcon aria-hidden="true" />}
  *   title="Personal Journal"
+ *   description="Record your daily thoughts"
  *   onClick={() => navigate('/journal')}
+ *   isPinned={pinnedId === 'journal'}
+ *   onPin={() => setPinnedId('journal')}
  * />
  * ```
  */
-/**
- * React.memo wrapper for list rendering performance
- * per rules.md: "✅ Use React.memo for list items"
- */
 export const MenuRow = memo(function MenuRow({
-  index,
+  index: _index, // Keep in props for API consistency with MenuCard
   icon,
   title,
+  description,
   onClick,
+  isPinned = false,
+  onPin,
   className = '',
   'aria-label': ariaLabel,
 }: MenuRowProps) {
-  const formattedIndex = String(index).padStart(2, '0');
   const isDisabled = !onClick;
+
+  // Memoized pin click handler
+  const handlePinClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onPin?.();
+    },
+    [onPin],
+  );
+
+  // Keyboard handler for pin button
+  const handlePinKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.stopPropagation();
+        e.preventDefault();
+        onPin?.();
+      }
+    },
+    [onPin],
+  );
 
   return (
     <button
@@ -81,24 +146,40 @@ export const MenuRow = memo(function MenuRow({
       disabled={isDisabled}
       aria-disabled={isDisabled}
       aria-label={ariaLabel || title}
-      className={`${baseClasses} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
+      className={`${baseClasses} ${defaultClasses} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
       style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
-      {/* Index */}
-      <span
-        className="text-xs tracking-widest text-theme-text-muted w-6"
-        style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-      >
-        {formattedIndex}
-      </span>
+      {/* Icon Container */}
+      <div className={iconContainerClasses}>
+        <span className="block w-5 h-5 sm:w-6 sm:h-6 [&>svg]:w-full [&>svg]:h-full">{icon}</span>
+      </div>
 
-      {/* Icon */}
-      <span className="text-theme-text-secondary" aria-hidden="true">
-        {icon}
-      </span>
+      {/* Content - Title and Description */}
+      <div className="flex-1 text-left min-w-0">
+        <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary mb-0.5 sm:mb-1 truncate">
+          {title}
+        </h3>
+        {description && (
+          <p className="text-xs sm:text-sm font-medium text-theme-text-secondary truncate">
+            {description}
+          </p>
+        )}
+      </div>
 
-      {/* Title */}
-      <span className="text-theme-text-primary font-medium">{title}</span>
+      {/* Pin Button (optional) */}
+      {onPin && (
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={handlePinClick}
+          onKeyDown={handlePinKeyDown}
+          aria-label={isPinned ? `Unpin ${title}` : `Pin ${title}`}
+          aria-pressed={isPinned}
+          className={`p-2 transition-colors ${isPinned ? 'text-theme-primary' : 'text-theme-border-default hover:text-theme-text-secondary'} ${focusClasses}`}
+        >
+          <PinIcon filled={isPinned} />
+        </span>
+      )}
     </button>
   );
 });
