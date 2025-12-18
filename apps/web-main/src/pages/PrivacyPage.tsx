@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           </SectionBadge>
 
           <h1
-            className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tight"
+            className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tighter italic"
             style={{ fontFamily: 'var(--font-family-serif-title)' }}
           >
             {t('footer.privacy')}

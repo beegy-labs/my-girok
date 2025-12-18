@@ -224,7 +224,7 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-16">
             {/* Promo Carousel Section - V0.0.1 Style */}
             <section className="mb-16" aria-label="Featured Promotions">
-              <div className="relative group w-full h-[300px] rounded-[56px] border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-4 focus-within:ring-theme-primary">
+              <div className="relative group w-full h-[300px] rounded-[56px] border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
                   <span
                     className="text-[12px] font-black uppercase tracking-[0.3em] text-theme-primary mb-4 block"
@@ -308,7 +308,7 @@ export default function HomePage() {
                 {/* Widget Grid - V0.0.1 Style */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {/* Today Widget - Active */}
-                  <article className="bg-theme-bg-card rounded-[48px] border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-4 focus-within:ring-theme-primary">
+                  <article className="bg-theme-bg-card rounded-[48px] border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
                     <div className="flex justify-between items-center mb-8">
                       <div className="flex items-center gap-4">
                         <div

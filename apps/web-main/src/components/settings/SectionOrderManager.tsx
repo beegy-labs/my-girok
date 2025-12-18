@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@my-girok/ui-components';
 import { SectionOrderItem, SectionType } from '../../api/userPreferences';
 import { useUserPreferencesStore } from '../../stores/userPreferencesStore';
 
@@ -141,12 +142,9 @@ export default function SectionOrderManager() {
         ))}
       </div>
 
-      <button
-        onClick={handleSave}
-        className="w-full bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white font-semibold py-3 px-6 rounded-lg shadow-theme-lg shadow-theme-primary/30 transform hover:scale-[1.02] transition-all"
-      >
+      <Button variant="primary" onClick={handleSave} fullWidth size="lg" rounded="editorial">
         {t('common.save')}
-      </button>
+      </Button>
     </div>
   );
 }

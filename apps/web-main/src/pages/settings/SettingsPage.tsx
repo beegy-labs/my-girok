@@ -17,7 +17,7 @@ export default function SettingsPage() {
         <header className="mb-12 sm:mb-16">
           <SectionBadge className="mb-4">{t('badge.environment')}</SectionBadge>
           <h1
-            className="text-3xl sm:text-4xl text-theme-text-primary tracking-tight mb-2"
+            className="text-3xl sm:text-4xl text-theme-text-primary tracking-tighter italic mb-2"
             style={{ fontFamily: 'var(--font-family-serif-title)' }}
           >
             {t('settings.title')}
