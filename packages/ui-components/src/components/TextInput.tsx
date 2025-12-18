@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, ChangeEvent, Ref } from 'react';
+import { InputHTMLAttributes, ChangeEvent, Ref, useId } from 'react';
 
 export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   /**
@@ -87,7 +87,9 @@ export function TextInput({
 }: TextInputProps) {
   // className is an alias for containerClassName for backwards compatibility
   const finalContainerClassName = containerClassName || className;
-  const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
+  // useId provides stable, unique IDs for accessibility (React 18+)
+  const generatedId = useId();
+  const inputId = id || generatedId;
 
   const errorClasses = error
     ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'

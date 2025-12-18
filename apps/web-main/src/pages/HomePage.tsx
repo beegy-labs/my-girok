@@ -166,6 +166,12 @@ export default function HomePage() {
                         aria-disabled="true"
                         aria-label={`${t(menu.nameKey)} - ${t('home.comingSoon')}`}
                         tabIndex={0}
+                        onKeyDown={(e) => {
+                          // Prevent keyboard activation for disabled button (WCAG 2.1 3.2.1)
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                          }
+                        }}
                         className={`${baseCardClasses} opacity-60 cursor-not-allowed`}
                       >
                         {cardContent}

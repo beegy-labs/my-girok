@@ -1,4 +1,4 @@
-import { SelectHTMLAttributes, ChangeEvent, Ref } from 'react';
+import { SelectHTMLAttributes, ChangeEvent, Ref, useId } from 'react';
 
 export interface SelectOption {
   value: string;
@@ -97,7 +97,9 @@ export function SelectInput({
   ref,
   ...props
 }: SelectInputProps) {
-  const selectId = id || `select-${label?.toLowerCase().replace(/\s+/g, '-')}`;
+  // useId provides stable, unique IDs for accessibility (React 18+)
+  const generatedId = useId();
+  const selectId = id || generatedId;
 
   const errorClasses = error
     ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'
