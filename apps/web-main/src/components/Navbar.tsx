@@ -34,19 +34,23 @@ export default function Navbar() {
 
   return (
     <nav
-      className="bg-theme-bg-elevated border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200"
+      className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-elevated/95 backdrop-blur-sm border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200"
+      style={{ height: 'var(--nav-height-editorial, 80px)' }}
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-14 sm:h-16">
-          {/* Logo - Text only, professional archive style */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex justify-between items-center h-full">
+          {/* Logo - Editorial monospace style */}
           <Link
             to="/"
-            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2 rounded-lg"
+            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
             aria-label="Go to homepage"
           >
-            <span className="text-xl sm:text-2xl font-bold font-mono text-theme-text-primary tracking-tight">
+            <span
+              className="text-xl sm:text-2xl font-semibold text-theme-text-primary tracking-tight"
+              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+            >
               Girok
             </span>
           </Link>
@@ -95,10 +99,10 @@ export default function Navbar() {
                   />
                 </button>
 
-                {/* Dropdown menu */}
+                {/* Dropdown menu - Editorial style */}
                 {isDropdownOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-48 bg-theme-bg-elevated rounded-xl shadow-theme-lg border border-theme-border-subtle py-1 z-50"
+                    className="absolute right-0 mt-3 w-56 bg-theme-bg-elevated rounded-2xl shadow-theme-lg border border-theme-border-default py-2 z-50"
                     role="menu"
                     aria-orientation="vertical"
                   >

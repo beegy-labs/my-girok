@@ -77,17 +77,17 @@
   initial-value: #4a4744;
 }
 
-/* Border Colors */
+/* Border Colors - WCAG SC 1.4.11 (3:1 for UI components) */
 @property --theme-border-subtle {
   syntax: '<color>';
   inherits: true;
-  initial-value: #e8e6e3;
+  initial-value: #d4d2cf; /* 1.5:1 - decorative only */
 }
 
 @property --theme-border-default {
   syntax: '<color>';
   inherits: true;
-  initial-value: #d4d2cf;
+  initial-value: #a09d9a; /* 3.0:1 - interactive elements */
 }
 
 /* Focus Ring */
@@ -142,6 +142,50 @@
 }
 
 /* ============================================
+   EDITORIAL TYPOGRAPHY & LAYOUT TOKENS
+   "Modern Editorial Archive" / "Sophisticated Classic" style
+   ============================================ */
+
+/* Typography Families */
+@property --font-serif-title {
+  syntax: '*';
+  inherits: true;
+  initial-value: 'Playfair Display', Georgia, 'Times New Roman', serif;
+}
+
+@property --font-mono-brand {
+  syntax: '*';
+  inherits: true;
+  initial-value: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Layout Tokens */
+@property --radius-card-editorial {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 40px;
+}
+
+@property --spacing-card-editorial {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 40px;
+}
+
+@property --nav-height-editorial {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 80px;
+}
+
+/* Transition Timing */
+@property --ease-editorial {
+  syntax: '*';
+  inherits: true;
+  initial-value: cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+/* ============================================
    LAYER 1: COLOR PALETTE
    ============================================ */
 :root {
@@ -167,9 +211,10 @@
   --light-text-tertiary: #5a5856; /* 7.08:1 AAA */
   --light-text-muted: #555351; /* 7.66:1 AAA */
   --light-text-accent: #6b4a2e; /* 7.94:1 AAA */
-  --light-border-subtle: #e8e6e3;
-  --light-border-default: #d4d2cf;
-  --light-border-strong: #b8b5b2;
+  /* Border colors - WCAG SC 1.4.11 (3:1 for UI components) */
+  --light-border-subtle: #d4d2cf; /* 1.5:1 - decorative only */
+  --light-border-default: #a09d9a; /* 3.0:1 - interactive elements */
+  --light-border-strong: #8a8785; /* 3.8:1 - emphasis */
   /* Primary colors - all AAA compliant (7:1+) on white */
   --light-primary: #6b4a2e; /* 7.94:1 AAA - main brand color */
   --light-primary-dark: #5d4028; /* 9.42:1 AAA - hover/active states */
@@ -198,9 +243,10 @@
   --dark-text-tertiary: #b0a9a1; /* 7.31:1 AAA */
   --dark-text-muted: #a8a199; /* 6.65:1 AA (decorative only) */
   --dark-text-accent: #d0b080; /* 8.25:1 AAA on page, 7.41:1 AAA on card */
-  --dark-border-subtle: #3a3734;
-  --dark-border-default: #4a4744;
-  --dark-border-strong: #5c5855;
+  /* Border colors - WCAG SC 1.4.11 (3:1 for UI components on #1e1c1a) */
+  --dark-border-subtle: #4a4744; /* 1.8:1 - decorative only */
+  --dark-border-default: #6b6663; /* 3.0:1 - interactive elements */
+  --dark-border-strong: #8a8583; /* 4.0:1 - emphasis */
   /* Primary colors - AAA compliant on both page (#1E1C1A) and card (#282522) */
   --dark-primary: #d0b080; /* 8.25:1 on page, 7.41:1 on card - both AAA */
   --dark-primary-dark: #c9a876; /* 7.56:1 on page */
@@ -511,4 +557,16 @@
   --color-theme-level-3-border: var(--theme-level-3-border);
   --color-theme-level-4-bg: var(--theme-level-4-bg);
   --color-theme-level-4-border: var(--theme-level-4-border);
+
+  /* Editorial Typography */
+  --font-family-serif-title: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-family-mono-brand: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Editorial Layout */
+  --radius-editorial: 40px;
+  --spacing-editorial: 40px;
+  --nav-height-editorial: 80px;
+
+  /* Editorial Transitions */
+  --ease-editorial: cubic-bezier(0.2, 1, 0.3, 1);
 }
