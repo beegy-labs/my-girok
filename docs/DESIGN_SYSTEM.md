@@ -156,6 +156,36 @@ All text color combinations meet WCAG 2.1 AAA standards (7:1+):
 
 ## Typography
 
+### Design Style: Modern Editorial Archive
+
+> "Sophisticated Classic" aesthetic with serif titles and editorial layout
+
+**Key Characteristics**:
+
+- Playfair Display serif for titles (classic, refined)
+- System monospace for brand "Girok" and badges
+- 40px border radius for cards (psychological comfort)
+- 80px fixed navbar with backdrop blur
+- Hover lift effects with smooth easing
+
+### Editorial Typography Tokens
+
+```css
+:root {
+  /* Editorial Typography */
+  --font-family-serif-title: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-family-mono-brand: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Editorial Layout */
+  --radius-editorial: 40px;
+  --spacing-editorial: 40px;
+  --nav-height-editorial: 80px;
+
+  /* Editorial Animation */
+  --ease-editorial: cubic-bezier(0.2, 1, 0.3, 1);
+}
+```
+
 ### WCAG-Optimized Settings
 
 ```css
@@ -169,11 +199,15 @@ All text color combinations meet WCAG 2.1 AAA standards (7:1+):
 ### Font Stack
 
 ```css
+/* Body text: System sans-serif */
 font-family:
   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
   sans-serif;
 
-/* Logo/Brand: Monospace */
+/* Page titles: Playfair Display serif */
+font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+
+/* Logo/Brand/Badges: Monospace */
 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 ```
 
@@ -208,15 +242,20 @@ import { Book, FileText, Wallet, Settings, Sun, Moon } from 'lucide-react';
 
 ### Core Icons
 
-| Icon     | Lucide Name | Usage             |
-| -------- | ----------- | ----------------- |
-| Book     | `Book`      | Records, library  |
-| FileText | `FileText`  | Resume, documents |
-| Wallet   | `Wallet`    | Assets, finance   |
-| Settings | `Settings`  | Configuration     |
-| Sun      | `Sun`       | Light mode toggle |
-| Moon     | `Moon`      | Dark mode toggle  |
-| Loader2  | `Loader2`   | Loading states    |
+| Icon      | Lucide Name | Usage                  |
+| --------- | ----------- | ---------------------- |
+| Book      | `Book`      | Journal, records       |
+| FileText  | `FileText`  | Resume, career archive |
+| Wallet    | `Wallet`    | Finance, ledger        |
+| Settings  | `Settings`  | Environment settings   |
+| Library   | `Library`   | Global library         |
+| Users     | `Users`     | Network, connections   |
+| BarChart3 | `BarChart3` | Stats, insights        |
+| Bell      | `Bell`      | Notifications          |
+| Sun       | `Sun`       | Light mode toggle      |
+| Moon      | `Moon`      | Dark mode toggle       |
+| Loader2   | `Loader2`   | Loading states         |
+| ArrowLeft | `ArrowLeft` | Back navigation        |
 
 ### Accessibility
 
@@ -245,11 +284,14 @@ xl: 1280px; /* Large Desktop */
 
 ### Border Radius
 
-| Token            | Size | Usage               |
-| ---------------- | ---- | ------------------- |
-| `rounded-xl`     | 12px | Inputs, buttons     |
-| `rounded-2xl`    | 16px | Cards               |
-| `rounded-[36px]` | 36px | Large feature cards |
+| Token            | Size | Usage                          |
+| ---------------- | ---- | ------------------------------ |
+| `rounded-xl`     | 12px | Inputs, buttons                |
+| `rounded-2xl`    | 16px | Standard cards, MenuRow        |
+| `rounded-[36px]` | 36px | Large feature cards (legacy)   |
+| `rounded-[40px]` | 40px | Editorial MenuCard, PageLayout |
+
+**Editorial Design**: Use 40px radius for main navigation cards (MenuCard) and editorial sections.
 
 ## Component Guidelines
 

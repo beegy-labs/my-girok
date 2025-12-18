@@ -12,39 +12,86 @@
 - **API**: Axios 1.13
 - **Testing**: Vitest 4.0 + Playwright 1.57
 
+## Design System: Modern Editorial Archive
+
+> "Sophisticated Classic" style - professional archive aesthetic
+
+### Design Tokens
+
+| Token                       | Value                        | Usage                     |
+| --------------------------- | ---------------------------- | ------------------------- |
+| `--font-family-serif-title` | Playfair Display             | Page titles, headings     |
+| `--font-family-mono-brand`  | System monospace             | Brand "Girok", badges     |
+| `--radius-editorial`        | 40px                         | MenuCard, Editorial cards |
+| `--nav-height-editorial`    | 80px                         | Fixed navbar height       |
+| `--ease-editorial`          | cubic-bezier(0.2, 1, 0.3, 1) | Smooth transitions        |
+
+### Layout Pattern
+
+```tsx
+// All pages use consistent Editorial layout
+<main style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}>
+  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <SectionBadge>MY ARCHIVE</SectionBadge>
+    <h1 style={{ fontFamily: 'var(--font-family-serif-title)' }}>Page Title</h1>
+    {/* Content */}
+  </div>
+  <Footer />
+</main>
+```
+
+### Key Components
+
+- **Navbar**: Fixed 80px, backdrop-blur, monospace "Girok"
+- **MenuCard**: 40px radius, hover lift, index numbers (01, 02...)
+- **MenuRow**: Compact list alternative
+- **ViewToggle**: Grid/List view switcher
+- **SectionBadge**: Uppercase monospace headers
+- **Footer**: "Recording your own story" tagline
+
 ## Structure
 
 ```
 apps/web-main/src/
 ├── pages/              # Route pages
-│   ├── HomePage.tsx
-│   ├── LoginPage.tsx
-│   ├── RegisterPage.tsx
+│   ├── HomePage.tsx           # Editorial dashboard with 8 menu functions
+│   ├── LoginPage.tsx          # Editorial login form
+│   ├── RegisterPage.tsx       # Editorial registration
 │   ├── ChangePasswordPage.tsx
 │   ├── NotFoundPage.tsx
-│   └── resume/
-│       ├── MyResumePage.tsx      # Resume management (/resume/my)
-│       ├── PublicResumePage.tsx  # Public view (/resume/:username)
-│       ├── ResumeEditPage.tsx    # Editor (/resume/edit, /resume/edit/:resumeId)
-│       ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
-│       └── SharedResumePage.tsx  # Shared view (/shared/:token)
+│   ├── JournalPage.tsx        # Placeholder (Coming Soon)
+│   ├── FinancePage.tsx        # Placeholder (Coming Soon)
+│   ├── LibraryPage.tsx        # Placeholder (Coming Soon)
+│   ├── NetworkPage.tsx        # Placeholder (Coming Soon)
+│   ├── StatsPage.tsx          # Placeholder (Coming Soon)
+│   ├── NotificationsPage.tsx  # Placeholder (Coming Soon)
+│   ├── resume/
+│   │   ├── MyResumePage.tsx      # Resume management (/resume/my)
+│   │   ├── PublicResumePage.tsx  # Public view (/resume/:username)
+│   │   ├── ResumeEditPage.tsx    # Editor (/resume/edit/:resumeId)
+│   │   ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
+│   │   └── SharedResumePage.tsx  # Shared view (/shared/:token)
+│   └── settings/
+│       └── SettingsPage.tsx      # Editorial settings
 ├── components/
-│   ├── Navbar.tsx               # Text-only 'Girok' logo, Lucide icons
+│   ├── Navbar.tsx               # Fixed 80px, 'Girok' monospace, backdrop-blur
+│   ├── Footer.tsx               # Editorial footer with tagline
+│   ├── PlaceholderPage.tsx      # Coming Soon template
 │   ├── PrivateRoute.tsx
-│   ├── LoadingSpinner.tsx       # WCAG-compliant loading (Lucide icon)
-│   ├── StatusMessage.tsx        # WCAG-compliant status/error messages
-│   ├── ErrorBoundary.tsx        # Error boundary with StatusMessage
+│   ├── LoadingSpinner.tsx
+│   ├── StatusMessage.tsx
+│   ├── ErrorBoundary.tsx
 │   └── resume/
 │       ├── ResumeForm.tsx
 │       ├── ResumePreview.tsx
-│       └── ResumePreviewContainer.tsx  # Shared preview wrapper
-├── api/                # API clients
+│       └── ResumePreviewContainer.tsx
+├── api/
 │   ├── auth.ts
 │   └── resume.ts
-├── stores/             # Zustand stores
+├── stores/
 │   └── authStore.ts
 ├── router.tsx          # Router config (createBrowserRouter)
-└── App.tsx             # Root component
+└── App.tsx
 ```
 
 ## Key Routes
@@ -60,10 +107,20 @@ apps/web-main/src/
 ### Protected Routes (PrivateRoute)
 
 - `/change-password` - ChangePasswordPage
+- `/settings` - SettingsPage (Editorial style)
 - `/resume/my` - MyResumePage (resume management dashboard)
 - `/resume/edit` - ResumeEditPage (create new resume)
 - `/resume/edit/:resumeId` - ResumeEditPage (edit existing resume)
 - `/resume/preview/:resumeId` - ResumePreviewPage (print preview)
+
+### Placeholder Routes (Coming Soon)
+
+- `/journal` - Personal Journal
+- `/finance` - Financial Ledger
+- `/library` - Global Library
+- `/network` - Network
+- `/stats` - Insight Stats
+- `/notifications` - Notifications
 
 ## Resume Feature
 
