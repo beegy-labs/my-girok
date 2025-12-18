@@ -1,11 +1,24 @@
-import { forwardRef, SelectHTMLAttributes, ChangeEvent } from 'react';
+import { SelectHTMLAttributes, ChangeEvent, Ref, useId } from 'react';
 
 export interface SelectOption {
   value: string;
   label: string;
 }
 
-export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className' | 'onChange'> {
+// Static class definitions (defined outside component for performance)
+// Base select classes with WCAG compliance:
+// - min-h-[48px] for touch target (WCAG 2.5.5)
+// - text-base (16px) for readability
+// - focus-visible for keyboard navigation
+const baseSelectClasses =
+  'w-full min-h-[48px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
+
+const defaultBorderClasses = 'border border-theme-border-default';
+
+export interface SelectInputProps extends Omit<
+  SelectHTMLAttributes<HTMLSelectElement>,
+  'className' | 'onChange'
+> {
   /**
    * Label text displayed above the select
    */
@@ -14,6 +27,10 @@ export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectEl
    * Error message displayed below the select
    */
   error?: string;
+  /**
+   * Helper text displayed below the select
+   */
+  hint?: string;
   /**
    * The callback fired when the value changes.
    */
@@ -38,10 +55,22 @@ export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectEl
    * Additional CSS classes for the select element
    */
   selectClassName?: string;
+  /**
+   * Ref for the select element (React 19 style - ref as prop)
+   */
+  ref?: Ref<HTMLSelectElement>;
 }
 
 /**
- * Reusable select input component with consistent styling
+ * Accessible select input component with WCAG 2.1 AA compliance
+ *
+ * Features:
+ * - Minimum 48px touch target height (WCAG 2.5.5)
+ * - Proper label association with htmlFor
+ * - Error states with aria-invalid and role="alert"
+ * - High contrast focus ring for keyboard navigation
+ * - 16px minimum font size for optimal readability
+ * - React 19 compatible (ref as prop)
  *
  * @example
  * ```tsx
@@ -54,78 +83,81 @@ export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectEl
  * />
  * ```
  */
-export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
-  ({
-    label,
-    error,
-    required,
-    options,
-    placeholder,
-    containerClassName = '',
-    selectClassName = '',
-    id,
-    onChange,
-    ...props
-  }, ref) => {
-    const selectId = id || `select-${label?.toLowerCase().replace(/\s+/g, '-')}`;
+export function SelectInput({
+  label,
+  error,
+  hint,
+  required,
+  options,
+  placeholder,
+  containerClassName = '',
+  selectClassName = '',
+  id,
+  onChange,
+  ref,
+  ...props
+}: SelectInputProps) {
+  // useId provides stable, unique IDs for accessibility (React 18+)
+  const generatedId = useId();
+  const selectId = id || generatedId;
 
-    const baseSelectClasses =
-      'w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted';
+  const errorClasses = error
+    ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'
+    : defaultBorderClasses;
 
-    const defaultBorderClasses =
-      'border border-theme-border-default focus:ring-theme-primary';
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    onChange(event.target.value);
+  };
 
-    const errorClasses = error
-      ? 'border-theme-status-error-border focus:ring-theme-status-error-text'
-      : defaultBorderClasses;
-
-    const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-      onChange(event.target.value);
-    };
-
-    return (
-      <div className={containerClassName}>
-        {label && (
-          <label
-            htmlFor={selectId}
-            className="block text-sm font-semibold text-theme-text-secondary mb-2"
-          >
-            {label}
-            {required && <span className="text-theme-status-error-text ml-1">*</span>}
-          </label>
-        )}
-
-        <select
-          ref={ref}
-          id={selectId}
-          className={`${baseSelectClasses} ${errorClasses} ${selectClassName}`}
-          onChange={handleChange}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${selectId}-error` : undefined}
-          {...props}
+  return (
+    <div className={containerClassName}>
+      {label && (
+        <label
+          htmlFor={selectId}
+          className="block text-base font-semibold text-theme-text-secondary mb-2"
         >
-          {placeholder && (
-            <option value="">{placeholder}</option>
+          {label}
+          {required && (
+            <span className="text-theme-status-error-text ml-1" aria-hidden="true">
+              *
+            </span>
           )}
-          {options.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          {required && <span className="sr-only">(required)</span>}
+        </label>
+      )}
 
-        {error && (
-          <p
-            id={`${selectId}-error`}
-            className="mt-1 text-sm text-theme-status-error-text"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-      </div>
-    );
-  }
-);
+      <select
+        ref={ref}
+        id={selectId}
+        className={`${baseSelectClasses} ${errorClasses} ${selectClassName}`}
+        onChange={handleChange}
+        aria-invalid={error ? 'true' : 'false'}
+        aria-describedby={error ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined}
+        aria-required={required}
+        {...props}
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
 
-SelectInput.displayName = 'SelectInput';
+      {hint && !error && (
+        <p id={`${selectId}-hint`} className="mt-2 text-base text-theme-text-tertiary">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p
+          id={`${selectId}-error`}
+          className="mt-2 text-base text-theme-status-error-text"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

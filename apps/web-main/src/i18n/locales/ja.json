@@ -37,9 +37,21 @@
     "subtitle": "あなたのプロフィールを管理",
     "description": "My-Girokは、履歴書、ブログ、予算管理を一箇所で行えるプラットフォームです。",
     "myApps": "マイアプリ",
+    "records": {
+      "title": "記録帳",
+      "description": "日常と思考を記録して整理する"
+    },
     "resume": {
       "title": "履歴書",
       "description": "プロフェッショナルな履歴書を作成・管理"
+    },
+    "assets": {
+      "title": "資産管理",
+      "description": "収入と支出、資産を管理する"
+    },
+    "settings": {
+      "title": "設定",
+      "description": "アプリ設定とアカウントを管理"
     },
     "blog": {
       "title": "ブログ",
@@ -49,6 +61,7 @@
       "title": "予算管理",
       "description": "収入と支出を追跡"
     },
+    "welcomeSuffix": "",
     "getStarted": "始める",
     "recordType": "記録の種類",
     "recordStart": "記録を始めましょう",
@@ -521,48 +534,38 @@
     },
     "success": "パスワードが正常に変更されました！"
   },
-  "character": {
+  "status": {
     "loading": {
-      "light": "記録を探しています",
-      "dark": "静かな夜に記録を探しています",
-      "messageLight": "お待ちください...",
-      "messageDark": "月明かりの下で本をめくっています..."
+      "title": "読み込み中",
+      "message": "しばらくお待ちください..."
     },
     "notFound": {
-      "light": "記録が見つかりません",
-      "dark": "この記録は夜の書斎にありません",
-      "messageLight": "リクエストされたページが見つかりませんでした",
-      "messageDark": "闇の中でも見つからない記録です"
+      "title": "ページが見つかりません",
+      "message": "リクエストされたページは存在しないか、削除されました"
     },
     "error": {
-      "light": "あっ、問題が発生しました",
-      "dark": "月明かりが薄れました",
-      "messageLight": "一時的なエラーが発生しました。後でもう一度お試しください",
-      "messageDark": "雲が夜空を覆いました。後でもう一度お試しください"
+      "title": "エラーが発生しました",
+      "message": "一時的なエラーが発生しました。後でもう一度お試しください"
+    },
+    "warning": {
+      "title": "確認が必要です",
+      "message": "続行する前にご確認ください"
     },
     "expired": {
-      "light": "共有期間が終了しました",
-      "dark": "深い夜が眠りにつきました",
-      "messageLight": "この共有リンクはもう有効ではありません",
-      "messageDark": "月が沈み、リンクも眠りにつきました"
+      "title": "共有リンクが期限切れです",
+      "message": "この共有リンクはもう有効ではありません"
     },
     "deleted": {
-      "light": "削除された記録",
-      "dark": "闇に消えた記録",
-      "messageLight": "この記録は所有者によって削除されました",
-      "messageDark": "夜霧の中に消えた記録です"
+      "title": "削除されたアイテム",
+      "message": "このアイテムは所有者によって削除されました"
     },
     "noPermission": {
-      "light": "アクセス権限がありません",
-      "dark": "この書斎は施錠されています",
-      "messageLight": "この記録を見る権限がありません",
-      "messageDark": "月明かりでも照らせない秘密の書斎"
+      "title": "アクセスが拒否されました",
+      "message": "このページを表示する権限がありません"
     },
     "maintenance": {
-      "light": "しばらく休憩中",
-      "dark": "夜の書斎整理中",
-      "messageLight": "システムメンテナンス中です。しばらくお待ちください",
-      "messageDark": "星明かりの下で書斎を整頓しています"
+      "title": "システムメンテナンス中",
+      "message": "しばらくお待ちください。まもなくサービスが復旧します"
     }
   },
   "errors": {

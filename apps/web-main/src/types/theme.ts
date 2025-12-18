@@ -5,8 +5,8 @@
  * Theme: User preference stored in localStorage
  */
 
-/** Theme names available in the system */
-export type ThemeName = 'vintage' | 'dark';
+/** Theme names available in the system (matches CSS [data-theme] selectors) */
+export type ThemeName = 'light' | 'dark';
 
 /** User preference options (includes 'system' for auto-detection) */
 export type Theme = 'light' | 'dark' | 'system';
@@ -18,22 +18,21 @@ export const AVAILABLE_THEMES: ReadonlyArray<{
   description: string;
 }> = [
   {
-    name: 'vintage',
-    label: 'Vintage Library',
-    description: 'Warm wood tones inspired by classic libraries',
+    name: 'light',
+    label: 'Clean White Oak',
+    description: 'Warm oak tones for comfortable daytime reading',
   },
   {
     name: 'dark',
-    label: 'Moonlit Library',
-    description: 'Cool slate tones for comfortable night reading',
+    label: 'Midnight Gentle Study',
+    description: 'Cool tones for comfortable night reading',
   },
 ] as const;
 
 /**
  * Maps user preference to actual theme name
- * 'light' preference -> 'vintage' theme
- * 'dark' preference -> 'dark' theme
+ * Direct mapping - preference equals theme name
  */
 export function mapPreferenceToTheme(preference: 'light' | 'dark'): ThemeName {
-  return preference === 'light' ? 'vintage' : 'dark';
+  return preference;
 }

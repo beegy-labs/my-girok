@@ -5,6 +5,7 @@
 ## How to Use This Directory
 
 **When starting a new task:**
+
 1. Read `rules.md` for core development rules
 2. Read `architecture.md` for system patterns (2025 architecture)
 3. Read specific service/app file based on your task
@@ -12,10 +13,12 @@
 ## Quick Links
 
 ### Core Documentation
+
 - **[rules.md](rules.md)** - Essential DO/DON'T rules (READ FIRST)
 - **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
 
 ### Development & Deployment
+
 - **[project-setup.md](project-setup.md)** - Quick project setup guide
 - **[git-flow.md](git-flow.md)** - Git Flow workflow reference
 - **[ci-cd.md](ci-cd.md)** - CI/CD pipeline (GitHub Actions + ArgoCD)
@@ -25,13 +28,17 @@
 - **[testing.md](testing.md)** - TDD guidelines and testing patterns
 
 ### Services (Implemented)
+
 - **[services/auth-service.md](services/auth-service.md)** - Authentication & authorization (REST + gRPC)
 - **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST + gRPC)
 
 ### Frontend Apps (Implemented)
+
 - **[apps/web-main.md](apps/web-main.md)** - Main web application (React + Vite)
 
 ### Shared Packages
+
+- **[packages/design-tokens.md](packages/design-tokens.md)** - WCAG 2.1 AA design tokens (SSOT)
 - **[packages/nest-common.md](packages/nest-common.md)** - Shared NestJS utilities (guards, decorators, gRPC)
 - **[packages/types.md](packages/types.md)** - TypeScript types + Protobuf
 - **[packages/ui-components.md](packages/ui-components.md)** - React UI components
@@ -87,6 +94,7 @@
 ```
 
 **Planned (Not Implemented):**
+
 - GraphQL BFF (Federation Gateway)
 - WS Gateway (Socket.io)
 - Feed Service (MongoDB)
@@ -105,6 +113,7 @@
 ## File Format
 
 Each service/app file contains:
+
 1. **Purpose** - What this service does
 2. **Tech Stack** - Technologies used
 3. **API/gRPC Endpoints** - Key routes and methods

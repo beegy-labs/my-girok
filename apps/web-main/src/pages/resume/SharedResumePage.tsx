@@ -5,7 +5,7 @@ import { getPublicResume, Resume } from '../../api/resume';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 import ResumeActionBar from '../../components/resume/ResumeActionBar';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { CharacterMessage } from '../../components/characters';
+import StatusMessage from '../../components/StatusMessage';
 
 export default function SharedResumePage() {
   const { token } = useParams<{ token: string }>();
@@ -56,7 +56,7 @@ export default function SharedResumePage() {
 
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <CharacterMessage
+        <StatusMessage
           type={messageType}
           message={error}
           action={

@@ -44,14 +44,11 @@ export default function RegisterPage() {
 
   return (
     <PageContainer maxWidth="sm" centered>
-      {/* Logo/Brand */}
+      {/* Logo/Brand - Text only, font-mono font-bold per design spec */}
       <div className="text-center mb-6 sm:mb-8">
-        <div className="flex items-center justify-center mb-3">
-          <span className="text-2xl sm:text-3xl mr-2">📚</span>
-          <h1 className="text-3xl sm:text-4xl font-bold text-theme-text-primary">
-            My-Girok
-          </h1>
-        </div>
+        <h1 className="text-3xl sm:text-4xl font-bold font-mono text-theme-text-primary mb-3">
+          girok
+        </h1>
         <p className="text-theme-text-secondary text-sm">{t('auth.createYourSpace')}</p>
       </div>
 

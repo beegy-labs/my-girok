@@ -89,7 +89,7 @@ A comprehensive personal management platform that helps you organize and showcas
 
 - ✅ React 19.2 + Vite 7.2 + TypeScript 5.7
 - ✅ Responsive design with Tailwind CSS 3.4
-- ✅ Library/book theme with amber colors
+- ✅ WCAG 2.1 AA compliant design (Oak Brown theme)
 - ✅ Automatic token refresh
 - ✅ Protected and public routes
 
@@ -212,6 +212,7 @@ pnpm dev
 ## 📖 Documentation
 
 ### User Documentation
+
 - **[Contributing Guide](./CONTRIBUTING.md)** - Git Flow, coding standards, PR process
 - **[CI/CD Pipeline](./docs/CI_CD.md)** - GitHub Actions, Harbor, ArgoCD
 - **[Database Management](./docs/DATABASE.md)** - Migrations, backups, collaboration
@@ -220,6 +221,7 @@ pnpm dev
 - **[Helm Deployment - Web Test](./apps/web-main/helm/README.md)** - Web app deployment
 
 ### Developer Documentation
+
 - **[Testing Guide](./.ai/testing.md)** - TDD, test coverage, best practices
 - **[Architecture](./.ai/architecture.md)** - System architecture and patterns
 - **[CI/CD Quick Reference](./.ai/ci-cd.md)** - Token-optimized CI/CD guide
@@ -475,6 +477,7 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 ### Completed ✅
 
 **Resume Management:**
+
 - [x] Multiple resume support with metadata
 - [x] Comprehensive profile information
 - [x] Work experience and projects
@@ -490,6 +493,7 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 - [x] Copy resume functionality with i18n support
 
 **Authentication & Infrastructure:**
+
 - [x] Multi-provider authentication (Local, Google, Kakao, Naver)
 - [x] JWT token management (Access + Refresh)
 - [x] Role-based access control (RBAC)
@@ -512,6 +516,7 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 ### Planned 📋
 
 **Budget Management:**
+
 - [ ] Income and expense tracking
 - [ ] Category-based budgeting
 - [ ] Monthly/yearly budget planning
@@ -519,6 +524,7 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 - [ ] Share budget summaries
 
 **Additional Features:**
+
 - [ ] Admin dashboard (Next.js)
 - [ ] Mobile apps (iOS, Android)
 - [ ] Email verification

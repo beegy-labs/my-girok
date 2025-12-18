@@ -86,6 +86,7 @@ Skill Category (e.g., "Frontend")
 ```
 
 **Example**:
+
 ```
 • React
   • React Hooks와 Context API를 활용한 전역 상태 관리
@@ -95,11 +96,13 @@ Skill Category (e.g., "Frontend")
 ```
 
 **Components**:
+
 - `HierarchicalDescription.tsx` - Reusable hierarchical input component
 - Supports drag & drop, collapse/expand, recursive structure
 - Same UX as Work Experience achievements
 
 **Reordering**:
+
 - Skill items have ▲/▼ buttons to change order
 - Up button only shows if not first, down only if not last
 - Simple array swap, no drag-and-drop library needed
@@ -108,14 +111,16 @@ Skill Category (e.g., "Frontend")
 
 **Concept**: "나의 기록" (My Records) - Personal library for documenting life and career
 
-**Colors**:
-- Primary: `amber-900` (#78350F) - Headers
-- Accent: `amber-700` to `amber-600` gradient - CTAs
-- Backgrounds: `amber-50/30` - Cards
-- Borders: `amber-200` - Form inputs
-- Focus: `amber-400` - Ring states
+**Colors** (WCAG 2.1 AA - Oak Brown Theme):
+
+- Primary: `theme-primary` (#8B5E3C) - Headers, CTAs
+- Text: `theme-text-primary` (#262220 light / #B0A9A2 dark)
+- Backgrounds: `theme-bg-card` (#F8F7F4 light / #282522 dark)
+- Borders: `theme-border-default`
+- Focus: `theme-focus-ring`
 
 **Visual Metaphors**:
+
 - 📚 Brand/Library
 - 📖 Roles/Chapters
 - ✍️ Tasks/Writing
@@ -151,13 +156,14 @@ for (const skill of skills) {
 ### Profile Photo Handling
 
 **Display in Form** (ResumeForm.tsx):
+
 ```jsx
 {formData.profileImage && (
   <div className="mb-3 flex items-center gap-3">
     <img
       src={formData.profileImage}
       alt="Profile"
-      className="w-24 h-24 object-cover rounded-full border-2 border-amber-300"
+      className="w-24 h-24 object-cover rounded-full border-2 border-theme-border-default"
       onError={(e) => {
         // Fallback to placeholder SVG on error
         (e.target as HTMLImageElement).src = 'data:image/svg+xml,...';
@@ -175,40 +181,46 @@ for (const skill of skills) {
 ```
 
 **Key Points**:
-- Image preview: 96x96px (`w-24 h-24`) circular with amber border
+
+- Image preview: 96x96px (`w-24 h-24`) circular with theme border
 - Error handling: Fallback to SVG placeholder if URL fails to load
 - Remove button: Clears profileImage field (destructive action, red color)
 - Input field: Text input for image URL (file upload not implemented)
 
-### Library Theme Styling
+### Theme Styling (WCAG 2.1 AA)
 
 **Project Cards**:
+
 ```jsx
-className="border border-amber-200 rounded-lg p-4 bg-amber-50/20"
+className = 'border border-theme-border-subtle rounded-lg p-4 bg-theme-bg-card';
 ```
 
 **Section Headers**:
+
 ```jsx
-<h5 className="text-sm font-semibold text-amber-900 flex items-center gap-1">
+<h5 className="text-sm font-semibold text-theme-text-primary flex items-center gap-1">
   📁 Project #{projectIndex + 1}
 </h5>
 ```
 
-**Inputs**:
+**Inputs** (use @my-girok/ui-components):
+
 ```jsx
-className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg
-           focus:outline-none focus:ring-2 focus:ring-amber-400 text-gray-900"
+<TextInput label="Project Name" value={name} onChange={setName} />
 ```
 
-**Buttons**:
+**Buttons** (use @my-girok/ui-components):
+
 ```jsx
-className="px-2 py-1 bg-amber-600 text-white text-xs rounded-lg
-           hover:bg-amber-700 transition-all"
+<Button variant="primary" size="sm">
+  Add
+</Button>
 ```
 
 ### Achievement Depth Selector
 
 Shows bullet symbols for hierarchical achievements:
+
 ```jsx
 <option value="1">• (1)</option>
 <option value="2">◦ (2)</option>
@@ -247,6 +259,7 @@ DELETE /v1/share/:id               // Delete share link
 ## Database Migration
 
 **Use db push for development** (no shadow database required):
+
 ```bash
 DATABASE_URL="<connection_string>" pnpm --filter @my-girok/personal-service prisma db push
 ```
@@ -254,6 +267,7 @@ DATABASE_URL="<connection_string>" pnpm --filter @my-girok/personal-service pris
 ## Testing
 
 **Run tests**:
+
 ```bash
 cd services/personal-service
 pnpm test -- --testPathPattern=resume.service.spec.ts
@@ -280,7 +294,7 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 - **Content**: Uses grayscale (gray-50 ~ gray-900) for text and layout
 - **Profile Photos**: Show in color by default, optional grayscale toggle
 - **Grayscale Toggle**: 🎨/🖤 button lets users switch to full B&W mode
-- **Editing UI**: Uses amber brand colors (form inputs, buttons, navigation)
+- **Editing UI**: Uses Oak Brown theme (WCAG 2.1 AA compliant)
 - **Multi-Page**: Supports both A4 (21cm × 29.7cm) and Letter (21.59cm × 27.94cm)
 - **Page Separation**: Visual shadows between pages, page numbers on screen
 - **Print-Friendly**: Automatic page breaks, cost-effective, ATS-compatible
@@ -294,12 +308,14 @@ pnpm test -- --testPathPattern=resume.service.spec.ts
 ## Print & PDF Output
 
 **Current Strategy (2025-11-19)**:
+
 - **Print**: Uses Paged.js paginated view (📄 페이지 보기)
 - **PDF Export**: Uses Paged.js with multi-page support
 - **Margins**: 0.5cm on all sides (minimal padding for maximum content)
 - **@page margin**: 0 (Paged.js handles all spacing)
 
 **Required Print Settings**:
+
 - Margins: **None**
 - Headers and footers: **None**
 - Background graphics: **On**
@@ -343,8 +359,12 @@ useEffect(() => {
 ```css
 @media print {
   /* Hide continuous view, show Paged.js */
-  #resume-content { display: none !important; }
-  .pagedjs-container { display: block !important; }
+  #resume-content {
+    display: none !important;
+  }
+  .pagedjs-container {
+    display: block !important;
+  }
 
   /* Page constraints */
   .pagedjs_page,
@@ -362,14 +382,20 @@ useEffect(() => {
   }
 
   /* Text overflow prevention */
-  a, span, p, div, li {
+  a,
+  span,
+  p,
+  div,
+  li {
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
     hyphens: auto !important;
   }
 
   /* Media constraints */
-  img, video, svg {
+  img,
+  video,
+  svg {
     max-width: 100% !important;
     height: auto !important;
   }
@@ -417,6 +443,7 @@ export async function exportResumeToPDF(
 ```
 
 **Print Styles**:
+
 - `print.css`: Global print styles (black & white optimizations, page breaks)
 - `resume-print.css`: Resume-specific page layouts (A4/Letter dimensions)
 - **Background**: White (`background: white`) for cost-effective printing
@@ -424,6 +451,7 @@ export async function exportResumeToPDF(
 - **Page Breaks**: Controlled with `page-break-inside: avoid` for sections/items
 
 **CRITICAL**:
+
 - ❌ Don't use hardcoded `@page { size: A4 }` in CSS files
 - ✅ Use dynamic style injection in component based on props
 - ❌ Don't use colored backgrounds (gray, etc.) for print
@@ -432,6 +460,7 @@ export async function exportResumeToPDF(
 ## Performance Optimization (CRITICAL)
 
 ❌ **DON'T**:
+
 ```typescript
 // Inline functions in resume list (creates 60+ functions per render)
 {resumes.map(r => <button onClick={() => navigate(`/edit/${r.id}`)}>Edit</button>)}
@@ -442,6 +471,7 @@ useEffect(() => { if(nav) navigate(nav) }, [nav]);
 ```
 
 ✅ **DO**:
+
 ```typescript
 // Memoize all handlers
 const navigateToEdit = useCallback((id) => navigate(`/edit/${id}`), [navigate]);
@@ -455,6 +485,7 @@ const handleSubmit = async (data) => {
 ```
 
 **Required for resume pages:**
+
 - `MyResumePage`: Memoize all 9 handlers (edit, preview, copy, share, delete, etc.)
 - `ResumeEditPage`: Memoize handleFormChange, defaultSections
 - `ResumeForm`: Exclude onChange from useEffect deps (parent memoizes it)
@@ -462,6 +493,7 @@ const handleSubmit = async (data) => {
 ## Common Mistakes to Avoid
 
 ❌ **DON'T**:
+
 - Use `blue-600` or other off-brand colors
 - Use arbitrary values like `w-[123px]`
 - Forget to add translation keys for new text
@@ -472,7 +504,8 @@ const handleSubmit = async (data) => {
 - Use state for navigation
 
 ✅ **DO**:
-- Follow amber library theme consistently
+
+- Follow Oak Brown theme (see `docs/DESIGN_SYSTEM.md`)
 - Use standard spacing (multiples of 0.25rem)
 - Add i18n keys for all user-facing text
 - Use `create` with nested data for relations
@@ -483,8 +516,7 @@ const handleSubmit = async (data) => {
 
 ## File Locations
 
-- **Policy docs**: `docs/policies/RESUME.md` (comprehensive)
-- **LLM guide**: `.ai/resume.md` (this file, concise)
+- **LLM guide**: `.ai/resume.md` (this file)
 - **Design system**: `docs/DESIGN_SYSTEM.md`
 - **Schema**: `services/personal-service/prisma/schema.prisma`
 - **Types**: `apps/web-main/src/api/resume.ts`
@@ -508,27 +540,30 @@ const handleSubmit = async (data) => {
 
 **CRITICAL**: Profile photos are stored in **original color format only**.
 
-| Aspect | Policy |
-|--------|--------|
-| **Storage** | Original color image only (no server-side grayscale conversion) |
-| **Display Default** | Color (original) |
-| **Grayscale Option** | Frontend CSS filter (`filter: grayscale(100%)`) via UI toggle |
-| **Location** | MinIO bucket: `resumes/{userId}/{resumeId}/{uuid}.{ext}` |
-| **Temp Storage** | `tmp/{userId}/{uuid}.{ext}` (24-hour auto-cleanup) |
+| Aspect               | Policy                                                          |
+| -------------------- | --------------------------------------------------------------- |
+| **Storage**          | Original color image only (no server-side grayscale conversion) |
+| **Display Default**  | Color (original)                                                |
+| **Grayscale Option** | Frontend CSS filter (`filter: grayscale(100%)`) via UI toggle   |
+| **Location**         | MinIO bucket: `resumes/{userId}/{resumeId}/{uuid}.{ext}`        |
+| **Temp Storage**     | `tmp/{userId}/{uuid}.{ext}` (24-hour auto-cleanup)              |
 
 ### Implementation Rules
 
 **Backend (storage.service.ts)**:
+
 - ❌ **NEVER** auto-convert images to grayscale on upload
 - ❌ **NEVER** store duplicate grayscale versions
 - ✅ Store original file only with `moveFromTemp()`
 - ✅ Return `{ fileKey, fileUrl }` (no grayscaleUrl)
 
 **Backend (resume.service.ts)**:
+
 - ❌ **NEVER** use `result.grayscaleUrl || result.fileUrl`
 - ✅ Always use `result.fileUrl` (original color image)
 
 **Frontend (ResumePreview.tsx)**:
+
 - ✅ Display color by default
 - ✅ Apply `filter: grayscale(100%)` when user enables B&W mode
 - ✅ Toggle button: 🎨 (color) / 🖤 (grayscale)
@@ -543,6 +578,7 @@ const handleSubmit = async (data) => {
 ## Recent Updates
 
 **2025-11-20 (Part 2)**: Birth date field upgrade for accurate age calculation (#TBD)
+
 - **Breaking Change**: Upgraded `birthYear` (number) to `birthDate` (string, YYYY-MM-DD format)
 - **Reason**: Accurate Korean age (만 나이) calculation requires full birth date
 - Added `birthDate` field to Resume model, CreateResumeDto
@@ -556,6 +592,7 @@ const handleSubmit = async (data) => {
 - Files changed: `schema.prisma`, `packages/types/src/resume/index.ts`, `create-resume.dto.ts`, `ResumeForm.tsx`, `ResumePreview.tsx`, `ResumeEditPage.tsx`, `resume.ts`, `ko.json`, `en.json`, `ja.json`, `RESUME.md`, `.ai/resume.md`
 
 **2025-11-20 (Part 1)**: Birth year and gender fields (#125)
+
 - Added `birthYear` (number) and `gender` (Gender enum: MALE | FEMALE | OTHER) to Resume model
 - Added input fields in ResumeForm for birth year and gender selection
 - Display format in preview: "남, 1994 (30세)" next to name in header
@@ -564,6 +601,7 @@ const handleSubmit = async (data) => {
 - Files changed: `schema.prisma`, `packages/types/src/resume/index.ts`, `resume.ts`, `ResumeForm.tsx`, `ResumePreview.tsx`, `RESUME.md`, `.ai/resume.md`
 
 **2025-11-19 (Part 3)**: Print content overflow and clipping fix (#116)
+
 - Fixed print button content clipping and overflow issues
 - Added max-width: 100% constraints to all Paged.js elements (.pagedjs_page, .pagedjs_page_content, .pagedjs_pagebox)
 - Applied box-sizing: border-box to prevent size overflow from padding/borders
@@ -573,6 +611,7 @@ const handleSubmit = async (data) => {
 - Result: Content no longer overflows page boundaries, long URLs wrap properly, images scale to fit
 
 **2025-11-19 (Part 2)**: Paged.js print integration and optimization (#115)
+
 - Changed print strategy from continuous view to Paged.js paginated view
 - Print now uses page view (📄 페이지 보기) instead of continuous view
 - Added print settings guidance in ResumePreviewPage: Margins=None, Headers/footers=None, Background graphics=On
@@ -583,6 +622,7 @@ const handleSubmit = async (data) => {
 - Files: `resume-print.css`, `ResumePreview.tsx`, `ResumePreviewPage.tsx`, `RESUME.md`
 
 **2025-11-19 (Part 1)**: Resume margin optimization and print/PDF strategy (#114)
+
 - Optimized margins from 2cm to 0.5cm for maximum content space
 - PDF export: Uses Paged.js for multi-page PDF with proper page boundaries
 - Print view: Uses Paged.js with @page margin: 0.5cm
@@ -592,6 +632,7 @@ const handleSubmit = async (data) => {
 - Files: `resume-print.css`, `ResumePreview.tsx`, `pdf.ts`, `RESUME.md`
 
 **2025-11-19**: CI workflow optimization for faster test execution (#114 CI commit)
+
 - Split single test job into 3 parallel jobs (lint, type-check, test)
 - Added node_modules caching for 80% faster dependency installation
 - Used --prefer-offline flag for pnpm install
@@ -601,6 +642,7 @@ const handleSubmit = async (data) => {
 - Files: `.github/workflows/ci-web-main.yml`
 
 **2025-01-19 (Part 2)**: Shared resume preview container component (#107)
+
 - Extracted duplicate preview container code into `ResumePreviewContainer` component
 - Consolidates identical wrapper logic across 4 pages: ResumeEditPage, ResumePreviewPage, SharedResumePage, PublicResumePage
 - Features: customizable scale, maxHeight, responsive padding, horizontal scroll, dark mode support
@@ -609,6 +651,7 @@ const handleSubmit = async (data) => {
 - Files: `ResumePreviewContainer.tsx` (new), `ResumeEditPage.tsx`, `ResumePreviewPage.tsx`, `SharedResumePage.tsx`, `PublicResumePage.tsx`
 
 **2025-01-19 (Part 1)**: A4 print margins and page boundaries fix (#106)
+
 - Fixed content clipping at page edges by increasing print margins from 1.2-1.5cm to **2cm** on all sides (later optimized to 0.5cm in #114)
 - Updated `@page { size: A4; margin: 0; }` in print.css for proper page setup
 - Updated paginated view to show accurate page boundaries accounting for padding
@@ -620,6 +663,7 @@ const handleSubmit = async (data) => {
 - Files: `print.css`, `resume-print.css`, `ResumePreview.tsx`
 
 **2025-11-18 (Part 4)**: PDF/Print output and profile photo preview improvements (#102)
+
 - Fixed PDF/print background color: Changed from gray (#F9FAFB) to white for cost-effective printing
 - Implemented dynamic @page size injection based on paperSize prop (A4 vs Letter)
 - Added useEffect hook in ResumePreview to dynamically inject `@page { size: ... }` style
@@ -630,6 +674,7 @@ const handleSubmit = async (data) => {
 - Files changed: `resume-print.css`, `print.css`, `ResumePreview.tsx`, `ResumeForm.tsx`
 
 **2025-11-18 (Part 3)**: Fix missing experience data in shared/public resume pages (#101)
+
 - Fixed shared (`/shared/:token`) and public (`/:username`) resume pages missing all experience data
 - Added nested includes for experiences → projects → achievements (4-level hierarchy) in `findById()` and `getPublicResumeByUsername()`
 - Added `sections` include to public resume endpoint for proper section visibility
@@ -637,6 +682,7 @@ const handleSubmit = async (data) => {
 - Files changed: `resume.service.ts`
 
 **2025-11-18 (Part 2)**: Key Achievements UI improvements (#100)
+
 - Fixed text wrapping issues when Key Achievements contain long multi-line text
 - Changed bullet list from `list-inside` to `list-outside` with `pl-5` padding
 - Changed input type from single-line `<input>` to multi-line `<textarea>` with `rows={3}` and `resize-y`
@@ -645,6 +691,7 @@ const handleSubmit = async (data) => {
 - Files changed: `ResumePreview.tsx`, `ResumeForm.tsx`
 
 **2025-11-18 (Part 1)**: Key Achievements storage and display (#98, #99)
+
 - Added Key Achievements (주요 성과) field to resume schema and backend service
 - Added `keyAchievements: string[]` to Resume model for storing career highlights
 - Updated `create()` and `update()` methods in resume.service.ts to handle keyAchievements
@@ -653,12 +700,14 @@ const handleSubmit = async (data) => {
 - Files changed: `resume.service.ts`
 
 **2025-11-15**: React rendering optimization (#82)
+
 - Memoized all event handlers in MyResumePage, ResumeEditPage
 - Fixed navigation anti-pattern (state + useEffect → direct navigate())
 - Fixed infinite loop risk in ResumeForm onChange
 - 80%+ reduction in re-renders (60+ inline functions eliminated)
 
 **2025-11-14**: Add i18n support to ResumePreview component
+
 - Applied i18n to all hardcoded text in ResumePreview.tsx
 - Added `resume.preview.*` translation keys to ko.json, en.json, ja.json
 - Translated UI elements: view modes (continuous/paginated), color/grayscale mode toggles
@@ -667,6 +716,7 @@ const handleSubmit = async (data) => {
 - Files changed: `ResumePreview.tsx`, `ko.json`, `en.json`, `ja.json`
 
 **2025-11-14 (Part 2)**: Fix experience duration calculation to include end month
+
 - Fixed `calculateMonths()` to include both start and end months in duration calculation
 - Example: 2021-10 ~ 2022-05 now correctly calculates as 8 months (not 7)
   - Includes: Oct, Nov, Dec (2021) + Jan, Feb, Mar, Apr, May (2022) = 8 months
@@ -674,18 +724,23 @@ const handleSubmit = async (data) => {
 - Updated all test expectations to match the corrected calculation
 - All 15 tests passing
 
-**2025-11-14**: Resume list UI improvements with i18n and amber theme
+**2025-12-18**: WCAG 2.1 AA Design System Refactor
+
+- Updated from amber theme to Oak Brown (#8B5E3C) theme
+- All colors now use `theme-*` CSS tokens for consistency
+- WCAG 2.1 AA compliant (4.5:1+ contrast ratio)
+- Uses Lucide-React icons for iconography
+- Removed character mascots, uses StatusMessage component
+
+**2025-11-14**: Resume list UI improvements with i18n
+
 - Added resume copy button to ResumeList component
-- Refactored ResumeList.tsx to use i18n for all user-facing text (policy compliance)
-- Changed color scheme from blue/green to amber theme (policy compliance)
+- Refactored ResumeList.tsx to use i18n for all user-facing text
 - Added translation keys to en.json, ko.json, ja.json: `resume.list.*`
-- Translation keys support: title, createNew, edit, preview, copy, setDefault, delete, confirmations, error messages, stats
-- UI buttons now follow amber library theme: `bg-amber-50 text-amber-700`, gradient CTAs
-- Delete button remains red (appropriate for destructive action)
 - Copy feature: Uses existing backend API `POST /v1/resume/:id/copy`
-- Files changed: `ResumeList.tsx`, `en.json`, `ko.json`, `ja.json`
 
 **2025-11-13**: Total career duration with overlap handling
+
 - Added `calculateTotalExperienceWithOverlap()` utility function to handle overlapping work periods
 - Merges overlapping date ranges using interval merging algorithm to avoid double-counting
 - Example: Company A (2020-01~2022-06) + Company B (2022-03~2025-11) = 5y 11m (not 6y 3m)
@@ -697,6 +752,7 @@ const handleSubmit = async (data) => {
 - Deprecated old `calculateTotalExperience()` function (simple sum without overlap handling)
 
 **2025-11-12 (Part 7)**: Fix missing isCurrentlyWorking field and empty string handling
+
 - Fixed 500 error when creating/updating resumes with missing `isCurrentlyWorking` field
 - Added proper handling for empty string values (`""` → `null`) in `endDate` fields
 - Added default values for optional fields: `order` (0), `visible` (true)
@@ -704,6 +760,7 @@ const handleSubmit = async (data) => {
 - Prevents database insertion errors when frontend sends empty strings or missing optional fields
 
 **2025-11-12 (Part 6)**: Fix 500 error in resume create/update operations
+
 - Fixed 500 Internal Server Error when creating or updating resumes
 - Extended hierarchical achievements fetch pattern to `create()` and `update()` return values
 - Both methods now properly return hierarchical achievements with `where: { parentId: null }`
@@ -712,6 +769,7 @@ const handleSubmit = async (data) => {
 - Resolves issue where flat achievement structures were causing response processing errors
 
 **2025-11-12 (Part 5)**: Resume copy/duplicate feature + Nested achievements retrieval fix
+
 - Added resume copy endpoint: `POST /v1/resume/:id/copy`
 - Copies all nested data: sections, skills, experiences with projects/achievements (4 depth), education, certificates
 - Copied resume title gets " (Copy)" suffix and is never set as default
@@ -721,12 +779,14 @@ const handleSubmit = async (data) => {
 - Frontend API: `copyResume(resumeId)`
 
 **2025-11-12 (Part 4)**: Nested achievements save fix
+
 - Fixed critical bug where only first level of achievements was saved
 - Added `transformAchievements()` recursive helper method
 - Properly handles children at all depth levels (1-4)
 - Applied to both `create()` and `update()` methods in resume service
 
 **2025-11-12 (Part 3)**: Collapsible sections + Share link fixes + DB field stripping
+
 - Added collapsible functionality to all resume form sections for better UX
 - Fixed share link URL format: `/shared/:token` (was incorrectly `/resume/:token`)
 - Enhanced `stripIds()` to remove all DB fields: `id`, `projectId`, `resumeId`, `experienceId`, `parentId`, `createdAt`, `updatedAt`
@@ -734,17 +794,20 @@ const handleSubmit = async (data) => {
 - Certificates and Education saving confirmed working correctly
 
 **2025-11-12 (Part 2)**: Share link creation and management
+
 - Share links now generate correct URLs: `https://domain/shared/{token}`
 - Frontend routes: `/resume/:username` (public profile), `/shared/:token` (share link)
 - Backend endpoints: `/v1/resume/public/:username`, `/v1/share/public/:token`
 - Fixed `findAllByUser()` and `update()` in share.service.ts
 
 **2025-11-12 (Part 1)**: Database field validation fix
+
 - `stripIds()` function now removes all database-generated fields
 - Prevents "property X should not exist" validation errors
 - Applies recursively to all nested objects (achievements, projects, etc.)
 
 **2025-01-16 (Part 4)**: Experience duration auto-calculation + Currently working flag
+
 - Added `isCurrentlyWorking` (재직중) checkbox for Experience
 - Auto-calculate experience duration (e.g., "6년 8개월")
 - Display duration under company name in preview
@@ -752,17 +815,20 @@ const handleSubmit = async (data) => {
 - Utility: `calculateExperienceDuration()` and `calculateTotalExperience()`
 
 **2025-01-16 (Part 3)**: Career goals → Application reason + Tech Stack + GPA format
+
 - Changed `careerGoals` to `applicationReason` (지원 동기)
 - Moved Tech Stack after Description in preview
 - Added GPA format field: SCALE_4_0, SCALE_4_5, SCALE_100
 - Country-specific formats: US (4.0), KR (4.5), JP (100)
 
 **2025-01-16 (Part 2)**: Fix achievements save validation error
+
 - Added `stripIds()` utility to recursively remove `id` fields
 - Updated `createResume()` and `updateResume()` to use `prepareResumeForSubmit()`
 - Fixes: "property id should not exist" validation error
 
 **2025-01-16 (Part 1)**: Education degree enum + drag-and-drop
+
 - DegreeType enum: HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE
 - i18n: KR (2년제/3년제), JP, EN
 - EducationSection.tsx: drag-and-drop sortable component
@@ -770,15 +836,13 @@ const handleSubmit = async (data) => {
 - UI: Select with t(`resume.degreeTypes.${degree}`)
 
 **2025-01-15 (Part 2)**: Skill save fix + reordering
+
 - Fix: `create()` loop vs `createMany()` for JSON
 - Feature: ▲/▼ buttons for skill items
 
 **2025-01-15 (Part 1)**: Skills hierarchical descriptions
+
 - HierarchicalDescription.tsx (reusable, 4 depth)
 - Backward compatible
 
-**Stack**: Amber theme, i18n (KR/EN), Jest/Vitest
-
----
-
-**For detailed information, refer to**: `docs/policies/RESUME.md`
+**Stack**: Oak Brown theme (WCAG 2.1 AA), i18n (KR/EN/JA), Vitest
