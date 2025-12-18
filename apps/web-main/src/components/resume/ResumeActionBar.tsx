@@ -7,6 +7,10 @@ import { Button } from '@my-girok/ui-components';
 import ShareLinkModal from './ShareLinkModal';
 import { Download, Printer, Share2, Pencil, Eye, Link2, User } from 'lucide-react';
 
+/**
+ * ResumeActionBar - V0.0.1 AAA Workstation Design
+ * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
+ */
 export interface ResumeActionBarProps {
   resume: Resume;
   /**
@@ -22,7 +26,12 @@ export interface ResumeActionBarProps {
   isOwnProfile?: boolean;
 }
 
-export default function ResumeActionBar({ resume, mode, username, isOwnProfile }: ResumeActionBarProps) {
+export default function ResumeActionBar({
+  resume,
+  mode,
+  username,
+  isOwnProfile,
+}: ResumeActionBarProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showShareModal, setShowShareModal] = useState(false);
@@ -101,26 +110,39 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
 
   return (
     <>
-      <div className="print:hidden px-4 pt-4 sm:pt-6">
-        <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl shadow-theme-sm px-4 py-3 sm:py-4 transition-colors duration-200">
-          {/* Header - Stack on mobile, side-by-side on larger screens */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+      {/* V0.0.1 Action Bar */}
+      <div className="print:hidden px-4 sm:px-8 pt-6 sm:pt-10">
+        <div className="max-w-5xl mx-auto bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] shadow-theme-md px-8 py-6 sm:px-10 sm:py-8 transition-colors duration-200">
+          {/* Header - V0.0.1 Style */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 pb-6 border-b-2 border-theme-border-default">
             <div>
-              <h1 className="text-lg sm:text-2xl font-bold text-theme-text-primary">
+              <h1
+                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-2"
+                style={{ fontFamily: 'var(--font-family-serif-title)' }}
+              >
                 {getTitle()}
               </h1>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-3 mt-2">
                 {getSubtitle() && (
-                  <p className="text-xs sm:text-sm text-theme-text-secondary">{getSubtitle()}</p>
+                  <p
+                    className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary"
+                    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+                  >
+                    {getSubtitle()}
+                  </p>
                 )}
-                {(isPublic && isOwnProfile) && (
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColorClasses[badge.color]}`}>
+                {isPublic && isOwnProfile && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${badgeColorClasses[badge.color]}`}
+                  >
                     <BadgeIcon className="w-3 h-3" aria-hidden="true" />
                     {badge.text}
                   </span>
                 )}
                 {!isPublic && (
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColorClasses[badge.color]}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${badgeColorClasses[badge.color]}`}
+                  >
                     <BadgeIcon className="w-3 h-3" aria-hidden="true" />
                     {badge.text}
                   </span>
@@ -131,7 +153,8 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
               <Button
                 variant="secondary"
                 onClick={() => navigate(editRoute)}
-                size="sm"
+                size="lg"
+                rounded="default"
                 icon={<Pencil className="w-4 h-4" />}
                 className="self-start sm:self-auto"
               >
@@ -140,12 +163,14 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
             )}
           </div>
 
-          {/* Action Buttons - Responsive grid on mobile, flex on larger screens */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2 sm:gap-3">
+          {/* Action Buttons - V0.0.1 Style */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-3 sm:gap-4">
             <Button
               variant="primary"
               onClick={handleExportPDF}
               loading={exporting}
+              size="lg"
+              rounded="editorial"
               icon={<Download className="w-4 h-4" />}
               className="flex-1 whitespace-nowrap"
             >
@@ -155,6 +180,8 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
               variant="secondary"
               onClick={handlePrint}
               loading={printing}
+              size="lg"
+              rounded="default"
               icon={<Printer className="w-4 h-4" />}
               className="flex-1 whitespace-nowrap"
             >
@@ -164,6 +191,8 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
               <Button
                 variant="secondary"
                 onClick={() => setShowShareModal(true)}
+                size="lg"
+                rounded="default"
                 icon={<Share2 className="w-4 h-4" />}
                 className="col-span-2 sm:col-span-1 flex-1 whitespace-nowrap"
               >
@@ -176,10 +205,7 @@ export default function ResumeActionBar({ resume, mode, username, isOwnProfile }
 
       {/* Share Modal - Only shown in owner mode */}
       {canShare && showShareModal && (
-        <ShareLinkModal
-          onClose={() => setShowShareModal(false)}
-          resumeId={resume.id}
-        />
+        <ShareLinkModal onClose={() => setShowShareModal(false)} resumeId={resume.id} />
       )}
     </>
   );

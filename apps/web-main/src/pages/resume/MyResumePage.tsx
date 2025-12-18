@@ -16,6 +16,10 @@ import { Button, Card, Alert, SectionBadge } from '@my-girok/ui-components';
 import Footer from '../../components/Footer';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
+/**
+ * MyResumePage - V0.0.1 AAA Workstation Design
+ * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
+ */
 export default function MyResumePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -177,20 +181,25 @@ export default function MyResumePage() {
       style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Header - Editorial Style */}
+        {/* Header - V0.0.1 Editorial Style */}
         <header className="mb-12 sm:mb-16">
           <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
               <h1
-                className="text-3xl sm:text-4xl text-theme-text-primary tracking-tight mb-2"
+                className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3"
                 style={{ fontFamily: 'var(--font-family-serif-title)' }}
               >
                 {t('resume.myResumes')}
               </h1>
-              <p className="text-base text-theme-text-secondary">{t('resume.manageResumes')}</p>
+              <p
+                className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
+                style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+              >
+                {t('resume.manageResumes')}
+              </p>
             </div>
-            <Button variant="primary" onClick={navigateToEdit}>
+            <Button variant="primary" size="lg" rounded="editorial" onClick={navigateToEdit}>
               {t('resume.createNewResume')}
             </Button>
           </div>
@@ -202,25 +211,33 @@ export default function MyResumePage() {
           </Alert>
         )}
 
-        {/* Resume List */}
+        {/* Resume List - V0.0.1 Style */}
         <section className="mb-8">
           <h2
-            className="text-xl sm:text-2xl text-theme-text-primary tracking-tight mb-6"
+            className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-8"
             style={{ fontFamily: 'var(--font-family-serif-title)' }}
           >
             {t('resume.list.title')}
           </h2>
 
           {resumes.length === 0 ? (
-            <Card variant="primary" padding="lg" className="text-center">
-              <div className="text-5xl sm:text-6xl mb-4">📝</div>
-              <h3 className="text-lg sm:text-xl font-bold text-theme-text-primary mb-2">
+            <Card
+              variant="primary"
+              padding="xl"
+              radius="xl"
+              className="text-center border-2 border-theme-border-default"
+            >
+              <div className="text-5xl sm:text-6xl mb-6">📝</div>
+              <h3
+                className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-3"
+                style={{ fontFamily: 'var(--font-family-serif-title)' }}
+              >
                 {t('resume.list.noResumes')}
               </h3>
-              <p className="text-sm sm:text-base text-theme-text-secondary mb-4">
+              <p className="text-sm sm:text-base text-theme-text-secondary mb-6">
                 {t('resume.list.createFirst')}
               </p>
-              <Button variant="primary" onClick={navigateToEdit}>
+              <Button variant="primary" size="lg" rounded="editorial" onClick={navigateToEdit}>
                 {t('resume.list.createNew')}
               </Button>
             </Card>
@@ -407,7 +424,7 @@ export default function MyResumePage() {
           )}
         </section>
 
-        {/* Share Modal - WCAG AAA accessible dialog */}
+        {/* Share Modal - V0.0.1 AAA accessible dialog */}
         {showShareModal && (
           <div
             className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
@@ -421,21 +438,27 @@ export default function MyResumePage() {
               }
             }}
           >
-            <Card variant="secondary" padding="lg" className="max-w-md w-full shadow-theme-xl">
+            <Card
+              variant="secondary"
+              padding="xl"
+              radius="xl"
+              className="max-w-md w-full shadow-theme-xl border-2 border-theme-border-default"
+            >
               <h2
                 id={shareModalTitleId}
-                className="text-xl sm:text-2xl font-bold text-theme-text-primary mb-4"
+                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-6"
+                style={{ fontFamily: 'var(--font-family-serif-title)' }}
               >
                 {t('resume.shareLinkCreate')}
               </h2>
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-theme-text-secondary mb-2">
+              <div className="mb-8">
+                <label className="block text-xs font-bold uppercase tracking-widest text-theme-text-secondary mb-3">
                   {t('resume.shareDuration')}
                 </label>
                 <select
                   value={shareDuration}
                   onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-theme-bg-input border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-sm sm:text-base text-theme-text-primary"
+                  className="w-full px-6 py-4 bg-theme-bg-input border-2 border-theme-border-default rounded-[24px] focus:outline-none focus:ring-[3px] focus:ring-theme-focus-ring focus:border-theme-primary transition-all text-base font-bold text-theme-text-primary"
                 >
                   <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
                   <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
@@ -443,9 +466,11 @@ export default function MyResumePage() {
                   <option value={ShareDuration.PERMANENT}>{t('resume.permanent')}</option>
                 </select>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <Button
                   variant="secondary"
+                  size="lg"
+                  rounded="default"
                   onClick={() => {
                     setShowShareModal(false);
                     setSelectedResumeId(null);
@@ -454,7 +479,13 @@ export default function MyResumePage() {
                 >
                   {t('common.cancel')}
                 </Button>
-                <Button variant="primary" onClick={handleCreateShare} className="flex-1">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  rounded="editorial"
+                  onClick={handleCreateShare}
+                  className="flex-1"
+                >
                   {t('common.save')}
                 </Button>
               </div>

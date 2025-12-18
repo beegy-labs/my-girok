@@ -8,6 +8,10 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import StatusMessage from '../../components/StatusMessage';
 import { Button } from '@my-girok/ui-components';
 
+/**
+ * ResumePreviewPage - V0.0.1 AAA Workstation Design
+ * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
+ */
 export default function ResumePreviewPage() {
   const navigate = useNavigate();
   const { resumeId } = useParams<{ resumeId: string }>();
@@ -58,13 +62,21 @@ export default function ResumePreviewPage() {
 
   if (error === 'NOT_FOUND') {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+      >
         <StatusMessage
           type="not-found"
           title={t('resume.preview.notFoundTitle')}
           message={t('resume.preview.notFoundMessage')}
           action={
-            <Button variant="primary" onClick={() => navigate('/resume/my')}>
+            <Button
+              variant="primary"
+              size="lg"
+              rounded="editorial"
+              onClick={() => navigate('/resume/my')}
+            >
               {t('resume.preview.backToMyResumes')}
             </Button>
           }
@@ -75,13 +87,16 @@ export default function ResumePreviewPage() {
 
   if (error) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+      >
         <StatusMessage
           type="error"
           title={t('resume.preview.errorTitle')}
           message={t('resume.preview.errorMessage')}
           action={
-            <Button variant="primary" onClick={() => loadResume()}>
+            <Button variant="primary" size="lg" rounded="editorial" onClick={() => loadResume()}>
               {t('resume.preview.retry')}
             </Button>
           }
@@ -95,12 +110,15 @@ export default function ResumePreviewPage() {
   }
 
   return (
-    <div className="w-full min-h-screen">
-      {/* Action Bar - Common component with owner mode (all actions enabled) */}
+    <div
+      className="w-full min-h-screen bg-theme-bg-page"
+      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+    >
+      {/* Action Bar - V0.0.1 Style with owner mode (all actions enabled) */}
       <ResumeActionBar resume={resume} mode="owner" />
 
-      {/* Resume Preview - Full width responsive container */}
-      <div className="py-4 sm:py-6 md:py-8 print:py-0">
+      {/* Resume Preview - V0.0.1 Full width responsive container */}
+      <div className="py-6 sm:py-10 md:py-14 print:py-0">
         <ResumePreviewContainer resume={resume} />
       </div>
     </div>
