@@ -121,21 +121,14 @@ Returns: `execute`, `loading`, `error`, `data`, `reset`
 
 ## Theming
 
-Components use CSS custom properties via `theme-*` Tailwind classes:
+Components require `@my-girok/design-tokens` for CSS custom properties:
 
 ```css
-/* Light mode */
---light-primary: #8b5e3c; /* Oak Brown */
---light-text-primary: #262220;
---light-bg-card: #f8f7f4;
-
-/* Dark mode */
---dark-primary: #9c835e;
---dark-text-primary: #b0a9a2;
---dark-bg-card: #282522;
+/* In your app's CSS entry point */
+@import '@my-girok/design-tokens/tokens.css';
 ```
 
-See `/docs/DESIGN_SYSTEM.md` for full color palette.
+See `packages/design-tokens/README.md` for token documentation.
 
 ## Installation
 
