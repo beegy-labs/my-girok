@@ -29,8 +29,11 @@ apps/web-main/src/
 │       ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
 │       └── SharedResumePage.tsx  # Shared view (/shared/:token)
 ├── components/
-│   ├── Navbar.tsx
+│   ├── Navbar.tsx               # Text-only 'girok' logo, Lucide icons
 │   ├── PrivateRoute.tsx
+│   ├── LoadingSpinner.tsx       # WCAG-compliant loading (Lucide icon)
+│   ├── StatusMessage.tsx        # WCAG-compliant status/error messages
+│   ├── ErrorBoundary.tsx        # Error boundary with StatusMessage
 │   └── resume/
 │       ├── ResumeForm.tsx
 │       ├── ResumePreview.tsx
@@ -47,6 +50,7 @@ apps/web-main/src/
 ## Key Routes
 
 ### Public Routes
+
 - `/` - HomePage (dashboard for logged-in, landing for visitors)
 - `/login` - LoginPage
 - `/register` - RegisterPage
@@ -54,6 +58,7 @@ apps/web-main/src/
 - `/shared/:token` - SharedResumePage (shared resume via token)
 
 ### Protected Routes (PrivateRoute)
+
 - `/change-password` - ChangePasswordPage
 - `/resume/my` - MyResumePage (resume management dashboard)
 - `/resume/edit` - ResumeEditPage (create new resume)
@@ -63,9 +68,11 @@ apps/web-main/src/
 ## Resume Feature
 
 ### MyResumePage (`/resume/my`)
+
 **Purpose**: Resume management dashboard
 
 **Features**:
+
 - List all user's resumes
 - Create new resume
 - Edit/preview/delete resumes
@@ -73,41 +80,48 @@ apps/web-main/src/
 - View share statistics
 
 **APIs Used**:
+
 ```typescript
-getAllResumes()           // Get user's resume list
-getMyShareLinks()         // Get share links
-createResumeShare()       // Create share link
-deleteShareLink()         // Delete share link
-deleteResume()            // Delete resume
+getAllResumes(); // Get user's resume list
+getMyShareLinks(); // Get share links
+createResumeShare(); // Create share link
+deleteShareLink(); // Delete share link
+deleteResume(); // Delete resume
 ```
 
 ### PublicResumePage (`/resume/:username`)
+
 **Purpose**: Public resume view (no auth required)
 
 **Features**:
+
 - View user's default resume
 - Edit button (if own profile)
 - Print button
 
 **APIs Used**:
+
 ```typescript
-getUserResume(username)   // Get public resume by username
+getUserResume(username); // Get public resume by username
 ```
 
 ### ResumeEditPage (`/resume/edit` or `/resume/edit/:resumeId`)
+
 **Purpose**: Create/edit resume (auth required)
 
 **Features**:
+
 - Full resume editor with live preview
 - Save/update resume
 - Navigate to preview on save
 - Auto-save draft to localStorage
 
 **APIs Used**:
+
 ```typescript
-getResume(resumeId)       // Load existing resume by ID
-createResume(dto)         // Create new resume
-updateResume(id, dto)     // Update existing resume
+getResume(resumeId); // Load existing resume by ID
+createResume(dto); // Create new resume
+updateResume(id, dto); // Update existing resume
 ```
 
 ## API Client Pattern
@@ -127,8 +141,8 @@ export const personalApi = axios.create({
 // Request interceptor: Add JWT token
 personalApi.interceptors.request.use(async (config) => {
   // Skip auth for public endpoints
-  const isPublicEndpoint = config.url?.includes('/share/public/') ||
-                           config.url?.includes('/resume/public/');
+  const isPublicEndpoint =
+    config.url?.includes('/share/public/') || config.url?.includes('/resume/public/');
 
   if (isPublicEndpoint) {
     return config; // No Authorization header
@@ -188,6 +202,7 @@ export const getDefaultResume = async (): Promise<Resume> => {
 ```
 
 **Key Points**:
+
 - Skip `Authorization` header for public endpoints (iOS Safari compatibility)
 - Enhanced error logging includes `userAgent` for mobile debugging
 - Auto-retry with token refresh on 401 errors
@@ -219,25 +234,28 @@ export const authApi = axios.create({
 
 **Why separate clients?**
 
-| Function | API Client | Reason |
-|----------|-----------|--------|
-| `login()` | `publicApi` | 401 = invalid credentials, show error to user |
-| `register()` | `publicApi` | 401 = validation error, show error to user |
-| `logout()` | `publicApi` | If token invalid, just clear local state |
-| `getCurrentUser()` | `authApi` | 401 = token expired, try refresh |
-| `changePassword()` | `authApi` | 401 = token expired, try refresh |
+| Function           | API Client  | Reason                                        |
+| ------------------ | ----------- | --------------------------------------------- |
+| `login()`          | `publicApi` | 401 = invalid credentials, show error to user |
+| `register()`       | `publicApi` | 401 = validation error, show error to user    |
+| `logout()`         | `publicApi` | If token invalid, just clear local state      |
+| `getCurrentUser()` | `authApi`   | 401 = token expired, try refresh              |
+| `changePassword()` | `authApi`   | 401 = token expired, try refresh              |
 
 **Problem this solves**:
 Without `publicApi`, login failure (401) would trigger:
+
 1. Token refresh attempt (no token exists)
 2. Refresh fails → `window.location.href = '/login'`
 3. Page reloads, error message lost
 
 ### Token Storage
+
 - **Access Token**: localStorage
 - **Refresh Token**: HttpOnly cookie (set by BFF)
 
 ### Auth Store (Zustand)
+
 ```typescript
 interface AuthState {
   user: User | null;
@@ -247,6 +265,7 @@ interface AuthState {
 ```
 
 ### PrivateRoute
+
 ```typescript
 // Redirects to /login if not authenticated
 <PrivateRoute>
@@ -261,6 +280,7 @@ interface AuthState {
 ### Available Components
 
 **Form Components**:
+
 ```typescript
 import { Button, TextInput, SelectInput, TextArea, FileUpload } from '@my-girok/ui-components';
 
@@ -290,6 +310,7 @@ import { Button, TextInput, SelectInput, TextArea, FileUpload } from '@my-girok/
 ```
 
 **Button Component**:
+
 ```typescript
 import { Button } from '@my-girok/ui-components';
 
@@ -315,20 +336,35 @@ import { Button } from '@my-girok/ui-components';
 ```
 
 **Layout & Feedback**:
-```typescript
-import { Card, Alert, LoadingSpinner } from '@my-girok/ui-components';
 
-// Card - Content container
-<Card variant="primary">
+```typescript
+import { Card, Alert } from '@my-girok/ui-components';
+import LoadingSpinner from '../components/LoadingSpinner';
+import StatusMessage from '../components/StatusMessage';
+
+// Card - Content container with 36px radius option
+<Card variant="primary" radius="lg">
   <h2>Card Title</h2>
 </Card>
 
 // Alert - Status messages
 <Alert variant="success">Resume saved successfully!</Alert>
 
-// LoadingSpinner - Loading states
-<LoadingSpinner fullScreen />
+// LoadingSpinner - WCAG-compliant loading (Lucide Loader2 icon)
+<LoadingSpinner fullScreen message="Loading..." />
+
+// StatusMessage - WCAG-compliant status/error messages (replaced CharacterMessage)
+<StatusMessage type="not-found" action={<Button>Go Back</Button>} />
 ```
+
+**StatusMessage Types**:
+
+- `error` - System errors (AlertCircle icon)
+- `not-found` - 404 pages (FileQuestion icon)
+- `expired` - Expired content (Clock icon)
+- `no-permission` - Access denied (Lock icon)
+- `maintenance` - System maintenance (Wrench icon)
+- `deleted` - Deleted content (Trash2 icon)
 
 ### Component Structure
 
@@ -351,6 +387,7 @@ packages/ui-components/src/components/
 ### Usage Guidelines
 
 **Import Pattern**:
+
 ```typescript
 // ✅ DO - Use barrel imports from the package
 import { Button, Card, TextInput } from '@my-girok/ui-components';
@@ -360,12 +397,39 @@ import Card from '../../components/ui/Layout/Card';
 ```
 
 **Theme Support**:
+
 - All components use semantic theme tokens (`theme-*`) and automatically adapt to light/dark mode.
 - See `/docs/DESIGN_SYSTEM.md` for full design guidelines.
 
 ## Design System
 
-**Color Theme**: "Wood Library" (Vintage) + "Moonlit Library" (Dark)
+**Color Theme**: "Clean White Oak" (Light) + "Midnight Gentle Study" (Dark)
+
+### WCAG 2.1 AA Compliance
+
+All color combinations meet WCAG 2.1 AA standards with 4.5:1 minimum contrast ratio.
+
+**Light Mode (Clean White Oak)**:
+| Token | Value | Usage |
+|-------|-------|-------|
+| Page BG | #FFFFFF | Page background |
+| Card BG | #F8F7F4 | Card backgrounds |
+| Primary Text | #262220 | Main text |
+| Primary Accent | #8B5E3C | Buttons, links |
+
+**Dark Mode (Midnight Gentle Study)**:
+| Token | Value | Usage |
+|-------|-------|-------|
+| Page BG | #1E1C1A | Page background |
+| Card BG | #282522 | Card backgrounds |
+| Primary Text | #B0A9A2 | Main text |
+| Primary Accent | #9C835E | Buttons, links |
+
+### Typography (WCAG Optimized)
+
+- **Line Height**: 1.8 (improved readability)
+- **Letter Spacing**: -0.02em (Korean optimization)
+- **Minimum Font Size**: 16px (WCAG 2.1 AA)
 
 ### Scalable Theme Architecture (2025-12)
 
@@ -378,9 +442,10 @@ Layer 3: Tailwind (@theme)     → Maps to utilities (bg-theme-*, text-theme-*)
 ```
 
 **Adding a New Theme**:
+
 ```css
 /* index.css - Only modify this file */
-[data-theme="ocean"] {
+[data-theme='ocean'] {
   --theme-bg-page: #0a192f;
   --theme-text-primary: #ccd6f6;
   /* ... semantic tokens ... */
@@ -388,6 +453,7 @@ Layer 3: Tailwind (@theme)     → Maps to utilities (bg-theme-*, text-theme-*)
 ```
 
 **Usage in Components**:
+
 ```tsx
 // Use semantic theme classes (auto-adapts to theme)
 <div className="bg-theme-bg-card text-theme-text-primary">
@@ -398,16 +464,17 @@ All components now use unified `theme-*` tokens.
 
 ### Key Classes
 
-| Token | Usage |
-|-------|-------|
-| `bg-theme-bg-page` | Page background |
-| `bg-theme-bg-card` | Card backgrounds |
-| `text-theme-text-primary` | Primary text |
-| `text-theme-text-secondary` | Secondary text |
-| `border-theme-border-subtle` | Subtle borders |
-| `shadow-theme-lg` | Large shadows |
+| Token                        | Usage            |
+| ---------------------------- | ---------------- |
+| `bg-theme-bg-page`           | Page background  |
+| `bg-theme-bg-card`           | Card backgrounds |
+| `text-theme-text-primary`    | Primary text     |
+| `text-theme-text-secondary`  | Secondary text   |
+| `border-theme-border-subtle` | Subtle borders   |
+| `shadow-theme-lg`            | Large shadows    |
 
 **See**:
+
 - **Component Library** (above) - Ready-to-use UI components
 - `/docs/DESIGN_SYSTEM.md` - Full design guidelines
 - `apps/web-main/src/index.css` - Theme variable definitions
@@ -423,17 +490,17 @@ VITE_AUTH_API_URL=https://api.girok.dev  # REST fallback for auth
 ## Common Patterns
 
 ### Page Loading State
+
 ```typescript
+import LoadingSpinner from '../components/LoadingSpinner';
+
 if (loading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700" />
-    </div>
-  );
+  return <LoadingSpinner fullScreen />;
 }
 ```
 
 ### Error Handling
+
 ```typescript
 const [error, setError] = useState<string | null>(null);
 
@@ -446,6 +513,7 @@ const [error, setError] = useState<string | null>(null);
 ```
 
 ### Navigation
+
 ```typescript
 const navigate = useNavigate();
 const { user } = useAuthStore();
@@ -477,6 +545,7 @@ pnpm preview
 ## Resume PDF & Preview (Updated 2025-12)
 
 ### Architecture
+
 Resume preview and PDF export use **@react-pdf/renderer** + **react-pdf**:
 
 ```
@@ -488,12 +557,14 @@ ResumePreviewContainer   → Responsive wrapper with scale
 ```
 
 **Key Files**:
+
 - `ResumePdfDocument.tsx` - PDF document using @react-pdf/renderer components
 - `ResumePreview.tsx` - PDF viewer using react-pdf
 - `ResumePreviewContainer.tsx` - Responsive container with auto-scale
 - `utils/pdf.ts` - PDF export utilities
 
 **Benefits**:
+
 - True vector PDF (not image-based)
 - No CSS transform clipping issues
 - Consistent output across all devices
@@ -515,6 +586,7 @@ Both `ResumePdfDocument.tsx` and `ResumeContent.tsx` must filter empty values be
 ```
 
 **Affected Fields**:
+
 - `keyAchievements` - string[]
 - `project.achievements` - string[]
 - `skill.items` - string[] | SkillItem[]
@@ -539,6 +611,7 @@ type PdfLocale = 'ko' | 'en' | 'ja';
 ```
 
 **Locale-specific translations include**:
+
 - Section titles (Skills, Experience, Education, etc.)
 - Labels (Email, Phone, Present, Ongoing)
 - Duration format (1년 2개월 / 1 yrs 2 mos / 1年2ヶ月)
@@ -567,6 +640,7 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
 **Location**: `apps/web-main/src/components/resume/ResumePreviewContainer.tsx`
 
 **Responsive Design Policy (Updated 2025-12)**:
+
 - **Full responsive scaling**: Automatically scales PDF to fit container width
 - **No minimum scale**: Allows complete fit on all screen sizes (mobile ~47%, tablet ~93%, desktop 100%)
 - **No horizontal overflow**: PDF never clips or requires horizontal scrolling
@@ -574,6 +648,7 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
 - **PDF quality preserved**: Export always generates full-resolution vector PDF regardless of display scale
 
 **Features**:
+
 - Auto-scales based on container width (never scales up beyond 100%)
 - Optional maxHeight with overflow scrolling
 - Responsive padding (mobile vs desktop)
@@ -608,6 +683,7 @@ const blob = await generateResumePDFBlob(resume, { paperSize: 'A4' });
 ```
 
 **Used In**:
+
 - `ResumeEditPage` - Live preview
 - `ResumePreviewPage` - Full preview
 - `SharedResumePage` - Public shared resume view
@@ -631,6 +707,7 @@ const devicePixelRatio = Math.min(2, window.devicePixelRatio || 1);
 ```
 
 **Why cap at 2?**
+
 - iPhone has 3x DPI - rendering at 3x causes memory issues
 - 2x provides excellent quality on Retina/4K displays
 - Performance remains stable on mobile devices
@@ -664,11 +741,12 @@ Standard page layout for resume preview pages:
 ```
 
 ### Scale Values by Device (Updated 2025-12)
-| Device | Viewport | Scale | Notes |
-|--------|----------|-------|-------|
-| Mobile | 375px | ~47% | Full fit, pinch-to-zoom for details |
-| Tablet | 768px | ~93% | Near full size |
-| Desktop | 1024px+ | 100% | Full size |
+
+| Device  | Viewport | Scale | Notes                               |
+| ------- | -------- | ----- | ----------------------------------- |
+| Mobile  | 375px    | ~47%  | Full fit, pinch-to-zoom for details |
+| Tablet  | 768px    | ~93%  | Near full size                      |
+| Desktop | 1024px+  | 100%  | Full size                           |
 
 **Design Decision**: Prioritize no-overflow over minimum readability scale. Users on mobile can pinch-to-zoom for details, which is the expected mobile UX pattern.
 
@@ -678,23 +756,23 @@ Standard page layout for resume preview pages:
 
 Use these consistent Tailwind classes across all resume edit components:
 
-| Element | Mobile | Tablet (sm:) | Desktop (lg:) |
-|---------|--------|--------------|---------------|
-| Card padding | `p-3` | `sm:p-4` | `lg:p-6` |
-| Section gap | `space-y-3` | `sm:space-y-4` | `lg:space-y-6` |
-| Form field gap | `space-y-3` | `sm:space-y-4` | - |
-| Border radius | `rounded-xl` | `sm:rounded-2xl` | - |
-| Section title | `text-base font-bold` | `sm:text-lg` | `lg:text-xl` |
-| Label | `text-xs font-semibold` | `sm:text-sm` | - |
-| Body text | `text-xs` | `sm:text-sm` | - |
+| Element        | Mobile                  | Tablet (sm:)     | Desktop (lg:)  |
+| -------------- | ----------------------- | ---------------- | -------------- |
+| Card padding   | `p-3`                   | `sm:p-4`         | `lg:p-6`       |
+| Section gap    | `space-y-3`             | `sm:space-y-4`   | `lg:space-y-6` |
+| Form field gap | `space-y-3`             | `sm:space-y-4`   | -              |
+| Border radius  | `rounded-xl`            | `sm:rounded-2xl` | -              |
+| Section title  | `text-base font-bold`   | `sm:text-lg`     | `lg:text-xl`   |
+| Label          | `text-xs font-semibold` | `sm:text-sm`     | -              |
+| Body text      | `text-xs`               | `sm:text-sm`     | -              |
 
 ### Button Size Standards
 
-| Size | Padding | Font | Use Case |
-|------|---------|------|----------|
-| xs | `py-1.5 px-2` | `text-xs` | Inline actions, nested items |
-| sm | `py-2 px-3` | `text-xs sm:text-sm` | Default buttons |
-| md | `py-2.5 px-4` | `text-sm sm:text-base` | Primary actions |
+| Size | Padding       | Font                   | Use Case                     |
+| ---- | ------------- | ---------------------- | ---------------------------- |
+| xs   | `py-1.5 px-2` | `text-xs`              | Inline actions, nested items |
+| sm   | `py-2 px-3`   | `text-xs sm:text-sm`   | Default buttons              |
+| md   | `py-2.5 px-4` | `text-sm sm:text-base` | Primary actions              |
 
 ### Usage Example
 
@@ -733,11 +811,12 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 const sensors = useSensors(
   useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-  useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
 );
 ```
 
 **Key Settings**:
+
 - `distance: 8` - Prevents accidental drag on pointer devices
 - `delay: 200` - 200ms hold before drag starts on touch
 - `tolerance: 5` - 5px movement allowed during delay
@@ -789,17 +868,25 @@ const [isExpanded, setIsExpanded] = useState(true);
 Use compact 24x24px icon buttons on mobile:
 
 ```jsx
-{/* Desktop: text buttons */}
+{
+  /* Desktop: text buttons */
+}
 <div className="hidden sm:flex gap-2">
   <button className="px-2 py-1 text-xs">+ Add</button>
   <button className="px-2 py-1 text-xs">Remove</button>
-</div>
+</div>;
 
-{/* Mobile: icon buttons */}
+{
+  /* Mobile: icon buttons */
+}
 <div className="sm:hidden flex gap-0.5">
-  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">+</button>
-  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">✕</button>
-</div>
+  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">
+    +
+  </button>
+  <button className="w-6 h-6 flex items-center justify-center text-[10px] touch-manipulation">
+    ✕
+  </button>
+</div>;
 ```
 
 ### Fixed Bottom Navigation Bar
@@ -807,8 +894,10 @@ Use compact 24x24px icon buttons on mobile:
 For mobile preview toggle and navigation:
 
 ```jsx
-<div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card
-                border-t border-theme-border-subtle p-3 lg:hidden safe-area-bottom">
+<div
+  className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card
+                border-t border-theme-border-subtle p-3 lg:hidden safe-area-bottom"
+>
   <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
     <SecondaryButton className="flex-1 py-3">← Back</SecondaryButton>
     <PrimaryButton className="flex-1 py-3">👁️ Preview</PrimaryButton>
@@ -819,6 +908,7 @@ For mobile preview toggle and navigation:
 ## ESLint Configuration (Updated 2025-12)
 
 ### react-hooks Plugin
+
 The project uses `eslint-plugin-react-hooks` for proper React Hooks linting:
 
 ```javascript
@@ -877,5 +967,5 @@ const { projects: _projects, ...dataToSubmit } = formData;
 ## References
 
 - **Design System**: `/docs/DESIGN_SYSTEM.md`
-- **Resume Policy**: `/docs/policies/RESUME.md`
+- **Resume Guide**: `/.ai/resume.md`
 - **API Docs**: Personal Service API

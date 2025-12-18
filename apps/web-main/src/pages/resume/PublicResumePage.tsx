@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { getUserResume, Resume } from '../../api/resume';
 import { useAuthStore } from '../../stores/authStore';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
+import ResumeActionBar from '../../components/resume/ResumeActionBar';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { CharacterMessage } from '../../components/characters';
+import StatusMessage from '../../components/StatusMessage';
 import { Button } from '@my-girok/ui-components';
 
 export default function PublicResumePage() {
@@ -19,19 +20,14 @@ export default function PublicResumePage() {
 
   const isOwnProfile = user?.username === username;
 
-  useEffect(() => {
-    if (username) {
-      loadResume(username);
-    }
-  }, [username]);
-
-  const loadResume = async (username: string) => {
+  // Memoized with useCallback per project policy
+  const loadResume = useCallback(async (targetUsername: string) => {
     try {
-      const data = await getUserResume(username);
+      const data = await getUserResume(targetUsername);
       setResume(data);
-    } catch (error: unknown) {
-      const err = error as { response?: { status?: number } };
-      if (err.response?.status === 404) {
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         setError('User not found');
       } else {
         setError('Failed to load resume');
@@ -39,15 +35,13 @@ export default function PublicResumePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleEdit = () => {
-    navigate(`/resume/${username}/edit`);
-  };
+  useEffect(() => {
+    if (username) {
+      loadResume(username);
+    }
+  }, [username, loadResume]);
 
   if (loading) {
     return <LoadingSpinner fullScreen message={t('resume.preview.loading')} />;
@@ -58,7 +52,7 @@ export default function PublicResumePage() {
 
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <CharacterMessage
+        <StatusMessage
           type={isNotFound ? 'not-found' : 'error'}
           title={isNotFound ? t('resume.preview.notFoundTitle') : undefined}
           message={isNotFound ? t('resume.preview.notFoundMessage') : error}
@@ -78,36 +72,13 @@ export default function PublicResumePage() {
 
   return (
     <div className="w-full min-h-screen">
-      {/* Action Bar - Hidden when printing */}
-      <div className="print:hidden px-4 pt-4 sm:pt-6">
-        <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl shadow-theme-sm px-4 py-3 sm:py-4 transition-colors duration-200">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-            <div className="flex-1">
-              <h1 className="text-lg sm:text-2xl font-bold text-theme-text-primary">
-                {t('resume.preview.title', { name: resume.name })}
-              </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs sm:text-sm text-theme-text-secondary">@{username}</p>
-                {isOwnProfile && (
-                  <span className="px-2 py-0.5 text-xs font-semibold bg-theme-primary/20 text-theme-primary-light rounded-full">
-                    {t('resume.public.yourProfile')}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {isOwnProfile && (
-                <Button variant="primary" onClick={handleEdit} size="sm">
-                  {t('resume.edit')}
-                </Button>
-              )}
-              <Button variant="secondary" onClick={handlePrint} size="sm">
-                {t('resume.preview.print')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Action Bar - Common component with public mode */}
+      <ResumeActionBar
+        resume={resume}
+        mode="public"
+        username={username}
+        isOwnProfile={isOwnProfile}
+      />
 
       {/* Resume Preview - Full responsive scaling */}
       <div className="py-4 sm:py-6 md:py-8 print:py-0">

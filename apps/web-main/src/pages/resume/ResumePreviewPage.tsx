@@ -5,7 +5,7 @@ import { getResume, Resume } from '../../api/resume';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
 import ResumeActionBar from '../../components/resume/ResumeActionBar';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { CharacterMessage } from '../../components/characters';
+import StatusMessage from '../../components/StatusMessage';
 import { Button } from '@my-girok/ui-components';
 
 export default function ResumePreviewPage() {
@@ -58,31 +58,35 @@ export default function ResumePreviewPage() {
 
   if (error === 'NOT_FOUND') {
     return (
-      <CharacterMessage
-        type="not-found"
-        title={t('resume.preview.notFoundTitle')}
-        message={t('resume.preview.notFoundMessage')}
-        action={
-          <Button variant="primary" onClick={() => navigate('/resume/my')}>
-            {t('resume.preview.backToMyResumes')}
-          </Button>
-        }
-      />
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <StatusMessage
+          type="not-found"
+          title={t('resume.preview.notFoundTitle')}
+          message={t('resume.preview.notFoundMessage')}
+          action={
+            <Button variant="primary" onClick={() => navigate('/resume/my')}>
+              {t('resume.preview.backToMyResumes')}
+            </Button>
+          }
+        />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <CharacterMessage
-        type="error"
-        title={t('resume.preview.errorTitle')}
-        message={t('resume.preview.errorMessage')}
-        action={
-          <Button variant="primary" onClick={() => loadResume()}>
-            {t('resume.preview.retry')}
-          </Button>
-        }
-      />
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <StatusMessage
+          type="error"
+          title={t('resume.preview.errorTitle')}
+          message={t('resume.preview.errorMessage')}
+          action={
+            <Button variant="primary" onClick={() => loadResume()}>
+              {t('resume.preview.retry')}
+            </Button>
+          }
+        />
+      </div>
     );
   }
 

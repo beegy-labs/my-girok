@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export interface AsyncOperationState<T = any> {
+export interface AsyncOperationState<T = unknown> {
   /**
    * Loading state
    */
@@ -15,15 +15,15 @@ export interface AsyncOperationState<T = any> {
   data: T | null;
 }
 
-export interface UseAsyncOperationOptions {
+export interface UseAsyncOperationOptions<T = unknown> {
   /**
    * Callback on success
    */
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: T) => void;
   /**
    * Callback on error
    */
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
   /**
    * Callback on finally (always called)
    */
@@ -66,13 +66,8 @@ export interface UseAsyncOperationOptions {
  * }
  * ```
  */
-export function useAsyncOperation<T = any>(options: UseAsyncOperationOptions = {}) {
-  const {
-    onSuccess,
-    onError,
-    onFinally,
-    defaultErrorMessage = 'An error occurred',
-  } = options;
+export function useAsyncOperation<T = unknown>(options: UseAsyncOperationOptions<T> = {}) {
+  const { onSuccess, onError, onFinally, defaultErrorMessage = 'An error occurred' } = options;
 
   const [state, setState] = useState<AsyncOperationState<T>>({
     loading: false,
@@ -81,15 +76,15 @@ export function useAsyncOperation<T = any>(options: UseAsyncOperationOptions = {
   });
 
   const setLoading = useCallback((loading: boolean) => {
-    setState(prev => ({ ...prev, loading }));
+    setState((prev) => ({ ...prev, loading }));
   }, []);
 
   const setError = useCallback((error: string | null) => {
-    setState(prev => ({ ...prev, error }));
+    setState((prev) => ({ ...prev, error }));
   }, []);
 
   const setData = useCallback((data: T | null) => {
-    setState(prev => ({ ...prev, data }));
+    setState((prev) => ({ ...prev, data }));
   }, []);
 
   const execute = useCallback(
@@ -102,17 +97,21 @@ export function useAsyncOperation<T = any>(options: UseAsyncOperationOptions = {
         setData(result);
         onSuccess?.(result);
         return result;
-      } catch (err: any) {
-        const errorMessage = err?.response?.data?.message || err?.message || defaultErrorMessage;
+      } catch (err: unknown) {
+        // Type-safe error handling
+        const error = err instanceof Error ? err : new Error(String(err));
+        const axiosError = err as { response?: { data?: { message?: string } } };
+        const errorMessage =
+          axiosError?.response?.data?.message || error.message || defaultErrorMessage;
         setError(errorMessage);
-        onError?.(err);
+        onError?.(error);
         throw err;
       } finally {
         setLoading(false);
         onFinally?.();
       }
     },
-    [onSuccess, onError, onFinally, defaultErrorMessage, setLoading, setError, setData]
+    [onSuccess, onError, onFinally, defaultErrorMessage, setLoading, setError, setData],
   );
 
   const reset = useCallback(() => {

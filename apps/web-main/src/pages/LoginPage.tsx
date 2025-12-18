@@ -63,81 +63,94 @@ export default function LoginPage() {
 
   return (
     <PageContainer maxWidth="sm" centered>
-      {/* Logo/Brand */}
+      {/* Logo/Brand - Text only, font-mono font-bold per design spec */}
       <div className="text-center mb-6 sm:mb-8">
-        <div className="flex items-center justify-center mb-3">
-          <span className="text-2xl sm:text-3xl mr-2">📚</span>
-          <h1 className="text-3xl sm:text-4xl font-bold text-theme-text-primary">
-            My-Girok
-          </h1>
-        </div>
+        <h1 className="text-3xl sm:text-4xl font-bold font-mono text-theme-text-primary mb-3">
+          girok
+        </h1>
         <p className="text-theme-text-secondary text-sm">{t('auth.startRecording')}</p>
       </div>
 
       {/* Login Form */}
       <Card variant="primary" padding="lg" className="shadow-theme-xl">
-        {error && <Alert variant="error" className="mb-6">{error}</Alert>}
+        {error && (
+          <Alert variant="error" className="mb-6">
+            {error}
+          </Alert>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <TextInput
-              id="email"
-              label={t('auth.emailAddress')}
-              type="email"
-              value={email}
-              onChange={setEmail}
-              required
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <TextInput
+            id="email"
+            label={t('auth.emailAddress')}
+            type="email"
+            value={email}
+            onChange={setEmail}
+            required
+            placeholder="you@example.com"
+            autoComplete="email"
+          />
 
-            <TextInput
-              id="password"
-              label={t('auth.password')}
-              type="password"
-              value={password}
-              onChange={setPassword}
-              required
-              placeholder="••••••••"
-              autoComplete="current-password"
-            />
+          <TextInput
+            id="password"
+            label={t('auth.password')}
+            type="password"
+            value={password}
+            onChange={setPassword}
+            required
+            placeholder="••••••••"
+            autoComplete="current-password"
+          />
 
-            <div className="flex items-center">
+          {/* Checkbox with 44x44px touch target for WCAG 2.5.5 accessibility */}
+          <label
+            htmlFor="rememberEmail"
+            className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none group"
+          >
+            <span className="relative flex items-center justify-center w-11 h-11">
               <input
                 id="rememberEmail"
                 type="checkbox"
                 checked={rememberEmail}
                 onChange={(e) => setRememberEmail(e.target.checked)}
-                className="w-4 h-4 text-theme-primary bg-theme-bg-input border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
+                className="absolute w-11 h-11 opacity-0 cursor-pointer peer"
               />
-              <label htmlFor="rememberEmail" className="ml-2 text-sm text-theme-text-secondary">
-                {t('auth.rememberEmail')}
-              </label>
-            </div>
-
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={loading}
-              loading={loading}
-              fullWidth
-            >
-              {t('auth.loginButton')}
-            </Button>
-          </form>
-
-          {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-theme-border-subtle">
-            <p className="text-center text-sm text-theme-text-secondary">
-              {t('auth.noAccount')}{' '}
-              <Link
-                to="/register"
-                className="font-semibold text-theme-primary hover:text-theme-primary-light transition-colors"
+              <span
+                className="w-5 h-5 border-2 border-theme-border-default rounded bg-theme-bg-input transition-colors peer-checked:bg-theme-primary peer-checked:border-theme-primary peer-focus-visible:ring-2 peer-focus-visible:ring-theme-focus-ring peer-focus-visible:ring-offset-2"
+                aria-hidden="true"
               >
-                {t('auth.registerHere')}
-              </Link>
-            </p>
-          </div>
-        </Card>
+                {rememberEmail && (
+                  <svg className="w-full h-full text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </span>
+            </span>
+            <span className="text-sm text-theme-text-secondary">{t('auth.rememberEmail')}</span>
+          </label>
+
+          <Button variant="primary" type="submit" disabled={loading} loading={loading} fullWidth>
+            {t('auth.loginButton')}
+          </Button>
+        </form>
+
+        {/* Divider */}
+        <div className="mt-8 pt-6 border-t border-theme-border-subtle">
+          <p className="text-center text-sm text-theme-text-secondary">
+            {t('auth.noAccount')}{' '}
+            <Link
+              to="/register"
+              className="font-semibold text-theme-primary hover:text-theme-primary-light transition-colors"
+            >
+              {t('auth.registerHere')}
+            </Link>
+          </p>
+        </div>
+      </Card>
 
       {/* Footer Note */}
       <p className="text-center text-xs text-theme-text-tertiary mt-6">

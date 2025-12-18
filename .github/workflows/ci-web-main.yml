@@ -34,6 +34,22 @@ jobs:
       - name: Lint and type-check
         working-directory: apps/web-main
         run: pnpm lint & pnpm type-check & wait
+      - name: Build for bundle analysis
+        if: github.event_name == 'pull_request'
+        working-directory: apps/web-main
+        run: pnpm build
+      - name: Bundle size report
+        if: github.event_name == 'pull_request'
+        working-directory: apps/web-main
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          find dist/assets -name "*.js" -exec ls -lh {} \; | awk '{print "| " $NF " | " $5 " |"}' >> $GITHUB_STEP_SUMMARY
+          TOTAL=$(du -sh dist | cut -f1)
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total: ${TOTAL}**" >> $GITHUB_STEP_SUMMARY
 
   build:
     name: Build

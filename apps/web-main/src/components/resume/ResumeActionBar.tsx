@@ -5,24 +5,24 @@ import { Resume } from '../../api/resume';
 import { exportResumeToPDF, printResumePDF } from '../../utils/pdf';
 import { Button } from '@my-girok/ui-components';
 import ShareLinkModal from './ShareLinkModal';
+import { Download, Printer, Share2, Pencil, Eye, Link2, User } from 'lucide-react';
 
 export interface ResumeActionBarProps {
   resume: Resume;
   /**
    * Mode determines which actions are available:
    * - 'owner': Full access (edit, PDF, print, share) - for /resume/preview
+   * - 'public': Public profile view (edit if own, PDF, print) - for /resume/:username
    * - 'shared': Limited access (PDF, print only) - for /shared/ pages
    */
-  mode: 'owner' | 'shared';
-  /** Custom badge to show (optional) */
-  badge?: {
-    emoji: string;
-    text: string;
-    color: 'blue' | 'green';
-  };
+  mode: 'owner' | 'public' | 'shared';
+  /** Username for public mode */
+  username?: string;
+  /** Whether viewing own profile (for public mode) */
+  isOwnProfile?: boolean;
 }
 
-export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBarProps) {
+export default function ResumeActionBar({ resume, mode, username, isOwnProfile }: ResumeActionBarProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showShareModal, setShowShareModal] = useState(false);
@@ -60,18 +60,44 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
   };
 
   const isOwner = mode === 'owner';
+  const isPublic = mode === 'public';
+  const canEdit = isOwner || (isPublic && isOwnProfile);
+  const canShare = isOwner;
 
-  // Default badge based on mode
-  const displayBadge = badge || {
-    emoji: isOwner ? '👁️' : '🔗',
-    text: isOwner ? t('resume.preview.badge') : t('resume.shared.badge'),
-    color: isOwner ? 'blue' as const : 'green' as const,
+  // Badge configuration based on mode
+  const badgeConfig = {
+    owner: { icon: Eye, text: t('resume.preview.badge'), color: 'blue' as const },
+    public: { icon: User, text: t('resume.public.yourProfile'), color: 'green' as const },
+    shared: { icon: Link2, text: t('resume.shared.badge'), color: 'green' as const },
   };
+
+  const badge = badgeConfig[mode];
 
   const badgeColorClasses = {
     blue: 'bg-theme-status-info-bg text-theme-status-info-text',
     green: 'bg-theme-status-success-bg text-theme-status-success-text',
   };
+
+  // Determine title and subtitle based on mode
+  const getTitle = () => {
+    if (isPublic) {
+      return t('resume.preview.title', { name: resume.name });
+    }
+    return isOwner
+      ? t('resume.preview.title', { name: resume.name })
+      : t('resume.shared.resumeTitle', { name: resume.name });
+  };
+
+  const getSubtitle = () => {
+    if (isPublic && username) {
+      return `@${username}`;
+    }
+    return null;
+  };
+
+  const editRoute = `/resume/edit/${resume.id}`;
+
+  const BadgeIcon = badge.icon;
 
   return (
     <>
@@ -80,25 +106,36 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
           {/* Header - Stack on mobile, side-by-side on larger screens */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
-                📄 {isOwner
-                  ? t('resume.preview.title', { name: resume.name })
-                  : t('resume.shared.resumeTitle', { name: resume.name })}
+              <h1 className="text-lg sm:text-2xl font-bold text-theme-text-primary">
+                {getTitle()}
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColorClasses[displayBadge.color]}`}>
-                  {displayBadge.emoji} {displayBadge.text}
-                </span>
+                {getSubtitle() && (
+                  <p className="text-xs sm:text-sm text-theme-text-secondary">{getSubtitle()}</p>
+                )}
+                {(isPublic && isOwnProfile) && (
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColorClasses[badge.color]}`}>
+                    <BadgeIcon className="w-3 h-3" aria-hidden="true" />
+                    {badge.text}
+                  </span>
+                )}
+                {!isPublic && (
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColorClasses[badge.color]}`}>
+                    <BadgeIcon className="w-3 h-3" aria-hidden="true" />
+                    {badge.text}
+                  </span>
+                )}
               </div>
             </div>
-            {isOwner && (
+            {canEdit && (
               <Button
                 variant="secondary"
-                onClick={() => navigate(`/resume/edit/${resume.id}`)}
+                onClick={() => navigate(editRoute)}
                 size="sm"
+                icon={<Pencil className="w-4 h-4" />}
                 className="self-start sm:self-auto"
               >
-                ✍️ {t('resume.preview.edit')}
+                {t('resume.preview.edit')}
               </Button>
             )}
           </div>
@@ -109,25 +146,28 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
               variant="primary"
               onClick={handleExportPDF}
               loading={exporting}
+              icon={<Download className="w-4 h-4" />}
               className="flex-1 whitespace-nowrap"
             >
-              📥 {t('resume.preview.downloadPdf')}
+              {t('resume.preview.downloadPdf')}
             </Button>
             <Button
               variant="secondary"
               onClick={handlePrint}
               loading={printing}
+              icon={<Printer className="w-4 h-4" />}
               className="flex-1 whitespace-nowrap"
             >
-              🖨️ {t('resume.preview.print')}
+              {t('resume.preview.print')}
             </Button>
-            {isOwner && (
+            {canShare && (
               <Button
                 variant="secondary"
                 onClick={() => setShowShareModal(true)}
+                icon={<Share2 className="w-4 h-4" />}
                 className="col-span-2 sm:col-span-1 flex-1 whitespace-nowrap"
               >
-                🔗 {t('resume.preview.shareLink')}
+                {t('resume.preview.shareLink')}
               </Button>
             )}
           </div>
@@ -135,7 +175,7 @@ export default function ResumeActionBar({ resume, mode, badge }: ResumeActionBar
       </div>
 
       {/* Share Modal - Only shown in owner mode */}
-      {isOwner && showShareModal && (
+      {canShare && showShareModal && (
         <ShareLinkModal
           onClose={() => setShowShareModal(false)}
           resumeId={resume.id}
