@@ -4,14 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import { generateWebsiteSchema } from '../utils/structuredData';
 import { Button } from '@my-girok/ui-components';
-import {
-  FileText,
-  Wallet,
-  Settings,
-  Book,
-  ArrowRight,
-  ExternalLink,
-} from 'lucide-react';
+import { FileText, Wallet, Settings, Book, ArrowRight, ExternalLink } from 'lucide-react';
 
 interface MenuCard {
   id: string;
@@ -22,45 +15,45 @@ interface MenuCard {
   status: 'active' | 'coming-soon';
 }
 
+// Static menu configuration - defined outside component to avoid recreation on each render
+const CORE_MENUS: MenuCard[] = [
+  {
+    id: 'records',
+    nameKey: 'home.records.title',
+    descriptionKey: 'home.records.description',
+    icon: Book,
+    route: '/records',
+    status: 'coming-soon',
+  },
+  {
+    id: 'resume',
+    nameKey: 'home.resume.title',
+    descriptionKey: 'home.resume.description',
+    icon: FileText,
+    route: '/resume/my',
+    status: 'active',
+  },
+  {
+    id: 'assets',
+    nameKey: 'home.assets.title',
+    descriptionKey: 'home.assets.description',
+    icon: Wallet,
+    route: '/assets',
+    status: 'coming-soon',
+  },
+  {
+    id: 'settings',
+    nameKey: 'home.settings.title',
+    descriptionKey: 'home.settings.description',
+    icon: Settings,
+    route: '/settings',
+    status: 'coming-soon',
+  },
+];
+
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const { t } = useTranslation();
-
-  // 4 core menus as specified: Records, Resume, Assets, Settings
-  const coreMenus: MenuCard[] = [
-    {
-      id: 'records',
-      nameKey: 'home.records.title',
-      descriptionKey: 'home.records.description',
-      icon: Book,
-      route: '/records',
-      status: 'coming-soon',
-    },
-    {
-      id: 'resume',
-      nameKey: 'home.resume.title',
-      descriptionKey: 'home.resume.description',
-      icon: FileText,
-      route: '/resume/my',
-      status: 'active',
-    },
-    {
-      id: 'assets',
-      nameKey: 'home.assets.title',
-      descriptionKey: 'home.assets.description',
-      icon: Wallet,
-      route: '/assets',
-      status: 'coming-soon',
-    },
-    {
-      id: 'settings',
-      nameKey: 'home.settings.title',
-      descriptionKey: 'home.settings.description',
-      icon: Settings,
-      route: '/settings',
-      status: 'coming-soon',
-    },
-  ];
 
   return (
     <>
@@ -110,7 +103,7 @@ export default function HomePage() {
               {/* 4 Core Menu Cards - Large grid with 36px radius */}
               <nav aria-label="Main menu">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  {coreMenus.map((menu) => {
+                  {CORE_MENUS.map((menu) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
 
@@ -127,9 +120,10 @@ export default function HomePage() {
                           transition-all duration-200
                           min-h-[180px] flex flex-col justify-between
                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2
-                          ${isDisabled
-                            ? 'opacity-60 cursor-not-allowed'
-                            : 'hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1 cursor-pointer'
+                          ${
+                            isDisabled
+                              ? 'opacity-60 cursor-not-allowed'
+                              : 'hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1 cursor-pointer'
                           }
                         `}
                       >
@@ -138,9 +132,10 @@ export default function HomePage() {
                           <div
                             className={`
                               p-3 sm:p-4 rounded-2xl
-                              ${isDisabled
-                                ? 'bg-theme-bg-hover'
-                                : 'bg-theme-primary/10 group-hover:bg-theme-primary/20'
+                              ${
+                                isDisabled
+                                  ? 'bg-theme-bg-hover'
+                                  : 'bg-theme-primary/10 group-hover:bg-theme-primary/20'
                               }
                               transition-colors
                             `}
@@ -209,7 +204,11 @@ export default function HomePage() {
                     </Button>
                   </Link>
                   <Link to="/login">
-                    <Button variant="secondary" size="lg" className="w-full sm:w-auto min-w-[160px]">
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="w-full sm:w-auto min-w-[160px]"
+                    >
                       {t('nav.login')}
                     </Button>
                   </Link>
@@ -222,7 +221,7 @@ export default function HomePage() {
                   {t('home.recordingTypes')}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  {coreMenus.map((menu) => {
+                  {CORE_MENUS.map((menu) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
 
