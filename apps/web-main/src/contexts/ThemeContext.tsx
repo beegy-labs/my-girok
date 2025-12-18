@@ -63,7 +63,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   });
 
   const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
-  const [themeName, setThemeName] = useState<ThemeName>('vintage');
+  const [themeName, setThemeName] = useState<ThemeName>('light');
 
   // Determine effective theme based on user preference and system preference
   useEffect(() => {
