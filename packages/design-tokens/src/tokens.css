@@ -161,11 +161,12 @@
   --light-bg-elevated: #ffffff;
   --light-bg-input: #ffffff;
   --light-bg-hover: #f0efec;
-  --light-text-primary: #262220;
-  --light-text-secondary: #4a4744;
-  --light-text-tertiary: #6b6866;
-  --light-text-muted: #8c8a88;
-  --light-text-accent: #5c4a38;
+  /* All text colors meet WCAG AAA (7:1+) on #FFFFFF */
+  --light-text-primary: #262220; /* 15.76:1 AAA */
+  --light-text-secondary: #4a4744; /* 9.23:1 AAA */
+  --light-text-tertiary: #5a5856; /* 7.08:1 AAA */
+  --light-text-muted: #555351; /* 7.66:1 AAA */
+  --light-text-accent: #6b4a2e; /* 7.94:1 AAA */
   --light-border-subtle: #e8e6e3;
   --light-border-default: #d4d2cf;
   --light-border-strong: #b8b5b2;
@@ -176,12 +177,12 @@
   /* Theme: "Midnight Gentle Study" (Dark Mode)
      - Page BG: #1E1C1A (Deep Brown Charcoal - prevents halation)
      - Card BG: #282522 (Low contrast elevation)
-     - Main Text: #B0A9A2 (Sand Gray - prevents eye strain)
-     - Primary: #9C835E (Muted Bronze)
-     WCAG Contrast:
-     - #B0A9A2 on #1E1C1A = 7.2:1 (AAA)
-     - #B0A9A2 on #282522 = 6.1:1 (AA)
-     - #9C835E on #1E1C1A = 4.6:1 (AA)
+     - Main Text: #CCC5BD (Warm Sand - WCAG AAA)
+     - Primary: #C9A876 (Warm Golden Bronze - WCAG AAA)
+     WCAG Contrast (all AAA 7:1+):
+     - #CCC5BD on #1E1C1A = 9.94:1 (AAA)
+     - #CCC5BD on #282522 = 8.92:1 (AAA)
+     - #C9A876 on #1E1C1A = 7.56:1 (AAA)
   */
   --dark-bg-page: #1e1c1a;
   --dark-bg-card: #282522;
@@ -189,17 +190,18 @@
   --dark-bg-elevated: #322f2c;
   --dark-bg-hover: #3a3734;
   --dark-bg-input: #252320;
-  --dark-text-primary: #b0a9a2;
-  --dark-text-secondary: #948e87;
-  --dark-text-tertiary: #787370;
-  --dark-text-muted: #5c5855;
-  --dark-text-accent: #9c835e;
+  /* All text colors meet WCAG AAA (7:1+) on #1E1C1A */
+  --dark-text-primary: #ccc5bd; /* 9.94:1 AAA */
+  --dark-text-secondary: #b4ada5; /* 7.65:1 AAA */
+  --dark-text-tertiary: #b0a9a1; /* 7.31:1 AAA */
+  --dark-text-muted: #a8a199; /* 6.65:1 AA (decorative only) */
+  --dark-text-accent: #c9a876; /* 7.56:1 AAA */
   --dark-border-subtle: #3a3734;
   --dark-border-default: #4a4744;
   --dark-border-strong: #5c5855;
-  --dark-primary: #9c835e;
-  --dark-primary-dark: #7a6648;
-  --dark-primary-light: #b89a70;
+  --dark-primary: #c9a876; /* 7.56:1 AAA */
+  --dark-primary-dark: #b89a70;
+  --dark-primary-light: #d4b896;
 
   /* Status Colors - Light Mode */
   --status-success-bg: #e8f5e9;
@@ -285,9 +287,13 @@
   --theme-shadow-lg: 0 8px 24px rgba(38, 34, 32, 0.12);
   --theme-shadow-glow: 0 4px 12px rgba(139, 94, 60, 0.15);
 
-  /* Component: Button Primary */
-  --btn-primary-gradient-from: var(--theme-primary-dark);
-  --btn-primary-gradient-to: var(--theme-primary);
+  /* Component: Button Primary (WCAG AAA: 7:1+ contrast)
+     Light mode: White text on dark oak gradient
+     - #5d4028 = 9.42:1 contrast with white
+     - #6d4c30 = 7.70:1 contrast with white
+  */
+  --btn-primary-gradient-from: #5d4028;
+  --btn-primary-gradient-to: #6d4c30;
   --btn-primary-text-color: #ffffff;
 
   /* Component: Button Secondary */
@@ -362,11 +368,15 @@
   --theme-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --theme-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
   --theme-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --theme-shadow-glow: 0 4px 12px rgba(156, 131, 94, 0.2);
+  --theme-shadow-glow: 0 4px 12px rgba(201, 168, 118, 0.25);
 
-  /* Component: Button Primary */
-  --btn-primary-gradient-from: var(--theme-primary-light);
-  --btn-primary-gradient-to: var(--theme-primary);
+  /* Component: Button Primary (WCAG AAA: 7:1+ contrast)
+     Dark mode: Dark text on warm champagne gradient
+     - #d4c4a8 = 9.92:1 contrast with #1e1c1a
+     - #cfc0a0 = 9.46:1 contrast with #1e1c1a
+  */
+  --btn-primary-gradient-from: #d4c4a8;
+  --btn-primary-gradient-to: #cfc0a0;
   --btn-primary-text-color: #1e1c1a;
 
   /* Component: Button Secondary */
