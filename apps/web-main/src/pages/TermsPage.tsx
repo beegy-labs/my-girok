@@ -31,8 +31,8 @@ export default function TermsPage() {
           </h1>
         </div>
 
-        {/* Content Placeholder */}
-        <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 mb-10">
+        {/* Content - V24.5 Editorial Card (border-2, p-10) */}
+        <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-10 mb-10">
           <p className="text-theme-text-secondary text-center">
             {t('legal.termsPlaceholder', {
               defaultValue: 'Terms of Service content will be available soon.',

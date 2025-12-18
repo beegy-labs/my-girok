@@ -65,8 +65,8 @@ export default function RegisterPage() {
           <p className="text-theme-text-secondary text-sm">{t('auth.createYourSpace')}</p>
         </div>
 
-        {/* Register Form - Editorial Card */}
-        <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 shadow-theme-lg">
+        {/* Register Form - V24.5 Editorial Card (border-2, p-10) */}
+        <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-10 shadow-theme-lg">
           <h2
             className="text-xl sm:text-2xl text-theme-text-primary mb-6 tracking-tight"
             style={{ fontFamily: 'var(--font-family-serif-title)' }}

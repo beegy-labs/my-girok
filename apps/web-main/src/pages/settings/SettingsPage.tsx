@@ -25,15 +25,15 @@ export default function SettingsPage() {
           <p className="text-base text-theme-text-secondary">{t('settings.description')}</p>
         </header>
 
-        {/* Settings Cards - Editorial Style */}
+        {/* Settings Cards - V24.5 Editorial Style (border-2, p-10) */}
         <div className="space-y-6 sm:space-y-8">
           {/* Theme Settings */}
-          <section className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10">
+          <section className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-10">
             <ThemeToggle />
           </section>
 
           {/* Section Order Settings */}
-          <section className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10">
+          <section className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-10">
             <SectionOrderManager />
           </section>
         </div>
