@@ -37,6 +37,34 @@
     "subtitle": "Manage Your Professional Profile",
     "description": "My-Girok is a platform for managing your resume, blog, and budget all in one place.",
     "myApps": "My Apps",
+    "journal": {
+      "title": "Personal Journal",
+      "description": "Record your daily thoughts and reflections"
+    },
+    "career": {
+      "title": "Career Archive",
+      "description": "Manage your resume and professional profile"
+    },
+    "finance": {
+      "title": "Financial Ledger",
+      "description": "Track income, expenses, and manage your budget"
+    },
+    "library": {
+      "title": "Global Library",
+      "description": "Organize articles, books, and learning resources"
+    },
+    "network": {
+      "title": "Network",
+      "description": "Connect with professionals and mentors"
+    },
+    "stats": {
+      "title": "Insight Stats",
+      "description": "View insights and analytics about your records"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage alerts and activity updates"
+    },
     "records": {
       "title": "Records",
       "description": "Document and organize your daily life and thoughts"
@@ -69,12 +97,14 @@
     "comingSoon": "Coming Soon",
     "quickLinks": "Quick Links",
     "viewPublicProfile": "View Public Profile",
-    "settings": "Settings",
+    "settingsLink": "Settings",
     "recordBook": "'s Record Book",
     "startToday": "Start recording about yourself today",
     "allInOne": "Resume, blog, and budget all in one place",
     "createRecordBook": "Create Record Book",
-    "recordingTypes": "What You Can Record"
+    "recordingTypes": "What You Can Record",
+    "archiveFunctions": "Archive Functions",
+    "supportMessage": "Your archive grows with every story you record."
   },
   "auth": {
     "loginTitle": "Login",
@@ -98,7 +128,14 @@
     "startRecording": "Start your recording journey",
     "createYourSpace": "Create your personal record",
     "termsAgreement": "By signing up, you agree to our Terms of Service and Privacy Policy",
-    "rememberEmail": "Remember my email"
+    "rememberEmail": "Remember my email",
+    "welcomeBack": "WELCOME BACK",
+    "createAccount": "CREATE ACCOUNT"
+  },
+  "footer": {
+    "tagline": "Recording your own story",
+    "privacy": "Privacy",
+    "terms": "Terms"
   },
   "resume": {
     "edit": "Edit Resume",

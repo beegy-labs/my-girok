@@ -35,9 +35,37 @@
   "home": {
     "title": "나의 기록을 정리하는 공간",
     "subtitle": "나만의 프로필을 관리하세요",
-    "description": "girok은 이력서, 기록, 자산 관리를 한 곳에서 할 수 있는 플랫폼입니다.",
+    "description": "Girok은 이력서, 기록, 자산 관리를 한 곳에서 할 수 있는 플랫폼입니다.",
     "myApps": "나의 앱",
     "welcomeSuffix": "",
+    "journal": {
+      "title": "개인 일기",
+      "description": "일상의 생각과 반성을 기록하세요"
+    },
+    "career": {
+      "title": "커리어 아카이브",
+      "description": "이력서와 전문 프로필을 관리하세요"
+    },
+    "finance": {
+      "title": "가계부",
+      "description": "수입, 지출을 추적하고 예산을 관리하세요"
+    },
+    "library": {
+      "title": "글로벌 라이브러리",
+      "description": "글, 책, 학습 자료를 정리하세요"
+    },
+    "network": {
+      "title": "네트워크",
+      "description": "전문가 및 멘토와 연결하세요"
+    },
+    "stats": {
+      "title": "인사이트 통계",
+      "description": "기록에 대한 인사이트와 분석을 확인하세요"
+    },
+    "notifications": {
+      "title": "알림",
+      "description": "알림 및 활동 업데이트를 관리하세요"
+    },
     "records": {
       "title": "기록장",
       "description": "일상과 생각을 기록하고 정리하세요"
@@ -69,18 +97,20 @@
     "comingSoon": "준비중",
     "quickLinks": "빠른 링크",
     "viewPublicProfile": "내 공개 프로필 보기",
-    "settings": "설정",
+    "settingsLink": "설정",
     "recordBook": "님의 기록장",
     "startToday": "오늘도 나에 대한 기록을 시작해보세요",
     "allInOne": "이력서, 블로그, 가계부를 한 곳에서",
     "createRecordBook": "기록장 만들기",
-    "recordingTypes": "기록할 수 있는 것들"
+    "recordingTypes": "기록할 수 있는 것들",
+    "archiveFunctions": "아카이브 기능",
+    "supportMessage": "기록할수록 당신의 아카이브가 성장합니다."
   },
   "auth": {
     "loginTitle": "로그인",
     "registerTitle": "새 기록장 만들기",
     "email": "이메일",
-    "emailAddress": "Email Address",
+    "emailAddress": "이메일 주소",
     "password": "비밀번호",
     "confirmPassword": "비밀번호 확인",
     "name": "이름",
@@ -98,7 +128,14 @@
     "startRecording": "나의 기록을 시작하세요",
     "createYourSpace": "나만의 기록장을 만드세요",
     "termsAgreement": "가입하시면 서비스 약관 및 개인정보 처리방침에 동의하게 됩니다",
-    "rememberEmail": "이메일 기억하기"
+    "rememberEmail": "이메일 기억하기",
+    "welcomeBack": "다시 오신 것을 환영합니다",
+    "createAccount": "계정 만들기"
+  },
+  "footer": {
+    "tagline": "나만의 이야기를 기록하다",
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관"
   },
   "resume": {
     "edit": "이력서 편집",

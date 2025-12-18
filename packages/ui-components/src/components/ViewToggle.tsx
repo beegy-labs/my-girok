@@ -15,19 +15,21 @@ export interface ViewToggleProps {
   className?: string;
 }
 
-// Static class definitions
+// Static class definitions (2025 best practice - outside component)
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2';
 
+// p-3 ensures reliable 44px touch target even with smaller icons
 const buttonBaseClasses =
-  'p-2 rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center';
+  'p-3 rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center';
 
 /**
- * View Toggle Component for switching between Grid and List views
+ * View Toggle Component for switching between Grid and List views (2025 Accessible Pattern)
  *
  * Features:
  * - Toggle between grid (2-column cards) and list (compact rows) views
- * - WCAG 2.1 AA compliant touch targets (44x44px)
+ * - WCAG 2.1 AAA compliant touch targets (44x44px with p-3 padding)
+ * - Theme-aware text colors for proper contrast in both light/dark modes
  * - Clear visual feedback for active state
  *
  * @example
@@ -48,7 +50,7 @@ export function ViewToggle({ value, onChange, className = '' }: ViewToggleProps)
         onClick={() => onChange('grid')}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'grid'
-            ? 'bg-theme-primary text-white'
+            ? 'bg-theme-primary text-btn-primary-text'
             : 'text-theme-text-secondary hover:bg-theme-bg-hover'
         }`}
         role="radio"
@@ -75,7 +77,7 @@ export function ViewToggle({ value, onChange, className = '' }: ViewToggleProps)
         onClick={() => onChange('list')}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'list'
-            ? 'bg-theme-primary text-white'
+            ? 'bg-theme-primary text-btn-primary-text'
             : 'text-theme-text-secondary hover:bg-theme-bg-hover'
         }`}
         role="radio"
