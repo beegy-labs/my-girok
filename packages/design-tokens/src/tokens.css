@@ -203,19 +203,19 @@
   --dark-primary-dark: #b89a70;
   --dark-primary-light: #d4b896;
 
-  /* Status Colors - Light Mode */
+  /* Status Colors - Light Mode (WCAG AAA 7:1+) */
   --status-success-bg: #e8f5e9;
   --status-success-border: #c8e6c9;
-  --status-success-text: #2e7d32;
+  --status-success-text: #1b5e20; /* 7.87:1 AAA */
   --status-error-bg: #ffebee;
   --status-error-border: #ffcdd2;
-  --status-error-text: #c62828;
+  --status-error-text: #a31818; /* 7.77:1 AAA */
   --status-warning-bg: #fff8e1;
   --status-warning-border: #ffe082;
-  --status-warning-text: #f57f17;
+  --status-warning-text: #8b3d06; /* 7.59:1 AAA */
   --status-info-bg: #e3f2fd;
   --status-info-border: #bbdefb;
-  --status-info-text: #1565c0;
+  --status-info-text: #0d47a1; /* 8.63:1 AAA */
 
   /* Status Colors - Dark Mode */
   --status-success-bg-dark: rgba(46, 125, 50, 0.15);
@@ -296,15 +296,19 @@
   --btn-primary-gradient-to: #6d4c30;
   --btn-primary-text-color: #ffffff;
 
-  /* Component: Button Secondary */
+  /* Component: Button Secondary (WCAG AAA: 7:1+)
+     Light mode: #6b4a2e on #f8f7f4 = 7.41:1 AAA
+  */
   --btn-secondary-bg: var(--theme-bg-card);
-  --btn-secondary-text: var(--theme-primary);
-  --btn-secondary-border: var(--theme-primary);
+  --btn-secondary-text: #6b4a2e;
+  --btn-secondary-border: #6b4a2e;
   --btn-secondary-bg-hover: var(--theme-bg-hover);
 
-  /* Component: Button Danger */
-  --btn-danger-bg: #c62828;
-  --btn-danger-bg-hover: #b71c1c;
+  /* Component: Button Danger (WCAG AAA: 7:1+)
+     White on #8b1414 = 9.51:1 AAA
+  */
+  --btn-danger-bg: #8b1414;
+  --btn-danger-bg-hover: #7b1212;
   --btn-danger-text: #ffffff;
 
   /* Status Semantic Tokens */
@@ -379,15 +383,19 @@
   --btn-primary-gradient-to: #cfc0a0;
   --btn-primary-text-color: #1e1c1a;
 
-  /* Component: Button Secondary */
+  /* Component: Button Secondary (WCAG AAA: 7:1+)
+     Dark mode: #d4b896 on #2d2a27 = 7.54:1 AAA
+  */
   --btn-secondary-bg: var(--theme-bg-secondary);
-  --btn-secondary-text: var(--theme-primary);
-  --btn-secondary-border: var(--theme-primary);
+  --btn-secondary-text: #d4b896;
+  --btn-secondary-border: #d4b896;
   --btn-secondary-bg-hover: var(--theme-bg-card);
 
-  /* Component: Button Danger */
-  --btn-danger-bg: #b71c1c;
-  --btn-danger-bg-hover: #c62828;
+  /* Component: Button Danger (WCAG AAA: 7:1+)
+     White on #8b1414 = 9.51:1 AAA
+  */
+  --btn-danger-bg: #8b1414;
+  --btn-danger-bg-hover: #7b1212;
   --btn-danger-text: #ffffff;
 
   /* Status Semantic Tokens - Dark Override */

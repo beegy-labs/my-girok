@@ -66,7 +66,7 @@ export default function LoginPage() {
       {/* Logo/Brand - Text only, font-mono font-bold per design spec */}
       <div className="text-center mb-6 sm:mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold font-mono text-theme-text-primary mb-3">
-          girok
+          Girok
         </h1>
         <p className="text-theme-text-secondary text-sm">{t('auth.startRecording')}</p>
       </div>
