@@ -34,7 +34,7 @@ Key tokens use CSS `@property` for type validation and smooth transitions:
 @property --theme-primary {
   syntax: '<color>';
   inherits: true;
-  initial-value: #8b5e3c;
+  initial-value: #6b4a2e; /* AAA 7.94:1 */
 }
 ```
 
@@ -106,44 +106,53 @@ The `dark:` Tailwind variant is **only** for semantic status colors that need ex
 
 ### Theme: "Clean White Oak" (Light) + "Midnight Gentle Study" (Dark)
 
-**Design Philosophy**: A professional archive aesthetic focused on WCAG 2.1 AA accessibility compliance.
+**Design Philosophy**: A professional archive aesthetic focused on WCAG 2.1 AAA accessibility compliance for socially inclusive design.
 
 **Key Principles**:
 
-- All color combinations meet WCAG 2.1 AA 4.5:1 contrast ratio
-- Typography optimized for readability (line-height 1.8, min 16px)
+- All text combinations meet WCAG 2.1 AAA 7:1+ contrast ratio
+- Typography optimized for readability (line-height 1.8, min 16px, tracking-wide)
 - Warm, earthy tones for a professional archive feel
 
 ### Light Mode - Clean White Oak
 
-| Token          | Value   | Usage                           |
-| -------------- | ------- | ------------------------------- |
-| Page BG        | #FFFFFF | Page background                 |
-| Card BG        | #F8F7F4 | Card backgrounds                |
-| Primary Text   | #262220 | Main text (13.5:1 contrast)     |
-| Secondary Text | #4A4641 | Body text (7.2:1 contrast)      |
-| Primary Accent | #8B5E3C | Buttons, links (5.8:1 contrast) |
+| Token          | Value   | Usage                            |
+| -------------- | ------- | -------------------------------- |
+| Page BG        | #FFFFFF | Page background                  |
+| Card BG        | #F8F7F4 | Card backgrounds                 |
+| Primary Text   | #262220 | Main text (15.76:1 contrast)     |
+| Secondary Text | #4A4744 | Body text (9.23:1 contrast)      |
+| Tertiary Text  | #5A5856 | Hint text (7.08:1 contrast)      |
+| Muted Text     | #555351 | Disabled text (7.66:1 contrast)  |
+| Primary Accent | #6B4A2E | Buttons, links (7.94:1 contrast) |
 
 ### Dark Mode - Midnight Gentle Study
 
-| Token          | Value   | Usage                           |
-| -------------- | ------- | ------------------------------- |
-| Page BG        | #1E1C1A | Page background                 |
-| Card BG        | #282522 | Card backgrounds                |
-| Primary Text   | #B0A9A2 | Main text (7.8:1 contrast)      |
-| Secondary Text | #8A847D | Body text (4.9:1 contrast)      |
-| Primary Accent | #9C835E | Buttons, links (5.2:1 contrast) |
+| Token          | Value   | Usage                                     |
+| -------------- | ------- | ----------------------------------------- |
+| Page BG        | #1E1C1A | Page background                           |
+| Card BG        | #282522 | Card backgrounds                          |
+| Primary Text   | #CCC5BD | Main text (9.94:1 contrast)               |
+| Secondary Text | #B4ADA5 | Body text (7.65:1 contrast)               |
+| Tertiary Text  | #B0A9A1 | Hint text (7.31:1 contrast)               |
+| Primary Accent | #D0B080 | Buttons, links (8.25:1 page, 7.41:1 card) |
 
-### WCAG 2.1 AA Compliance
+### WCAG 2.1 AAA Compliance
 
-All color combinations meet or exceed WCAG 2.1 AA standards:
+All text color combinations meet WCAG 2.1 AAA standards (7:1+):
 
-| Combination                  | Contrast Ratio | WCAG Level |
-| ---------------------------- | -------------- | ---------- |
-| Light primary text on card   | 13.5:1         | AAA        |
-| Light secondary text on card | 7.2:1          | AAA        |
-| Dark primary text on card    | 7.8:1          | AAA        |
-| Dark secondary text on card  | 4.9:1          | AA         |
+| Element          | Light Mode | Dark Mode | WCAG Level |
+| ---------------- | ---------- | --------- | ---------- |
+| Primary Text     | 15.76:1    | 9.94:1    | AAA        |
+| Secondary Text   | 9.23:1     | 7.65:1    | AAA        |
+| Tertiary Text    | 7.08:1     | 7.31:1    | AAA        |
+| Primary Button   | 7.70:1+    | 9.46:1+   | AAA        |
+| Secondary Button | 7.41:1     | 7.54:1    | AAA        |
+| Danger Button    | 9.51:1     | 9.51:1    | AAA        |
+| Status Success   | 7.87:1     | 8.44:1    | AAA        |
+| Status Error     | 7.77:1     | 7.89:1    | AAA        |
+| Status Warning   | 7.59:1     | 13.13:1   | AAA        |
+| Status Info      | 8.63:1     | 9.71:1    | AAA        |
 
 ## Typography
 
@@ -432,6 +441,7 @@ pnpm-workspace.yaml            # Centralized version management (catalog:)
 
 ## Version History
 
+- v2.3.0 (2025-12): WCAG 2.1 AAA upgrade (7:1+ contrast), rebrand to "Girok"
 - v2.2.0 (2025-12): Add CSS @property type safety, @theme inline, pnpm catalogs
 - v2.1.0 (2025-12): Extract design tokens to dedicated package (@my-girok/design-tokens)
 - v2.0.0 (2025-12): Consolidated and optimized documentation, removed legacy patterns

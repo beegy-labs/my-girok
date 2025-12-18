@@ -1,10 +1,10 @@
 # @my-girok/ui-components
 
-> Shared React 19 components with WCAG 2.1 AA compliance
+> Shared React 19 components with WCAG 2.1 AAA compliance
 
 ## Purpose
 
-Reusable UI components for React applications in the monorepo. All components meet WCAG 2.1 AA standards with 44px+ touch targets and focus-visible keyboard navigation.
+Reusable UI components for React applications in the monorepo. All components meet WCAG 2.1 AAA standards (7:1+ contrast) with 44px+ touch targets, focus-visible keyboard navigation, and tracking-wide letter-spacing for readability.
 
 ## Structure
 

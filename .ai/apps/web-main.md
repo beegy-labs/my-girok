@@ -29,7 +29,7 @@ apps/web-main/src/
 │       ├── ResumePreviewPage.tsx # Preview (/resume/preview/:resumeId)
 │       └── SharedResumePage.tsx  # Shared view (/shared/:token)
 ├── components/
-│   ├── Navbar.tsx               # Text-only 'girok' logo, Lucide icons
+│   ├── Navbar.tsx               # Text-only 'Girok' logo, Lucide icons
 │   ├── PrivateRoute.tsx
 │   ├── LoadingSpinner.tsx       # WCAG-compliant loading (Lucide icon)
 │   ├── StatusMessage.tsx        # WCAG-compliant status/error messages
@@ -405,25 +405,25 @@ import Card from '../../components/ui/Layout/Card';
 
 **Color Theme**: "Clean White Oak" (Light) + "Midnight Gentle Study" (Dark)
 
-### WCAG 2.1 AA Compliance
+### WCAG 2.1 AAA Compliance
 
-All color combinations meet WCAG 2.1 AA standards with 4.5:1 minimum contrast ratio.
+All text color combinations meet WCAG 2.1 AAA standards with 7:1+ contrast ratio.
 
 **Light Mode (Clean White Oak)**:
-| Token | Value | Usage |
-|-------|-------|-------|
-| Page BG | #FFFFFF | Page background |
-| Card BG | #F8F7F4 | Card backgrounds |
-| Primary Text | #262220 | Main text |
-| Primary Accent | #8B5E3C | Buttons, links |
+| Token | Value | Contrast | Usage |
+|-------|-------|----------|-------|
+| Page BG | #FFFFFF | - | Page background |
+| Card BG | #F8F7F4 | - | Card backgrounds |
+| Primary Text | #262220 | 15.76:1 | Main text |
+| Primary Accent | #6B4A2E | 7.94:1 | Buttons, links |
 
 **Dark Mode (Midnight Gentle Study)**:
-| Token | Value | Usage |
-|-------|-------|-------|
-| Page BG | #1E1C1A | Page background |
-| Card BG | #282522 | Card backgrounds |
-| Primary Text | #B0A9A2 | Main text |
-| Primary Accent | #9C835E | Buttons, links |
+| Token | Value | Contrast | Usage |
+|-------|-------|----------|-------|
+| Page BG | #1E1C1A | - | Page background |
+| Card BG | #282522 | - | Card backgrounds |
+| Primary Text | #CCC5BD | 9.94:1 | Main text |
+| Primary Accent | #D0B080 | 8.25:1 (page), 7.41:1 (card) | Buttons, links |
 
 ### Typography (WCAG Optimized)
 

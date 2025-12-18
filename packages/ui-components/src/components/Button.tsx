@@ -32,8 +32,9 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 }
 
 // Static class definitions (defined outside component for performance)
+// tracking-wide improves readability for long button text (WCAG AAA)
 const baseClasses =
-  'font-semibold rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
+  'font-semibold tracking-wide rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
 
 const variantClasses = {
   primary:
