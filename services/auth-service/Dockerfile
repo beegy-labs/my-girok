@@ -62,9 +62,9 @@ COPY --chown=node:node --from=builder /app/packages/nest-common/dist ./packages/
 COPY --chown=node:node --from=builder /app/packages/nest-common/package.json ./packages/nest-common/package.json
 COPY --chown=node:node --from=builder /app/services/auth-service/dist ./services/auth-service/dist
 
-# Install production dependencies (now includes prisma CLI)
+# Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 WORKDIR /app/services/auth-service
 
