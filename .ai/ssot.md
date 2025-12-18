@@ -43,7 +43,9 @@ Tailwind CSS 4에서는 `@theme` 블록의 **CSS 변수 네이밍**에 따라 **
   --font-family-mono-brand: ui-monospace, SFMono-Regular, monospace;
 
   /* Letter Spacing - SSOT */
+  --letter-spacing-brand-sm: 0.2em;
   --letter-spacing-brand: 0.3em;
+  --letter-spacing-brand-lg: 0.5em;
   --letter-spacing-editorial: -0.05em;
 }
 ```
@@ -94,7 +96,9 @@ Tailwind CSS 4에서는 `@theme` 블록의 **CSS 변수 네이밍**에 따라 **
 | ---------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | `style={{ fontFamily: 'var(--font-family-serif-title)' }}` | `className="font-serif-title"` | `--font-family-serif-title`  |
 | `style={{ fontFamily: 'var(--font-family-mono-brand)' }}`  | `className="font-mono-brand"`  | `--font-family-mono-brand`   |
+| `tracking-[0.2em]`, `tracking-[0.25em]`                    | `tracking-brand-sm`            | `--letter-spacing-brand-sm`  |
 | `tracking-[0.3em]`                                         | `tracking-brand`               | `--letter-spacing-brand`     |
+| `tracking-[0.4em]`, `tracking-[0.5em]`, `tracking-[0.6em]` | `tracking-brand-lg`            | `--letter-spacing-brand-lg`  |
 | `tracking-tighter`                                         | `tracking-editorial`           | `--letter-spacing-editorial` |
 
 ## Benefits
@@ -133,22 +137,25 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 
 - [x] `--radius-*` → `--border-radius-*` 네이밍 변경
 - [x] `--letter-spacing-brand: 0.3em` 추가
+- [x] `--letter-spacing-brand-sm: 0.2em` 추가
+- [x] `--letter-spacing-brand-lg: 0.5em` 추가
 - [x] `--letter-spacing-editorial: -0.05em` 추가
 
 ### Components
 
 - [x] `rounded-[Npx]` → `rounded-*` 유틸리티로 교체
 - [x] `style={{ fontFamily: ... }}` → `className="font-*"` 로 교체
-- [x] `tracking-[0.3em]` → `tracking-brand` 로 교체
+- [x] `tracking-[Nem]` → `tracking-brand-*` 로 교체
 - [ ] `tracking-tighter` → `tracking-editorial` 로 교체 (optional)
 
 ## File Impact
 
-| File                                    | Changes Required             |
-| --------------------------------------- | ---------------------------- |
-| `packages/design-tokens/src/tokens.css` | Rename CSS variable prefixes |
-| `apps/web-main/src/pages/*.tsx`         | Replace hardcoded values     |
-| `apps/web-main/src/components/*.tsx`    | Replace hardcoded values     |
+| File                                          | Status      | Changes                       |
+| --------------------------------------------- | ----------- | ----------------------------- |
+| `packages/design-tokens/src/tokens.css`       | ✅ Complete | SSOT variable prefixes        |
+| `packages/ui-components/src/components/*.tsx` | ✅ Complete | All hardcoded values replaced |
+| `apps/web-main/src/pages/*.tsx`               | ✅ Complete | All hardcoded values replaced |
+| `apps/web-main/src/components/*.tsx`          | ✅ Complete | All hardcoded values replaced |
 
 ## References
 
