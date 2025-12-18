@@ -20,6 +20,36 @@ export interface CardProps {
   'aria-label'?: string;
 }
 
+// Static class definitions (defined outside component for performance)
+const focusClasses =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2';
+
+const variantBaseClasses = {
+  primary: 'bg-theme-bg-card border border-theme-border-subtle shadow-theme-md',
+  secondary: 'bg-theme-bg-card border border-theme-border-default shadow-theme-sm',
+  elevated: 'bg-theme-bg-elevated border border-theme-border-subtle shadow-theme-lg',
+} as const;
+
+const variantInteractiveClasses = {
+  primary: 'hover:shadow-theme-lg hover:border-theme-primary cursor-pointer',
+  secondary: 'hover:shadow-theme-md hover:border-theme-border-strong cursor-pointer',
+  elevated: 'hover:shadow-theme-xl hover:border-theme-primary cursor-pointer',
+} as const;
+
+const paddingClasses = {
+  none: '',
+  sm: 'p-4',
+  md: 'p-6',
+  lg: 'p-8',
+  responsive: 'p-4 sm:p-6 lg:p-8', // Mobile-first responsive padding
+} as const;
+
+// 36px radius for large menu cards, 16px for default
+const radiusClasses = {
+  default: 'rounded-2xl',
+  lg: 'rounded-[36px]',
+} as const;
+
 /**
  * Accessible Card Component with WCAG 2.1 AA compliance
  *
@@ -48,60 +78,17 @@ export function Card({
   onClick,
   'aria-label': ariaLabel,
 }: CardProps) {
-  // High contrast focus ring for keyboard navigation
-  const focusClasses = interactive
-    ? 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2'
+  const variantClass = variantBaseClasses[variant];
+  const interactiveClass = interactive
+    ? `${variantInteractiveClasses[variant]} ${focusClasses}`
     : '';
-
-  // Theme: Semantic theme tokens (auto-switch via data-theme)
-  const variantClasses = {
-    primary: `
-      bg-theme-bg-card
-      border border-theme-border-subtle
-      shadow-theme-md
-      ${interactive ? 'hover:shadow-theme-lg hover:border-theme-primary cursor-pointer' : ''}
-      ${focusClasses}
-    `.trim().replace(/\s+/g, ' '),
-    secondary: `
-      bg-theme-bg-card
-      border border-theme-border-default
-      shadow-theme-sm
-      ${interactive ? 'hover:shadow-theme-md hover:border-theme-border-strong cursor-pointer' : ''}
-      ${focusClasses}
-    `.trim().replace(/\s+/g, ' '),
-    elevated: `
-      bg-theme-bg-elevated
-      border border-theme-border-subtle
-      shadow-theme-lg
-      ${interactive ? 'hover:shadow-theme-xl hover:border-theme-primary cursor-pointer' : ''}
-      ${focusClasses}
-    `.trim().replace(/\s+/g, ' '),
-  };
-
-  const paddingClasses = {
-    none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-    responsive: 'p-4 sm:p-6 lg:p-8', // Mobile-first responsive padding
-  };
-
-  // 36px radius for large menu cards, 16px for default
-  const radiusClasses = {
-    default: 'rounded-2xl',
-    lg: 'rounded-[36px]',
-  };
+  const paddingClass = paddingClasses[padding];
+  const radiusClass = radiusClasses[radius];
 
   return (
     <div
       onClick={onClick}
-      className={`
-        ${variantClasses[variant]}
-        ${paddingClasses[padding]}
-        ${radiusClasses[radius]}
-        transition-all duration-200
-        ${className}
-      `.trim().replace(/\s+/g, ' ')}
+      className={`${variantClass} ${interactiveClass} ${paddingClass} ${radiusClass} transition-all duration-200 ${className}`}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
       aria-label={ariaLabel}

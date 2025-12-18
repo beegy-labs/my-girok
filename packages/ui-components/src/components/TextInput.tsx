@@ -39,6 +39,16 @@ export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
   ref?: Ref<HTMLInputElement>;
 }
 
+// Static class definitions (defined outside component for performance)
+// Base input classes with WCAG compliance:
+// - min-h-[48px] for touch target (WCAG 2.5.5)
+// - text-base (16px) for readability
+// - focus-visible for keyboard navigation
+const baseInputClasses =
+  'w-full min-h-[48px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring focus-visible:border-transparent transition-all duration-200';
+
+const defaultBorderClasses = 'border border-theme-border-default';
+
 /**
  * Accessible text input component with WCAG 2.1 AA compliance
  *
@@ -75,77 +85,60 @@ export function TextInput({
   ref,
   ...props
 }: TextInputProps) {
-    // className is an alias for containerClassName for backwards compatibility
-    const finalContainerClassName = containerClassName || className;
-    const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
+  // className is an alias for containerClassName for backwards compatibility
+  const finalContainerClassName = containerClassName || className;
+  const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-')}`;
 
-    // Base input classes with WCAG compliance:
-    // - min-h-[48px] for touch target (WCAG 2.5.5)
-    // - text-base (16px) for readability
-    // - focus-visible for keyboard navigation
-    const baseInputClasses = `
-      w-full min-h-[48px] px-4 py-3
-      text-base rounded-xl
-      bg-theme-bg-input text-theme-text-primary
-      placeholder:text-theme-text-muted
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-      focus-visible:ring-theme-focus-ring focus-visible:border-transparent
-      transition-all duration-200
-    `.trim().replace(/\s+/g, ' ');
+  const errorClasses = error
+    ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'
+    : defaultBorderClasses;
 
-    const defaultBorderClasses = 'border border-theme-border-default';
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.value);
+  };
 
-    const errorClasses = error
-      ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'
-      : defaultBorderClasses;
+  return (
+    <div className={finalContainerClassName}>
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="block text-base font-semibold text-theme-text-secondary mb-2"
+        >
+          {label}
+          {required && (
+            <span className="text-theme-status-error-text ml-1" aria-hidden="true">
+              *
+            </span>
+          )}
+          {required && <span className="sr-only">(required)</span>}
+        </label>
+      )}
 
-    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-      onChange(event.target.value);
-    };
+      <input
+        ref={ref}
+        id={inputId}
+        className={`${baseInputClasses} ${errorClasses} ${inputClassName}`}
+        onChange={handleChange}
+        aria-invalid={error ? 'true' : 'false'}
+        aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+        aria-required={required}
+        {...props}
+      />
 
-    return (
-      <div className={finalContainerClassName}>
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-base font-semibold text-theme-text-secondary mb-2"
-          >
-            {label}
-            {required && (
-              <span className="text-theme-status-error-text ml-1" aria-hidden="true">*</span>
-            )}
-            {required && <span className="sr-only">(required)</span>}
-          </label>
-        )}
-
-        <input
-          ref={ref}
-          id={inputId}
-          className={`${baseInputClasses} ${errorClasses} ${inputClassName}`}
-          onChange={handleChange}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-          aria-required={required}
-          {...props}
-        />
-
-        {error && (
-          <p
-            id={`${inputId}-error`}
-            className="mt-2 text-base text-theme-status-error-text"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-        {!error && hint && (
-          <p
-            id={`${inputId}-hint`}
-            className="mt-2 text-base text-theme-text-tertiary"
-          >
-            {hint}
-          </p>
-        )}
-      </div>
+      {error && (
+        <p
+          id={`${inputId}-error`}
+          className="mt-2 text-base text-theme-status-error-text"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+      {!error && hint && (
+        <p id={`${inputId}-hint`} className="mt-2 text-base text-theme-text-tertiary">
+          {hint}
+        </p>
+      )}
+    </div>
   );
 }
