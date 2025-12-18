@@ -43,27 +43,40 @@ export interface MenuCardProps {
   'aria-label'?: string;
 }
 
+/**
+ * Chevron Right Icon SVG component
+ */
+const ChevronRightIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+  </svg>
+);
+
 // Static class definitions (defined outside component for performance - 2025 best practice)
+// V25.8 AAA Workstation Design System
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const baseClasses =
-  'w-full text-left bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 transition-all duration-300';
+  'w-full text-left bg-theme-bg-card border-2 border-theme-border-subtle rounded-[64px] p-10 md:p-12 min-h-[380px] flex flex-col transition-all duration-300 shadow-theme-sm';
 
 const enabledClasses =
   'cursor-pointer hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1';
 
 const disabledClasses = 'cursor-not-allowed opacity-50';
 
-const pinnedClasses = 'bg-theme-bg-card border-theme-primary';
+const pinnedClasses = 'border-theme-primary';
 
 const pinButtonBaseClasses =
-  'p-2 rounded-lg border transition-all min-w-[36px] min-h-[36px] flex items-center justify-center';
+  'p-2.5 rounded-xl border-2 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center';
 
 const pinButtonActiveClasses = 'bg-theme-primary text-btn-primary-text border-theme-primary';
 
 const pinButtonInactiveClasses =
   'bg-transparent border-theme-border-default text-theme-text-secondary hover:text-theme-text-primary hover:border-theme-primary';
+
+const iconContainerClasses =
+  'p-6 rounded-[28px] bg-theme-bg-secondary border-2 border-theme-border-subtle text-theme-text-secondary group-hover:text-theme-primary transition-all w-fit shadow-theme-sm';
 
 /**
  * Pin Icon SVG component (inline to avoid external dependency)
@@ -160,18 +173,24 @@ export const MenuCard = memo(function MenuCard({
       disabled={isDisabled}
       aria-disabled={isDisabled}
       aria-label={ariaLabel || title}
-      className={`${baseClasses} ${isPinned ? pinnedClasses : ''} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
+      className={`group ${baseClasses} ${isPinned ? pinnedClasses : ''} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
       style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
-      {/* Header: Index + Pin + Icon */}
-      <div className="flex items-center justify-between mb-6">
-        <span
-          className="text-sm tracking-widest text-theme-text-muted"
-          style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-        >
-          {formattedIndex}
-        </span>
-        <div className="flex items-center gap-2">
+      {/* Icon container */}
+      <div className={`${iconContainerClasses} [&>svg]:w-8 [&>svg]:h-8`} aria-hidden="true">
+        {icon}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 mt-10">
+        {/* Index + Pin row */}
+        <div className="flex items-center justify-between mb-4">
+          <span
+            className="text-xs font-bold tracking-[0.3em] text-theme-primary"
+            style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+          >
+            {formattedIndex}
+          </span>
           {/* Pin button (optional) */}
           {onPin && (
             <span
@@ -187,22 +206,28 @@ export const MenuCard = memo(function MenuCard({
               <PinIcon filled={isPinned} />
             </span>
           )}
-          <span className="text-theme-text-secondary" aria-hidden="true">
-            {icon}
-          </span>
         </div>
+
+        {/* Title */}
+        <h3
+          className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tight leading-tight"
+          style={{ fontFamily: 'var(--font-family-serif-title)' }}
+        >
+          {title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-[18px] font-bold text-theme-text-secondary leading-relaxed group-hover:text-theme-text-primary transition-colors">
+          {description}
+        </p>
       </div>
 
-      {/* Title */}
-      <h3
-        className="text-xl sm:text-2xl text-theme-text-primary mb-3 tracking-tight"
-        style={{ fontFamily: 'var(--font-family-serif-title)' }}
-      >
-        {title}
-      </h3>
-
-      {/* Description */}
-      <p className="text-sm text-theme-text-secondary leading-relaxed">{description}</p>
+      {/* Chevron footer */}
+      <div className="mt-auto pt-8 flex items-center justify-end">
+        <span className="text-theme-border-subtle group-hover:text-theme-primary group-hover:translate-x-2 transition-all">
+          <ChevronRightIcon />
+        </span>
+      </div>
     </button>
   );
 });

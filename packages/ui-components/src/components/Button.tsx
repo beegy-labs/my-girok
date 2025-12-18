@@ -8,7 +8,11 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   /**
    * Button size - all sizes meet WCAG 44x44px minimum touch target
    */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  /**
+   * Border radius style
+   */
+  rounded?: 'default' | 'editorial' | 'full';
   /**
    * Shows loading state with spinner
    */
@@ -32,17 +36,19 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 }
 
 // Static class definitions (defined outside component for performance)
+// V25.8 AAA Workstation Design System
 // tracking-wide improves readability for long button text (WCAG AAA)
 const baseClasses =
-  'font-semibold tracking-wide rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
+  'font-bold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-offset-4 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
 
 const variantClasses = {
   primary:
     'bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text shadow-theme-md hover:shadow-theme-lg hover:scale-[1.02] active:scale-[0.98]',
   secondary:
-    'bg-btn-secondary-bg border border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover hover:scale-[1.01] active:scale-[0.99]',
+    'bg-btn-secondary-bg border-2 border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover hover:scale-[1.01] active:scale-[0.99]',
   danger: 'bg-btn-danger-bg text-btn-danger-text hover:bg-btn-danger-bg-hover active:scale-[0.98]',
-  ghost: 'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover',
+  ghost:
+    'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover border-2 border-transparent hover:border-theme-border-default',
 } as const;
 
 // All sizes meet WCAG 44x44px minimum touch target
@@ -50,22 +56,34 @@ const sizeClasses = {
   sm: 'min-h-[44px] px-4 py-2.5 text-sm',
   md: 'min-h-[44px] px-5 py-3 text-base',
   lg: 'min-h-[48px] px-6 py-3.5 text-lg',
+  xl: 'min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-[0.3em]',
+} as const;
+
+// Border radius options
+const roundedClasses = {
+  default: 'rounded-xl',
+  editorial: 'rounded-[24px]',
+  full: 'rounded-full',
 } as const;
 
 /**
  * Accessible button component with WCAG 2.1 AAA compliance
+ * V25.8 AAA Workstation Design System
  *
  * Features:
  * - Minimum 44x44px touch target (WCAG 2.5.5)
  * - High contrast focus ring for keyboard navigation
  * - Proper disabled states
  * - Loading state with spinner
+ * - Editorial radius option (24px) for V25.8 styling
  * - React 19 compatible (ref as prop)
  *
  * @example
  * ```tsx
  * <Button
  *   variant="primary"
+ *   size="xl"
+ *   rounded="editorial"
  *   loading={isSubmitting}
  *   onClick={handleSubmit}
  * >
@@ -76,6 +94,7 @@ const sizeClasses = {
 export function Button({
   variant = 'primary',
   size = 'md',
+  rounded = 'default',
   loading = false,
   fullWidth = false,
   icon,
@@ -91,10 +110,10 @@ export function Button({
     <button
       ref={ref}
       disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${widthClass} ${className}`}
       {...props}
     >
-      <span className="flex items-center justify-center gap-2">
+      <span className="flex items-center justify-center gap-3">
         {loading && <LoadingSpinner />}
         {!loading && icon && <span aria-hidden="true">{icon}</span>}
         {children}

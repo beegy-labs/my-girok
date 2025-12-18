@@ -32,20 +32,26 @@ export interface TopWidgetProps {
 }
 
 // Static class definitions (2025 best practice - outside component)
+// V25.8 AAA Workstation Design System
 const containerClasses =
-  'p-8 sm:p-10 rounded-[48px] bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
+  'p-10 sm:p-12 rounded-[48px] bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
 
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
+const iconContainerClasses =
+  'p-3 bg-theme-bg-secondary border border-theme-border-default rounded-2xl text-theme-primary';
+
 /**
  * TopWidget Component - Pinned Widget for Dashboard (2025 Accessible Pattern)
+ * V25.8 AAA Workstation Design System
  *
  * Features:
  * - Displays a pinned widget at the top of the dashboard
  * - 48px border radius for premium look
  * - Accent border for emphasis
  * - WCAG 2.1 AAA compliant focus ring
+ * - 44px minimum touch targets
  * - Supports custom content via children
  *
  * @example
@@ -73,22 +79,20 @@ export const TopWidget = memo(function TopWidget({
   return (
     <section className={`${containerClasses} ${className}`} aria-label={title}>
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex justify-between items-start mb-10">
+        <div className="flex items-center gap-5">
           {/* Icon container */}
-          <div className="p-3 bg-theme-bg-page border border-theme-border-default rounded-2xl text-theme-primary">
-            {icon}
-          </div>
+          <div className={iconContainerClasses}>{icon}</div>
           {/* Title and badge */}
           <div>
             <h2
-              className="text-xl font-bold text-theme-text-primary"
+              className="text-2xl font-bold text-theme-text-primary"
               style={{ fontFamily: 'var(--font-family-serif-title)' }}
             >
               {title}
             </h2>
             <p
-              className="text-[10px] font-bold text-theme-text-muted uppercase tracking-widest"
+              className="text-xs font-bold text-theme-text-muted uppercase tracking-[0.25em] mt-1"
               style={{ fontFamily: 'var(--font-family-mono-brand)' }}
             >
               {badgeText}
@@ -101,7 +105,7 @@ export const TopWidget = memo(function TopWidget({
           <button
             type="button"
             onClick={onChangeFocus}
-            className={`text-[10px] font-bold uppercase tracking-widest text-theme-text-secondary hover:text-theme-text-primary transition-colors rounded-lg px-3 py-2 min-h-[44px] flex items-center ${focusClasses}`}
+            className={`text-xs font-bold uppercase tracking-[0.2em] text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover transition-all rounded-xl px-4 py-3 min-h-[44px] min-w-[44px] flex items-center border-2 border-transparent hover:border-theme-border-default ${focusClasses}`}
           >
             {changeFocusText}
           </button>

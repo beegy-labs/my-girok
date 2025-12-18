@@ -1,6 +1,6 @@
 # @my-girok/design-tokens
 
-WCAG 2.1 AAA compliant design tokens package with CSS @property type safety.
+> WCAG 2.1 AAA compliant design tokens - **V0.0.1 AAA Workstation**
 
 ## Purpose
 
@@ -32,20 +32,63 @@ Layer 3: Tailwind (@theme inline) → Utility classes (dynamic)
 
 ## Token Categories
 
-| Category   | Example Classes                                        |
-| ---------- | ------------------------------------------------------ |
-| Background | `bg-theme-bg-page`, `bg-theme-bg-card`                 |
-| Text       | `text-theme-text-primary`, `text-theme-text-secondary` |
-| Border     | `border-theme-border-subtle`                           |
-| Primary    | `text-theme-primary`, `bg-theme-primary`               |
-| Shadows    | `shadow-theme-sm`, `shadow-theme-lg`                   |
-| Status     | `bg-theme-status-error-bg`                             |
+| Category   | Example Classes                                                 |
+| ---------- | --------------------------------------------------------------- |
+| Background | `bg-theme-bg-page`, `bg-theme-bg-card`, `bg-theme-bg-secondary` |
+| Text       | `text-theme-text-primary`, `text-theme-text-secondary`          |
+| Border     | `border-theme-border-default`, `border-theme-border-subtle`     |
+| Primary    | `text-theme-primary`, `bg-theme-primary`                        |
+| Shadows    | `shadow-theme-sm`, `shadow-theme-md`, `shadow-theme-lg`         |
+| Status     | `bg-theme-status-error-bg`, `text-theme-status-success-text`    |
+
+## Editorial Layout Tokens (V0.0.1)
+
+```css
+:root {
+  /* Typography */
+  --font-family-serif-title: 'Playfair Display', Georgia, serif;
+  --font-family-mono-brand: ui-monospace, SFMono-Regular, monospace;
+
+  /* Border Radius */
+  --radius-editorial: 40px;
+  --radius-editorial-lg: 48px; /* Form cards */
+  --radius-editorial-xl: 56px; /* Promo cards */
+  --radius-editorial-2xl: 64px; /* Section containers */
+  --radius-input: 24px; /* Input fields (lg size) */
+
+  /* Spacing */
+  --spacing-editorial: 40px;
+  --nav-height-editorial: 80px;
+
+  /* Animation */
+  --ease-editorial: cubic-bezier(0.2, 1, 0.3, 1);
+}
+```
+
+## Tailwind Integration (@theme inline)
+
+```css
+@theme inline {
+  /* Editorial Layout - V0.0.1 */
+  --radius-editorial: 40px;
+  --radius-editorial-lg: 48px;
+  --radius-editorial-xl: 56px;
+  --radius-editorial-2xl: 64px;
+  --radius-input: 24px;
+  --spacing-editorial: 40px;
+  --nav-height-editorial: 80px;
+
+  /* Typography */
+  --font-family-serif-title: 'Playfair Display', Georgia, serif;
+  --font-family-mono-brand: ui-monospace, SFMono-Regular, monospace;
+}
+```
 
 ## @property Type Safety
 
 Key tokens have @property definitions for:
 
-- Type validation (`syntax: '<color>'`)
+- Type validation (`syntax: '<color>'` or `syntax: '<length>'`)
 - Fallback values (`initial-value`)
 - Smooth color transitions in animations
 
@@ -54,6 +97,12 @@ Key tokens have @property definitions for:
   syntax: '<color>';
   inherits: true;
   initial-value: #6b4a2e; /* AAA 7.94:1 */
+}
+
+@property --radius-editorial-2xl {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 64px;
 }
 ```
 
@@ -78,10 +127,6 @@ All text combinations meet 7:1+ contrast ratio (AAA standard).
 | Primary Button   | 7.70:1+    | 9.46:1+                      |
 | Secondary Button | 7.41:1     | 7.54:1                       |
 | Danger Button    | 9.51:1     | 9.51:1                       |
-| Status Success   | 7.87:1     | 8.44:1                       |
-| Status Error     | 7.77:1     | 7.89:1                       |
-| Status Warning   | 7.59:1     | 13.13:1                      |
-| Status Info      | 8.63:1     | 9.71:1                       |
 
 ### Border Contrast (WCAG SC 1.4.11)
 
@@ -95,3 +140,7 @@ All text combinations meet 7:1+ contrast ratio (AAA standard).
 
 - Chrome 85+, Firefox 128+, Safari 15.4+ (for @property)
 - Graceful degradation in older browsers
+
+## Version
+
+**V0.0.1 AAA Workstation** (2025-12)

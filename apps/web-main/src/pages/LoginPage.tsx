@@ -5,10 +5,15 @@ import Cookies from 'js-cookie';
 import { login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
 import { TextInput, Button, Alert } from '@my-girok/ui-components';
+import { Mail, Lock, ArrowRight, UserPlus, Key } from 'lucide-react';
 
 const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
 const COOKIE_EXPIRY_DAYS = 30;
 
+/**
+ * LoginPage - V25.8 AAA Workstation Design
+ * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
+ */
 export default function LoginPage() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -63,117 +68,134 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen bg-theme-bg-page flex flex-col items-center justify-center px-4 py-8"
+      className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700"
       style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
     >
-      <div className="w-full max-w-md">
-        {/* Logo/Brand - Editorial monospace style */}
-        <div className="text-center mb-8 sm:mb-10">
-          <span
-            className="inline-block text-xs tracking-[0.3em] text-theme-text-muted mb-4 uppercase"
-            style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-          >
-            {t('auth.welcomeBack')}
-          </span>
-          <h1
-            className="text-3xl sm:text-4xl text-theme-text-primary mb-3 tracking-tight"
-            style={{ fontFamily: 'var(--font-family-serif-title)' }}
-          >
-            Girok
-          </h1>
-          <p className="text-theme-text-secondary text-sm">{t('auth.startRecording')}</p>
-        </div>
-
-        {/* Login Form - Editorial Card */}
-        <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 shadow-theme-lg">
-          {error && (
-            <Alert variant="error" className="mb-6">
-              {error}
-            </Alert>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <TextInput
-              id="email"
-              label={t('auth.emailAddress')}
-              type="email"
-              value={email}
-              onChange={setEmail}
-              required
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-
-            <TextInput
-              id="password"
-              label={t('auth.password')}
-              type="password"
-              value={password}
-              onChange={setPassword}
-              required
-              placeholder="••••••••"
-              autoComplete="current-password"
-            />
-
-            {/* Checkbox with 44x44px touch target for WCAG 2.5.5 accessibility */}
-            <label
-              htmlFor="rememberEmail"
-              className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none group"
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
+        <div className="w-full max-w-md">
+          {/* Header - V25.8 Editorial Style */}
+          <div className="text-center mb-10">
+            <h1
+              className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic"
+              style={{ fontFamily: 'var(--font-family-serif-title)' }}
             >
-              <span className="relative flex items-center justify-center w-11 h-11">
-                <input
-                  id="rememberEmail"
-                  type="checkbox"
-                  checked={rememberEmail}
-                  onChange={(e) => setRememberEmail(e.target.checked)}
-                  className="absolute w-11 h-11 opacity-0 cursor-pointer peer"
-                />
-                <span
-                  className="w-5 h-5 border-2 border-theme-border-default rounded bg-theme-bg-input transition-colors peer-checked:bg-theme-primary peer-checked:border-theme-primary peer-focus-visible:ring-2 peer-focus-visible:ring-theme-focus-ring peer-focus-visible:ring-offset-2"
-                  aria-hidden="true"
-                >
-                  {rememberEmail && (
-                    <svg
-                      className="w-full h-full text-white"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
-                </span>
-              </span>
-              <span className="text-sm text-theme-text-secondary">{t('auth.rememberEmail')}</span>
-            </label>
-
-            <Button variant="primary" type="submit" disabled={loading} loading={loading} fullWidth>
-              {t('auth.loginButton')}
-            </Button>
-          </form>
-
-          {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-theme-border-subtle">
-            <p className="text-center text-sm text-theme-text-secondary">
-              {t('auth.noAccount')}{' '}
-              <Link
-                to="/register"
-                className="font-semibold text-theme-primary hover:text-theme-primary-light transition-colors"
-              >
-                {t('auth.registerHere')}
-              </Link>
+              Login
+            </h1>
+            <p
+              className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
+              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+            >
+              Archive Access
             </p>
           </div>
-        </div>
 
-        {/* Footer Note */}
-        <p className="text-center text-xs text-theme-text-tertiary mt-6">
-          {t('auth.termsAgreement')}
-        </p>
-      </div>
+          {/* Form Card - V25.8 Editorial Style */}
+          <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[48px] p-10 md:p-14 shadow-theme-lg">
+            {error && (
+              <Alert variant="error" className="mb-6">
+                {error}
+              </Alert>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <TextInput
+                id="email"
+                label={t('auth.emailAddress')}
+                type="email"
+                size="lg"
+                icon={<Mail size={18} />}
+                value={email}
+                onChange={setEmail}
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+
+              <TextInput
+                id="password"
+                label={t('auth.password')}
+                type="password"
+                size="lg"
+                icon={<Lock size={18} />}
+                value={password}
+                onChange={setPassword}
+                required
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+
+              {/* Checkbox with 44x44px touch target for WCAG 2.5.5 accessibility */}
+              <label
+                htmlFor="rememberEmail"
+                className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none group"
+              >
+                <span className="relative flex items-center justify-center w-11 h-11">
+                  <input
+                    id="rememberEmail"
+                    type="checkbox"
+                    checked={rememberEmail}
+                    onChange={(e) => setRememberEmail(e.target.checked)}
+                    className="absolute w-11 h-11 opacity-0 cursor-pointer peer"
+                  />
+                  <span
+                    className="w-5 h-5 border-2 border-theme-border-default rounded bg-theme-bg-input transition-colors peer-checked:bg-theme-primary peer-checked:border-theme-primary peer-focus-visible:ring-2 peer-focus-visible:ring-theme-focus-ring peer-focus-visible:ring-offset-2"
+                    aria-hidden="true"
+                  >
+                    {rememberEmail && (
+                      <svg
+                        className="w-full h-full text-white"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                </span>
+                <span className="text-sm text-theme-text-secondary">{t('auth.rememberEmail')}</span>
+              </label>
+
+              <Button
+                variant="primary"
+                type="submit"
+                size="xl"
+                rounded="editorial"
+                disabled={loading}
+                loading={loading}
+                fullWidth
+                icon={<ArrowRight size={18} />}
+              >
+                {t('auth.loginButton')}
+              </Button>
+            </form>
+
+            {/* Secondary Actions - V25.8 Style */}
+            <div className="mt-8 flex flex-col gap-3">
+              <Link to="/register" className="block">
+                <Button variant="secondary" size="lg" rounded="editorial" fullWidth>
+                  <UserPlus size={16} />
+                  {t('auth.registerHere')}
+                </Button>
+              </Link>
+              <Link to="/forgot-password" className="block">
+                <Button variant="ghost" size="lg" rounded="editorial" fullWidth>
+                  <Key size={16} />
+                  {t('auth.forgotPassword', { defaultValue: 'Forgot Password' })}
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Footer Note */}
+          <p className="text-center text-xs text-theme-text-tertiary mt-6">
+            {t('auth.termsAgreement')}
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

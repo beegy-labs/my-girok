@@ -12,7 +12,11 @@ export interface BadgeProps {
   /**
    * Badge size
    */
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
+  /**
+   * Border radius style
+   */
+  rounded?: 'default' | 'full';
   /**
    * Additional CSS classes
    */
@@ -20,8 +24,9 @@ export interface BadgeProps {
 }
 
 // Static variant classes
+// V25.8 AAA Workstation Design System
 const variantClasses = {
-  default: 'bg-theme-bg-hover text-theme-text-secondary border-theme-border-default',
+  default: 'bg-theme-bg-secondary text-theme-text-secondary border-theme-border-default',
   success:
     'bg-theme-status-success-bg text-theme-status-success-text border-theme-status-success-border',
   warning:
@@ -32,33 +37,43 @@ const variantClasses = {
 } as const;
 
 const sizeClasses = {
-  sm: 'px-2 py-0.5 text-xs',
-  md: 'px-3 py-1 text-sm',
+  sm: 'px-3 py-1 text-[11px]',
+  md: 'px-4 py-1.5 text-xs',
+  lg: 'px-5 py-2 text-[14px]',
+} as const;
+
+const roundedClasses = {
+  default: 'rounded-lg',
+  full: 'rounded-full',
 } as const;
 
 /**
  * Badge Component for status indicators and labels
+ * V25.8 AAA Workstation Design System
  *
  * Features:
  * - Multiple color variants (default, success, warning, error, info, accent)
- * - Size options (sm, md)
+ * - Size options (sm, md, lg)
+ * - Rounded options (default: lg, full: pill shape)
  * - WCAG AAA compliant text contrast
+ * - Wider tracking for improved readability
  *
  * @example
  * ```tsx
  * <Badge variant="success">Active</Badge>
- * <Badge variant="warning" size="sm">Pending</Badge>
+ * <Badge variant="warning" size="sm" rounded="full">Pending</Badge>
  * ```
  */
 export const Badge = memo(function Badge({
   children,
   variant = 'default',
   size = 'md',
+  rounded = 'default',
   className = '',
 }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full border tracking-wide ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center font-black uppercase border tracking-widest ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${className}`}
     >
       {children}
     </span>
@@ -78,9 +93,10 @@ export interface SectionBadgeProps {
 
 /**
  * Section Badge for editorial-style section headers
+ * V25.8 AAA Workstation Design System
  *
  * Features:
- * - Uppercase text with wide letter-spacing
+ * - Uppercase text with wide letter-spacing (0.3em)
  * - Monospace font for technical feel
  * - Subtle border and background
  *
@@ -95,7 +111,7 @@ export const SectionBadge = memo(function SectionBadge({
 }: SectionBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-[0.25em] text-theme-text-muted bg-theme-bg-card border border-theme-border-default rounded-full ${className}`}
+      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.3em] text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-lg ${className}`}
       style={{ fontFamily: 'var(--font-family-mono-brand)' }}
     >
       {children}

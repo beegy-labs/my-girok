@@ -25,6 +25,10 @@ import {
   BarChart3,
   Bell,
   Plus,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  GripVertical,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -36,7 +40,7 @@ interface MenuItem {
   status: 'active' | 'coming-soon';
 }
 
-// 9 Menu Functions - Editorial Archive Style (matches mockup V24.5)
+// 9 Menu Functions - Editorial Archive Style (V25.8 AAA Workstation)
 const MENU_ITEMS: MenuItem[] = [
   {
     id: 'journal',
@@ -115,12 +119,39 @@ const MENU_ITEMS: MenuItem[] = [
 // Widget-enabled menu IDs (can be pinned to top)
 const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
 
+// Promo slides - V25.8 mockup style
+const PROMOS = [
+  {
+    tag: 'Premium',
+    title: 'Gold Edition.',
+    desc: 'Unlimited storage and enhanced security system.',
+    cta: 'Upgrade',
+  },
+  {
+    tag: 'Theme',
+    title: 'Walnut Collection.',
+    desc: 'Elegant vintage theme for your archive.',
+    cta: 'Apply',
+  },
+  {
+    tag: 'Mobile',
+    title: 'Girok Mobile.',
+    desc: 'Record your story anywhere with the mobile app.',
+    cta: 'Get App',
+  },
+];
+
+/**
+ * HomePage - V25.8 AAA Workstation Design
+ * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
+ */
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [pinnedWidgetId, setPinnedWidgetId] = useState<string | null>(null);
+  const [currentPromo, setCurrentPromo] = useState(0);
 
   // Memoized pinned widget data
   const pinnedWidget = useMemo(
@@ -128,7 +159,7 @@ export default function HomePage() {
     [pinnedWidgetId],
   );
 
-  // Memoized handler per rules.md: "✅ Memoize handlers with useCallback"
+  // Memoized handler per rules.md: "Memoize handlers with useCallback"
   const handleMenuClick = useCallback(
     (menu: MenuItem) => {
       if (menu.status === 'active') {
@@ -148,6 +179,15 @@ export default function HomePage() {
     (menuId: string) => WIDGET_ENABLED_IDS.includes(menuId as (typeof WIDGET_ENABLED_IDS)[number]),
     [],
   );
+
+  // Promo carousel handlers
+  const handlePrevPromo = useCallback(() => {
+    setCurrentPromo((prev) => (prev - 1 + PROMOS.length) % PROMOS.length);
+  }, []);
+
+  const handleNextPromo = useCallback(() => {
+    setCurrentPromo((prev) => (prev + 1) % PROMOS.length);
+  }, []);
 
   return (
     <>
@@ -175,28 +215,174 @@ export default function HomePage() {
 
       <main
         id="main-content"
-        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
+        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pb-32"
         style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
         role="main"
       >
         {isAuthenticated ? (
-          /* Authenticated Dashboard */
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-            {/* Welcome Section - Editorial Style */}
-            <header className="mb-12 sm:mb-16">
-              <SectionBadge className="mb-4">{t('badge.myArchive')}</SectionBadge>
-              <h1
-                className="text-3xl sm:text-4xl lg:text-5xl text-theme-text-primary tracking-tight mb-3"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
-              >
-                {user?.name || user?.username}
-              </h1>
-              <p className="text-base sm:text-lg text-theme-text-secondary">
-                {t('home.startToday')}
-              </p>
-            </header>
+          /* Authenticated Dashboard - V25.8 Style */
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-16">
+            {/* Promo Carousel Section - V25.8 Style */}
+            <section className="mb-16" aria-label="Featured Promotions">
+              <div className="relative group w-full h-[300px] rounded-[56px] border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-4 focus-within:ring-theme-primary">
+                <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
+                  <span
+                    className="text-[12px] font-black uppercase tracking-[0.3em] text-theme-primary mb-4 block"
+                    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+                  >
+                    {PROMOS[currentPromo].tag}
+                  </span>
+                  <h2
+                    className="text-3xl sm:text-5xl text-theme-text-primary mb-6 leading-tight"
+                    style={{ fontFamily: 'var(--font-family-serif-title)' }}
+                  >
+                    {PROMOS[currentPromo].title}
+                  </h2>
+                  <p className="text-lg font-bold text-theme-text-secondary mb-10 leading-relaxed max-w-xl">
+                    {PROMOS[currentPromo].desc}
+                  </p>
+                  <button
+                    type="button"
+                    className="text-[12px] font-black uppercase tracking-[0.25em] text-theme-primary border-b-2 border-theme-primary pb-2 hover:opacity-80 transition-all w-fit min-h-[44px]"
+                  >
+                    {PROMOS[currentPromo].cta}
+                  </button>
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handlePrevPromo}
+                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
+                    aria-label="Previous Promo"
+                  >
+                    <ChevronLeft size={24} aria-hidden="true" />
+                  </button>
+                  <button
+                    onClick={handleNextPromo}
+                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
+                    aria-label="Next Promo"
+                  >
+                    <ChevronRight size={24} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </section>
 
-            {/* Top Widget Section (when pinned) */}
+            {/* Workstation Section - V25.8 Style */}
+            <section className="mb-20" aria-label="Workstation Controls">
+              <div className="p-10 md:p-14 rounded-[64px] bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
+                {/* Workstation Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 border-b-2 border-theme-border-default pb-10">
+                  <div className="flex items-center gap-6">
+                    <div
+                      className="p-5 bg-theme-bg-card rounded-[24px] border-2 border-theme-border-default text-theme-primary shadow-theme-sm"
+                      aria-hidden="true"
+                    >
+                      <Layers size={28} />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-theme-text-primary">
+                        {t('home.workstation', { defaultValue: 'Workstation' })}
+                      </h2>
+                      <p
+                        className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-[0.25em] mt-2"
+                        style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+                      >
+                        Active Workspace
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    rounded="editorial"
+                    icon={<Plus size={18} strokeWidth={3} />}
+                    aria-label={t('home.addWidget', { defaultValue: 'Add new widget' })}
+                  >
+                    {t('home.add', { defaultValue: 'Add' })}
+                  </Button>
+                </div>
+
+                {/* Widget Grid - V25.8 Style */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                  {/* Today Widget - Active */}
+                  <article className="bg-theme-bg-card rounded-[48px] border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-4 focus-within:ring-theme-primary">
+                    <div className="flex justify-between items-center mb-8">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="p-3 bg-theme-bg-secondary rounded-2xl text-theme-primary border border-theme-border-subtle"
+                          aria-hidden="true"
+                        >
+                          <Calendar size={20} />
+                        </div>
+                        <h3
+                          className="text-[14px] font-black text-theme-text-primary uppercase tracking-[0.2em]"
+                          style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+                        >
+                          {t('home.today', { defaultValue: 'Today' })}
+                        </h3>
+                      </div>
+                      <GripVertical
+                        size={22}
+                        className="text-theme-border-default group-hover:text-theme-primary cursor-move transition-colors"
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    <div className="space-y-4 flex-1">
+                      <div className="flex items-start gap-5 p-5 rounded-[24px] bg-theme-bg-secondary border-2 border-transparent group/item hover:bg-theme-bg-card hover:border-theme-border-default transition-all">
+                        <div className="mt-1.5 w-2 h-2 rounded-full bg-theme-primary" />
+                        <div>
+                          <p className="text-[16px] font-bold text-theme-text-primary leading-tight">
+                            {t('home.sampleEvent', { defaultValue: 'Planning Meeting' })}
+                          </p>
+                          <p className="text-[12px] font-bold text-theme-text-secondary mt-2">
+                            10:00 - 11:30
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="mt-10 text-[12px] font-black uppercase tracking-widest text-theme-text-secondary hover:text-theme-primary transition-colors flex items-center gap-3 group/btn min-h-[44px]"
+                    >
+                      {t('home.viewAll', { defaultValue: 'View All' })}{' '}
+                      <ChevronRight
+                        size={18}
+                        className="group-hover/btn:translate-x-1 transition-transform"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </article>
+
+                  {/* Empty Widget Slots */}
+                  {[2, 3].map((slot) => (
+                    <div
+                      key={slot}
+                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-[48px] border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Empty Slot ${slot}`}
+                    >
+                      <Plus
+                        size={32}
+                        className="text-theme-border-default group-hover:text-theme-primary group-hover:scale-110 transition-all"
+                        strokeWidth={2.5}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-[0.4em]"
+                        style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+                      >
+                        Empty
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Pinned Top Widget Section */}
             {pinnedWidget && (
               <section className="mb-12 sm:mb-16">
                 <TopWidget
@@ -262,22 +448,22 @@ export default function HomePage() {
               </section>
             )}
 
-            {/* Menu Section */}
-            <section aria-label={t('aria.mainMenu')}>
-              {/* Section Header with View Toggle */}
-              <div className="flex items-center justify-between mb-8">
+            {/* Index Section - V25.8 Style */}
+            <section className="mb-24" aria-label={t('aria.mainMenu')}>
+              {/* Section Header with View Toggle - V25.8 Style */}
+              <div className="flex items-center justify-between mb-14 border-b-4 border-theme-text-primary pb-10 px-6">
                 <h2
-                  className="text-xl sm:text-2xl text-theme-text-primary tracking-tight"
+                  className="text-4xl text-theme-text-primary tracking-tight"
                   style={{ fontFamily: 'var(--font-family-serif-title)' }}
                 >
-                  {t('home.archiveFunctions')}
+                  {t('home.index', { defaultValue: 'Index' })}
                 </h2>
                 <ViewToggle value={viewMode} onChange={setViewMode} />
               </div>
 
               {/* Grid View */}
               {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
@@ -287,7 +473,7 @@ export default function HomePage() {
                       <MenuCard
                         key={menu.id}
                         index={index + 1}
-                        icon={<IconComponent className="w-6 h-6" />}
+                        icon={<IconComponent />}
                         title={t(menu.nameKey)}
                         description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
                         onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
@@ -312,22 +498,26 @@ export default function HomePage() {
 
               {/* List View */}
               {viewMode === 'list' && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
+                    const canPin = canPinAsWidget(menu.id);
 
                     return (
                       <MenuRow
                         key={menu.id}
                         index={index + 1}
-                        icon={<IconComponent className="w-5 h-5" />}
+                        icon={<IconComponent />}
                         title={
                           isDisabled
                             ? `${t(menu.nameKey)} (${t('home.comingSoon')})`
                             : t(menu.nameKey)
                         }
+                        description={isDisabled ? undefined : t(menu.descriptionKey)}
                         onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
+                        isPinned={pinnedWidgetId === menu.id}
+                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
                         className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                         aria-label={
                           isDisabled
@@ -341,9 +531,9 @@ export default function HomePage() {
               )}
             </section>
 
-            {/* Archive Support Banner */}
+            {/* Archive Support Banner - V25.8 Style */}
             <section className="mt-12 sm:mt-16">
-              <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 text-center">
+              <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-8 sm:p-10 text-center font-medium">
                 <SectionBadge className="mb-4">{t('badge.archiveSupport')}</SectionBadge>
                 <p className="text-theme-text-secondary text-sm sm:text-base max-w-lg mx-auto">
                   {t('home.supportMessage', {
@@ -354,61 +544,42 @@ export default function HomePage() {
             </section>
           </div>
         ) : (
-          /* Landing Page for Non-authenticated Users - Editorial centered style (consistent with LoginPage) */
+          /* Landing Page - V25.8 Hero Style */
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-            <div className="w-full max-w-md text-center">
-              {/* Brand Badge */}
-              <span
-                className="inline-block text-xs tracking-[0.3em] text-theme-text-muted mb-4 uppercase"
-                style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-              >
-                {t('badge.personalArchive')}
-              </span>
-
-              {/* Brand Title */}
+            <div className="text-center">
+              {/* Giant Brand Title - V25.8 Style */}
               <h1
-                className="text-3xl sm:text-4xl text-theme-text-primary mb-3 tracking-tight"
+                className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-tighter italic"
                 style={{ fontFamily: 'var(--font-family-serif-title)' }}
               >
-                Girok
+                girok<span className="text-theme-primary">.</span>
               </h1>
 
-              {/* Tagline */}
-              <p className="text-theme-text-secondary text-sm sm:text-base mb-8 leading-relaxed">
-                {t('home.title')}
-              </p>
-
-              {/* CTA Card - Editorial Style (consistent with LoginPage card) */}
-              <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 shadow-theme-lg">
-                <div className="space-y-4">
-                  <Link to="/register" className="block">
-                    <Button variant="primary" size="lg" fullWidth>
-                      {t('home.createRecordBook')}
-                    </Button>
-                  </Link>
-                  <Link to="/login" className="block">
-                    <Button variant="secondary" size="lg" fullWidth>
-                      {t('nav.login')}
-                    </Button>
-                  </Link>
-                </div>
-
-                {/* Divider */}
-                <div className="mt-8 pt-6 border-t border-theme-border-subtle">
-                  <p className="text-sm text-theme-text-muted">{t('home.startToday')}</p>
-                </div>
-              </div>
-
-              {/* Footer Note */}
-              <p className="text-center text-xs text-theme-text-tertiary mt-6">
-                {t('auth.termsAgreement')}
-              </p>
+              {/* Enter Button - V25.8 Style */}
+              <Link to="/login">
+                <Button
+                  variant="primary"
+                  size="xl"
+                  rounded="full"
+                  className="px-16 sm:px-20 py-6 sm:py-8 text-[14px] font-black uppercase tracking-[0.3em] shadow-theme-xl hover:scale-105 transition-transform"
+                >
+                  Enter
+                </Button>
+              </Link>
             </div>
           </div>
         )}
 
         <Footer />
       </main>
+
+      {/* Widget slot background pattern */}
+      <style>{`
+        .widget-slot {
+          background-image: radial-gradient(var(--theme-border-subtle) 1.5px, transparent 1.5px);
+          background-size: 20px 20px;
+        }
+      `}</style>
     </>
   );
 }

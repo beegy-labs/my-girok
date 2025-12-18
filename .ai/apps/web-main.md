@@ -1,6 +1,6 @@
 # Web Main App
 
-> Public-facing web application for My-Girok
+> Public-facing web application for My-Girok - **V0.0.1 AAA Workstation**
 
 ## Tech Stack
 
@@ -12,52 +12,81 @@
 - **API**: Axios 1.13
 - **Testing**: Vitest 4.0 + Playwright 1.57
 
-## Design System: Modern Editorial Archive
+## Design System: V0.0.1 AAA Workstation
 
-> "Sophisticated Classic" style - professional archive aesthetic
+> "Sophisticated Classic" style - WCAG 2.1 AAA compliant editorial design
 
-### Design Tokens
+### Design Tokens (V0.0.1)
 
-| Token                       | Value                        | Usage                     |
-| --------------------------- | ---------------------------- | ------------------------- |
-| `--font-family-serif-title` | Playfair Display             | Page titles, headings     |
-| `--font-family-mono-brand`  | System monospace             | Brand "Girok", badges     |
-| `--radius-editorial`        | 40px                         | MenuCard, Editorial cards |
-| `--spacing-editorial`       | 40px                         | Card padding (p-10)       |
-| `--nav-height-editorial`    | 80px                         | Fixed navbar height       |
-| `--ease-editorial`          | cubic-bezier(0.2, 1, 0.3, 1) | Smooth transitions        |
+| Token                       | Value                        | Usage                           |
+| --------------------------- | ---------------------------- | ------------------------------- |
+| `--font-family-serif-title` | Playfair Display             | Italic page titles, headings    |
+| `--font-family-mono-brand`  | System monospace             | Brand "girok.", badges          |
+| `--radius-editorial`        | 40px                         | Archive support banner          |
+| `--radius-editorial-lg`     | 48px                         | Form cards (Login, Register)    |
+| `--radius-editorial-xl`     | 56px                         | Promo carousel                  |
+| `--radius-editorial-2xl`    | 64px                         | MenuCard, Workstation section   |
+| `--radius-input`            | 24px                         | Input (lg size), editorial btns |
+| `--spacing-editorial`       | 40px                         | Card padding (p-10)             |
+| `--nav-height-editorial`    | 80px                         | Fixed navbar height             |
+| `--ease-editorial`          | cubic-bezier(0.2, 1, 0.3, 1) | Smooth transitions              |
+
+### V0.0.1 Key Visual Patterns
+
+| Element     | Specification                                                 |
+| ----------- | ------------------------------------------------------------- |
+| Title font  | `text-5xl italic tracking-tighter serif`                      |
+| Subtitle    | `text-[11px] font-black uppercase tracking-[0.3em] monospace` |
+| Form card   | `rounded-[48px] border-2 p-10 md:p-14`                        |
+| Input (lg)  | `h-16 rounded-[24px] font-bold` with left icon                |
+| Button (xl) | `min-h-[64px] font-black uppercase tracking-[0.3em]`          |
+| MenuCard    | `rounded-[64px] border-2 p-10 md:p-12 min-h-[320px]`          |
+| Footer      | `mt-40 py-24 border-t-2 tracking-[0.6em]`                     |
 
 ### Layout Pattern
 
 ```tsx
-// All pages use consistent Editorial layout
+// All pages use consistent V0.0.1 Editorial layout
 <main style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}>
-  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-    <SectionBadge>MY ARCHIVE</SectionBadge>
-    <h1 style={{ fontFamily: 'var(--font-family-serif-title)' }}>Page Title</h1>
+  <div className="max-w-5xl mx-auto px-4 sm:px-8">
+    {/* V0.0.1 Title Pattern */}
+    <h1
+      className="text-5xl text-theme-text-primary tracking-tighter italic"
+      style={{ fontFamily: 'var(--font-family-serif-title)' }}
+    >
+      Page Title
+    </h1>
+    <p
+      className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
+      style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+    >
+      Subtitle Badge
+    </p>
     {/* Content */}
   </div>
   <Footer />
 </main>
 ```
 
-### Key Components
+### Key Components (V0.0.1)
 
 - **Navbar**: Fixed 80px, backdrop-blur, monospace "Girok"
-- **MenuCard**: 40px radius, hover lift, index numbers (01, 02...)
-- **MenuRow**: Compact list alternative
-- **ViewToggle**: Grid/List view switcher
-- **SectionBadge**: Uppercase monospace headers
-- **Footer**: "Recording your own story" tagline
+- **MenuCard**: 64px radius, border-2, hover lift, index numbers (01, 02...)
+- **MenuRow**: rounded-3xl border-2, description/pin support
+- **ViewToggle**: 56px touch targets, rounded-2xl
+- **TopWidget**: p-3 border rounded-2xl icon container
+- **SectionBadge**: font-black uppercase tracking-widest
+- **Footer**: tracking-[0.6em] brand text, "System V0.0.1 AAA Enhanced"
 
 ## Structure
 
 ```
 apps/web-main/src/
 ├── pages/              # Route pages
-│   ├── HomePage.tsx           # Editorial dashboard with 8 menu functions
-│   ├── LoginPage.tsx          # Editorial login form
-│   ├── RegisterPage.tsx       # Editorial registration
+│   ├── HomePage.tsx           # V0.0.1 Landing + Dashboard (Promo, Workstation, Index)
+│   ├── LoginPage.tsx          # V0.0.1 Editorial login form (48px card, lg inputs)
+│   ├── RegisterPage.tsx       # V0.0.1 Editorial registration
+│   ├── ForgotPasswordPage.tsx # V0.0.1 Password recovery (UI only)
 │   ├── ChangePasswordPage.tsx
 │   ├── NotFoundPage.tsx
 │   ├── JournalPage.tsx        # Placeholder (Coming Soon)
@@ -78,7 +107,7 @@ apps/web-main/src/
 │       └── SettingsPage.tsx      # Editorial settings
 ├── components/
 │   ├── Navbar.tsx               # Fixed 80px, 'Girok' monospace, backdrop-blur
-│   ├── Footer.tsx               # Editorial footer with tagline
+│   ├── Footer.tsx               # V0.0.1 footer (mt-40 py-24 border-t-2 tracking-[0.6em])
 │   ├── PlaceholderPage.tsx      # Coming Soon template
 │   ├── PrivateRoute.tsx
 │   ├── LoadingSpinner.tsx
@@ -101,9 +130,10 @@ apps/web-main/src/
 
 ### Public Routes
 
-- `/` - HomePage (dashboard for logged-in, landing for visitors)
-- `/login` - LoginPage
-- `/register` - RegisterPage
+- `/` - HomePage (V0.0.1 dashboard for logged-in, landing for visitors)
+- `/login` - LoginPage (V0.0.1 editorial form)
+- `/register` - RegisterPage (V0.0.1 editorial form)
+- `/forgot-password` - ForgotPasswordPage (V0.0.1 password recovery, UI only)
 - `/resume/:username` - PublicResumePage (public resume view)
 - `/shared/:token` - SharedResumePage (shared resume via token)
 
@@ -375,30 +405,34 @@ import { Button, TextInput, SelectInput, TextArea, FileUpload } from '@my-girok/
 />
 ```
 
-**Button Component**:
+**Button Component (V0.0.1)**:
 
 ```typescript
 import { Button } from '@my-girok/ui-components';
 
-// Primary Button - Main actions
-<Button variant="primary" onClick={handleSubmit} disabled={loading}>
-  Save Changes
+// Primary submit button (V0.0.1 - xl size, editorial rounded)
+<Button
+  variant="primary"
+  size="xl"                    // min-h-[64px], font-black uppercase
+  rounded="editorial"          // rounded-[24px]
+  icon={<ArrowRight size={18} />}
+>
+  Sign In
 </Button>
 
-// Secondary Button - Secondary actions
-<Button variant="secondary" onClick={handleCancel}>
-  Cancel
+// Secondary action button
+<Button variant="secondary" size="lg" rounded="editorial">
+  <UserPlus size={16} />
+  Create Account
 </Button>
 
-// Danger Button - Delete/remove actions
-<Button variant="danger" onClick={handleDelete}>
-  Delete Resume
+// Hero button (V0.0.1 landing page)
+<Button variant="primary" size="xl" rounded="full" className="px-20 py-8">
+  Enter
 </Button>
 
-// Button sizes
-<Button size="sm">Small</Button>
-<Button>Default</Button>
-<Button size="lg">Large</Button>
+// Button sizes reference:
+// sm: 44px, md: 44px, lg: 48px, xl: 64px (font-black uppercase tracking-[0.3em])
 ```
 
 **Layout & Feedback**:

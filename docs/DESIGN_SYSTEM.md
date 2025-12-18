@@ -1,6 +1,12 @@
 # Design System & Brand Identity
 
-> My-Girok Design Guidelines (2025-12)
+> My-Girok Design Guidelines - **V0.0.1 AAA Workstation**
+
+## Version
+
+**Current Version**: V0.0.1 AAA Workstation (2025-12)
+
+This design system implements WCAG 2.1 AAA compliance with a "Modern Editorial Archive" aesthetic optimized for professional record-keeping applications.
 
 ## Brand Concept
 
@@ -15,6 +21,34 @@ My-Girok is a personal record-keeping platform where users document their life s
 - **Focus**: Comfortable for long reading and writing sessions
 - **Growth**: Track personal development over time
 
+## Design Style: V0.0.1 AAA Workstation
+
+> "Sophisticated Classic" aesthetic with serif titles, editorial layout, and AAA accessibility
+
+### Key Visual Characteristics
+
+| Element         | Specification                                |
+| --------------- | -------------------------------------------- |
+| Card Radius     | 48px (forms), 56px (promos), 64px (sections) |
+| Border Width    | 2px (`border-2`) for interactive elements    |
+| Primary Padding | `p-10 md:p-14` for main cards                |
+| Touch Targets   | 44px minimum, 56px for prominent actions     |
+| Title Font      | Playfair Display (italic)                    |
+| Brand Font      | System monospace                             |
+| Letter Spacing  | `tracking-[0.3em]` for uppercase labels      |
+
+### Typography Hierarchy
+
+| Element        | Styling                                                       |
+| -------------- | ------------------------------------------------------------- |
+| Hero Title     | `text-[10rem] italic tracking-tighter serif`                  |
+| Page Title     | `text-4xl sm:text-5xl italic tracking-tighter serif`          |
+| Section Title  | `text-4xl tracking-tight serif`                               |
+| Card Title     | `text-2xl font-bold` or `text-4xl serif`                      |
+| Subtitle/Badge | `text-[11px] font-black uppercase tracking-[0.3em] monospace` |
+| Input Label    | `text-xs font-bold uppercase tracking-widest`                 |
+| Description    | `text-[18px] font-bold`                                       |
+
 ## Scalable Theme Architecture
 
 The theme system uses a 4-layer architecture for type safety and easy extensibility:
@@ -26,7 +60,7 @@ Layer 2: Semantic (--theme-*)     → Theme-switchable via [data-theme] attribut
 Layer 3: Tailwind (@theme inline) → Maps to utilities (bg-theme-*, text-theme-*)
 ```
 
-### CSS @property Type Safety (2025)
+### CSS @property Type Safety
 
 Key tokens use CSS `@property` for type validation and smooth transitions:
 
@@ -49,57 +83,10 @@ Key tokens use CSS `@property` for type validation and smooth transitions:
 
 ```tsx
 // Use semantic theme classes (auto-adapts to theme)
-<div className="bg-theme-bg-card text-theme-text-primary border-theme-border-subtle">
+<div className="bg-theme-bg-card text-theme-text-primary border-theme-border-default">
   <h2 className="text-theme-text-primary">Title</h2>
   <p className="text-theme-text-secondary">Description</p>
 </div>
-
-// Use themed shadows
-<div className="shadow-theme-lg">
-```
-
-### Adding a New Theme
-
-Modify `packages/design-tokens/src/tokens.css`:
-
-```css
-[data-theme='ocean'] {
-  --theme-bg-page: #0a192f;
-  --theme-bg-card: #112240;
-  --theme-text-primary: #ccd6f6;
-  /* ... map all semantic tokens ... */
-}
-```
-
-Then update `apps/web-main/src/types/theme.ts` to include the new theme name.
-
-### Key Theme Tokens
-
-| Token                         | Usage                              |
-| ----------------------------- | ---------------------------------- |
-| `bg-theme-bg-page`            | Page background                    |
-| `bg-theme-bg-card`            | Card backgrounds                   |
-| `bg-theme-bg-elevated`        | Elevated surfaces (navbar, modals) |
-| `bg-theme-bg-hover`           | Hover states                       |
-| `text-theme-text-primary`     | Primary text                       |
-| `text-theme-text-secondary`   | Secondary text                     |
-| `text-theme-text-tertiary`    | Hints, captions                    |
-| `border-theme-border-subtle`  | Subtle borders                     |
-| `border-theme-border-default` | Default borders                    |
-| `shadow-theme-lg`             | Large shadows                      |
-| `text-theme-primary`          | Primary accent color               |
-
-### When to Use `dark:` Variant
-
-The `dark:` Tailwind variant is **only** for semantic status colors that need explicit dark mode handling:
-
-```tsx
-// OK - Semantic status colors (not part of theme system)
-<div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400">
-<div className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-
-// DON'T - Theme colors (use theme-* instead)
-<div className="bg-vintage-bg-card dark:bg-dark-bg-card">
 ```
 
 ## Color Palette
@@ -120,10 +107,10 @@ The `dark:` Tailwind variant is **only** for semantic status colors that need ex
 | -------------- | ------- | -------------------------------- |
 | Page BG        | #FFFFFF | Page background                  |
 | Card BG        | #F8F7F4 | Card backgrounds                 |
+| Secondary BG   | #F5F4F1 | Section backgrounds              |
 | Primary Text   | #262220 | Main text (15.76:1 contrast)     |
 | Secondary Text | #4A4744 | Body text (9.23:1 contrast)      |
 | Tertiary Text  | #5A5856 | Hint text (7.08:1 contrast)      |
-| Muted Text     | #555351 | Disabled text (7.66:1 contrast)  |
 | Primary Accent | #6B4A2E | Buttons, links (7.94:1 contrast) |
 
 ### Dark Mode - Midnight Gentle Study
@@ -132,6 +119,7 @@ The `dark:` Tailwind variant is **only** for semantic status colors that need ex
 | -------------- | ------- | ----------------------------------------- |
 | Page BG        | #1E1C1A | Page background                           |
 | Card BG        | #282522 | Card backgrounds                          |
+| Secondary BG   | #2D2A27 | Section backgrounds                       |
 | Primary Text   | #CCC5BD | Main text (9.94:1 contrast)               |
 | Secondary Text | #B4ADA5 | Body text (7.65:1 contrast)               |
 | Tertiary Text  | #B0A9A1 | Hint text (7.31:1 contrast)               |
@@ -149,10 +137,6 @@ All text color combinations meet WCAG 2.1 AAA standards (7:1+):
 | Primary Button   | 7.70:1+    | 9.46:1+   | AAA        |
 | Secondary Button | 7.41:1     | 7.54:1    | AAA        |
 | Danger Button    | 9.51:1     | 9.51:1    | AAA        |
-| Status Success   | 7.87:1     | 8.44:1    | AAA        |
-| Status Error     | 7.77:1     | 7.89:1    | AAA        |
-| Status Warning   | 7.59:1     | 13.13:1   | AAA        |
-| Status Info      | 8.63:1     | 9.71:1    | AAA        |
 
 ### WCAG SC 1.4.11 Non-text Contrast (Borders)
 
@@ -164,25 +148,7 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 | `--theme-border-default` | #A09D9A    | #6B6663   | 3.0:1 | Interactive elements ✅ |
 | `--theme-border-strong`  | #8A8785    | #8A8583   | 3.8:1 | Emphasis ✅             |
 
-**Usage Guidelines**:
-
-- Use `border-subtle` only for purely decorative borders where card separation is already clear via shadows/backgrounds
-- Use `border-default` for interactive elements (buttons, inputs, cards with click handlers)
-- Use `border-strong` for emphasis and high-visibility borders
-
 ## Typography
-
-### Design Style: Modern Editorial Archive
-
-> "Sophisticated Classic" aesthetic with serif titles and editorial layout
-
-**Key Characteristics**:
-
-- Playfair Display serif for titles (classic, refined)
-- System monospace for brand "Girok" and badges
-- 40px border radius for cards (psychological comfort)
-- 80px fixed navbar with backdrop blur
-- Hover lift effects with smooth easing
 
 ### Editorial Typography Tokens
 
@@ -192,8 +158,12 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
   --font-family-serif-title: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-family-mono-brand: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Editorial Layout */
+  /* Editorial Layout - V0.0.1 */
   --radius-editorial: 40px;
+  --radius-editorial-lg: 48px; /* Form cards */
+  --radius-editorial-xl: 56px; /* Promo cards */
+  --radius-editorial-2xl: 64px; /* Section containers */
+  --radius-input: 24px; /* Input fields */
   --spacing-editorial: 40px;
   --nav-height-editorial: 80px;
 
@@ -212,21 +182,6 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 }
 ```
 
-### Font Stack
-
-```css
-/* Body text: System sans-serif */
-font-family:
-  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
-  sans-serif;
-
-/* Page titles: Playfair Display serif */
-font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-
-/* Logo/Brand/Badges: Monospace */
-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-```
-
 ### Font Sizes
 
 | Token       | Size | Usage               |
@@ -237,233 +192,203 @@ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 | `text-2xl`  | 24px | Card headers        |
 | `text-3xl`  | 30px | Section headers     |
 | `text-4xl`  | 36px | Page titles         |
+| `text-5xl`  | 48px | Hero titles         |
 
-**Important**: Minimum font size for body text is 16px (1rem) per WCAG 2.1 AA guidelines.
+## Border Radius Guide (V0.0.1)
 
-## Iconography
+| Token            | Size | Usage                              |
+| ---------------- | ---- | ---------------------------------- |
+| `rounded-xl`     | 12px | Inputs (default size), buttons     |
+| `rounded-2xl`    | 16px | Small cards, ViewToggle            |
+| `rounded-3xl`    | 24px | MenuRow                            |
+| `rounded-[24px]` | 24px | Input (lg size), editorial buttons |
+| `rounded-[40px]` | 40px | Archive support banner             |
+| `rounded-[48px]` | 48px | Form cards (Login, Register)       |
+| `rounded-[56px]` | 56px | Promo carousel                     |
+| `rounded-[64px]` | 64px | MenuCard, Workstation section      |
+| `rounded-full`   | 50%  | Circular buttons, hero button      |
 
-**Primary Library**: Lucide-React icons for consistency and accessibility
+## Component Specifications (V0.0.1)
 
-### Icon Usage
+### Form Cards (Login, Register, ForgotPassword)
 
 ```tsx
-import { Book, FileText, Wallet, Settings, Sun, Moon } from 'lucide-react';
+// Card container
+<div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[48px] p-10 md:p-14 shadow-theme-lg">
 
-// Standard icon with WCAG touch target
-<button className="p-2.5 min-w-[44px] min-h-[44px]">
-  <Settings className="w-5 h-5" aria-hidden="true" />
-  <span className="sr-only">Settings</span>
-</button>;
+// Page title
+<h1
+  className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic"
+  style={{ fontFamily: 'var(--font-family-serif-title)' }}
+>
+  Login
+</h1>
+
+// Subtitle
+<p
+  className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
+  style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+>
+  Archive Access
+</p>
 ```
 
-### Core Icons
+### Form Inputs (size="lg")
 
-| Icon      | Lucide Name | Usage                  |
-| --------- | ----------- | ---------------------- |
-| Book      | `Book`      | Journal, records       |
-| FileText  | `FileText`  | Resume, career archive |
-| Wallet    | `Wallet`    | Finance, ledger        |
-| Settings  | `Settings`  | Environment settings   |
-| Library   | `Library`   | Global library         |
-| Users     | `Users`     | Network, connections   |
-| BarChart3 | `BarChart3` | Stats, insights        |
-| Bell      | `Bell`      | Notifications          |
-| Sun       | `Sun`       | Light mode toggle      |
-| Moon      | `Moon`      | Dark mode toggle       |
-| Loader2   | `Loader2`   | Loading states         |
-| ArrowLeft | `ArrowLeft` | Back navigation        |
-
-### Accessibility
-
-- All icons must have `aria-hidden="true"` when decorative
-- Interactive icons need visible labels or `sr-only` text
-- Minimum touch target: 44x44px (WCAG 2.5.5)
-
-## Spacing & Layout
-
-### Base Unit: 4px (0.25rem)
-
-| Token       | Size | Usage           |
-| ----------- | ---- | --------------- |
-| `spacing-4` | 16px | Default gap     |
-| `spacing-6` | 24px | Card padding    |
-| `spacing-8` | 32px | Section padding |
-
-### Responsive Breakpoints
-
-```css
-sm: 640px; /* Tablet */
-md: 768px; /* Tablet Landscape */
-lg: 1024px; /* Desktop */
-xl: 1280px; /* Large Desktop */
+```tsx
+<TextInput
+  label="Email"
+  type="email"
+  size="lg" // h-16, rounded-[24px], font-bold
+  icon={<Mail size={18} />} // Left icon
+  value={email}
+  onChange={setEmail}
+  required
+/>
 ```
 
-### Border Radius
-
-| Token            | Size | Usage                          |
-| ---------------- | ---- | ------------------------------ |
-| `rounded-xl`     | 12px | Inputs, buttons                |
-| `rounded-2xl`    | 16px | Standard cards, MenuRow        |
-| `rounded-[36px]` | 36px | Large feature cards (legacy)   |
-| `rounded-[40px]` | 40px | Editorial MenuCard, PageLayout |
-
-**Editorial Design**: Use 40px radius for main navigation cards (MenuCard) and editorial sections.
-
-## Component Guidelines
+- Height: 64px (`h-16`)
+- Border radius: 24px (`rounded-[24px]`)
+- Font weight: Bold (`font-bold`)
+- Icon padding: `pl-14`
+- Border: 2px (`border-2`)
 
 ### Buttons
 
-All buttons meet WCAG 44x44px minimum touch target.
+```tsx
+// Primary submit button (xl size)
+<Button
+  variant="primary"
+  size="xl"                    // min-h-[64px], font-black, uppercase
+  rounded="editorial"          // rounded-[24px]
+  icon={<ArrowRight size={18} />}
+>
+  Sign In
+</Button>
+
+// Secondary action button (lg size)
+<Button
+  variant="secondary"
+  size="lg"                    // min-h-[48px]
+  rounded="editorial"          // rounded-[24px]
+>
+  <UserPlus size={16} />
+  Create Account
+</Button>
+
+// Hero button (xl size, full rounded)
+<Button
+  variant="primary"
+  size="xl"
+  rounded="full"               // rounded-full
+  className="px-20 py-8"
+>
+  Enter
+</Button>
+```
+
+### Button Size Reference
+
+| Size | Min Height | Styling                                             |
+| ---- | ---------- | --------------------------------------------------- |
+| sm   | 44px       | Standard body text                                  |
+| md   | 44px       | Standard body text                                  |
+| lg   | 48px       | Larger padding                                      |
+| xl   | 64px       | `font-black uppercase tracking-[0.3em] text-[14px]` |
+
+### MenuCard (Dashboard Grid)
 
 ```tsx
-import { Button } from '@my-girok/ui-components';
-
-<Button variant="primary">Primary Action</Button>
-<Button variant="secondary">Secondary Action</Button>
-<Button variant="danger">Destructive Action</Button>
-<Button variant="ghost">Subtle Action</Button>
+<MenuCard
+  index={1} // Displays as "01"
+  icon={<Book />} // Icon in p-6 rounded-[28px] container
+  title="Journal" // text-4xl serif
+  description="Record daily thoughts" // text-[18px] font-bold
+  onClick={() => navigate('/journal')}
+/>
 ```
 
-### Cards
+- Card: `rounded-[64px] border-2 p-10 md:p-12 min-h-[320px]`
+- Icon container: `p-6 rounded-[28px] border-2`
+- Index badge: `text-[12px] font-black tracking-[0.3em] monospace`
+
+### Workstation Section
 
 ```tsx
-import { Card } from '@my-girok/ui-components';
+<section className="p-10 md:p-14 rounded-[64px] bg-theme-bg-secondary border-2 border-theme-border-default">
+  {/* Header with border-b-2 */}
+  <div className="border-b-2 border-theme-border-default pb-10 mb-12">
+    <div className="p-5 bg-theme-bg-card rounded-[24px] border-2">
+      <Layers size={28} />
+    </div>
+    <h2 className="text-2xl font-bold">Workstation</h2>
+  </div>
 
-<Card variant="primary" radius="lg">
-  Content
-</Card>;
+  {/* Widget grid */}
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+    {/* Active widget: rounded-[48px] border-2 p-10 */}
+    {/* Empty slot: border-dashed rounded-[48px] */}
+  </div>
+</section>
 ```
 
-### Form Inputs
+### Index Section Header
 
 ```tsx
-import { TextInput, SelectInput } from '@my-girok/ui-components';
-
-<TextInput
-  label="Email"
-  value={email}
-  onChange={setEmail} // Direct value handler
-  error={errors.email}
-/>;
+<div className="flex items-center justify-between mb-14 border-b-4 border-theme-text-primary pb-10 px-6">
+  <h2
+    className="text-4xl text-theme-text-primary tracking-tight"
+    style={{ fontFamily: 'var(--font-family-serif-title)' }}
+  >
+    Index
+  </h2>
+  <ViewToggle value={viewMode} onChange={setViewMode} />
+</div>
 ```
 
-**See**: `.ai/apps/web-main.md` for complete component API documentation.
-
-## Status & Loading Components
-
-### LoadingSpinner
+### Footer
 
 ```tsx
-import LoadingSpinner from './components/LoadingSpinner';
-
-<LoadingSpinner />                    // Inline
-<LoadingSpinner fullScreen />         // Overlay
-<LoadingSpinner message="Loading..." />
+<footer className="mt-40 py-16 sm:py-24 border-t-2 border-theme-border-default bg-theme-bg-secondary/40">
+  <p
+    className="text-lg text-theme-text-primary font-black uppercase tracking-[0.5em] sm:tracking-[0.6em]"
+    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+  >
+    girok.dev
+    <span className="text-theme-primary ml-2">© 2025</span>
+  </p>
+  <p className="text-[12px] font-bold uppercase tracking-widest">System V0.0.1 AAA Enhanced</p>
+</footer>
 ```
 
-### StatusMessage
+## Spacing Patterns (V0.0.1)
 
-```tsx
-import StatusMessage from './components/StatusMessage';
+| Context           | Mobile   | Desktop  |
+| ----------------- | -------- | -------- |
+| Form card padding | `p-10`   | `p-14`   |
+| Section padding   | `p-10`   | `p-14`   |
+| Widget card       | `p-10`   | `p-12`   |
+| Card gap          | `gap-6`  | `gap-8`  |
+| Widget gap        | `gap-10` | `gap-10` |
+| Section margin    | `mb-16`  | `mb-20`  |
+| Footer margin     | `mt-40`  | `mt-40`  |
 
-<StatusMessage type="error" />
-<StatusMessage type="not-found" />
-<StatusMessage type="expired" />
-<StatusMessage type="no-permission" />
+## Touch Targets (WCAG 2.5.5)
+
+| Element         | Size     | Class                           |
+| --------------- | -------- | ------------------------------- |
+| Standard button | 44×44px  | `min-h-[44px]`                  |
+| Carousel button | 56×56px  | `min-w-[56px] min-h-[56px] p-5` |
+| Primary action  | 64×64px+ | `min-h-[64px]`                  |
+| Icon button     | 48×48px  | `min-w-[48px] min-h-[48px] p-3` |
+
+## Focus States
+
+All interactive elements use consistent focus styling:
+
+```css
+focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4
 ```
-
-| Type            | Icon          | Use Case           |
-| --------------- | ------------- | ------------------ |
-| `error`         | AlertCircle   | System errors      |
-| `not-found`     | FileQuestion  | 404 pages          |
-| `expired`       | Clock         | Expired links      |
-| `no-permission` | Lock          | Access denied      |
-| `maintenance`   | Wrench        | System maintenance |
-| `deleted`       | Trash2        | Deleted content    |
-| `warning`       | AlertTriangle | Warning messages   |
-
-## Resume Preview (Print-Optimized)
-
-**Important**: Resume preview and PDF output use high-contrast grayscale for print optimization.
-
-### Design Philosophy
-
-- **Not pure black & white**: Use grayscale range (gray-50 ~ gray-900)
-- **High contrast**: Ensure excellent readability for screen and print
-- **Print-optimized**: Reduce printing costs, ATS-friendly
-
-### Grayscale vs Brand Colors
-
-**Use Grayscale (preview/print only)**:
-
-- `ResumePreview` component
-- PDF export output
-- Public resume page display
-
-**Use Brand Colors (standard UI)**:
-
-- Resume Edit Page UI
-- Action bars and controls
-- Navigation elements
-
-## Mobile-First Responsive Design
-
-### Core Patterns
-
-```tsx
-// Responsive text
-className = 'text-base sm:text-lg lg:text-xl';
-
-// Responsive padding
-className = 'p-4 sm:p-6 lg:p-8';
-
-// Stack on mobile, row on desktop
-className = 'flex flex-col sm:flex-row gap-4';
-
-// Responsive grid
-className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
-```
-
-### Touch Targets
-
-- Minimum: 44x44px for primary actions
-- Inline actions: 24x24px minimum
-- Add `touch-manipulation` for faster touch response
-
-### Mobile Edit Patterns
-
-```typescript
-// TouchSensor for drag-and-drop
-const sensors = useSensors(
-  useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-  useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-);
-
-// Depth colors for hierarchical data
-const DEPTH_COLORS = {
-  1: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-l-blue-500' },
-  2: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500' },
-  // ...
-};
-```
-
-## Implementation Guidelines
-
-### Do's
-
-- Use Tailwind CSS utility classes with `theme-*` tokens
-- Follow mobile-first responsive design
-- Ensure all interactive elements have hover/focus states
-- Test color contrast for accessibility
-- Use semantic HTML elements
-
-### Don'ts
-
-- Don't use raw hex color values in components
-- Don't use legacy `vintage-*` or `dark:dark-*` patterns
-- Don't create buttons smaller than 44x44px touch target
-- Don't use font sizes smaller than 16px for body text
-- Don't skip focus-visible styles for keyboard navigation
 
 ## File Locations
 
@@ -473,35 +398,37 @@ packages/design-tokens/        # SINGLE SOURCE OF TRUTH for design tokens
 └── README.md                 # Token documentation
 
 packages/ui-components/src/    # Shared UI components (depends on design-tokens)
-├── Button.tsx
-├── Card.tsx
-├── TextInput.tsx
+├── Button.tsx                # primary/secondary/danger/ghost, sm/md/lg/xl
+├── Card.tsx                  # radius options: default/lg/xl/2xl
+├── TextInput.tsx             # size options: default/lg, icon support
+├── MenuCard.tsx              # Editorial 64px card
+├── MenuRow.tsx               # Editorial list row
+├── ViewToggle.tsx            # Grid/List toggle
+├── TopWidget.tsx             # Pinned dashboard widget
+├── Badge.tsx                 # Status badges, rounded options
 └── ...
 
 apps/web-main/src/
-├── index.css                  # App-specific styles + @import design-tokens
-├── contexts/ThemeContext.tsx  # Theme switching logic
+├── pages/
+│   ├── HomePage.tsx          # Landing + Dashboard
+│   ├── LoginPage.tsx         # V0.0.1 editorial form
+│   ├── RegisterPage.tsx      # V0.0.1 editorial form
+│   └── ForgotPasswordPage.tsx # V0.0.1 editorial form
 └── components/
-    ├── LoadingSpinner.tsx     # Loading indicator
-    ├── StatusMessage.tsx      # Status/error messages
-    └── ErrorBoundary.tsx      # Error boundary
-
-pnpm-workspace.yaml            # Centralized version management (catalog:)
+    └── Footer.tsx            # V0.0.1 editorial footer
 ```
-
-## References
-
-- **Component API**: `.ai/apps/web-main.md`
-- **Tailwind CSS**: https://tailwindcss.com/docs
-- **CSS @property**: https://developer.mozilla.org/en-US/docs/Web/CSS/@property
-- **WCAG 2.1**: https://www.w3.org/WAI/WCAG21/quickref/
-- **Lucide Icons**: https://lucide.dev/icons
 
 ## Version History
 
+- **V0.0.1** (2025-12): AAA Workstation design system
+  - Italic serif titles with tracking-tighter
+  - Increased border radius (48px forms, 64px sections)
+  - border-2 for interactive elements
+  - lg size inputs (h-16, rounded-[24px])
+  - xl size buttons (64px, font-black uppercase)
+  - Widget slot backgrounds with dot pattern
+  - Footer with 0.6em tracking brand text
 - v2.3.0 (2025-12): WCAG 2.1 AAA upgrade (7:1+ contrast), rebrand to "Girok"
 - v2.2.0 (2025-12): Add CSS @property type safety, @theme inline, pnpm catalogs
 - v2.1.0 (2025-12): Extract design tokens to dedicated package (@my-girok/design-tokens)
 - v2.0.0 (2025-12): Consolidated and optimized documentation, removed legacy patterns
-- v1.5.0 (2025-12): Scalable 3-layer theme system
-- v1.4.0 (2025-12): WCAG 2.1 AA compliant color system

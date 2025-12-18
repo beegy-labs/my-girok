@@ -166,6 +166,30 @@
   initial-value: 40px;
 }
 
+@property --radius-editorial-lg {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 48px;
+}
+
+@property --radius-editorial-xl {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 56px;
+}
+
+@property --radius-editorial-2xl {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 64px;
+}
+
+@property --radius-input {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 24px;
+}
+
 @property --spacing-editorial {
   syntax: '<length>';
   inherits: true;
@@ -562,8 +586,12 @@
   --font-family-serif-title: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-family-mono-brand: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Editorial Layout */
+  /* Editorial Layout - V25.8 AAA Workstation */
   --radius-editorial: 40px;
+  --radius-editorial-lg: 48px;
+  --radius-editorial-xl: 56px;
+  --radius-editorial-2xl: 64px;
+  --radius-input: 24px;
   --spacing-editorial: 40px;
   --nav-height-editorial: 80px;
 
