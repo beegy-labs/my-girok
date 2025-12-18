@@ -30,13 +30,41 @@ catalog:
   '@dnd-kit/sortable': ^10.0.0
   '@dnd-kit/utilities': ^3.2.2
 
-  # Testing
+  # Testing (Frontend)
   vitest: ^4.0.15
   '@testing-library/react': ^16.3.0
   '@testing-library/jest-dom': ^6.9.1
   '@playwright/test': ^1.57.0
 
+  # Testing (Backend)
+  jest: ^30.2.0
+  '@types/jest': ^30.0.0
+
   # Linting
   eslint: ^9.39.1
   '@typescript-eslint/eslint-plugin': ^8.49.0
   '@typescript-eslint/parser': ^8.49.0
+
+  # NestJS ecosystem
+  '@nestjs/common': ^11.1.9
+  '@nestjs/core': ^11.1.9
+  '@nestjs/config': ^4.0.2
+  '@nestjs/jwt': ^11.0.2
+  '@nestjs/passport': ^11.0.5
+  '@nestjs/platform-express': ^11.1.9
+  '@nestjs/swagger': ^11.2.3
+  '@nestjs/testing': ^11.1.9
+  '@nestjs/cli': ^11.0.14
+
+  # Database
+  '@prisma/client': ^6.19.0
+  prisma: ^6.19.0
+
+  # Security (fixed versions for CVE patches)
+  passport: ^0.7.0
+  passport-jwt: ^4.0.1
+  helmet: ^8.1.0
+
+  # Node types
+  '@types/node': ^25.0.1
+  '@types/express': ^5.0.6
