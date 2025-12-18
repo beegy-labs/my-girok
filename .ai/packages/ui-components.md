@@ -309,6 +309,33 @@ Editorial page layout with 80px nav offset.
 
 **Features**: Playfair Display serif titles, monospace badges, max-w-5xl default
 
+### TopWidget
+
+Pinned widget for dashboard with 48px radius and accent border.
+
+```typescript
+export interface TopWidgetProps {
+  icon: React.ReactNode;       // Lucide icon
+  title: string;               // Serif font title
+  badgeText?: string;          // e.g., "Active Focus"
+  onChangeFocus?: () => void;  // Change/unpin handler
+  changeFocusText?: string;    // Button text
+  children: React.ReactNode;   // Widget content
+}
+
+// Usage
+<TopWidget
+  icon={<Calendar />}
+  title="Today's Schedule"
+  badgeText="Active Focus"
+  onChangeFocus={() => setEditMode(true)}
+>
+  <ScheduleContent />
+</TopWidget>
+```
+
+**Features**: 48px radius, accent border, 44px touch targets, Playfair Display serif
+
 ### SortableList (DnD Kit)
 
 ```typescript
