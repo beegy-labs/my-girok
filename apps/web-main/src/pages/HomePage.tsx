@@ -159,7 +159,7 @@ export default function HomePage() {
             </header>
 
             {/* Menu Section */}
-            <section aria-label="Main menu">
+            <section aria-label={t('aria.mainMenu')}>
               {/* Section Header with View Toggle */}
               <div className="flex items-center justify-between mb-8">
                 <h2

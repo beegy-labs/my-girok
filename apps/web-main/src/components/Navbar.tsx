@@ -29,6 +29,15 @@ export default function Navbar() {
     setIsDropdownOpen(false);
   }, []);
 
+  const handleToggleDropdown = useCallback(() => {
+    setIsDropdownOpen((prev) => !prev);
+  }, []);
+
+  const handleLogoutClick = useCallback(() => {
+    handleCloseDropdown();
+    handleLogout();
+  }, [handleCloseDropdown, handleLogout]);
+
   // Close dropdown when clicking outside or pressing Escape
   useClickOutside(dropdownRef, isDropdownOpen, handleCloseDropdown);
 
@@ -37,7 +46,7 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-elevated/95 backdrop-blur-sm border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200"
       style={{ height: 'var(--nav-height-editorial, 80px)' }}
       role="navigation"
-      aria-label="Main navigation"
+      aria-label={t('aria.mainNavigation')}
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full">
@@ -78,7 +87,7 @@ export default function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 {/* User button */}
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={handleToggleDropdown}
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
                   aria-label={t('aria.userMenu')}
@@ -117,10 +126,7 @@ export default function Navbar() {
                     </Link>
                     <hr className="my-1 border-theme-border-subtle" />
                     <button
-                      onClick={() => {
-                        handleCloseDropdown();
-                        handleLogout();
-                      }}
+                      onClick={handleLogoutClick}
                       className="flex items-center gap-3 w-full text-left px-4 py-3 text-base text-theme-status-error-text hover:bg-theme-status-error-bg transition-colors min-h-[44px]"
                       role="menuitem"
                     >

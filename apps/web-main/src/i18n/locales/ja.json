@@ -36,7 +36,15 @@
     "goToHomepage": "ホームページへ移動",
     "switchToLight": "ライトモードに切り替え",
     "switchToDark": "ダークモードに切り替え",
-    "userMenu": "ユーザーメニュー"
+    "userMenu": "ユーザーメニュー",
+    "mainNavigation": "メインナビゲーション",
+    "mainMenu": "メインメニュー",
+    "footerNavigation": "フッターナビゲーション",
+    "toggleTheme": "テーマ切り替え",
+    "selectLanguage": "言語を選択。現在: {{current}}",
+    "languageOptions": "言語オプション",
+    "moveUp": "上に移動",
+    "moveDown": "下に移動"
   },
   "home": {
     "title": "My-Girokへようこそ",

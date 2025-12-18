@@ -21,7 +21,7 @@ export default function Footer() {
           </div>
 
           {/* Links */}
-          <nav className="flex items-center gap-6" aria-label="Footer navigation">
+          <nav className="flex items-center gap-6" aria-label={t('aria.footerNavigation')}>
             <Link
               to="/privacy"
               className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"

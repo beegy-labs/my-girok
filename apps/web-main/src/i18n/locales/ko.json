@@ -36,7 +36,15 @@
     "goToHomepage": "홈페이지로 이동",
     "switchToLight": "라이트 모드로 전환",
     "switchToDark": "다크 모드로 전환",
-    "userMenu": "사용자 메뉴"
+    "userMenu": "사용자 메뉴",
+    "mainNavigation": "메인 네비게이션",
+    "mainMenu": "메인 메뉴",
+    "footerNavigation": "푸터 네비게이션",
+    "toggleTheme": "테마 전환",
+    "selectLanguage": "언어 선택. 현재: {{current}}",
+    "languageOptions": "언어 옵션",
+    "moveUp": "위로 이동",
+    "moveDown": "아래로 이동"
   },
   "home": {
     "title": "나의 기록을 정리하는 공간",

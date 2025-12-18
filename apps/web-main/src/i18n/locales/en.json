@@ -36,7 +36,15 @@
     "goToHomepage": "Go to homepage",
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode",
-    "userMenu": "User menu"
+    "userMenu": "User menu",
+    "mainNavigation": "Main navigation",
+    "mainMenu": "Main menu",
+    "footerNavigation": "Footer navigation",
+    "toggleTheme": "Toggle theme",
+    "selectLanguage": "Select language. Current: {{current}}",
+    "languageOptions": "Language options",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "home": {
     "title": "Welcome to My-Girok",
