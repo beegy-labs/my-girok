@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { register } from '../api/auth';
@@ -18,17 +18,9 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
-
-  // Handle navigation after successful registration (React 19 compatibility)
-  useEffect(() => {
-    if (registerSuccess) {
-      navigate('/');
-    }
-  }, [registerSuccess, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +30,7 @@ export default function RegisterPage() {
     try {
       const response = await register({ email, username, password, name });
       setAuth(response.user, response.accessToken, response.refreshToken);
-      setRegisterSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
+      navigate('/'); // Direct navigation (2025 best practice)
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || t('errors.registrationFailed'));

@@ -28,6 +28,10 @@ export default function ResumeEditPage() {
   const [previewData, setPreviewData] = useState<Resume | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Memoized navigation handlers (2025 best practice)
+  const handleBack = useCallback(() => navigate(-1), [navigate]);
+  const togglePreview = useCallback(() => setShowPreview((prev) => !prev), []);
+
   const loadResume = useCallback(async () => {
     if (!resumeId) return;
 
@@ -164,7 +168,7 @@ export default function ResumeEditPage() {
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
           <Button
             variant="secondary"
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             size="lg"
             rounded="default"
             className="flex-1"
@@ -173,7 +177,7 @@ export default function ResumeEditPage() {
           </Button>
           <Button
             variant="primary"
-            onClick={() => setShowPreview(!showPreview)}
+            onClick={togglePreview}
             size="lg"
             rounded="editorial"
             className="flex-1"
@@ -204,7 +208,7 @@ export default function ResumeEditPage() {
             </div>
             <Button
               variant="primary"
-              onClick={() => setShowPreview(!showPreview)}
+              onClick={togglePreview}
               size="lg"
               rounded="editorial"
               className="hidden lg:flex"

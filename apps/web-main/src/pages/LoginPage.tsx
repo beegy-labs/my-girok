@@ -21,7 +21,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(true);
-  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
@@ -34,13 +33,6 @@ export default function LoginPage() {
       setRememberEmail(true);
     }
   }, []);
-
-  // Handle navigation after successful login (React 19 compatibility)
-  useEffect(() => {
-    if (loginSuccess) {
-      navigate('/');
-    }
-  }, [loginSuccess, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +49,7 @@ export default function LoginPage() {
 
       const response = await login({ email, password });
       setAuth(response.user, response.accessToken, response.refreshToken);
-      setLoginSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
+      navigate('/'); // Direct navigation (2025 best practice)
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || t('errors.loginFailed'));
