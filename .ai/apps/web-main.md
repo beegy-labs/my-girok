@@ -18,6 +18,16 @@
 
 **Reference**: Based on V24.5 Integrated Showcase mockup
 
+### Design Priority Policy
+
+| 항목          | 정책          | 비고                        |
+| ------------- | ------------- | --------------------------- |
+| **색상**      | WCAG AAA 우선 | 사회적 약자 배려 (7:1 대비) |
+| **터치 타겟** | **목업 우선** | 40px (WCAG AA 충족)         |
+| **레이아웃**  | **목업 우선** | V24.5 스펙 따름             |
+
+→ 상세: `.ai/rules.md` "Design Priority Policy" 참조
+
 ### V24.5 Component Layout
 
 | Component  | Specs                                 |

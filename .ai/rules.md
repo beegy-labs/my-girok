@@ -242,6 +242,23 @@ useEffect(() => { if(nav) navigate(nav) }, [nav]);
 navigate('/path'); // Works in React Router v7
 ```
 
+## Design Priority Policy (2025)
+
+**V24.5 Mockup First** - 목업 디자인이 WCAG보다 우선
+
+| 항목              | 정책                | 설명                          |
+| ----------------- | ------------------- | ----------------------------- |
+| **색상**          | WCAG AAA (7:1) 우선 | 모든 텍스트는 AAA 준수 필수   |
+| **터치 타겟**     | 목업 우선           | 40px (목업) > 44px (WCAG AAA) |
+| **레이아웃/간격** | 목업 우선           | V24.5 mockup 스펙 따름        |
+| **컴포넌트 구조** | 목업 우선           | HTML 유효성은 유지            |
+
+**Rationale**:
+
+- 색상은 접근성(사회적 약자 배려)을 위해 AAA 필수
+- 터치 타겟 40px는 WCAG AA (24px) 충족, 대부분 사용자에게 충분
+- 목업의 시각적 일관성이 4px 차이보다 중요
+
 ## Over-Engineering Policy (2025)
 
 **Project prefers over-engineering for production quality code.**
