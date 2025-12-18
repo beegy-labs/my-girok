@@ -40,7 +40,7 @@
 | Form card   | `rounded-[48px] border-2 p-10 md:p-14`                        |
 | Input (lg)  | `h-16 rounded-[24px] font-bold` with left icon                |
 | Button (xl) | `min-h-[64px] font-black uppercase tracking-[0.3em]`          |
-| MenuCard    | `rounded-[64px] border-2 p-10 md:p-12 min-h-[320px]`          |
+| MenuCard    | `rounded-[64px] border-2 p-10 md:p-12 min-h-[380px]`          |
 | Footer      | `mt-40 py-24 border-t-2 tracking-[0.6em]`                     |
 
 ### Layout Pattern
@@ -70,7 +70,15 @@
 
 ### Key Components (V0.0.1)
 
-- **Navbar**: Fixed 80px, backdrop-blur, monospace "Girok"
+- **Navbar**: Fixed 80px, backdrop-blur, monospace "girok." with walnut dot
+  - Logo: `text-2xl font-black tracking-tighter` + `.` in primary
+  - Icon buttons: `min-w-[48px] min-h-[48px] p-3`, icons `size={22}`
+  - User profile: Avatar `w-8 h-8 rounded-full` + `text-[13px] font-black uppercase tracking-widest`
+  - Separator: `w-px h-6 bg-theme-border-default mx-2`
+  - Dropdown: `rounded-[24px] border-2`
+- **LanguageSwitcher**: Simple 2-char code (KO, EN, JA)
+  - Button: `p-3 text-[12px] font-black uppercase tracking-tighter w-12 min-h-[48px]`
+  - Dropdown: `rounded-[24px] border-2`
 - **MenuCard**: 64px radius, border-2, hover lift, index numbers (01, 02...)
 - **MenuRow**: rounded-3xl border-2, description/pin support
 - **ViewToggle**: 56px touch targets, rounded-2xl
@@ -106,7 +114,7 @@ apps/web-main/src/
 │   └── settings/
 │       └── SettingsPage.tsx      # Editorial settings
 ├── components/
-│   ├── Navbar.tsx               # Fixed 80px, 'Girok' monospace, backdrop-blur
+│   ├── Navbar.tsx               # V0.0.1 nav (80px, 'girok.' + walnut dot, 48px icons)
 │   ├── Footer.tsx               # V0.0.1 footer (mt-40 py-24 border-t-2 tracking-[0.6em])
 │   ├── PlaceholderPage.tsx      # Coming Soon template
 │   ├── PrivateRoute.tsx
@@ -420,8 +428,8 @@ import { Button } from '@my-girok/ui-components';
   Sign In
 </Button>
 
-// Secondary action button
-<Button variant="secondary" size="lg" rounded="editorial">
+// Secondary action button (V0.0.1 - lg size, default rounded)
+<Button variant="secondary" size="lg" rounded="default">
   <UserPlus size={16} />
   Create Account
 </Button>
@@ -431,8 +439,9 @@ import { Button } from '@my-girok/ui-components';
   Enter
 </Button>
 
-// Button sizes reference:
-// sm: 44px, md: 44px, lg: 48px, xl: 64px (font-black uppercase tracking-[0.3em])
+// Button sizes reference (V0.0.1):
+// sm: 44px, md: 44px, lg: 56px (font-black uppercase tracking-widest text-[11px])
+// xl: 64px (font-black uppercase tracking-[0.3em] text-[14px])
 ```
 
 **Layout & Feedback**:

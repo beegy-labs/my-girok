@@ -346,6 +346,106 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 </div>
 ```
 
+### Navbar
+
+V0.0.1 editorial navigation with 48px touch targets.
+
+```tsx
+<nav
+  className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-card/95 backdrop-blur-xl border-b border-theme-border-default"
+  style={{ height: 'var(--nav-height-editorial, 80px)' }}
+>
+  <div className="max-w-5xl mx-auto px-4 sm:px-8 h-full flex justify-between items-center">
+    {/* Logo - V0.0.1 monospace with accent dot */}
+    <span
+      className="text-2xl font-black text-theme-text-primary tracking-tighter select-none"
+      style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+    >
+      girok<span className="text-theme-primary">.</span>
+    </span>
+
+    <div className="flex items-center gap-2">
+      {/* User profile (authenticated) */}
+      <div className="flex items-center gap-3 px-4 py-2 hover:bg-theme-bg-secondary rounded-2xl">
+        <div className="w-8 h-8 rounded-full bg-theme-bg-secondary border border-theme-border-default flex items-center justify-center">
+          <User size={16} className="text-theme-primary" />
+        </div>
+        <span
+          className="text-[13px] font-black text-theme-text-primary uppercase tracking-widest"
+          style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+        >
+          Username
+        </span>
+      </div>
+
+      {/* Separator */}
+      <div className="w-px h-6 bg-theme-border-default mx-2" />
+
+      {/* Icon buttons - 48px touch target */}
+      <button className="p-3 rounded-xl hover:bg-theme-bg-hover min-w-[48px] min-h-[48px]">
+        <Moon size={22} />
+      </button>
+
+      {/* Language switcher */}
+      <LanguageSwitcher />
+
+      {/* Auth button */}
+      <button className="p-3 rounded-xl hover:bg-theme-bg-hover min-w-[48px] min-h-[48px]">
+        <User size={22} />
+      </button>
+    </div>
+  </div>
+</nav>
+```
+
+**Navbar Specifications:**
+
+| Element      | Specification                                                      |
+| ------------ | ------------------------------------------------------------------ |
+| Height       | 80px (`--nav-height-editorial`)                                    |
+| Logo         | `text-2xl font-black tracking-tighter` + `.` in primary color      |
+| Icon buttons | `min-w-[48px] min-h-[48px] p-3 rounded-xl`                         |
+| Icon size    | 22px (`size={22}`)                                                 |
+| User profile | Avatar `w-8 h-8 rounded-full` + `text-[13px] font-black uppercase` |
+| Separator    | `w-px h-6 bg-theme-border-default mx-2`                            |
+| Dropdown     | `rounded-[24px] border-2 border-theme-border-default`              |
+
+### LanguageSwitcher
+
+Simple 2-character language toggle with dropdown.
+
+```tsx
+<div className="relative">
+  {/* Trigger button - 48px touch target */}
+  <button
+    className="p-3 text-[12px] font-black uppercase text-theme-text-primary hover:bg-theme-bg-hover rounded-xl transition-colors w-12 min-h-[48px] flex items-center justify-center tracking-tighter"
+    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+  >
+    KO
+  </button>
+
+  {/* Dropdown */}
+  <div className="absolute right-0 mt-4 w-48 bg-theme-bg-card border-2 border-theme-border-default rounded-[24px] shadow-theme-lg py-2">
+    <button className="w-full flex items-center gap-3 px-5 py-3.5 text-sm min-h-[44px]">
+      <span>🇰🇷</span>
+      <span>한국어</span>
+      <Check className="w-4 h-4 ml-auto text-theme-primary" />
+    </button>
+    {/* ... more options */}
+  </div>
+</div>
+```
+
+**LanguageSwitcher Specifications:**
+
+| Element      | Specification                                                |
+| ------------ | ------------------------------------------------------------ |
+| Button       | `p-3 text-[12px] font-black uppercase tracking-tighter w-12` |
+| Touch target | `min-h-[48px]`                                               |
+| Display      | Simple 2-char code (KO, EN, JA)                              |
+| Dropdown     | `rounded-[24px] border-2`                                    |
+| Options      | `px-5 py-3.5 min-h-[44px]` with flag + label + check icon    |
+
 ### Footer
 
 ```tsx
