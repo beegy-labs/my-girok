@@ -145,6 +145,15 @@
     "stats": "記録されたデータからインサイトを得て、進捗を追跡しましょう。この機能は近日公開予定です。",
     "notifications": "アラートとアクティビティ更新を確認しましょう。この機能は近日公開予定です。"
   },
+  "badge": {
+    "myArchive": "マイアーカイブ",
+    "careerArchive": "キャリアアーカイブ",
+    "archiveSupport": "アーカイブサポート",
+    "personalArchive": "パーソナルアーカイブ",
+    "features": "機能",
+    "comingSoon": "準備中",
+    "environment": "環境設定"
+  },
   "resume": {
     "edit": "履歴書編集",
     "preview": "プレビュー",

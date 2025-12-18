@@ -178,7 +178,7 @@ export default function MyResumePage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header - Editorial Style */}
         <header className="mb-12 sm:mb-16">
-          <SectionBadge className="mb-4">CAREER ARCHIVE</SectionBadge>
+          <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1

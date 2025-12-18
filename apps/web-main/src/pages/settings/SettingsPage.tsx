@@ -15,7 +15,7 @@ export default function SettingsPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header - Editorial Style */}
         <header className="mb-12 sm:mb-16">
-          <SectionBadge className="mb-4">ENVIRONMENT</SectionBadge>
+          <SectionBadge className="mb-4">{t('badge.environment')}</SectionBadge>
           <h1
             className="text-3xl sm:text-4xl text-theme-text-primary tracking-tight mb-2"
             style={{ fontFamily: 'var(--font-family-serif-title)' }}

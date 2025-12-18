@@ -15,9 +15,10 @@ export default function PlaceholderPage({
   icon,
   titleKey,
   descriptionKey,
-  badge = 'COMING SOON',
+  badge,
 }: PlaceholderPageProps) {
   const { t } = useTranslation();
+  const badgeText = badge ?? t('badge.comingSoon');
 
   return (
     <main
@@ -32,7 +33,7 @@ export default function PlaceholderPage({
           </div>
 
           {/* Badge */}
-          <SectionBadge className="mb-4">{badge}</SectionBadge>
+          <SectionBadge className="mb-4">{badgeText}</SectionBadge>
 
           {/* Title */}
           <h1

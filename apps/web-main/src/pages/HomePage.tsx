@@ -139,7 +139,7 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             {/* Welcome Section - Editorial Style */}
             <header className="mb-12 sm:mb-16">
-              <SectionBadge className="mb-4">MY ARCHIVE</SectionBadge>
+              <SectionBadge className="mb-4">{t('badge.myArchive')}</SectionBadge>
               <h1
                 className="text-3xl sm:text-4xl lg:text-5xl text-theme-text-primary tracking-tight mb-3"
                 style={{ fontFamily: 'var(--font-family-serif-title)' }}
@@ -225,7 +225,7 @@ export default function HomePage() {
             {/* Archive Support Banner */}
             <section className="mt-12 sm:mt-16">
               <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 text-center">
-                <SectionBadge className="mb-4">ARCHIVE SUPPORT</SectionBadge>
+                <SectionBadge className="mb-4">{t('badge.archiveSupport')}</SectionBadge>
                 <p className="text-theme-text-secondary text-sm sm:text-base max-w-lg mx-auto">
                   {t('home.supportMessage', {
                     defaultValue: 'Your archive grows with every story you record.',
@@ -243,7 +243,7 @@ export default function HomePage() {
                 className="inline-block text-sm tracking-[0.3em] text-theme-text-muted mb-6 uppercase"
                 style={{ fontFamily: 'var(--font-family-mono-brand)' }}
               >
-                PERSONAL ARCHIVE
+                {t('badge.personalArchive')}
               </span>
               <h1
                 className="text-4xl sm:text-5xl lg:text-6xl text-theme-text-primary mb-6 tracking-tight"
@@ -271,7 +271,7 @@ export default function HomePage() {
             {/* Features Preview - 4 Main Functions */}
             <section className="py-12 sm:py-16" aria-labelledby="features-heading">
               <div className="text-center mb-12">
-                <SectionBadge className="mb-4">FEATURES</SectionBadge>
+                <SectionBadge className="mb-4">{t('badge.features')}</SectionBadge>
                 <h2
                   id="features-heading"
                   className="text-2xl sm:text-3xl text-theme-text-primary tracking-tight"

@@ -1,6 +1,8 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 export default function Footer() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -24,20 +26,20 @@ export default function Footer() {
               to="/privacy"
               className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
             >
-              Privacy
+              {t('footer.privacy')}
             </Link>
             <Link
               to="/terms"
               className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
             >
-              Terms
+              {t('footer.terms')}
             </Link>
           </nav>
         </div>
 
         {/* Tagline */}
         <p className="mt-6 text-center text-xs text-theme-text-muted tracking-wide">
-          Recording your own story
+          {t('footer.tagline')}
         </p>
       </div>
     </footer>

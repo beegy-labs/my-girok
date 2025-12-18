@@ -145,6 +145,15 @@
     "stats": "기록된 데이터에서 인사이트를 얻고 진행 상황을 추적하세요. 이 기능은 곧 출시됩니다.",
     "notifications": "알림 및 활동 업데이트를 확인하세요. 이 기능은 곧 출시됩니다."
   },
+  "badge": {
+    "myArchive": "나의 아카이브",
+    "careerArchive": "커리어 아카이브",
+    "archiveSupport": "아카이브 서포트",
+    "personalArchive": "개인 아카이브",
+    "features": "기능",
+    "comingSoon": "준비중",
+    "environment": "환경설정"
+  },
   "resume": {
     "edit": "이력서 편집",
     "preview": "미리보기",

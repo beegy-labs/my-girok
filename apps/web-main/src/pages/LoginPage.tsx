@@ -171,7 +171,7 @@ export default function LoginPage() {
 
         {/* Footer Note */}
         <p className="text-center text-xs text-theme-text-tertiary mt-6">
-          By signing in, you agree to our Terms of Service and Privacy Policy
+          {t('auth.termsAgreement')}
         </p>
       </div>
     </div>

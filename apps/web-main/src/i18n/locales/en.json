@@ -145,6 +145,15 @@
     "stats": "Gain insights from your recorded data and track your progress. This feature is coming soon.",
     "notifications": "Stay updated with alerts and activity notifications. This feature is coming soon."
   },
+  "badge": {
+    "myArchive": "MY ARCHIVE",
+    "careerArchive": "CAREER ARCHIVE",
+    "archiveSupport": "ARCHIVE SUPPORT",
+    "personalArchive": "PERSONAL ARCHIVE",
+    "features": "FEATURES",
+    "comingSoon": "COMING SOON",
+    "environment": "ENVIRONMENT"
+  },
   "resume": {
     "edit": "Edit Resume",
     "preview": "Preview",
