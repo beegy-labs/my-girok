@@ -145,25 +145,28 @@ All text combinations meet 7:1+ contrast ratio (AAA standard).
 
 ## Migration Status (2025-12)
 
-### ⚠️ Current State (Pre-SSOT)
+### ✅ SSOT Complete
 
-Current tokens use `--radius-*` naming which does **not** auto-generate Tailwind utilities:
-
-```css
-/* Current - requires hardcoded values in components */
---radius-editorial: 40px; /* ❌ No utility generated */
-```
-
-### 🎯 Target State (Full SSOT)
-
-Migrate to `--border-radius-*` naming to enable auto-generated utilities:
+All tokens now use proper Tailwind CSS 4 naming conventions for auto-generated utilities:
 
 ```css
-/* Target - auto-generates rounded-* utilities */
---border-radius-editorial: 40px; /* ✅ → rounded-editorial */
+/* Border Radius - generates rounded-* utilities */
+--border-radius-input: 24px; /* → rounded-input */
+--border-radius-editorial: 40px; /* → rounded-editorial */
+--border-radius-editorial-lg: 48px; /* → rounded-editorial-lg */
+--border-radius-editorial-xl: 56px; /* → rounded-editorial-xl */
+--border-radius-editorial-2xl: 64px; /* → rounded-editorial-2xl */
+
+/* Letter Spacing - generates tracking-* utilities */
+--letter-spacing-brand: 0.3em; /* → tracking-brand */
+--letter-spacing-editorial: -0.05em; /* → tracking-editorial */
+
+/* Font Family - generates font-* utilities */
+--font-family-serif-title: ...; /* → font-serif-title */
+--font-family-mono-brand: ...; /* → font-mono-brand */
 ```
 
-**See [ssot.md](../ssot.md) for full migration guide.**
+**See [ssot.md](../ssot.md) for SSOT strategy documentation.**
 
 ## Version
 

@@ -131,15 +131,15 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 
 ### tokens.css (@theme)
 
-- [ ] `--radius-*` → `--border-radius-*` 네이밍 변경
-- [ ] `--letter-spacing-brand: 0.3em` 추가
-- [ ] `--letter-spacing-editorial: -0.05em` 추가
+- [x] `--radius-*` → `--border-radius-*` 네이밍 변경
+- [x] `--letter-spacing-brand: 0.3em` 추가
+- [x] `--letter-spacing-editorial: -0.05em` 추가
 
 ### Components
 
-- [ ] `rounded-[Npx]` → `rounded-*` 유틸리티로 교체
-- [ ] `style={{ fontFamily: ... }}` → `className="font-*"` 로 교체
-- [ ] `tracking-[0.3em]` → `tracking-brand` 로 교체
+- [x] `rounded-[Npx]` → `rounded-*` 유틸리티로 교체
+- [x] `style={{ fontFamily: ... }}` → `className="font-*"` 로 교체
+- [x] `tracking-[0.3em]` → `tracking-brand` 로 교체
 - [ ] `tracking-tighter` → `tracking-editorial` 로 교체 (optional)
 
 ## File Impact
