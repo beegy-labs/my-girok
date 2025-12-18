@@ -16,14 +16,14 @@ export default function Footer() {
           {t('footer.tagline')}
         </p>
 
-        {/* Links - centered */}
+        {/* Links - centered (using text-secondary for AAA compliance in both modes) */}
         <nav
           className="flex items-center justify-center gap-6 mb-8"
           aria-label={t('aria.footerNavigation')}
         >
           <Link
             to="/privacy"
-            className="text-sm text-theme-text-muted hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
+            className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
           >
             {t('footer.privacy')}
           </Link>
@@ -32,7 +32,7 @@ export default function Footer() {
           </span>
           <Link
             to="/terms"
-            className="text-sm text-theme-text-muted hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
+            className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
           >
             {t('footer.terms')}
           </Link>
