@@ -159,35 +159,48 @@
   initial-value: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 }
 
-/* Layout Tokens - must match :root variable names */
-@property --radius-editorial {
+/* Layout Tokens - SSOT naming for auto-generated Tailwind utilities */
+@property --border-radius-editorial {
   syntax: '<length>';
   inherits: true;
   initial-value: 40px;
 }
 
-@property --radius-editorial-lg {
+@property --border-radius-editorial-lg {
   syntax: '<length>';
   inherits: true;
   initial-value: 48px;
 }
 
-@property --radius-editorial-xl {
+@property --border-radius-editorial-xl {
   syntax: '<length>';
   inherits: true;
   initial-value: 56px;
 }
 
-@property --radius-editorial-2xl {
+@property --border-radius-editorial-2xl {
   syntax: '<length>';
   inherits: true;
   initial-value: 64px;
 }
 
-@property --radius-input {
+@property --border-radius-input {
   syntax: '<length>';
   inherits: true;
   initial-value: 24px;
+}
+
+/* Letter Spacing - SSOT naming for auto-generated Tailwind utilities */
+@property --letter-spacing-brand {
+  syntax: '*';
+  inherits: true;
+  initial-value: 0.3em;
+}
+
+@property --letter-spacing-editorial {
+  syntax: '*';
+  inherits: true;
+  initial-value: -0.05em;
 }
 
 @property --spacing-editorial {
@@ -582,16 +595,22 @@
   --color-theme-level-4-bg: var(--theme-level-4-bg);
   --color-theme-level-4-border: var(--theme-level-4-border);
 
-  /* Editorial Typography */
+  /* Editorial Typography - SSOT: generates font-* utilities */
   --font-family-serif-title: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-family-mono-brand: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Editorial Layout - V0.0.1 AAA Workstation */
-  --radius-editorial: 40px;
-  --radius-editorial-lg: 48px;
-  --radius-editorial-xl: 56px;
-  --radius-editorial-2xl: 64px;
-  --radius-input: 24px;
+  /* Letter Spacing - SSOT: generates tracking-* utilities */
+  --letter-spacing-brand: 0.3em;
+  --letter-spacing-editorial: -0.05em;
+
+  /* Border Radius - SSOT: generates rounded-* utilities */
+  --border-radius-input: 24px;
+  --border-radius-editorial: 40px;
+  --border-radius-editorial-lg: 48px;
+  --border-radius-editorial-xl: 56px;
+  --border-radius-editorial-2xl: 64px;
+
+  /* Spacing - V0.0.1 AAA Workstation */
   --spacing-editorial: 40px;
   --nav-height-editorial: 80px;
 

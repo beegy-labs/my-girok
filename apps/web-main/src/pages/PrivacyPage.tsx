@@ -23,16 +23,13 @@ export default function PrivacyPage() {
             {t('badge.legal', { defaultValue: 'LEGAL' })}
           </SectionBadge>
 
-          <h1
-            className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tighter italic"
-            style={{ fontFamily: 'var(--font-family-serif-title)' }}
-          >
+          <h1 className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tighter italic font-serif-title">
             {t('footer.privacy')}
           </h1>
         </div>
 
         {/* Content Placeholder */}
-        <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 mb-10">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-editorial p-8 sm:p-10 mb-10">
           <p className="text-theme-text-secondary text-center">
             {t('legal.privacyPlaceholder', {
               defaultValue: 'Privacy Policy content will be available soon.',

@@ -56,7 +56,7 @@ export default function LanguageSwitcher() {
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-4 w-48 bg-theme-bg-card border-2 border-theme-border-default rounded-[24px] shadow-theme-lg overflow-hidden z-50 py-2"
+          className="absolute right-0 mt-4 w-48 bg-theme-bg-card border-2 border-theme-border-default rounded-input shadow-theme-lg overflow-hidden z-50 py-2"
           role="listbox"
           aria-label={t('aria.languageOptions')}
         >

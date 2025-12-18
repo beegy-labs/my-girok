@@ -56,10 +56,7 @@ export default function Navbar() {
             className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
             aria-label={t('aria.goToHomepage')}
           >
-            <span
-              className="text-2xl font-black text-theme-text-primary tracking-tighter select-none"
-              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-            >
+            <span className="text-2xl font-black text-theme-text-primary tracking-tighter select-none font-mono-brand">
               girok<span className="text-theme-primary">.</span>
             </span>
           </Link>
@@ -73,10 +70,7 @@ export default function Navbar() {
                   <div className="w-8 h-8 rounded-full bg-theme-bg-secondary group-hover:bg-theme-bg-card border border-theme-border-default flex items-center justify-center transition-colors">
                     <User size={16} className="text-theme-primary" aria-hidden="true" />
                   </div>
-                  <span
-                    className="text-[13px] font-black text-theme-text-primary uppercase tracking-widest hidden sm:block"
-                    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                  >
+                  <span className="text-[13px] font-black text-theme-text-primary uppercase tracking-widest hidden sm:block font-mono-brand">
                     {user?.username || user?.name?.slice(0, 10) || 'User'}
                   </span>
                 </div>
@@ -119,7 +113,7 @@ export default function Navbar() {
                 {/* Dropdown menu - Editorial style */}
                 {isDropdownOpen && (
                   <div
-                    className="absolute right-0 mt-4 w-56 bg-theme-bg-card rounded-[24px] shadow-theme-lg border-2 border-theme-border-default py-3 z-50"
+                    className="absolute right-0 mt-4 w-56 bg-theme-bg-card rounded-input shadow-theme-lg border-2 border-theme-border-default py-3 z-50"
                     role="menu"
                     aria-orientation="vertical"
                   >

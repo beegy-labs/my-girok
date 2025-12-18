@@ -224,18 +224,12 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-16">
             {/* Promo Carousel Section - V0.0.1 Style */}
             <section className="mb-16" aria-label="Featured Promotions">
-              <div className="relative group w-full h-[300px] rounded-[56px] border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
+              <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
-                  <span
-                    className="text-[12px] font-black uppercase tracking-[0.3em] text-theme-primary mb-4 block"
-                    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                  >
+                  <span className="text-[12px] font-black uppercase tracking-brand text-theme-primary mb-4 block font-mono-brand">
                     {PROMOS[currentPromo].tag}
                   </span>
-                  <h2
-                    className="text-3xl sm:text-5xl text-theme-text-primary mb-6 leading-tight"
-                    style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                  >
+                  <h2 className="text-3xl sm:text-5xl text-theme-text-primary mb-6 leading-tight font-serif-title">
                     {PROMOS[currentPromo].title}
                   </h2>
                   <p className="text-lg font-bold text-theme-text-secondary mb-10 leading-relaxed max-w-xl">
@@ -272,12 +266,12 @@ export default function HomePage() {
 
             {/* Workstation Section - V0.0.1 Style */}
             <section className="mb-20" aria-label="Workstation Controls">
-              <div className="p-10 md:p-14 rounded-[64px] bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
+              <div className="p-10 md:p-14 rounded-editorial-2xl bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
                 {/* Workstation Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 border-b-2 border-theme-border-default pb-10">
                   <div className="flex items-center gap-6">
                     <div
-                      className="p-5 bg-theme-bg-card rounded-[24px] border-2 border-theme-border-default text-theme-primary shadow-theme-sm"
+                      className="p-5 bg-theme-bg-card rounded-input border-2 border-theme-border-default text-theme-primary shadow-theme-sm"
                       aria-hidden="true"
                     >
                       <Layers size={28} />
@@ -286,10 +280,7 @@ export default function HomePage() {
                       <h2 className="text-2xl font-bold text-theme-text-primary">
                         {t('home.workstation', { defaultValue: 'Workstation' })}
                       </h2>
-                      <p
-                        className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-[0.25em] mt-2"
-                        style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                      >
+                      <p className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-[0.25em] mt-2 font-mono-brand">
                         {t('home.activeWorkspace', { defaultValue: 'Active Workspace' })}
                       </p>
                     </div>
@@ -308,7 +299,7 @@ export default function HomePage() {
                 {/* Widget Grid - V0.0.1 Style */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {/* Today Widget - Active */}
-                  <article className="bg-theme-bg-card rounded-[48px] border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
+                  <article className="bg-theme-bg-card rounded-editorial-lg border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
                     <div className="flex justify-between items-center mb-8">
                       <div className="flex items-center gap-4">
                         <div
@@ -317,10 +308,7 @@ export default function HomePage() {
                         >
                           <Calendar size={20} />
                         </div>
-                        <h3
-                          className="text-[14px] font-black text-theme-text-primary uppercase tracking-[0.2em]"
-                          style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                        >
+                        <h3 className="text-[14px] font-black text-theme-text-primary uppercase tracking-[0.2em] font-mono-brand">
                           {t('home.today', { defaultValue: 'Today' })}
                         </h3>
                       </div>
@@ -332,7 +320,7 @@ export default function HomePage() {
                     </div>
 
                     <div className="space-y-4 flex-1">
-                      <div className="flex items-start gap-5 p-5 rounded-[24px] bg-theme-bg-secondary border-2 border-transparent group/item hover:bg-theme-bg-card hover:border-theme-border-default transition-all">
+                      <div className="flex items-start gap-5 p-5 rounded-input bg-theme-bg-secondary border-2 border-transparent group/item hover:bg-theme-bg-card hover:border-theme-border-default transition-all">
                         <div className="mt-1.5 w-2 h-2 rounded-full bg-theme-primary" />
                         <div>
                           <p className="text-[16px] font-bold text-theme-text-primary leading-tight">
@@ -362,7 +350,7 @@ export default function HomePage() {
                   {[2, 3].map((slot) => (
                     <div
                       key={slot}
-                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-[48px] border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-editorial-lg border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
                       tabIndex={0}
                       role="button"
                       aria-label={t('aria.addWidgetToSlot', {
@@ -375,10 +363,7 @@ export default function HomePage() {
                         strokeWidth={2.5}
                         aria-hidden="true"
                       />
-                      <span
-                        className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-[0.4em]"
-                        style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                      >
+                      <span className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-[0.4em] font-mono-brand">
                         {t('home.emptySlot', { defaultValue: 'Empty' })}
                       </span>
                     </div>
@@ -457,10 +442,7 @@ export default function HomePage() {
             <section className="mb-24" aria-label={t('aria.mainMenu')}>
               {/* Section Header with View Toggle - V0.0.1 Style */}
               <div className="flex items-center justify-between mb-14 border-b-4 border-theme-text-primary pb-10 px-6">
-                <h2
-                  className="text-4xl text-theme-text-primary tracking-tight"
-                  style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                >
+                <h2 className="text-4xl text-theme-text-primary tracking-tight font-serif-title">
                   {t('home.index', { defaultValue: 'Index' })}
                 </h2>
                 <ViewToggle value={viewMode} onChange={setViewMode} />
@@ -538,7 +520,7 @@ export default function HomePage() {
 
             {/* Archive Support Banner - V0.0.1 Style */}
             <section className="mt-12 sm:mt-16">
-              <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] p-8 sm:p-10 text-center font-medium">
+              <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-editorial p-8 sm:p-10 text-center font-medium">
                 <SectionBadge className="mb-4">{t('badge.archiveSupport')}</SectionBadge>
                 <p className="text-theme-text-secondary text-sm sm:text-base max-w-lg mx-auto">
                   {t('home.supportMessage', {
@@ -553,10 +535,7 @@ export default function HomePage() {
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
             <div className="text-center">
               {/* Giant Brand Title - V0.0.1 Style */}
-              <h1
-                className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-tighter italic"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
-              >
+              <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-tighter italic font-serif-title">
                 girok<span className="text-theme-primary">.</span>
               </h1>
 
@@ -566,7 +545,7 @@ export default function HomePage() {
                   variant="primary"
                   size="xl"
                   rounded="full"
-                  className="px-16 sm:px-20 py-6 sm:py-8 text-[14px] font-black uppercase tracking-[0.3em] shadow-theme-xl hover:scale-105 transition-transform"
+                  className="px-16 sm:px-20 py-6 sm:py-8 text-[14px] font-black uppercase tracking-brand shadow-theme-xl hover:scale-105 transition-transform"
                 >
                   {t('auth.enter', { defaultValue: 'Enter' })}
                 </Button>

@@ -67,22 +67,16 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
-            <h1
-              className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic"
-              style={{ fontFamily: 'var(--font-family-serif-title)' }}
-            >
+            <h1 className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic font-serif-title">
               Login
             </h1>
-            <p
-              className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
-              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-            >
+            <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
               {t('auth.archiveAccess', { defaultValue: 'Archive Access' })}
             </p>
           </div>
 
           {/* Form Card - V0.0.1 Editorial Style */}
-          <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[48px] p-10 md:p-14 shadow-theme-lg">
+          <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-editorial-lg p-10 md:p-14 shadow-theme-lg">
             {error && (
               <Alert variant="error" className="mb-6">
                 {error}

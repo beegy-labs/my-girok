@@ -37,22 +37,16 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
-            <h1
-              className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic"
-              style={{ fontFamily: 'var(--font-family-serif-title)' }}
-            >
+            <h1 className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic font-serif-title">
               {t('forgotPassword.title', { defaultValue: 'Reset' })}
             </h1>
-            <p
-              className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
-              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-            >
+            <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
               {t('forgotPassword.subtitle', { defaultValue: 'Password Recovery' })}
             </p>
           </div>
 
           {/* Form Card - V0.0.1 Editorial Style */}
-          <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[48px] p-10 md:p-14 shadow-theme-lg">
+          <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-editorial-lg p-10 md:p-14 shadow-theme-lg">
             {error && (
               <Alert variant="error" className="mb-6">
                 {error}
@@ -65,10 +59,7 @@ export default function ForgotPasswordPage() {
                 <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-theme-bg-secondary border-2 border-theme-border-default flex items-center justify-center">
                   <Mail className="w-8 h-8 text-theme-primary" />
                 </div>
-                <h2
-                  className="text-2xl text-theme-text-primary mb-4 tracking-tight"
-                  style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                >
+                <h2 className="text-2xl text-theme-text-primary mb-4 tracking-tight font-serif-title">
                   {t('forgotPassword.checkEmail', { defaultValue: 'Check Your Email' })}
                 </h2>
                 <p className="text-sm text-theme-text-secondary mb-8 leading-relaxed">

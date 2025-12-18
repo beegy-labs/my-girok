@@ -131,22 +131,16 @@ export default function ResumeActionBar({
     <>
       {/* V0.0.1 Action Bar */}
       <div className="print:hidden px-4 sm:px-8 pt-6 sm:pt-10">
-        <div className="max-w-5xl mx-auto bg-theme-bg-card border-2 border-theme-border-default rounded-[40px] shadow-theme-md px-8 py-6 sm:px-10 sm:py-8 transition-colors duration-200">
+        <div className="max-w-5xl mx-auto bg-theme-bg-card border-2 border-theme-border-default rounded-editorial shadow-theme-md px-8 py-6 sm:px-10 sm:py-8 transition-colors duration-200">
           {/* Header - V0.0.1 Style */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 pb-6 border-b-2 border-theme-border-default">
             <div>
-              <h1
-                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-2"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
-              >
+              <h1 className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-2 font-serif-title">
                 {title}
               </h1>
               <div className="flex items-center gap-3 mt-2">
                 {subtitle && (
-                  <p
-                    className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary"
-                    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                  >
+                  <p className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary font-mono-brand">
                     {subtitle}
                   </p>
                 )}

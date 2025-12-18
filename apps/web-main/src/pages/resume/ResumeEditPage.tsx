@@ -197,16 +197,10 @@ export default function ResumeEditPage() {
           <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h1
-                className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
-              >
+              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
                 {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
               </h1>
-              <p
-                className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
-                style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-              >
+              <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
                 {resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
               </p>
             </div>
@@ -245,17 +239,11 @@ export default function ResumeEditPage() {
                 radius="lg"
                 className="mb-4 sm:mb-6 border-2 border-theme-border-default"
               >
-                <h2
-                  className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-2 flex items-center gap-3"
-                  style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                >
+                <h2 className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-2 flex items-center gap-3 font-serif-title">
                   <span>👁️</span>
                   {t('edit.livePreview')}
                 </h2>
-                <p
-                  className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary"
-                  style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                >
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary font-mono-brand">
                   {t('edit.previewDescription')}
                 </p>
               </Card>
@@ -264,7 +252,7 @@ export default function ResumeEditPage() {
                 <ResumePreviewContainer
                   resume={previewData}
                   maxHeight="calc(100vh - 320px)"
-                  containerClassName="border-2 border-theme-border-default rounded-[24px]"
+                  containerClassName="border-2 border-theme-border-default rounded-input"
                 />
               ) : (
                 <Card

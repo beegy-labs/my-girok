@@ -200,16 +200,10 @@ export default function MyResumePage() {
           <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h1
-                className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
-              >
+              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
                 {t('resume.myResumes')}
               </h1>
-              <p
-                className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
-                style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-              >
+              <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
                 {t('resume.manageResumes')}
               </p>
             </div>
@@ -227,10 +221,7 @@ export default function MyResumePage() {
 
         {/* Resume List - V0.0.1 Style */}
         <section className="mb-8">
-          <h2
-            className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-8"
-            style={{ fontFamily: 'var(--font-family-serif-title)' }}
-          >
+          <h2 className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-8 font-serif-title">
             {t('resume.list.title')}
           </h2>
 
@@ -242,10 +233,7 @@ export default function MyResumePage() {
               className="text-center border-2 border-theme-border-default"
             >
               <div className="text-5xl sm:text-6xl mb-6">📝</div>
-              <h3
-                className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-3"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
-              >
+              <h3 className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
                 {t('resume.list.noResumes')}
               </h3>
               <p className="text-sm sm:text-base text-theme-text-secondary mb-6">
@@ -455,8 +443,7 @@ export default function MyResumePage() {
             >
               <h2
                 id={shareModalTitleId}
-                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-6"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
+                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-6 font-serif-title"
               >
                 {t('resume.shareLinkCreate')}
               </h2>
@@ -467,7 +454,7 @@ export default function MyResumePage() {
                 <select
                   value={shareDuration}
                   onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                  className="w-full px-6 py-4 bg-theme-bg-input border-2 border-theme-border-default rounded-[24px] focus:outline-none focus:ring-[3px] focus:ring-theme-focus-ring focus:border-theme-primary transition-all text-base font-bold text-theme-text-primary"
+                  className="w-full px-6 py-4 bg-theme-bg-input border-2 border-theme-border-default rounded-input focus:outline-none focus:ring-[3px] focus:ring-theme-focus-ring focus:border-theme-primary transition-all text-base font-bold text-theme-text-primary"
                 >
                   <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
                   <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
