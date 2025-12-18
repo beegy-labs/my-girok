@@ -242,7 +242,11 @@ export default function HomePage() {
                               count: 3,
                             })}
                           </p>
-                          <button className="flex items-center gap-2 text-xs font-bold uppercase text-theme-primary">
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 text-xs font-bold uppercase text-theme-primary min-h-[44px] hover:opacity-80 transition-opacity"
+                            aria-label={t('widget.quickAdd')}
+                          >
                             {t('widget.quickAdd')} <Plus className="w-4 h-4" strokeWidth={3} />
                           </button>
                         </div>

@@ -96,12 +96,12 @@ export const TopWidget = memo(function TopWidget({
           </div>
         </div>
 
-        {/* Change Focus button */}
+        {/* Change Focus button - min-h-[44px] for WCAG 2.5.5 touch target */}
         {onChangeFocus && (
           <button
             type="button"
             onClick={onChangeFocus}
-            className={`text-[10px] font-bold uppercase tracking-widest text-theme-text-secondary hover:text-theme-text-primary transition-colors rounded-lg px-2 py-1 ${focusClasses}`}
+            className={`text-[10px] font-bold uppercase tracking-widest text-theme-text-secondary hover:text-theme-text-primary transition-colors rounded-lg px-3 py-2 min-h-[44px] flex items-center ${focusClasses}`}
           >
             {changeFocusText}
           </button>
