@@ -137,6 +137,14 @@
     "privacy": "Privacy",
     "terms": "Terms"
   },
+  "placeholder": {
+    "journal": "Write and reflect on your daily experiences. This feature is coming soon.",
+    "finance": "Track your income, expenses, and financial goals. This feature is coming soon.",
+    "library": "Organize your reading lists, articles, and learning materials. This feature is coming soon.",
+    "network": "Build connections with professionals and mentors. This feature is coming soon.",
+    "stats": "Gain insights from your recorded data and track your progress. This feature is coming soon.",
+    "notifications": "Stay updated with alerts and activity notifications. This feature is coming soon."
+  },
   "resume": {
     "edit": "Edit Resume",
     "preview": "Preview",
