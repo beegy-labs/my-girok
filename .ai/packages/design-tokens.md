@@ -69,18 +69,19 @@ Key tokens have @property definitions for:
 
 All text combinations meet 7:1+ contrast ratio (AAA standard).
 
-| Element          | Light Mode | Dark Mode |
-| ---------------- | ---------- | --------- |
-| Primary Text     | 15.76:1    | 9.94:1    |
-| Secondary Text   | 9.23:1     | 7.65:1    |
-| Tertiary Text    | 7.08:1     | 7.31:1    |
-| Primary Button   | 7.70:1+    | 9.46:1+   |
-| Secondary Button | 7.41:1     | 7.54:1    |
-| Danger Button    | 9.51:1     | 9.51:1    |
-| Status Success   | 7.87:1     | 8.44:1    |
-| Status Error     | 7.77:1     | 7.89:1    |
-| Status Warning   | 7.59:1     | 13.13:1   |
-| Status Info      | 8.63:1     | 9.71:1    |
+| Element          | Light Mode | Dark Mode                    |
+| ---------------- | ---------- | ---------------------------- |
+| Primary Text     | 15.76:1    | 9.94:1                       |
+| Secondary Text   | 9.23:1     | 7.65:1                       |
+| Tertiary Text    | 7.08:1     | 7.31:1                       |
+| Primary Accent   | 7.94:1     | 8.25:1 (page), 7.41:1 (card) |
+| Primary Button   | 7.70:1+    | 9.46:1+                      |
+| Secondary Button | 7.41:1     | 7.54:1                       |
+| Danger Button    | 9.51:1     | 9.51:1                       |
+| Status Success   | 7.87:1     | 8.44:1                       |
+| Status Error     | 7.77:1     | 7.89:1                       |
+| Status Warning   | 7.59:1     | 13.13:1                      |
+| Status Info      | 8.63:1     | 9.71:1                       |
 
 ## Browser Support
 

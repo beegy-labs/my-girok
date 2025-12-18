@@ -128,14 +128,14 @@ The `dark:` Tailwind variant is **only** for semantic status colors that need ex
 
 ### Dark Mode - Midnight Gentle Study
 
-| Token          | Value   | Usage                            |
-| -------------- | ------- | -------------------------------- |
-| Page BG        | #1E1C1A | Page background                  |
-| Card BG        | #282522 | Card backgrounds                 |
-| Primary Text   | #CCC5BD | Main text (9.94:1 contrast)      |
-| Secondary Text | #B4ADA5 | Body text (7.65:1 contrast)      |
-| Tertiary Text  | #B0A9A1 | Hint text (7.31:1 contrast)      |
-| Primary Accent | #C9A876 | Buttons, links (7.56:1 contrast) |
+| Token          | Value   | Usage                                     |
+| -------------- | ------- | ----------------------------------------- |
+| Page BG        | #1E1C1A | Page background                           |
+| Card BG        | #282522 | Card backgrounds                          |
+| Primary Text   | #CCC5BD | Main text (9.94:1 contrast)               |
+| Secondary Text | #B4ADA5 | Body text (7.65:1 contrast)               |
+| Tertiary Text  | #B0A9A1 | Hint text (7.31:1 contrast)               |
+| Primary Accent | #D0B080 | Buttons, links (8.25:1 page, 7.41:1 card) |
 
 ### WCAG 2.1 AAA Compliance
 

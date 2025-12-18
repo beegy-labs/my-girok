@@ -24,19 +24,19 @@
 @property --theme-primary {
   syntax: '<color>';
   inherits: true;
-  initial-value: #8b5e3c;
+  initial-value: #6b4a2e; /* AAA 7.94:1 */
 }
 
 @property --theme-primary-light {
   syntax: '<color>';
   inherits: true;
-  initial-value: #a87b54;
+  initial-value: #8b5e3c; /* AA 5.58:1 - decorative only */
 }
 
 @property --theme-primary-dark {
   syntax: '<color>';
   inherits: true;
-  initial-value: #6b4a2e;
+  initial-value: #5d4028; /* AAA 9.42:1 */
 }
 
 /* Background Colors */
@@ -170,19 +170,21 @@
   --light-border-subtle: #e8e6e3;
   --light-border-default: #d4d2cf;
   --light-border-strong: #b8b5b2;
-  --light-primary: #8b5e3c;
-  --light-primary-dark: #6b4a2e;
-  --light-primary-light: #a87b54;
+  /* Primary colors - all AAA compliant (7:1+) on white */
+  --light-primary: #6b4a2e; /* 7.94:1 AAA - main brand color */
+  --light-primary-dark: #5d4028; /* 9.42:1 AAA - hover/active states */
+  --light-primary-light: #8b5e3c; /* 5.58:1 AA - decorative only */
 
   /* Theme: "Midnight Gentle Study" (Dark Mode)
      - Page BG: #1E1C1A (Deep Brown Charcoal - prevents halation)
      - Card BG: #282522 (Low contrast elevation)
      - Main Text: #CCC5BD (Warm Sand - WCAG AAA)
-     - Primary: #C9A876 (Warm Golden Bronze - WCAG AAA)
+     - Primary: #D0B080 (Warm Golden Bronze - WCAG AAA on both backgrounds)
      WCAG Contrast (all AAA 7:1+):
      - #CCC5BD on #1E1C1A = 9.94:1 (AAA)
      - #CCC5BD on #282522 = 8.92:1 (AAA)
-     - #C9A876 on #1E1C1A = 7.56:1 (AAA)
+     - #D0B080 on #1E1C1A = 8.25:1 (AAA)
+     - #D0B080 on #282522 = 7.41:1 (AAA)
   */
   --dark-bg-page: #1e1c1a;
   --dark-bg-card: #282522;
@@ -195,13 +197,14 @@
   --dark-text-secondary: #b4ada5; /* 7.65:1 AAA */
   --dark-text-tertiary: #b0a9a1; /* 7.31:1 AAA */
   --dark-text-muted: #a8a199; /* 6.65:1 AA (decorative only) */
-  --dark-text-accent: #c9a876; /* 7.56:1 AAA */
+  --dark-text-accent: #d0b080; /* 8.25:1 AAA on page, 7.41:1 AAA on card */
   --dark-border-subtle: #3a3734;
   --dark-border-default: #4a4744;
   --dark-border-strong: #5c5855;
-  --dark-primary: #c9a876; /* 7.56:1 AAA */
-  --dark-primary-dark: #b89a70;
-  --dark-primary-light: #d4b896;
+  /* Primary colors - AAA compliant on both page (#1E1C1A) and card (#282522) */
+  --dark-primary: #d0b080; /* 8.25:1 on page, 7.41:1 on card - both AAA */
+  --dark-primary-dark: #c9a876; /* 7.56:1 on page */
+  --dark-primary-light: #d8b890; /* 9.04:1 on page */
 
   /* Status Colors - Light Mode (WCAG AAA 7:1+) */
   --status-success-bg: #e8f5e9;
