@@ -163,10 +163,7 @@ export const MenuRow = memo(function MenuRow({
       style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
       {/* Index */}
-      <span
-        className="text-xs font-bold tracking-[0.3em] text-theme-primary w-8 flex-shrink-0"
-        style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-      >
+      <span className="text-xs font-bold tracking-brand text-theme-primary w-8 flex-shrink-0 font-mono-brand">
         {formattedIndex}
       </span>
 

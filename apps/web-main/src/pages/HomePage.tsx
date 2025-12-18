@@ -237,7 +237,7 @@ export default function HomePage() {
                   </p>
                   <button
                     type="button"
-                    className="text-[12px] font-black uppercase tracking-[0.25em] text-theme-primary border-b-2 border-theme-primary pb-2 hover:opacity-80 transition-all w-fit min-h-[44px]"
+                    className="text-[12px] font-black uppercase tracking-brand-sm text-theme-primary border-b-2 border-theme-primary pb-2 hover:opacity-80 transition-all w-fit min-h-[44px]"
                     aria-label={t('aria.viewPromoDetails', {
                       defaultValue: `View ${PROMOS[currentPromo].title} details`,
                     })}
@@ -280,7 +280,7 @@ export default function HomePage() {
                       <h2 className="text-2xl font-bold text-theme-text-primary">
                         {t('home.workstation', { defaultValue: 'Workstation' })}
                       </h2>
-                      <p className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-[0.25em] mt-2 font-mono-brand">
+                      <p className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-brand-sm mt-2 font-mono-brand">
                         {t('home.activeWorkspace', { defaultValue: 'Active Workspace' })}
                       </p>
                     </div>
@@ -308,7 +308,7 @@ export default function HomePage() {
                         >
                           <Calendar size={20} />
                         </div>
-                        <h3 className="text-[14px] font-black text-theme-text-primary uppercase tracking-[0.2em] font-mono-brand">
+                        <h3 className="text-[14px] font-black text-theme-text-primary uppercase tracking-brand-sm font-mono-brand">
                           {t('home.today', { defaultValue: 'Today' })}
                         </h3>
                       </div>
@@ -363,7 +363,7 @@ export default function HomePage() {
                         strokeWidth={2.5}
                         aria-hidden="true"
                       />
-                      <span className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-[0.4em] font-mono-brand">
+                      <span className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-brand font-mono-brand">
                         {t('home.emptySlot', { defaultValue: 'Empty' })}
                       </span>
                     </div>

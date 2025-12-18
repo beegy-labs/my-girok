@@ -15,7 +15,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-10 sm:gap-14">
           {/* Brand & Version */}
           <div className="flex flex-col items-center md:items-start gap-4">
-            <p className="text-lg text-theme-text-primary font-black uppercase tracking-[0.5em] sm:tracking-[0.6em] font-mono-brand">
+            <p className="text-lg text-theme-text-primary font-black uppercase tracking-brand-lg sm:tracking-brand-lg font-mono-brand">
               girok.dev
               <span className="text-theme-primary ml-2">&copy; {currentYear}</span>
             </p>
@@ -26,7 +26,7 @@ export default function Footer() {
 
           {/* Links - V0.0.1 Style */}
           <nav
-            className="flex gap-8 sm:gap-12 text-[13px] font-black uppercase tracking-[0.25em] text-theme-text-secondary"
+            className="flex gap-8 sm:gap-12 text-[13px] font-black uppercase tracking-brand-sm text-theme-text-secondary"
             aria-label={t('aria.footerNavigation')}
           >
             <Link

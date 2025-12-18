@@ -58,7 +58,7 @@ const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const baseClasses =
-  'w-full text-left bg-theme-bg-card border-2 border-theme-border-subtle rounded-[64px] p-10 md:p-12 min-h-[380px] flex flex-col transition-all duration-300 shadow-theme-sm';
+  'w-full text-left bg-theme-bg-card border-2 border-theme-border-subtle rounded-editorial-2xl p-10 md:p-12 min-h-[380px] flex flex-col transition-all duration-300 shadow-theme-sm';
 
 const enabledClasses =
   'cursor-pointer hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1';
@@ -76,7 +76,7 @@ const pinButtonInactiveClasses =
   'bg-transparent border-theme-border-default text-theme-text-secondary hover:text-theme-text-primary hover:border-theme-primary';
 
 const iconContainerClasses =
-  'p-6 rounded-[28px] bg-theme-bg-secondary border-2 border-theme-border-subtle text-theme-text-secondary group-hover:text-theme-primary transition-all w-fit shadow-theme-sm';
+  'p-6 rounded-input bg-theme-bg-secondary border-2 border-theme-border-subtle text-theme-text-secondary group-hover:text-theme-primary transition-all w-fit shadow-theme-sm';
 
 /**
  * Pin Icon SVG component (inline to avoid external dependency)
@@ -185,10 +185,7 @@ export const MenuCard = memo(function MenuCard({
       <div className="flex-1 mt-10">
         {/* Index + Pin row */}
         <div className="flex items-center justify-between mb-4">
-          <span
-            className="text-xs font-bold tracking-[0.3em] text-theme-primary"
-            style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-          >
+          <span className="text-xs font-bold tracking-brand text-theme-primary font-mono-brand">
             {formattedIndex}
           </span>
           {/* Pin button (optional) */}
@@ -209,10 +206,7 @@ export const MenuCard = memo(function MenuCard({
         </div>
 
         {/* Title */}
-        <h3
-          className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tight leading-tight"
-          style={{ fontFamily: 'var(--font-family-serif-title)' }}
-        >
+        <h3 className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tight leading-tight font-serif-title">
           {title}
         </h3>
 

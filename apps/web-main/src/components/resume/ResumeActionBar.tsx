@@ -140,7 +140,7 @@ export default function ResumeActionBar({
               </h1>
               <div className="flex items-center gap-3 mt-2">
                 {subtitle && (
-                  <p className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary font-mono-brand">
+                  <p className="text-[11px] font-black uppercase tracking-brand-sm text-theme-text-secondary font-mono-brand">
                     {subtitle}
                   </p>
                 )}

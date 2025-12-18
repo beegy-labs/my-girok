@@ -32,9 +32,9 @@ export interface TopWidgetProps {
 }
 
 // Static class definitions (2025 best practice - outside component)
-// V0.0.1 AAA Workstation Design System
+// V0.0.1 AAA Workstation Design System - SSOT tokens from tokens.css
 const containerClasses =
-  'p-10 sm:p-12 rounded-[48px] bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
+  'p-10 sm:p-12 rounded-editorial-lg bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
 
 const focusClasses =
   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
@@ -85,16 +85,8 @@ export const TopWidget = memo(function TopWidget({
           <div className={iconContainerClasses}>{icon}</div>
           {/* Title and badge */}
           <div>
-            <h2
-              className="text-2xl font-bold text-theme-text-primary"
-              style={{ fontFamily: 'var(--font-family-serif-title)' }}
-            >
-              {title}
-            </h2>
-            <p
-              className="text-xs font-bold text-theme-text-muted uppercase tracking-[0.25em] mt-1"
-              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-            >
+            <h2 className="text-2xl font-bold text-theme-text-primary font-serif-title">{title}</h2>
+            <p className="text-xs font-bold text-theme-text-muted uppercase tracking-brand-sm mt-1 font-mono-brand">
               {badgeText}
             </p>
           </div>
@@ -105,7 +97,7 @@ export const TopWidget = memo(function TopWidget({
           <button
             type="button"
             onClick={onChangeFocus}
-            className={`text-xs font-bold uppercase tracking-[0.2em] text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover transition-all rounded-xl px-4 py-3 min-h-[44px] min-w-[44px] flex items-center border-2 border-transparent hover:border-theme-border-default ${focusClasses}`}
+            className={`text-xs font-bold uppercase tracking-brand-sm text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover transition-all rounded-xl px-4 py-3 min-h-[44px] min-w-[44px] flex items-center border-2 border-transparent hover:border-theme-border-default ${focusClasses}`}
           >
             {changeFocusText}
           </button>

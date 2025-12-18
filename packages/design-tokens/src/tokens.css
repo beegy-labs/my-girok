@@ -191,10 +191,22 @@
 }
 
 /* Letter Spacing - SSOT naming for auto-generated Tailwind utilities */
+@property --letter-spacing-brand-sm {
+  syntax: '*';
+  inherits: true;
+  initial-value: 0.2em;
+}
+
 @property --letter-spacing-brand {
   syntax: '*';
   inherits: true;
   initial-value: 0.3em;
+}
+
+@property --letter-spacing-brand-lg {
+  syntax: '*';
+  inherits: true;
+  initial-value: 0.5em;
 }
 
 @property --letter-spacing-editorial {
@@ -600,7 +612,9 @@
   --font-family-mono-brand: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Letter Spacing - SSOT: generates tracking-* utilities */
+  --letter-spacing-brand-sm: 0.2em;
   --letter-spacing-brand: 0.3em;
+  --letter-spacing-brand-lg: 0.5em;
   --letter-spacing-editorial: -0.05em;
 
   /* Border Radius - SSOT: generates rounded-* utilities */

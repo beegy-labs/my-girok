@@ -46,12 +46,12 @@ const paddingClasses = {
   responsive: 'p-4 sm:p-6 lg:p-8', // Mobile-first responsive padding
 } as const;
 
-// V0.0.1 Editorial radius options
+// V0.0.1 Editorial radius options - SSOT tokens from tokens.css
 const radiusClasses = {
-  default: 'rounded-2xl', // 16px
-  lg: 'rounded-[40px]', // 40px - editorial standard
-  xl: 'rounded-[48px]', // 48px - widget/featured cards
-  '2xl': 'rounded-[64px]', // 64px - hero sections
+  default: 'rounded-2xl', // 16px (Tailwind default)
+  lg: 'rounded-editorial', // SSOT: --border-radius-editorial: 40px
+  xl: 'rounded-editorial-lg', // SSOT: --border-radius-editorial-lg: 48px
+  '2xl': 'rounded-editorial-2xl', // SSOT: --border-radius-editorial-2xl: 64px
 } as const;
 
 /**

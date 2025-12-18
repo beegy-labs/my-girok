@@ -110,18 +110,12 @@ export function PageSection({ children, title, badge, actions, className = '' }:
         <div className="flex items-center justify-between mb-8">
           <div>
             {badge && (
-              <span
-                className="inline-flex items-center px-3 py-1 mb-3 text-xs font-medium uppercase tracking-[0.25em] text-theme-text-muted bg-theme-bg-card border border-theme-border-default rounded-full"
-                style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-              >
+              <span className="inline-flex items-center px-3 py-1 mb-3 text-xs font-medium uppercase tracking-brand-sm text-theme-text-muted bg-theme-bg-card border border-theme-border-default rounded-full font-mono-brand">
                 {badge}
               </span>
             )}
             {title && (
-              <h2
-                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tight"
-                style={{ fontFamily: 'var(--font-family-serif-title)' }}
-              >
+              <h2 className="text-2xl sm:text-3xl text-theme-text-primary tracking-tight font-serif-title">
                 {title}
               </h2>
             )}

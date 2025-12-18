@@ -111,8 +111,7 @@ export const SectionBadge = memo(function SectionBadge({
 }: SectionBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.3em] text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-lg ${className}`}
-      style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-lg font-mono-brand ${className}`}
     >
       {children}
     </span>

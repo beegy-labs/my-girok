@@ -57,14 +57,14 @@ const sizeClasses = {
   sm: 'min-h-[44px] px-4 py-2.5 text-sm',
   md: 'min-h-[44px] px-5 py-3 text-base',
   lg: 'min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-widest',
-  xl: 'min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-[0.3em]',
+  xl: 'min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-brand',
 } as const;
 
-// Border radius options
+// Border radius options - SSOT tokens from tokens.css
 // V0.0.1: default (16px) for secondary, editorial (24px) for primary
 const roundedClasses = {
   default: 'rounded-2xl',
-  editorial: 'rounded-[24px]',
+  editorial: 'rounded-input', // SSOT: --border-radius-input: 24px
   full: 'rounded-full',
 } as const;
 

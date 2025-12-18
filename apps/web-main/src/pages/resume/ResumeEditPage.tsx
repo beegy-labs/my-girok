@@ -243,7 +243,7 @@ export default function ResumeEditPage() {
                   <span>👁️</span>
                   {t('edit.livePreview')}
                 </h2>
-                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary font-mono-brand">
+                <p className="text-[11px] font-black uppercase tracking-brand-sm text-theme-text-secondary font-mono-brand">
                   {t('edit.previewDescription')}
                 </p>
               </Card>
