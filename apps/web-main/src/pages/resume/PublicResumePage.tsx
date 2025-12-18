@@ -25,21 +25,24 @@ export default function PublicResumePage() {
   const isOwnProfile = user?.username === username;
 
   // Memoized with useCallback per project policy
-  const loadResume = useCallback(async (targetUsername: string) => {
-    try {
-      const data = await getUserResume(targetUsername);
-      setResume(data);
-    } catch (err: unknown) {
-      const axiosError = err as { response?: { status?: number } };
-      if (axiosError.response?.status === 404) {
-        setError('User not found');
-      } else {
-        setError('Failed to load resume');
+  const loadResume = useCallback(
+    async (targetUsername: string) => {
+      try {
+        const data = await getUserResume(targetUsername);
+        setResume(data);
+      } catch (err: unknown) {
+        const axiosError = err as { response?: { status?: number } };
+        if (axiosError.response?.status === 404) {
+          setError(t('resume.public.userNotFound'));
+        } else {
+          setError(t('resume.public.loadFailed'));
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (username) {
@@ -52,7 +55,7 @@ export default function PublicResumePage() {
   }
 
   if (error) {
-    const isNotFound = error === 'User not found';
+    const isNotFound = error === t('resume.public.userNotFound');
 
     return (
       <div

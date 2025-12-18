@@ -568,7 +568,7 @@ export default function HomePage() {
                   rounded="full"
                   className="px-16 sm:px-20 py-6 sm:py-8 text-[14px] font-black uppercase tracking-[0.3em] shadow-theme-xl hover:scale-105 transition-transform"
                 >
-                  Enter
+                  {t('auth.enter', { defaultValue: 'Enter' })}
                 </Button>
               </Link>
             </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { register } from '../api/auth';
@@ -22,22 +22,31 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  // Memoized username sanitizer (2025 best practice)
+  const handleUsernameChange = useCallback((value: string) => {
+    setUsername(value.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  }, []);
 
-    try {
-      const response = await register({ email, username, password, name });
-      setAuth(response.user, response.accessToken, response.refreshToken);
-      navigate('/'); // Direct navigation (2025 best practice)
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setError(err.response?.data?.message || t('errors.registrationFailed'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Memoized submit handler (2025 best practice)
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError('');
+      setLoading(true);
+
+      try {
+        const response = await register({ email, username, password, name });
+        setAuth(response.user, response.accessToken, response.refreshToken);
+        navigate('/'); // Direct navigation (2025 best practice)
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        setError(err.response?.data?.message || t('errors.registrationFailed'));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, username, password, name, setAuth, navigate, t],
+  );
 
   return (
     <div
@@ -58,7 +67,7 @@ export default function RegisterPage() {
               className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
               style={{ fontFamily: 'var(--font-family-mono-brand)' }}
             >
-              Create Your Archive
+              {t('auth.createArchive', { defaultValue: 'Create Your Archive' })}
             </p>
           </div>
 
@@ -91,9 +100,7 @@ export default function RegisterPage() {
                 size="lg"
                 icon={<AtSign size={18} />}
                 value={username}
-                onChange={(value: string) =>
-                  setUsername(value.toLowerCase().replace(/[^a-z0-9]/g, ''))
-                }
+                onChange={handleUsernameChange}
                 required
                 placeholder="johndoe"
                 hint={t('auth.usernameRule')}

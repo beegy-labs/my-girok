@@ -71,18 +71,32 @@ export default function MyResumePage() {
   );
 
   // Memoize other handlers
+  const handleCloseModal = useCallback(() => {
+    setShowShareModal(false);
+    setSelectedResumeId(null);
+  }, []);
+
+  // Memoized escape key handler for modal (2025 best practice)
+  const handleModalKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseModal();
+      }
+    },
+    [handleCloseModal],
+  );
+
   const handleCreateShare = useCallback(async () => {
     if (!selectedResumeId) return;
 
     try {
       await createResumeShare(selectedResumeId, { duration: shareDuration });
       await loadData();
-      setShowShareModal(false);
-      setSelectedResumeId(null);
+      handleCloseModal();
     } catch (_err) {
       setError(t('resume.errors.shareFailed'));
     }
-  }, [selectedResumeId, shareDuration, loadData, t]);
+  }, [selectedResumeId, shareDuration, loadData, handleCloseModal, t]);
 
   const handleDeleteShare = useCallback(
     async (shareId: string) => {
@@ -431,12 +445,7 @@ export default function MyResumePage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby={shareModalTitleId}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setShowShareModal(false);
-                setSelectedResumeId(null);
-              }
-            }}
+            onKeyDown={handleModalKeyDown}
           >
             <Card
               variant="secondary"
@@ -471,10 +480,7 @@ export default function MyResumePage() {
                   variant="secondary"
                   size="lg"
                   rounded="default"
-                  onClick={() => {
-                    setShowShareModal(false);
-                    setSelectedResumeId(null);
-                  }}
+                  onClick={handleCloseModal}
                   className="flex-1"
                 >
                   {t('common.cancel')}

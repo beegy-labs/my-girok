@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Resume } from '../../api/resume';
@@ -6,6 +6,12 @@ import { exportResumeToPDF, printResumePDF } from '../../utils/pdf';
 import { Button } from '@my-girok/ui-components';
 import ShareLinkModal from './ShareLinkModal';
 import { Download, Printer, Share2, Pencil, Eye, Link2, User } from 'lucide-react';
+
+// Static badge color classes (2025 best practice - define constants outside component)
+const BADGE_COLOR_CLASSES = {
+  blue: 'bg-theme-status-info-bg text-theme-status-info-text',
+  green: 'bg-theme-status-success-bg text-theme-status-success-text',
+} as const;
 
 /**
  * ResumeActionBar - V0.0.1 AAA Workstation Design
@@ -38,7 +44,8 @@ export default function ResumeActionBar({
   const [exporting, setExporting] = useState(false);
   const [printing, setPrinting] = useState(false);
 
-  const handlePrint = async () => {
+  // Memoized print handler (2025 best practice)
+  const handlePrint = useCallback(async () => {
     setPrinting(true);
     try {
       const paperSize = resume.paperSize || 'A4';
@@ -49,9 +56,10 @@ export default function ResumeActionBar({
     } finally {
       setPrinting(false);
     }
-  };
+  }, [resume, t]);
 
-  const handleExportPDF = async () => {
+  // Memoized PDF export handler (2025 best practice)
+  const handleExportPDF = useCallback(async () => {
     setExporting(true);
     try {
       const paperSize = resume.paperSize || 'A4';
@@ -66,45 +74,56 @@ export default function ResumeActionBar({
     } finally {
       setExporting(false);
     }
-  };
+  }, [resume, t]);
 
   const isOwner = mode === 'owner';
   const isPublic = mode === 'public';
   const canEdit = isOwner || (isPublic && isOwnProfile);
   const canShare = isOwner;
 
-  // Badge configuration based on mode
-  const badgeConfig = {
-    owner: { icon: Eye, text: t('resume.preview.badge'), color: 'blue' as const },
-    public: { icon: User, text: t('resume.public.yourProfile'), color: 'green' as const },
-    shared: { icon: Link2, text: t('resume.shared.badge'), color: 'green' as const },
-  };
+  // Memoized badge configuration based on mode (2025 best practice)
+  const badge = useMemo(
+    () =>
+      ({
+        owner: { icon: Eye, text: t('resume.preview.badge'), color: 'blue' as const },
+        public: { icon: User, text: t('resume.public.yourProfile'), color: 'green' as const },
+        shared: { icon: Link2, text: t('resume.shared.badge'), color: 'green' as const },
+      })[mode],
+    [mode, t],
+  );
 
-  const badge = badgeConfig[mode];
-
-  const badgeColorClasses = {
-    blue: 'bg-theme-status-info-bg text-theme-status-info-text',
-    green: 'bg-theme-status-success-bg text-theme-status-success-text',
-  };
-
-  // Determine title and subtitle based on mode
-  const getTitle = () => {
+  // Memoized title and subtitle (2025 best practice)
+  const title = useMemo(() => {
     if (isPublic) {
       return t('resume.preview.title', { name: resume.name });
     }
     return isOwner
       ? t('resume.preview.title', { name: resume.name })
       : t('resume.shared.resumeTitle', { name: resume.name });
-  };
+  }, [isPublic, isOwner, resume.name, t]);
 
-  const getSubtitle = () => {
+  const subtitle = useMemo(() => {
     if (isPublic && username) {
       return `@${username}`;
     }
     return null;
-  };
+  }, [isPublic, username]);
 
   const editRoute = `/resume/edit/${resume.id}`;
+
+  // Memoized navigation handler (2025 best practice)
+  const handleNavigateToEdit = useCallback(() => {
+    navigate(editRoute);
+  }, [navigate, editRoute]);
+
+  // Memoized share modal toggle (2025 best practice)
+  const handleOpenShareModal = useCallback(() => {
+    setShowShareModal(true);
+  }, []);
+
+  const handleCloseShareModal = useCallback(() => {
+    setShowShareModal(false);
+  }, []);
 
   const BadgeIcon = badge.icon;
 
@@ -120,20 +139,20 @@ export default function ResumeActionBar({
                 className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-2"
                 style={{ fontFamily: 'var(--font-family-serif-title)' }}
               >
-                {getTitle()}
+                {title}
               </h1>
               <div className="flex items-center gap-3 mt-2">
-                {getSubtitle() && (
+                {subtitle && (
                   <p
                     className="text-[11px] font-black uppercase tracking-[0.25em] text-theme-text-secondary"
                     style={{ fontFamily: 'var(--font-family-mono-brand)' }}
                   >
-                    {getSubtitle()}
+                    {subtitle}
                   </p>
                 )}
                 {isPublic && isOwnProfile && (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${badgeColorClasses[badge.color]}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${BADGE_COLOR_CLASSES[badge.color]}`}
                   >
                     <BadgeIcon className="w-3 h-3" aria-hidden="true" />
                     {badge.text}
@@ -141,7 +160,7 @@ export default function ResumeActionBar({
                 )}
                 {!isPublic && (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${badgeColorClasses[badge.color]}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${BADGE_COLOR_CLASSES[badge.color]}`}
                   >
                     <BadgeIcon className="w-3 h-3" aria-hidden="true" />
                     {badge.text}
@@ -152,7 +171,7 @@ export default function ResumeActionBar({
             {canEdit && (
               <Button
                 variant="secondary"
-                onClick={() => navigate(editRoute)}
+                onClick={handleNavigateToEdit}
                 size="lg"
                 rounded="default"
                 icon={<Pencil className="w-4 h-4" />}
@@ -190,7 +209,7 @@ export default function ResumeActionBar({
             {canShare && (
               <Button
                 variant="secondary"
-                onClick={() => setShowShareModal(true)}
+                onClick={handleOpenShareModal}
                 size="lg"
                 rounded="default"
                 icon={<Share2 className="w-4 h-4" />}
@@ -205,7 +224,7 @@ export default function ResumeActionBar({
 
       {/* Share Modal - Only shown in owner mode */}
       {canShare && showShareModal && (
-        <ShareLinkModal onClose={() => setShowShareModal(false)} resumeId={resume.id} />
+        <ShareLinkModal onClose={handleCloseShareModal} resumeId={resume.id} />
       )}
     </>
   );

@@ -3,21 +3,27 @@ import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { useClickOutside } from '@my-girok/ui-components';
 
+// Static language options (2025 best practice - define constants outside component)
+const LANGUAGES = [
+  { code: 'ko', label: '한국어', flag: '🇰🇷' },
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵' },
+] as const;
+
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const languages = [
-    { code: 'ko', label: '한국어', flag: '🇰🇷' },
-    { code: 'en', label: 'English', flag: '🇺🇸' },
-    { code: 'ja', label: '日本語', flag: '🇯🇵' },
-  ];
-
-  const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0];
+  const currentLanguage = LANGUAGES.find((lang) => lang.code === i18n.language) || LANGUAGES[0];
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
+  }, []);
+
+  // Memoized toggle handler (2025 best practice)
+  const handleToggle = useCallback(() => {
+    setIsOpen((prev) => !prev);
   }, []);
 
   const changeLanguage = useCallback(
@@ -39,7 +45,7 @@ export default function LanguageSwitcher() {
     <div className="relative" ref={dropdownRef}>
       {/* V0.0.1: 48px touch target, font-black uppercase */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         aria-label={t('aria.selectLanguage', { current: currentLanguage.label })}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -54,7 +60,7 @@ export default function LanguageSwitcher() {
           role="listbox"
           aria-label={t('aria.languageOptions')}
         >
-          {languages.map((lang) => (
+          {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
               onClick={() => changeLanguage(lang.code)}

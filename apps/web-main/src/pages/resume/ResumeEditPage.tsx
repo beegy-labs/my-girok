@@ -120,39 +120,43 @@ export default function ResumeEditPage() {
     [resume?.id, resume?.userId, resume?.sections, defaultSections],
   );
 
-  const handleSubmit = async (data: CreateResumeDto) => {
-    try {
-      if (resumeId) {
-        // Update existing resume
-        const updated = await updateResume(resumeId, data);
-        setResume(updated);
-        setPreviewData(updated);
-        // Direct navigation - React Router v7 supports this without issues
-        navigate(`/resume/preview/${updated.id}`);
-      } else {
-        // Create new resume
-        const created = await createResume(data);
-        setResume(created);
-        setPreviewData(created);
-        // Direct navigation - React Router v7 supports this without issues
-        navigate(`/resume/preview/${created.id}`);
+  // Memoized submit handler (2025 best practice)
+  const handleSubmit = useCallback(
+    async (data: CreateResumeDto) => {
+      try {
+        if (resumeId) {
+          // Update existing resume
+          const updated = await updateResume(resumeId, data);
+          setResume(updated);
+          setPreviewData(updated);
+          // Direct navigation - React Router v7 supports this without issues
+          navigate(`/resume/preview/${updated.id}`);
+        } else {
+          // Create new resume
+          const created = await createResume(data);
+          setResume(created);
+          setPreviewData(created);
+          // Direct navigation - React Router v7 supports this without issues
+          navigate(`/resume/preview/${created.id}`);
+        }
+      } catch (error: unknown) {
+        // Log detailed error for debugging
+        console.error('Resume save failed:', error);
+        const err = error as { response?: { data?: { message?: string | string[] } } };
+        if (err.response?.data?.message) {
+          console.error('Server error message:', err.response.data.message);
+          // Show specific validation errors if available
+          const serverMessage = Array.isArray(err.response.data.message)
+            ? err.response.data.message.join(', ')
+            : err.response.data.message;
+          setError(`${t('resume.errors.saveFailed')}: ${serverMessage}`);
+        } else {
+          setError(t('resume.errors.saveFailed'));
+        }
       }
-    } catch (error: unknown) {
-      // Log detailed error for debugging
-      console.error('Resume save failed:', error);
-      const err = error as { response?: { data?: { message?: string | string[] } } };
-      if (err.response?.data?.message) {
-        console.error('Server error message:', err.response.data.message);
-        // Show specific validation errors if available
-        const serverMessage = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : err.response.data.message;
-        setError(`${t('resume.errors.saveFailed')}: ${serverMessage}`);
-      } else {
-        setError(t('resume.errors.saveFailed'));
-      }
-    }
-  };
+    },
+    [resumeId, navigate, t],
+  );
 
   if (loading) {
     return <LoadingSpinner fullScreen message={t('errors.loadingResume')} />;

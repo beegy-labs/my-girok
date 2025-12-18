@@ -1,10 +1,6 @@
 import { useState, useCallback } from 'react';
 import { TFunction } from 'i18next';
-import {
-  TextInput,
-  Button,
-  CollapsibleSection,
-} from '@my-girok/ui-components';
+import { TextInput, Button, CollapsibleSection } from '@my-girok/ui-components';
 import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
 import type { Skill, SkillItem } from '../../api/resume';
 
@@ -20,6 +16,11 @@ interface SkillsSectionProps {
 export default function SkillsSection({ skills, onChange, t }: SkillsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
+  // Memoized toggle handler (2025 best practice)
+  const handleToggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
+
   const handleAddCategory = useCallback(() => {
     onChange([
       ...skills,
@@ -32,77 +33,96 @@ export default function SkillsSection({ skills, onChange, t }: SkillsSectionProp
     ]);
   }, [skills, onChange]);
 
-  const handleDeleteCategory = useCallback((skillIndex: number) => {
-    onChange(skills.filter((_, i) => i !== skillIndex));
-  }, [skills, onChange]);
+  const handleDeleteCategory = useCallback(
+    (skillIndex: number) => {
+      onChange(skills.filter((_, i) => i !== skillIndex));
+    },
+    [skills, onChange],
+  );
 
-  const handleCategoryChange = useCallback((skillIndex: number, category: string) => {
-    const newSkills = [...skills];
-    newSkills[skillIndex] = { ...newSkills[skillIndex], category };
-    onChange(newSkills);
-  }, [skills, onChange]);
+  const handleCategoryChange = useCallback(
+    (skillIndex: number, category: string) => {
+      const newSkills = [...skills];
+      newSkills[skillIndex] = { ...newSkills[skillIndex], category };
+      onChange(newSkills);
+    },
+    [skills, onChange],
+  );
 
-  const handleAddSkillItem = useCallback((skillIndex: number) => {
-    const newSkills = [...skills];
-    const currentItems = Array.isArray(newSkills[skillIndex].items)
-      ? newSkills[skillIndex].items
-      : [];
-    newSkills[skillIndex] = {
-      ...newSkills[skillIndex],
-      items: [...currentItems, { name: '', description: '' }],
-    };
-    onChange(newSkills);
-  }, [skills, onChange]);
+  const handleAddSkillItem = useCallback(
+    (skillIndex: number) => {
+      const newSkills = [...skills];
+      const currentItems = Array.isArray(newSkills[skillIndex].items)
+        ? newSkills[skillIndex].items
+        : [];
+      newSkills[skillIndex] = {
+        ...newSkills[skillIndex],
+        items: [...currentItems, { name: '', description: '' }],
+      };
+      onChange(newSkills);
+    },
+    [skills, onChange],
+  );
 
-  const handleDeleteSkillItem = useCallback((skillIndex: number, itemIndex: number) => {
-    const newSkills = [...skills];
-    const newItems = Array.isArray(newSkills[skillIndex].items)
-      ? newSkills[skillIndex].items.filter((_, i) => i !== itemIndex)
-      : [];
-    newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-    onChange(newSkills);
-  }, [skills, onChange]);
+  const handleDeleteSkillItem = useCallback(
+    (skillIndex: number, itemIndex: number) => {
+      const newSkills = [...skills];
+      const newItems = Array.isArray(newSkills[skillIndex].items)
+        ? newSkills[skillIndex].items.filter((_, i) => i !== itemIndex)
+        : [];
+      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+      onChange(newSkills);
+    },
+    [skills, onChange],
+  );
 
-  const handleSkillItemNameChange = useCallback((skillIndex: number, itemIndex: number, name: string) => {
-    const newSkills = [...skills];
-    const newItems = [...(newSkills[skillIndex].items || [])];
-    newItems[itemIndex] = typeof newItems[itemIndex] === 'string'
-      ? { name, description: '' }
-      : { ...newItems[itemIndex], name };
-    newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-    onChange(newSkills);
-  }, [skills, onChange]);
+  const handleSkillItemNameChange = useCallback(
+    (skillIndex: number, itemIndex: number, name: string) => {
+      const newSkills = [...skills];
+      const newItems = [...(newSkills[skillIndex].items || [])];
+      newItems[itemIndex] =
+        typeof newItems[itemIndex] === 'string'
+          ? { name, description: '' }
+          : { ...newItems[itemIndex], name };
+      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+      onChange(newSkills);
+    },
+    [skills, onChange],
+  );
 
-  const handleSkillItemDescriptionsChange = useCallback((
-    skillIndex: number,
-    itemIndex: number,
-    descriptions: HierarchicalItem[]
-  ) => {
-    const newSkills = [...skills];
-    const newItems = [...(newSkills[skillIndex].items || [])];
-    const currentItem = newItems[itemIndex];
-    newItems[itemIndex] = typeof currentItem === 'string'
-      ? { name: currentItem, description: '', descriptions }
-      : { ...currentItem, descriptions };
-    newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-    onChange(newSkills);
-  }, [skills, onChange]);
+  const handleSkillItemDescriptionsChange = useCallback(
+    (skillIndex: number, itemIndex: number, descriptions: HierarchicalItem[]) => {
+      const newSkills = [...skills];
+      const newItems = [...(newSkills[skillIndex].items || [])];
+      const currentItem = newItems[itemIndex];
+      newItems[itemIndex] =
+        typeof currentItem === 'string'
+          ? { name: currentItem, description: '', descriptions }
+          : { ...currentItem, descriptions };
+      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+      onChange(newSkills);
+    },
+    [skills, onChange],
+  );
 
-  const handleMoveSkillItem = useCallback((skillIndex: number, itemIndex: number, direction: 'up' | 'down') => {
-    const newSkills = [...skills];
-    const newItems = [...(newSkills[skillIndex].items || [])];
-    const targetIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1;
-    [newItems[itemIndex], newItems[targetIndex]] = [newItems[targetIndex], newItems[itemIndex]];
-    newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
-    onChange(newSkills);
-  }, [skills, onChange]);
+  const handleMoveSkillItem = useCallback(
+    (skillIndex: number, itemIndex: number, direction: 'up' | 'down') => {
+      const newSkills = [...skills];
+      const newItems = [...(newSkills[skillIndex].items || [])];
+      const targetIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1;
+      [newItems[itemIndex], newItems[targetIndex]] = [newItems[targetIndex], newItems[itemIndex]];
+      newSkills[skillIndex] = { ...newSkills[skillIndex], items: newItems };
+      onChange(newSkills);
+    },
+    [skills, onChange],
+  );
 
   return (
     <CollapsibleSection
       title={t('resume.sections.skills')}
       icon="⚡"
       isExpanded={isExpanded}
-      onToggle={() => setIsExpanded(!isExpanded)}
+      onToggle={handleToggleExpanded}
       count={skills.length}
       variant="secondary"
       headerAction={
@@ -156,7 +176,11 @@ interface SkillCategoryProps {
   onAddSkillItem: (skillIndex: number) => void;
   onDeleteSkillItem: (skillIndex: number, itemIndex: number) => void;
   onSkillItemNameChange: (skillIndex: number, itemIndex: number, name: string) => void;
-  onSkillItemDescriptionsChange: (skillIndex: number, itemIndex: number, descriptions: HierarchicalItem[]) => void;
+  onSkillItemDescriptionsChange: (
+    skillIndex: number,
+    itemIndex: number,
+    descriptions: HierarchicalItem[],
+  ) => void;
   onMoveSkillItem: (skillIndex: number, itemIndex: number, direction: 'up' | 'down') => void;
 }
 
@@ -249,7 +273,11 @@ interface SkillItemCardProps {
   t: TFunction;
   onDeleteSkillItem: (skillIndex: number, itemIndex: number) => void;
   onSkillItemNameChange: (skillIndex: number, itemIndex: number, name: string) => void;
-  onSkillItemDescriptionsChange: (skillIndex: number, itemIndex: number, descriptions: HierarchicalItem[]) => void;
+  onSkillItemDescriptionsChange: (
+    skillIndex: number,
+    itemIndex: number,
+    descriptions: HierarchicalItem[],
+  ) => void;
   onMoveSkillItem: (skillIndex: number, itemIndex: number, direction: 'up' | 'down') => void;
 }
 
@@ -322,7 +350,9 @@ function SkillItemCard({
       {/* Hierarchical Description */}
       <HierarchicalDescription
         items={(itemData.descriptions || []) as HierarchicalItem[]}
-        onChange={(descriptions) => onSkillItemDescriptionsChange(skillIndex, itemIndex, descriptions)}
+        onChange={(descriptions) =>
+          onSkillItemDescriptionsChange(skillIndex, itemIndex, descriptions)
+        }
         label={t('resume.form.experience')}
         placeholder={t('resume.form.experiencePlaceholder')}
         maxDepth={4}

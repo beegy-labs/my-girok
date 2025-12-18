@@ -1073,6 +1073,108 @@ Prefix unused variables with underscore to satisfy ESLint:
 const { projects: _projects, ...dataToSubmit } = formData;
 ```
 
+## React 2025 Best Practices
+
+### Memoization Pattern (MANDATORY)
+
+All event handlers and derived data must be memoized to prevent unnecessary re-renders:
+
+```typescript
+// ✅ DO - Memoize all handlers with useCallback
+const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  e.preventDefault();
+  // ... implementation
+}, [dependencies]);
+
+// ✅ DO - Memoize derived data with useMemo
+const filteredItems = useMemo(
+  () => items.filter(item => item.active),
+  [items]
+);
+
+// ✅ DO - Memoize toggle handlers
+const handleToggle = useCallback(() => {
+  setIsOpen(prev => !prev);
+}, []);
+
+// ❌ DON'T - Inline functions in JSX
+<button onClick={() => setIsOpen(!isOpen)}>Toggle</button>
+
+// ✅ DO - Use memoized handler
+<button onClick={handleToggle}>Toggle</button>
+```
+
+### Static Constants Outside Component (MANDATORY)
+
+Move static arrays and objects outside the component to prevent recreation on every render:
+
+```typescript
+// ✅ DO - Define outside component
+const LANGUAGES = [
+  { code: 'ko', label: '한국어', flag: '🇰🇷' },
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+] as const;
+
+const BADGE_COLOR_CLASSES = {
+  blue: 'bg-theme-status-info-bg text-theme-status-info-text',
+  green: 'bg-theme-status-success-bg text-theme-status-success-text',
+} as const;
+
+export default function Component() {
+  // Use constants directly
+  const current = LANGUAGES.find((lang) => lang.code === code);
+}
+
+// ❌ DON'T - Define inside component
+export default function Component() {
+  const languages = [
+    // Recreated every render!
+    { code: 'ko', label: '한국어' },
+  ];
+}
+```
+
+### i18n Pattern (MANDATORY)
+
+Never hardcode user-facing strings. Always use translation function with defaultValue:
+
+```typescript
+// ❌ DON'T - Hardcoded strings
+<p>Create Your Archive</p>
+<button>Enter</button>
+
+// ✅ DO - Use t() with defaultValue fallback
+<p>{t('auth.createArchive', { defaultValue: 'Create Your Archive' })}</p>
+<button>{t('auth.enter', { defaultValue: 'Enter' })}</button>
+```
+
+### Direct Navigation Pattern (React Router v7)
+
+Use direct `navigate()` calls instead of state-based navigation:
+
+```typescript
+// ❌ DON'T - State-based navigation (unnecessary re-render)
+const [shouldNavigate, setShouldNavigate] = useState(false);
+useEffect(() => {
+  if (shouldNavigate) navigate('/');
+}, [shouldNavigate]);
+
+// ✅ DO - Direct navigation
+await login(credentials);
+navigate('/'); // Direct navigation after async operation
+```
+
+### Component Memoization
+
+Use React.memo for list item components that receive stable props:
+
+```typescript
+// ✅ DO - Memoize list items
+const MenuItem = memo(function MenuItem({ item, onClick }: Props) {
+  return <div onClick={onClick}>{item.name}</div>;
+});
+```
+
 ## References
 
 - **Design System**: `/docs/DESIGN_SYSTEM.md`
