@@ -166,7 +166,7 @@ export const MenuRow = memo(function MenuRow({
         )}
       </div>
 
-      {/* Pin Button (optional) */}
+      {/* Pin Button (optional) - min 44x44px for WCAG 2.5.5 touch target */}
       {onPin && (
         <span
           role="button"
@@ -175,7 +175,7 @@ export const MenuRow = memo(function MenuRow({
           onKeyDown={handlePinKeyDown}
           aria-label={isPinned ? `Unpin ${title}` : `Pin ${title}`}
           aria-pressed={isPinned}
-          className={`p-2 transition-colors ${isPinned ? 'text-theme-primary' : 'text-theme-border-default hover:text-theme-text-secondary'} ${focusClasses}`}
+          className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${isPinned ? 'text-theme-primary' : 'text-theme-border-default hover:text-theme-text-secondary'} ${focusClasses}`}
         >
           <PinIcon filled={isPinned} />
         </span>
