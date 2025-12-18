@@ -32,11 +32,53 @@
     "logout": "ログアウト",
     "changePassword": "パスワード変更"
   },
+  "aria": {
+    "goToHomepage": "ホームページへ移動",
+    "switchToLight": "ライトモードに切り替え",
+    "switchToDark": "ダークモードに切り替え",
+    "userMenu": "ユーザーメニュー",
+    "mainNavigation": "メインナビゲーション",
+    "mainMenu": "メインメニュー",
+    "footerNavigation": "フッターナビゲーション",
+    "toggleTheme": "テーマ切り替え",
+    "selectLanguage": "言語を選択。現在: {{current}}",
+    "languageOptions": "言語オプション",
+    "moveUp": "上に移動",
+    "moveDown": "下に移動"
+  },
   "home": {
     "title": "My-Girokへようこそ",
     "subtitle": "あなたのプロフィールを管理",
-    "description": "My-Girokは、履歴書、ブログ、予算管理を一箇所で行えるプラットフォームです。",
+    "description": "Girokは、履歴書、ブログ、予算管理を一箇所で行えるプラットフォームです。",
     "myApps": "マイアプリ",
+    "journal": {
+      "title": "個人日記",
+      "description": "日々の思考と反省を記録する"
+    },
+    "career": {
+      "title": "キャリアアーカイブ",
+      "description": "履歴書とプロフィールを管理"
+    },
+    "finance": {
+      "title": "家計簿",
+      "description": "収入と支出を追跡し、予算を管理"
+    },
+    "library": {
+      "title": "グローバルライブラリ",
+      "description": "記事、本、学習リソースを整理"
+    },
+    "network": {
+      "title": "ネットワーク",
+      "description": "専門家やメンターとつながる"
+    },
+    "stats": {
+      "title": "インサイト統計",
+      "description": "記録に関するインサイトと分析を表示"
+    },
+    "notifications": {
+      "title": "通知",
+      "description": "アラートとアクティビティ更新を管理"
+    },
     "records": {
       "title": "記録帳",
       "description": "日常と思考を記録して整理する"
@@ -69,12 +111,14 @@
     "comingSoon": "準備中",
     "quickLinks": "クイックリンク",
     "viewPublicProfile": "公開プロフィールを表示",
-    "settings": "設定",
+    "settingsLink": "設定",
     "recordBook": "さんの記録帳",
     "startToday": "今日も自分について記録しましょう",
     "allInOne": "履歴書、ブログ、家計簿を一箇所で",
     "createRecordBook": "記録帳を作成",
-    "recordingTypes": "記録できること"
+    "recordingTypes": "記録できること",
+    "archiveFunctions": "アーカイブ機能",
+    "supportMessage": "記録するたびにあなたのアーカイブは成長します。"
   },
   "auth": {
     "loginTitle": "ログイン",
@@ -87,7 +131,7 @@
     "username": "ユーザー名",
     "usernameHint": "ユーザー名（URLになります）",
     "usernameRule": "3〜20文字、英小文字と数字のみ使用可能",
-    "passwordRule": "最低8文字以上",
+    "passwordRule": "8文字以上、大文字1つ、特殊文字1つを含む",
     "loginButton": "ログイン",
     "registerButton": "記録帳を作成",
     "registering": "記録帳を作成中...",
@@ -98,7 +142,31 @@
     "startRecording": "記録を始めましょう",
     "createYourSpace": "あなただけの記録帳を作成してください",
     "termsAgreement": "登録することで、利用規約とプライバシーポリシーに同意したことになります",
-    "rememberEmail": "メールアドレスを記憶する"
+    "rememberEmail": "メールアドレスを記憶する",
+    "welcomeBack": "おかえりなさい",
+    "createAccount": "アカウント作成"
+  },
+  "footer": {
+    "tagline": "あなたの物語を記録する",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約"
+  },
+  "placeholder": {
+    "journal": "日々の経験を書いて振り返りましょう。この機能は近日公開予定です。",
+    "finance": "収入、支出、財務目標を追跡しましょう。この機能は近日公開予定です。",
+    "library": "読み物、記事、学習資料を整理しましょう。この機能は近日公開予定です。",
+    "network": "専門家やメンターとつながりを築きましょう。この機能は近日公開予定です。",
+    "stats": "記録されたデータからインサイトを得て、進捗を追跡しましょう。この機能は近日公開予定です。",
+    "notifications": "アラートとアクティビティ更新を確認しましょう。この機能は近日公開予定です。"
+  },
+  "badge": {
+    "myArchive": "マイアーカイブ",
+    "careerArchive": "キャリアアーカイブ",
+    "archiveSupport": "アーカイブサポート",
+    "personalArchive": "パーソナルアーカイブ",
+    "features": "機能",
+    "comingSoon": "準備中",
+    "environment": "環境設定"
   },
   "resume": {
     "edit": "履歴書編集",
@@ -522,13 +590,13 @@
     "newPassword": "新しいパスワード",
     "confirmPassword": "新しいパスワードの確認",
     "currentPasswordPlaceholder": "現在のパスワードを入力",
-    "newPasswordPlaceholder": "新しいパスワードを入力（最低8文字）",
+    "newPasswordPlaceholder": "新しいパスワード（8文字+、大文字、特殊文字）",
     "confirmPasswordPlaceholder": "新しいパスワードを再入力",
     "changeButton": "パスワード変更",
     "changing": "パスワード変更中...",
     "backToHome": "ホームに戻る",
     "errors": {
-      "tooShort": "新しいパスワードは最低8文字以上である必要があります",
+      "tooShort": "パスワードは8文字以上、大文字1つ、特殊文字1つを含む必要があります",
       "noMatch": "新しいパスワードが一致しません",
       "failed": "パスワードの変更に失敗しました。現在のパスワードを確認してください。"
     },

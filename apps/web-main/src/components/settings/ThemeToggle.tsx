@@ -5,8 +5,7 @@ import { useUserPreferencesStore } from '../../stores/userPreferencesStore';
 
 export default function ThemeToggle() {
   const { t } = useTranslation();
-  const { preferences, loadPreferences, setTheme } =
-    useUserPreferencesStore();
+  const { preferences, loadPreferences, setTheme } = useUserPreferencesStore();
 
   useEffect(() => {
     loadPreferences();
@@ -15,8 +14,7 @@ export default function ThemeToggle() {
   const currentTheme = preferences?.theme || Theme.LIGHT;
 
   const handleToggle = async () => {
-    const newTheme =
-      currentTheme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT;
+    const newTheme = currentTheme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT;
     try {
       await setTheme(newTheme);
     } catch (error) {
@@ -27,27 +25,19 @@ export default function ThemeToggle() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h3 className="text-lg font-semibold text-theme-text-primary">
-          {t('settings.darkMode')}
-        </h3>
-        <p className="text-sm text-theme-text-secondary">
-          {t('settings.themeDescription')}
-        </p>
+        <h3 className="text-lg font-semibold text-theme-text-primary">{t('settings.darkMode')}</h3>
+        <p className="text-sm text-theme-text-secondary">{t('settings.themeDescription')}</p>
       </div>
       <button
         onClick={handleToggle}
         className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-          currentTheme === Theme.DARK
-            ? 'bg-theme-primary'
-            : 'bg-theme-border-default'
+          currentTheme === Theme.DARK ? 'bg-theme-primary' : 'bg-theme-border-default'
         }`}
-        aria-label="Toggle theme"
+        aria-label={t('aria.toggleTheme')}
       >
         <span
           className={`inline-block h-6 w-6 transform rounded-full bg-theme-bg-elevated shadow-sm transition-transform ${
-            currentTheme === Theme.DARK
-              ? 'translate-x-7'
-              : 'translate-x-1'
+            currentTheme === Theme.DARK ? 'translate-x-7' : 'translate-x-1'
           }`}
         />
       </button>

@@ -32,12 +32,54 @@
     "logout": "로그아웃",
     "changePassword": "비밀번호 변경"
   },
+  "aria": {
+    "goToHomepage": "홈페이지로 이동",
+    "switchToLight": "라이트 모드로 전환",
+    "switchToDark": "다크 모드로 전환",
+    "userMenu": "사용자 메뉴",
+    "mainNavigation": "메인 네비게이션",
+    "mainMenu": "메인 메뉴",
+    "footerNavigation": "푸터 네비게이션",
+    "toggleTheme": "테마 전환",
+    "selectLanguage": "언어 선택. 현재: {{current}}",
+    "languageOptions": "언어 옵션",
+    "moveUp": "위로 이동",
+    "moveDown": "아래로 이동"
+  },
   "home": {
     "title": "나의 기록을 정리하는 공간",
     "subtitle": "나만의 프로필을 관리하세요",
-    "description": "girok은 이력서, 기록, 자산 관리를 한 곳에서 할 수 있는 플랫폼입니다.",
+    "description": "Girok은 이력서, 기록, 자산 관리를 한 곳에서 할 수 있는 플랫폼입니다.",
     "myApps": "나의 앱",
     "welcomeSuffix": "",
+    "journal": {
+      "title": "개인 일기",
+      "description": "일상의 생각과 반성을 기록하세요"
+    },
+    "career": {
+      "title": "커리어 아카이브",
+      "description": "이력서와 전문 프로필을 관리하세요"
+    },
+    "finance": {
+      "title": "가계부",
+      "description": "수입, 지출을 추적하고 예산을 관리하세요"
+    },
+    "library": {
+      "title": "글로벌 라이브러리",
+      "description": "글, 책, 학습 자료를 정리하세요"
+    },
+    "network": {
+      "title": "네트워크",
+      "description": "전문가 및 멘토와 연결하세요"
+    },
+    "stats": {
+      "title": "인사이트 통계",
+      "description": "기록에 대한 인사이트와 분석을 확인하세요"
+    },
+    "notifications": {
+      "title": "알림",
+      "description": "알림 및 활동 업데이트를 관리하세요"
+    },
     "records": {
       "title": "기록장",
       "description": "일상과 생각을 기록하고 정리하세요"
@@ -69,25 +111,27 @@
     "comingSoon": "준비중",
     "quickLinks": "빠른 링크",
     "viewPublicProfile": "내 공개 프로필 보기",
-    "settings": "설정",
+    "settingsLink": "설정",
     "recordBook": "님의 기록장",
     "startToday": "오늘도 나에 대한 기록을 시작해보세요",
     "allInOne": "이력서, 블로그, 가계부를 한 곳에서",
     "createRecordBook": "기록장 만들기",
-    "recordingTypes": "기록할 수 있는 것들"
+    "recordingTypes": "기록할 수 있는 것들",
+    "archiveFunctions": "아카이브 기능",
+    "supportMessage": "기록할수록 당신의 아카이브가 성장합니다."
   },
   "auth": {
     "loginTitle": "로그인",
     "registerTitle": "새 기록장 만들기",
     "email": "이메일",
-    "emailAddress": "Email Address",
+    "emailAddress": "이메일 주소",
     "password": "비밀번호",
     "confirmPassword": "비밀번호 확인",
     "name": "이름",
     "username": "사용자명",
     "usernameHint": "사용자명 (URL 주소가 됩니다)",
     "usernameRule": "3-20자, 영문 소문자와 숫자만 사용 가능",
-    "passwordRule": "최소 8자 이상",
+    "passwordRule": "최소 8자, 대문자 1개, 특수문자 1개 포함",
     "loginButton": "로그인",
     "registerButton": "기록장 만들기",
     "registering": "기록장 만드는 중...",
@@ -98,7 +142,31 @@
     "startRecording": "나의 기록을 시작하세요",
     "createYourSpace": "나만의 기록장을 만드세요",
     "termsAgreement": "가입하시면 서비스 약관 및 개인정보 처리방침에 동의하게 됩니다",
-    "rememberEmail": "이메일 기억하기"
+    "rememberEmail": "이메일 기억하기",
+    "welcomeBack": "다시 오신 것을 환영합니다",
+    "createAccount": "계정 만들기"
+  },
+  "footer": {
+    "tagline": "나만의 이야기를 기록하다",
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관"
+  },
+  "placeholder": {
+    "journal": "일상의 경험을 작성하고 되돌아보세요. 이 기능은 곧 출시됩니다.",
+    "finance": "수입, 지출, 재정 목표를 추적하세요. 이 기능은 곧 출시됩니다.",
+    "library": "읽을거리, 기사, 학습 자료를 정리하세요. 이 기능은 곧 출시됩니다.",
+    "network": "전문가 및 멘토와 연결을 구축하세요. 이 기능은 곧 출시됩니다.",
+    "stats": "기록된 데이터에서 인사이트를 얻고 진행 상황을 추적하세요. 이 기능은 곧 출시됩니다.",
+    "notifications": "알림 및 활동 업데이트를 확인하세요. 이 기능은 곧 출시됩니다."
+  },
+  "badge": {
+    "myArchive": "나의 아카이브",
+    "careerArchive": "커리어 아카이브",
+    "archiveSupport": "아카이브 서포트",
+    "personalArchive": "개인 아카이브",
+    "features": "기능",
+    "comingSoon": "준비중",
+    "environment": "환경설정"
   },
   "resume": {
     "edit": "이력서 편집",
@@ -106,8 +174,8 @@
     "viewPublic": "공개 프로필 보기",
     "address": "주소",
     "contactInfo": {
-      "email": "Email",
-      "phone": "Phone",
+      "email": "이메일",
+      "phone": "전화번호",
       "address": "주소"
     },
     "birthYear": "출생 연도",
@@ -313,26 +381,26 @@
       "deleteDraft": "저장 내용이 삭제되었습니다."
     },
     "form": {
-      "resumeTitle": "Resume Title",
-      "paperSize": "Paper Size",
-      "description": "Description",
-      "descriptionPlaceholder": "Brief description of this resume",
-      "name": "Name",
+      "resumeTitle": "이력서 제목",
+      "paperSize": "용지 크기",
+      "description": "설명",
+      "descriptionPlaceholder": "이력서에 대한 간단한 설명",
+      "name": "이름",
       "email": "Email",
-      "phone": "Phone",
+      "phone": "연락처",
       "github": "GitHub",
       "blog": "Blog",
       "linkedin": "LinkedIn",
-      "profilePhoto": "Profile Photo URL",
-      "militaryService": "Military Service",
+      "profilePhoto": "프로필 사진 URL",
+      "militaryService": "병역사항",
       "selectStatus": "선택",
-      "summary": "Summary",
-      "summaryPlaceholder": "Brief introduction about yourself...",
-      "koreanSections": "Korean Resume Sections",
-      "coverLetter": "Cover Letter (자기소개서)",
+      "summary": "자기소개",
+      "summaryPlaceholder": "간략한 자기소개를 입력하세요...",
+      "koreanSections": "한국 이력서 항목",
+      "coverLetter": "자기소개서",
       "coverLetterPlaceholder": "귀하의 배경, 강점, 그리고 이 직무에 적합한 이유를 작성해주세요...",
       "coverLetterHint": "본인의 배경, 경험, 그리고 차별화된 점을 설명",
-      "applicationReason": "Application Reason (지원 동기)",
+      "applicationReason": "지원 동기",
       "applicationReasonPlaceholder": "귀사에 지원하게 된 동기와 이유를 작성해주세요...",
       "applicationReasonHint": "회사의 비전, 직무의 매력, 본인의 강점과의 연결성 등을 작성",
       "addCategory": "카테고리 추가",
@@ -343,30 +411,30 @@
       "moveDown": "아래로 이동",
       "experience": "활용 경험 / 세부 설명",
       "experiencePlaceholder": "활용 경험이나 세부 설명을 추가하려면 '+ 추가' 버튼을 클릭하세요",
-      "addCertificate": "Add Certificate",
-      "certificateName": "Certificate Name",
-      "issuer": "Issuer",
-      "issueDate": "Issue Date",
-      "expiryDate": "Expiry Date",
-      "credentialId": "Credential ID",
-      "credentialUrl": "Credential URL",
-      "remove": "Remove",
-      "noCertificates": "No certifications added yet. Click \"Add Certificate\" to get started.",
-      "attachments": "Attachments",
-      "attachmentsDesc": "Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.",
-      "saveFirst": "Please save your resume first to enable file uploads.",
-      "uploadError": "Failed to upload file",
-      "profilePhotoSection": "Profile Photo",
-      "profilePhotoDesc": "Professional photo (automatically converted to grayscale)",
-      "portfolioSection": "Portfolio",
-      "portfolioDesc": "Upload your project screenshots, designs, or PDF documents",
-      "certificatesSection": "Certificates",
-      "certificatesDesc": "Upload your certification or award documents",
-      "uploading": "Uploading...",
-      "clickToUpload": "Click to upload",
-      "clickToUploadPhoto": "Click to upload profile photo",
-      "clickToUploadPortfolio": "Click to upload portfolio file",
-      "clickToUploadCertificate": "Click to upload certificate",
+      "addCertificate": "자격증 추가",
+      "certificateName": "자격증명",
+      "issuer": "발급기관",
+      "issueDate": "발급일",
+      "expiryDate": "만료일",
+      "credentialId": "자격증 ID",
+      "credentialUrl": "인증 URL",
+      "remove": "삭제",
+      "noCertificates": "아직 추가된 자격증이 없습니다. \"자격증 추가\"를 눌러 시작하세요.",
+      "attachments": "첨부파일",
+      "attachmentsDesc": "프로필 사진(흑백), 포트폴리오, 자격증을 업로드하세요. 파일당 최대 10MB.",
+      "saveFirst": "파일 업로드를 위해 먼저 이력서를 저장해주세요.",
+      "uploadError": "파일 업로드에 실패했습니다",
+      "profilePhotoSection": "프로필 사진",
+      "profilePhotoDesc": "전문적인 사진 (자동으로 흑백 변환)",
+      "portfolioSection": "포트폴리오",
+      "portfolioDesc": "프로젝트 스크린샷, 디자인, PDF 문서를 업로드하세요",
+      "certificatesSection": "자격증",
+      "certificatesDesc": "자격증 또는 수상 서류를 업로드하세요",
+      "uploading": "업로드 중...",
+      "clickToUpload": "클릭하여 업로드",
+      "clickToUploadPhoto": "클릭하여 프로필 사진 업로드",
+      "clickToUploadPortfolio": "클릭하여 포트폴리오 업로드",
+      "clickToUploadCertificate": "클릭하여 자격증 업로드",
       "deleteDraft": "저장 내용 삭제",
       "saveAndPreview": "💾 저장 및 미리보기",
       "saving": "💾 저장 중...",
@@ -516,23 +584,23 @@
     }
   },
   "changePassword": {
-    "title": "Change Password",
-    "description": "Update your account password",
-    "currentPassword": "Current Password",
-    "newPassword": "New Password",
-    "confirmPassword": "Confirm New Password",
-    "currentPasswordPlaceholder": "Enter your current password",
-    "newPasswordPlaceholder": "Enter new password (min. 8 characters)",
-    "confirmPasswordPlaceholder": "Confirm new password",
-    "changeButton": "Change Password",
-    "changing": "Changing Password...",
-    "backToHome": "Back to Home",
+    "title": "비밀번호 변경",
+    "description": "계정 비밀번호를 변경합니다",
+    "currentPassword": "현재 비밀번호",
+    "newPassword": "새 비밀번호",
+    "confirmPassword": "새 비밀번호 확인",
+    "currentPasswordPlaceholder": "현재 비밀번호를 입력하세요",
+    "newPasswordPlaceholder": "새 비밀번호 입력 (8자+, 대문자, 특수문자)",
+    "confirmPasswordPlaceholder": "새 비밀번호를 다시 입력하세요",
+    "changeButton": "비밀번호 변경",
+    "changing": "변경 중...",
+    "backToHome": "홈으로 돌아가기",
     "errors": {
-      "tooShort": "New password must be at least 8 characters long",
-      "noMatch": "New passwords do not match",
-      "failed": "Failed to change password. Please check your current password."
+      "tooShort": "새 비밀번호는 최소 8자, 대문자 1개, 특수문자 1개를 포함해야 합니다",
+      "noMatch": "새 비밀번호가 일치하지 않습니다",
+      "failed": "비밀번호 변경에 실패했습니다. 현재 비밀번호를 확인해주세요."
     },
-    "success": "Password changed successfully!"
+    "success": "비밀번호가 성공적으로 변경되었습니다!"
   },
   "status": {
     "loading": {
@@ -569,10 +637,10 @@
     }
   },
   "errors": {
-    "loginFailed": "Login failed. Please check your credentials.",
-    "registrationFailed": "Registration failed. Please try again.",
-    "loadingResume": "Loading resume...",
-    "startFilling": "Start filling the form to see your resume preview"
+    "loginFailed": "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.",
+    "registrationFailed": "회원가입에 실패했습니다. 다시 시도해주세요.",
+    "loadingResume": "이력서 불러오는 중...",
+    "startFilling": "이력서 미리보기를 보려면 양식을 작성하세요"
   },
   "placeholders": {
     "email": "you@example.com",

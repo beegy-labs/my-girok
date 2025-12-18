@@ -32,11 +32,53 @@
     "logout": "Logout",
     "changePassword": "Change Password"
   },
+  "aria": {
+    "goToHomepage": "Go to homepage",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "userMenu": "User menu",
+    "mainNavigation": "Main navigation",
+    "mainMenu": "Main menu",
+    "footerNavigation": "Footer navigation",
+    "toggleTheme": "Toggle theme",
+    "selectLanguage": "Select language. Current: {{current}}",
+    "languageOptions": "Language options",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
+  },
   "home": {
     "title": "Welcome to My-Girok",
     "subtitle": "Manage Your Professional Profile",
     "description": "My-Girok is a platform for managing your resume, blog, and budget all in one place.",
     "myApps": "My Apps",
+    "journal": {
+      "title": "Personal Journal",
+      "description": "Record your daily thoughts and reflections"
+    },
+    "career": {
+      "title": "Career Archive",
+      "description": "Manage your resume and professional profile"
+    },
+    "finance": {
+      "title": "Financial Ledger",
+      "description": "Track income, expenses, and manage your budget"
+    },
+    "library": {
+      "title": "Global Library",
+      "description": "Organize articles, books, and learning resources"
+    },
+    "network": {
+      "title": "Network",
+      "description": "Connect with professionals and mentors"
+    },
+    "stats": {
+      "title": "Insight Stats",
+      "description": "View insights and analytics about your records"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage alerts and activity updates"
+    },
     "records": {
       "title": "Records",
       "description": "Document and organize your daily life and thoughts"
@@ -69,12 +111,14 @@
     "comingSoon": "Coming Soon",
     "quickLinks": "Quick Links",
     "viewPublicProfile": "View Public Profile",
-    "settings": "Settings",
+    "settingsLink": "Settings",
     "recordBook": "'s Record Book",
     "startToday": "Start recording about yourself today",
     "allInOne": "Resume, blog, and budget all in one place",
     "createRecordBook": "Create Record Book",
-    "recordingTypes": "What You Can Record"
+    "recordingTypes": "What You Can Record",
+    "archiveFunctions": "Archive Functions",
+    "supportMessage": "Your archive grows with every story you record."
   },
   "auth": {
     "loginTitle": "Login",
@@ -87,7 +131,7 @@
     "username": "Username",
     "usernameHint": "Username (will be your URL)",
     "usernameRule": "3-20 characters, lowercase letters and numbers only",
-    "passwordRule": "Minimum 8 characters",
+    "passwordRule": "Min 8 chars, 1 uppercase, 1 special character",
     "loginButton": "Login",
     "registerButton": "Create Record",
     "registering": "Creating your record...",
@@ -98,7 +142,31 @@
     "startRecording": "Start your recording journey",
     "createYourSpace": "Create your personal record",
     "termsAgreement": "By signing up, you agree to our Terms of Service and Privacy Policy",
-    "rememberEmail": "Remember my email"
+    "rememberEmail": "Remember my email",
+    "welcomeBack": "WELCOME BACK",
+    "createAccount": "CREATE ACCOUNT"
+  },
+  "footer": {
+    "tagline": "Recording your own story",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "placeholder": {
+    "journal": "Write and reflect on your daily experiences. This feature is coming soon.",
+    "finance": "Track your income, expenses, and financial goals. This feature is coming soon.",
+    "library": "Organize your reading lists, articles, and learning materials. This feature is coming soon.",
+    "network": "Build connections with professionals and mentors. This feature is coming soon.",
+    "stats": "Gain insights from your recorded data and track your progress. This feature is coming soon.",
+    "notifications": "Stay updated with alerts and activity notifications. This feature is coming soon."
+  },
+  "badge": {
+    "myArchive": "MY ARCHIVE",
+    "careerArchive": "CAREER ARCHIVE",
+    "archiveSupport": "ARCHIVE SUPPORT",
+    "personalArchive": "PERSONAL ARCHIVE",
+    "features": "FEATURES",
+    "comingSoon": "COMING SOON",
+    "environment": "ENVIRONMENT"
   },
   "resume": {
     "edit": "Edit Resume",
@@ -522,13 +590,13 @@
     "newPassword": "New Password",
     "confirmPassword": "Confirm New Password",
     "currentPasswordPlaceholder": "Enter your current password",
-    "newPasswordPlaceholder": "Enter new password (min. 8 characters)",
+    "newPasswordPlaceholder": "New password (8+ chars, uppercase, special)",
     "confirmPasswordPlaceholder": "Confirm new password",
     "changeButton": "Change Password",
     "changing": "Changing Password...",
     "backToHome": "Back to Home",
     "errors": {
-      "tooShort": "New password must be at least 8 characters long",
+      "tooShort": "Password must be at least 8 characters with 1 uppercase and 1 special character",
       "noMatch": "New passwords do not match",
       "failed": "Failed to change password. Please check your current password."
     },

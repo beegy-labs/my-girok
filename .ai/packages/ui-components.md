@@ -12,18 +12,23 @@ Reusable UI components for React applications in the monorepo. All components me
 packages/ui-components/
 ├── src/
 │   ├── components/
-│   │   ├── Button.tsx
-│   │   ├── TextInput.tsx
-│   │   ├── TextArea.tsx
-│   │   ├── SelectInput.tsx
 │   │   ├── Alert.tsx
+│   │   ├── Badge.tsx           # Badge, SectionBadge (Editorial)
+│   │   ├── Button.tsx
 │   │   ├── Card.tsx
-│   │   ├── SortableList.tsx
-│   │   ├── SortableItem.tsx
-│   │   ├── PageHeader.tsx
-│   │   ├── SectionHeader.tsx
-│   │   ├── PageContainer.tsx
 │   │   ├── CollapsibleSection.tsx
+│   │   ├── MenuCard.tsx        # Editorial 40px card (NEW)
+│   │   ├── MenuRow.tsx         # Editorial list row (NEW)
+│   │   ├── PageContainer.tsx
+│   │   ├── PageHeader.tsx
+│   │   ├── PageLayout.tsx      # Editorial layout (NEW)
+│   │   ├── SectionHeader.tsx
+│   │   ├── SelectInput.tsx
+│   │   ├── SortableItem.tsx
+│   │   ├── SortableList.tsx
+│   │   ├── TextArea.tsx
+│   │   ├── TextInput.tsx
+│   │   ├── ViewToggle.tsx      # Grid/List toggle (NEW)
 │   │   └── index.ts
 │   ├── hooks/
 │   │   ├── useAsyncOperation.ts
@@ -205,6 +210,104 @@ export interface CardProps {
 - Keyboard navigation (Enter/Space for interactive)
 - `focus-visible` ring
 - `role="button"` and `tabIndex={0}` for interactive cards
+
+## Editorial Components (Modern Editorial Archive Style)
+
+> "Sophisticated Classic" design pattern with serif titles, 40px radius, and editorial typography
+
+### MenuCard
+
+Large navigation card with index number and hover lift effect.
+
+```typescript
+export interface MenuCardProps {
+  index: number;           // Display index (01, 02, etc.)
+  icon: React.ReactNode;   // Lucide icon
+  title: string;           // Serif font title
+  description: string;
+  onClick?: () => void;    // undefined = disabled
+  'aria-label'?: string;
+}
+
+// Usage
+<MenuCard
+  index={1}
+  icon={<Book className="w-6 h-6" />}
+  title="Personal Journal"
+  description="Record your daily thoughts"
+  onClick={() => navigate('/journal')}
+/>
+```
+
+**Features**: 40px radius, hover translateY(-4px), semantic `<button>`, Playfair Display serif
+
+### MenuRow
+
+Compact list row for list view mode.
+
+```typescript
+export interface MenuRowProps {
+  index: number;
+  icon: React.ReactNode;
+  title: string;
+  onClick?: () => void;
+  'aria-label'?: string;
+}
+
+// Usage
+<MenuRow
+  index={1}
+  icon={<Book className="w-5 h-5" />}
+  title="Personal Journal"
+  onClick={() => navigate('/journal')}
+/>
+```
+
+### ViewToggle
+
+Grid/List view mode toggle with radiogroup semantics.
+
+```typescript
+export type ViewMode = 'grid' | 'list';
+
+export interface ViewToggleProps {
+  value: ViewMode;
+  onChange: (mode: ViewMode) => void;
+}
+
+// Usage
+const [viewMode, setViewMode] = useState<ViewMode>('grid');
+<ViewToggle value={viewMode} onChange={setViewMode} />
+```
+
+**WCAG Features**: `role="radiogroup"`, `aria-checked`, 44px touch targets
+
+### Badge / SectionBadge
+
+```typescript
+// Badge - Status indicators
+<Badge variant="success">Active</Badge>
+<Badge variant="warning" size="sm">Pending</Badge>
+
+// SectionBadge - Editorial section headers
+<SectionBadge>MY ARCHIVE</SectionBadge>
+```
+
+**Variants**: default, success, warning, error, info, accent
+
+### PageLayout / PageSection
+
+Editorial page layout with 80px nav offset.
+
+```typescript
+<PageLayout maxWidth="5xl">
+  <PageSection badge="MY ARCHIVE" title="Dashboard" actions={<ViewToggle />}>
+    <div className="grid grid-cols-2 gap-6">...</div>
+  </PageSection>
+</PageLayout>
+```
+
+**Features**: Playfair Display serif titles, monospace badges, max-w-5xl default
 
 ### SortableList (DnD Kit)
 

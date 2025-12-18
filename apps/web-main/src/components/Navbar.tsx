@@ -29,24 +29,37 @@ export default function Navbar() {
     setIsDropdownOpen(false);
   }, []);
 
+  const handleToggleDropdown = useCallback(() => {
+    setIsDropdownOpen((prev) => !prev);
+  }, []);
+
+  const handleLogoutClick = useCallback(() => {
+    handleCloseDropdown();
+    handleLogout();
+  }, [handleCloseDropdown, handleLogout]);
+
   // Close dropdown when clicking outside or pressing Escape
   useClickOutside(dropdownRef, isDropdownOpen, handleCloseDropdown);
 
   return (
     <nav
-      className="bg-theme-bg-elevated border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200"
+      className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-elevated/95 backdrop-blur-sm border-b border-theme-border-subtle shadow-theme-sm transition-colors duration-200"
+      style={{ height: 'var(--nav-height-editorial, 80px)' }}
       role="navigation"
-      aria-label="Main navigation"
+      aria-label={t('aria.mainNavigation')}
     >
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-14 sm:h-16">
-          {/* Logo - Text only, professional archive style */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex justify-between items-center h-full">
+          {/* Logo - Editorial monospace style */}
           <Link
             to="/"
-            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2 rounded-lg"
-            aria-label="Go to homepage"
+            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
+            aria-label={t('aria.goToHomepage')}
           >
-            <span className="text-xl sm:text-2xl font-bold font-mono text-theme-text-primary tracking-tight">
+            <span
+              className="text-xl sm:text-2xl font-semibold text-theme-text-primary tracking-tight"
+              style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+            >
               Girok
             </span>
           </Link>
@@ -57,7 +70,7 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               aria-label={
-                effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+                effectiveTheme === 'dark' ? t('aria.switchToLight') : t('aria.switchToDark')
               }
               className="p-2.5 sm:p-3 rounded-lg hover:bg-theme-bg-hover transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
             >
@@ -74,10 +87,10 @@ export default function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 {/* User button */}
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={handleToggleDropdown}
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
-                  aria-label="User menu"
+                  aria-label={t('aria.userMenu')}
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg hover:bg-theme-bg-hover transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring"
                 >
                   <div className="text-right">
@@ -95,10 +108,10 @@ export default function Navbar() {
                   />
                 </button>
 
-                {/* Dropdown menu */}
+                {/* Dropdown menu - Editorial style */}
                 {isDropdownOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-48 bg-theme-bg-elevated rounded-xl shadow-theme-lg border border-theme-border-subtle py-1 z-50"
+                    className="absolute right-0 mt-3 w-56 bg-theme-bg-elevated rounded-2xl shadow-theme-lg border border-theme-border-default py-2 z-50"
                     role="menu"
                     aria-orientation="vertical"
                   >
@@ -113,10 +126,7 @@ export default function Navbar() {
                     </Link>
                     <hr className="my-1 border-theme-border-subtle" />
                     <button
-                      onClick={() => {
-                        handleCloseDropdown();
-                        handleLogout();
-                      }}
+                      onClick={handleLogoutClick}
                       className="flex items-center gap-3 w-full text-left px-4 py-3 text-base text-theme-status-error-text hover:bg-theme-status-error-bg transition-colors min-h-[44px]"
                       role="menuitem"
                     >

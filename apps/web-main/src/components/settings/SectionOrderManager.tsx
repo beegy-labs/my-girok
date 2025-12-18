@@ -13,12 +13,9 @@ const DEFAULT_SECTION_ORDER: SectionOrderItem[] = [
 
 export default function SectionOrderManager() {
   const { t } = useTranslation();
-  const { preferences, loadPreferences, setSectionOrder } =
-    useUserPreferencesStore();
+  const { preferences, loadPreferences, setSectionOrder } = useUserPreferencesStore();
 
-  const [sections, setSections] = useState<SectionOrderItem[]>(
-    DEFAULT_SECTION_ORDER,
-  );
+  const [sections, setSections] = useState<SectionOrderItem[]>(DEFAULT_SECTION_ORDER);
 
   const getSectionLabel = (type: SectionType): string => {
     const keyMap: Record<SectionType, string> = {
@@ -43,9 +40,7 @@ export default function SectionOrderManager() {
 
   const handleVisibilityToggle = (type: SectionType) => {
     const newSections = sections.map((section) =>
-      section.type === type
-        ? { ...section, visible: !section.visible }
-        : section,
+      section.type === type ? { ...section, visible: !section.visible } : section,
     );
     setSections(newSections);
   };
@@ -53,10 +48,7 @@ export default function SectionOrderManager() {
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     const newSections = [...sections];
-    [newSections[index - 1], newSections[index]] = [
-      newSections[index],
-      newSections[index - 1],
-    ];
+    [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
     newSections.forEach((section, idx) => {
       section.order = idx;
     });
@@ -66,10 +58,7 @@ export default function SectionOrderManager() {
   const handleMoveDown = (index: number) => {
     if (index === sections.length - 1) return;
     const newSections = [...sections];
-    [newSections[index], newSections[index + 1]] = [
-      newSections[index + 1],
-      newSections[index],
-    ];
+    [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
     newSections.forEach((section, idx) => {
       section.order = idx;
     });
@@ -109,7 +98,7 @@ export default function SectionOrderManager() {
                   onClick={() => handleMoveUp(index)}
                   disabled={index === 0}
                   className="text-theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
-                  aria-label="Move up"
+                  aria-label={t('aria.moveUp')}
                 >
                   ▲
                 </button>
@@ -117,7 +106,7 @@ export default function SectionOrderManager() {
                   onClick={() => handleMoveDown(index)}
                   disabled={index === sections.length - 1}
                   className="text-theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
-                  aria-label="Move down"
+                  aria-label={t('aria.moveDown')}
                 >
                   ▼
                 </button>

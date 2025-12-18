@@ -1,12 +1,12 @@
 # @my-girok/ui-components
 
-Shared UI components for my-girok frontend applications with WCAG 2.1 AA compliance.
+Shared UI components for my-girok frontend applications with WCAG 2.1 AAA compliance.
 
 ## Overview
 
 Reusable React 19 components with consistent theming:
 
-- WCAG 2.1 AA compliant (4.5:1+ contrast, 44px touch targets)
+- WCAG 2.1 AAA compliant (7:1+ contrast, 44px touch targets)
 - Theme tokens (`theme-*` classes) for light/dark mode
 - React 19 compatible (ref as prop)
 

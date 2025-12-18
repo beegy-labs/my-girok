@@ -89,7 +89,7 @@ A comprehensive personal management platform that helps you organize and showcas
 
 - ✅ React 19.2 + Vite 7.2 + TypeScript 5.7
 - ✅ Responsive design with Tailwind CSS 3.4
-- ✅ WCAG 2.1 AA compliant design (Oak Brown theme)
+- ✅ WCAG 2.1 AAA compliant design (Oak Brown theme, 7:1+ contrast)
 - ✅ Automatic token refresh
 - ✅ Protected and public routes
 

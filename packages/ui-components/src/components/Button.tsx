@@ -53,7 +53,7 @@ const sizeClasses = {
 } as const;
 
 /**
- * Accessible button component with WCAG 2.1 AA compliance
+ * Accessible button component with WCAG 2.1 AAA compliance
  *
  * Features:
  * - Minimum 44x44px touch target (WCAG 2.5.5)
