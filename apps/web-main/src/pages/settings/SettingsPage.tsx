@@ -9,7 +9,7 @@ export default function SettingsPage() {
 
   return (
     <main
-      className="min-h-screen bg-theme-bg-page transition-colors duration-200"
+      className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
       style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -108,9 +108,6 @@ export default function HomePage() {
     [navigate],
   );
 
-  // Memoized slice per rules.md: "❌ Objects/arrays inside render → Use useMemo"
-  const featuredMenuItems = useMemo(() => MENU_ITEMS.slice(0, 4), []);
-
   return (
     <>
       <SEO
@@ -137,7 +134,7 @@ export default function HomePage() {
 
       <main
         id="main-content"
-        className="min-h-screen bg-theme-bg-page transition-colors duration-200"
+        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
         style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
         role="main"
       >
@@ -242,87 +239,56 @@ export default function HomePage() {
             </section>
           </div>
         ) : (
-          /* Landing Page for Non-authenticated Users */
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Hero Section - Editorial Style */}
-            <header className="py-16 sm:py-24 lg:py-32 text-center">
+          /* Landing Page for Non-authenticated Users - Editorial centered style (consistent with LoginPage) */
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+            <div className="w-full max-w-md text-center">
+              {/* Brand Badge */}
               <span
-                className="inline-block text-sm tracking-[0.3em] text-theme-text-muted mb-6 uppercase"
+                className="inline-block text-xs tracking-[0.3em] text-theme-text-muted mb-4 uppercase"
                 style={{ fontFamily: 'var(--font-family-mono-brand)' }}
               >
                 {t('badge.personalArchive')}
               </span>
+
+              {/* Brand Title */}
               <h1
-                className="text-4xl sm:text-5xl lg:text-6xl text-theme-text-primary mb-6 tracking-tight"
+                className="text-3xl sm:text-4xl text-theme-text-primary mb-3 tracking-tight"
                 style={{ fontFamily: 'var(--font-family-serif-title)' }}
               >
                 Girok
               </h1>
-              <p className="text-lg sm:text-xl text-theme-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
+
+              {/* Tagline */}
+              <p className="text-theme-text-secondary text-sm sm:text-base mb-8 leading-relaxed">
                 {t('home.title')}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/register">
-                  <Button variant="primary" size="lg" className="w-full sm:w-auto min-w-[180px]">
-                    {t('home.createRecordBook')}
-                  </Button>
-                </Link>
-                <Link to="/login">
-                  <Button variant="secondary" size="lg" className="w-full sm:w-auto min-w-[180px]">
-                    {t('nav.login')}
-                  </Button>
-                </Link>
-              </div>
-            </header>
 
-            {/* Features Preview - 4 Main Functions */}
-            <section className="py-12 sm:py-16" aria-labelledby="features-heading">
-              <div className="text-center mb-12">
-                <SectionBadge className="mb-4">{t('badge.features')}</SectionBadge>
-                <h2
-                  id="features-heading"
-                  className="text-2xl sm:text-3xl text-theme-text-primary tracking-tight"
-                  style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                >
-                  {t('home.recordingTypes')}
-                </h2>
+              {/* CTA Card - Editorial Style (consistent with LoginPage card) */}
+              <div className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 shadow-theme-lg">
+                <div className="space-y-4">
+                  <Link to="/register" className="block">
+                    <Button variant="primary" size="lg" fullWidth>
+                      {t('home.createRecordBook')}
+                    </Button>
+                  </Link>
+                  <Link to="/login" className="block">
+                    <Button variant="secondary" size="lg" fullWidth>
+                      {t('nav.login')}
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Divider */}
+                <div className="mt-8 pt-6 border-t border-theme-border-subtle">
+                  <p className="text-sm text-theme-text-muted">{t('home.startToday')}</p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {featuredMenuItems.map((menu, index) => {
-                  const IconComponent = menu.icon;
-                  const isDisabled = menu.status === 'coming-soon';
-
-                  return (
-                    <div
-                      key={menu.id}
-                      className={`bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10 ${
-                        isDisabled ? 'opacity-50' : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-6">
-                        <span
-                          className="text-sm tracking-widest text-theme-text-muted"
-                          style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-                        >
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <IconComponent className="w-6 h-6 text-theme-text-secondary" />
-                      </div>
-                      <h3
-                        className="text-xl sm:text-2xl text-theme-text-primary mb-3 tracking-tight"
-                        style={{ fontFamily: 'var(--font-family-serif-title)' }}
-                      >
-                        {t(menu.nameKey)}
-                      </h3>
-                      <p className="text-sm text-theme-text-secondary leading-relaxed">
-                        {isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
+              {/* Footer Note */}
+              <p className="text-center text-xs text-theme-text-tertiary mt-6">
+                {t('auth.termsAgreement')}
+              </p>
+            </div>
           </div>
         )}
 
