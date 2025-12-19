@@ -37,6 +37,9 @@
 - ❌ **Objects/arrays inside render** → Use useMemo
 - ❌ **State for navigation** → Call navigate() directly
 - ❌ **Functions in useEffect deps** → Memoize parent
+- ❌ **Nested `<main>` tags** → One `<main>` per page only
+- ❌ **Footer inside `<main>`** → Footer must be sibling of main
+- ❌ **`<main>` in Layout components** → Pages own their `<main>` element
 
 ### ALWAYS
 
