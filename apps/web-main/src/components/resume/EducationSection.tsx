@@ -220,7 +220,7 @@ function SortableEducationCard({
               type="month"
               value={education.startDate}
               onChange={(e) => onUpdate({ ...education, startDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
 
@@ -233,7 +233,7 @@ function SortableEducationCard({
               type="month"
               value={education.endDate || ''}
               onChange={(e) => onUpdate({ ...education, endDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
         </div>
@@ -297,7 +297,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   };
 
   return (
-    <div className="bg-theme-bg-elevated border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+    <div className="bg-theme-bg-elevated border border-theme-border-subtle rounded-xl sm:rounded-input lg:rounded-widget shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 lg:mb-6">
         <div className="min-w-0">
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary transition-colors duration-200">

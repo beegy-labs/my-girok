@@ -445,7 +445,7 @@ export default function MyResumePage() {
                 {t('resume.shareLinkCreate')}
               </h2>
               <div className="mb-8">
-                <label className="block text-xs font-bold uppercase tracking-widest text-theme-text-secondary mb-3">
+                <label className="block text-xs font-bold uppercase tracking-brand-lg text-theme-text-secondary mb-3">
                   {t('resume.shareDuration')}
                 </label>
                 <select

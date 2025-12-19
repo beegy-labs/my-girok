@@ -101,7 +101,7 @@ function HierarchicalItemComponent({
     <div className="space-y-1 sm:space-y-2">
       {/* Color-coded card by depth */}
       <div
-        className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
+        className={`${depthColor.bg} rounded-xl p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
           maxWidth: `calc(100% - ${mobileMargin}rem)`,
@@ -263,7 +263,7 @@ function SortableHierarchicalItem({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-1 sm:space-y-2">
-      <div className="flex items-start gap-1.5 sm:gap-2 bg-theme-bg-elevated rounded-lg p-1.5 sm:p-2 border border-theme-border-default transition-colors duration-200">
+      <div className="flex items-start gap-1.5 sm:gap-2 bg-theme-bg-elevated rounded-xl p-1.5 sm:p-2 border border-theme-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
@@ -373,7 +373,7 @@ export default function HierarchicalDescription({
         <button
           type="button"
           onClick={addItem}
-          className="px-2 py-1 bg-theme-primary text-white text-xs rounded-lg hover:bg-theme-primary-light transition-all transition-colors duration-200"
+          className="px-2 py-1 bg-theme-primary text-white text-xs rounded-xl hover:bg-theme-primary-light transition-all transition-colors duration-200"
         >
           + {t('common.add')}
         </button>

@@ -60,7 +60,7 @@ function SortableSection({ section }: { section: ResumeSection }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-theme-bg-elevated border border-theme-border-subtle rounded-lg p-4 flex items-center justify-between hover:border-theme-primary transition-colors duration-200"
+      className="bg-theme-bg-elevated border border-theme-border-subtle rounded-xl p-4 flex items-center justify-between hover:border-theme-primary transition-colors duration-200"
     >
       <div className="flex items-center gap-3">
         <button
@@ -118,7 +118,7 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
   };
 
   return (
-    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-2xl shadow-theme-md p-6 transition-colors duration-200">
+    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-input shadow-theme-md p-6 transition-colors duration-200">
       <div className="mb-4">
         <h2 className="text-xl font-bold text-theme-text-accent mb-2 flex items-center gap-2">
           <span>↕️</span>
@@ -143,7 +143,7 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
         </SortableContext>
       </DndContext>
 
-      <div className="mt-4 p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-lg">
+      <div className="mt-4 p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-xl">
         <p className="text-sm text-theme-status-info-text">
           💡 <strong>Tip:</strong> Sections will appear in this order in your resume preview and PDF
           export.

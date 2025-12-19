@@ -146,7 +146,7 @@ export default function ResumeActionBar({
                 )}
                 {isPublic && isOwnProfile && (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${BADGE_COLOR_CLASSES[badge.color]}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-brand-lg rounded-full ${BADGE_COLOR_CLASSES[badge.color]}`}
                   >
                     <BadgeIcon className="w-3 h-3" aria-hidden="true" />
                     {badge.text}
@@ -154,7 +154,7 @@ export default function ResumeActionBar({
                 )}
                 {!isPublic && (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${BADGE_COLOR_CLASSES[badge.color]}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-brand-lg rounded-full ${BADGE_COLOR_CLASSES[badge.color]}`}
                   >
                     <BadgeIcon className="w-3 h-3" aria-hidden="true" />
                     {badge.text}

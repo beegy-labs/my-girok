@@ -343,7 +343,7 @@ export default function HomePage() {
 
                     <button
                       type="button"
-                      className="mt-10 text-[12px] font-black uppercase tracking-widest text-theme-text-secondary hover:text-theme-primary transition-colors flex items-center gap-3 group/btn min-h-[44px]"
+                      className="mt-10 text-[12px] font-black uppercase tracking-brand-lg text-theme-text-secondary hover:text-theme-primary transition-colors flex items-center gap-3 group/btn min-h-[44px]"
                     >
                       {t('home.viewAll', { defaultValue: 'View All' })}{' '}
                       <ChevronRight

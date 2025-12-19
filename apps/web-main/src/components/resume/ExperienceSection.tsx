@@ -302,7 +302,7 @@ function SortableExperienceCard({
                 type="month"
                 value={experience.startDate}
                 onChange={(e) => onUpdate({ ...experience, startDate: e.target.value })}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               />
             </div>
 
@@ -318,14 +318,14 @@ function SortableExperienceCard({
                   onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })
                 }
                 disabled={experience.isCurrentlyWorking}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
               />
             </div>
           </div>
         </div>
 
         {/* Currently working checkbox - larger touch target */}
-        <label className="flex items-center p-2 -mx-2 mb-3 rounded-lg hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
+        <label className="flex items-center p-2 -mx-2 mb-3 rounded-xl hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
           <input
             type="checkbox"
             checked={experience.isCurrentlyWorking || false}
@@ -346,7 +346,7 @@ function SortableExperienceCard({
 
         {/* Experience Duration */}
         {experience.startDate && (
-          <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-lg transition-colors duration-200">
+          <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-xl transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-theme-primary-light transition-colors duration-200">
               {t('resume.experienceForm.experiencePeriod')}{' '}
               {(() => {
@@ -399,14 +399,14 @@ function SortableExperienceCard({
                   salary: e.target.value ? parseInt(e.target.value) : undefined,
                 })
               }
-              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               placeholder={t('resume.experienceForm.salaryPlaceholder')}
               min="0"
             />
             <select
               value={experience.salaryUnit || 'KRW'}
               onChange={(e) => onUpdate({ ...experience, salaryUnit: e.target.value })}
-              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
             >
               <option value="KRW">{t('resume.experienceForm.salaryUnits.manwon')}</option>
               <option value="USD">USD</option>
@@ -414,7 +414,7 @@ function SortableExperienceCard({
               <option value="JPY">JPY</option>
             </select>
           </div>
-          <label className="flex items-center p-2 -mx-2 mt-1 rounded-lg hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
+          <label className="flex items-center p-2 -mx-2 mt-1 rounded-xl hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
             <input
               type="checkbox"
               checked={experience.showSalary ?? false}
@@ -483,7 +483,7 @@ function SortableExperienceCard({
               </SortableContext>
             </DndContext>
           ) : (
-            <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-card rounded-lg border border-dashed border-theme-border-default transition-colors duration-200">
+            <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-card rounded-xl border border-dashed border-theme-border-default transition-colors duration-200">
               <p>{t('resume.experienceForm.noProjects')}</p>
             </div>
           )}
@@ -548,7 +548,7 @@ function SortableProject({
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-theme-border-strong rounded-lg bg-theme-bg-card transition-colors duration-200"
+      className="border border-theme-border-strong rounded-xl bg-theme-bg-card transition-colors duration-200"
     >
       {/* Project Header */}
       <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-theme-bg-hover transition-colors duration-200">
@@ -630,7 +630,7 @@ function SortableProject({
                   type="month"
                   value={project.startDate}
                   onChange={(e) => onUpdate({ ...project, startDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                 />
               </div>
 
@@ -642,7 +642,7 @@ function SortableProject({
                   type="month"
                   value={project.endDate || ''}
                   onChange={(e) => onUpdate({ ...project, endDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                   placeholder={t('resume.experienceForm.ongoingProject')}
                 />
               </div>
@@ -710,7 +710,7 @@ function SortableProject({
               <button
                 type="button"
                 onClick={onAddAchievement}
-                className="px-2 py-1 bg-theme-primary text-white text-xs rounded-lg hover:bg-theme-primary-light transition-colors duration-200"
+                className="px-2 py-1 bg-theme-primary text-white text-xs rounded-xl hover:bg-theme-primary-light transition-colors duration-200"
               >
                 {t('resume.experienceForm.addAchievement')}
               </button>
@@ -819,7 +819,7 @@ function HierarchicalAchievement({
     <div className="space-y-1 sm:space-y-2">
       {/* Color-coded card by depth */}
       <div
-        className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
+        className={`${depthColor.bg} rounded-xl p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
           maxWidth: `calc(100% - ${mobileMargin}rem)`,
@@ -981,7 +981,7 @@ function SortableAchievement({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
-      <div className="flex items-start gap-2 bg-theme-bg-card rounded-lg p-2 border border-theme-border-default transition-colors duration-200">
+      <div className="flex items-start gap-2 bg-theme-bg-card rounded-xl p-2 border border-theme-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
@@ -1068,7 +1068,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
   };
 
   return (
-    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-input lg:rounded-widget shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between mb-3 sm:mb-6 lg:mb-8">
         <div className="min-w-0">
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary flex items-center gap-2 transition-colors duration-200">
@@ -1081,7 +1081,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
         <button
           type="button"
           onClick={addExperience}
-          className="px-2 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-light transition-colors duration-200 font-semibold text-xs sm:text-sm lg:text-base flex-shrink-0"
+          className="px-2 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-light transition-colors duration-200 font-semibold text-xs sm:text-sm lg:text-base flex-shrink-0"
         >
           {t('resume.experienceForm.addExperience')}
         </button>

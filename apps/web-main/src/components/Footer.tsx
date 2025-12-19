@@ -19,7 +19,7 @@ export default function Footer() {
               girok.dev
               <span className="text-theme-primary ml-2">&copy; {currentYear}</span>
             </p>
-            <p className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-widest font-mono-brand">
+            <p className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-brand-lg font-mono-brand">
               {t('footer.version', { defaultValue: 'System V0.0.1 AAA Enhanced' })}
             </p>
           </div>

@@ -52,7 +52,7 @@ export default function Navbar() {
           {/* Logo - V0.0.1 Editorial monospace style with accent dot */}
           <Link
             to="/"
-            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
+            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-xl"
             aria-label={t('aria.goToHomepage')}
           >
             <span className="text-2xl font-black text-theme-text-primary tracking-editorial select-none font-mono-brand">
@@ -69,7 +69,7 @@ export default function Navbar() {
                   <div className="w-8 h-8 rounded-full bg-theme-bg-secondary group-hover:bg-theme-bg-card border border-theme-border-default flex items-center justify-center transition-colors">
                     <User size={16} className="text-theme-primary" aria-hidden="true" />
                   </div>
-                  <span className="text-[13px] font-black text-theme-text-primary uppercase tracking-widest hidden sm:block font-mono-brand">
+                  <span className="text-[13px] font-black text-theme-text-primary uppercase tracking-brand-lg hidden sm:block font-mono-brand">
                     {user?.username || user?.name?.slice(0, 10) || 'User'}
                   </span>
                 </div>

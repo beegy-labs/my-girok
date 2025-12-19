@@ -111,14 +111,14 @@ export default function ResumePreview({
       {/* Toolbar (hidden in print) */}
       {showToolbar && (
         <div className="print:hidden mb-6 relative z-0">
-          <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl shadow-sm shadow-theme-sm px-4 py-3 transition-colors duration-200">
+          <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-input shadow-sm shadow-theme-sm px-4 py-3 transition-colors duration-200">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 {/* Paper Size Selector */}
-                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-xl p-1">
                   <button
                     onClick={() => handlePaperSizeChange('A4')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${
                       paperSize === 'A4'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -129,7 +129,7 @@ export default function ResumePreview({
                   </button>
                   <button
                     onClick={() => handlePaperSizeChange('LETTER')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${
                       paperSize === 'LETTER'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -141,21 +141,21 @@ export default function ResumePreview({
                     Letter
                   </button>
                 </div>
-                <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-lg px-2 py-1 text-xs text-theme-status-info-text">
+                <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-xl px-2 py-1 text-xs text-theme-status-info-text">
                   {Math.round(scale * 100)}%
                 </div>
                 {numPages > 0 && (
-                  <div className="bg-theme-status-success-bg border border-theme-status-success-border rounded-lg px-2 py-1 text-xs text-theme-status-success-text">
+                  <div className="bg-theme-status-success-bg border border-theme-status-success-border rounded-xl px-2 py-1 text-xs text-theme-status-success-text">
                     {numPages} {t('resume.preview.pages', { defaultValue: 'pages' })}
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 {/* View Mode Toggle */}
-                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-xl p-1">
                   <button
                     onClick={handleSetContinuousView}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${
                       viewMode === 'continuous'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -166,7 +166,7 @@ export default function ResumePreview({
                   </button>
                   <button
                     onClick={handleSetPaginatedView}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${
                       viewMode === 'paginated'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -179,7 +179,7 @@ export default function ResumePreview({
                 {/* Grayscale Toggle */}
                 <button
                   onClick={handleToggleGrayscale}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg border-2 transition-all ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl border-2 transition-all ${
                     isGrayscaleMode
                       ? 'bg-theme-bg-elevated text-theme-text-primary border-theme-border-strong'
                       : 'bg-theme-bg-card text-theme-text-primary border-theme-border-default hover:border-theme-border-strong hover:bg-theme-bg-hover'
