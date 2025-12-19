@@ -70,7 +70,7 @@ export default function RegisterPage() {
               </Alert>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <TextInput
                 id="name"
                 label={t('auth.name')}

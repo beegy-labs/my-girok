@@ -55,12 +55,12 @@ const variantClasses = {
 
 // All sizes meet WCAG 44x44px minimum touch target
 // V0.0.1 Editorial sizes: lg (56px) and xl (64px) have editorial typography
-// SSOT tracking tokens: tracking-brand-lg (0.5em), tracking-brand (0.3em)
+// SSOT tracking tokens: tracking-brand (0.3em)
 const sizeClasses = {
   sm: 'min-h-[44px] px-4 py-2.5 text-sm',
   md: 'min-h-[44px] px-5 py-3 text-base',
-  lg: 'min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-brand-lg',
-  xl: 'min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-brand',
+  lg: 'h-14 min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-brand',
+  xl: 'h-16 min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-brand',
 } as const;
 
 // Border radius options - SSOT tokens from tokens.css
