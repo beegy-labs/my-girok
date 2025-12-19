@@ -226,7 +226,10 @@ export default function HomePage() {
           /* Authenticated Dashboard - V0.0.1 Style */
           <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-16">
             {/* Promo Carousel Section - V0.0.1 Style */}
-            <section className="mb-16" aria-label="Featured Promotions">
+            <section
+              className="mb-16"
+              aria-label={t('aria.featuredPromotions', { defaultValue: 'Featured Promotions' })}
+            >
               <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
                   <span className="text-[12px] font-black uppercase tracking-brand text-theme-primary mb-4 block font-mono-brand">
@@ -268,7 +271,10 @@ export default function HomePage() {
             </section>
 
             {/* Workstation Section - V0.0.1 Style */}
-            <section className="mb-20" aria-label="Workstation Controls">
+            <section
+              className="mb-20"
+              aria-label={t('aria.workstationControls', { defaultValue: 'Workstation Controls' })}
+            >
               <div className="p-10 md:p-14 rounded-editorial-2xl bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
                 {/* Workstation Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 border-b-2 border-theme-border-default pb-10">

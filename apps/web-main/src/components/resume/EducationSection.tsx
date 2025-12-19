@@ -71,7 +71,7 @@ function SortableEducationCard({
             {...attributes}
             {...listeners}
             className="p-1.5 cursor-grab active:cursor-grabbing text-theme-text-tertiary hover:text-theme-text-secondary transition-colors duration-200 touch-manipulation"
-            title="Drag to reorder"
+            title={t('common.dragToReorder')}
           >
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5"
@@ -312,7 +312,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
           onClick={handleAdd}
           className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation"
         >
-          + <span className="hidden sm:inline">Add Education</span>
+          + <span className="hidden sm:inline">{t('resume.form.addEducation')}</span>
           <span className="sm:hidden">{t('common.add')}</span>
         </Button>
       </div>

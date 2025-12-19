@@ -104,13 +104,16 @@ function HierarchicalItemComponent({
         className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
-          maxWidth: `calc(100% - ${mobileMargin}rem)`
+          maxWidth: `calc(100% - ${mobileMargin}rem)`,
         }}
       >
         {/* Desktop: horizontal layout */}
-        <div className="hidden sm:flex items-start gap-2" style={{
-          marginLeft: `${(depth - 1) * 0.75}rem`,
-        }}>
+        <div
+          className="hidden sm:flex items-start gap-2"
+          style={{
+            marginLeft: `${(depth - 1) * 0.75}rem`,
+          }}
+        >
           <div className="flex items-center gap-1 min-w-[50px] flex-shrink-0">
             <span className="text-theme-text-secondary font-bold text-sm select-none">
               {getBulletSymbol(depth)}
@@ -121,7 +124,7 @@ function HierarchicalItemComponent({
           <input
             type="text"
             value={item.content}
-            onChange={e => onUpdate({ ...item, content: e.target.value })}
+            onChange={(e) => onUpdate({ ...item, content: e.target.value })}
             className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder={t('resume.hierarchical.enterDescription')}
@@ -133,18 +136,18 @@ function HierarchicalItemComponent({
                 type="button"
                 onClick={onAddChild}
                 className="px-2 py-1 bg-theme-status-success-bg border border-theme-status-success-border text-theme-status-success-text text-xs rounded hover:opacity-80 transition-all font-semibold whitespace-nowrap touch-manipulation"
-                title="Add sub-item"
+                title={t('common.addSubItem')}
               >
                 {t('resume.hierarchical.addSubItem')}
               </button>
             )}
 
-            {(item.children && item.children.length > 0) && (
+            {item.children && item.children.length > 0 && (
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="px-2 py-1 text-xs text-theme-text-secondary hover:text-theme-text-primary transition-colors duration-200 touch-manipulation"
-                title={isExpanded ? "Collapse" : "Expand"}
+                title={isExpanded ? t('common.collapse') : t('common.expand')}
               >
                 {isExpanded ? '▼' : '▶'}
               </button>
@@ -154,7 +157,7 @@ function HierarchicalItemComponent({
               type="button"
               onClick={onRemove}
               className="text-theme-status-error-text hover:opacity-80 text-xs font-semibold transition-colors duration-200 touch-manipulation"
-              title="Remove"
+              title={t('common.remove')}
             >
               ✕
             </button>
@@ -170,7 +173,7 @@ function HierarchicalItemComponent({
             <input
               type="text"
               value={item.content}
-              onChange={e => onUpdate({ ...item, content: e.target.value })}
+              onChange={(e) => onUpdate({ ...item, content: e.target.value })}
               className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
               placeholder={t('resume.hierarchical.enterDescription')}
             />
@@ -181,13 +184,13 @@ function HierarchicalItemComponent({
                   type="button"
                   onClick={onAddChild}
                   className="w-6 h-6 flex items-center justify-center bg-theme-status-success-bg text-theme-status-success-text text-[10px] rounded hover:opacity-80 transition-colors duration-200 touch-manipulation"
-                  title="Add sub-item"
+                  title={t('common.addSubItem')}
                 >
                   +
                 </button>
               )}
 
-              {(item.children && item.children.length > 0) && (
+              {item.children && item.children.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
@@ -248,14 +251,9 @@ function SortableHierarchicalItem({
   maxDepth: number;
   t: (key: string) => string;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id || `item-${itemIndex}` });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id || `item-${itemIndex}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -271,10 +269,20 @@ function SortableHierarchicalItem({
           {...attributes}
           {...listeners}
           className="mt-0.5 sm:mt-1 p-1 cursor-move text-theme-text-tertiary hover:text-theme-primary transition-colors duration-200 flex-shrink-0 touch-manipulation"
-          title="Drag to reorder"
+          title={t('common.dragToReorder')}
         >
-          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          <svg
+            className="w-3 h-3 sm:w-4 sm:h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 8h16M4 16h16"
+            />
           </svg>
         </button>
 
@@ -309,15 +317,19 @@ export default function HierarchicalDescription({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = items.findIndex(item => (item.id || `item-${items.indexOf(item)}`) === active.id);
-    const newIndex = items.findIndex(item => (item.id || `item-${items.indexOf(item)}`) === over.id);
+    const oldIndex = items.findIndex(
+      (item) => (item.id || `item-${items.indexOf(item)}`) === active.id,
+    );
+    const newIndex = items.findIndex(
+      (item) => (item.id || `item-${items.indexOf(item)}`) === over.id,
+    );
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const newItems = arrayMove(items, oldIndex, newIndex).map((item, idx) => ({
@@ -354,7 +366,9 @@ export default function HierarchicalDescription({
       <div className="flex items-center justify-between mb-3">
         <label className="text-sm font-bold text-theme-text-accent flex items-center gap-2">
           ⭐ {displayLabel}
-          <span className="text-xs text-theme-text-tertiary font-normal">{t('resume.hierarchical.maxDepth', { depth: maxDepth })}</span>
+          <span className="text-xs text-theme-text-tertiary font-normal">
+            {t('resume.hierarchical.maxDepth', { depth: maxDepth })}
+          </span>
         </label>
         <button
           type="button"
@@ -366,11 +380,7 @@ export default function HierarchicalDescription({
       </div>
 
       {items && items.length > 0 ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
             items={items.map((item, i) => item.id || `item-${i}`)}
             strategy={verticalListSortingStrategy}
