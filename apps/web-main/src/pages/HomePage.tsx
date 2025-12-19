@@ -119,25 +119,25 @@ const MENU_ITEMS: MenuItem[] = [
 // Widget-enabled menu IDs (can be pinned to top)
 const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
 
-// Promo slides - V0.0.1 mockup style
+// Promo slides - V0.0.1 mockup style (i18n keys)
 const PROMOS = [
   {
-    tag: 'Premium',
-    title: 'Gold Edition.',
-    desc: 'Unlimited storage and enhanced security system.',
-    cta: 'Upgrade',
+    tagKey: 'promo.premium.tag',
+    titleKey: 'promo.premium.title',
+    descKey: 'promo.premium.desc',
+    ctaKey: 'promo.premium.cta',
   },
   {
-    tag: 'Theme',
-    title: 'Walnut Collection.',
-    desc: 'Elegant vintage theme for your archive.',
-    cta: 'Apply',
+    tagKey: 'promo.theme.tag',
+    titleKey: 'promo.theme.title',
+    descKey: 'promo.theme.desc',
+    ctaKey: 'promo.theme.cta',
   },
   {
-    tag: 'Mobile',
-    title: 'Girok Mobile.',
-    desc: 'Record your story anywhere with the mobile app.',
-    cta: 'Get App',
+    tagKey: 'promo.mobile.tag',
+    titleKey: 'promo.mobile.title',
+    descKey: 'promo.mobile.desc',
+    ctaKey: 'promo.mobile.cta',
   },
 ];
 
@@ -193,7 +193,10 @@ export default function HomePage() {
     <>
       <SEO
         title={isAuthenticated ? `${user?.name || user?.username}'s Archive` : undefined}
-        description="Create, manage, and share your professional resume with girok. Build your career profile, track your achievements, and share your professional story with the world."
+        description={t('seo.homeDescription', {
+          defaultValue:
+            'Create, manage, and share your professional resume with girok. Build your career profile, track your achievements, and share your professional story with the world.',
+        })}
         keywords={[
           'resume builder',
           'cv creator',
@@ -210,7 +213,7 @@ export default function HomePage() {
 
       {/* Skip link for accessibility */}
       <a href="#main-content" className="skip-link">
-        Skip to main content
+        {t('aria.skipToMainContent', { defaultValue: 'Skip to main content' })}
       </a>
 
       <main
@@ -227,36 +230,36 @@ export default function HomePage() {
               <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
                   <span className="text-[12px] font-black uppercase tracking-brand text-theme-primary mb-4 block font-mono-brand">
-                    {PROMOS[currentPromo].tag}
+                    {t(PROMOS[currentPromo].tagKey, { defaultValue: 'Premium' })}
                   </span>
                   <h2 className="text-3xl sm:text-5xl text-theme-text-primary mb-6 leading-tight font-serif-title">
-                    {PROMOS[currentPromo].title}
+                    {t(PROMOS[currentPromo].titleKey, { defaultValue: 'Gold Edition.' })}
                   </h2>
                   <p className="text-lg font-bold text-theme-text-secondary mb-10 leading-relaxed max-w-xl">
-                    {PROMOS[currentPromo].desc}
+                    {t(PROMOS[currentPromo].descKey, {
+                      defaultValue: 'Unlimited storage and enhanced security.',
+                    })}
                   </p>
                   <button
                     type="button"
                     className="text-[12px] font-black uppercase tracking-brand-sm text-theme-primary border-b-2 border-theme-primary pb-2 hover:opacity-80 transition-all w-fit min-h-[44px]"
-                    aria-label={t('aria.viewPromoDetails', {
-                      defaultValue: `View ${PROMOS[currentPromo].title} details`,
-                    })}
+                    aria-label={t('aria.viewPromoDetails', { defaultValue: 'View promo details' })}
                   >
-                    {PROMOS[currentPromo].cta}
+                    {t(PROMOS[currentPromo].ctaKey, { defaultValue: 'Learn More' })}
                   </button>
                 </div>
                 <div className="flex gap-4">
                   <button
                     onClick={handlePrevPromo}
                     className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
-                    aria-label="Previous Promo"
+                    aria-label={t('aria.previousPromo', { defaultValue: 'Previous Promo' })}
                   >
                     <ChevronLeft size={24} aria-hidden="true" />
                   </button>
                   <button
                     onClick={handleNextPromo}
                     className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
-                    aria-label="Next Promo"
+                    aria-label={t('aria.nextPromo', { defaultValue: 'Next Promo' })}
                   >
                     <ChevronRight size={24} aria-hidden="true" />
                   </button>
