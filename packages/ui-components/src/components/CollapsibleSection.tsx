@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 
 export interface CollapsibleSectionProps {
   /** Section title */
@@ -70,7 +70,8 @@ export function CollapsibleSection({
   const isControlled = controlledExpanded !== undefined;
   const isExpanded = isControlled ? controlledExpanded : internalExpanded;
 
-  const handleToggle = useCallback(() => {
+  // 2025 best practice: inline handlers in non-memoized components
+  const handleToggle = () => {
     if (collapsible) {
       if (isControlled && onToggle) {
         onToggle();
@@ -78,17 +79,14 @@ export function CollapsibleSection({
         setInternalExpanded((prev) => !prev);
       }
     }
-  }, [collapsible, isControlled, onToggle]);
+  };
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (collapsible && (e.key === 'Enter' || e.key === ' ')) {
-        e.preventDefault();
-        handleToggle();
-      }
-    },
-    [collapsible, handleToggle],
-  );
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (collapsible && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      handleToggle();
+    }
+  };
 
   // Theme: Semantic theme tokens (auto-switch via data-theme)
   const variantClasses = {

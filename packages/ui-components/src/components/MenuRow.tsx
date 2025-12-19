@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo } from 'react';
 import { focusClasses } from '../styles/constants';
 
 export interface MenuRowProps {
@@ -129,27 +129,20 @@ export const MenuRow = memo(function MenuRow({
   const formattedIndex = String(index).padStart(2, '0');
   const isDisabled = !onClick;
 
-  // Memoized pin click handler to prevent event bubbling
-  const handlePinClick = useCallback(
-    (e: React.MouseEvent) => {
+  // 2025 best practice: inline handlers in memoized components
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onPin?.();
+  };
+
+  const handlePinKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
       e.stopPropagation();
       e.preventDefault();
       onPin?.();
-    },
-    [onPin],
-  );
-
-  // Keyboard handler for pin button (WCAG 2.1 3.2.1)
-  const handlePinKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.stopPropagation();
-        e.preventDefault();
-        onPin?.();
-      }
-    },
-    [onPin],
-  );
+    }
+  };
 
   return (
     <button

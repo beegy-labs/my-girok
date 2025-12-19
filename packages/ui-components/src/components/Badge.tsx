@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 
 export interface BadgeProps {
   /**
@@ -64,7 +64,7 @@ const roundedClasses = {
  * <Badge variant="warning" size="sm" rounded="full">Pending</Badge>
  * ```
  */
-export const Badge = memo(function Badge({
+export function Badge({
   children,
   variant = 'default',
   size = 'md',
@@ -78,7 +78,7 @@ export const Badge = memo(function Badge({
       {children}
     </span>
   );
-});
+}
 
 export interface SectionBadgeProps {
   /**
@@ -105,10 +105,7 @@ export interface SectionBadgeProps {
  * <SectionBadge>MY ARCHIVE</SectionBadge>
  * ```
  */
-export const SectionBadge = memo(function SectionBadge({
-  children,
-  className = '',
-}: SectionBadgeProps) {
+export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
   return (
     <span
       className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-lg font-mono-brand ${className}`}
@@ -116,4 +113,4 @@ export const SectionBadge = memo(function SectionBadge({
       {children}
     </span>
   );
-});
+}

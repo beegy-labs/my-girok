@@ -1,4 +1,4 @@
-import { TextareaHTMLAttributes, useId, useMemo, Ref } from 'react';
+import { TextareaHTMLAttributes, useId, Ref } from 'react';
 
 export interface TextAreaProps extends Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
@@ -62,13 +62,8 @@ export function TextArea({
   const errorId = `${inputId}-error`;
   const hintId = `${inputId}-hint`;
 
-  // Build aria-describedby based on present elements
-  const ariaDescribedBy = useMemo(() => {
-    const ids: string[] = [];
-    if (error) ids.push(errorId);
-    if (hint && !error) ids.push(hintId);
-    return ids.length > 0 ? ids.join(' ') : undefined;
-  }, [error, hint, errorId, hintId]);
+  // 2025 best practice: inline simple string logic (no memoization needed)
+  const ariaDescribedBy = error ? errorId : hint ? hintId : undefined;
 
   // Base textarea classes with WCAG compliance:
   // - min-h for adequate touch target

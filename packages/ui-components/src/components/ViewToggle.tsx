@@ -1,4 +1,4 @@
-import { useCallback, memo } from 'react';
+import { memo } from 'react';
 import { focusClasses } from '../styles/constants';
 
 export type ViewMode = 'grid' | 'list';
@@ -51,15 +51,12 @@ export const ViewToggle = memo(function ViewToggle({
   onChange,
   className = '',
 }: ViewToggleProps) {
-  // Memoized handlers per rules.md: "✅ Memoize handlers with useCallback"
-  const handleGridClick = useCallback(() => onChange('grid'), [onChange]);
-  const handleListClick = useCallback(() => onChange('list'), [onChange]);
-
+  // 2025 best practice: inline handlers when component is already memoized
   return (
     <div className={`inline-flex gap-4 ${className}`} role="radiogroup" aria-label="View mode">
       <button
         type="button"
-        onClick={handleGridClick}
+        onClick={() => onChange('grid')}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'grid' ? buttonActiveClasses : buttonInactiveClasses
         }`}
@@ -84,7 +81,7 @@ export const ViewToggle = memo(function ViewToggle({
       </button>
       <button
         type="button"
-        onClick={handleListClick}
+        onClick={() => onChange('list')}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'list' ? buttonActiveClasses : buttonInactiveClasses
         }`}
