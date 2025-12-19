@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useClickOutside } from '@my-girok/ui-components';
+import { useClickOutside, focusClasses } from '@my-girok/ui-components';
 import { Bell, X, CheckCircle2, Trash2 } from 'lucide-react';
 
 interface Notification {
@@ -78,15 +78,21 @@ export default function NotificationButton() {
     setIsOpen((prev) => !prev);
   }, []);
 
-  // Mark notification as read
-  const handleMarkAsRead = useCallback((id: number) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  }, []);
+  // Mark notification as read (curried to avoid inline functions in map)
+  const handleMarkAsRead = useCallback(
+    (id: number) => () => {
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    },
+    [],
+  );
 
-  // Delete notification
-  const handleDelete = useCallback((id: number) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
+  // Delete notification (curried to avoid inline functions in map)
+  const handleDelete = useCallback(
+    (id: number) => () => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    },
+    [],
+  );
 
   // Close on click outside
   useClickOutside(panelRef, isOpen, handleClose);
@@ -111,7 +117,7 @@ export default function NotificationButton() {
           defaultValue: `Notifications (${unreadCount} unread)`,
           count: unreadCount,
         })}
-        className={`p-3 rounded-xl transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring ${
+        className={`p-3 rounded-xl transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center ${focusClasses} ${
           isOpen
             ? 'bg-theme-bg-secondary text-theme-primary border border-theme-border-default'
             : 'text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover'
@@ -143,7 +149,7 @@ export default function NotificationButton() {
             </h3>
             <button
               onClick={handleClose}
-              className="p-3 hover:bg-theme-border-default/30 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className={`p-3 hover:bg-theme-border-default/30 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${focusClasses}`}
               aria-label={t('common.close', { defaultValue: 'Close' })}
             >
               <X size={20} aria-hidden="true" />
@@ -168,8 +174,8 @@ export default function NotificationButton() {
                       <div className="flex items-center gap-2">
                         {!notification.read && (
                           <button
-                            onClick={() => handleMarkAsRead(notification.id)}
-                            className="p-2.5 text-theme-primary hover:bg-theme-primary/10 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+                            onClick={handleMarkAsRead(notification.id)}
+                            className={`p-2.5 text-theme-primary hover:bg-theme-primary/10 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center ${focusClasses}`}
                             aria-label={t('notifications.markAsRead', {
                               defaultValue: 'Mark as read',
                             })}
@@ -178,8 +184,8 @@ export default function NotificationButton() {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(notification.id)}
-                          className="p-2.5 text-theme-status-error-text hover:bg-theme-status-error-bg rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          onClick={handleDelete(notification.id)}
+                          className={`p-2.5 text-theme-status-error-text hover:bg-theme-status-error-bg rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center ${focusClasses}`}
                           aria-label={t('notifications.delete', {
                             defaultValue: 'Delete notification',
                           })}
@@ -213,7 +219,7 @@ export default function NotificationButton() {
             <Link
               to="/notices"
               onClick={handleClose}
-              className="block w-full p-6 text-[12px] font-black uppercase tracking-brand-sm text-theme-primary bg-theme-bg-secondary border-t border-theme-border-default hover:bg-theme-primary hover:text-theme-bg-card transition-all text-center min-h-[44px]"
+              className={`block w-full p-6 text-[12px] font-black uppercase tracking-brand-sm text-theme-primary bg-theme-bg-secondary border-t border-theme-border-default hover:bg-theme-primary hover:text-theme-bg-card transition-all text-center min-h-[44px] ${focusClasses}`}
             >
               {t('notifications.viewAll', { defaultValue: 'View All' })}
             </Link>

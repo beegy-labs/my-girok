@@ -19,6 +19,9 @@ export * from './components/ViewToggle';
 // Hooks
 export * from './hooks';
 
+// Styles (SSOT constants)
+export { focusClasses } from './styles/constants';
+
 // Re-export commonly used types
 export type {
   TextInputProps,
