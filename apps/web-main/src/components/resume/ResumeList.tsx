@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import {
   getAllResumes,
   deleteResume,
@@ -8,6 +8,7 @@ import {
 } from '../../api/resume';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 
 export default function ResumeList() {
   const { t } = useTranslation();
@@ -33,40 +34,50 @@ export default function ResumeList() {
     loadResumes();
   }, [loadResumes]);
 
-  const handleDelete = async (resumeId: string) => {
-    if (!confirm(t('resume.list.confirmDelete'))) return;
+  // Memoized handlers (2025 best practice)
+  const handleDelete = useCallback(
+    async (resumeId: string) => {
+      if (!confirm(t('resume.list.confirmDelete'))) return;
 
-    try {
-      await deleteResume(resumeId);
-      await loadResumes();
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      alert(err.response?.data?.message || t('resume.list.deleteFailed'));
-    }
-  };
+      try {
+        await deleteResume(resumeId);
+        await loadResumes();
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        alert(err.response?.data?.message || t('resume.list.deleteFailed'));
+      }
+    },
+    [t, loadResumes],
+  );
 
-  const handleSetDefault = async (resumeId: string) => {
-    try {
-      await setDefaultResume(resumeId);
-      await loadResumes();
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      alert(err.response?.data?.message || t('resume.list.setDefaultFailed'));
-    }
-  };
+  const handleSetDefault = useCallback(
+    async (resumeId: string) => {
+      try {
+        await setDefaultResume(resumeId);
+        await loadResumes();
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        alert(err.response?.data?.message || t('resume.list.setDefaultFailed'));
+      }
+    },
+    [t, loadResumes],
+  );
 
-  const handleCopy = async (resumeId: string, resumeTitle: string) => {
-    if (!confirm(t('resume.list.confirmCopy', { title: resumeTitle }))) return;
+  const handleCopy = useCallback(
+    async (resumeId: string, resumeTitle: string) => {
+      if (!confirm(t('resume.list.confirmCopy', { title: resumeTitle }))) return;
 
-    try {
-      await copyResume(resumeId);
-      await loadResumes();
-      alert(t('resume.list.copySuccess'));
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      alert(err.response?.data?.message || t('resume.list.copyFailed'));
-    }
-  };
+      try {
+        await copyResume(resumeId);
+        await loadResumes();
+        alert(t('resume.list.copySuccess'));
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        alert(err.response?.data?.message || t('resume.list.copyFailed'));
+      }
+    },
+    [t, loadResumes],
+  );
 
   if (loading) {
     return (
@@ -109,90 +120,127 @@ export default function ResumeList() {
       ) : (
         <div className="space-y-4">
           {resumes.map((resume) => (
-            <div
+            <ResumeCard
               key={resume.id}
-              className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 hover:shadow-theme-lg transition"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-xl font-semibold text-theme-text-primary">
-                      {resume.title}
-                    </h2>
-                    {resume.isDefault && (
-                      <span className="px-2 py-1 text-xs font-medium bg-theme-primary/20 text-theme-primary-light rounded">
-                        {t('resume.list.defaultBadge')}
-                      </span>
-                    )}
-                  </div>
-                  {resume.description?.trim() && (
-                    <p className="text-theme-text-secondary mb-2">{resume.description}</p>
-                  )}
-                  <p className="text-sm text-theme-text-tertiary">
-                    {resume.name} · {resume.email}
-                  </p>
-                  <p className="text-xs text-theme-text-muted mt-1">
-                    {t('resume.list.updatedAt')}: {new Date(resume.updatedAt).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Link
-                    to={`/resume/edit/${resume.id}`}
-                    className="px-4 py-2 text-sm bg-theme-primary/10 text-theme-primary rounded hover:bg-theme-primary/20 transition"
-                  >
-                    {t('resume.list.edit')}
-                  </Link>
-                  <Link
-                    to={`/resume/preview/${resume.id}`}
-                    className="px-4 py-2 text-sm bg-theme-primary/10 text-theme-primary rounded hover:bg-theme-primary/20 transition"
-                  >
-                    {t('resume.list.preview')}
-                  </Link>
-                  <button
-                    onClick={() => handleCopy(resume.id, resume.title)}
-                    className="px-4 py-2 text-sm bg-theme-primary/10 text-theme-primary rounded hover:bg-theme-primary/20 transition"
-                  >
-                    {t('resume.list.copy')}
-                  </button>
-                  {!resume.isDefault && (
-                    <button
-                      onClick={() => handleSetDefault(resume.id)}
-                      className="px-4 py-2 text-sm bg-theme-primary/20 text-theme-primary-light rounded hover:bg-theme-primary/30 transition"
-                    >
-                      {t('resume.list.setDefault')}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(resume.id)}
-                    className="px-4 py-2 text-sm bg-theme-status-error-bg text-theme-status-error-text rounded hover:opacity-80 transition"
-                  >
-                    {t('resume.list.delete')}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex gap-6 text-sm text-theme-text-secondary">
-                <div>
-                  {t('resume.list.stats.skills')}: {resume.skills.length}
-                </div>
-                <div>
-                  {t('resume.list.stats.experiences')}: {resume.experiences.length}
-                </div>
-                <div>
-                  {t('resume.list.stats.projects')}: {resume.projects.length}
-                </div>
-                <div>
-                  {t('resume.list.stats.education')}: {resume.educations.length}
-                </div>
-                <div>
-                  {t('resume.list.stats.certificates')}: {resume.certificates.length}
-                </div>
-              </div>
-            </div>
+              resume={resume}
+              t={t}
+              onCopy={handleCopy}
+              onSetDefault={handleSetDefault}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
     </div>
   );
 }
+
+// Props interface for ResumeCard
+interface ResumeCardProps {
+  resume: Resume;
+  t: TFunction;
+  onCopy: (resumeId: string, resumeTitle: string) => void;
+  onSetDefault: (resumeId: string) => void;
+  onDelete: (resumeId: string) => void;
+}
+
+// Memoized ResumeCard component (2025 best practice)
+const ResumeCard = memo(function ResumeCard({
+  resume,
+  t,
+  onCopy,
+  onSetDefault,
+  onDelete,
+}: ResumeCardProps) {
+  // Memoized handlers (2025 best practice)
+  const handleCopy = useCallback(() => {
+    onCopy(resume.id, resume.title);
+  }, [onCopy, resume.id, resume.title]);
+
+  const handleSetDefault = useCallback(() => {
+    onSetDefault(resume.id);
+  }, [onSetDefault, resume.id]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(resume.id);
+  }, [onDelete, resume.id]);
+
+  return (
+    <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 hover:shadow-theme-lg transition">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-xl font-semibold text-theme-text-primary">{resume.title}</h2>
+            {resume.isDefault && (
+              <span className="px-2 py-1 text-xs font-medium bg-theme-primary/20 text-theme-primary-light rounded">
+                {t('resume.list.defaultBadge')}
+              </span>
+            )}
+          </div>
+          {resume.description?.trim() && (
+            <p className="text-theme-text-secondary mb-2">{resume.description}</p>
+          )}
+          <p className="text-sm text-theme-text-tertiary">
+            {resume.name} · {resume.email}
+          </p>
+          <p className="text-xs text-theme-text-muted mt-1">
+            {t('resume.list.updatedAt')}: {new Date(resume.updatedAt).toLocaleDateString()}
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <Link
+            to={`/resume/edit/${resume.id}`}
+            className="px-4 py-2 text-sm bg-theme-primary/10 text-theme-primary rounded hover:bg-theme-primary/20 transition"
+          >
+            {t('resume.list.edit')}
+          </Link>
+          <Link
+            to={`/resume/preview/${resume.id}`}
+            className="px-4 py-2 text-sm bg-theme-primary/10 text-theme-primary rounded hover:bg-theme-primary/20 transition"
+          >
+            {t('resume.list.preview')}
+          </Link>
+          <button
+            onClick={handleCopy}
+            className="px-4 py-2 text-sm bg-theme-primary/10 text-theme-primary rounded hover:bg-theme-primary/20 transition"
+          >
+            {t('resume.list.copy')}
+          </button>
+          {!resume.isDefault && (
+            <button
+              onClick={handleSetDefault}
+              className="px-4 py-2 text-sm bg-theme-primary/20 text-theme-primary-light rounded hover:bg-theme-primary/30 transition"
+            >
+              {t('resume.list.setDefault')}
+            </button>
+          )}
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 text-sm bg-theme-status-error-bg text-theme-status-error-text rounded hover:opacity-80 transition"
+          >
+            {t('resume.list.delete')}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex gap-6 text-sm text-theme-text-secondary">
+        <div>
+          {t('resume.list.stats.skills')}: {resume.skills.length}
+        </div>
+        <div>
+          {t('resume.list.stats.experiences')}: {resume.experiences.length}
+        </div>
+        <div>
+          {t('resume.list.stats.projects')}: {resume.projects.length}
+        </div>
+        <div>
+          {t('resume.list.stats.education')}: {resume.educations.length}
+        </div>
+        <div>
+          {t('resume.list.stats.certificates')}: {resume.certificates.length}
+        </div>
+      </div>
+    </div>
+  );
+});

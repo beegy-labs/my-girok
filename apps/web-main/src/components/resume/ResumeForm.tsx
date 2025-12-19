@@ -402,6 +402,52 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }));
   }, []);
 
+  // Memoized handler for removing achievement (2025 React best practice)
+  const handleRemoveAchievement = useCallback(
+    (index: number) => () => {
+      const newAchievements = formData.keyAchievements?.filter((_, i) => i !== index);
+      setFormData({ ...formData, keyAchievements: newAchievements });
+    },
+    [formData],
+  );
+
+  // Memoized handler for adding certificate (2025 React best practice)
+  const handleAddCertificate = useCallback(() => {
+    setFormData({
+      ...formData,
+      certificates: [
+        ...(formData.certificates || []),
+        {
+          name: '',
+          issuer: '',
+          issueDate: '',
+          expiryDate: '',
+          credentialId: '',
+          credentialUrl: '',
+          order: formData.certificates?.length || 0,
+          visible: true,
+        },
+      ],
+    });
+  }, [formData]);
+
+  // Memoized handler for removing certificate (2025 React best practice)
+  const handleRemoveCertificate = useCallback(
+    (index: number) => () => {
+      const newCertificates = formData.certificates?.filter((_, i) => i !== index);
+      setFormData({ ...formData, certificates: newCertificates });
+    },
+    [formData],
+  );
+
+  // Memoized handler for deleting attachment (2025 React best practice)
+  const handleDeleteAttachmentClick = useCallback(
+    (attachmentId: string) => () => {
+      handleDeleteAttachment(attachmentId);
+    },
+    [],
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -804,10 +850,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 </div>
                 <Button
                   variant="danger"
-                  onClick={() => {
-                    const newAchievements = formData.keyAchievements?.filter((_, i) => i !== index);
-                    setFormData({ ...formData, keyAchievements: newAchievements });
-                  }}
+                  onClick={handleRemoveAchievement(index)}
                   size="sm"
                   className="self-end sm:self-start py-2 touch-manipulation"
                 >
@@ -886,24 +929,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         headerAction={
           <Button
             variant="primary"
-            onClick={() => {
-              setFormData({
-                ...formData,
-                certificates: [
-                  ...(formData.certificates || []),
-                  {
-                    name: '',
-                    issuer: '',
-                    issueDate: '',
-                    expiryDate: '',
-                    credentialId: '',
-                    credentialUrl: '',
-                    order: formData.certificates?.length || 0,
-                    visible: true,
-                  },
-                ],
-              });
-            }}
+            onClick={handleAddCertificate}
             size="sm"
             className="py-2 touch-manipulation"
           >
@@ -928,10 +954,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   </h3>
                   <Button
                     variant="danger"
-                    onClick={() => {
-                      const newCertificates = formData.certificates?.filter((_, i) => i !== index);
-                      setFormData({ ...formData, certificates: newCertificates });
-                    }}
+                    onClick={handleRemoveCertificate(index)}
                     size="sm"
                     className="py-1.5 px-2 text-xs touch-manipulation"
                   >
@@ -1076,7 +1099,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleDeleteAttachment(attachment.id)}
+                  onClick={handleDeleteAttachmentClick(attachment.id)}
                   className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
                   {t('common.delete')}
@@ -1130,7 +1153,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleDeleteAttachment(attachment.id)}
+                  onClick={handleDeleteAttachmentClick(attachment.id)}
                   className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
                   {t('common.delete')}
@@ -1186,7 +1209,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleDeleteAttachment(attachment.id)}
+                  onClick={handleDeleteAttachmentClick(attachment.id)}
                   className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
                 >
                   {t('common.delete')}

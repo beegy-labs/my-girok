@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { TFunction } from 'i18next';
 import { TextInput, Button, CollapsibleSection } from '@my-girok/ui-components';
 import HierarchicalDescription, { HierarchicalItem } from './HierarchicalDescription';
@@ -184,7 +184,8 @@ interface SkillCategoryProps {
   onMoveSkillItem: (skillIndex: number, itemIndex: number, direction: 'up' | 'down') => void;
 }
 
-function SkillCategory({
+// Memoized SkillCategory component (2025 best practice)
+const SkillCategory = memo(function SkillCategory({
   skill,
   skillIndex,
   t,
@@ -196,6 +197,22 @@ function SkillCategory({
   onSkillItemDescriptionsChange,
   onMoveSkillItem,
 }: SkillCategoryProps) {
+  // Memoized handlers (2025 best practice)
+  const handleDeleteCategory = useCallback(() => {
+    onDeleteCategory(skillIndex);
+  }, [onDeleteCategory, skillIndex]);
+
+  const handleCategoryChange = useCallback(
+    (value: string) => {
+      onCategoryChange(skillIndex, value);
+    },
+    [onCategoryChange, skillIndex],
+  );
+
+  const handleAddSkillItem = useCallback(() => {
+    onAddSkillItem(skillIndex);
+  }, [onAddSkillItem, skillIndex]);
+
   return (
     <div className="border border-theme-border-default rounded-xl p-3 sm:p-5 bg-theme-bg-hover transition-colors duration-200">
       <div className="flex justify-between items-center mb-3 sm:mb-4">
@@ -204,7 +221,7 @@ function SkillCategory({
         </h3>
         <button
           type="button"
-          onClick={() => onDeleteCategory(skillIndex)}
+          onClick={handleDeleteCategory}
           className="text-theme-status-error-text hover:opacity-80 text-xs sm:text-sm font-semibold px-2 py-1 hover:bg-theme-status-error-bg rounded touch-manipulation"
         >
           {t('common.delete')}
@@ -216,7 +233,7 @@ function SkillCategory({
         <TextInput
           label={t('resume.form.categoryName')}
           value={skill.category}
-          onChange={(value: string) => onCategoryChange(skillIndex, value)}
+          onChange={handleCategoryChange}
           placeholder={t('resume.form.categoryPlaceholder')}
           required
         />
@@ -230,7 +247,7 @@ function SkillCategory({
           </label>
           <Button
             variant="secondary"
-            onClick={() => onAddSkillItem(skillIndex)}
+            onClick={handleAddSkillItem}
             size="sm"
             className="py-1.5 px-2 text-xs sm:text-sm touch-manipulation"
           >
@@ -263,7 +280,7 @@ function SkillCategory({
       </div>
     </div>
   );
-}
+});
 
 interface SkillItemCardProps {
   item: SkillItem | string;
@@ -281,7 +298,8 @@ interface SkillItemCardProps {
   onMoveSkillItem: (skillIndex: number, itemIndex: number, direction: 'up' | 'down') => void;
 }
 
-function SkillItemCard({
+// Memoized SkillItemCard component (2025 best practice)
+const SkillItemCard = memo(function SkillItemCard({
   item,
   skillIndex,
   itemIndex,
@@ -294,6 +312,33 @@ function SkillItemCard({
 }: SkillItemCardProps) {
   const itemData = typeof item === 'string' ? { name: item, description: '' } : item;
 
+  // Memoized handlers (2025 best practice)
+  const handleMoveUp = useCallback(() => {
+    onMoveSkillItem(skillIndex, itemIndex, 'up');
+  }, [onMoveSkillItem, skillIndex, itemIndex]);
+
+  const handleMoveDown = useCallback(() => {
+    onMoveSkillItem(skillIndex, itemIndex, 'down');
+  }, [onMoveSkillItem, skillIndex, itemIndex]);
+
+  const handleDelete = useCallback(() => {
+    onDeleteSkillItem(skillIndex, itemIndex);
+  }, [onDeleteSkillItem, skillIndex, itemIndex]);
+
+  const handleNameChange = useCallback(
+    (value: string) => {
+      onSkillItemNameChange(skillIndex, itemIndex, value);
+    },
+    [onSkillItemNameChange, skillIndex, itemIndex],
+  );
+
+  const handleDescriptionsChange = useCallback(
+    (descriptions: HierarchicalItem[]) => {
+      onSkillItemDescriptionsChange(skillIndex, itemIndex, descriptions);
+    },
+    [onSkillItemDescriptionsChange, skillIndex, itemIndex],
+  );
+
   return (
     <div className="border border-theme-border-subtle rounded-xl p-2 sm:p-4 bg-theme-bg-card transition-colors duration-200">
       <div className="flex justify-between items-center mb-2 sm:mb-3">
@@ -303,7 +348,7 @@ function SkillItemCard({
             {itemIndex > 0 && (
               <button
                 type="button"
-                onClick={() => onMoveSkillItem(skillIndex, itemIndex, 'up')}
+                onClick={handleMoveUp}
                 className="w-6 h-6 flex items-center justify-center text-theme-primary hover:text-theme-primary-light hover:bg-theme-bg-hover rounded text-xs font-semibold touch-manipulation"
                 title={t('resume.form.moveUpButton')}
               >
@@ -313,7 +358,7 @@ function SkillItemCard({
             {itemIndex < itemCount - 1 && (
               <button
                 type="button"
-                onClick={() => onMoveSkillItem(skillIndex, itemIndex, 'down')}
+                onClick={handleMoveDown}
                 className="w-6 h-6 flex items-center justify-center text-theme-primary hover:text-theme-primary-light hover:bg-theme-bg-hover rounded text-xs font-semibold touch-manipulation"
                 title={t('resume.form.moveDownButton')}
               >
@@ -327,7 +372,7 @@ function SkillItemCard({
         </div>
         <Button
           variant="danger"
-          onClick={() => onDeleteSkillItem(skillIndex, itemIndex)}
+          onClick={handleDelete}
           size="sm"
           className="py-1.5 px-2 text-xs touch-manipulation"
         >
@@ -341,7 +386,7 @@ function SkillItemCard({
         <TextInput
           label={t('resume.form.skillName')}
           value={itemData.name}
-          onChange={(value: string) => onSkillItemNameChange(skillIndex, itemIndex, value)}
+          onChange={handleNameChange}
           placeholder={t('resume.form.skillPlaceholder')}
           required
         />
@@ -350,9 +395,7 @@ function SkillItemCard({
       {/* Hierarchical Description */}
       <HierarchicalDescription
         items={(itemData.descriptions || []) as HierarchicalItem[]}
-        onChange={(descriptions) =>
-          onSkillItemDescriptionsChange(skillIndex, itemIndex, descriptions)
-        }
+        onChange={handleDescriptionsChange}
         label={t('resume.form.experience')}
         placeholder={t('resume.form.experiencePlaceholder')}
         maxDepth={4}
@@ -371,4 +414,4 @@ function SkillItemCard({
       )}
     </div>
   );
-}
+});

@@ -73,7 +73,7 @@ export function Badge({
 }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center font-black uppercase border tracking-widest ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${className}`}
+      className={`inline-flex items-center font-black uppercase border tracking-brand-lg ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${className}`}
     >
       {children}
     </span>

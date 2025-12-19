@@ -26,8 +26,9 @@ export default function LanguageSwitcher() {
     setIsOpen((prev) => !prev);
   }, []);
 
-  const changeLanguage = useCallback(
-    (lng: string) => {
+  // Memoized language change handler (2025 best practice)
+  const handleLanguageChange = useCallback(
+    (lng: string) => () => {
       i18n.changeLanguage(lng);
       localStorage.setItem('language', lng);
       setIsOpen(false);
@@ -63,7 +64,7 @@ export default function LanguageSwitcher() {
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
-              onClick={() => changeLanguage(lang.code)}
+              onClick={handleLanguageChange(lang.code)}
               role="option"
               aria-selected={i18n.language === lang.code}
               className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-inset focus-visible:ring-theme-focus-ring ${

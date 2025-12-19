@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DndContext,
@@ -45,8 +45,8 @@ interface HierarchicalDescriptionProps {
   maxDepth?: number; // Default: 4
 }
 
-// Recursive Hierarchical Item Component
-function HierarchicalItemComponent({
+// Recursive Hierarchical Item Component (2025 best practice with memo)
+const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
   item,
   depth,
   onUpdate,
@@ -65,31 +65,45 @@ function HierarchicalItemComponent({
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const handleUpdateChild = (childIndex: number, updatedChild: HierarchicalItem) => {
-    const newChildren = [...(item.children || [])];
-    newChildren[childIndex] = updatedChild;
-    onUpdate({ ...item, children: newChildren });
-  };
+  // Memoized toggle handler (2025 best practice)
+  const handleToggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
 
-  const handleRemoveChild = (childIndex: number) => {
-    const newChildren = (item.children || []).filter((_, i) => i !== childIndex);
-    onUpdate({ ...item, children: newChildren });
-  };
+  const handleUpdateChild = useCallback(
+    (childIndex: number, updatedChild: HierarchicalItem) => {
+      const newChildren = [...(item.children || [])];
+      newChildren[childIndex] = updatedChild;
+      onUpdate({ ...item, children: newChildren });
+    },
+    [item, onUpdate],
+  );
 
-  const handleAddChildToChild = (childIndex: number) => {
-    const newChildren = [...(item.children || [])];
-    const newSubChild: HierarchicalItem = {
-      content: '',
-      depth: depth + 2,
-      order: (newChildren[childIndex].children || []).length,
-      children: [],
-    };
-    newChildren[childIndex] = {
-      ...newChildren[childIndex],
-      children: [...(newChildren[childIndex].children || []), newSubChild],
-    };
-    onUpdate({ ...item, children: newChildren });
-  };
+  const handleRemoveChild = useCallback(
+    (childIndex: number) => {
+      const newChildren = (item.children || []).filter((_, i) => i !== childIndex);
+      onUpdate({ ...item, children: newChildren });
+    },
+    [item, onUpdate],
+  );
+
+  const handleAddChildToChild = useCallback(
+    (childIndex: number) => {
+      const newChildren = [...(item.children || [])];
+      const newSubChild: HierarchicalItem = {
+        content: '',
+        depth: depth + 2,
+        order: (newChildren[childIndex].children || []).length,
+        children: [],
+      };
+      newChildren[childIndex] = {
+        ...newChildren[childIndex],
+        children: [...(newChildren[childIndex].children || []), newSubChild],
+      };
+      onUpdate({ ...item, children: newChildren });
+    },
+    [item, depth, onUpdate],
+  );
 
   // Get depth color with fallback
   const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
@@ -145,7 +159,7 @@ function HierarchicalItemComponent({
             {item.children && item.children.length > 0 && (
               <button
                 type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={handleToggleExpanded}
                 className="px-2 py-1 text-xs text-theme-text-secondary hover:text-theme-text-primary transition-colors duration-200 touch-manipulation"
                 title={isExpanded ? t('common.collapse') : t('common.expand')}
               >
@@ -193,7 +207,7 @@ function HierarchicalItemComponent({
               {item.children && item.children.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={handleToggleExpanded}
                   className="w-6 h-6 flex items-center justify-center text-[10px] text-theme-text-secondary hover:bg-theme-bg-hover rounded transition-colors duration-200 touch-manipulation"
                 >
                   {isExpanded ? '▼' : '▶'}
@@ -231,7 +245,7 @@ function HierarchicalItemComponent({
       )}
     </div>
   );
-}
+});
 
 // Sortable Item Component (for drag-and-drop at root level)
 function SortableHierarchicalItem({

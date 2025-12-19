@@ -185,6 +185,63 @@ export default function MyResumePage() {
     setExpandedResumeId((prev) => (prev === resumeId ? null : resumeId));
   }, []);
 
+  // Memoized handler factories for inline functions (2025 React best practice)
+  const handlePreviewClick = useCallback(
+    (resumeId: string) => () => {
+      navigateToPreview(resumeId);
+    },
+    [navigateToPreview],
+  );
+
+  const handleEditClick = useCallback(
+    (resumeId: string) => () => {
+      navigateToEditResume(resumeId);
+    },
+    [navigateToEditResume],
+  );
+
+  const handleCopyClick = useCallback(
+    (resumeId: string) => () => {
+      handleCopyResume(resumeId);
+    },
+    [handleCopyResume],
+  );
+
+  const handleShareClick = useCallback(
+    (resumeId: string) => () => {
+      openShareModal(resumeId);
+    },
+    [openShareModal],
+  );
+
+  const handleDeleteClick = useCallback(
+    (resumeId: string) => () => {
+      handleDeleteResume(resumeId);
+    },
+    [handleDeleteResume],
+  );
+
+  const handleToggleShareLinksClick = useCallback(
+    (resumeId: string) => () => {
+      toggleShareLinks(resumeId);
+    },
+    [toggleShareLinks],
+  );
+
+  const handleCopyToClipboardClick = useCallback(
+    (shareUrl: string, linkId: string) => () => {
+      copyToClipboard(shareUrl, linkId);
+    },
+    [copyToClipboard],
+  );
+
+  const handleDeleteShareClick = useCallback(
+    (shareId: string) => () => {
+      handleDeleteShare(shareId);
+    },
+    [handleDeleteShare],
+  );
+
   if (loading) {
     return <LoadingSpinner fullScreen message={t('common.loading')} />;
   }
@@ -289,37 +346,29 @@ export default function MyResumePage() {
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
                           <Button
                             variant="secondary"
-                            onClick={() => navigateToPreview(resume.id)}
+                            onClick={handlePreviewClick(resume.id)}
                             size="sm"
                           >
                             👁️ {t('common.preview')}
                           </Button>
-                          <Button
-                            variant="primary"
-                            onClick={() => navigateToEditResume(resume.id)}
-                            size="sm"
-                          >
+                          <Button variant="primary" onClick={handleEditClick(resume.id)} size="sm">
                             ✍️ {t('common.edit')}
                           </Button>
                           <Button
                             variant="secondary"
-                            onClick={() => handleCopyResume(resume.id)}
+                            onClick={handleCopyClick(resume.id)}
                             size="sm"
                           >
                             📋 {t('common.copy')}
                           </Button>
                           <Button
                             variant="secondary"
-                            onClick={() => openShareModal(resume.id)}
+                            onClick={handleShareClick(resume.id)}
                             size="sm"
                           >
                             🔗 {t('common.share')}
                           </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => handleDeleteResume(resume.id)}
-                            size="sm"
-                          >
+                          <Button variant="danger" onClick={handleDeleteClick(resume.id)} size="sm">
                             🗑️ {t('common.delete')}
                           </Button>
                         </div>
@@ -330,7 +379,7 @@ export default function MyResumePage() {
                     {hasActiveShare && (
                       <div className="border-t border-theme-border-subtle bg-theme-bg-elevated/50">
                         <button
-                          onClick={() => toggleShareLinks(resume.id)}
+                          onClick={handleToggleShareLinksClick(resume.id)}
                           className="w-full px-4 sm:px-6 py-3 flex items-center justify-between text-sm font-semibold text-theme-text-primary hover:bg-theme-bg-hover/50 transition-all"
                         >
                           <span className="flex items-center gap-2">
@@ -376,7 +425,7 @@ export default function MyResumePage() {
                                       />
                                       <Button
                                         variant="secondary"
-                                        onClick={() => copyToClipboard(link.shareUrl, link.id)}
+                                        onClick={handleCopyToClipboardClick(link.shareUrl, link.id)}
                                         size="sm"
                                       >
                                         {copiedLinkId === link.id
@@ -404,7 +453,7 @@ export default function MyResumePage() {
                                   </div>
                                   <Button
                                     variant="danger"
-                                    onClick={() => handleDeleteShare(link.id)}
+                                    onClick={handleDeleteShareClick(link.id)}
                                     size="sm"
                                   >
                                     {t('common.delete')}

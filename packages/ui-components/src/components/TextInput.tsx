@@ -131,7 +131,7 @@ export function TextInput({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-bold uppercase tracking-widest text-theme-text-primary mb-2 ml-1"
+          className="block text-xs font-bold uppercase tracking-brand-lg text-theme-text-primary mb-2 ml-1"
         >
           {label}
           {required && (
