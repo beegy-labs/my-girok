@@ -45,38 +45,47 @@ export default function SectionOrderManager() {
     }
   }, [preferences]);
 
-  // Memoized handlers (2025 best practice)
-  const handleVisibilityToggle = useCallback((type: SectionType) => {
-    setSections((prev) =>
-      prev.map((section) =>
-        section.type === type ? { ...section, visible: !section.visible } : section,
-      ),
-    );
-  }, []);
+  // Curried handlers (2025 best practice - no inline functions in map)
+  const handleVisibilityToggle = useCallback(
+    (type: SectionType) => () => {
+      setSections((prev) =>
+        prev.map((section) =>
+          section.type === type ? { ...section, visible: !section.visible } : section,
+        ),
+      );
+    },
+    [],
+  );
 
-  const handleMoveUp = useCallback((index: number) => {
-    if (index === 0) return;
-    setSections((prev) => {
-      const newSections = [...prev];
-      [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-      newSections.forEach((section, idx) => {
-        section.order = idx;
+  const handleMoveUp = useCallback(
+    (index: number) => () => {
+      if (index === 0) return;
+      setSections((prev) => {
+        const newSections = [...prev];
+        [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+        newSections.forEach((section, idx) => {
+          section.order = idx;
+        });
+        return newSections;
       });
-      return newSections;
-    });
-  }, []);
+    },
+    [],
+  );
 
-  const handleMoveDown = useCallback((index: number) => {
-    setSections((prev) => {
-      if (index === prev.length - 1) return prev;
-      const newSections = [...prev];
-      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-      newSections.forEach((section, idx) => {
-        section.order = idx;
+  const handleMoveDown = useCallback(
+    (index: number) => () => {
+      setSections((prev) => {
+        if (index === prev.length - 1) return prev;
+        const newSections = [...prev];
+        [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+        newSections.forEach((section, idx) => {
+          section.order = idx;
+        });
+        return newSections;
       });
-      return newSections;
-    });
-  }, []);
+    },
+    [],
+  );
 
   const handleSave = useCallback(async () => {
     try {
@@ -108,7 +117,7 @@ export default function SectionOrderManager() {
             <div className="flex items-center space-x-4">
               <div className="flex flex-col space-y-1">
                 <button
-                  onClick={() => handleMoveUp(index)}
+                  onClick={handleMoveUp(index)}
                   disabled={index === 0}
                   className="text-theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
                   aria-label={t('aria.moveUp')}
@@ -116,7 +125,7 @@ export default function SectionOrderManager() {
                   ▲
                 </button>
                 <button
-                  onClick={() => handleMoveDown(index)}
+                  onClick={handleMoveDown(index)}
                   disabled={index === sections.length - 1}
                   className="text-theme-text-secondary hover:text-theme-primary disabled:text-theme-text-muted disabled:cursor-not-allowed transition-colors"
                   aria-label={t('aria.moveDown')}
@@ -134,7 +143,7 @@ export default function SectionOrderManager() {
               <input
                 type="checkbox"
                 checked={section.visible}
-                onChange={() => handleVisibilityToggle(section.type)}
+                onChange={handleVisibilityToggle(section.type)}
                 className="w-5 h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary"
               />
             </label>

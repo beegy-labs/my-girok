@@ -58,9 +58,9 @@ export default function ResumePreview({
   const paperSize = externalPaperSize || internalPaperSize;
   const paper = PAPER_SIZES[paperSize];
 
-  // Handle paper size change
+  // Handle paper size change (curried - 2025 best practice)
   const handlePaperSizeChange = useCallback(
-    (size: PaperSizeKey) => {
+    (size: PaperSizeKey) => () => {
       setInternalPaperSize(size);
       onPaperSizeChange?.(size);
     },
@@ -117,7 +117,7 @@ export default function ResumePreview({
                 {/* Paper Size Selector */}
                 <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-xl p-1">
                   <button
-                    onClick={() => handlePaperSizeChange('A4')}
+                    onClick={handlePaperSizeChange('A4')}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${
                       paperSize === 'A4'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
@@ -128,7 +128,7 @@ export default function ResumePreview({
                     A4
                   </button>
                   <button
-                    onClick={() => handlePaperSizeChange('LETTER')}
+                    onClick={handlePaperSizeChange('LETTER')}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${
                       paperSize === 'LETTER'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'

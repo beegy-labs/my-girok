@@ -783,31 +783,45 @@ function HierarchicalAchievement({
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const handleUpdateChild = (childIndex: number, updatedChild: ProjectAchievement) => {
-    const newChildren = [...(achievement.children || [])];
-    newChildren[childIndex] = updatedChild;
-    onUpdate({ ...achievement, children: newChildren });
-  };
+  // Memoized toggle handler (2025 best practice)
+  const handleToggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
 
-  const handleRemoveChild = (childIndex: number) => {
-    const newChildren = (achievement.children || []).filter((_, i) => i !== childIndex);
-    onUpdate({ ...achievement, children: newChildren });
-  };
+  const handleUpdateChild = useCallback(
+    (childIndex: number, updatedChild: ProjectAchievement) => {
+      const newChildren = [...(achievement.children || [])];
+      newChildren[childIndex] = updatedChild;
+      onUpdate({ ...achievement, children: newChildren });
+    },
+    [achievement, onUpdate],
+  );
 
-  const handleAddChildToChild = (childIndex: number) => {
-    const newChildren = [...(achievement.children || [])];
-    const newSubChild: ProjectAchievement = {
-      content: '',
-      depth: depth + 2,
-      order: (newChildren[childIndex].children || []).length,
-      children: [],
-    };
-    newChildren[childIndex] = {
-      ...newChildren[childIndex],
-      children: [...(newChildren[childIndex].children || []), newSubChild],
-    };
-    onUpdate({ ...achievement, children: newChildren });
-  };
+  const handleRemoveChild = useCallback(
+    (childIndex: number) => {
+      const newChildren = (achievement.children || []).filter((_, i) => i !== childIndex);
+      onUpdate({ ...achievement, children: newChildren });
+    },
+    [achievement, onUpdate],
+  );
+
+  const handleAddChildToChild = useCallback(
+    (childIndex: number) => {
+      const newChildren = [...(achievement.children || [])];
+      const newSubChild: ProjectAchievement = {
+        content: '',
+        depth: depth + 2,
+        order: (newChildren[childIndex].children || []).length,
+        children: [],
+      };
+      newChildren[childIndex] = {
+        ...newChildren[childIndex],
+        children: [...(newChildren[childIndex].children || []), newSubChild],
+      };
+      onUpdate({ ...achievement, children: newChildren });
+    },
+    [achievement, depth, onUpdate],
+  );
 
   // Get depth color with fallback
   const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
@@ -862,7 +876,7 @@ function HierarchicalAchievement({
             {achievement.children && achievement.children.length > 0 && (
               <button
                 type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={handleToggleExpanded}
                 className="px-2 py-1 text-xs text-theme-text-secondary hover:text-theme-text-primary transition-colors duration-200"
                 title={
                   isExpanded
@@ -914,7 +928,7 @@ function HierarchicalAchievement({
               {achievement.children && achievement.children.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={handleToggleExpanded}
                   className="w-6 h-6 flex items-center justify-center text-[10px] text-theme-text-secondary hover:bg-theme-bg-hover rounded transition-colors duration-200 touch-manipulation"
                 >
                   {isExpanded ? '▼' : '▶'}
