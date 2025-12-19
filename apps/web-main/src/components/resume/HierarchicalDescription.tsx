@@ -280,7 +280,7 @@ function SortableHierarchicalItem({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1.5}
               d="M4 8h16M4 16h16"
             />
           </svg>

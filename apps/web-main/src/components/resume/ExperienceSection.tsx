@@ -214,7 +214,7 @@ function SortableExperienceCard({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M4 8h16M4 16h16"
               />
             </svg>
@@ -248,7 +248,7 @@ function SortableExperienceCard({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M19 9l-7 7-7-7"
               />
             </svg>
@@ -563,7 +563,7 @@ function SortableProject({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1.5}
               d="M4 8h16M4 16h16"
             />
           </svg>
@@ -592,7 +592,12 @@ function SortableProject({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
@@ -988,7 +993,7 @@ function SortableAchievement({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1.5}
               d="M4 8h16M4 16h16"
             />
           </svg>

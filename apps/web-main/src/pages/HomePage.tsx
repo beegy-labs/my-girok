@@ -297,7 +297,7 @@ export default function HomePage() {
                     variant="primary"
                     size="lg"
                     rounded="editorial"
-                    icon={<Plus size={18} strokeWidth={3} />}
+                    icon={<Plus size={18} strokeWidth={1.5} />}
                     aria-label={t('home.addWidget', { defaultValue: 'Add new widget' })}
                   >
                     {t('home.add', { defaultValue: 'Add' })}
@@ -431,7 +431,7 @@ export default function HomePage() {
                             className="flex items-center gap-2 text-xs font-bold uppercase text-theme-primary min-h-[44px] hover:opacity-80 transition-opacity"
                             aria-label={t('widget.quickAdd')}
                           >
-                            {t('widget.quickAdd')} <Plus className="w-4 h-4" strokeWidth={3} />
+                            {t('widget.quickAdd')} <Plus className="w-4 h-4" strokeWidth={1.5} />
                           </button>
                         </div>
                       </>

@@ -31,7 +31,7 @@ export interface SortableItemProps {
    */
   renderDragHandle?: (
     listeners: SyntheticListenerMap | undefined,
-    attributes: DraggableAttributes
+    attributes: DraggableAttributes,
   ) => ReactNode;
 }
 
@@ -70,14 +70,7 @@ export function SortableItem({
   useDragHandle = false,
   renderDragHandle,
 }: SortableItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
 
@@ -122,11 +115,7 @@ export interface DragHandleProps {
  * </SortableItem>
  * ```
  */
-export function DragHandle({
-  listeners,
-  attributes,
-  className = '',
-}: DragHandleProps) {
+export function DragHandle({ listeners, attributes, className = '' }: DragHandleProps) {
   return (
     <button
       type="button"
@@ -136,7 +125,7 @@ export function DragHandle({
       aria-label="Drag to reorder"
     >
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8h16M4 16h16" />
       </svg>
     </button>
   );

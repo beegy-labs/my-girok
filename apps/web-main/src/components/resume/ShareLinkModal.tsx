@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { createResumeShare, getMyShareLinks, updateShareLink, deleteShareLink, ShareDuration, ShareLink } from '../../api/resume';
+import {
+  createResumeShare,
+  getMyShareLinks,
+  updateShareLink,
+  deleteShareLink,
+  ShareDuration,
+  ShareLink,
+} from '../../api/resume';
 
 interface ShareLinkModalProps {
   onClose: () => void;
@@ -20,7 +27,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
     try {
       const links = await getMyShareLinks();
       // Filter only resume links
-      const resumeLinks = links.filter(link => link.resourceId === resumeId);
+      const resumeLinks = links.filter((link) => link.resourceId === resumeId);
       setShareLinks(resumeLinks);
     } catch (_err) {
       console.error('Failed to load share links', _err);
@@ -90,16 +97,19 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                 🔗 {t('share.title')}
               </h2>
-              <p className="text-white/80 text-sm mt-1">
-                {t('share.description')}
-              </p>
+              <p className="text-white/80 text-sm mt-1">{t('share.description')}</p>
             </div>
             <button
               onClick={onClose}
               className="text-white hover:bg-white/20 rounded-lg p-2 transition-all transition-colors duration-200"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -112,9 +122,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
             <h3 className="font-bold text-theme-primary mb-3 flex items-center gap-2">
               ✨ {t('share.createNew')}
             </h3>
-            <p className="text-sm text-theme-text-secondary mb-4">
-              {t('share.createDescription')}
-            </p>
+            <p className="text-sm text-theme-text-secondary mb-4">{t('share.createDescription')}</p>
             <div className="flex flex-col gap-3">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
@@ -172,7 +180,9 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
               <div className="text-center py-12 bg-theme-bg-secondary rounded-xl border border-theme-border-subtle transition-colors duration-200">
                 <div className="text-5xl mb-3">🔗</div>
                 <p className="text-theme-text-secondary font-medium">{t('share.noLinksYet')}</p>
-                <p className="text-sm text-theme-text-tertiary mt-1">{t('share.createFirstLink')}</p>
+                <p className="text-sm text-theme-text-tertiary mt-1">
+                  {t('share.createFirstLink')}
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -212,10 +222,12 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
 
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-theme-text-secondary">
-                        👁️ {t('resume.viewCount')}: <span className="font-semibold">{link.viewCount}</span>
+                        👁️ {t('resume.viewCount')}:{' '}
+                        <span className="font-semibold">{link.viewCount}</span>
                         {link.lastViewedAt && (
                           <span className="ml-2">
-                            • {t('share.lastViewed')}: {new Date(link.lastViewedAt).toLocaleDateString()}
+                            • {t('share.lastViewed')}:{' '}
+                            {new Date(link.lastViewedAt).toLocaleDateString()}
                           </span>
                         )}
                       </p>
@@ -230,7 +242,9 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                             : 'bg-theme-primary/20 text-theme-primary hover:bg-theme-primary/30'
                         }`}
                       >
-                        {copySuccess === link.id ? `✓ ${t('resume.linkCopied')}` : `📋 ${t('resume.copyLink')}`}
+                        {copySuccess === link.id
+                          ? `✓ ${t('resume.linkCopied')}`
+                          : `📋 ${t('resume.copyLink')}`}
                       </button>
                       <button
                         onClick={() => handleToggle(link.id, link.isActive)}
