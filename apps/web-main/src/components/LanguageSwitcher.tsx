@@ -26,8 +26,9 @@ export default function LanguageSwitcher() {
     setIsOpen((prev) => !prev);
   }, []);
 
-  const changeLanguage = useCallback(
-    (lng: string) => {
+  // Memoized language change handler (2025 best practice)
+  const handleLanguageChange = useCallback(
+    (lng: string) => () => {
       i18n.changeLanguage(lng);
       localStorage.setItem('language', lng);
       setIsOpen(false);
@@ -49,7 +50,7 @@ export default function LanguageSwitcher() {
         aria-label={t('aria.selectLanguage', { current: currentLanguage.label })}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className="p-3 text-[12px] font-black uppercase text-theme-text-primary hover:bg-theme-bg-hover rounded-xl transition-colors w-12 min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring tracking-tighter"
+        className="p-3 text-[12px] font-black uppercase text-theme-text-primary hover:bg-theme-bg-hover rounded-xl transition-colors w-12 min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring tracking-editorial"
       >
         {langCode}
       </button>
@@ -63,10 +64,10 @@ export default function LanguageSwitcher() {
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
-              onClick={() => changeLanguage(lang.code)}
+              onClick={handleLanguageChange(lang.code)}
               role="option"
               aria-selected={i18n.language === lang.code}
-              className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-focus-ring ${
+              className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-inset focus-visible:ring-theme-focus-ring ${
                 i18n.language === lang.code
                   ? 'bg-theme-primary/10 text-theme-primary font-bold'
                   : 'text-theme-text-secondary hover:bg-theme-bg-hover'

@@ -1,4 +1,5 @@
-import { useCallback, memo } from 'react';
+import { memo } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export type ViewMode = 'grid' | 'list';
 
@@ -19,8 +20,6 @@ export interface ViewToggleProps {
 
 // Static class definitions (2025 best practice - outside component)
 // V0.0.1 AAA Workstation Design System
-const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 // p-4 ensures reliable 56px touch target with larger icons
 const buttonBaseClasses =
@@ -52,15 +51,12 @@ export const ViewToggle = memo(function ViewToggle({
   onChange,
   className = '',
 }: ViewToggleProps) {
-  // Memoized handlers per rules.md: "✅ Memoize handlers with useCallback"
-  const handleGridClick = useCallback(() => onChange('grid'), [onChange]);
-  const handleListClick = useCallback(() => onChange('list'), [onChange]);
-
+  // 2025 best practice: inline handlers when component is already memoized
   return (
     <div className={`inline-flex gap-4 ${className}`} role="radiogroup" aria-label="View mode">
       <button
         type="button"
-        onClick={handleGridClick}
+        onClick={() => onChange('grid')}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'grid' ? buttonActiveClasses : buttonInactiveClasses
         }`}
@@ -78,14 +74,14 @@ export const ViewToggle = memo(function ViewToggle({
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={2}
+            strokeWidth={1.5}
             d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
           />
         </svg>
       </button>
       <button
         type="button"
-        onClick={handleListClick}
+        onClick={() => onChange('list')}
         className={`${buttonBaseClasses} ${focusClasses} ${
           value === 'list' ? buttonActiveClasses : buttonInactiveClasses
         }`}
@@ -103,7 +99,7 @@ export const ViewToggle = memo(function ViewToggle({
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={2}
+            strokeWidth={1.5}
             d="M4 6h16M4 12h16M4 18h16"
           />
         </svg>

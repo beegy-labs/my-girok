@@ -159,9 +159,9 @@ export default function HomePage() {
     [pinnedWidgetId],
   );
 
-  // Memoized handler per rules.md: "Memoize handlers with useCallback"
+  // Curried handlers (2025 React best practice - no inline functions in map)
   const handleMenuClick = useCallback(
-    (menu: MenuItem) => {
+    (menu: MenuItem) => () => {
       if (menu.status === 'active') {
         navigate(menu.route);
       }
@@ -169,10 +169,13 @@ export default function HomePage() {
     [navigate],
   );
 
-  // Pin/unpin widget handler
-  const handlePinWidget = useCallback((menuId: string) => {
-    setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
-  }, []);
+  // Pin/unpin widget handler (curried)
+  const handlePinWidget = useCallback(
+    (menuId: string) => () => {
+      setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
+    },
+    [],
+  );
 
   // Check if a menu can be pinned as widget
   const canPinAsWidget = useCallback(
@@ -218,8 +221,7 @@ export default function HomePage() {
 
       <main
         id="main-content"
-        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pb-32"
-        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pb-32 pt-nav"
         role="main"
       >
         {isAuthenticated ? (
@@ -230,7 +232,7 @@ export default function HomePage() {
               className="mb-16"
               aria-label={t('aria.featuredPromotions', { defaultValue: 'Featured Promotions' })}
             >
-              <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
+              <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
                   <span className="text-[12px] font-black uppercase tracking-brand text-theme-primary mb-4 block font-mono-brand">
                     {t(PROMOS[currentPromo].tagKey, { defaultValue: 'Premium' })}
@@ -254,14 +256,14 @@ export default function HomePage() {
                 <div className="flex gap-4">
                   <button
                     onClick={handlePrevPromo}
-                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
+                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
                     aria-label={t('aria.previousPromo', { defaultValue: 'Previous Promo' })}
                   >
                     <ChevronLeft size={24} aria-hidden="true" />
                   </button>
                   <button
                     onClick={handleNextPromo}
-                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
+                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
                     aria-label={t('aria.nextPromo', { defaultValue: 'Next Promo' })}
                   >
                     <ChevronRight size={24} aria-hidden="true" />
@@ -298,7 +300,7 @@ export default function HomePage() {
                     variant="primary"
                     size="lg"
                     rounded="editorial"
-                    icon={<Plus size={18} strokeWidth={3} />}
+                    icon={<Plus size={18} strokeWidth={1.5} />}
                     aria-label={t('home.addWidget', { defaultValue: 'Add new widget' })}
                   >
                     {t('home.add', { defaultValue: 'Add' })}
@@ -308,11 +310,11 @@ export default function HomePage() {
                 {/* Widget Grid - V0.0.1 Style */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {/* Today Widget - Active */}
-                  <article className="bg-theme-bg-card rounded-editorial-lg border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
+                  <article className="bg-theme-bg-card rounded-editorial-lg border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
                     <div className="flex justify-between items-center mb-8">
                       <div className="flex items-center gap-4">
                         <div
-                          className="p-3 bg-theme-bg-secondary rounded-2xl text-theme-primary border border-theme-border-subtle"
+                          className="p-3 bg-theme-bg-secondary rounded-xl text-theme-primary border border-theme-border-subtle"
                           aria-hidden="true"
                         >
                           <Calendar size={20} />
@@ -344,7 +346,7 @@ export default function HomePage() {
 
                     <button
                       type="button"
-                      className="mt-10 text-[12px] font-black uppercase tracking-widest text-theme-text-secondary hover:text-theme-primary transition-colors flex items-center gap-3 group/btn min-h-[44px]"
+                      className="mt-10 text-[12px] font-black uppercase tracking-brand-lg text-theme-text-secondary hover:text-theme-primary transition-colors flex items-center gap-3 group/btn min-h-[44px]"
                     >
                       {t('home.viewAll', { defaultValue: 'View All' })}{' '}
                       <ChevronRight
@@ -359,7 +361,7 @@ export default function HomePage() {
                   {[2, 3].map((slot) => (
                     <div
                       key={slot}
-                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-editorial-lg border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-editorial-lg border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
                       tabIndex={0}
                       role="button"
                       aria-label={t('aria.addWidgetToSlot', {
@@ -369,7 +371,7 @@ export default function HomePage() {
                       <Plus
                         size={32}
                         className="text-theme-border-default group-hover:text-theme-primary group-hover:scale-110 transition-all"
-                        strokeWidth={2.5}
+                        strokeWidth={1.5}
                         aria-hidden="true"
                       />
                       <span className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-brand font-mono-brand">
@@ -403,7 +405,7 @@ export default function HomePage() {
                       <>
                         {/* Schedule Widget Mockup */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between p-4 bg-theme-bg-page rounded-2xl border border-theme-border-default">
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page rounded-input border border-theme-border-default">
                             <span className="font-bold text-sm text-theme-text-primary">
                               14:00 {t('placeholder.schedule').split('.')[0]}
                             </span>
@@ -411,7 +413,7 @@ export default function HomePage() {
                               {t('widget.scheduleNow')}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between p-4 bg-theme-bg-page/50 rounded-2xl border border-theme-border-subtle">
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page/50 rounded-input border border-theme-border-subtle">
                             <span className="font-bold text-sm text-theme-text-muted">
                               16:30 {t('placeholder.schedule').split('.')[0]}
                             </span>
@@ -420,7 +422,7 @@ export default function HomePage() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex flex-col justify-center p-6 bg-theme-primary/5 rounded-3xl border border-theme-primary/20">
+                        <div className="flex flex-col justify-center p-6 bg-theme-primary/5 rounded-input border border-theme-primary/20">
                           <p className="text-sm font-bold text-theme-text-primary mb-2">
                             {t('widget.scheduleSummary', {
                               name: user?.name || user?.username,
@@ -432,7 +434,7 @@ export default function HomePage() {
                             className="flex items-center gap-2 text-xs font-bold uppercase text-theme-primary min-h-[44px] hover:opacity-80 transition-opacity"
                             aria-label={t('widget.quickAdd')}
                           >
-                            {t('widget.quickAdd')} <Plus className="w-4 h-4" strokeWidth={3} />
+                            {t('widget.quickAdd')} <Plus className="w-4 h-4" strokeWidth={1.5} />
                           </button>
                         </div>
                       </>
@@ -459,7 +461,7 @@ export default function HomePage() {
 
               {/* Grid View */}
               {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-14">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';
@@ -472,9 +474,9 @@ export default function HomePage() {
                         icon={<IconComponent />}
                         title={t(menu.nameKey)}
                         description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
-                        onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
+                        onClick={isDisabled ? undefined : handleMenuClick(menu)}
                         isPinned={pinnedWidgetId === menu.id}
-                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
+                        onPin={canPin ? handlePinWidget(menu.id) : undefined}
                         pinTooltip={
                           pinnedWidgetId === menu.id
                             ? t('widget.unpinFromTop')
@@ -511,9 +513,9 @@ export default function HomePage() {
                             : t(menu.nameKey)
                         }
                         description={isDisabled ? undefined : t(menu.descriptionKey)}
-                        onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
+                        onClick={isDisabled ? undefined : handleMenuClick(menu)}
                         isPinned={pinnedWidgetId === menu.id}
-                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
+                        onPin={canPin ? handlePinWidget(menu.id) : undefined}
                         className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                         aria-label={
                           isDisabled
@@ -544,7 +546,7 @@ export default function HomePage() {
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
             <div className="text-center">
               {/* Giant Brand Title - V0.0.1 Style */}
-              <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-tighter italic font-serif-title">
+              <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-editorial italic font-serif-title">
                 girok<span className="text-theme-primary">.</span>
               </h1>
 

@@ -50,6 +50,7 @@ LLM 작업 시 아래 유틸리티 클래스를 사용:
 | Category       | Utility Class           | Usage                    |
 | -------------- | ----------------------- | ------------------------ |
 | Border Radius  | `rounded-input`         | Inputs, buttons (24px)   |
+|                | `rounded-widget`        | Widgets, modals (32px)   |
 |                | `rounded-editorial`     | Cards (40px)             |
 |                | `rounded-editorial-lg`  | Form cards (48px)        |
 |                | `rounded-editorial-xl`  | Hero sections (56px)     |
@@ -57,9 +58,13 @@ LLM 작업 시 아래 유틸리티 클래스를 사용:
 | Typography     | `font-serif-title`      | Serif headings           |
 |                | `font-mono-brand`       | Brand labels             |
 | Letter Spacing | `tracking-brand-sm`     | Small labels (0.2em)     |
+|                | `tracking-brand-md`     | Footer links (0.25em)    |
 |                | `tracking-brand`        | Default brand (0.3em)    |
 |                | `tracking-brand-lg`     | Large brand (0.5em)      |
 |                | `tracking-editorial`    | Serif headings (-0.05em) |
+| Spacing        | `pt-nav`, `h-nav`       | Navigation height (80px) |
+|                | `mb-section`            | Section margin (96px)    |
+| Focus Ring     | `ring-[4px]`            | AAA focus ring (4px)     |
 
 ### Usage Pattern
 

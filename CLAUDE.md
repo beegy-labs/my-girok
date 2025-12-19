@@ -4,7 +4,7 @@
 
 ## Quick Start
 
-👉 **Start here**: [.ai/README.md](.ai/README.md) - Navigation for all AI documentation
+**Start here**: [.ai/README.md](.ai/README.md) - Navigation for all AI documentation
 
 ## Essential Reading
 
@@ -18,76 +18,43 @@
 ### Backend Development
 
 **Working on authentication?**
-→ Read: `.ai/rules.md` + `.ai/services/auth-service.md`
-
-**Working on GraphQL BFF?**
-→ Read: `.ai/rules.md` + `.ai/architecture.md` + `.ai/services/graphql-bff.md`
-
-**Working on WebSocket/real-time?**
-→ Read: `.ai/rules.md` + `.ai/services/ws-gateway.md`
-
-**Working on feed/timeline?**
-→ Read: `.ai/rules.md` + `.ai/services/feed-service.md`
-
-**Working on chat?**
-→ Read: `.ai/rules.md` + `.ai/services/chat-service.md`
-
-**Working on random matching?**
-→ Read: `.ai/rules.md` + `.ai/services/matching-service.md`
+Read: `.ai/rules.md` + `.ai/services/auth-service.md`
 
 **Working on resume/profile?**
-→ Read: `.ai/rules.md` + `.ai/services/personal-service.md`
-
-**Working on AI features?**
-→ Read: `.ai/rules.md` + `.ai/services/llm-api.md`
+Read: `.ai/rules.md` + `.ai/services/personal-service.md`
 
 ### Frontend Development
 
 **Working on web app?**
-→ Read: `.ai/rules.md` + `.ai/apps/web-main.md`
-
-**Working on admin dashboard?**
-→ Read: `.ai/rules.md` + `.ai/apps/web-admin.md`
-
-**Working on mobile app (Flutter)?**
-→ Read: `.ai/rules.md` + `.ai/apps/mobile-flutter.md`
+Read: `.ai/rules.md` + `.ai/apps/web-main.md`
 
 **Working on design tokens/styling?**
-→ Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
+Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
 
 ## Documentation Structure
 
 ```
 my-girok/
-├── CLAUDE.md                 # ← You are here (Entry point)
+├── CLAUDE.md                 # <- You are here (Entry point)
 ├── README.md                 # Project introduction
 │
-├── .ai/                      # 🤖 LLM-optimized docs (~10K tokens)
+├── .ai/                      # LLM-optimized docs
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
 │   ├── architecture.md       # Architecture patterns (2025)
 │   ├── ssot.md               # Single Source of Truth strategy (2025)
 │   ├── services/             # Backend service APIs
-│   │   ├── graphql-bff.md    # GraphQL Federation Gateway
-│   │   ├── ws-gateway.md     # WebSocket Gateway
 │   │   ├── auth-service.md   # Authentication (REST + gRPC)
-│   │   ├── personal-service.md # Resume, Profile
-│   │   ├── feed-service.md   # Timeline, Posts
-│   │   ├── chat-service.md   # Messages, Rooms
-│   │   ├── matching-service.md # Random matching
-│   │   ├── media-service.md  # Image processing
-│   │   └── llm-api.md        # AI features
+│   │   └── personal-service.md # Resume, Profile
 │   ├── packages/             # Shared packages
 │   │   ├── design-tokens.md  # WCAG 2.1 AAA design tokens (SSOT)
 │   │   ├── nest-common.md
 │   │   ├── types.md
 │   │   └── ui-components.md
 │   └── apps/                 # Frontend app guides
-│       ├── web-main.md
-│       ├── web-admin.md
-│       └── mobile-flutter.md
+│       └── web-main.md
 │
-└── docs/                     # 📚 Human-readable docs (~73K tokens)
+└── docs/                     # Human-readable docs
     ├── policies/             # Detailed policies
     ├── guides/               # Tutorials (GraphQL, gRPC, NATS)
     └── api/                  # API specs
@@ -102,17 +69,17 @@ my-girok/
 ### Git Branch & Merge Policy (GitFlow Standard)
 
 ```
-feat/* ──squash──▶ develop ──merge──▶ release ──merge──▶ main
+feat/* ──squash──> develop ──merge──> release ──merge──> main
                     (Dev)    (Staging)   (Prod)
 ```
 
-| Source → Target   | Merge Type | Command                |
-| ----------------- | ---------- | ---------------------- |
-| feat → develop    | Squash     | `gh pr merge --squash` |
-| develop → release | Merge      | `gh pr merge --merge`  |
-| release → main    | Merge      | `gh pr merge --merge`  |
+| Source -> Target   | Merge Type | Command                |
+| ------------------ | ---------- | ---------------------- |
+| feat -> develop    | Squash     | `gh pr merge --squash` |
+| develop -> release | Merge      | `gh pr merge --merge`  |
+| release -> main    | Merge      | `gh pr merge --merge`  |
 
-👉 **Full details**: [.ai/git-flow.md](.ai/git-flow.md)
+Full details: [.ai/git-flow.md](.ai/git-flow.md)
 
 ### Git Commit Policy
 
@@ -149,18 +116,18 @@ feat/* ──squash──▶ develop ──merge──▶ release ──merge─
 
 ## Need More Detail?
 
-**Security policies** → `docs/policies/SECURITY.md`
-**Testing standards** → `docs/policies/TESTING.md`
-**Performance tips** → `docs/policies/PERFORMANCE.md`
-**Deployment guide** → `docs/policies/DEPLOYMENT.md`
+**Security policies** -> `docs/policies/SECURITY.md`
+**Testing standards** -> `docs/policies/TESTING.md`
+**Performance tips** -> `docs/policies/PERFORMANCE.md`
+**Deployment guide** -> `docs/policies/DEPLOYMENT.md`
 
 ## Token Optimization
 
-- **Read .ai/ for coding** (~10K tokens) - Patterns, APIs, flows
-- **Refer to docs/ for policies** (~73K tokens) - Detailed guides, tutorials
+- **Read .ai/ for coding** - Patterns, APIs, flows
+- **Refer to docs/ for policies** - Detailed guides, tutorials
 
 **Always prefer .ai/ documentation for implementation tasks.**
 
 ---
 
-**Ready to code? Start with [.ai/README.md](.ai/README.md) 🚀**
+**Ready to code? Start with [.ai/README.md](.ai/README.md)**

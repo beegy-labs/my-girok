@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
@@ -34,6 +34,11 @@ export default function LoginPage() {
     }
   }, []);
 
+  // Memoized remember email handler (2025 React best practice)
+  const handleRememberEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setRememberEmail(e.target.checked);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -59,15 +64,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700 pt-nav">
       <main className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
         <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
-            <h1 className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic font-serif-title">
+            <h1 className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-editorial italic font-serif-title">
               {t('auth.login', { defaultValue: 'Login' })}
             </h1>
             <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
@@ -120,11 +122,11 @@ export default function LoginPage() {
                     id="rememberEmail"
                     type="checkbox"
                     checked={rememberEmail}
-                    onChange={(e) => setRememberEmail(e.target.checked)}
+                    onChange={handleRememberEmailChange}
                     className="absolute w-11 h-11 opacity-0 cursor-pointer peer"
                   />
                   <span
-                    className="w-5 h-5 border-2 border-theme-border-default rounded bg-theme-bg-input transition-colors peer-checked:bg-theme-primary peer-checked:border-theme-primary peer-focus-visible:ring-2 peer-focus-visible:ring-theme-focus-ring peer-focus-visible:ring-offset-2"
+                    className="w-5 h-5 border-2 border-theme-border-default rounded bg-theme-bg-input transition-colors peer-checked:bg-theme-primary peer-checked:border-theme-primary peer-focus-visible:ring-[4px] peer-focus-visible:ring-theme-focus-ring peer-focus-visible:ring-offset-4"
                     aria-hidden="true"
                   >
                     {rememberEmail && (

@@ -21,10 +21,7 @@ export default function PlaceholderPage({
   const badgeText = badge ?? t('badge.comingSoon');
 
   return (
-    <main
-      className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         <div className="text-center">
           {/* Icon */}

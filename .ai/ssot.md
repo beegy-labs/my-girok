@@ -33,6 +33,7 @@ Tailwind CSS 4에서는 `@theme` 블록의 **CSS 변수 네이밍**에 따라 **
 @theme inline {
   /* Border Radius - SSOT */
   --border-radius-input: 24px;
+  --border-radius-widget: 32px;
   --border-radius-editorial: 40px;
   --border-radius-editorial-lg: 48px;
   --border-radius-editorial-xl: 56px;
@@ -85,6 +86,7 @@ Tailwind CSS 4에서는 `@theme` 블록의 **CSS 변수 네이밍**에 따라 **
 | Current (❌)     | SSOT (✅)               | Token                           |
 | ---------------- | ----------------------- | ------------------------------- |
 | `rounded-[24px]` | `rounded-input`         | `--border-radius-input`         |
+| `rounded-[32px]` | `rounded-widget`        | `--border-radius-widget`        |
 | `rounded-[40px]` | `rounded-editorial`     | `--border-radius-editorial`     |
 | `rounded-[48px]` | `rounded-editorial-lg`  | `--border-radius-editorial-lg`  |
 | `rounded-[56px]` | `rounded-editorial-xl`  | `--border-radius-editorial-xl`  |
@@ -97,9 +99,23 @@ Tailwind CSS 4에서는 `@theme` 블록의 **CSS 변수 네이밍**에 따라 **
 | `style={{ fontFamily: 'var(--font-family-serif-title)' }}` | `className="font-serif-title"` | `--font-family-serif-title`  |
 | `style={{ fontFamily: 'var(--font-family-mono-brand)' }}`  | `className="font-mono-brand"`  | `--font-family-mono-brand`   |
 | `tracking-[0.2em]`, `tracking-[0.25em]`                    | `tracking-brand-sm`            | `--letter-spacing-brand-sm`  |
+| `tracking-[0.25em]`                                        | `tracking-brand-md`            | `--letter-spacing-brand-md`  |
 | `tracking-[0.3em]`                                         | `tracking-brand`               | `--letter-spacing-brand`     |
 | `tracking-[0.4em]`, `tracking-[0.5em]`, `tracking-[0.6em]` | `tracking-brand-lg`            | `--letter-spacing-brand-lg`  |
 | `tracking-tighter`                                         | `tracking-editorial`           | `--letter-spacing-editorial` |
+
+### Navigation & Layout Spacing
+
+| Current (❌)                                      | SSOT (✅) | Token           |
+| ------------------------------------------------- | --------- | --------------- |
+| `style={{ paddingTop: 'var(--nav-height-...)' }}` | `pt-nav`  | `--spacing-nav` |
+| `style={{ height: 'var(--nav-height-...)' }}`     | `h-nav`   | `--spacing-nav` |
+
+### Focus Ring (AAA Accessibility)
+
+| Current (❌) | SSOT (✅)    | Spec                           |
+| ------------ | ------------ | ------------------------------ |
+| `ring-[3px]` | `ring-[4px]` | V0.0.1 spec: outline-width 4px |
 
 ## Benefits
 
@@ -138,8 +154,10 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 - [x] `--radius-*` → `--border-radius-*` 네이밍 변경
 - [x] `--letter-spacing-brand: 0.3em` 추가
 - [x] `--letter-spacing-brand-sm: 0.2em` 추가
+- [x] `--letter-spacing-brand-md: 0.25em` 추가 (footer)
 - [x] `--letter-spacing-brand-lg: 0.5em` 추가
 - [x] `--letter-spacing-editorial: -0.05em` 추가
+- [x] `--spacing-nav: 80px` 추가 (pt-nav, h-nav)
 
 ### Components
 
@@ -147,6 +165,10 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 - [x] `style={{ fontFamily: ... }}` → `className="font-*"` 로 교체
 - [x] `tracking-[Nem]` → `tracking-brand-*` 로 교체
 - [x] `tracking-tighter` → `tracking-editorial` 로 교체
+- [x] `style={{ paddingTop: 'var(--nav-height-...)' }}` → `pt-nav` 교체
+- [x] `style={{ height: 'var(--nav-height-...)' }}` → `h-nav` 교체
+- [x] `ring-[3px]` → `ring-[4px]` 교체 (AAA spec)
+- [x] `strokeWidth={2}` or `{3}` → `strokeWidth={1.5}` 표준화
 
 ## File Impact
 

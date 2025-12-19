@@ -163,10 +163,7 @@ export default function ResumeEditPage() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-theme-bg-page transition-colors duration-200"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className="min-h-screen bg-theme-bg-page transition-colors duration-200 pt-nav">
       {/* Mobile: Fixed bottom navigation bar for preview toggle - V0.0.1 Style */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card border-t-2 border-theme-border-default p-4 lg:hidden safe-area-bottom">
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
@@ -197,7 +194,7 @@ export default function ResumeEditPage() {
           <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
+              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-editorial italic mb-3 font-serif-title">
                 {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
               </h1>
               <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
@@ -239,7 +236,7 @@ export default function ResumeEditPage() {
                 radius="lg"
                 className="mb-4 sm:mb-6 border-2 border-theme-border-default"
               >
-                <h2 className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-2 flex items-center gap-3 font-serif-title">
+                <h2 className="text-xl sm:text-2xl text-theme-text-primary tracking-editorial italic mb-2 flex items-center gap-3 font-serif-title">
                   <span>👁️</span>
                   {t('edit.livePreview')}
                 </h2>

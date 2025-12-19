@@ -1,4 +1,5 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface MenuCardProps {
   /**
@@ -48,14 +49,12 @@ export interface MenuCardProps {
  */
 const ChevronRightIcon = () => (
   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
   </svg>
 );
 
 // Static class definitions (defined outside component for performance - 2025 best practice)
 // V0.0.1 AAA Workstation Design System
-const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const baseClasses =
   'w-full text-left bg-theme-bg-card border-2 border-theme-border-subtle rounded-editorial-2xl p-10 md:p-12 min-h-[380px] flex flex-col transition-all duration-300 shadow-theme-sm';
@@ -92,7 +91,7 @@ const PinIcon = ({ filled = false }: { filled?: boolean }) => (
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth={2}
+      strokeWidth={1.5}
       d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
     />
   </svg>
@@ -144,27 +143,20 @@ export const MenuCard = memo(function MenuCard({
   const formattedIndex = String(index).padStart(2, '0');
   const isDisabled = !onClick;
 
-  // Memoized pin click handler to prevent event bubbling
-  const handlePinClick = useCallback(
-    (e: React.MouseEvent) => {
+  // 2025 best practice: inline handlers in memoized components
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onPin?.();
+  };
+
+  const handlePinKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
       e.stopPropagation();
       e.preventDefault();
       onPin?.();
-    },
-    [onPin],
-  );
-
-  // Keyboard handler for pin button (WCAG 2.1 3.2.1)
-  const handlePinKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.stopPropagation();
-        e.preventDefault();
-        onPin?.();
-      }
-    },
-    [onPin],
-  );
+    }
+  };
 
   return (
     <button
@@ -174,7 +166,6 @@ export const MenuCard = memo(function MenuCard({
       aria-disabled={isDisabled}
       aria-label={ariaLabel || title}
       className={`group ${baseClasses} ${isPinned ? pinnedClasses : ''} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
-      style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
       {/* Icon container */}
       <div className={`${iconContainerClasses} [&>svg]:w-8 [&>svg]:h-8`} aria-hidden="true">

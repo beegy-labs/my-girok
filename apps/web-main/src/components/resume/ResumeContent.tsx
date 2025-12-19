@@ -1,5 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { Resume, calculateExperienceDuration, calculateTotalExperienceWithOverlap, Gender, getAge } from '../../api/resume';
+import {
+  Resume,
+  calculateExperienceDuration,
+  calculateTotalExperienceWithOverlap,
+  Gender,
+  getAge,
+} from '../../api/resume';
 import { getBulletStyle, getIndentation, sortByOrder } from '../../utils/hierarchical-renderer';
 import { getProxyImageUrl } from '../../utils/imageProxy';
 import { PAPER_SIZES, PaperSizeKey } from '../../constants/paper';
@@ -31,14 +37,18 @@ interface ResumeContentProps {
  * - ResumePreview (for screen display with external scaling)
  * - Paged.js (for paginated print view)
  */
-export default function ResumeContent({ resume, paperSize, isGrayscaleMode = false }: ResumeContentProps) {
+export default function ResumeContent({
+  resume,
+  paperSize,
+  isGrayscaleMode = false,
+}: ResumeContentProps) {
   const { t, i18n } = useTranslation();
   const paper = PAPER_SIZES[paperSize];
 
   // Safe access to sections with fallback to empty array
   // Use `visible !== false` to include items where visible is undefined or true
   const visibleSections = (resume.sections || [])
-    .filter(s => s.visible !== false)
+    .filter((s) => s.visible !== false)
     .sort((a, b) => a.order - b.order);
 
   return (
@@ -62,13 +72,14 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
                 src={getProxyImageUrl(resume.profileImage) || resume.profileImage}
                 alt={resume.name}
                 crossOrigin="anonymous"
-                className={`w-32 h-40 object-cover rounded-lg border-2 border-gray-300 transition-all ${
+                className={`w-32 h-40 object-cover rounded-xl border-2 border-gray-300 transition-all ${
                   isGrayscaleMode ? 'filter grayscale' : ''
                 }`}
                 onError={(e) => {
                   const target = e.currentTarget;
                   target.onerror = null;
-                  target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160"%3E%3Crect width="128" height="160" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%239ca3af"%3ENo Image%3C/text%3E%3C/svg%3E';
+                  target.src =
+                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160"%3E%3Crect width="128" height="160" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%239ca3af"%3ENo Image%3C/text%3E%3C/svg%3E';
                 }}
               />
             </div>
@@ -99,16 +110,19 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
             </h1>
             <div className="flex flex-col gap-y-0.5 text-sm text-gray-700 mb-2">
               <div>
-                <span className="font-semibold">{t('resume.contactInfo.email')}:</span> {resume.email}
+                <span className="font-semibold">{t('resume.contactInfo.email')}:</span>{' '}
+                {resume.email}
               </div>
               {resume.phone?.trim() && (
                 <div>
-                  <span className="font-semibold">{t('resume.contactInfo.phone')}:</span> {resume.phone}
+                  <span className="font-semibold">{t('resume.contactInfo.phone')}:</span>{' '}
+                  {resume.phone}
                 </div>
               )}
               {resume.address?.trim() && (
                 <div>
-                  <span className="font-semibold">{t('resume.contactInfo.address')}:</span> {resume.address}
+                  <span className="font-semibold">{t('resume.contactInfo.address')}:</span>{' '}
+                  {resume.address}
                 </div>
               )}
             </div>
@@ -123,9 +137,14 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
                     {i18n.language === 'ko' ? (
                       <>
                         {resume.militaryRank && <span>{resume.militaryRank} </span>}
-                        {resume.militaryDischargeType && <span>{resume.militaryDischargeType}</span>}
+                        {resume.militaryDischargeType && (
+                          <span>{resume.militaryDischargeType}</span>
+                        )}
                         {resume.militaryServiceStartDate && resume.militaryServiceEndDate && (
-                          <span> ({resume.militaryServiceStartDate} ~ {resume.militaryServiceEndDate})</span>
+                          <span>
+                            {' '}
+                            ({resume.militaryServiceStartDate} ~ {resume.militaryServiceEndDate})
+                          </span>
                         )}
                         {!resume.militaryRank && resume.militaryDischarge && (
                           <span>{resume.militaryDischarge}</span>
@@ -138,7 +157,10 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
                       <>
                         {t('resume.militaryService.completed')}
                         {resume.militaryServiceStartDate && resume.militaryServiceEndDate && (
-                          <span> ({resume.militaryServiceStartDate} - {resume.militaryServiceEndDate})</span>
+                          <span>
+                            {' '}
+                            ({resume.militaryServiceStartDate} - {resume.militaryServiceEndDate})
+                          </span>
                         )}
                         {!resume.militaryServiceStartDate && resume.militaryDischarge && (
                           <span> ({resume.militaryDischarge})</span>
@@ -183,20 +205,23 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
       )}
 
       {/* Key Achievements */}
-      {resume.keyAchievements && resume.keyAchievements.filter((a: string) => a?.trim()).length > 0 && (
-        <div className="mb-6 resume-section">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-            ⭐ {t('resume.preview.keyAchievements')}
-          </h2>
-          <ul className="list-disc list-outside pl-5 space-y-2">
-            {resume.keyAchievements.filter((a: string) => a?.trim()).map((achievement: string, index: number) => (
-              <li key={index} className="text-gray-700 leading-relaxed">
-                {achievement}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {resume.keyAchievements &&
+        resume.keyAchievements.filter((a: string) => a?.trim()).length > 0 && (
+          <div className="mb-6 resume-section">
+            <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+              ⭐ {t('resume.preview.keyAchievements')}
+            </h2>
+            <ul className="list-disc list-outside pl-5 space-y-2">
+              {resume.keyAchievements
+                .filter((a: string) => a?.trim())
+                .map((achievement: string, index: number) => (
+                  <li key={index} className="text-gray-700 leading-relaxed">
+                    {achievement}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
 
       {/* Application Reason */}
       {resume.applicationReason?.trim() && (
@@ -204,23 +229,50 @@ export default function ResumeContent({ resume, paperSize, isGrayscaleMode = fal
           <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
             {t('resume.preview.applicationReason')}
           </h2>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.applicationReason}</p>
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+            {resume.applicationReason}
+          </p>
         </div>
       )}
 
       {/* Dynamic Sections based on visibility and order */}
-      {visibleSections.map(section => {
+      {visibleSections.map((section) => {
         switch (section.type) {
           case 'SKILLS':
-            return <SkillsSection key={section.id} skills={(resume.skills || []).filter(s => s.visible !== false)} />;
+            return (
+              <SkillsSection
+                key={section.id}
+                skills={(resume.skills || []).filter((s) => s.visible !== false)}
+              />
+            );
           case 'EXPERIENCE':
-            return <ExperienceSection key={section.id} experiences={(resume.experiences || []).filter(e => e.visible !== false)} />;
+            return (
+              <ExperienceSection
+                key={section.id}
+                experiences={(resume.experiences || []).filter((e) => e.visible !== false)}
+              />
+            );
           case 'PROJECT':
-            return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible !== false)} />;
+            return (
+              <ProjectsSection
+                key={section.id}
+                projects={(resume.projects || []).filter((p) => p.visible !== false)}
+              />
+            );
           case 'EDUCATION':
-            return <EducationSection key={section.id} educations={(resume.educations || []).filter(e => e.visible !== false)} />;
+            return (
+              <EducationSection
+                key={section.id}
+                educations={(resume.educations || []).filter((e) => e.visible !== false)}
+              />
+            );
           case 'CERTIFICATE':
-            return <CertificatesSection key={section.id} certificates={(resume.certificates || []).filter(c => c.visible !== false)} />;
+            return (
+              <CertificatesSection
+                key={section.id}
+                certificates={(resume.certificates || []).filter((c) => c.visible !== false)}
+              />
+            );
           default:
             return null;
         }
@@ -252,7 +304,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
           className="flex items-start break-words"
           style={{
             marginLeft: getIndentation(desc.depth),
-            marginBottom: '0.25rem'
+            marginBottom: '0.25rem',
           }}
         >
           <span className="mr-1 select-none flex-shrink-0">{getBulletStyle(desc.depth)}</span>
@@ -269,45 +321,52 @@ function SkillsSection({ skills }: { skills: any[] }) {
         {t('resume.sections.skills')}
       </h2>
       <div className="space-y-4">
-        {skills.sort((a, b) => a.order - b.order).map((skill, idx) => (
-          <div key={idx}>
-            <h3 className="font-bold text-gray-900 mb-2">{skill.category}</h3>
-            <div className="space-y-2 ml-4">
-              {Array.isArray(skill.items) && skill.items
-                .filter((item: any) => typeof item === 'string' ? item?.trim() : item?.name?.trim())
-                .map((item: any, itemIdx: number) => {
-                if (typeof item === 'string') {
-                  return (
-                    <div key={itemIdx} className="text-sm text-gray-700">
-                      • {item}
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={itemIdx} className="text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="text-gray-700 flex-shrink-0">•</span>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold text-gray-900 break-words">{item.name}</span>
-                        {item.descriptions && item.descriptions.length > 0 && (
-                          <div className="mt-2 text-gray-700">
-                            {renderDescriptions(item.descriptions)}
+        {skills
+          .sort((a, b) => a.order - b.order)
+          .map((skill, idx) => (
+            <div key={idx}>
+              <h3 className="font-bold text-gray-900 mb-2">{skill.category}</h3>
+              <div className="space-y-2 ml-4">
+                {Array.isArray(skill.items) &&
+                  skill.items
+                    .filter((item: any) =>
+                      typeof item === 'string' ? item?.trim() : item?.name?.trim(),
+                    )
+                    .map((item: any, itemIdx: number) => {
+                      if (typeof item === 'string') {
+                        return (
+                          <div key={itemIdx} className="text-sm text-gray-700">
+                            • {item}
                           </div>
-                        )}
-                        {item.description && !item.descriptions?.length && (
-                          <p className="text-gray-700 mt-1 ml-0 break-words">
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                        );
+                      }
+
+                      return (
+                        <div key={itemIdx} className="text-sm">
+                          <div className="flex items-start gap-2">
+                            <span className="text-gray-700 flex-shrink-0">•</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-gray-900 break-words">
+                                {item.name}
+                              </span>
+                              {item.descriptions && item.descriptions.length > 0 && (
+                                <div className="mt-2 text-gray-700">
+                                  {renderDescriptions(item.descriptions)}
+                                </div>
+                              )}
+                              {item.description && !item.descriptions?.length && (
+                                <p className="text-gray-700 mt-1 ml-0 break-words">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
@@ -326,112 +385,131 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
           className="flex items-start"
           style={{
             marginLeft: getIndentation(achievement.depth),
-            marginBottom: '0.25rem'
+            marginBottom: '0.25rem',
           }}
         >
           <span className="mr-1 select-none">{getBulletStyle(achievement.depth)}</span>
           <span className="flex-1">{achievement.content}</span>
         </div>
-        {achievement.children && achievement.children.length > 0 && renderAchievements(achievement.children)}
+        {achievement.children &&
+          achievement.children.length > 0 &&
+          renderAchievements(achievement.children)}
       </div>
     ));
   };
 
   const totalDuration = calculateTotalExperienceWithOverlap(experiences);
-  const durationText = totalDuration.years > 0 || totalDuration.months > 0
-    ? ` (${t('resume.experience.duration', { years: totalDuration.years, months: totalDuration.months })})`
-    : '';
+  const durationText =
+    totalDuration.years > 0 || totalDuration.months > 0
+      ? ` (${t('resume.experience.duration', { years: totalDuration.years, months: totalDuration.months })})`
+      : '';
 
   return (
     <div className="mb-6 resume-section">
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
-        {t('resume.sections.experience')}{durationText}
+        {t('resume.sections.experience')}
+        {durationText}
       </h2>
-      {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
-        <div key={idx} className="mb-5 resume-item">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
-              {exp.startDate && (
-                <p className="text-xs text-gray-600 mt-1">
-                  {(() => {
-                    const duration = calculateExperienceDuration(
-                      exp.startDate,
-                      exp.endDate,
-                      exp.isCurrentlyWorking
-                    );
-                    return t('resume.experience.duration', { years: duration.years, months: duration.months });
-                  })()}
+      {experiences
+        .sort((a, b) => a.order - b.order)
+        .map((exp, idx) => (
+          <div key={idx} className="mb-5 resume-item">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
+                {exp.startDate && (
+                  <p className="text-xs text-gray-600 mt-1">
+                    {(() => {
+                      const duration = calculateExperienceDuration(
+                        exp.startDate,
+                        exp.endDate,
+                        exp.isCurrentlyWorking,
+                      );
+                      return t('resume.experience.duration', {
+                        years: duration.years,
+                        months: duration.months,
+                      });
+                    })()}
+                  </p>
+                )}
+              </div>
+              <span className="text-sm text-gray-700 whitespace-nowrap">
+                {exp.startDate} -{' '}
+                {exp.isCurrentlyWorking
+                  ? t('resume.experience.currentlyWorking')
+                  : exp.endDate || t('resume.experience.currentlyWorking')}
+              </span>
+            </div>
+
+            <div className="mb-3">
+              <h4 className="font-semibold text-gray-900">{exp.finalPosition}</h4>
+              <p className="text-sm text-gray-700 italic">{exp.jobTitle}</p>
+              {exp.showSalary && exp.salary && (
+                <p className="text-sm text-gray-600 mt-1">
+                  <span className="font-semibold">{t('resume.experienceForm.salary')}:</span>{' '}
+                  {exp.salary.toLocaleString()}{' '}
+                  {exp.salaryUnit || t('resume.experienceForm.salaryUnits.manwon')}
                 </p>
               )}
             </div>
-            <span className="text-sm text-gray-700 whitespace-nowrap">
-              {exp.startDate} - {exp.isCurrentlyWorking ? t('resume.experience.currentlyWorking') : (exp.endDate || t('resume.experience.currentlyWorking'))}
-            </span>
-          </div>
 
-          <div className="mb-3">
-            <h4 className="font-semibold text-gray-900">{exp.finalPosition}</h4>
-            <p className="text-sm text-gray-700 italic">{exp.jobTitle}</p>
-            {exp.showSalary && exp.salary && (
-              <p className="text-sm text-gray-600 mt-1">
-                <span className="font-semibold">{t('resume.experienceForm.salary')}:</span> {exp.salary.toLocaleString()} {exp.salaryUnit || t('resume.experienceForm.salaryUnits.manwon')}
-              </p>
+            {exp.projects && exp.projects.length > 0 && (
+              <div className="space-y-4">
+                {exp.projects
+                  .sort((a: any, b: any) => a.order - b.order)
+                  .map((project: any, projectIdx: number) => (
+                    <div key={projectIdx} className="ml-4">
+                      <div className="mb-2">
+                        <div className="flex justify-between items-start">
+                          <h5 className="font-semibold text-gray-900">{project.name}</h5>
+                          <span className="text-xs text-gray-600 whitespace-nowrap ml-2">
+                            {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
+                          </span>
+                        </div>
+                        {project.role?.trim() && (
+                          <p className="text-sm text-gray-700 italic">{project.role}</p>
+                        )}
+                      </div>
+
+                      {project.description?.trim() && (
+                        <p className="text-sm text-gray-700 mb-2">{project.description}</p>
+                      )}
+
+                      {project.techStack && project.techStack.length > 0 && (
+                        <p className="text-xs text-gray-600 mb-2">
+                          <span className="font-semibold">{t('resume.preview.tech')}:</span>{' '}
+                          {project.techStack.join(', ')}
+                        </p>
+                      )}
+
+                      {project.achievements && project.achievements.length > 0 && (
+                        <div className="text-sm text-gray-700 mb-2">
+                          {renderAchievements(project.achievements)}
+                        </div>
+                      )}
+
+                      {(project.url?.trim() || project.githubUrl?.trim()) && (
+                        <div className="text-xs text-gray-900 flex flex-col gap-0.5">
+                          {project.url?.trim() && (
+                            <div>
+                              <span className="font-semibold">{t('resume.preview.demo')}:</span>{' '}
+                              {project.url}
+                            </div>
+                          )}
+                          {project.githubUrl?.trim() && (
+                            <div>
+                              <span className="font-semibold">{t('resume.preview.github')}:</span>{' '}
+                              {project.githubUrl}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
             )}
           </div>
-
-          {exp.projects && exp.projects.length > 0 && (
-            <div className="space-y-4">
-              {exp.projects.sort((a: any, b: any) => a.order - b.order).map((project: any, projectIdx: number) => (
-                <div key={projectIdx} className="ml-4">
-                  <div className="mb-2">
-                    <div className="flex justify-between items-start">
-                      <h5 className="font-semibold text-gray-900">{project.name}</h5>
-                      <span className="text-xs text-gray-600 whitespace-nowrap ml-2">
-                        {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
-                      </span>
-                    </div>
-                    {project.role?.trim() && (
-                      <p className="text-sm text-gray-700 italic">{project.role}</p>
-                    )}
-                  </div>
-
-                  {project.description?.trim() && (
-                    <p className="text-sm text-gray-700 mb-2">{project.description}</p>
-                  )}
-
-                  {project.techStack && project.techStack.length > 0 && (
-                    <p className="text-xs text-gray-600 mb-2">
-                      <span className="font-semibold">{t('resume.preview.tech')}:</span> {project.techStack.join(', ')}
-                    </p>
-                  )}
-
-                  {project.achievements && project.achievements.length > 0 && (
-                    <div className="text-sm text-gray-700 mb-2">
-                      {renderAchievements(project.achievements)}
-                    </div>
-                  )}
-
-                  {(project.url?.trim() || project.githubUrl?.trim()) && (
-                    <div className="text-xs text-gray-900 flex flex-col gap-0.5">
-                      {project.url?.trim() && (
-                        <div>
-                          <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
-                        </div>
-                      )}
-                      {project.githubUrl?.trim() && (
-                        <div>
-                          <span className="font-semibold">{t('resume.preview.github')}:</span> {project.githubUrl}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+        ))}
     </div>
   );
 }
@@ -446,46 +524,53 @@ function ProjectsSection({ projects }: { projects: any[] }) {
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.projects')}
       </h2>
-      {projects.sort((a, b) => a.order - b.order).map((project, idx) => (
-        <div key={idx} className="mb-4">
-          <div className="flex justify-between items-start mb-1">
-            <div>
-              <h3 className="font-semibold text-gray-900">{project.name}</h3>
-              {project.role?.trim() && <p className="text-sm text-gray-700">{project.role}</p>}
+      {projects
+        .sort((a, b) => a.order - b.order)
+        .map((project, idx) => (
+          <div key={idx} className="mb-4">
+            <div className="flex justify-between items-start mb-1">
+              <div>
+                <h3 className="font-semibold text-gray-900">{project.name}</h3>
+                {project.role?.trim() && <p className="text-sm text-gray-700">{project.role}</p>}
+              </div>
+              <span className="text-sm text-gray-700 whitespace-nowrap">
+                {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
+              </span>
             </div>
-            <span className="text-sm text-gray-700 whitespace-nowrap">
-              {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
-            </span>
+            <p className="text-sm text-gray-700 mb-2">{project.description}</p>
+            {project.achievements &&
+              project.achievements.filter((a: string) => a?.trim()).length > 0 && (
+                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-2">
+                  {project.achievements
+                    .filter((a: string) => a?.trim())
+                    .map((achievement: string, i: number) => (
+                      <li key={i}>{achievement}</li>
+                    ))}
+                </ul>
+              )}
+            {project.techStack && project.techStack.length > 0 && (
+              <p className="text-sm text-gray-700 mt-2">
+                <span className="font-semibold">{t('resume.preview.tech')}:</span>{' '}
+                {project.techStack.join(', ')}
+              </p>
+            )}
+            {(project.url?.trim() || project.githubUrl?.trim()) && (
+              <div className="flex flex-col gap-1 mt-2 text-sm text-gray-900">
+                {project.url?.trim() && (
+                  <div>
+                    <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
+                  </div>
+                )}
+                {project.githubUrl?.trim() && (
+                  <div>
+                    <span className="font-semibold">{t('resume.preview.github')}:</span>{' '}
+                    {project.githubUrl}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          <p className="text-sm text-gray-700 mb-2">{project.description}</p>
-          {project.achievements && project.achievements.filter((a: string) => a?.trim()).length > 0 && (
-            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-2">
-              {project.achievements.filter((a: string) => a?.trim()).map((achievement: string, i: number) => (
-                <li key={i}>{achievement}</li>
-              ))}
-            </ul>
-          )}
-          {project.techStack && project.techStack.length > 0 && (
-            <p className="text-sm text-gray-700 mt-2">
-              <span className="font-semibold">{t('resume.preview.tech')}:</span> {project.techStack.join(', ')}
-            </p>
-          )}
-          {(project.url?.trim() || project.githubUrl?.trim()) && (
-            <div className="flex flex-col gap-1 mt-2 text-sm text-gray-900">
-              {project.url?.trim() && (
-                <div>
-                  <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
-                </div>
-              )}
-              {project.githubUrl?.trim() && (
-                <div>
-                  <span className="font-semibold">{t('resume.preview.github')}:</span> {project.githubUrl}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+        ))}
     </div>
   );
 }
@@ -500,22 +585,25 @@ function EducationSection({ educations }: { educations: any[] }) {
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.education')}
       </h2>
-      {educations.sort((a, b) => a.order - b.order).map((edu, idx) => (
-        <div key={idx} className="mb-3">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-gray-900">{edu.school}</h3>
-              <p className="text-gray-700">
-                {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : t('resume.preview.degree')} {t('resume.preview.in')} {edu.major}
-              </p>
-              {edu.gpa?.trim() && <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>}
+      {educations
+        .sort((a, b) => a.order - b.order)
+        .map((edu, idx) => (
+          <div key={idx} className="mb-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-gray-900">{edu.school}</h3>
+                <p className="text-gray-700">
+                  {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : t('resume.preview.degree')}{' '}
+                  {t('resume.preview.in')} {edu.major}
+                </p>
+                {edu.gpa?.trim() && <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>}
+              </div>
+              <span className="text-sm text-gray-700 whitespace-nowrap">
+                {edu.startDate} - {edu.endDate || t('resume.preview.present')}
+              </span>
             </div>
-            <span className="text-sm text-gray-700 whitespace-nowrap">
-              {edu.startDate} - {edu.endDate || t('resume.preview.present')}
-            </span>
           </div>
-        </div>
-      ))}
+        ))}
     </div>
   );
 }
@@ -530,24 +618,28 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
       <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
         {t('resume.sections.certifications')}
       </h2>
-      {certificates.sort((a, b) => a.order - b.order).map((cert, idx) => (
-        <div key={idx} className="mb-3">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-gray-900">{cert.name}</h3>
-              <p className="text-gray-700">{cert.issuer}</p>
-              {cert.credentialUrl?.trim() && (
-                <div className="mt-1 text-sm text-gray-900">
-                  <span className="font-semibold">{t('resume.preview.verify')}:</span> {cert.credentialUrl}
-                </div>
-              )}
+      {certificates
+        .sort((a, b) => a.order - b.order)
+        .map((cert, idx) => (
+          <div key={idx} className="mb-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-gray-900">{cert.name}</h3>
+                <p className="text-gray-700">{cert.issuer}</p>
+                {cert.credentialUrl?.trim() && (
+                  <div className="mt-1 text-sm text-gray-900">
+                    <span className="font-semibold">{t('resume.preview.verify')}:</span>{' '}
+                    {cert.credentialUrl}
+                  </div>
+                )}
+              </div>
+              <span className="text-sm text-gray-700 whitespace-nowrap">
+                {cert.issueDate}
+                {cert.expiryDate && ` - ${cert.expiryDate}`}
+              </span>
             </div>
-            <span className="text-sm text-gray-700 whitespace-nowrap">
-              {cert.issueDate}{cert.expiryDate && ` - ${cert.expiryDate}`}
-            </span>
           </div>
-        </div>
-      ))}
+        ))}
     </div>
   );
 }

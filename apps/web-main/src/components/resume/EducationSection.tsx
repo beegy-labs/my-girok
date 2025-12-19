@@ -43,6 +43,30 @@ function SortableEducationCard({
   const [isExpanded, setIsExpanded] = useState(true);
   const toggleExpand = useCallback(() => setIsExpanded((prev) => !prev), []);
 
+  // Memoized education date handlers (2025 React best practice)
+  const handleStartDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...education, startDate: e.target.value });
+    },
+    [education, onUpdate],
+  );
+
+  const handleEndDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...education, endDate: e.target.value });
+    },
+    [education, onUpdate],
+  );
+
+  // Curried handler for TextInput/SelectInput fields (2025 React best practice)
+  const handleFieldChange = useCallback(
+    <K extends keyof Education>(field: K) =>
+      (value: string) => {
+        onUpdate({ ...education, [field]: value || undefined });
+      },
+    [education, onUpdate],
+  );
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: education.id || `edu-${index}`,
   });
@@ -82,7 +106,7 @@ function SortableEducationCard({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M4 8h16M4 16h16"
               />
             </svg>
@@ -113,7 +137,7 @@ function SortableEducationCard({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M19 9l-7 7-7-7"
               />
             </svg>
@@ -150,7 +174,7 @@ function SortableEducationCard({
           <TextInput
             label="School"
             value={education.school}
-            onChange={(value: string) => onUpdate({ ...education, school: value })}
+            onChange={handleFieldChange('school')}
             placeholder={t('resume.education.universityPlaceholder')}
             required
           />
@@ -158,7 +182,7 @@ function SortableEducationCard({
           <TextInput
             label="Major"
             value={education.major}
-            onChange={(value: string) => onUpdate({ ...education, major: value })}
+            onChange={handleFieldChange('major')}
             placeholder={t('resume.education.majorPlaceholder')}
             required
           />
@@ -169,9 +193,7 @@ function SortableEducationCard({
           <SelectInput
             label="Degree"
             value={education.degree || ''}
-            onChange={(value: string) =>
-              onUpdate({ ...education, degree: (value as DegreeType) || undefined })
-            }
+            onChange={handleFieldChange('degree')}
             options={[
               { value: '', label: 'Select degree' },
               ...degreeTypes.map((degreeType) => ({
@@ -184,7 +206,7 @@ function SortableEducationCard({
           <SelectInput
             label="GPA Format"
             value={education.gpaFormat || GpaFormat.SCALE_4_0}
-            onChange={(value: string) => onUpdate({ ...education, gpaFormat: value as GpaFormat })}
+            onChange={handleFieldChange('gpaFormat')}
             options={gpaFormats.map((format) => ({
               value: format,
               label: t(`resume.gpaFormats.${format}`),
@@ -197,7 +219,7 @@ function SortableEducationCard({
           <TextInput
             label="GPA"
             value={education.gpa || ''}
-            onChange={(value: string) => onUpdate({ ...education, gpa: value })}
+            onChange={handleFieldChange('gpa')}
             placeholder={
               education.gpaFormat === GpaFormat.SCALE_4_5
                 ? 'e.g., 4.2/4.5'
@@ -219,8 +241,8 @@ function SortableEducationCard({
             <input
               type="month"
               value={education.startDate}
-              onChange={(e) => onUpdate({ ...education, startDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              onChange={handleStartDateChange}
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
 
@@ -232,8 +254,8 @@ function SortableEducationCard({
             <input
               type="month"
               value={education.endDate || ''}
-              onChange={(e) => onUpdate({ ...education, endDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              onChange={handleEndDateChange}
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
         </div>
@@ -268,16 +290,24 @@ export default function EducationSection({ educations, onChange, t }: EducationS
     }
   };
 
-  const handleUpdate = (index: number, updated: Education) => {
-    const newEducations = [...educations];
-    newEducations[index] = updated;
-    onChange(newEducations);
-  };
+  // Curried handler for updating education (2025 React best practice)
+  const handleUpdate = useCallback(
+    (index: number) => (updated: Education) => {
+      const newEducations = [...educations];
+      newEducations[index] = updated;
+      onChange(newEducations);
+    },
+    [educations, onChange],
+  );
 
-  const handleRemove = (index: number) => {
-    const newEducations = educations.filter((_, i) => i !== index);
-    onChange(newEducations);
-  };
+  // Curried handler for removing education (2025 React best practice)
+  const handleRemove = useCallback(
+    (index: number) => () => {
+      const newEducations = educations.filter((_, i) => i !== index);
+      onChange(newEducations);
+    },
+    [educations, onChange],
+  );
 
   const handleAdd = () => {
     onChange([
@@ -297,7 +327,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   };
 
   return (
-    <div className="bg-theme-bg-elevated border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+    <div className="bg-theme-bg-elevated border border-theme-border-subtle rounded-xl sm:rounded-input lg:rounded-widget shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 lg:mb-6">
         <div className="min-w-0">
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary transition-colors duration-200">
@@ -329,8 +359,8 @@ export default function EducationSection({ educations, onChange, t }: EducationS
                   key={edu.id || `edu-${index}`}
                   education={edu}
                   index={index}
-                  onUpdate={(updated) => handleUpdate(index, updated)}
-                  onRemove={() => handleRemove(index)}
+                  onUpdate={handleUpdate(index)}
+                  onRemove={handleRemove(index)}
                   t={t}
                 />
               ))}

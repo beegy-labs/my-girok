@@ -50,7 +50,7 @@ export default function ResumePreviewContainer({
   showToolbar = true,
 }: ResumePreviewContainerProps) {
   const [currentPaperSize, setCurrentPaperSize] = useState<PaperSizeKey>(
-    (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey
+    (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey,
   );
   const containerRef = useRef<HTMLDivElement>(null);
   const [displayScale, setDisplayScale] = useState(1);
@@ -87,7 +87,7 @@ export default function ResumePreviewContainer({
     // Round to 2 decimal places
     const roundedScale = Math.round(newScale * 100) / 100;
 
-    setDisplayScale(prevScale => {
+    setDisplayScale((prevScale) => {
       const roundedPrevScale = Math.round(prevScale * 100) / 100;
       return roundedPrevScale !== roundedScale ? roundedScale : prevScale;
     });
@@ -125,15 +125,15 @@ export default function ResumePreviewContainer({
   const outerClasses = [
     'bg-theme-bg-secondary',
     responsivePadding ? 'p-1 sm:p-2 md:p-4' : 'p-2 sm:p-4',
-    'rounded-lg shadow-theme-inner',
+    'rounded-xl shadow-theme-inner',
     'transition-colors duration-200',
     'w-full',
     containerClassName,
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-  const innerClasses = [
-    innerClassName,
-  ].filter(Boolean).join(' ');
+  const innerClasses = [innerClassName].filter(Boolean).join(' ');
 
   // Container style
   const containerStyle: React.CSSProperties = {};
