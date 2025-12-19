@@ -13,7 +13,7 @@ export default function SettingsPage() {
         {/* Header - Editorial Style */}
         <header className="mb-12 sm:mb-16">
           <SectionBadge className="mb-4">{t('badge.environment')}</SectionBadge>
-          <h1 className="text-3xl sm:text-4xl text-theme-text-primary tracking-tighter italic mb-2 font-serif-title">
+          <h1 className="text-3xl sm:text-4xl text-theme-text-primary tracking-editorial italic mb-2 font-serif-title">
             {t('settings.title')}
           </h1>
           <p className="text-base text-theme-text-secondary">{t('settings.description')}</p>

@@ -55,7 +55,7 @@ export default function Navbar() {
             className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
             aria-label={t('aria.goToHomepage')}
           >
-            <span className="text-2xl font-black text-theme-text-primary tracking-tighter select-none font-mono-brand">
+            <span className="text-2xl font-black text-theme-text-primary tracking-editorial select-none font-mono-brand">
               girok<span className="text-theme-primary">.</span>
             </span>
           </Link>

@@ -135,7 +135,7 @@ export default function ResumeActionBar({
           {/* Header - V0.0.1 Style */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 pb-6 border-b-2 border-theme-border-default">
             <div>
-              <h1 className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-2 font-serif-title">
+              <h1 className="text-2xl sm:text-3xl text-theme-text-primary tracking-editorial italic mb-2 font-serif-title">
                 {title}
               </h1>
               <div className="flex items-center gap-3 mt-2">

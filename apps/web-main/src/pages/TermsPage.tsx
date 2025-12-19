@@ -20,7 +20,7 @@ export default function TermsPage() {
             {t('badge.legal', { defaultValue: 'LEGAL' })}
           </SectionBadge>
 
-          <h1 className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tighter italic font-serif-title">
+          <h1 className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-editorial italic font-serif-title">
             {t('footer.terms')}
           </h1>
         </div>

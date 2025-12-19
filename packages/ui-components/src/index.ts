@@ -8,7 +8,6 @@ export * from './components/MenuCard';
 export * from './components/MenuRow';
 export * from './components/PageContainer';
 export * from './components/PageHeader';
-export * from './components/PageLayout';
 export * from './components/SectionHeader';
 export * from './components/SelectInput';
 export * from './components/SortableItem';
@@ -42,8 +41,6 @@ export type {
   ViewMode,
   BadgeProps,
   SectionBadgeProps,
-  PageLayoutProps,
-  PageSectionProps,
 } from './components';
 
 export type { AsyncOperationState, UseAsyncOperationOptions } from './hooks';

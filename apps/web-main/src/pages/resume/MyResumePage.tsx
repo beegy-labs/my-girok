@@ -197,7 +197,7 @@ export default function MyResumePage() {
           <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
+              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-editorial italic mb-3 font-serif-title">
                 {t('resume.myResumes')}
               </h1>
               <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
@@ -218,7 +218,7 @@ export default function MyResumePage() {
 
         {/* Resume List - V0.0.1 Style */}
         <section className="mb-8">
-          <h2 className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-8 font-serif-title">
+          <h2 className="text-2xl sm:text-3xl text-theme-text-primary tracking-editorial italic mb-8 font-serif-title">
             {t('resume.list.title')}
           </h2>
 
@@ -230,7 +230,7 @@ export default function MyResumePage() {
               className="text-center border-2 border-theme-border-default"
             >
               <div className="text-5xl sm:text-6xl mb-6">📝</div>
-              <h3 className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
+              <h3 className="text-xl sm:text-2xl text-theme-text-primary tracking-editorial italic mb-3 font-serif-title">
                 {t('resume.list.noResumes')}
               </h3>
               <p className="text-sm sm:text-base text-theme-text-secondary mb-6">
@@ -440,7 +440,7 @@ export default function MyResumePage() {
             >
               <h2
                 id={shareModalTitleId}
-                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-6 font-serif-title"
+                className="text-2xl sm:text-3xl text-theme-text-primary tracking-editorial italic mb-6 font-serif-title"
               >
                 {t('resume.shareLinkCreate')}
               </h2>

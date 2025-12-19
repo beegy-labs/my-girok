@@ -543,7 +543,7 @@ export default function HomePage() {
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
             <div className="text-center">
               {/* Giant Brand Title - V0.0.1 Style */}
-              <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-tighter italic font-serif-title">
+              <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-editorial italic font-serif-title">
                 girok<span className="text-theme-primary">.</span>
               </h1>
 

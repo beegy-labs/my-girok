@@ -194,7 +194,7 @@ export default function ResumeEditPage() {
           <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
+              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-editorial italic mb-3 font-serif-title">
                 {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
               </h1>
               <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
@@ -236,7 +236,7 @@ export default function ResumeEditPage() {
                 radius="lg"
                 className="mb-4 sm:mb-6 border-2 border-theme-border-default"
               >
-                <h2 className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-2 flex items-center gap-3 font-serif-title">
+                <h2 className="text-xl sm:text-2xl text-theme-text-primary tracking-editorial italic mb-2 flex items-center gap-3 font-serif-title">
                   <span>👁️</span>
                   {t('edit.livePreview')}
                 </h2>
