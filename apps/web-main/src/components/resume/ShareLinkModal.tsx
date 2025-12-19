@@ -95,6 +95,15 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
     [t, loadShareLinks],
   );
 
+  // Memoized form field handlers (2025 best practice)
+  const handleDurationChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setDuration(e.target.value as ShareDuration);
+  }, []);
+
+  const handleCustomDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomDate(e.target.value);
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-colors duration-200">
       <div className="bg-theme-bg-elevated rounded-input shadow-theme-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col transition-colors duration-200">
@@ -139,7 +148,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                   </label>
                   <select
                     value={duration}
-                    onChange={(e) => setDuration(e.target.value as ShareDuration)}
+                    onChange={handleDurationChange}
                     className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
                   >
                     <option value={ShareDuration.ONE_WEEK}>⏱️ {t('resume.oneWeek')}</option>
@@ -157,7 +166,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                     <input
                       type="datetime-local"
                       value={customDate}
-                      onChange={(e) => setCustomDate(e.target.value)}
+                      onChange={handleCustomDateChange}
                       min={new Date().toISOString().slice(0, 16)}
                       className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
                     />

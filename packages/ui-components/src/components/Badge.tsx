@@ -43,7 +43,7 @@ const sizeClasses = {
 } as const;
 
 const roundedClasses = {
-  default: 'rounded-lg',
+  default: 'rounded-xl',
   full: 'rounded-full',
 } as const;
 
@@ -108,7 +108,7 @@ export interface SectionBadgeProps {
 export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-lg font-mono-brand ${className}`}
+      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-xl font-mono-brand ${className}`}
     >
       {children}
     </span>

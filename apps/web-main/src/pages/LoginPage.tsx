@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
@@ -32,6 +32,11 @@ export default function LoginPage() {
       setEmail(savedEmail);
       setRememberEmail(true);
     }
+  }, []);
+
+  // Memoized remember email handler (2025 React best practice)
+  const handleRememberEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setRememberEmail(e.target.checked);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,7 +122,7 @@ export default function LoginPage() {
                     id="rememberEmail"
                     type="checkbox"
                     checked={rememberEmail}
-                    onChange={(e) => setRememberEmail(e.target.checked)}
+                    onChange={handleRememberEmailChange}
                     className="absolute w-11 h-11 opacity-0 cursor-pointer peer"
                   />
                   <span

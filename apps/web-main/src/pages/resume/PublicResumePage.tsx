@@ -50,6 +50,11 @@ export default function PublicResumePage() {
     }
   }, [username, loadResume]);
 
+  // Memoized navigation handler (2025 React best practice)
+  const handleBackToHome = useCallback(() => {
+    navigate('/');
+  }, [navigate]);
+
   if (loading) {
     return <LoadingSpinner fullScreen message={t('resume.preview.loading')} />;
   }
@@ -64,7 +69,7 @@ export default function PublicResumePage() {
           title={isNotFound ? t('resume.preview.notFoundTitle') : undefined}
           message={isNotFound ? t('resume.preview.notFoundMessage') : error}
           action={
-            <Button variant="primary" size="lg" rounded="editorial" onClick={() => navigate('/')}>
+            <Button variant="primary" size="lg" rounded="editorial" onClick={handleBackToHome}>
               {t('common.backToHome')}
             </Button>
           }

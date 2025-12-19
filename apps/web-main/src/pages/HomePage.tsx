@@ -159,9 +159,9 @@ export default function HomePage() {
     [pinnedWidgetId],
   );
 
-  // Memoized handler per rules.md: "Memoize handlers with useCallback"
+  // Curried handlers (2025 React best practice - no inline functions in map)
   const handleMenuClick = useCallback(
-    (menu: MenuItem) => {
+    (menu: MenuItem) => () => {
       if (menu.status === 'active') {
         navigate(menu.route);
       }
@@ -169,10 +169,13 @@ export default function HomePage() {
     [navigate],
   );
 
-  // Pin/unpin widget handler
-  const handlePinWidget = useCallback((menuId: string) => {
-    setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
-  }, []);
+  // Pin/unpin widget handler (curried)
+  const handlePinWidget = useCallback(
+    (menuId: string) => () => {
+      setPinnedWidgetId((prev) => (prev === menuId ? null : menuId));
+    },
+    [],
+  );
 
   // Check if a menu can be pinned as widget
   const canPinAsWidget = useCallback(
@@ -471,9 +474,9 @@ export default function HomePage() {
                         icon={<IconComponent />}
                         title={t(menu.nameKey)}
                         description={isDisabled ? t('home.comingSoon') : t(menu.descriptionKey)}
-                        onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
+                        onClick={isDisabled ? undefined : handleMenuClick(menu)}
                         isPinned={pinnedWidgetId === menu.id}
-                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
+                        onPin={canPin ? handlePinWidget(menu.id) : undefined}
                         pinTooltip={
                           pinnedWidgetId === menu.id
                             ? t('widget.unpinFromTop')
@@ -510,9 +513,9 @@ export default function HomePage() {
                             : t(menu.nameKey)
                         }
                         description={isDisabled ? undefined : t(menu.descriptionKey)}
-                        onClick={isDisabled ? undefined : () => handleMenuClick(menu)}
+                        onClick={isDisabled ? undefined : handleMenuClick(menu)}
                         isPinned={pinnedWidgetId === menu.id}
-                        onPin={canPin ? () => handlePinWidget(menu.id) : undefined}
+                        onPin={canPin ? handlePinWidget(menu.id) : undefined}
                         className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                         aria-label={
                           isDisabled

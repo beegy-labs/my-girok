@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Resume,
   CreateResumeDto,
-  PaperSize,
   AttachmentType,
   ResumeAttachment,
   uploadAttachment,
@@ -13,6 +12,9 @@ import {
   deleteTempFile,
   SectionType,
   Gender,
+  Experience,
+  Skill,
+  Education,
 } from '../../api/resume';
 import SectionOrderManager from './SectionOrderManager';
 import ExperienceSection from './ExperienceSection';
@@ -52,9 +54,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     coverLetter: false,
   });
 
-  const toggleSection = (section: string) => {
-    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
+  // Curried handler for toggling section (2025 React best practice)
+  const toggleSection = useCallback(
+    (section: string) => () => {
+      setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+    },
+    [],
+  );
 
   const [formData, setFormData] = useState<CreateResumeDto>({
     title: resume?.title || 'My Resume',
@@ -440,6 +446,19 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [formData],
   );
 
+  // Memoized handler for updating certificate field (2025 React best practice - curried)
+  const handleUpdateCertificateField = useCallback(
+    (index: number, field: keyof NonNullable<CreateResumeDto['certificates']>[number]) =>
+      (value: string) => {
+        setFormData((prev) => {
+          const newCertificates = [...(prev.certificates || [])];
+          newCertificates[index] = { ...newCertificates[index], [field]: value };
+          return { ...prev, certificates: newCertificates };
+        });
+      },
+    [],
+  );
+
   // Memoized handler for deleting attachment (2025 React best practice)
   const handleDeleteAttachmentClick = useCallback(
     (attachmentId: string) => () => {
@@ -447,6 +466,106 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     },
     [],
   );
+
+  // Memoized handler for adding key achievement (2025 React best practice)
+  const handleAddKeyAchievement = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      keyAchievements: [...(prev.keyAchievements || []), ''],
+    }));
+  }, []);
+
+  // Memoized handler for updating key achievement (2025 React best practice - curried)
+  const handleUpdateKeyAchievement = useCallback(
+    (index: number) => (value: string) => {
+      setFormData((prev) => {
+        const newAchievements = [...(prev.keyAchievements || [])];
+        newAchievements[index] = value;
+        return { ...prev, keyAchievements: newAchievements };
+      });
+    },
+    [],
+  );
+
+  // Generic field change handler for select/input elements (2025 React best practice - curried)
+  const handleSelectChange = useCallback(
+    <K extends keyof CreateResumeDto>(field: K) =>
+      (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setFormData((prev) => ({ ...prev, [field]: e.target.value || undefined }));
+      },
+    [],
+  );
+
+  // Generic input change handler (2025 React best practice - curried)
+  const handleInputChange = useCallback(
+    <K extends keyof CreateResumeDto>(field: K) =>
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData((prev) => ({ ...prev, [field]: e.target.value || undefined }));
+      },
+    [],
+  );
+
+  // File upload handler factory (2025 React best practice - curried)
+  const handleFileChange = useCallback(
+    (type: AttachmentType) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleFileUpload(file, type);
+      }
+    },
+    [],
+  );
+
+  // Cover letter change handler (2025 React best practice)
+  const handleCoverLetterChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setFormData((prev) => ({ ...prev, coverLetter: e.target.value }));
+  }, []);
+
+  // TextInput field change handler (2025 React best practice - curried)
+  // TextInput passes value directly, not event
+  const handleTextFieldChange = useCallback(
+    <K extends keyof CreateResumeDto>(field: K) =>
+      (value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value || undefined }));
+      },
+    [],
+  );
+
+  // TextArea field change handler (2025 React best practice - curried)
+  const handleTextAreaChange = useCallback(
+    <K extends keyof CreateResumeDto>(field: K) =>
+      (value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+      },
+    [],
+  );
+
+  // SelectInput field change handler (2025 React best practice - curried)
+  // SelectInput passes value directly, not event
+  const handleSelectFieldChange = useCallback(
+    <K extends keyof CreateResumeDto>(field: K) =>
+      (value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value || undefined }));
+      },
+    [],
+  );
+
+  // Memoized handler for experiences change (2025 React best practice)
+  const handleExperiencesChange = useCallback((experiences: Experience[]) => {
+    // Only update formData - useEffect will call onChange automatically
+    // This prevents double-calling onChange with stale formData
+    setFormData((prev) => ({ ...prev, experiences }));
+  }, []);
+
+  // Memoized handler for skills change (2025 React best practice)
+  const handleSkillsChange = useCallback((skills: Skill[]) => {
+    setFormData((prev) => ({ ...prev, skills }));
+  }, []);
+
+  // Memoized handler for educations change (2025 React best practice)
+  const handleEducationsChange = useCallback((educations: Education[]) => {
+    setFormData((prev) => ({ ...prev, educations }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -515,7 +634,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <TextInput
             label={t('resume.form.resumeTitle')}
             value={formData.title}
-            onChange={(value: string) => setFormData({ ...formData, title: value })}
+            onChange={handleTextFieldChange('title')}
             required
             placeholder={t('resume.form.resumeTitlePlaceholder')}
             className="mb-0"
@@ -523,9 +642,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <SelectInput
             label={t('resume.form.paperSize')}
             value={formData.paperSize || 'A4'}
-            onChange={(value: string) =>
-              setFormData({ ...formData, paperSize: value as PaperSize })
-            }
+            onChange={handleSelectFieldChange('paperSize')}
             options={[
               { value: 'A4', label: t('resume.form.paperSizeA4') },
               { value: 'LETTER', label: t('resume.form.paperSizeLetter') },
@@ -537,7 +654,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <TextInput
             label={t('resume.form.description')}
             value={formData.description || ''}
-            onChange={(value: string) => setFormData({ ...formData, description: value })}
+            onChange={handleTextFieldChange('description')}
             placeholder={t('resume.form.descriptionPlaceholder')}
             className="mb-0"
           />
@@ -549,14 +666,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         title={t('resume.sections.basicInfo')}
         icon="📋"
         isExpanded={!collapsedSections.basicInfo}
-        onToggle={() => toggleSection('basicInfo')}
+        onToggle={toggleSection('basicInfo')}
         variant="primary"
       >
         <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6">
           <TextInput
             label={t('resume.form.name')}
             value={formData.name}
-            onChange={(value: string) => setFormData({ ...formData, name: value })}
+            onChange={handleTextFieldChange('name')}
             required
             placeholder={t('resume.form.namePlaceholder')}
             className="mb-0"
@@ -565,7 +682,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.email')}
             type="email"
             value={formData.email}
-            onChange={(value: string) => setFormData({ ...formData, email: value })}
+            onChange={handleTextFieldChange('email')}
             required
             placeholder={t('resume.form.emailPlaceholder')}
             className="mb-0"
@@ -574,14 +691,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.phone')}
             type="tel"
             value={formData.phone || ''}
-            onChange={(value: string) => setFormData({ ...formData, phone: value })}
+            onChange={handleTextFieldChange('phone')}
             placeholder={t('resume.form.phonePlaceholder')}
             className="mb-0"
           />
           <TextInput
             label={t('resume.address')}
             value={formData.address || ''}
-            onChange={(value: string) => setFormData({ ...formData, address: value })}
+            onChange={handleTextFieldChange('address')}
             placeholder={t('resume.form.addressPlaceholder')}
             hint={t('resume.form.addressHint')}
             className="mb-0"
@@ -590,7 +707,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.github')}
             type="url"
             value={formData.github || ''}
-            onChange={(value: string) => setFormData({ ...formData, github: value })}
+            onChange={handleTextFieldChange('github')}
             placeholder={t('resume.form.githubPlaceholder')}
             className="mb-0"
           />
@@ -598,7 +715,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.blog')}
             type="url"
             value={formData.blog || ''}
-            onChange={(value: string) => setFormData({ ...formData, blog: value })}
+            onChange={handleTextFieldChange('blog')}
             placeholder={t('resume.form.blogPlaceholder')}
             className="mb-0"
           />
@@ -606,7 +723,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.linkedin')}
             type="url"
             value={formData.linkedin || ''}
-            onChange={(value: string) => setFormData({ ...formData, linkedin: value })}
+            onChange={handleTextFieldChange('linkedin')}
             placeholder={t('resume.form.linkedinPlaceholder')}
             className="mb-0"
           />
@@ -743,7 +860,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </label>
           <select
             value={formData.militaryService || ''}
-            onChange={(e) => setFormData({ ...formData, militaryService: e.target.value as any })}
+            onChange={handleSelectChange('militaryService')}
             className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
           >
             <option value="">{t('resume.form.militaryServiceSelect')}</option>
@@ -760,7 +877,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               </label>
               <select
                 value={formData.militaryRank || ''}
-                onChange={(e) => setFormData({ ...formData, militaryRank: e.target.value })}
+                onChange={handleSelectChange('militaryRank')}
                 className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               >
                 <option value="">{t('resume.form.militaryRankSelect')}</option>
@@ -776,9 +893,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               </label>
               <select
                 value={formData.militaryDischargeType || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, militaryDischargeType: e.target.value })
-                }
+                onChange={handleSelectChange('militaryDischargeType')}
                 className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               >
                 <option value="">{t('resume.form.militaryDischargeSelect')}</option>
@@ -794,18 +909,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <input
                   type="month"
                   value={formData.militaryServiceStartDate || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, militaryServiceStartDate: e.target.value })
-                  }
+                  onChange={handleInputChange('militaryServiceStartDate')}
                   className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
                 <span className="text-theme-text-tertiary text-sm">~</span>
                 <input
                   type="month"
                   value={formData.militaryServiceEndDate || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, militaryServiceEndDate: e.target.value })
-                  }
+                  onChange={handleInputChange('militaryServiceEndDate')}
                   className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
               </div>
@@ -819,7 +930,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <TextArea
             label={t('resume.form.summary')}
             value={formData.summary || ''}
-            onChange={(value: string) => setFormData({ ...formData, summary: value })}
+            onChange={handleTextAreaChange('summary')}
             rows={4}
             placeholder={t('resume.form.summaryPlaceholder')}
           />
@@ -839,11 +950,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <div className="flex-1">
                   <TextArea
                     value={achievement}
-                    onChange={(value: string) => {
-                      const newAchievements = [...(formData.keyAchievements || [])];
-                      newAchievements[index] = value;
-                      setFormData({ ...formData, keyAchievements: newAchievements });
-                    }}
+                    onChange={handleUpdateKeyAchievement(index)}
                     rows={2}
                     placeholder={t('resume.form.achievementPlaceholder', { index: index + 1 })}
                   />
@@ -862,12 +969,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           ))}
           <Button
             variant="secondary"
-            onClick={() => {
-              setFormData({
-                ...formData,
-                keyAchievements: [...(formData.keyAchievements || []), ''],
-              });
-            }}
+            onClick={handleAddKeyAchievement}
             size="sm"
             className="py-2 touch-manipulation"
           >
@@ -881,12 +983,12 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         title={t('resume.form.applicationReason')}
         icon="💼"
         isExpanded={!collapsedSections.applicationReason}
-        onToggle={() => toggleSection('applicationReason')}
+        onToggle={toggleSection('applicationReason')}
         variant="primary"
       >
         <TextArea
           value={formData.applicationReason || ''}
-          onChange={(value: string) => setFormData({ ...formData, applicationReason: value })}
+          onChange={handleTextAreaChange('applicationReason')}
           rows={4}
           placeholder={t('resume.form.applicationReasonPlaceholder')}
           hint={t('resume.form.applicationReasonHint')}
@@ -896,25 +998,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       {/* Work Experience Section */}
       <ExperienceSection
         experiences={formData.experiences || []}
-        onChange={(experiences) => {
-          // Only update formData - useEffect will call onChange automatically
-          // This prevents double-calling onChange with stale formData
-          setFormData({ ...formData, experiences });
-        }}
+        onChange={handleExperiencesChange}
         t={t}
       />
 
       {/* Skills Section */}
-      <SkillsSection
-        skills={formData.skills || []}
-        onChange={(skills) => setFormData({ ...formData, skills })}
-        t={t}
-      />
+      <SkillsSection skills={formData.skills || []} onChange={handleSkillsChange} t={t} />
 
       {/* Education Section */}
       <EducationSection
         educations={formData.educations || []}
-        onChange={(educations) => setFormData({ ...formData, educations })}
+        onChange={handleEducationsChange}
         t={t}
       />
 
@@ -923,7 +1017,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         title={t('resume.sections.certifications')}
         icon="🏆"
         isExpanded={!collapsedSections.certificates}
-        onToggle={() => toggleSection('certificates')}
+        onToggle={toggleSection('certificates')}
         count={formData.certificates?.length}
         variant="secondary"
         headerAction={
@@ -967,11 +1061,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   <TextInput
                     label={t('resume.form.certificateName')}
                     value={cert.name}
-                    onChange={(value: string) => {
-                      const newCertificates = [...(formData.certificates || [])];
-                      newCertificates[index] = { ...newCertificates[index], name: value };
-                      setFormData({ ...formData, certificates: newCertificates });
-                    }}
+                    onChange={handleUpdateCertificateField(index, 'name')}
                     placeholder={t('resume.form.certificatePlaceholder')}
                     required
                   />
@@ -979,11 +1069,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   <TextInput
                     label={t('resume.form.issuer')}
                     value={cert.issuer}
-                    onChange={(value: string) => {
-                      const newCertificates = [...(formData.certificates || [])];
-                      newCertificates[index] = { ...newCertificates[index], issuer: value };
-                      setFormData({ ...formData, certificates: newCertificates });
-                    }}
+                    onChange={handleUpdateCertificateField(index, 'issuer')}
                     placeholder={t('resume.form.issuerPlaceholder')}
                     required
                   />
@@ -992,11 +1078,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     label={t('resume.form.issueDate')}
                     type="month"
                     value={cert.issueDate}
-                    onChange={(value: string) => {
-                      const newCertificates = [...(formData.certificates || [])];
-                      newCertificates[index] = { ...newCertificates[index], issueDate: value };
-                      setFormData({ ...formData, certificates: newCertificates });
-                    }}
+                    onChange={handleUpdateCertificateField(index, 'issueDate')}
                     required
                   />
 
@@ -1004,22 +1086,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     label={t('resume.form.expiryDate')}
                     type="month"
                     value={cert.expiryDate || ''}
-                    onChange={(value: string) => {
-                      const newCertificates = [...(formData.certificates || [])];
-                      newCertificates[index] = { ...newCertificates[index], expiryDate: value };
-                      setFormData({ ...formData, certificates: newCertificates });
-                    }}
+                    onChange={handleUpdateCertificateField(index, 'expiryDate')}
                     placeholder={t('resume.form.expiryEmpty')}
                   />
 
                   <TextInput
                     label={t('resume.form.credentialIdLabel')}
                     value={cert.credentialId || ''}
-                    onChange={(value: string) => {
-                      const newCertificates = [...(formData.certificates || [])];
-                      newCertificates[index] = { ...newCertificates[index], credentialId: value };
-                      setFormData({ ...formData, certificates: newCertificates });
-                    }}
+                    onChange={handleUpdateCertificateField(index, 'credentialId')}
                     placeholder={t('resume.form.credentialId')}
                   />
 
@@ -1027,11 +1101,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                     label={t('resume.form.credentialUrl')}
                     type="url"
                     value={cert.credentialUrl || ''}
-                    onChange={(value: string) => {
-                      const newCertificates = [...(formData.certificates || [])];
-                      newCertificates[index] = { ...newCertificates[index], credentialUrl: value };
-                      setFormData({ ...formData, certificates: newCertificates });
-                    }}
+                    onChange={handleUpdateCertificateField(index, 'credentialUrl')}
                     placeholder={t('resume.form.credentialUrlPlaceholder')}
                   />
                 </div>
@@ -1113,10 +1183,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 type="file"
                 accept="image/*"
                 disabled={!resume?.id || uploading}
-                onChange={(e) =>
-                  e.target.files?.[0] &&
-                  handleFileUpload(e.target.files[0], AttachmentType.PROFILE_PHOTO)
-                }
+                onChange={handleFileChange(AttachmentType.PROFILE_PHOTO)}
                 className="hidden"
               />
               <div className="border-2 border-dashed border-theme-border-default rounded-xl p-4 text-center hover:border-theme-primary transition-colors">
@@ -1167,10 +1234,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 type="file"
                 accept="image/*,application/pdf"
                 disabled={!resume?.id || uploading}
-                onChange={(e) =>
-                  e.target.files?.[0] &&
-                  handleFileUpload(e.target.files[0], AttachmentType.PORTFOLIO)
-                }
+                onChange={handleFileChange(AttachmentType.PORTFOLIO)}
                 className="hidden"
               />
               <div className="border-2 border-dashed border-theme-border-default rounded-xl p-4 text-center hover:border-theme-primary transition-colors">
@@ -1223,10 +1287,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 type="file"
                 accept="image/*,application/pdf"
                 disabled={!resume?.id || uploading}
-                onChange={(e) =>
-                  e.target.files?.[0] &&
-                  handleFileUpload(e.target.files[0], AttachmentType.CERTIFICATE)
-                }
+                onChange={handleFileChange(AttachmentType.CERTIFICATE)}
                 className="hidden"
               />
               <div className="border-2 border-dashed border-theme-border-default rounded-xl p-4 text-center hover:border-theme-primary transition-colors">
@@ -1257,12 +1318,12 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         title={t('resume.form.coverLetter')}
         icon="📝"
         isExpanded={!collapsedSections.coverLetter}
-        onToggle={() => toggleSection('coverLetter')}
+        onToggle={toggleSection('coverLetter')}
         variant="primary"
       >
         <textarea
           value={formData.coverLetter || ''}
-          onChange={(e) => setFormData({ ...formData, coverLetter: e.target.value })}
+          onChange={handleCoverLetterChange}
           rows={6}
           className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
           placeholder={t('resume.form.coverLetterPlaceholder')}

@@ -495,7 +495,7 @@ Simple 2-character language toggle with dropdown.
 All interactive elements use consistent focus styling:
 
 ```css
-focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4
+focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4
 ```
 
 ## File Locations

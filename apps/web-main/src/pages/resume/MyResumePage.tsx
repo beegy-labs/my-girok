@@ -76,6 +76,11 @@ export default function MyResumePage() {
     setSelectedResumeId(null);
   }, []);
 
+  // Memoized share duration change handler (2025 best practice)
+  const handleShareDurationChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setShareDuration(e.target.value as ShareDuration);
+  }, []);
+
   // Memoized escape key handler for modal (2025 best practice)
   const handleModalKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -499,7 +504,7 @@ export default function MyResumePage() {
                 </label>
                 <select
                   value={shareDuration}
-                  onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
+                  onChange={handleShareDurationChange}
                   className="w-full px-6 py-4 bg-theme-bg-input border-2 border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-focus-ring focus:border-theme-primary transition-all text-base font-bold text-theme-text-primary"
                 >
                   <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>

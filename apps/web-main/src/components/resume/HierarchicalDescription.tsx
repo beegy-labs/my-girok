@@ -70,8 +70,17 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
     setIsExpanded((prev) => !prev);
   }, []);
 
+  // Memoized content change handler (2025 best practice)
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...item, content: e.target.value });
+    },
+    [item, onUpdate],
+  );
+
+  // Curried handler for updating child (2025 React best practice)
   const handleUpdateChild = useCallback(
-    (childIndex: number, updatedChild: HierarchicalItem) => {
+    (childIndex: number) => (updatedChild: HierarchicalItem) => {
       const newChildren = [...(item.children || [])];
       newChildren[childIndex] = updatedChild;
       onUpdate({ ...item, children: newChildren });
@@ -79,16 +88,18 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
     [item, onUpdate],
   );
 
+  // Curried handler for removing child (2025 React best practice)
   const handleRemoveChild = useCallback(
-    (childIndex: number) => {
+    (childIndex: number) => () => {
       const newChildren = (item.children || []).filter((_, i) => i !== childIndex);
       onUpdate({ ...item, children: newChildren });
     },
     [item, onUpdate],
   );
 
+  // Curried handler for adding child to child (2025 React best practice)
   const handleAddChildToChild = useCallback(
-    (childIndex: number) => {
+    (childIndex: number) => () => {
       const newChildren = [...(item.children || [])];
       const newSubChild: HierarchicalItem = {
         content: '',
@@ -138,7 +149,7 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
           <input
             type="text"
             value={item.content}
-            onChange={(e) => onUpdate({ ...item, content: e.target.value })}
+            onChange={handleContentChange}
             className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder={t('resume.hierarchical.enterDescription')}
@@ -187,7 +198,7 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
             <input
               type="text"
               value={item.content}
-              onChange={(e) => onUpdate({ ...item, content: e.target.value })}
+              onChange={handleContentChange}
               className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
               placeholder={t('resume.hierarchical.enterDescription')}
             />
@@ -234,9 +245,9 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
               key={childIndex}
               item={child}
               depth={depth + 1}
-              onUpdate={(updatedChild) => handleUpdateChild(childIndex, updatedChild)}
-              onRemove={() => handleRemoveChild(childIndex)}
-              onAddChild={() => handleAddChildToChild(childIndex)}
+              onUpdate={handleUpdateChild(childIndex)}
+              onRemove={handleRemoveChild(childIndex)}
+              onAddChild={handleAddChildToChild(childIndex)}
               maxDepth={maxDepth}
               t={t}
             />
@@ -364,16 +375,43 @@ export default function HierarchicalDescription({
     onChange([...items, newItem]);
   };
 
-  const updateItem = (index: number, item: HierarchicalItem) => {
-    const newItems = [...items];
-    newItems[index] = item;
-    onChange(newItems);
-  };
+  // Curried handler for updating item (2025 React best practice)
+  const updateItem = useCallback(
+    (index: number) => (item: HierarchicalItem) => {
+      const newItems = [...items];
+      newItems[index] = item;
+      onChange(newItems);
+    },
+    [items, onChange],
+  );
 
-  const removeItem = (index: number) => {
-    const newItems = items.filter((_, i) => i !== index);
-    onChange(newItems);
-  };
+  // Curried handler for removing item (2025 React best practice)
+  const removeItem = useCallback(
+    (index: number) => () => {
+      const newItems = items.filter((_, i) => i !== index);
+      onChange(newItems);
+    },
+    [items, onChange],
+  );
+
+  // Curried handler for adding child to item (2025 React best practice)
+  const addChildToItem = useCallback(
+    (index: number, item: HierarchicalItem) => () => {
+      const newChild: HierarchicalItem = {
+        content: '',
+        depth: 2,
+        order: (item.children || []).length,
+        children: [],
+      };
+      const newItems = [...items];
+      newItems[index] = {
+        ...item,
+        children: [...(item.children || []), newChild],
+      };
+      onChange(newItems);
+    },
+    [items, onChange],
+  );
 
   return (
     <div className="border-t border-theme-border-default pt-4 transition-colors duration-200">
@@ -405,20 +443,9 @@ export default function HierarchicalDescription({
                   key={item.id || `item-${index}`}
                   item={item}
                   itemIndex={index}
-                  onUpdate={(updatedItem) => updateItem(index, updatedItem)}
-                  onRemove={() => removeItem(index)}
-                  onAddChild={() => {
-                    const newChild: HierarchicalItem = {
-                      content: '',
-                      depth: 2,
-                      order: (item.children || []).length,
-                      children: [],
-                    };
-                    updateItem(index, {
-                      ...item,
-                      children: [...(item.children || []), newChild],
-                    });
-                  }}
+                  onUpdate={updateItem(index)}
+                  onRemove={removeItem(index)}
+                  onAddChild={addChildToItem(index, item)}
                   maxDepth={maxDepth}
                   t={t}
                 />

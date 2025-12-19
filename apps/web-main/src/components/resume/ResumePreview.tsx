@@ -224,7 +224,7 @@ export default function ResumePreview({
                 <button
                   onClick={goToPrevPage}
                   disabled={currentPage <= 1}
-                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-md hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-xl hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('resume.preview.prevPage', { defaultValue: 'Previous' })}
                 </button>
@@ -234,7 +234,7 @@ export default function ResumePreview({
                 <button
                   onClick={goToNextPage}
                   disabled={currentPage >= numPages}
-                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-md hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-xl hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('resume.preview.nextPage', { defaultValue: 'Next' })}
                 </button>

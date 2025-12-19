@@ -56,6 +56,11 @@ export default function ResumePreviewPage() {
     loadResume();
   }, [loadResume]);
 
+  // Memoized navigation handler (2025 React best practice)
+  const handleBackToMyResumes = useCallback(() => {
+    navigate('/resume/my');
+  }, [navigate]);
+
   if (loading) {
     return <LoadingSpinner fullScreen message={t('resume.preview.loading')} />;
   }
@@ -68,12 +73,7 @@ export default function ResumePreviewPage() {
           title={t('resume.preview.notFoundTitle')}
           message={t('resume.preview.notFoundMessage')}
           action={
-            <Button
-              variant="primary"
-              size="lg"
-              rounded="editorial"
-              onClick={() => navigate('/resume/my')}
-            >
+            <Button variant="primary" size="lg" rounded="editorial" onClick={handleBackToMyResumes}>
               {t('resume.preview.backToMyResumes')}
             </Button>
           }
@@ -90,7 +90,7 @@ export default function ResumePreviewPage() {
           title={t('resume.preview.errorTitle')}
           message={t('resume.preview.errorMessage')}
           action={
-            <Button variant="primary" size="lg" rounded="editorial" onClick={() => loadResume()}>
+            <Button variant="primary" size="lg" rounded="editorial" onClick={loadResume}>
               {t('resume.preview.retry')}
             </Button>
           }
