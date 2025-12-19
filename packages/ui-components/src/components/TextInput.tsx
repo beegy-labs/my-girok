@@ -1,4 +1,5 @@
 import { InputHTMLAttributes, ChangeEvent, Ref, useId, ReactNode } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface TextInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -65,9 +66,6 @@ const sizeClasses = {
   default: 'min-h-[48px] px-4 py-3 rounded-xl',
   lg: 'h-16 px-6 py-4 rounded-input font-bold', // SSOT: --border-radius-input: 24px
 } as const;
-
-const focusClasses =
-  'focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 /**
  * Accessible text input component with WCAG 2.1 AAA compliance

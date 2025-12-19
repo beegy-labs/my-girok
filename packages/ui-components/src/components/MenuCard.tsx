@@ -1,4 +1,5 @@
 import React, { memo, useCallback } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface MenuCardProps {
   /**
@@ -54,8 +55,6 @@ const ChevronRightIcon = () => (
 
 // Static class definitions (defined outside component for performance - 2025 best practice)
 // V0.0.1 AAA Workstation Design System
-const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const baseClasses =
   'w-full text-left bg-theme-bg-card border-2 border-theme-border-subtle rounded-editorial-2xl p-10 md:p-12 min-h-[380px] flex flex-col transition-all duration-300 shadow-theme-sm';

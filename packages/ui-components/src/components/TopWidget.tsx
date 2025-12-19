@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface TopWidgetProps {
   /**
@@ -35,9 +36,6 @@ export interface TopWidgetProps {
 // V0.0.1 AAA Workstation Design System - SSOT tokens from tokens.css
 const containerClasses =
   'p-10 sm:p-12 min-h-[280px] rounded-editorial-lg bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
-
-const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const iconContainerClasses =
   'p-3 bg-theme-bg-secondary border border-theme-border-default rounded-2xl text-theme-primary';

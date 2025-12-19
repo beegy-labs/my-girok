@@ -8,7 +8,6 @@ export * from './components/MenuCard';
 export * from './components/MenuRow';
 export * from './components/PageContainer';
 export * from './components/PageHeader';
-export * from './components/SectionHeader';
 export * from './components/SelectInput';
 export * from './components/SortableItem';
 export * from './components/SortableList';
@@ -31,7 +30,6 @@ export type {
   SortableItemProps,
   CardProps,
   PageHeaderProps,
-  SectionHeaderProps,
   PageContainerProps,
   CollapsibleSectionProps,
   MenuCardProps,
@@ -42,5 +40,3 @@ export type {
   BadgeProps,
   SectionBadgeProps,
 } from './components';
-
-export type { AsyncOperationState, UseAsyncOperationOptions } from './hooks';
