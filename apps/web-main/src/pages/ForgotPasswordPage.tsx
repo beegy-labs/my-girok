@@ -29,8 +29,8 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700 pt-nav">
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
+    <main className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-200 pt-nav">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
         <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
@@ -127,7 +127,7 @@ export default function ForgotPasswordPage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

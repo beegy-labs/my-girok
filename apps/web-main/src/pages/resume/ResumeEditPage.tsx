@@ -163,7 +163,7 @@ export default function ResumeEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-theme-bg-page transition-colors duration-200 pt-nav">
+    <main className="min-h-screen bg-theme-bg-page transition-colors duration-200 pt-nav">
       {/* Mobile: Fixed bottom navigation bar for preview toggle - V0.0.1 Style */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card border-t-2 border-theme-border-default p-4 lg:hidden safe-area-bottom">
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
@@ -265,6 +265,6 @@ export default function ResumeEditPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

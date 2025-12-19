@@ -229,6 +229,38 @@ import { focusClasses } from '../styles/constants';
 <Icon strokeWidth={1.5} />
 ```
 
+### HTML5 Semantic Structure
+
+**Mandatory for all pages:**
+
+| Rule                    | Description                                                |
+| ----------------------- | ---------------------------------------------------------- |
+| One `<main>` per page   | Each page component must have exactly ONE `<main>` element |
+| `<footer>` sibling      | Footer must be sibling of `<main>`, not child              |
+| Layout provides wrapper | MainLayout/FullWidthLayout provide `<div>` wrapper only    |
+| Pages own semantics     | Pages are responsible for `<main>` and `<footer>` elements |
+
+```tsx
+// ✅ CORRECT: Standard page structure
+<>
+  <main className="min-h-screen bg-theme-bg-page pt-nav">
+    {/* Page content */}
+  </main>
+  <Footer />
+</>
+
+// ❌ WRONG: Nested main tags
+<main>  {/* Layout */}
+  <main>  {/* Page - creates nested main! */}
+  </main>
+</main>
+
+// ❌ WRONG: Footer inside main
+<main>
+  <Footer />  {/* Should be outside main */}
+</main>
+```
+
 ---
 
 ## 5. Performance Best Practices - 권장

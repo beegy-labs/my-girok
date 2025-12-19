@@ -62,7 +62,7 @@ export default function SharedResumePage() {
     else if (isNotFound) messageType = 'not-found';
 
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 pt-nav">
+      <main className="min-h-screen flex items-center justify-center px-4 pt-nav bg-theme-bg-page">
         <StatusMessage
           type={messageType}
           message={error}
@@ -72,7 +72,7 @@ export default function SharedResumePage() {
             )
           }
         />
-      </div>
+      </main>
     );
   }
 
@@ -81,7 +81,7 @@ export default function SharedResumePage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-theme-bg-page pt-nav">
+    <main className="w-full min-h-screen bg-theme-bg-page pt-nav">
       {/* Action Bar - V0.0.1 Style with shared mode (PDF + print only) */}
       <ResumeActionBar resume={resume} mode="shared" />
 
@@ -89,6 +89,6 @@ export default function SharedResumePage() {
       <div className="py-6 sm:py-10 md:py-14 print:py-0">
         <ResumePreviewContainer resume={resume} />
       </div>
-    </div>
+    </main>
   );
 }
