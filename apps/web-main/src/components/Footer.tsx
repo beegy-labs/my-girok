@@ -10,8 +10,8 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-40 py-16 sm:py-24 border-t-2 border-theme-border-default bg-theme-bg-secondary/40">
-      <div className="max-w-5xl mx-auto px-4 sm:px-8">
+    <footer className="w-full pt-24 pb-32 border-t-2 border-theme-border-default bg-theme-bg-secondary/40">
+      <div className="max-w-5xl mx-auto px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-10 sm:gap-14">
           {/* Brand & Version */}
           <div className="flex flex-col items-center md:items-start gap-4">
@@ -24,9 +24,9 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Links - V0.0.1 Style */}
+          {/* Links - V0.0.1 Style (spec: 11px, 0.25em, gap-48px) */}
           <nav
-            className="flex gap-8 sm:gap-12 text-[13px] font-black uppercase tracking-brand-sm text-theme-text-secondary"
+            className="flex gap-8 sm:gap-12 text-[11px] font-black uppercase tracking-brand-md text-theme-text-secondary"
             aria-label={t('aria.footerNavigation')}
           >
             <Link
