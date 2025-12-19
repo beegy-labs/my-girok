@@ -34,20 +34,49 @@
 
 ### Layout Pattern
 
+**HTML5 Semantic Structure (MANDATORY)**:
+
+- Each page must have exactly ONE `<main>` element as root
+- `<footer>` must be SIBLING of `<main>`, not child
+- Layout components (MainLayout, FullWidthLayout) provide wrapper `<div>` only
+- Pages are responsible for their own `<main>` and `<footer>` elements
+
 ```tsx
-// V0.0.1 Editorial layout with SSOT classes
-<main style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}>
-  <div className="max-w-5xl mx-auto px-4 sm:px-8">
-    {/* ✅ SSOT Pattern */}
-    <h1 className="font-serif-title tracking-editorial italic text-5xl text-theme-text-primary">
-      Page Title
-    </h1>
-    <p className="font-mono-brand tracking-brand uppercase text-[11px] font-black text-theme-text-secondary">
-      Subtitle Badge
-    </p>
-  </div>
+// ✅ CORRECT: Standard page with Footer
+<>
+  <main className="min-h-screen bg-theme-bg-page transition-colors duration-200 pt-nav">
+    <div className="max-w-5xl mx-auto px-4 sm:px-8">
+      <h1 className="font-serif-title tracking-editorial italic text-5xl text-theme-text-primary">
+        Page Title
+      </h1>
+    </div>
+  </main>
   <Footer />
+</>
+
+// ✅ CORRECT: Auth page (no footer, centered content)
+<main className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-200 pt-nav">
+  <div className="flex-1 flex items-center justify-center px-4 sm:px-8">
+    {/* Auth form content */}
+  </div>
 </main>
+
+// ✅ CORRECT: Full-width page (Resume preview)
+<main className="w-full min-h-screen bg-theme-bg-page pt-nav">
+  <ResumeActionBar />
+  <ResumePreviewContainer />
+</main>
+
+// ❌ WRONG: Footer inside main
+<main>
+  <div>Content</div>
+  <Footer />  {/* Footer must be outside main! */}
+</main>
+
+// ❌ WRONG: Redundant div wrapper
+<div className="min-h-screen">
+  <main>Content</main>  {/* Remove outer div, main should be root */}
+</div>
 ```
 
 ### Key Components (V0.0.1)
