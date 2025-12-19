@@ -221,7 +221,7 @@ export default function HomePage() {
 
       <main
         id="main-content"
-        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pb-32 pt-nav"
+        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pt-nav"
         role="main"
       >
         {isAuthenticated ? (
@@ -543,7 +543,7 @@ export default function HomePage() {
           </div>
         ) : (
           /* Landing Page - V0.0.1 Hero Style */
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-56">
             <div className="text-center">
               {/* Giant Brand Title - V0.0.1 Style */}
               <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-editorial italic font-serif-title">
@@ -564,9 +564,9 @@ export default function HomePage() {
             </div>
           </div>
         )}
-
-        <Footer />
       </main>
+
+      <Footer />
 
       {/* Widget slot background pattern */}
       <style>{`
