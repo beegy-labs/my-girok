@@ -1,53 +1,47 @@
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Footer - V0.0.1 AAA Workstation Design
+ * WCAG 2.1 AAA compliant with proper touch targets
+ */
 export default function Footer() {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full mt-auto border-t border-theme-border-subtle bg-theme-bg-card">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        {/* Tagline - Editorial serif style */}
-        <p
-          className="text-center text-lg sm:text-xl text-theme-text-secondary mb-8 tracking-tight"
-          style={{ fontFamily: 'var(--font-family-serif-title)' }}
-        >
-          {t('footer.tagline')}
-        </p>
+    <footer className="mt-40 py-16 sm:py-24 border-t-2 border-theme-border-default bg-theme-bg-secondary/40">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-10 sm:gap-14">
+          {/* Brand & Version */}
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <p className="text-lg text-theme-text-primary font-black uppercase tracking-brand-lg sm:tracking-brand-lg font-mono-brand">
+              girok.dev
+              <span className="text-theme-primary ml-2">&copy; {currentYear}</span>
+            </p>
+            <p className="text-[12px] font-bold text-theme-text-secondary uppercase tracking-widest font-mono-brand">
+              {t('footer.version', { defaultValue: 'System V0.0.1 AAA Enhanced' })}
+            </p>
+          </div>
 
-        {/* Links - centered (using text-secondary for AAA compliance in both modes) */}
-        <nav
-          className="flex items-center justify-center gap-6 mb-8"
-          aria-label={t('aria.footerNavigation')}
-        >
-          <Link
-            to="/privacy"
-            className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
+          {/* Links - V0.0.1 Style */}
+          <nav
+            className="flex gap-8 sm:gap-12 text-[13px] font-black uppercase tracking-brand-sm text-theme-text-secondary"
+            aria-label={t('aria.footerNavigation')}
           >
-            {t('footer.privacy')}
-          </Link>
-          <span className="text-theme-text-muted" aria-hidden="true">
-            ·
-          </span>
-          <Link
-            to="/terms"
-            className="text-sm text-theme-text-secondary hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring rounded"
-          >
-            {t('footer.terms')}
-          </Link>
-        </nav>
-
-        {/* Brand & Copyright - centered minimal */}
-        <div className="text-center">
-          <span
-            className="text-sm text-theme-text-muted tracking-wide"
-            style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-          >
-            Girok
-          </span>
-          <span className="text-theme-text-muted text-sm mx-2">·</span>
-          <span className="text-theme-text-muted text-sm">&copy; {currentYear}</span>
+            <Link
+              to="/privacy"
+              className="hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring rounded p-3 min-h-[44px] flex items-center"
+            >
+              {t('footer.privacy')}
+            </Link>
+            <Link
+              to="/terms"
+              className="hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring rounded p-3 min-h-[44px] flex items-center"
+            >
+              {t('footer.terms')}
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>

@@ -51,7 +51,7 @@ export default function ResumePreview({
   const [viewMode, setViewMode] = useState<'continuous' | 'paginated'>('paginated');
   const [currentPage, setCurrentPage] = useState(1);
   const [internalPaperSize, setInternalPaperSize] = useState<PaperSizeKey>(
-    (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey
+    (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey,
   );
 
   // Use external paper size if provided, otherwise use internal state
@@ -59,21 +59,20 @@ export default function ResumePreview({
   const paper = PAPER_SIZES[paperSize];
 
   // Handle paper size change
-  const handlePaperSizeChange = useCallback((size: PaperSizeKey) => {
-    setInternalPaperSize(size);
-    onPaperSizeChange?.(size);
-  }, [onPaperSizeChange]);
+  const handlePaperSizeChange = useCallback(
+    (size: PaperSizeKey) => {
+      setInternalPaperSize(size);
+      onPaperSizeChange?.(size);
+    },
+    [onPaperSizeChange],
+  );
 
   // Generate PDF document
   const pdfDocument = useMemo(
     () => (
-      <ResumePdfDocument
-        resume={resume}
-        paperSize={paperSize}
-        isGrayscaleMode={isGrayscaleMode}
-      />
+      <ResumePdfDocument resume={resume} paperSize={paperSize} isGrayscaleMode={isGrayscaleMode} />
     ),
-    [resume, paperSize, isGrayscaleMode]
+    [resume, paperSize, isGrayscaleMode],
   );
 
   // Use PDF hook to generate blob
@@ -96,13 +95,16 @@ export default function ResumePreview({
   const devicePixelRatio = useMemo(() => getCappedDevicePixelRatio(), []);
 
   // Page navigation handlers (memoized)
-  const goToPrevPage = useCallback(() => setCurrentPage(prev => Math.max(1, prev - 1)), []);
-  const goToNextPage = useCallback(() => setCurrentPage(prev => Math.min(numPages, prev + 1)), [numPages]);
+  const goToPrevPage = useCallback(() => setCurrentPage((prev) => Math.max(1, prev - 1)), []);
+  const goToNextPage = useCallback(
+    () => setCurrentPage((prev) => Math.min(numPages, prev + 1)),
+    [numPages],
+  );
 
   // View mode handlers (memoized)
   const handleSetContinuousView = useCallback(() => setViewMode('continuous'), []);
   const handleSetPaginatedView = useCallback(() => setViewMode('paginated'), []);
-  const handleToggleGrayscale = useCallback(() => setIsGrayscaleMode(prev => !prev), []);
+  const handleToggleGrayscale = useCallback(() => setIsGrayscaleMode((prev) => !prev), []);
 
   return (
     <div className="relative">
@@ -121,7 +123,7 @@ export default function ResumePreview({
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
                     }`}
-                    title="A4 (210mm x 297mm)"
+                    title={t('resume.paperSize.a4Title', { defaultValue: 'A4 (210mm x 297mm)' })}
                   >
                     A4
                   </button>
@@ -132,7 +134,9 @@ export default function ResumePreview({
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
                     }`}
-                    title="Letter (215.9mm x 279.4mm)"
+                    title={t('resume.paperSize.letterTitle', {
+                      defaultValue: 'Letter (215.9mm x 279.4mm)',
+                    })}
                   >
                     Letter
                   </button>
@@ -180,9 +184,15 @@ export default function ResumePreview({
                       ? 'bg-theme-bg-elevated text-theme-text-primary border-theme-border-strong'
                       : 'bg-theme-bg-card text-theme-text-primary border-theme-border-default hover:border-theme-border-strong hover:bg-theme-bg-hover'
                   }`}
-                  title={isGrayscaleMode ? t('resume.preview.switchToColorMode') : t('resume.preview.switchToGrayscaleMode')}
+                  title={
+                    isGrayscaleMode
+                      ? t('resume.preview.switchToColorMode')
+                      : t('resume.preview.switchToGrayscaleMode')
+                  }
                 >
-                  {isGrayscaleMode ? t('resume.preview.grayscaleMode') : t('resume.preview.colorMode')}
+                  {isGrayscaleMode
+                    ? t('resume.preview.grayscaleMode')
+                    : t('resume.preview.colorMode')}
                 </button>
               </div>
             </div>
@@ -195,11 +205,16 @@ export default function ResumePreview({
         {instance.loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary"></div>
-            <span className="ml-3 text-theme-text-secondary">{t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}</span>
+            <span className="ml-3 text-theme-text-secondary">
+              {t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}
+            </span>
           </div>
         ) : instance.error ? (
           <div className="flex items-center justify-center py-20 text-theme-status-error-text">
-            <span>{t('resume.preview.error', { defaultValue: 'Error generating PDF' })}: {instance.error}</span>
+            <span>
+              {t('resume.preview.error', { defaultValue: 'Error generating PDF' })}:{' '}
+              {instance.error}
+            </span>
           </div>
         ) : instance.blob ? (
           <>

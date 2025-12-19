@@ -52,6 +52,9 @@
 **Working on mobile app (Flutter)?**
 → Read: `.ai/rules.md` + `.ai/apps/mobile-flutter.md`
 
+**Working on design tokens/styling?**
+→ Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
+
 ## Documentation Structure
 
 ```
@@ -63,6 +66,7 @@ my-girok/
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
 │   ├── architecture.md       # Architecture patterns (2025)
+│   ├── ssot.md               # Single Source of Truth strategy (2025)
 │   ├── services/             # Backend service APIs
 │   │   ├── graphql-bff.md    # GraphQL Federation Gateway
 │   │   ├── ws-gateway.md     # WebSocket Gateway
@@ -74,6 +78,7 @@ my-girok/
 │   │   ├── media-service.md  # Image processing
 │   │   └── llm-api.md        # AI features
 │   ├── packages/             # Shared packages
+│   │   ├── design-tokens.md  # WCAG 2.1 AAA design tokens (SSOT)
 │   │   ├── nest-common.md
 │   │   ├── types.md
 │   │   └── ui-components.md
@@ -91,6 +96,7 @@ my-girok/
 ## Key Principles
 
 ### Language Policy
+
 **ALL code, documentation, and commits MUST be in English**
 
 ### Git Branch & Merge Policy (GitFlow Standard)
@@ -100,22 +106,25 @@ feat/* ──squash──▶ develop ──merge──▶ release ──merge─
                     (Dev)    (Staging)   (Prod)
 ```
 
-| Source → Target | Merge Type | Command |
-|-----------------|------------|---------|
-| feat → develop | Squash | `gh pr merge --squash` |
-| develop → release | Merge | `gh pr merge --merge` |
-| release → main | Merge | `gh pr merge --merge` |
+| Source → Target   | Merge Type | Command                |
+| ----------------- | ---------- | ---------------------- |
+| feat → develop    | Squash     | `gh pr merge --squash` |
+| develop → release | Merge      | `gh pr merge --merge`  |
+| release → main    | Merge      | `gh pr merge --merge`  |
 
 👉 **Full details**: [.ai/git-flow.md](.ai/git-flow.md)
 
 ### Git Commit Policy
+
 **NEVER mention AI assistance in commit messages**
+
 - Do NOT include "Generated with Claude" or similar references
 - Do NOT add "Co-Authored-By: Claude" or AI attribution
 - Write commit messages as if written by a human developer
 - Keep commits professional and focused on the change itself
 
 ### Architecture
+
 - Full BFF Pattern (IETF recommended, session-based auth)
 - GraphQL Federation for API aggregation
 - gRPC for internal service communication
@@ -123,12 +132,14 @@ feat/* ──squash──▶ develop ──merge──▶ release ──merge─
 - Cilium Gateway API for edge routing
 
 ### Development
+
 - Types first (`packages/types`)
 - `@Transactional()` for multi-step DB ops
 - 80% test coverage minimum
 - Sealed Secrets for K8s
 
 ### Stack
+
 - **Web**: React 19.2, TypeScript 5.9, Tailwind CSS 4.1, Vite 7.2
 - **Mobile**: iOS (Swift), Android (Kotlin)
 - **Backend**: Node.js 24, NestJS 11

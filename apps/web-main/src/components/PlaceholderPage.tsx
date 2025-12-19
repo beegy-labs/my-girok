@@ -36,10 +36,7 @@ export default function PlaceholderPage({
           <SectionBadge className="mb-4">{badgeText}</SectionBadge>
 
           {/* Title */}
-          <h1
-            className="text-3xl sm:text-4xl lg:text-5xl text-theme-text-primary mb-4 tracking-tight"
-            style={{ fontFamily: 'var(--font-family-serif-title)' }}
-          >
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl text-theme-text-primary mb-4 tracking-tight font-serif-title">
             {t(titleKey)}
           </h1>
 

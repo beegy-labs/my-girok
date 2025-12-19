@@ -16,10 +16,7 @@ export default function SettingsPage() {
         {/* Header - Editorial Style */}
         <header className="mb-12 sm:mb-16">
           <SectionBadge className="mb-4">{t('badge.environment')}</SectionBadge>
-          <h1
-            className="text-3xl sm:text-4xl text-theme-text-primary tracking-tight mb-2"
-            style={{ fontFamily: 'var(--font-family-serif-title)' }}
-          >
+          <h1 className="text-3xl sm:text-4xl text-theme-text-primary tracking-tighter italic mb-2 font-serif-title">
             {t('settings.title')}
           </h1>
           <p className="text-base text-theme-text-secondary">{t('settings.description')}</p>
@@ -28,12 +25,12 @@ export default function SettingsPage() {
         {/* Settings Cards - Editorial Style */}
         <div className="space-y-6 sm:space-y-8">
           {/* Theme Settings */}
-          <section className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10">
+          <section className="bg-theme-bg-card border border-theme-border-default rounded-editorial p-8 sm:p-10">
             <ThemeToggle />
           </section>
 
           {/* Section Order Settings */}
-          <section className="bg-theme-bg-card border border-theme-border-default rounded-[40px] p-8 sm:p-10">
+          <section className="bg-theme-bg-card border border-theme-border-default rounded-editorial p-8 sm:p-10">
             <SectionOrderManager />
           </section>
         </div>

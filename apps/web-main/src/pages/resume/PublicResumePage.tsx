@@ -9,6 +9,10 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import StatusMessage from '../../components/StatusMessage';
 import { Button } from '@my-girok/ui-components';
 
+/**
+ * PublicResumePage - V0.0.1 AAA Workstation Design
+ * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
+ */
 export default function PublicResumePage() {
   const { username } = useParams<{ username: string }>();
   const { user } = useAuthStore();
@@ -21,21 +25,24 @@ export default function PublicResumePage() {
   const isOwnProfile = user?.username === username;
 
   // Memoized with useCallback per project policy
-  const loadResume = useCallback(async (targetUsername: string) => {
-    try {
-      const data = await getUserResume(targetUsername);
-      setResume(data);
-    } catch (err: unknown) {
-      const axiosError = err as { response?: { status?: number } };
-      if (axiosError.response?.status === 404) {
-        setError('User not found');
-      } else {
-        setError('Failed to load resume');
+  const loadResume = useCallback(
+    async (targetUsername: string) => {
+      try {
+        const data = await getUserResume(targetUsername);
+        setResume(data);
+      } catch (err: unknown) {
+        const axiosError = err as { response?: { status?: number } };
+        if (axiosError.response?.status === 404) {
+          setError(t('resume.public.userNotFound'));
+        } else {
+          setError(t('resume.public.loadFailed'));
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (username) {
@@ -48,16 +55,19 @@ export default function PublicResumePage() {
   }
 
   if (error) {
-    const isNotFound = error === 'User not found';
+    const isNotFound = error === t('resume.public.userNotFound');
 
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+      >
         <StatusMessage
           type={isNotFound ? 'not-found' : 'error'}
           title={isNotFound ? t('resume.preview.notFoundTitle') : undefined}
           message={isNotFound ? t('resume.preview.notFoundMessage') : error}
           action={
-            <Button variant="primary" onClick={() => navigate('/')}>
+            <Button variant="primary" size="lg" rounded="editorial" onClick={() => navigate('/')}>
               {t('common.backToHome')}
             </Button>
           }
@@ -71,8 +81,11 @@ export default function PublicResumePage() {
   }
 
   return (
-    <div className="w-full min-h-screen">
-      {/* Action Bar - Common component with public mode */}
+    <div
+      className="w-full min-h-screen bg-theme-bg-page"
+      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+    >
+      {/* Action Bar - V0.0.1 Style with public mode */}
       <ResumeActionBar
         resume={resume}
         mode="public"
@@ -80,8 +93,8 @@ export default function PublicResumePage() {
         isOwnProfile={isOwnProfile}
       />
 
-      {/* Resume Preview - Full responsive scaling */}
-      <div className="py-4 sm:py-6 md:py-8 print:py-0">
+      {/* Resume Preview - V0.0.1 Full responsive scaling */}
+      <div className="py-6 sm:py-10 md:py-14 print:py-0">
         <ResumePreviewContainer resume={resume} />
       </div>
     </div>

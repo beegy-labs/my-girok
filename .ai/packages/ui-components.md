@@ -1,10 +1,10 @@
 # @my-girok/ui-components
 
-> Shared React 19 components with WCAG 2.1 AAA compliance
+> Shared React 19 components - **V0.0.1 AAA Workstation**
 
 ## Purpose
 
-Reusable UI components for React applications in the monorepo. All components meet WCAG 2.1 AAA standards (7:1+ contrast) with 44px+ touch targets, focus-visible keyboard navigation, and tracking-wide letter-spacing for readability.
+Reusable UI components for React applications in the monorepo. All components meet WCAG 2.1 AAA standards (7:1+ contrast) with 44px+ touch targets, focus-visible keyboard navigation, and editorial typography.
 
 ## Structure
 
@@ -13,25 +13,27 @@ packages/ui-components/
 ├── src/
 │   ├── components/
 │   │   ├── Alert.tsx
-│   │   ├── Badge.tsx           # Badge, SectionBadge (Editorial)
-│   │   ├── Button.tsx
-│   │   ├── Card.tsx
+│   │   ├── Badge.tsx           # Badge, SectionBadge (lg size, rounded options)
+│   │   ├── Button.tsx          # sm/md/lg/xl sizes, rounded options
+│   │   ├── Card.tsx            # radius: default/lg/xl/2xl
 │   │   ├── CollapsibleSection.tsx
-│   │   ├── MenuCard.tsx        # Editorial 40px card (NEW)
-│   │   ├── MenuRow.tsx         # Editorial list row (NEW)
+│   │   ├── MenuCard.tsx        # Editorial 64px card
+│   │   ├── MenuRow.tsx         # Editorial list row with pin support
 │   │   ├── PageContainer.tsx
 │   │   ├── PageHeader.tsx
-│   │   ├── PageLayout.tsx      # Editorial layout (NEW)
+│   │   ├── PageLayout.tsx
 │   │   ├── SectionHeader.tsx
 │   │   ├── SelectInput.tsx
 │   │   ├── SortableItem.tsx
 │   │   ├── SortableList.tsx
 │   │   ├── TextArea.tsx
-│   │   ├── TextInput.tsx
-│   │   ├── ViewToggle.tsx      # Grid/List toggle (NEW)
+│   │   ├── TextInput.tsx       # default/lg sizes, icon support
+│   │   ├── TopWidget.tsx       # Pinned dashboard widget
+│   │   ├── ViewToggle.tsx      # Grid/List toggle (56px)
 │   │   └── index.ts
 │   ├── hooks/
 │   │   ├── useAsyncOperation.ts
+│   │   ├── useClickOutside.ts
 │   │   ├── useDebounce.ts
 │   │   └── index.ts
 │   └── index.ts
@@ -39,207 +41,151 @@ packages/ui-components/
 └── tsconfig.json
 ```
 
-## Components
+## Components (V0.0.1)
 
 ### Button
 
 ```typescript
-import { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
-
-export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';  // All meet 44px+ touch target
+  size?: 'sm' | 'md' | 'lg' | 'xl'; // xl = 64px, font-black
+  rounded?: 'default' | 'editorial' | 'full'; // editorial = 24px
   loading?: boolean;
   fullWidth?: boolean;
   icon?: ReactNode;
-  ref?: Ref<HTMLButtonElement>;  // React 19 ref-as-prop
 }
-
-// Usage
-<Button variant="primary" size="lg" loading={isSubmitting}>
-  Submit
-</Button>
 ```
 
-**WCAG Features**:
+**Size Reference:**
 
-- All sizes meet 44x44px minimum touch target
-- `focus-visible` ring for keyboard navigation
-- Disabled state with proper opacity
+| Size | Min Height | Typography                                         |
+| ---- | ---------- | -------------------------------------------------- |
+| sm   | 44px       | Standard                                           |
+| md   | 44px       | Standard                                           |
+| lg   | 56px       | `font-black uppercase tracking-widest text-[11px]` |
+| xl   | 64px       | `font-black uppercase tracking-brand text-[14px]`  |
+
+**Rounded Options:**
+
+| Option    | SSOT Token    | Usage                      |
+| --------- | ------------- | -------------------------- |
+| default   | rounded-2xl   | Secondary buttons (V0.0.1) |
+| editorial | rounded-input | Primary buttons (V0.0.1)   |
+| full      | rounded-full  | Hero buttons, circular     |
+
+**Usage:**
+
+```tsx
+// Primary submit (xl size, editorial rounded)
+<Button variant="primary" size="xl" rounded="editorial" icon={<ArrowRight />}>
+  Sign In
+</Button>
+
+// Secondary action (lg size)
+<Button variant="secondary" size="lg" rounded="default">
+  Create Account
+</Button>
+
+// Hero button
+<Button variant="primary" size="xl" rounded="full" className="px-20 py-8">
+  Enter
+</Button>
+```
 
 ### TextInput
 
 ```typescript
-import { InputHTMLAttributes, Ref } from 'react';
-
-export interface TextInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+export interface TextInputProps {
   label?: string;
   error?: string;
   hint?: string;
   onChange: (value: string) => void;
   required?: boolean;
-  ref?: Ref<HTMLInputElement>;  // React 19 ref-as-prop
+  icon?: ReactNode; // Left icon (V0.0.1)
+  size?: 'default' | 'lg'; // lg = h-16, rounded-input
 }
+```
 
-// Usage
+**Size Reference:**
+
+| Size    | Height | SSOT Token    | Font      |
+| ------- | ------ | ------------- | --------- |
+| default | 48px   | rounded-xl    | normal    |
+| lg      | 64px   | rounded-input | font-bold |
+
+**Usage:**
+
+```tsx
 <TextInput
-  label="Email Address"
+  label="Email"
   type="email"
+  size="lg"
+  icon={<Mail size={18} />}
   value={email}
   onChange={setEmail}
-  error={errors.email}
   required
 />
 ```
-
-**WCAG Features**:
-
-- `min-h-[48px]` for touch target
-- `aria-invalid`, `aria-describedby`, `aria-required`
-- `focus-visible` ring for keyboard navigation
-- `sr-only` text for required field screen readers
-
-### TextArea
-
-```typescript
-import { TextareaHTMLAttributes, Ref } from 'react';
-
-export interface TextAreaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> {
-  label?: string;
-  error?: string;
-  hint?: string;
-  onChange?: (value: string) => void;
-  ref?: Ref<HTMLTextAreaElement>;  // React 19 ref-as-prop
-}
-
-// Usage
-<TextArea
-  label="Description"
-  value={description}
-  onChange={setDescription}
-  rows={4}
-  required
-/>
-```
-
-**WCAG Features**:
-
-- `min-h-[120px]` for adequate space
-- Same accessibility as TextInput
-
-### SelectInput
-
-```typescript
-export interface SelectOption {
-  value: string;
-  label: string;
-}
-
-export interface SelectInputProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className' | 'onChange'> {
-  label?: string;
-  error?: string;
-  hint?: string;
-  onChange: (value: string) => void;
-  required?: boolean;
-  options: SelectOption[];
-  placeholder?: string;
-  ref?: Ref<HTMLSelectElement>;  // React 19 ref-as-prop
-}
-
-// Usage
-<SelectInput
-  label="Degree"
-  options={[
-    { value: 'bachelor', label: "Bachelor's" },
-    { value: 'master', label: "Master's" },
-  ]}
-  value={degree}
-  onChange={setDegree}
-  placeholder="Select degree"
-/>
-```
-
-**WCAG Features**:
-
-- `min-h-[48px]` for touch target
-- Same accessibility as TextInput
-
-### Alert
-
-```typescript
-export interface AlertProps {
-  variant: 'success' | 'error' | 'warning' | 'info';
-  title?: string;
-  children: ReactNode;
-  onClose?: () => void;
-}
-
-// Usage
-<Alert variant="error" onClose={() => setError(null)}>
-  {errorMessage}
-</Alert>
-```
-
-**WCAG Features**:
-
-- 44x44px close button touch target
-- `focus-visible` ring on close button
 
 ### Card
 
 ```typescript
 export interface CardProps {
-  children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'elevated';
   interactive?: boolean;
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'responsive';
-  radius?: 'default' | 'lg';  // 'lg' = 36px for menu cards
-  className?: string;
-  onClick?: () => void;
-  'aria-label'?: string;
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  radius?: 'default' | 'lg' | 'xl' | '2xl'; // V0.0.1 options
 }
-
-// Usage
-<Card variant="primary" interactive radius="lg" onClick={handleClick}>
-  <h2>Card Title</h2>
-</Card>
 ```
 
-**WCAG Features**:
+**Radius Options (V0.0.1):**
 
-- Keyboard navigation (Enter/Space for interactive)
-- `focus-visible` ring
-- `role="button"` and `tabIndex={0}` for interactive cards
+| Option  | SSOT Token            | Usage              |
+| ------- | --------------------- | ------------------ |
+| default | rounded-xl            | Standard cards     |
+| lg      | rounded-editorial     | Editorial cards    |
+| xl      | rounded-editorial-lg  | Form cards         |
+| 2xl     | rounded-editorial-2xl | Section containers |
 
-## Editorial Components (Modern Editorial Archive Style)
+### Badge
 
-> "Sophisticated Classic" design pattern with serif titles, 40px radius, and editorial typography
+```typescript
+export interface BadgeProps {
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'accent';
+  size?: 'sm' | 'md' | 'lg'; // lg = text-[14px] font-black
+  rounded?: 'default' | 'full'; // V0.0.1: rounded options
+}
+```
+
+**V0.0.1 Styling:**
+
+- `font-black` (was font-bold)
+- `tracking-widest`
+- lg size: `text-[14px]`
+- rounded options: `default` (rounded-lg) or `full` (rounded-full)
 
 ### MenuCard
 
-Large navigation card with index number and hover lift effect.
+Editorial navigation card with `rounded-editorial-2xl`.
 
 ```typescript
 export interface MenuCardProps {
-  index: number;           // Display index (01, 02, etc.)
-  icon: React.ReactNode;   // Lucide icon
-  title: string;           // Serif font title
+  index: number; // Displays as "01", "02", etc.
+  icon: React.ReactNode;
+  title: string; // font-serif-title
   description: string;
-  onClick?: () => void;    // undefined = disabled
-  'aria-label'?: string;
+  onClick?: () => void;
+  isPinned?: boolean;
+  onPin?: () => void;
+  pinTooltip?: string;
 }
-
-// Usage
-<MenuCard
-  index={1}
-  icon={<Book className="w-6 h-6" />}
-  title="Personal Journal"
-  description="Record your daily thoughts"
-  onClick={() => navigate('/journal')}
-/>
 ```
 
-**Features**: 40px radius, hover translateY(-4px), semantic `<button>`, Playfair Display serif
+**V0.0.1 Styling:**
+
+- Card: `rounded-editorial-2xl border-2 p-10 md:p-12`
+- Index: `font-mono-brand tracking-brand font-black`
+- Title: `font-serif-title`
 
 ### MenuRow
 
@@ -250,91 +196,66 @@ export interface MenuRowProps {
   index: number;
   icon: React.ReactNode;
   title: string;
+  description?: string; // V0.0.1: description support
   onClick?: () => void;
-  'aria-label'?: string;
+  isPinned?: boolean;
+  onPin?: () => void;
 }
-
-// Usage
-<MenuRow
-  index={1}
-  icon={<Book className="w-5 h-5" />}
-  title="Personal Journal"
-  onClick={() => navigate('/journal')}
-/>
 ```
+
+**V0.0.1 Styling:**
+
+- `rounded-3xl border-2`
+- Pin support in list view
 
 ### ViewToggle
 
-Grid/List view mode toggle with radiogroup semantics.
+Grid/List view mode toggle.
 
 ```typescript
-export type ViewMode = 'grid' | 'list';
-
 export interface ViewToggleProps {
   value: ViewMode;
   onChange: (mode: ViewMode) => void;
 }
-
-// Usage
-const [viewMode, setViewMode] = useState<ViewMode>('grid');
-<ViewToggle value={viewMode} onChange={setViewMode} />
 ```
 
-**WCAG Features**: `role="radiogroup"`, `aria-checked`, 44px touch targets
+**V0.0.1 Styling:**
 
-### Badge / SectionBadge
-
-```typescript
-// Badge - Status indicators
-<Badge variant="success">Active</Badge>
-<Badge variant="warning" size="sm">Pending</Badge>
-
-// SectionBadge - Editorial section headers
-<SectionBadge>MY ARCHIVE</SectionBadge>
-```
-
-**Variants**: default, success, warning, error, info, accent
-
-### PageLayout / PageSection
-
-Editorial page layout with 80px nav offset.
-
-```typescript
-<PageLayout maxWidth="5xl">
-  <PageSection badge="MY ARCHIVE" title="Dashboard" actions={<ViewToggle />}>
-    <div className="grid grid-cols-2 gap-6">...</div>
-  </PageSection>
-</PageLayout>
-```
-
-**Features**: Playfair Display serif titles, monospace badges, max-w-5xl default
+- `min-h-[56px]` touch targets
+- `rounded-2xl`
+- `shadow-theme-lg`
 
 ### TopWidget
 
-Pinned widget for dashboard with 48px radius and accent border.
+Pinned widget for dashboard.
 
 ```typescript
 export interface TopWidgetProps {
-  icon: React.ReactNode;       // Lucide icon
-  title: string;               // Serif font title
-  badgeText?: string;          // e.g., "Active Focus"
-  onChangeFocus?: () => void;  // Change/unpin handler
-  changeFocusText?: string;    // Button text
-  children: React.ReactNode;   // Widget content
+  icon: React.ReactNode;
+  title: string; // font-serif-title
+  badgeText?: string;
+  onChangeFocus?: () => void;
+  changeFocusText?: string;
+  children: React.ReactNode;
 }
-
-// Usage
-<TopWidget
-  icon={<Calendar />}
-  title="Today's Schedule"
-  badgeText="Active Focus"
-  onChangeFocus={() => setEditMode(true)}
->
-  <ScheduleContent />
-</TopWidget>
 ```
 
-**Features**: 48px radius, accent border, 44px touch targets, Playfair Display serif
+**V0.0.1 Styling:**
+
+- Card: `rounded-editorial-lg`
+- Title: `font-serif-title`
+- Badge: `font-mono-brand tracking-brand`
+
+### Alert
+
+```typescript
+export interface AlertProps {
+  variant: 'success' | 'error' | 'warning' | 'info';
+  title?: string;
+  children: ReactNode;
+  onClose?: () => void;
+}
+```
 
 ### SortableList (DnD Kit)
 
@@ -345,63 +266,32 @@ export interface SortableListProps<T> {
   onReorder: (items: T[]) => void;
   renderItem: (item: T, index: number) => ReactNode;
 }
-
-// Usage
-<SortableList
-  items={skills}
-  getItemId={(skill) => skill.id}
-  onReorder={setSkills}
-  renderItem={(skill) => (
-    <SortableItem key={skill.id} id={skill.id} useDragHandle>
-      {skill.name}
-    </SortableItem>
-  )}
-/>
 ```
-
-**Accessibility**:
-
-- Keyboard drag with KeyboardSensor
-- Touch support with delay (200ms) to prevent scroll hijacking
 
 ## Hooks
 
 ### useAsyncOperation
 
 ```typescript
-export interface UseAsyncOperationOptions<T> {
-  onSuccess?: (data: T) => void;
-  onError?: (error: Error) => void;
-  defaultErrorMessage?: string;
-}
-
-export interface UseAsyncOperationResult<T> {
-  execute: (operation: () => Promise<T>) => Promise<T | undefined>;
-  loading: boolean;
-  error: string | null;
-  data: T | null;
-  reset: () => void;
-}
-
-// Usage
-const { execute, loading, error } = useAsyncOperation({
-  onSuccess: () => navigate('/dashboard'),
+const { execute, loading, error, data, reset } = useAsyncOperation({
+  onSuccess: (data) => navigate('/dashboard'),
+  onError: (error) => console.error(error),
 });
 
 await execute(() => api.createPost(data));
 ```
 
+### useClickOutside
+
+```typescript
+const ref = useRef<HTMLDivElement>(null);
+useClickOutside(ref, isOpen, () => setIsOpen(false));
+```
+
 ### useDebounce
 
 ```typescript
-// Usage
 const debouncedSearch = useDebounce(searchTerm, 300);
-
-useEffect(() => {
-  if (debouncedSearch) {
-    fetchResults(debouncedSearch);
-  }
-}, [debouncedSearch]);
 ```
 
 ## Theme Tokens
@@ -412,6 +302,7 @@ Components use semantic theme tokens from `@my-girok/design-tokens`:
 | ------------------------------------- | -------------------- |
 | `bg-theme-bg-page`                    | Page background      |
 | `bg-theme-bg-card`                    | Card background      |
+| `bg-theme-bg-secondary`               | Section background   |
 | `bg-theme-bg-input`                   | Input background     |
 | `bg-theme-bg-hover`                   | Hover states         |
 | `text-theme-text-primary`             | Primary text         |
@@ -420,35 +311,13 @@ Components use semantic theme tokens from `@my-girok/design-tokens`:
 | `border-theme-border-default`         | Default borders      |
 | `border-theme-border-subtle`          | Subtle borders       |
 | `text-theme-primary`                  | Primary accent color |
-| `bg-theme-status-error-bg`            | Error backgrounds    |
-| `text-theme-status-error-text`        | Error text           |
 | `focus-visible:ring-theme-focus-ring` | Focus ring           |
-
-## Usage
-
-```typescript
-import {
-  Button,
-  TextInput,
-  TextArea,
-  SelectInput,
-  Alert,
-  Card,
-  SortableList,
-  SortableItem,
-  useAsyncOperation,
-  useDebounce,
-} from '@my-girok/ui-components';
-```
 
 ## Installation
 
 ```bash
 # In monorepo - automatically available via workspace
 pnpm install
-
-# For drag-and-drop features
-pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
 
 ## Dependencies
@@ -459,27 +328,28 @@ pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "@my-girok/design-tokens": "workspace:*"
-  },
-  "dependencies": {
-    "@dnd-kit/core": "catalog:",
-    "@dnd-kit/sortable": "catalog:",
-    "@dnd-kit/utilities": "catalog:"
   }
 }
 ```
 
 ## React 19 Compatibility
 
-All components use **ref-as-prop** pattern (not forwardRef):
+All components use **ref-as-prop** pattern:
 
 ```typescript
-// React 19 pattern (current)
 export function Button({ ref, ...props }: ButtonProps) {
   return <button ref={ref} {...props} />;
 }
-
-// Old forwardRef pattern (deprecated)
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
-  return <button ref={ref} {...props} />;
-});
 ```
+
+## References
+
+| Document                             | Content              |
+| ------------------------------------ | -------------------- |
+| [design-tokens.md](design-tokens.md) | SSOT 유틸리티 클래스 |
+| [ssot.md](../ssot.md)                | SSOT 전략 문서       |
+| `docs/DESIGN_SYSTEM.md`              | 상세 디자인 스펙     |
+
+## Version
+
+**V0.0.1 AAA Workstation** (2025-12)
