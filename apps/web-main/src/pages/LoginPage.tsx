@@ -121,7 +121,7 @@ export default function LoginPage() {
                     className="absolute w-11 h-11 opacity-0 cursor-pointer peer"
                   />
                   <span
-                    className="w-5 h-5 border-2 border-theme-border-default rounded bg-theme-bg-input transition-colors peer-checked:bg-theme-primary peer-checked:border-theme-primary peer-focus-visible:ring-2 peer-focus-visible:ring-theme-focus-ring peer-focus-visible:ring-offset-2"
+                    className="w-5 h-5 border-2 border-theme-border-default rounded bg-theme-bg-input transition-colors peer-checked:bg-theme-primary peer-checked:border-theme-primary peer-focus-visible:ring-[4px] peer-focus-visible:ring-theme-focus-ring peer-focus-visible:ring-offset-4"
                     aria-hidden="true"
                   >
                     {rememberEmail && (

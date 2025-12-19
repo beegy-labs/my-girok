@@ -302,7 +302,7 @@ function SortableExperienceCard({
                 type="month"
                 value={experience.startDate}
                 onChange={(e) => onUpdate({ ...experience, startDate: e.target.value })}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               />
             </div>
 
@@ -318,7 +318,7 @@ function SortableExperienceCard({
                   onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })
                 }
                 disabled={experience.isCurrentlyWorking}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
               />
             </div>
           </div>
@@ -399,14 +399,14 @@ function SortableExperienceCard({
                   salary: e.target.value ? parseInt(e.target.value) : undefined,
                 })
               }
-              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               placeholder={t('resume.experienceForm.salaryPlaceholder')}
               min="0"
             />
             <select
               value={experience.salaryUnit || 'KRW'}
               onChange={(e) => onUpdate({ ...experience, salaryUnit: e.target.value })}
-              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
             >
               <option value="KRW">{t('resume.experienceForm.salaryUnits.manwon')}</option>
               <option value="USD">USD</option>
@@ -419,7 +419,7 @@ function SortableExperienceCard({
               type="checkbox"
               checked={experience.showSalary ?? false}
               onChange={(e) => onUpdate({ ...experience, showSalary: e.target.checked })}
-              className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
+              className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-[4px]"
             />
             <span className="ml-2 text-xs sm:text-sm text-theme-text-secondary">
               <span className="hidden sm:inline">
@@ -630,7 +630,7 @@ function SortableProject({
                   type="month"
                   value={project.startDate}
                   onChange={(e) => onUpdate({ ...project, startDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                 />
               </div>
 
@@ -642,7 +642,7 @@ function SortableProject({
                   type="month"
                   value={project.endDate || ''}
                   onChange={(e) => onUpdate({ ...project, endDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                   placeholder={t('resume.experienceForm.ongoingProject')}
                 />
               </div>

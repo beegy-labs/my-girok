@@ -132,7 +132,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                   <select
                     value={duration}
                     onChange={(e) => setDuration(e.target.value as ShareDuration)}
-                    className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
+                    className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
                   >
                     <option value={ShareDuration.ONE_WEEK}>⏱️ {t('resume.oneWeek')}</option>
                     <option value={ShareDuration.ONE_MONTH}>📅 {t('resume.oneMonth')}</option>
@@ -151,7 +151,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                       value={customDate}
                       onChange={(e) => setCustomDate(e.target.value)}
                       min={new Date().toISOString().slice(0, 16)}
-                      className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
+                      className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
                     />
                   </div>
                 )}

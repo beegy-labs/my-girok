@@ -220,7 +220,7 @@ function SortableEducationCard({
               type="month"
               value={education.startDate}
               onChange={(e) => onUpdate({ ...education, startDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
 
@@ -233,7 +233,7 @@ function SortableEducationCard({
               type="month"
               value={education.endDate || ''}
               onChange={(e) => onUpdate({ ...education, endDate: e.target.value })}
-              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-elevated border border-theme-border-default rounded-lg focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             />
           </div>
         </div>

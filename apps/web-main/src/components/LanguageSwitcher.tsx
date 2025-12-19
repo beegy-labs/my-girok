@@ -66,7 +66,7 @@ export default function LanguageSwitcher() {
               onClick={() => changeLanguage(lang.code)}
               role="option"
               aria-selected={i18n.language === lang.code}
-              className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-focus-ring ${
+              className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-inset focus-visible:ring-theme-focus-ring ${
                 i18n.language === lang.code
                   ? 'bg-theme-primary/10 text-theme-primary font-bold'
                   : 'text-theme-text-secondary hover:bg-theme-bg-hover'
