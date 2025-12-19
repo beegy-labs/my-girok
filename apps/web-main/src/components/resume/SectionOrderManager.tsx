@@ -35,14 +35,9 @@ interface SectionOrderManagerProps {
 
 function SortableSection({ section }: { section: ResumeSection }) {
   const { t } = useTranslation();
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: section.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: section.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -72,10 +67,20 @@ function SortableSection({ section }: { section: ResumeSection }) {
           {...listeners}
           {...attributes}
           className="cursor-grab active:cursor-grabbing p-2 hover:bg-theme-bg-hover rounded transition-colors duration-200"
-          title="Drag to reorder"
+          title={t('common.dragToReorder')}
         >
-          <svg className="w-5 h-5 text-theme-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          <svg
+            className="w-5 h-5 text-theme-text-tertiary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 8h16M4 16h16"
+            />
           </svg>
         </button>
         <span className="font-medium text-theme-text-primary">{getSectionLabel(section.type)}</span>
@@ -92,7 +97,7 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -120,12 +125,16 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
           Section Order
         </h2>
         <p className="text-sm text-theme-text-secondary">
-          Drag and drop to reorder sections. Fixed sections (Header, Summary, Cover Letter, Career Goals) cannot be reordered.
+          Drag and drop to reorder sections. Fixed sections (Header, Summary, Cover Letter, Career
+          Goals) cannot be reordered.
         </p>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={items.map((item) => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="space-y-2">
             {items.map((section) => (
               <SortableSection key={section.id} section={section} />
@@ -136,7 +145,8 @@ export default function SectionOrderManager({ sections, onReorder }: SectionOrde
 
       <div className="mt-4 p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-lg">
         <p className="text-sm text-theme-status-info-text">
-          💡 <strong>Tip:</strong> Sections will appear in this order in your resume preview and PDF export.
+          💡 <strong>Tip:</strong> Sections will appear in this order in your resume preview and PDF
+          export.
         </p>
       </div>
     </div>

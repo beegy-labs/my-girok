@@ -7,11 +7,11 @@ export interface CardProps {
   /**
    * Card padding size
    */
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'responsive';
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'responsive';
   /**
-   * Border radius - 'lg' for 36px radius (menu cards), 'default' for 16px
+   * Border radius - multiple options for V0.0.1 editorial design
    */
-  radius?: 'default' | 'lg';
+  radius?: 'default' | 'lg' | 'xl' | '2xl';
   className?: string;
   onClick?: () => void;
   /**
@@ -21,13 +21,14 @@ export interface CardProps {
 }
 
 // Static class definitions (defined outside component for performance)
+// V0.0.1 AAA Workstation Design System
 const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2';
+  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const variantBaseClasses = {
-  primary: 'bg-theme-bg-card border border-theme-border-subtle shadow-theme-md',
-  secondary: 'bg-theme-bg-card border border-theme-border-default shadow-theme-sm',
-  elevated: 'bg-theme-bg-elevated border border-theme-border-subtle shadow-theme-lg',
+  primary: 'bg-theme-bg-card border-2 border-theme-border-subtle shadow-theme-sm',
+  secondary: 'bg-theme-bg-card border-2 border-theme-border-default shadow-theme-sm',
+  elevated: 'bg-theme-bg-elevated border-2 border-theme-border-subtle shadow-theme-lg',
 } as const;
 
 const variantInteractiveClasses = {
@@ -41,28 +42,33 @@ const paddingClasses = {
   sm: 'p-4',
   md: 'p-6',
   lg: 'p-8',
+  xl: 'p-10 md:p-14',
   responsive: 'p-4 sm:p-6 lg:p-8', // Mobile-first responsive padding
 } as const;
 
-// 36px radius for large menu cards, 16px for default
+// V0.0.1 Editorial radius options - SSOT tokens from tokens.css
 const radiusClasses = {
-  default: 'rounded-2xl',
-  lg: 'rounded-[36px]',
+  default: 'rounded-2xl', // 16px (Tailwind default)
+  lg: 'rounded-editorial', // SSOT: --border-radius-editorial: 40px
+  xl: 'rounded-editorial-lg', // SSOT: --border-radius-editorial-lg: 48px
+  '2xl': 'rounded-editorial-2xl', // SSOT: --border-radius-editorial-2xl: 64px
 } as const;
 
 /**
  * Accessible Card Component with WCAG 2.1 AAA compliance
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Multiple variants (primary, secondary, elevated)
  * - Interactive mode with proper keyboard and focus support
  * - Configurable padding and border radius
- * - Large radius option (36px) for menu cards
+ * - Editorial radius options (40px, 48px, 64px) for V0.0.1 design
  * - High contrast focus ring for keyboard navigation
+ * - border-2 for modern aesthetic
  *
  * @example
  * ```tsx
- * <Card variant="primary" interactive padding="lg" radius="lg">
+ * <Card variant="primary" interactive padding="xl" radius="2xl">
  *   <h2>Card Title</h2>
  *   <p>Card content goes here...</p>
  * </Card>

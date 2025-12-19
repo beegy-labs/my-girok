@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { changePassword } from '../api/auth';
@@ -26,38 +26,42 @@ export default function ChangePasswordPage() {
     }
   }, [changeSuccess, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  // Memoized submit handler (2025 best practice)
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError('');
+      setSuccess('');
 
-    // Validate new password
-    if (newPassword.length < 8) {
-      setError(t('changePassword.errors.tooShort'));
-      return;
-    }
+      // Validate new password
+      if (newPassword.length < 8) {
+        setError(t('changePassword.errors.tooShort'));
+        return;
+      }
 
-    if (newPassword !== confirmPassword) {
-      setError(t('changePassword.errors.noMatch'));
-      return;
-    }
+      if (newPassword !== confirmPassword) {
+        setError(t('changePassword.errors.noMatch'));
+        return;
+      }
 
-    setLoading(true);
+      setLoading(true);
 
-    try {
-      await changePassword({ currentPassword, newPassword });
-      setSuccess(t('changePassword.success'));
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setChangeSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setError(err.response?.data?.message || t('changePassword.errors.failed'));
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        await changePassword({ currentPassword, newPassword });
+        setSuccess(t('changePassword.success'));
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setChangeSuccess(true); // Trigger navigation via useEffect (React 19 compatibility)
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        setError(err.response?.data?.message || t('changePassword.errors.failed'));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPassword, newPassword, confirmPassword, t],
+  );
 
   return (
     <PageContainer maxWidth="sm">
@@ -112,13 +116,7 @@ export default function ChangePasswordPage() {
           />
 
           <div className="pt-2">
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={loading}
-              loading={loading}
-              fullWidth
-            >
+            <Button variant="primary" type="submit" disabled={loading} loading={loading} fullWidth>
               {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
             </Button>
           </div>

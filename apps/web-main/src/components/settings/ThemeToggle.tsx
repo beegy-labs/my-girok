@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../api/userPreferences';
 import { useUserPreferencesStore } from '../../stores/userPreferencesStore';
@@ -13,14 +13,15 @@ export default function ThemeToggle() {
 
   const currentTheme = preferences?.theme || Theme.LIGHT;
 
-  const handleToggle = async () => {
+  // Memoized toggle handler (2025 best practice)
+  const handleToggle = useCallback(async () => {
     const newTheme = currentTheme === Theme.LIGHT ? Theme.DARK : Theme.LIGHT;
     try {
       await setTheme(newTheme);
     } catch (error) {
       console.error('Failed to update theme:', error);
     }
-  };
+  }, [currentTheme, setTheme]);
 
   return (
     <div className="flex items-center justify-between">

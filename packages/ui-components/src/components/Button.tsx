@@ -8,7 +8,11 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   /**
    * Button size - all sizes meet WCAG 44x44px minimum touch target
    */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  /**
+   * Border radius style
+   */
+  rounded?: 'default' | 'editorial' | 'full';
   /**
    * Shows loading state with spinner
    */
@@ -32,40 +36,56 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 }
 
 // Static class definitions (defined outside component for performance)
+// V0.0.1 AAA Workstation Design System
 // tracking-wide improves readability for long button text (WCAG AAA)
 const baseClasses =
-  'font-semibold tracking-wide rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
+  'font-bold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-offset-4 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
 
 const variantClasses = {
   primary:
     'bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text shadow-theme-md hover:shadow-theme-lg hover:scale-[1.02] active:scale-[0.98]',
   secondary:
-    'bg-btn-secondary-bg border border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover hover:scale-[1.01] active:scale-[0.99]',
+    'bg-btn-secondary-bg border-2 border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover hover:scale-[1.01] active:scale-[0.99]',
   danger: 'bg-btn-danger-bg text-btn-danger-text hover:bg-btn-danger-bg-hover active:scale-[0.98]',
-  ghost: 'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover',
+  ghost:
+    'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover border-2 border-transparent hover:border-theme-border-default',
 } as const;
 
 // All sizes meet WCAG 44x44px minimum touch target
+// V0.0.1 Editorial sizes: lg (56px) and xl (64px) have editorial typography
 const sizeClasses = {
   sm: 'min-h-[44px] px-4 py-2.5 text-sm',
   md: 'min-h-[44px] px-5 py-3 text-base',
-  lg: 'min-h-[48px] px-6 py-3.5 text-lg',
+  lg: 'min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-widest',
+  xl: 'min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-brand',
+} as const;
+
+// Border radius options - SSOT tokens from tokens.css
+// V0.0.1: default (16px) for secondary, editorial (24px) for primary
+const roundedClasses = {
+  default: 'rounded-2xl',
+  editorial: 'rounded-input', // SSOT: --border-radius-input: 24px
+  full: 'rounded-full',
 } as const;
 
 /**
  * Accessible button component with WCAG 2.1 AAA compliance
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Minimum 44x44px touch target (WCAG 2.5.5)
  * - High contrast focus ring for keyboard navigation
  * - Proper disabled states
  * - Loading state with spinner
+ * - Editorial radius option (24px) for V0.0.1 styling
  * - React 19 compatible (ref as prop)
  *
  * @example
  * ```tsx
  * <Button
  *   variant="primary"
+ *   size="xl"
+ *   rounded="editorial"
  *   loading={isSubmitting}
  *   onClick={handleSubmit}
  * >
@@ -76,6 +96,7 @@ const sizeClasses = {
 export function Button({
   variant = 'primary',
   size = 'md',
+  rounded = 'default',
   loading = false,
   fullWidth = false,
   icon,
@@ -91,10 +112,10 @@ export function Button({
     <button
       ref={ref}
       disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${widthClass} ${className}`}
       {...props}
     >
-      <span className="flex items-center justify-center gap-2">
+      <span className="flex items-center justify-center gap-3">
         {loading && <LoadingSpinner />}
         {!loading && icon && <span aria-hidden="true">{icon}</span>}
         {children}

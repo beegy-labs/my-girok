@@ -18,21 +18,28 @@ export interface ViewToggleProps {
 }
 
 // Static class definitions (2025 best practice - outside component)
+// V0.0.1 AAA Workstation Design System
 const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-focus-ring focus-visible:ring-offset-2';
+  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
-// p-3 ensures reliable 44px touch target even with smaller icons
+// p-4 ensures reliable 56px touch target with larger icons
 const buttonBaseClasses =
-  'p-3 rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center';
+  'p-4 rounded-2xl transition-all duration-200 min-h-[56px] min-w-[56px] flex items-center justify-center border-2 border-transparent';
+
+const buttonActiveClasses = 'bg-theme-primary text-btn-primary-text shadow-theme-lg';
+
+const buttonInactiveClasses =
+  'text-theme-text-secondary hover:bg-theme-bg-hover hover:border-theme-border-default';
 
 /**
  * View Toggle Component for switching between Grid and List views (2025 Accessible Pattern)
+ * V0.0.1 AAA Workstation Design System
  *
  * Features:
  * - Toggle between grid (2-column cards) and list (compact rows) views
- * - WCAG 2.1 AAA compliant touch targets (44x44px with p-3 padding)
+ * - WCAG 2.1 AAA compliant touch targets (56x56px with p-4 padding)
  * - Theme-aware text colors for proper contrast in both light/dark modes
- * - Clear visual feedback for active state
+ * - Clear visual feedback for active state with shadow
  *
  * @example
  * ```tsx
@@ -50,25 +57,19 @@ export const ViewToggle = memo(function ViewToggle({
   const handleListClick = useCallback(() => onChange('list'), [onChange]);
 
   return (
-    <div
-      className={`inline-flex gap-1 p-1 bg-theme-bg-card border border-theme-border-default rounded-xl ${className}`}
-      role="radiogroup"
-      aria-label="View mode"
-    >
+    <div className={`inline-flex gap-4 ${className}`} role="radiogroup" aria-label="View mode">
       <button
         type="button"
         onClick={handleGridClick}
         className={`${buttonBaseClasses} ${focusClasses} ${
-          value === 'grid'
-            ? 'bg-theme-primary text-btn-primary-text'
-            : 'text-theme-text-secondary hover:bg-theme-bg-hover'
+          value === 'grid' ? buttonActiveClasses : buttonInactiveClasses
         }`}
         role="radio"
         aria-checked={value === 'grid'}
         aria-label="Grid view"
       >
         <svg
-          className="w-5 h-5"
+          className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -86,16 +87,14 @@ export const ViewToggle = memo(function ViewToggle({
         type="button"
         onClick={handleListClick}
         className={`${buttonBaseClasses} ${focusClasses} ${
-          value === 'list'
-            ? 'bg-theme-primary text-btn-primary-text'
-            : 'text-theme-text-secondary hover:bg-theme-bg-hover'
+          value === 'list' ? buttonActiveClasses : buttonInactiveClasses
         }`}
         role="radio"
         aria-checked={value === 'list'}
         aria-label="List view"
       >
         <svg
-          className="w-5 h-5"
+          className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

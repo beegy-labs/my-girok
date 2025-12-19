@@ -16,6 +16,7 @@
 
 - **[rules.md](rules.md)** - Essential DO/DON'T rules (READ FIRST)
 - **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
+- **[ssot.md](ssot.md)** - Single Source of Truth strategy (Tailwind CSS 4, 2025)
 
 ### Development & Deployment
 
@@ -77,6 +78,9 @@
 
 **"I need to create a new NestJS service..."**
 → Read: `rules.md` + `packages/nest-common.md`
+
+**"I need to add design tokens or styling..."**
+→ Read: `ssot.md` + `packages/design-tokens.md`
 
 ## Current Architecture
 

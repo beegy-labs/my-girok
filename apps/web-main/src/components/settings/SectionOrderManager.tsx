@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@my-girok/ui-components';
 import { SectionOrderItem, SectionType } from '../../api/userPreferences';
 import { useUserPreferencesStore } from '../../stores/userPreferencesStore';
 
@@ -17,16 +18,22 @@ export default function SectionOrderManager() {
 
   const [sections, setSections] = useState<SectionOrderItem[]>(DEFAULT_SECTION_ORDER);
 
-  const getSectionLabel = (type: SectionType): string => {
-    const keyMap: Record<SectionType, string> = {
+  // Memoized section label lookup (2025 best practice)
+  const keyMap = useMemo<Record<SectionType, string>>(
+    () => ({
       [SectionType.SKILLS]: 'skills',
       [SectionType.EXPERIENCE]: 'experience',
       [SectionType.PROJECT]: 'projects',
       [SectionType.EDUCATION]: 'education',
       [SectionType.CERTIFICATE]: 'certifications',
-    };
-    return t(`settings.sections.${keyMap[type]}`);
-  };
+    }),
+    [],
+  );
+
+  const getSectionLabel = useCallback(
+    (type: SectionType): string => t(`settings.sections.${keyMap[type]}`),
+    [t, keyMap],
+  );
 
   useEffect(() => {
     loadPreferences();
@@ -38,34 +45,40 @@ export default function SectionOrderManager() {
     }
   }, [preferences]);
 
-  const handleVisibilityToggle = (type: SectionType) => {
-    const newSections = sections.map((section) =>
-      section.type === type ? { ...section, visible: !section.visible } : section,
+  // Memoized handlers (2025 best practice)
+  const handleVisibilityToggle = useCallback((type: SectionType) => {
+    setSections((prev) =>
+      prev.map((section) =>
+        section.type === type ? { ...section, visible: !section.visible } : section,
+      ),
     );
-    setSections(newSections);
-  };
+  }, []);
 
-  const handleMoveUp = (index: number) => {
+  const handleMoveUp = useCallback((index: number) => {
     if (index === 0) return;
-    const newSections = [...sections];
-    [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-    newSections.forEach((section, idx) => {
-      section.order = idx;
+    setSections((prev) => {
+      const newSections = [...prev];
+      [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+      newSections.forEach((section, idx) => {
+        section.order = idx;
+      });
+      return newSections;
     });
-    setSections(newSections);
-  };
+  }, []);
 
-  const handleMoveDown = (index: number) => {
-    if (index === sections.length - 1) return;
-    const newSections = [...sections];
-    [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-    newSections.forEach((section, idx) => {
-      section.order = idx;
+  const handleMoveDown = useCallback((index: number) => {
+    setSections((prev) => {
+      if (index === prev.length - 1) return prev;
+      const newSections = [...prev];
+      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+      newSections.forEach((section, idx) => {
+        section.order = idx;
+      });
+      return newSections;
     });
-    setSections(newSections);
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       await setSectionOrder(sections);
       alert(t('settings.saved'));
@@ -73,7 +86,7 @@ export default function SectionOrderManager() {
       console.error('Failed to save section order:', error);
       alert(t('settings.saveFailed'));
     }
-  };
+  }, [sections, setSectionOrder, t]);
 
   return (
     <div className="space-y-4">
@@ -129,12 +142,9 @@ export default function SectionOrderManager() {
         ))}
       </div>
 
-      <button
-        onClick={handleSave}
-        className="w-full bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white font-semibold py-3 px-6 rounded-lg shadow-theme-lg shadow-theme-primary/30 transform hover:scale-[1.02] transition-all"
-      >
+      <Button variant="primary" onClick={handleSave} fullWidth size="lg" rounded="editorial">
         {t('common.save')}
-      </button>
+      </Button>
     </div>
   );
 }

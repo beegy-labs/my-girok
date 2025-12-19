@@ -1,6 +1,6 @@
 # Web Main App
 
-> Public-facing web application for My-Girok
+> Public-facing web application for My-Girok - **V0.0.1 AAA Workstation**
 
 ## Tech Stack
 
@@ -12,52 +12,61 @@
 - **API**: Axios 1.13
 - **Testing**: Vitest 4.0 + Playwright 1.57
 
-## Design System: Modern Editorial Archive
+## Design System: V0.0.1 AAA Workstation
 
-> "Sophisticated Classic" style - professional archive aesthetic
+> "Sophisticated Classic" style - WCAG 2.1 AAA compliant editorial design
 
-### Design Tokens
+**👉 SSOT 토큰**: See [design-tokens.md](../packages/design-tokens.md) for utility classes.
 
-| Token                       | Value                        | Usage                     |
-| --------------------------- | ---------------------------- | ------------------------- |
-| `--font-family-serif-title` | Playfair Display             | Page titles, headings     |
-| `--font-family-mono-brand`  | System monospace             | Brand "Girok", badges     |
-| `--radius-editorial`        | 40px                         | MenuCard, Editorial cards |
-| `--spacing-editorial`       | 40px                         | Card padding (p-10)       |
-| `--nav-height-editorial`    | 80px                         | Fixed navbar height       |
-| `--ease-editorial`          | cubic-bezier(0.2, 1, 0.3, 1) | Smooth transitions        |
+### V0.0.1 Key Visual Patterns (SSOT)
+
+| Element     | SSOT Classes                                                      |
+| ----------- | ----------------------------------------------------------------- |
+| Title font  | `font-serif-title tracking-editorial italic text-5xl`             |
+| Subtitle    | `font-mono-brand tracking-brand uppercase text-[11px] font-black` |
+| Form card   | `rounded-editorial-lg border-2 p-10 md:p-14`                      |
+| Input (lg)  | `h-16 rounded-input font-bold`                                    |
+| Button (xl) | `min-h-[64px] font-black uppercase tracking-brand`                |
+| MenuCard    | `rounded-editorial-2xl border-2 p-10 md:p-12`                     |
+| Footer      | `mt-40 py-24 border-t-2 tracking-brand-lg`                        |
 
 ### Layout Pattern
 
 ```tsx
-// All pages use consistent Editorial layout
+// V0.0.1 Editorial layout with SSOT classes
 <main style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}>
-  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-    <SectionBadge>MY ARCHIVE</SectionBadge>
-    <h1 style={{ fontFamily: 'var(--font-family-serif-title)' }}>Page Title</h1>
-    {/* Content */}
+  <div className="max-w-5xl mx-auto px-4 sm:px-8">
+    {/* ✅ SSOT Pattern */}
+    <h1 className="font-serif-title tracking-editorial italic text-5xl text-theme-text-primary">
+      Page Title
+    </h1>
+    <p className="font-mono-brand tracking-brand uppercase text-[11px] font-black text-theme-text-secondary">
+      Subtitle Badge
+    </p>
   </div>
   <Footer />
 </main>
 ```
 
-### Key Components
+### Key Components (V0.0.1)
 
-- **Navbar**: Fixed 80px, backdrop-blur, monospace "Girok"
-- **MenuCard**: 40px radius, hover lift, index numbers (01, 02...)
-- **MenuRow**: Compact list alternative
-- **ViewToggle**: Grid/List view switcher
-- **SectionBadge**: Uppercase monospace headers
-- **Footer**: "Recording your own story" tagline
+- **Navbar**: Fixed 80px, backdrop-blur, `font-mono-brand`
+- **LanguageSwitcher**: 2-char code, dropdown `rounded-input`
+- **MenuCard**: `rounded-editorial-2xl`, border-2, hover lift
+- **MenuRow**: rounded-3xl border-2
+- **ViewToggle**: 56px touch targets, rounded-2xl
+- **TopWidget**: `rounded-editorial-lg`, `font-serif-title`
+- **Footer**: `tracking-brand-lg`, `font-mono-brand`
 
 ## Structure
 
 ```
 apps/web-main/src/
 ├── pages/              # Route pages
-│   ├── HomePage.tsx           # Editorial dashboard with 8 menu functions
-│   ├── LoginPage.tsx          # Editorial login form
-│   ├── RegisterPage.tsx       # Editorial registration
+│   ├── HomePage.tsx           # V0.0.1 Landing + Dashboard (Promo, Workstation, Index)
+│   ├── LoginPage.tsx          # V0.0.1 Editorial login form (48px card, lg inputs)
+│   ├── RegisterPage.tsx       # V0.0.1 Editorial registration
+│   ├── ForgotPasswordPage.tsx # V0.0.1 Password recovery (UI only)
 │   ├── ChangePasswordPage.tsx
 │   ├── NotFoundPage.tsx
 │   ├── JournalPage.tsx        # Placeholder (Coming Soon)
@@ -77,8 +86,8 @@ apps/web-main/src/
 │   └── settings/
 │       └── SettingsPage.tsx      # Editorial settings
 ├── components/
-│   ├── Navbar.tsx               # Fixed 80px, 'Girok' monospace, backdrop-blur
-│   ├── Footer.tsx               # Editorial footer with tagline
+│   ├── Navbar.tsx               # V0.0.1 nav (80px, 'girok.' + walnut dot, 48px icons)
+│   ├── Footer.tsx               # V0.0.1 footer (mt-40 py-24 border-t-2 tracking-[0.6em])
 │   ├── PlaceholderPage.tsx      # Coming Soon template
 │   ├── PrivateRoute.tsx
 │   ├── LoadingSpinner.tsx
@@ -101,9 +110,10 @@ apps/web-main/src/
 
 ### Public Routes
 
-- `/` - HomePage (dashboard for logged-in, landing for visitors)
-- `/login` - LoginPage
-- `/register` - RegisterPage
+- `/` - HomePage (V0.0.1 dashboard for logged-in, landing for visitors)
+- `/login` - LoginPage (V0.0.1 editorial form)
+- `/register` - RegisterPage (V0.0.1 editorial form)
+- `/forgot-password` - ForgotPasswordPage (V0.0.1 password recovery, UI only)
 - `/resume/:username` - PublicResumePage (public resume view)
 - `/shared/:token` - SharedResumePage (shared resume via token)
 
@@ -375,30 +385,35 @@ import { Button, TextInput, SelectInput, TextArea, FileUpload } from '@my-girok/
 />
 ```
 
-**Button Component**:
+**Button Component (V0.0.1)**:
 
 ```typescript
 import { Button } from '@my-girok/ui-components';
 
-// Primary Button - Main actions
-<Button variant="primary" onClick={handleSubmit} disabled={loading}>
-  Save Changes
+// Primary submit button (V0.0.1 - xl size, editorial rounded)
+<Button
+  variant="primary"
+  size="xl"                    // min-h-[64px], font-black uppercase
+  rounded="editorial"          // rounded-[24px]
+  icon={<ArrowRight size={18} />}
+>
+  Sign In
 </Button>
 
-// Secondary Button - Secondary actions
-<Button variant="secondary" onClick={handleCancel}>
-  Cancel
+// Secondary action button (V0.0.1 - lg size, default rounded)
+<Button variant="secondary" size="lg" rounded="default">
+  <UserPlus size={16} />
+  Create Account
 </Button>
 
-// Danger Button - Delete/remove actions
-<Button variant="danger" onClick={handleDelete}>
-  Delete Resume
+// Hero button (V0.0.1 landing page)
+<Button variant="primary" size="xl" rounded="full" className="px-20 py-8">
+  Enter
 </Button>
 
-// Button sizes
-<Button size="sm">Small</Button>
-<Button>Default</Button>
-<Button size="lg">Large</Button>
+// Button sizes reference (V0.0.1):
+// sm: 44px, md: 44px, lg: 56px (font-black uppercase tracking-widest text-[11px])
+// xl: 64px (font-black uppercase tracking-[0.3em] text-[14px])
 ```
 
 **Layout & Feedback**:
@@ -1028,6 +1043,108 @@ Prefix unused variables with underscore to satisfy ESLint:
 
 // ✅ DO - Destructuring unused properties
 const { projects: _projects, ...dataToSubmit } = formData;
+```
+
+## React 2025 Best Practices
+
+### Memoization Pattern (MANDATORY)
+
+All event handlers and derived data must be memoized to prevent unnecessary re-renders:
+
+```typescript
+// ✅ DO - Memoize all handlers with useCallback
+const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  e.preventDefault();
+  // ... implementation
+}, [dependencies]);
+
+// ✅ DO - Memoize derived data with useMemo
+const filteredItems = useMemo(
+  () => items.filter(item => item.active),
+  [items]
+);
+
+// ✅ DO - Memoize toggle handlers
+const handleToggle = useCallback(() => {
+  setIsOpen(prev => !prev);
+}, []);
+
+// ❌ DON'T - Inline functions in JSX
+<button onClick={() => setIsOpen(!isOpen)}>Toggle</button>
+
+// ✅ DO - Use memoized handler
+<button onClick={handleToggle}>Toggle</button>
+```
+
+### Static Constants Outside Component (MANDATORY)
+
+Move static arrays and objects outside the component to prevent recreation on every render:
+
+```typescript
+// ✅ DO - Define outside component
+const LANGUAGES = [
+  { code: 'ko', label: '한국어', flag: '🇰🇷' },
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+] as const;
+
+const BADGE_COLOR_CLASSES = {
+  blue: 'bg-theme-status-info-bg text-theme-status-info-text',
+  green: 'bg-theme-status-success-bg text-theme-status-success-text',
+} as const;
+
+export default function Component() {
+  // Use constants directly
+  const current = LANGUAGES.find((lang) => lang.code === code);
+}
+
+// ❌ DON'T - Define inside component
+export default function Component() {
+  const languages = [
+    // Recreated every render!
+    { code: 'ko', label: '한국어' },
+  ];
+}
+```
+
+### i18n Pattern (MANDATORY)
+
+Never hardcode user-facing strings. Always use translation function with defaultValue:
+
+```typescript
+// ❌ DON'T - Hardcoded strings
+<p>Create Your Archive</p>
+<button>Enter</button>
+
+// ✅ DO - Use t() with defaultValue fallback
+<p>{t('auth.createArchive', { defaultValue: 'Create Your Archive' })}</p>
+<button>{t('auth.enter', { defaultValue: 'Enter' })}</button>
+```
+
+### Direct Navigation Pattern (React Router v7)
+
+Use direct `navigate()` calls instead of state-based navigation:
+
+```typescript
+// ❌ DON'T - State-based navigation (unnecessary re-render)
+const [shouldNavigate, setShouldNavigate] = useState(false);
+useEffect(() => {
+  if (shouldNavigate) navigate('/');
+}, [shouldNavigate]);
+
+// ✅ DO - Direct navigation
+await login(credentials);
+navigate('/'); // Direct navigation after async operation
+```
+
+### Component Memoization
+
+Use React.memo for list item components that receive stable props:
+
+```typescript
+// ✅ DO - Memoize list items
+const MenuItem = memo(function MenuItem({ item, onClick }: Props) {
+  return <div onClick={onClick}>{item.name}</div>;
+});
 ```
 
 ## References
