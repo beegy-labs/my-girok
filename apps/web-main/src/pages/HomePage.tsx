@@ -311,7 +311,7 @@ export default function HomePage() {
                     <div className="flex justify-between items-center mb-8">
                       <div className="flex items-center gap-4">
                         <div
-                          className="p-3 bg-theme-bg-secondary rounded-2xl text-theme-primary border border-theme-border-subtle"
+                          className="p-3 bg-theme-bg-secondary rounded-xl text-theme-primary border border-theme-border-subtle"
                           aria-hidden="true"
                         >
                           <Calendar size={20} />
@@ -402,7 +402,7 @@ export default function HomePage() {
                       <>
                         {/* Schedule Widget Mockup */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between p-4 bg-theme-bg-page rounded-2xl border border-theme-border-default">
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page rounded-input border border-theme-border-default">
                             <span className="font-bold text-sm text-theme-text-primary">
                               14:00 {t('placeholder.schedule').split('.')[0]}
                             </span>
@@ -410,7 +410,7 @@ export default function HomePage() {
                               {t('widget.scheduleNow')}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between p-4 bg-theme-bg-page/50 rounded-2xl border border-theme-border-subtle">
+                          <div className="flex items-center justify-between p-4 bg-theme-bg-page/50 rounded-input border border-theme-border-subtle">
                             <span className="font-bold text-sm text-theme-text-muted">
                               16:30 {t('placeholder.schedule').split('.')[0]}
                             </span>
@@ -419,7 +419,7 @@ export default function HomePage() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex flex-col justify-center p-6 bg-theme-primary/5 rounded-3xl border border-theme-primary/20">
+                        <div className="flex flex-col justify-center p-6 bg-theme-primary/5 rounded-input border border-theme-primary/20">
                           <p className="text-sm font-bold text-theme-text-primary mb-2">
                             {t('widget.scheduleSummary', {
                               name: user?.name || user?.username,

@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
   /**
@@ -38,8 +39,9 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 // Static class definitions (defined outside component for performance)
 // V0.0.1 AAA Workstation Design System
 // tracking-wide improves readability for long button text (WCAG AAA)
+// Focus ring via focusClasses (SSOT: 4px ring, 4px offset)
 const baseClasses =
-  'font-bold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-offset-4 focus-visible:ring-theme-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
+  'font-bold tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none';
 
 const variantClasses = {
   primary:
@@ -53,10 +55,11 @@ const variantClasses = {
 
 // All sizes meet WCAG 44x44px minimum touch target
 // V0.0.1 Editorial sizes: lg (56px) and xl (64px) have editorial typography
+// SSOT tracking tokens: tracking-brand-lg (0.5em), tracking-brand (0.3em)
 const sizeClasses = {
   sm: 'min-h-[44px] px-4 py-2.5 text-sm',
   md: 'min-h-[44px] px-5 py-3 text-base',
-  lg: 'min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-widest',
+  lg: 'min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-brand-lg',
   xl: 'min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-brand',
 } as const;
 
@@ -112,7 +115,7 @@ export function Button({
     <button
       ref={ref}
       disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${widthClass} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${focusClasses} ${widthClass} ${className}`}
       {...props}
     >
       <span className="flex items-center justify-center gap-3">
