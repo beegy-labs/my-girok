@@ -368,7 +368,7 @@ export default function HomePage() {
                       <Plus
                         size={32}
                         className="text-theme-border-default group-hover:text-theme-primary group-hover:scale-110 transition-all"
-                        strokeWidth={2.5}
+                        strokeWidth={1.5}
                         aria-hidden="true"
                       />
                       <span className="mt-5 text-[11px] font-black uppercase text-theme-text-secondary tracking-brand font-mono-brand">
