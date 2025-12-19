@@ -52,7 +52,7 @@ export default function Navbar() {
           {/* Logo - V0.0.1 Editorial monospace style with accent dot */}
           <Link
             to="/"
-            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
+            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
             aria-label={t('aria.goToHomepage')}
           >
             <span className="text-2xl font-black text-theme-text-primary tracking-tighter select-none font-mono-brand">
@@ -85,7 +85,7 @@ export default function Navbar() {
               aria-label={
                 effectiveTheme === 'dark' ? t('aria.switchToLight') : t('aria.switchToDark')
               }
-              className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+              className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
             >
               {effectiveTheme === 'dark' ? (
                 <Sun size={22} aria-hidden="true" />
@@ -104,7 +104,7 @@ export default function Navbar() {
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
                   aria-label={t('aria.userMenu')}
-                  className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                  className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
                 >
                   <LogOut size={22} aria-hidden="true" />
                 </button>
@@ -141,7 +141,7 @@ export default function Navbar() {
               /* Login button - V0.0.1 Icon style */
               <Link
                 to="/login"
-                className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
                 aria-label={t('nav.login')}
               >
                 <User size={22} aria-hidden="true" />

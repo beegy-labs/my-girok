@@ -31,13 +31,13 @@ export default function Footer() {
           >
             <Link
               to="/privacy"
-              className="hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring rounded p-3 min-h-[44px] flex items-center"
+              className="hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring rounded p-3 min-h-[44px] flex items-center"
             >
               {t('footer.privacy')}
             </Link>
             <Link
               to="/terms"
-              className="hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring rounded p-3 min-h-[44px] flex items-center"
+              className="hover:text-theme-primary transition-colors focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring rounded p-3 min-h-[44px] flex items-center"
             >
               {t('footer.terms')}
             </Link>

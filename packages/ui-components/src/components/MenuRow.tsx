@@ -46,7 +46,7 @@ export interface MenuRowProps {
 // Static class definitions (defined outside component for performance - 2025 best practice)
 // V0.0.1 AAA Workstation Design System
 const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
+  'focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const baseClasses =
   'w-full flex items-center gap-6 px-8 py-5 bg-theme-bg-card border-2 border-theme-border-subtle rounded-3xl transition-all duration-300 shadow-theme-sm';

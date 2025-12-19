@@ -20,7 +20,7 @@ export interface ViewToggleProps {
 // Static class definitions (2025 best practice - outside component)
 // V0.0.1 AAA Workstation Design System
 const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
+  'focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 // p-4 ensures reliable 56px touch target with larger icons
 const buttonBaseClasses =

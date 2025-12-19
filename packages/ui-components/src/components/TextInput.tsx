@@ -67,7 +67,7 @@ const sizeClasses = {
 } as const;
 
 const focusClasses =
-  'focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
+  'focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 /**
  * Accessible text input component with WCAG 2.1 AAA compliance

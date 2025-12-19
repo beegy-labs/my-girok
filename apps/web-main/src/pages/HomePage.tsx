@@ -229,7 +229,7 @@ export default function HomePage() {
               className="mb-16"
               aria-label={t('aria.featuredPromotions', { defaultValue: 'Featured Promotions' })}
             >
-              <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
+              <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
                   <span className="text-[12px] font-black uppercase tracking-brand text-theme-primary mb-4 block font-mono-brand">
                     {t(PROMOS[currentPromo].tagKey, { defaultValue: 'Premium' })}
@@ -253,14 +253,14 @@ export default function HomePage() {
                 <div className="flex gap-4">
                   <button
                     onClick={handlePrevPromo}
-                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
+                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
                     aria-label={t('aria.previousPromo', { defaultValue: 'Previous Promo' })}
                   >
                     <ChevronLeft size={24} aria-hidden="true" />
                   </button>
                   <button
                     onClick={handleNextPromo}
-                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
+                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
                     aria-label={t('aria.nextPromo', { defaultValue: 'Next Promo' })}
                   >
                     <ChevronRight size={24} aria-hidden="true" />
@@ -307,7 +307,7 @@ export default function HomePage() {
                 {/* Widget Grid - V0.0.1 Style */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {/* Today Widget - Active */}
-                  <article className="bg-theme-bg-card rounded-editorial-lg border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[3px] focus-within:ring-theme-focus-ring">
+                  <article className="bg-theme-bg-card rounded-editorial-lg border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
                     <div className="flex justify-between items-center mb-8">
                       <div className="flex items-center gap-4">
                         <div
@@ -358,7 +358,7 @@ export default function HomePage() {
                   {[2, 3].map((slot) => (
                     <div
                       key={slot}
-                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-editorial-lg border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-editorial-lg border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
                       tabIndex={0}
                       role="button"
                       aria-label={t('aria.addWidgetToSlot', {
