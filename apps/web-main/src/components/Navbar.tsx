@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { logout } from '../api/auth';
 import LanguageSwitcher from './LanguageSwitcher';
+import NotificationButton from './NotificationButton';
 import { useTheme } from '../hooks/useTheme';
 import { useClickOutside } from '@my-girok/ui-components';
 import { Sun, Moon, KeyRound, LogOut, User } from 'lucide-react';
@@ -76,6 +77,9 @@ export default function Navbar() {
 
                 {/* Separator */}
                 <div className="w-px h-6 bg-theme-border-default mx-2" aria-hidden="true" />
+
+                {/* Notification button - V0.0.1 Style */}
+                <NotificationButton />
               </>
             )}
 

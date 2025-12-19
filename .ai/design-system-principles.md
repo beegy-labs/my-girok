@@ -85,6 +85,24 @@ tokens.css (@theme)  →  Tailwind Utility Classes  →  Components
 | `ring-3`       | `ring-[4px]`   | WCAG AAA          |
 | inline classes | `focusClasses` | from constants.ts |
 
+#### Form Input Labels
+
+| Element    | Classes                                                     |
+| ---------- | ----------------------------------------------------------- |
+| Label      | `text-[12px] font-black uppercase tracking-brand mb-3 ml-1` |
+| Input (lg) | `h-16 rounded-input border-2 font-bold`                     |
+| Form       | `space-y-6` (24px gap between fields)                       |
+| Buttons    | `h-14` (lg) or `h-16` (xl) with `tracking-brand`            |
+
+#### Card Styling (Editorial)
+
+| Size    | Token                   | Radius |
+| ------- | ----------------------- | ------ |
+| Default | `rounded-2xl`           | 16px   |
+| Large   | `rounded-editorial`     | 40px   |
+| XL      | `rounded-editorial-lg`  | 48px   |
+| 2XL     | `rounded-editorial-2xl` | 64px   |
+
 ---
 
 ## 2. 4-Layer Token Architecture - 권장
