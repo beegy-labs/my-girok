@@ -146,7 +146,7 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 - [x] `rounded-[Npx]` → `rounded-*` 유틸리티로 교체
 - [x] `style={{ fontFamily: ... }}` → `className="font-*"` 로 교체
 - [x] `tracking-[Nem]` → `tracking-brand-*` 로 교체
-- [ ] `tracking-tighter` → `tracking-editorial` 로 교체 (optional)
+- [x] `tracking-tighter` → `tracking-editorial` 로 교체
 
 ## File Impact
 

@@ -43,70 +43,42 @@ Layer 3: Tailwind (@theme inline) → Utility classes (dynamic)
 | Shadows    | `shadow-theme-sm`, `shadow-theme-md`, `shadow-theme-lg`         |
 | Status     | `bg-theme-status-error-bg`, `text-theme-status-success-text`    |
 
-## Editorial Layout Tokens (V0.0.1)
+## SSOT Utility Classes (V0.0.1)
 
-```css
-:root {
-  /* Typography */
-  --font-family-serif-title: 'Playfair Display', Georgia, serif;
-  --font-family-mono-brand: ui-monospace, SFMono-Regular, monospace;
+LLM 작업 시 아래 유틸리티 클래스를 사용:
 
-  /* Border Radius */
-  --radius-editorial: 40px;
-  --radius-editorial-lg: 48px; /* Form cards */
-  --radius-editorial-xl: 56px; /* Promo cards */
-  --radius-editorial-2xl: 64px; /* Section containers */
-  --radius-input: 24px; /* Input fields (lg size) */
+| Category       | Utility Class           | Usage                    |
+| -------------- | ----------------------- | ------------------------ |
+| Border Radius  | `rounded-input`         | Inputs, buttons (24px)   |
+|                | `rounded-editorial`     | Cards (40px)             |
+|                | `rounded-editorial-lg`  | Form cards (48px)        |
+|                | `rounded-editorial-xl`  | Hero sections (56px)     |
+|                | `rounded-editorial-2xl` | Menu cards (64px)        |
+| Typography     | `font-serif-title`      | Serif headings           |
+|                | `font-mono-brand`       | Brand labels             |
+| Letter Spacing | `tracking-brand-sm`     | Small labels (0.2em)     |
+|                | `tracking-brand`        | Default brand (0.3em)    |
+|                | `tracking-brand-lg`     | Large brand (0.5em)      |
+|                | `tracking-editorial`    | Serif headings (-0.05em) |
 
-  /* Spacing */
-  --spacing-editorial: 40px;
-  --nav-height-editorial: 80px;
+### Usage Pattern
 
-  /* Animation */
-  --ease-editorial: cubic-bezier(0.2, 1, 0.3, 1);
-}
-```
+```tsx
+// ✅ SSOT Pattern
+<h1 className="font-serif-title tracking-editorial italic">Title</h1>
+<div className="rounded-editorial-lg border-2 p-10">Form Card</div>
+<span className="font-mono-brand tracking-brand uppercase">GIROK.</span>
 
-## Tailwind Integration (@theme inline)
-
-```css
-@theme inline {
-  /* Editorial Layout - V0.0.1 */
-  --radius-editorial: 40px;
-  --radius-editorial-lg: 48px;
-  --radius-editorial-xl: 56px;
-  --radius-editorial-2xl: 64px;
-  --radius-input: 24px;
-  --spacing-editorial: 40px;
-  --nav-height-editorial: 80px;
-
-  /* Typography */
-  --font-family-serif-title: 'Playfair Display', Georgia, serif;
-  --font-family-mono-brand: ui-monospace, SFMono-Regular, monospace;
-}
+// ❌ Anti-Pattern (DO NOT USE)
+<h1 style={{ fontFamily: 'var(--font-family-serif-title)' }}>
+<div className="rounded-[48px]">
+<span className="tracking-[0.3em]">
 ```
 
 ## @property Type Safety
 
-Key tokens have @property definitions for:
-
-- Type validation (`syntax: '<color>'` or `syntax: '<length>'`)
-- Fallback values (`initial-value`)
-- Smooth color transitions in animations
-
-```css
-@property --theme-primary {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: #6b4a2e; /* AAA 7.94:1 */
-}
-
-@property --radius-editorial-2xl {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 64px;
-}
-```
+Key tokens use CSS @property for type validation and smooth transitions.
+See `packages/design-tokens/src/tokens.css` for definitions.
 
 ## Theming
 
@@ -143,30 +115,13 @@ All text combinations meet 7:1+ contrast ratio (AAA standard).
 - Chrome 85+, Firefox 128+, Safari 15.4+ (for @property)
 - Graceful degradation in older browsers
 
-## Migration Status (2025-12)
+## References
 
-### ✅ SSOT Complete
-
-All tokens now use proper Tailwind CSS 4 naming conventions for auto-generated utilities:
-
-```css
-/* Border Radius - generates rounded-* utilities */
---border-radius-input: 24px; /* → rounded-input */
---border-radius-editorial: 40px; /* → rounded-editorial */
---border-radius-editorial-lg: 48px; /* → rounded-editorial-lg */
---border-radius-editorial-xl: 56px; /* → rounded-editorial-xl */
---border-radius-editorial-2xl: 64px; /* → rounded-editorial-2xl */
-
-/* Letter Spacing - generates tracking-* utilities */
---letter-spacing-brand: 0.3em; /* → tracking-brand */
---letter-spacing-editorial: -0.05em; /* → tracking-editorial */
-
-/* Font Family - generates font-* utilities */
---font-family-serif-title: ...; /* → font-serif-title */
---font-family-mono-brand: ...; /* → font-mono-brand */
-```
-
-**See [ssot.md](../ssot.md) for SSOT strategy documentation.**
+| Document                                | Content                           |
+| --------------------------------------- | --------------------------------- |
+| [ssot.md](../ssot.md)                   | SSOT 전략, 마이그레이션 가이드    |
+| `packages/design-tokens/src/tokens.css` | 실제 토큰 정의 (source of truth)  |
+| `docs/DESIGN_SYSTEM.md`                 | 상세 디자인 스펙 (human-readable) |
 
 ## Version
 

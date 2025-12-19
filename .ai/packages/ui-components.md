@@ -58,20 +58,20 @@ export interface ButtonProps {
 
 **Size Reference:**
 
-| Size | Min Height | Typography                                          |
-| ---- | ---------- | --------------------------------------------------- |
-| sm   | 44px       | Standard                                            |
-| md   | 44px       | Standard                                            |
-| lg   | 56px       | `font-black uppercase tracking-widest text-[11px]`  |
-| xl   | 64px       | `font-black uppercase tracking-[0.3em] text-[14px]` |
+| Size | Min Height | Typography                                         |
+| ---- | ---------- | -------------------------------------------------- |
+| sm   | 44px       | Standard                                           |
+| md   | 44px       | Standard                                           |
+| lg   | 56px       | `font-black uppercase tracking-widest text-[11px]` |
+| xl   | 64px       | `font-black uppercase tracking-brand text-[14px]`  |
 
 **Rounded Options:**
 
-| Option    | Radius | Usage                      |
-| --------- | ------ | -------------------------- |
-| default   | 16px   | Secondary buttons (V0.0.1) |
-| editorial | 24px   | Primary buttons (V0.0.1)   |
-| full      | 50%    | Hero buttons, circular     |
+| Option    | SSOT Token    | Usage                      |
+| --------- | ------------- | -------------------------- |
+| default   | rounded-2xl   | Secondary buttons (V0.0.1) |
+| editorial | rounded-input | Primary buttons (V0.0.1)   |
+| full      | rounded-full  | Hero buttons, circular     |
 
 **Usage:**
 
@@ -102,16 +102,16 @@ export interface TextInputProps {
   onChange: (value: string) => void;
   required?: boolean;
   icon?: ReactNode; // Left icon (V0.0.1)
-  size?: 'default' | 'lg'; // lg = h-16, rounded-[24px]
+  size?: 'default' | 'lg'; // lg = h-16, rounded-input
 }
 ```
 
 **Size Reference:**
 
-| Size    | Height | Radius | Font      | Icon Padding |
-| ------- | ------ | ------ | --------- | ------------ |
-| default | 48px   | 12px   | normal    | pl-12        |
-| lg      | 64px   | 24px   | font-bold | pl-14        |
+| Size    | Height | SSOT Token    | Font      |
+| ------- | ------ | ------------- | --------- |
+| default | 48px   | rounded-xl    | normal    |
+| lg      | 64px   | rounded-input | font-bold |
 
 **Usage:**
 
@@ -140,12 +140,12 @@ export interface CardProps {
 
 **Radius Options (V0.0.1):**
 
-| Option  | Size | Usage              |
-| ------- | ---- | ------------------ |
-| default | 12px | Standard cards     |
-| lg      | 40px | Editorial cards    |
-| xl      | 48px | Form cards         |
-| 2xl     | 64px | Section containers |
+| Option  | SSOT Token            | Usage              |
+| ------- | --------------------- | ------------------ |
+| default | rounded-xl            | Standard cards     |
+| lg      | rounded-editorial     | Editorial cards    |
+| xl      | rounded-editorial-lg  | Form cards         |
+| 2xl     | rounded-editorial-2xl | Section containers |
 
 ### Badge
 
@@ -166,27 +166,26 @@ export interface BadgeProps {
 
 ### MenuCard
 
-Editorial navigation card with 64px radius.
+Editorial navigation card with `rounded-editorial-2xl`.
 
 ```typescript
 export interface MenuCardProps {
   index: number; // Displays as "01", "02", etc.
-  icon: React.ReactNode; // In p-6 rounded-[28px] container
-  title: string; // text-4xl serif
-  description: string; // text-[18px] font-bold
+  icon: React.ReactNode;
+  title: string; // font-serif-title
+  description: string;
   onClick?: () => void;
-  isPinned?: boolean; // Pin indicator
-  onPin?: () => void; // Pin handler
+  isPinned?: boolean;
+  onPin?: () => void;
   pinTooltip?: string;
 }
 ```
 
 **V0.0.1 Styling:**
 
-- Card: `rounded-[64px] border-2 p-10 md:p-12 min-h-[380px]`
-- Icon container: `p-6 rounded-[28px] border-2`
-- Index: `text-[12px] font-black tracking-[0.3em] monospace`
-- Description: `text-[18px] font-bold`
+- Card: `rounded-editorial-2xl border-2 p-10 md:p-12`
+- Index: `font-mono-brand tracking-brand font-black`
+- Title: `font-serif-title`
 
 ### MenuRow
 
@@ -233,7 +232,7 @@ Pinned widget for dashboard.
 ```typescript
 export interface TopWidgetProps {
   icon: React.ReactNode;
-  title: string; // Serif font
+  title: string; // font-serif-title
   badgeText?: string;
   onChangeFocus?: () => void;
   changeFocusText?: string;
@@ -243,8 +242,9 @@ export interface TopWidgetProps {
 
 **V0.0.1 Styling:**
 
-- Icon container: `p-3 border rounded-2xl` (was p-4 border-2 rounded-[20px])
-- Larger padding: `p-10 sm:p-12`
+- Card: `rounded-editorial-lg`
+- Title: `font-serif-title`
+- Badge: `font-mono-brand tracking-brand`
 
 ### Alert
 
@@ -341,6 +341,14 @@ export function Button({ ref, ...props }: ButtonProps) {
   return <button ref={ref} {...props} />;
 }
 ```
+
+## References
+
+| Document                             | Content              |
+| ------------------------------------ | -------------------- |
+| [design-tokens.md](design-tokens.md) | SSOT 유틸리티 클래스 |
+| [ssot.md](../ssot.md)                | SSOT 전략 문서       |
+| `docs/DESIGN_SYSTEM.md`              | 상세 디자인 스펙     |
 
 ## Version
 

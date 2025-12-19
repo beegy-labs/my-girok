@@ -16,53 +16,33 @@
 
 > "Sophisticated Classic" style - WCAG 2.1 AAA compliant editorial design
 
-### Design Tokens (V0.0.1)
+**👉 SSOT 토큰**: See [design-tokens.md](../packages/design-tokens.md) for utility classes.
 
-| Token                       | Value                        | Usage                           |
-| --------------------------- | ---------------------------- | ------------------------------- |
-| `--font-family-serif-title` | Playfair Display             | Italic page titles, headings    |
-| `--font-family-mono-brand`  | System monospace             | Brand "girok.", badges          |
-| `--radius-editorial`        | 40px                         | Archive support banner          |
-| `--radius-editorial-lg`     | 48px                         | Form cards (Login, Register)    |
-| `--radius-editorial-xl`     | 56px                         | Promo carousel                  |
-| `--radius-editorial-2xl`    | 64px                         | MenuCard, Workstation section   |
-| `--radius-input`            | 24px                         | Input (lg size), editorial btns |
-| `--spacing-editorial`       | 40px                         | Card padding (p-10)             |
-| `--nav-height-editorial`    | 80px                         | Fixed navbar height             |
-| `--ease-editorial`          | cubic-bezier(0.2, 1, 0.3, 1) | Smooth transitions              |
+### V0.0.1 Key Visual Patterns (SSOT)
 
-### V0.0.1 Key Visual Patterns
-
-| Element     | Specification                                                 |
-| ----------- | ------------------------------------------------------------- |
-| Title font  | `text-5xl italic tracking-tighter serif`                      |
-| Subtitle    | `text-[11px] font-black uppercase tracking-[0.3em] monospace` |
-| Form card   | `rounded-[48px] border-2 p-10 md:p-14`                        |
-| Input (lg)  | `h-16 rounded-[24px] font-bold` with left icon                |
-| Button (xl) | `min-h-[64px] font-black uppercase tracking-[0.3em]`          |
-| MenuCard    | `rounded-[64px] border-2 p-10 md:p-12 min-h-[380px]`          |
-| Footer      | `mt-40 py-24 border-t-2 tracking-[0.6em]`                     |
+| Element     | SSOT Classes                                                      |
+| ----------- | ----------------------------------------------------------------- |
+| Title font  | `font-serif-title tracking-editorial italic text-5xl`             |
+| Subtitle    | `font-mono-brand tracking-brand uppercase text-[11px] font-black` |
+| Form card   | `rounded-editorial-lg border-2 p-10 md:p-14`                      |
+| Input (lg)  | `h-16 rounded-input font-bold`                                    |
+| Button (xl) | `min-h-[64px] font-black uppercase tracking-brand`                |
+| MenuCard    | `rounded-editorial-2xl border-2 p-10 md:p-12`                     |
+| Footer      | `mt-40 py-24 border-t-2 tracking-brand-lg`                        |
 
 ### Layout Pattern
 
 ```tsx
-// All pages use consistent V0.0.1 Editorial layout
+// V0.0.1 Editorial layout with SSOT classes
 <main style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}>
   <div className="max-w-5xl mx-auto px-4 sm:px-8">
-    {/* V0.0.1 Title Pattern */}
-    <h1
-      className="text-5xl text-theme-text-primary tracking-tighter italic"
-      style={{ fontFamily: 'var(--font-family-serif-title)' }}
-    >
+    {/* ✅ SSOT Pattern */}
+    <h1 className="font-serif-title tracking-editorial italic text-5xl text-theme-text-primary">
       Page Title
     </h1>
-    <p
-      className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-text-secondary"
-      style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-    >
+    <p className="font-mono-brand tracking-brand uppercase text-[11px] font-black text-theme-text-secondary">
       Subtitle Badge
     </p>
-    {/* Content */}
   </div>
   <Footer />
 </main>
@@ -70,21 +50,13 @@
 
 ### Key Components (V0.0.1)
 
-- **Navbar**: Fixed 80px, backdrop-blur, monospace "girok." with walnut dot
-  - Logo: `text-2xl font-black tracking-tighter` + `.` in primary
-  - Icon buttons: `min-w-[48px] min-h-[48px] p-3`, icons `size={22}`
-  - User profile: Avatar `w-8 h-8 rounded-full` + `text-[13px] font-black uppercase tracking-widest`
-  - Separator: `w-px h-6 bg-theme-border-default mx-2`
-  - Dropdown: `rounded-[24px] border-2`
-- **LanguageSwitcher**: Simple 2-char code (KO, EN, JA)
-  - Button: `p-3 text-[12px] font-black uppercase tracking-tighter w-12 min-h-[48px]`
-  - Dropdown: `rounded-[24px] border-2`
-- **MenuCard**: 64px radius, border-2, hover lift, index numbers (01, 02...)
-- **MenuRow**: rounded-3xl border-2, description/pin support
+- **Navbar**: Fixed 80px, backdrop-blur, `font-mono-brand`
+- **LanguageSwitcher**: 2-char code, dropdown `rounded-input`
+- **MenuCard**: `rounded-editorial-2xl`, border-2, hover lift
+- **MenuRow**: rounded-3xl border-2
 - **ViewToggle**: 56px touch targets, rounded-2xl
-- **TopWidget**: p-3 border rounded-2xl icon container
-- **SectionBadge**: font-black uppercase tracking-widest
-- **Footer**: tracking-[0.6em] brand text, "System V0.0.1 AAA Enhanced"
+- **TopWidget**: `rounded-editorial-lg`, `font-serif-title`
+- **Footer**: `tracking-brand-lg`, `font-mono-brand`
 
 ## Structure
 
