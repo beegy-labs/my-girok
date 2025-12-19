@@ -7,9 +7,8 @@ function App() {
     <ErrorBoundary>
       <div className="min-h-screen bg-theme-bg-page transition-colors duration-200">
         <Navbar />
-        <main className="container mx-auto px-4 py-8">
-          <Outlet />
-        </main>
+        {/* Outlet renders page components that have their own <main> and <footer> */}
+        <Outlet />
       </div>
     </ErrorBoundary>
   );
