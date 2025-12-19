@@ -1,4 +1,5 @@
 import { SelectHTMLAttributes, ChangeEvent, Ref, useId } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface SelectOption {
   value: string;
@@ -6,12 +7,13 @@ export interface SelectOption {
 }
 
 // Static class definitions (defined outside component for performance)
+// V0.0.1 AAA Workstation Design System
 // Base select classes with WCAG compliance:
 // - min-h-[48px] for touch target (WCAG 2.5.5)
 // - text-base (16px) for readability
-// - focus-visible for keyboard navigation
+// - focus ring via focusClasses (4px, SSOT)
 const baseSelectClasses =
-  'w-full min-h-[48px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
+  'w-full min-h-[48px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
 
 const defaultBorderClasses = 'border border-theme-border-default';
 
@@ -129,7 +131,7 @@ export function SelectInput({
       <select
         ref={ref}
         id={selectId}
-        className={`${baseSelectClasses} ${errorClasses} ${selectClassName}`}
+        className={`${baseSelectClasses} ${errorClasses} ${focusClasses} ${selectClassName}`}
         onChange={handleChange}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined}

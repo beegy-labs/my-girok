@@ -43,8 +43,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-card/95 backdrop-blur-xl border-b border-theme-border-default transition-colors duration-200"
-      style={{ height: 'var(--nav-height-editorial, 80px)' }}
+      className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-card/95 backdrop-blur-xl border-b border-theme-border-default transition-colors duration-200 h-nav"
       role="navigation"
       aria-label={t('aria.mainNavigation')}
     >
@@ -53,10 +52,10 @@ export default function Navbar() {
           {/* Logo - V0.0.1 Editorial monospace style with accent dot */}
           <Link
             to="/"
-            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-lg"
+            className="flex items-center flex-shrink-0 focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4 rounded-xl"
             aria-label={t('aria.goToHomepage')}
           >
-            <span className="text-2xl font-black text-theme-text-primary tracking-tighter select-none font-mono-brand">
+            <span className="text-2xl font-black text-theme-text-primary tracking-editorial select-none font-mono-brand">
               girok<span className="text-theme-primary">.</span>
             </span>
           </Link>
@@ -70,7 +69,7 @@ export default function Navbar() {
                   <div className="w-8 h-8 rounded-full bg-theme-bg-secondary group-hover:bg-theme-bg-card border border-theme-border-default flex items-center justify-center transition-colors">
                     <User size={16} className="text-theme-primary" aria-hidden="true" />
                   </div>
-                  <span className="text-[13px] font-black text-theme-text-primary uppercase tracking-widest hidden sm:block font-mono-brand">
+                  <span className="text-[13px] font-black text-theme-text-primary uppercase tracking-brand-lg hidden sm:block font-mono-brand">
                     {user?.username || user?.name?.slice(0, 10) || 'User'}
                   </span>
                 </div>
@@ -86,7 +85,7 @@ export default function Navbar() {
               aria-label={
                 effectiveTheme === 'dark' ? t('aria.switchToLight') : t('aria.switchToDark')
               }
-              className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+              className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
             >
               {effectiveTheme === 'dark' ? (
                 <Sun size={22} aria-hidden="true" />
@@ -105,7 +104,7 @@ export default function Navbar() {
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
                   aria-label={t('aria.userMenu')}
-                  className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                  className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
                 >
                   <LogOut size={22} aria-hidden="true" />
                 </button>
@@ -142,7 +141,7 @@ export default function Navbar() {
               /* Login button - V0.0.1 Icon style */
               <Link
                 to="/login"
-                className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring"
+                className="p-3 rounded-xl hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
                 aria-label={t('nav.login')}
               >
                 <User size={22} aria-hidden="true" />

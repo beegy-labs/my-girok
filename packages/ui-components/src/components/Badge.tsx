@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 
 export interface BadgeProps {
   /**
@@ -43,7 +43,7 @@ const sizeClasses = {
 } as const;
 
 const roundedClasses = {
-  default: 'rounded-lg',
+  default: 'rounded-xl',
   full: 'rounded-full',
 } as const;
 
@@ -64,7 +64,7 @@ const roundedClasses = {
  * <Badge variant="warning" size="sm" rounded="full">Pending</Badge>
  * ```
  */
-export const Badge = memo(function Badge({
+export function Badge({
   children,
   variant = 'default',
   size = 'md',
@@ -73,12 +73,12 @@ export const Badge = memo(function Badge({
 }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center font-black uppercase border tracking-widest ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${className}`}
+      className={`inline-flex items-center font-black uppercase border tracking-brand-lg ${variantClasses[variant]} ${sizeClasses[size]} ${roundedClasses[rounded]} ${className}`}
     >
       {children}
     </span>
   );
-});
+}
 
 export interface SectionBadgeProps {
   /**
@@ -105,15 +105,12 @@ export interface SectionBadgeProps {
  * <SectionBadge>MY ARCHIVE</SectionBadge>
  * ```
  */
-export const SectionBadge = memo(function SectionBadge({
-  children,
-  className = '',
-}: SectionBadgeProps) {
+export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-lg font-mono-brand ${className}`}
+      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-xl font-mono-brand ${className}`}
     >
       {children}
     </span>
   );
-});
+}

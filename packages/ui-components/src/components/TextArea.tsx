@@ -1,4 +1,5 @@
-import { TextareaHTMLAttributes, useId, useMemo, Ref } from 'react';
+import { TextareaHTMLAttributes, useId, Ref } from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface TextAreaProps extends Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,
@@ -62,20 +63,15 @@ export function TextArea({
   const errorId = `${inputId}-error`;
   const hintId = `${inputId}-hint`;
 
-  // Build aria-describedby based on present elements
-  const ariaDescribedBy = useMemo(() => {
-    const ids: string[] = [];
-    if (error) ids.push(errorId);
-    if (hint && !error) ids.push(hintId);
-    return ids.length > 0 ? ids.join(' ') : undefined;
-  }, [error, hint, errorId, hintId]);
+  // 2025 best practice: inline simple string logic (no memoization needed)
+  const ariaDescribedBy = error ? errorId : hint ? hintId : undefined;
 
   // Base textarea classes with WCAG compliance:
   // - min-h for adequate touch target
   // - text-base (16px) for readability
-  // - focus-visible for keyboard navigation
+  // - focus ring via focusClasses (4px, SSOT)
   const baseTextareaClasses =
-    'w-full min-h-[120px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-theme-focus-ring focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 resize-y';
+    'w-full min-h-[120px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 resize-y';
 
   const defaultBorderClasses = 'border border-theme-border-default';
 
@@ -106,7 +102,7 @@ export function TextArea({
         aria-describedby={ariaDescribedBy}
         aria-required={props.required}
         onChange={(e) => onChange?.(e.target.value)}
-        className={`${baseTextareaClasses} ${errorClasses} ${className}`}
+        className={`${baseTextareaClasses} ${errorClasses} ${focusClasses} ${className}`}
         {...props}
       />
       {hint && !error && (

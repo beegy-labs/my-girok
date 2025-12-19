@@ -28,7 +28,9 @@
 | Input (lg)  | `h-16 rounded-input font-bold`                                    |
 | Button (xl) | `min-h-[64px] font-black uppercase tracking-brand`                |
 | MenuCard    | `rounded-editorial-2xl border-2 p-10 md:p-12`                     |
-| Footer      | `mt-40 py-24 border-t-2 tracking-brand-lg`                        |
+| Menu Grid   | `grid grid-cols-1 md:grid-cols-2 gap-14`                          |
+| TopWidget   | `min-h-[280px] rounded-editorial-lg border-2`                     |
+| Footer      | `w-full pt-24 pb-32 px-8 border-t-2 tracking-brand-lg`            |
 
 ### Layout Pattern
 
@@ -55,8 +57,8 @@
 - **MenuCard**: `rounded-editorial-2xl`, border-2, hover lift
 - **MenuRow**: rounded-3xl border-2
 - **ViewToggle**: 56px touch targets, rounded-2xl
-- **TopWidget**: `rounded-editorial-lg`, `font-serif-title`
-- **Footer**: `tracking-brand-lg`, `font-mono-brand`
+- **TopWidget**: `min-h-[280px] rounded-editorial-lg`, `font-serif-title`
+- **Footer**: `pt-24 pb-32 px-8`, `tracking-brand-lg`, `font-mono-brand`
 
 ## Structure
 

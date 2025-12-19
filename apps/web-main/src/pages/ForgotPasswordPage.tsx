@@ -29,15 +29,12 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700 pt-nav">
       <main className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
         <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
-            <h1 className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-tighter italic font-serif-title">
+            <h1 className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-editorial italic font-serif-title">
               {t('forgotPassword.title', { defaultValue: 'Reset' })}
             </h1>
             <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">

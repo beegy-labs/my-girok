@@ -242,7 +242,7 @@ export interface TopWidgetProps {
 
 **V0.0.1 Styling:**
 
-- Card: `rounded-editorial-lg`
+- Card: `min-h-[280px] rounded-editorial-lg`
 - Title: `font-serif-title`
 - Badge: `font-mono-brand tracking-brand`
 

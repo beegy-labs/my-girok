@@ -8,10 +8,7 @@ export default function TermsPage() {
   const { t } = useTranslation();
 
   return (
-    <main
-      className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         {/* Header */}
         <div className="text-center mb-12">
@@ -23,7 +20,7 @@ export default function TermsPage() {
             {t('badge.legal', { defaultValue: 'LEGAL' })}
           </SectionBadge>
 
-          <h1 className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-tighter italic font-serif-title">
+          <h1 className="text-3xl sm:text-4xl text-theme-text-primary mb-4 tracking-editorial italic font-serif-title">
             {t('footer.terms')}
           </h1>
         </div>

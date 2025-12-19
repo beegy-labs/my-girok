@@ -1,4 +1,5 @@
 import React from 'react';
+import { focusClasses } from '../styles/constants';
 
 export interface CardProps {
   children: React.ReactNode;
@@ -22,8 +23,6 @@ export interface CardProps {
 
 // Static class definitions (defined outside component for performance)
 // V0.0.1 AAA Workstation Design System
-const focusClasses =
-  'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-theme-focus-ring focus-visible:ring-offset-4';
 
 const variantBaseClasses = {
   primary: 'bg-theme-bg-card border-2 border-theme-border-subtle shadow-theme-sm',

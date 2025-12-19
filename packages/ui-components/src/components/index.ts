@@ -7,8 +7,6 @@ export * from './MenuCard';
 export * from './MenuRow';
 export * from './PageContainer';
 export * from './PageHeader';
-export * from './PageLayout';
-export * from './SectionHeader';
 export * from './SelectInput';
 export * from './SortableItem';
 export * from './SortableList';

@@ -62,10 +62,7 @@ export default function SharedResumePage() {
     else if (isNotFound) messageType = 'not-found';
 
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-4 pt-nav">
         <StatusMessage
           type={messageType}
           message={error}
@@ -84,10 +81,7 @@ export default function SharedResumePage() {
   }
 
   return (
-    <div
-      className="w-full min-h-screen bg-theme-bg-page"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className="w-full min-h-screen bg-theme-bg-page pt-nav">
       {/* Action Bar - V0.0.1 Style with shared mode (PDF + print only) */}
       <ResumeActionBar resume={resume} mode="shared" />
 

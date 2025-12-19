@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DndContext,
@@ -45,8 +45,8 @@ interface HierarchicalDescriptionProps {
   maxDepth?: number; // Default: 4
 }
 
-// Recursive Hierarchical Item Component
-function HierarchicalItemComponent({
+// Recursive Hierarchical Item Component (2025 best practice with memo)
+const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
   item,
   depth,
   onUpdate,
@@ -65,31 +65,56 @@ function HierarchicalItemComponent({
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const handleUpdateChild = (childIndex: number, updatedChild: HierarchicalItem) => {
-    const newChildren = [...(item.children || [])];
-    newChildren[childIndex] = updatedChild;
-    onUpdate({ ...item, children: newChildren });
-  };
+  // Memoized toggle handler (2025 best practice)
+  const handleToggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
 
-  const handleRemoveChild = (childIndex: number) => {
-    const newChildren = (item.children || []).filter((_, i) => i !== childIndex);
-    onUpdate({ ...item, children: newChildren });
-  };
+  // Memoized content change handler (2025 best practice)
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...item, content: e.target.value });
+    },
+    [item, onUpdate],
+  );
 
-  const handleAddChildToChild = (childIndex: number) => {
-    const newChildren = [...(item.children || [])];
-    const newSubChild: HierarchicalItem = {
-      content: '',
-      depth: depth + 2,
-      order: (newChildren[childIndex].children || []).length,
-      children: [],
-    };
-    newChildren[childIndex] = {
-      ...newChildren[childIndex],
-      children: [...(newChildren[childIndex].children || []), newSubChild],
-    };
-    onUpdate({ ...item, children: newChildren });
-  };
+  // Curried handler for updating child (2025 React best practice)
+  const handleUpdateChild = useCallback(
+    (childIndex: number) => (updatedChild: HierarchicalItem) => {
+      const newChildren = [...(item.children || [])];
+      newChildren[childIndex] = updatedChild;
+      onUpdate({ ...item, children: newChildren });
+    },
+    [item, onUpdate],
+  );
+
+  // Curried handler for removing child (2025 React best practice)
+  const handleRemoveChild = useCallback(
+    (childIndex: number) => () => {
+      const newChildren = (item.children || []).filter((_, i) => i !== childIndex);
+      onUpdate({ ...item, children: newChildren });
+    },
+    [item, onUpdate],
+  );
+
+  // Curried handler for adding child to child (2025 React best practice)
+  const handleAddChildToChild = useCallback(
+    (childIndex: number) => () => {
+      const newChildren = [...(item.children || [])];
+      const newSubChild: HierarchicalItem = {
+        content: '',
+        depth: depth + 2,
+        order: (newChildren[childIndex].children || []).length,
+        children: [],
+      };
+      newChildren[childIndex] = {
+        ...newChildren[childIndex],
+        children: [...(newChildren[childIndex].children || []), newSubChild],
+      };
+      onUpdate({ ...item, children: newChildren });
+    },
+    [item, depth, onUpdate],
+  );
 
   // Get depth color with fallback
   const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
@@ -101,7 +126,7 @@ function HierarchicalItemComponent({
     <div className="space-y-1 sm:space-y-2">
       {/* Color-coded card by depth */}
       <div
-        className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
+        className={`${depthColor.bg} rounded-xl p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
           maxWidth: `calc(100% - ${mobileMargin}rem)`,
@@ -124,7 +149,7 @@ function HierarchicalItemComponent({
           <input
             type="text"
             value={item.content}
-            onChange={(e) => onUpdate({ ...item, content: e.target.value })}
+            onChange={handleContentChange}
             className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder={t('resume.hierarchical.enterDescription')}
@@ -145,7 +170,7 @@ function HierarchicalItemComponent({
             {item.children && item.children.length > 0 && (
               <button
                 type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={handleToggleExpanded}
                 className="px-2 py-1 text-xs text-theme-text-secondary hover:text-theme-text-primary transition-colors duration-200 touch-manipulation"
                 title={isExpanded ? t('common.collapse') : t('common.expand')}
               >
@@ -173,7 +198,7 @@ function HierarchicalItemComponent({
             <input
               type="text"
               value={item.content}
-              onChange={(e) => onUpdate({ ...item, content: e.target.value })}
+              onChange={handleContentChange}
               className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
               placeholder={t('resume.hierarchical.enterDescription')}
             />
@@ -193,7 +218,7 @@ function HierarchicalItemComponent({
               {item.children && item.children.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={handleToggleExpanded}
                   className="w-6 h-6 flex items-center justify-center text-[10px] text-theme-text-secondary hover:bg-theme-bg-hover rounded transition-colors duration-200 touch-manipulation"
                 >
                   {isExpanded ? '▼' : '▶'}
@@ -220,9 +245,9 @@ function HierarchicalItemComponent({
               key={childIndex}
               item={child}
               depth={depth + 1}
-              onUpdate={(updatedChild) => handleUpdateChild(childIndex, updatedChild)}
-              onRemove={() => handleRemoveChild(childIndex)}
-              onAddChild={() => handleAddChildToChild(childIndex)}
+              onUpdate={handleUpdateChild(childIndex)}
+              onRemove={handleRemoveChild(childIndex)}
+              onAddChild={handleAddChildToChild(childIndex)}
               maxDepth={maxDepth}
               t={t}
             />
@@ -231,7 +256,7 @@ function HierarchicalItemComponent({
       )}
     </div>
   );
-}
+});
 
 // Sortable Item Component (for drag-and-drop at root level)
 function SortableHierarchicalItem({
@@ -263,7 +288,7 @@ function SortableHierarchicalItem({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-1 sm:space-y-2">
-      <div className="flex items-start gap-1.5 sm:gap-2 bg-theme-bg-elevated rounded-lg p-1.5 sm:p-2 border border-theme-border-default transition-colors duration-200">
+      <div className="flex items-start gap-1.5 sm:gap-2 bg-theme-bg-elevated rounded-xl p-1.5 sm:p-2 border border-theme-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
@@ -280,7 +305,7 @@ function SortableHierarchicalItem({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1.5}
               d="M4 8h16M4 16h16"
             />
           </svg>
@@ -350,16 +375,43 @@ export default function HierarchicalDescription({
     onChange([...items, newItem]);
   };
 
-  const updateItem = (index: number, item: HierarchicalItem) => {
-    const newItems = [...items];
-    newItems[index] = item;
-    onChange(newItems);
-  };
+  // Curried handler for updating item (2025 React best practice)
+  const updateItem = useCallback(
+    (index: number) => (item: HierarchicalItem) => {
+      const newItems = [...items];
+      newItems[index] = item;
+      onChange(newItems);
+    },
+    [items, onChange],
+  );
 
-  const removeItem = (index: number) => {
-    const newItems = items.filter((_, i) => i !== index);
-    onChange(newItems);
-  };
+  // Curried handler for removing item (2025 React best practice)
+  const removeItem = useCallback(
+    (index: number) => () => {
+      const newItems = items.filter((_, i) => i !== index);
+      onChange(newItems);
+    },
+    [items, onChange],
+  );
+
+  // Curried handler for adding child to item (2025 React best practice)
+  const addChildToItem = useCallback(
+    (index: number, item: HierarchicalItem) => () => {
+      const newChild: HierarchicalItem = {
+        content: '',
+        depth: 2,
+        order: (item.children || []).length,
+        children: [],
+      };
+      const newItems = [...items];
+      newItems[index] = {
+        ...item,
+        children: [...(item.children || []), newChild],
+      };
+      onChange(newItems);
+    },
+    [items, onChange],
+  );
 
   return (
     <div className="border-t border-theme-border-default pt-4 transition-colors duration-200">
@@ -373,7 +425,7 @@ export default function HierarchicalDescription({
         <button
           type="button"
           onClick={addItem}
-          className="px-2 py-1 bg-theme-primary text-white text-xs rounded-lg hover:bg-theme-primary-light transition-all transition-colors duration-200"
+          className="px-2 py-1 bg-theme-primary text-white text-xs rounded-xl hover:bg-theme-primary-light transition-all transition-colors duration-200"
         >
           + {t('common.add')}
         </button>
@@ -391,20 +443,9 @@ export default function HierarchicalDescription({
                   key={item.id || `item-${index}`}
                   item={item}
                   itemIndex={index}
-                  onUpdate={(updatedItem) => updateItem(index, updatedItem)}
-                  onRemove={() => removeItem(index)}
-                  onAddChild={() => {
-                    const newChild: HierarchicalItem = {
-                      content: '',
-                      depth: 2,
-                      order: (item.children || []).length,
-                      children: [],
-                    };
-                    updateItem(index, {
-                      ...item,
-                      children: [...(item.children || []), newChild],
-                    });
-                  }}
+                  onUpdate={updateItem(index)}
+                  onRemove={removeItem(index)}
+                  onAddChild={addChildToItem(index, item)}
                   maxDepth={maxDepth}
                   t={t}
                 />

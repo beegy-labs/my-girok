@@ -75,12 +75,75 @@ function SortableExperienceCard({
     setIsCompanyExpanded((prev) => !prev);
   }, []);
 
-  const toggleProject = (projectIndex: number) => {
-    setExpandedProjects((prev) => ({
-      ...prev,
-      [projectIndex]: !prev[projectIndex],
-    }));
-  };
+  // Memoized experience field handlers (2025 React best practice - curried)
+  const handleStartDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...experience, startDate: e.target.value });
+    },
+    [experience, onUpdate],
+  );
+
+  const handleEndDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false });
+    },
+    [experience, onUpdate],
+  );
+
+  const handleIsCurrentlyWorkingChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({
+        ...experience,
+        isCurrentlyWorking: e.target.checked,
+        endDate: e.target.checked ? '' : experience.endDate,
+      });
+    },
+    [experience, onUpdate],
+  );
+
+  const handleSalaryChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({
+        ...experience,
+        salary: e.target.value ? parseInt(e.target.value) : undefined,
+      });
+    },
+    [experience, onUpdate],
+  );
+
+  const handleSalaryUnitChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onUpdate({ ...experience, salaryUnit: e.target.value });
+    },
+    [experience, onUpdate],
+  );
+
+  const handleShowSalaryChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...experience, showSalary: e.target.checked });
+    },
+    [experience, onUpdate],
+  );
+
+  // Curried handler for TextInput/TextArea fields (2025 React best practice)
+  const handleExperienceFieldChange = useCallback(
+    <K extends keyof Experience>(field: K) =>
+      (value: string) => {
+        onUpdate({ ...experience, [field]: value || undefined });
+      },
+    [experience, onUpdate],
+  );
+
+  // Curried handler for toggling project expansion (2025 React best practice)
+  const toggleProject = useCallback(
+    (projectIndex: number) => () => {
+      setExpandedProjects((prev) => ({
+        ...prev,
+        [projectIndex]: !prev[projectIndex],
+      }));
+    },
+    [],
+  );
 
   const handleProjectDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -100,30 +163,34 @@ function SortableExperienceCard({
     }
   };
 
-  const handleAchievementDragEnd = (projectIndex: number, event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  // Curried handler for achievement drag end (2025 React best practice)
+  const handleAchievementDragEnd = useCallback(
+    (projectIndex: number) => (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
 
-    const project = projects[projectIndex];
-    const achievements = project.achievements || [];
-    const oldIndex = achievements.findIndex(
-      (a) => (a.id || `ach-${achievements.indexOf(a)}`) === active.id,
-    );
-    const newIndex = achievements.findIndex(
-      (a) => (a.id || `ach-${achievements.indexOf(a)}`) === over.id,
-    );
+      const project = projects[projectIndex];
+      const achievements = project.achievements || [];
+      const oldIndex = achievements.findIndex(
+        (a) => (a.id || `ach-${achievements.indexOf(a)}`) === active.id,
+      );
+      const newIndex = achievements.findIndex(
+        (a) => (a.id || `ach-${achievements.indexOf(a)}`) === over.id,
+      );
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-      const newAchievements = arrayMove(achievements, oldIndex, newIndex).map((a, idx) => ({
-        ...a,
-        order: idx,
-      }));
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newAchievements = arrayMove(achievements, oldIndex, newIndex).map((a, idx) => ({
+          ...a,
+          order: idx,
+        }));
 
-      const newProjects = [...projects];
-      newProjects[projectIndex] = { ...project, achievements: newAchievements };
-      onUpdate({ ...experience, projects: newProjects });
-    }
-  };
+        const newProjects = [...projects];
+        newProjects[projectIndex] = { ...project, achievements: newAchievements };
+        onUpdate({ ...experience, projects: newProjects });
+      }
+    },
+    [projects, experience, onUpdate],
+  );
 
   const addProject = () => {
     const newProject: ExperienceProject = {
@@ -140,47 +207,69 @@ function SortableExperienceCard({
     setExpandedProjects((prev) => ({ ...prev, [projects.length]: true }));
   };
 
-  const updateProject = (projectIndex: number, project: ExperienceProject) => {
-    const newProjects = [...projects];
-    newProjects[projectIndex] = project;
-    onUpdate({ ...experience, projects: newProjects });
-  };
+  // Curried handler for updating project (2025 React best practice)
+  const updateProject = useCallback(
+    (projectIndex: number) => (project: ExperienceProject) => {
+      const newProjects = [...projects];
+      newProjects[projectIndex] = project;
+      onUpdate({ ...experience, projects: newProjects });
+    },
+    [projects, experience, onUpdate],
+  );
 
-  const removeProject = (projectIndex: number) => {
-    const newProjects = projects.filter((_, i) => i !== projectIndex);
-    onUpdate({ ...experience, projects: newProjects });
-  };
+  // Curried handler for removing project (2025 React best practice)
+  const removeProject = useCallback(
+    (projectIndex: number) => () => {
+      const newProjects = projects.filter((_, i) => i !== projectIndex);
+      onUpdate({ ...experience, projects: newProjects });
+    },
+    [projects, experience, onUpdate],
+  );
 
-  const addAchievement = (projectIndex: number) => {
-    const project = projects[projectIndex];
-    const achievements = project.achievements || [];
-    const newAchievement: ProjectAchievement = {
-      content: '',
-      depth: 1,
-      order: achievements.length,
-    };
-    updateProject(projectIndex, {
-      ...project,
-      achievements: [...achievements, newAchievement],
-    });
-  };
+  // Curried handler for adding achievement (2025 React best practice)
+  const addAchievement = useCallback(
+    (projectIndex: number) => () => {
+      const project = projects[projectIndex];
+      const achievements = project.achievements || [];
+      const newAchievement: ProjectAchievement = {
+        content: '',
+        depth: 1,
+        order: achievements.length,
+      };
+      const newProjects = [...projects];
+      newProjects[projectIndex] = {
+        ...project,
+        achievements: [...achievements, newAchievement],
+      };
+      onUpdate({ ...experience, projects: newProjects });
+    },
+    [projects, experience, onUpdate],
+  );
 
-  const updateAchievement = (
-    projectIndex: number,
-    achievementIndex: number,
-    achievement: ProjectAchievement,
-  ) => {
-    const project = projects[projectIndex];
-    const newAchievements = [...(project.achievements || [])];
-    newAchievements[achievementIndex] = achievement;
-    updateProject(projectIndex, { ...project, achievements: newAchievements });
-  };
+  // Curried handler for updating achievement (2025 React best practice)
+  const updateAchievement = useCallback(
+    (projectIndex: number) => (achievementIndex: number, achievement: ProjectAchievement) => {
+      const project = projects[projectIndex];
+      const newAchievements = [...(project.achievements || [])];
+      newAchievements[achievementIndex] = achievement;
+      const newProjects = [...projects];
+      newProjects[projectIndex] = { ...project, achievements: newAchievements };
+      onUpdate({ ...experience, projects: newProjects });
+    },
+    [projects, experience, onUpdate],
+  );
 
-  const removeAchievement = (projectIndex: number, achievementIndex: number) => {
-    const project = projects[projectIndex];
-    const newAchievements = (project.achievements || []).filter((_, i) => i !== achievementIndex);
-    updateProject(projectIndex, { ...project, achievements: newAchievements });
-  };
+  // Curried handler for removing achievement (2025 React best practice)
+  const removeAchievement = useCallback(
+    (projectIndex: number) => (achievementIndex: number) => {
+      const project = projects[projectIndex];
+      const newAchievements = (project.achievements || []).filter((_, i) => i !== achievementIndex);
+      const newProjects = [...projects];
+      newProjects[projectIndex] = { ...project, achievements: newAchievements };
+      onUpdate({ ...experience, projects: newProjects });
+    },
+    [projects, experience, onUpdate],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -214,7 +303,7 @@ function SortableExperienceCard({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M4 8h16M4 16h16"
               />
             </svg>
@@ -248,7 +337,7 @@ function SortableExperienceCard({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M19 9l-7 7-7-7"
               />
             </svg>
@@ -285,7 +374,7 @@ function SortableExperienceCard({
           <TextInput
             label={t('resume.experienceForm.company')}
             value={experience.company}
-            onChange={(value: string) => onUpdate({ ...experience, company: value })}
+            onChange={handleExperienceFieldChange('company')}
             placeholder={t('resume.experienceForm.companyName')}
             required
           />
@@ -301,8 +390,8 @@ function SortableExperienceCard({
               <input
                 type="month"
                 value={experience.startDate}
-                onChange={(e) => onUpdate({ ...experience, startDate: e.target.value })}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+                onChange={handleStartDateChange}
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               />
             </div>
 
@@ -314,28 +403,20 @@ function SortableExperienceCard({
               <input
                 type="month"
                 value={experience.endDate || ''}
-                onChange={(e) =>
-                  onUpdate({ ...experience, endDate: e.target.value, isCurrentlyWorking: false })
-                }
+                onChange={handleEndDateChange}
                 disabled={experience.isCurrentlyWorking}
-                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
+                className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed transition-colors duration-200"
               />
             </div>
           </div>
         </div>
 
         {/* Currently working checkbox - larger touch target */}
-        <label className="flex items-center p-2 -mx-2 mb-3 rounded-lg hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
+        <label className="flex items-center p-2 -mx-2 mb-3 rounded-xl hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
           <input
             type="checkbox"
             checked={experience.isCurrentlyWorking || false}
-            onChange={(e) =>
-              onUpdate({
-                ...experience,
-                isCurrentlyWorking: e.target.checked,
-                endDate: e.target.checked ? '' : experience.endDate,
-              })
-            }
+            onChange={handleIsCurrentlyWorkingChange}
             className="w-5 h-5 text-theme-primary border-theme-border-default rounded focus:ring-theme-primary"
           />
           <span className="ml-3 text-xs sm:text-sm text-theme-text-secondary">
@@ -346,7 +427,7 @@ function SortableExperienceCard({
 
         {/* Experience Duration */}
         {experience.startDate && (
-          <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-lg transition-colors duration-200">
+          <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-xl transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-theme-primary-light transition-colors duration-200">
               {t('resume.experienceForm.experiencePeriod')}{' '}
               {(() => {
@@ -369,7 +450,7 @@ function SortableExperienceCard({
           <TextInput
             label={t('resume.experienceForm.position')}
             value={experience.finalPosition}
-            onChange={(value: string) => onUpdate({ ...experience, finalPosition: value })}
+            onChange={handleExperienceFieldChange('finalPosition')}
             placeholder={t('resume.experienceForm.positionPlaceholder')}
             required
           />
@@ -377,7 +458,7 @@ function SortableExperienceCard({
           <TextInput
             label={t('resume.experienceForm.jobTitle')}
             value={experience.jobTitle}
-            onChange={(value: string) => onUpdate({ ...experience, jobTitle: value })}
+            onChange={handleExperienceFieldChange('jobTitle')}
             placeholder={t('resume.experienceForm.jobTitlePlaceholder')}
             required
           />
@@ -393,20 +474,15 @@ function SortableExperienceCard({
             <input
               type="number"
               value={experience.salary || ''}
-              onChange={(e) =>
-                onUpdate({
-                  ...experience,
-                  salary: e.target.value ? parseInt(e.target.value) : undefined,
-                })
-              }
-              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+              onChange={handleSalaryChange}
+              className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
               placeholder={t('resume.experienceForm.salaryPlaceholder')}
               min="0"
             />
             <select
               value={experience.salaryUnit || 'KRW'}
-              onChange={(e) => onUpdate({ ...experience, salaryUnit: e.target.value })}
-              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
+              onChange={handleSalaryUnitChange}
+              className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary transition-colors duration-200"
             >
               <option value="KRW">{t('resume.experienceForm.salaryUnits.manwon')}</option>
               <option value="USD">USD</option>
@@ -414,12 +490,12 @@ function SortableExperienceCard({
               <option value="JPY">JPY</option>
             </select>
           </div>
-          <label className="flex items-center p-2 -mx-2 mt-1 rounded-lg hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
+          <label className="flex items-center p-2 -mx-2 mt-1 rounded-xl hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
             <input
               type="checkbox"
               checked={experience.showSalary ?? false}
-              onChange={(e) => onUpdate({ ...experience, showSalary: e.target.checked })}
-              className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-2"
+              onChange={handleShowSalaryChange}
+              className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-[4px]"
             />
             <span className="ml-2 text-xs sm:text-sm text-theme-text-secondary">
               <span className="hidden sm:inline">
@@ -467,15 +543,13 @@ function SortableExperienceCard({
                       project={project}
                       projectIndex={projectIndex}
                       isExpanded={expandedProjects[projectIndex] || false}
-                      onToggle={() => toggleProject(projectIndex)}
-                      onUpdate={(p) => updateProject(projectIndex, p)}
-                      onRemove={() => removeProject(projectIndex)}
-                      onAddAchievement={() => addAchievement(projectIndex)}
-                      onUpdateAchievement={(achIndex, ach) =>
-                        updateAchievement(projectIndex, achIndex, ach)
-                      }
-                      onRemoveAchievement={(achIndex) => removeAchievement(projectIndex, achIndex)}
-                      onAchievementDragEnd={(e) => handleAchievementDragEnd(projectIndex, e)}
+                      onToggle={toggleProject(projectIndex)}
+                      onUpdate={updateProject(projectIndex)}
+                      onRemove={removeProject(projectIndex)}
+                      onAddAchievement={addAchievement(projectIndex)}
+                      onUpdateAchievement={updateAchievement(projectIndex)}
+                      onRemoveAchievement={removeAchievement(projectIndex)}
+                      onAchievementDragEnd={handleAchievementDragEnd(projectIndex)}
                       t={t}
                     />
                   ))}
@@ -483,7 +557,7 @@ function SortableExperienceCard({
               </SortableContext>
             </DndContext>
           ) : (
-            <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-card rounded-lg border border-dashed border-theme-border-default transition-colors duration-200">
+            <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-card rounded-xl border border-dashed border-theme-border-default transition-colors duration-200">
               <p>{t('resume.experienceForm.noProjects')}</p>
             </div>
           )}
@@ -544,11 +618,74 @@ function SortableProject({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  // Memoized project date handlers (2025 React best practice)
+  const handleProjectStartDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...project, startDate: e.target.value });
+    },
+    [project, onUpdate],
+  );
+
+  const handleProjectEndDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...project, endDate: e.target.value });
+    },
+    [project, onUpdate],
+  );
+
+  // Curried handler for TextInput/TextArea fields (2025 React best practice)
+  const handleProjectFieldChange = useCallback(
+    <K extends keyof ExperienceProject>(field: K) =>
+      (value: string) => {
+        onUpdate({ ...project, [field]: value || undefined });
+      },
+    [project, onUpdate],
+  );
+
+  // Handler for techStackInput (local state)
+  const handleTechStackInputChange = useCallback((value: string) => {
+    setTechStackInput(value);
+  }, []);
+
+  // Curried handler for updating achievement (2025 React best practice)
+  const handleUpdateAchievement = useCallback(
+    (achIndex: number) => (ach: ProjectAchievement) => {
+      onUpdateAchievement(achIndex, ach);
+    },
+    [onUpdateAchievement],
+  );
+
+  // Curried handler for removing achievement (2025 React best practice)
+  const handleRemoveAchievement = useCallback(
+    (achIndex: number) => () => {
+      onRemoveAchievement(achIndex);
+    },
+    [onRemoveAchievement],
+  );
+
+  // Curried handler for adding child to achievement (2025 React best practice)
+  const handleAddChildToAchievement = useCallback(
+    (achIndex: number, achievement: ProjectAchievement) => () => {
+      const newChild: ProjectAchievement = {
+        content: '',
+        depth: 2,
+        order: (achievement.children || []).length,
+        children: [],
+      };
+      const updatedAchievement = {
+        ...achievement,
+        children: [...(achievement.children || []), newChild],
+      };
+      onUpdateAchievement(achIndex, updatedAchievement);
+    },
+    [onUpdateAchievement],
+  );
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-theme-border-strong rounded-lg bg-theme-bg-card transition-colors duration-200"
+      className="border border-theme-border-strong rounded-xl bg-theme-bg-card transition-colors duration-200"
     >
       {/* Project Header */}
       <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-theme-bg-hover transition-colors duration-200">
@@ -563,7 +700,7 @@ function SortableProject({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1.5}
               d="M4 8h16M4 16h16"
             />
           </svg>
@@ -592,7 +729,12 @@ function SortableProject({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
@@ -610,7 +752,7 @@ function SortableProject({
             <TextInput
               label={t('resume.experienceForm.projectName')}
               value={project.name}
-              onChange={(value: string) => onUpdate({ ...project, name: value })}
+              onChange={handleProjectFieldChange('name')}
               placeholder={t('resume.experienceForm.projectNamePlaceholder')}
               required
             />
@@ -624,8 +766,8 @@ function SortableProject({
                 <input
                   type="month"
                   value={project.startDate}
-                  onChange={(e) => onUpdate({ ...project, startDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
+                  onChange={handleProjectStartDateChange}
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                 />
               </div>
 
@@ -636,8 +778,8 @@ function SortableProject({
                 <input
                   type="month"
                   value={project.endDate || ''}
-                  onChange={(e) => onUpdate({ ...project, endDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
+                  onChange={handleProjectEndDateChange}
+                  className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary transition-colors duration-200"
                   placeholder={t('resume.experienceForm.ongoingProject')}
                 />
               </div>
@@ -646,7 +788,7 @@ function SortableProject({
             <TextArea
               label={t('resume.experienceForm.description')}
               value={project.description}
-              onChange={(value: string) => onUpdate({ ...project, description: value })}
+              onChange={handleProjectFieldChange('description')}
               rows={3}
               placeholder={t('resume.experienceForm.projectDescription')}
               required
@@ -655,14 +797,14 @@ function SortableProject({
             <TextInput
               label={t('resume.experienceForm.yourRole')}
               value={project.role || ''}
-              onChange={(value: string) => onUpdate({ ...project, role: value })}
+              onChange={handleProjectFieldChange('role')}
               placeholder={t('resume.experienceForm.rolePlaceholder')}
             />
 
             <TextInput
               label={t('resume.experienceForm.techStack')}
               value={techStackInput}
-              onChange={(value: string) => setTechStackInput(value)}
+              onChange={handleTechStackInputChange}
               onBlur={() => {
                 const parsed = techStackInput
                   .split(',')
@@ -679,7 +821,7 @@ function SortableProject({
                 label={t('resume.experienceForm.projectUrl')}
                 type="url"
                 value={project.url || ''}
-                onChange={(value: string) => onUpdate({ ...project, url: value })}
+                onChange={handleProjectFieldChange('url')}
                 placeholder={t('resume.experienceForm.urlPlaceholder')}
               />
 
@@ -687,7 +829,7 @@ function SortableProject({
                 label={t('resume.experienceForm.githubUrl')}
                 type="url"
                 value={project.githubUrl || ''}
-                onChange={(value: string) => onUpdate({ ...project, githubUrl: value })}
+                onChange={handleProjectFieldChange('githubUrl')}
                 placeholder={t('resume.experienceForm.githubUrlPlaceholder')}
               />
             </div>
@@ -705,7 +847,7 @@ function SortableProject({
               <button
                 type="button"
                 onClick={onAddAchievement}
-                className="px-2 py-1 bg-theme-primary text-white text-xs rounded-lg hover:bg-theme-primary-light transition-colors duration-200"
+                className="px-2 py-1 bg-theme-primary text-white text-xs rounded-xl hover:bg-theme-primary-light transition-colors duration-200"
               >
                 {t('resume.experienceForm.addAchievement')}
               </button>
@@ -727,21 +869,9 @@ function SortableProject({
                         key={achievement.id || `ach-${achIndex}`}
                         achievement={achievement}
                         achIndex={achIndex}
-                        onUpdate={(ach) => onUpdateAchievement(achIndex, ach)}
-                        onRemove={() => onRemoveAchievement(achIndex)}
-                        onAddChild={() => {
-                          const newChild: ProjectAchievement = {
-                            content: '',
-                            depth: 2,
-                            order: (achievement.children || []).length,
-                            children: [],
-                          };
-                          const updatedAchievement = {
-                            ...achievement,
-                            children: [...(achievement.children || []), newChild],
-                          };
-                          onUpdateAchievement(achIndex, updatedAchievement);
-                        }}
+                        onUpdate={handleUpdateAchievement(achIndex)}
+                        onRemove={handleRemoveAchievement(achIndex)}
+                        onAddChild={handleAddChildToAchievement(achIndex, achievement)}
                         t={t}
                       />
                     ))}
@@ -778,31 +908,56 @@ function HierarchicalAchievement({
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const handleUpdateChild = (childIndex: number, updatedChild: ProjectAchievement) => {
-    const newChildren = [...(achievement.children || [])];
-    newChildren[childIndex] = updatedChild;
-    onUpdate({ ...achievement, children: newChildren });
-  };
+  // Memoized toggle handler (2025 best practice)
+  const handleToggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
 
-  const handleRemoveChild = (childIndex: number) => {
-    const newChildren = (achievement.children || []).filter((_, i) => i !== childIndex);
-    onUpdate({ ...achievement, children: newChildren });
-  };
+  // Memoized content change handler (2025 best practice)
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ ...achievement, content: e.target.value });
+    },
+    [achievement, onUpdate],
+  );
 
-  const handleAddChildToChild = (childIndex: number) => {
-    const newChildren = [...(achievement.children || [])];
-    const newSubChild: ProjectAchievement = {
-      content: '',
-      depth: depth + 2,
-      order: (newChildren[childIndex].children || []).length,
-      children: [],
-    };
-    newChildren[childIndex] = {
-      ...newChildren[childIndex],
-      children: [...(newChildren[childIndex].children || []), newSubChild],
-    };
-    onUpdate({ ...achievement, children: newChildren });
-  };
+  // Curried handler for updating child (2025 React best practice)
+  const handleUpdateChild = useCallback(
+    (childIndex: number) => (updatedChild: ProjectAchievement) => {
+      const newChildren = [...(achievement.children || [])];
+      newChildren[childIndex] = updatedChild;
+      onUpdate({ ...achievement, children: newChildren });
+    },
+    [achievement, onUpdate],
+  );
+
+  // Curried handler for removing child (2025 React best practice)
+  const handleRemoveChild = useCallback(
+    (childIndex: number) => () => {
+      const newChildren = (achievement.children || []).filter((_, i) => i !== childIndex);
+      onUpdate({ ...achievement, children: newChildren });
+    },
+    [achievement, onUpdate],
+  );
+
+  // Curried handler for adding child to child (2025 React best practice)
+  const handleAddChildToChild = useCallback(
+    (childIndex: number) => () => {
+      const newChildren = [...(achievement.children || [])];
+      const newSubChild: ProjectAchievement = {
+        content: '',
+        depth: depth + 2,
+        order: (newChildren[childIndex].children || []).length,
+        children: [],
+      };
+      newChildren[childIndex] = {
+        ...newChildren[childIndex],
+        children: [...(newChildren[childIndex].children || []), newSubChild],
+      };
+      onUpdate({ ...achievement, children: newChildren });
+    },
+    [achievement, depth, onUpdate],
+  );
 
   // Get depth color with fallback
   const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
@@ -814,7 +969,7 @@ function HierarchicalAchievement({
     <div className="space-y-1 sm:space-y-2">
       {/* Color-coded card by depth */}
       <div
-        className={`${depthColor.bg} rounded-lg p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
+        className={`${depthColor.bg} rounded-xl p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
           maxWidth: `calc(100% - ${mobileMargin}rem)`,
@@ -836,7 +991,7 @@ function HierarchicalAchievement({
           <input
             type="text"
             value={achievement.content}
-            onChange={(e) => onUpdate({ ...achievement, content: e.target.value })}
+            onChange={handleContentChange}
             className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder={t('resume.experienceForm.achievementPlaceholder')}
@@ -857,7 +1012,7 @@ function HierarchicalAchievement({
             {achievement.children && achievement.children.length > 0 && (
               <button
                 type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={handleToggleExpanded}
                 className="px-2 py-1 text-xs text-theme-text-secondary hover:text-theme-text-primary transition-colors duration-200"
                 title={
                   isExpanded
@@ -889,7 +1044,7 @@ function HierarchicalAchievement({
             <input
               type="text"
               value={achievement.content}
-              onChange={(e) => onUpdate({ ...achievement, content: e.target.value })}
+              onChange={handleContentChange}
               className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
               placeholder={t('resume.experienceForm.achievementPlaceholder')}
             />
@@ -909,7 +1064,7 @@ function HierarchicalAchievement({
               {achievement.children && achievement.children.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={handleToggleExpanded}
                   className="w-6 h-6 flex items-center justify-center text-[10px] text-theme-text-secondary hover:bg-theme-bg-hover rounded transition-colors duration-200 touch-manipulation"
                 >
                   {isExpanded ? '▼' : '▶'}
@@ -936,9 +1091,9 @@ function HierarchicalAchievement({
               key={childIndex}
               achievement={child}
               depth={depth + 1}
-              onUpdate={(updatedChild) => handleUpdateChild(childIndex, updatedChild)}
-              onRemove={() => handleRemoveChild(childIndex)}
-              onAddChild={() => handleAddChildToChild(childIndex)}
+              onUpdate={handleUpdateChild(childIndex)}
+              onRemove={handleRemoveChild(childIndex)}
+              onAddChild={handleAddChildToChild(childIndex)}
               t={t}
             />
           ))}
@@ -976,7 +1131,7 @@ function SortableAchievement({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
-      <div className="flex items-start gap-2 bg-theme-bg-card rounded-lg p-2 border border-theme-border-default transition-colors duration-200">
+      <div className="flex items-start gap-2 bg-theme-bg-card rounded-xl p-2 border border-theme-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
@@ -988,7 +1143,7 @@ function SortableAchievement({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1.5}
               d="M4 8h16M4 16h16"
             />
           </svg>
@@ -1051,19 +1206,27 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
     onChange([...experiences, newExperience]);
   };
 
-  const updateExperience = (index: number, experience: Experience) => {
-    const newExperiences = [...experiences];
-    newExperiences[index] = experience;
-    onChange(newExperiences);
-  };
+  // Curried handler for updating experience (2025 React best practice)
+  const updateExperience = useCallback(
+    (index: number) => (experience: Experience) => {
+      const newExperiences = [...experiences];
+      newExperiences[index] = experience;
+      onChange(newExperiences);
+    },
+    [experiences, onChange],
+  );
 
-  const removeExperience = (index: number) => {
-    const newExperiences = experiences.filter((_, i) => i !== index);
-    onChange(newExperiences);
-  };
+  // Curried handler for removing experience (2025 React best practice)
+  const removeExperience = useCallback(
+    (index: number) => () => {
+      const newExperiences = experiences.filter((_, i) => i !== index);
+      onChange(newExperiences);
+    },
+    [experiences, onChange],
+  );
 
   return (
-    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
+    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-input lg:rounded-widget shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
       <div className="flex items-center justify-between mb-3 sm:mb-6 lg:mb-8">
         <div className="min-w-0">
           <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary flex items-center gap-2 transition-colors duration-200">
@@ -1076,7 +1239,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
         <button
           type="button"
           onClick={addExperience}
-          className="px-2 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-light transition-colors duration-200 font-semibold text-xs sm:text-sm lg:text-base flex-shrink-0"
+          className="px-2 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-theme-primary text-white rounded-xl hover:bg-theme-primary-light transition-colors duration-200 font-semibold text-xs sm:text-sm lg:text-base flex-shrink-0"
         >
           {t('resume.experienceForm.addExperience')}
         </button>
@@ -1094,8 +1257,8 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
                   key={exp.id || `exp-${index}`}
                   experience={exp}
                   index={index}
-                  onUpdate={(e) => updateExperience(index, e)}
-                  onRemove={() => removeExperience(index)}
+                  onUpdate={updateExperience(index)}
+                  onRemove={removeExperience(index)}
                   t={t}
                 />
               ))}

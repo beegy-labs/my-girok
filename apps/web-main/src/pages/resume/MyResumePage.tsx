@@ -76,6 +76,11 @@ export default function MyResumePage() {
     setSelectedResumeId(null);
   }, []);
 
+  // Memoized share duration change handler (2025 best practice)
+  const handleShareDurationChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setShareDuration(e.target.value as ShareDuration);
+  }, []);
+
   // Memoized escape key handler for modal (2025 best practice)
   const handleModalKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -185,22 +190,76 @@ export default function MyResumePage() {
     setExpandedResumeId((prev) => (prev === resumeId ? null : resumeId));
   }, []);
 
+  // Memoized handler factories for inline functions (2025 React best practice)
+  const handlePreviewClick = useCallback(
+    (resumeId: string) => () => {
+      navigateToPreview(resumeId);
+    },
+    [navigateToPreview],
+  );
+
+  const handleEditClick = useCallback(
+    (resumeId: string) => () => {
+      navigateToEditResume(resumeId);
+    },
+    [navigateToEditResume],
+  );
+
+  const handleCopyClick = useCallback(
+    (resumeId: string) => () => {
+      handleCopyResume(resumeId);
+    },
+    [handleCopyResume],
+  );
+
+  const handleShareClick = useCallback(
+    (resumeId: string) => () => {
+      openShareModal(resumeId);
+    },
+    [openShareModal],
+  );
+
+  const handleDeleteClick = useCallback(
+    (resumeId: string) => () => {
+      handleDeleteResume(resumeId);
+    },
+    [handleDeleteResume],
+  );
+
+  const handleToggleShareLinksClick = useCallback(
+    (resumeId: string) => () => {
+      toggleShareLinks(resumeId);
+    },
+    [toggleShareLinks],
+  );
+
+  const handleCopyToClipboardClick = useCallback(
+    (shareUrl: string, linkId: string) => () => {
+      copyToClipboard(shareUrl, linkId);
+    },
+    [copyToClipboard],
+  );
+
+  const handleDeleteShareClick = useCallback(
+    (shareId: string) => () => {
+      handleDeleteShare(shareId);
+    },
+    [handleDeleteShare],
+  );
+
   if (loading) {
     return <LoadingSpinner fullScreen message={t('common.loading')} />;
   }
 
   return (
-    <main
-      className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header - V0.0.1 Editorial Style */}
         <header className="mb-12 sm:mb-16">
           <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
+              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-editorial italic mb-3 font-serif-title">
                 {t('resume.myResumes')}
               </h1>
               <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
@@ -221,7 +280,7 @@ export default function MyResumePage() {
 
         {/* Resume List - V0.0.1 Style */}
         <section className="mb-8">
-          <h2 className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-8 font-serif-title">
+          <h2 className="text-2xl sm:text-3xl text-theme-text-primary tracking-editorial italic mb-8 font-serif-title">
             {t('resume.list.title')}
           </h2>
 
@@ -233,7 +292,7 @@ export default function MyResumePage() {
               className="text-center border-2 border-theme-border-default"
             >
               <div className="text-5xl sm:text-6xl mb-6">📝</div>
-              <h3 className="text-xl sm:text-2xl text-theme-text-primary tracking-tighter italic mb-3 font-serif-title">
+              <h3 className="text-xl sm:text-2xl text-theme-text-primary tracking-editorial italic mb-3 font-serif-title">
                 {t('resume.list.noResumes')}
               </h3>
               <p className="text-sm sm:text-base text-theme-text-secondary mb-6">
@@ -292,37 +351,29 @@ export default function MyResumePage() {
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2">
                           <Button
                             variant="secondary"
-                            onClick={() => navigateToPreview(resume.id)}
+                            onClick={handlePreviewClick(resume.id)}
                             size="sm"
                           >
                             👁️ {t('common.preview')}
                           </Button>
-                          <Button
-                            variant="primary"
-                            onClick={() => navigateToEditResume(resume.id)}
-                            size="sm"
-                          >
+                          <Button variant="primary" onClick={handleEditClick(resume.id)} size="sm">
                             ✍️ {t('common.edit')}
                           </Button>
                           <Button
                             variant="secondary"
-                            onClick={() => handleCopyResume(resume.id)}
+                            onClick={handleCopyClick(resume.id)}
                             size="sm"
                           >
                             📋 {t('common.copy')}
                           </Button>
                           <Button
                             variant="secondary"
-                            onClick={() => openShareModal(resume.id)}
+                            onClick={handleShareClick(resume.id)}
                             size="sm"
                           >
                             🔗 {t('common.share')}
                           </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => handleDeleteResume(resume.id)}
-                            size="sm"
-                          >
+                          <Button variant="danger" onClick={handleDeleteClick(resume.id)} size="sm">
                             🗑️ {t('common.delete')}
                           </Button>
                         </div>
@@ -333,7 +384,7 @@ export default function MyResumePage() {
                     {hasActiveShare && (
                       <div className="border-t border-theme-border-subtle bg-theme-bg-elevated/50">
                         <button
-                          onClick={() => toggleShareLinks(resume.id)}
+                          onClick={handleToggleShareLinksClick(resume.id)}
                           className="w-full px-4 sm:px-6 py-3 flex items-center justify-between text-sm font-semibold text-theme-text-primary hover:bg-theme-bg-hover/50 transition-all"
                         >
                           <span className="flex items-center gap-2">
@@ -352,7 +403,7 @@ export default function MyResumePage() {
                             {activeShares.map((link) => (
                               <div
                                 key={link.id}
-                                className="bg-theme-bg-card border border-theme-border-subtle rounded-lg p-3 sm:p-4 transition-colors duration-200"
+                                className="bg-theme-bg-card border border-theme-border-subtle rounded-xl p-3 sm:p-4 transition-colors duration-200"
                               >
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                   <div className="flex-1 min-w-0">
@@ -379,7 +430,7 @@ export default function MyResumePage() {
                                       />
                                       <Button
                                         variant="secondary"
-                                        onClick={() => copyToClipboard(link.shareUrl, link.id)}
+                                        onClick={handleCopyToClipboardClick(link.shareUrl, link.id)}
                                         size="sm"
                                       >
                                         {copiedLinkId === link.id
@@ -407,7 +458,7 @@ export default function MyResumePage() {
                                   </div>
                                   <Button
                                     variant="danger"
-                                    onClick={() => handleDeleteShare(link.id)}
+                                    onClick={handleDeleteShareClick(link.id)}
                                     size="sm"
                                   >
                                     {t('common.delete')}
@@ -443,18 +494,18 @@ export default function MyResumePage() {
             >
               <h2
                 id={shareModalTitleId}
-                className="text-2xl sm:text-3xl text-theme-text-primary tracking-tighter italic mb-6 font-serif-title"
+                className="text-2xl sm:text-3xl text-theme-text-primary tracking-editorial italic mb-6 font-serif-title"
               >
                 {t('resume.shareLinkCreate')}
               </h2>
               <div className="mb-8">
-                <label className="block text-xs font-bold uppercase tracking-widest text-theme-text-secondary mb-3">
+                <label className="block text-xs font-bold uppercase tracking-brand-lg text-theme-text-secondary mb-3">
                   {t('resume.shareDuration')}
                 </label>
                 <select
                   value={shareDuration}
-                  onChange={(e) => setShareDuration(e.target.value as ShareDuration)}
-                  className="w-full px-6 py-4 bg-theme-bg-input border-2 border-theme-border-default rounded-input focus:outline-none focus:ring-[3px] focus:ring-theme-focus-ring focus:border-theme-primary transition-all text-base font-bold text-theme-text-primary"
+                  onChange={handleShareDurationChange}
+                  className="w-full px-6 py-4 bg-theme-bg-input border-2 border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-focus-ring focus:border-theme-primary transition-all text-base font-bold text-theme-text-primary"
                 >
                   <option value={ShareDuration.ONE_WEEK}>{t('resume.oneWeek')}</option>
                   <option value={ShareDuration.ONE_MONTH}>{t('resume.oneMonth')}</option>
