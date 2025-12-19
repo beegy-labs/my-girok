@@ -52,10 +52,7 @@ export function PageLayout({
   contentClassName = '',
 }: PageLayoutProps) {
   return (
-    <div
-      className={`min-h-screen bg-theme-bg-page pt-20 pb-12 ${className}`}
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className={`min-h-screen bg-theme-bg-page pt-nav pb-12 ${className}`}>
       <div
         className={`mx-auto px-4 sm:px-6 lg:px-8 ${maxWidthClasses[maxWidth]} ${contentClassName}`}
       >

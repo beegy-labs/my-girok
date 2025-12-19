@@ -8,10 +8,7 @@ export default function TermsPage() {
   const { t } = useTranslation();
 
   return (
-    <main
-      className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         {/* Header */}
         <div className="text-center mb-12">

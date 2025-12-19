@@ -43,8 +43,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-card/95 backdrop-blur-xl border-b border-theme-border-default transition-colors duration-200"
-      style={{ height: 'var(--nav-height-editorial, 80px)' }}
+      className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-card/95 backdrop-blur-xl border-b border-theme-border-default transition-colors duration-200 h-nav"
       role="navigation"
       aria-label={t('aria.mainNavigation')}
     >

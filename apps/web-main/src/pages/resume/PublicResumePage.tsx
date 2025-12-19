@@ -58,10 +58,7 @@ export default function PublicResumePage() {
     const isNotFound = error === t('resume.public.userNotFound');
 
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-4 pt-nav">
         <StatusMessage
           type={isNotFound ? 'not-found' : 'error'}
           title={isNotFound ? t('resume.preview.notFoundTitle') : undefined}
@@ -81,10 +78,7 @@ export default function PublicResumePage() {
   }
 
   return (
-    <div
-      className="w-full min-h-screen bg-theme-bg-page"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className="w-full min-h-screen bg-theme-bg-page pt-nav">
       {/* Action Bar - V0.0.1 Style with public mode */}
       <ResumeActionBar
         resume={resume}

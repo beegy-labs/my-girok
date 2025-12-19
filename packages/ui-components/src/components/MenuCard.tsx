@@ -174,7 +174,6 @@ export const MenuCard = memo(function MenuCard({
       aria-disabled={isDisabled}
       aria-label={ariaLabel || title}
       className={`group ${baseClasses} ${isPinned ? pinnedClasses : ''} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
-      style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
       {/* Icon container */}
       <div className={`${iconContainerClasses} [&>svg]:w-8 [&>svg]:h-8`} aria-hidden="true">

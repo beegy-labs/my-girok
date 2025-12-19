@@ -62,10 +62,7 @@ export default function ResumePreviewPage() {
 
   if (error === 'NOT_FOUND') {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-4 pt-nav">
         <StatusMessage
           type="not-found"
           title={t('resume.preview.notFoundTitle')}
@@ -87,10 +84,7 @@ export default function ResumePreviewPage() {
 
   if (error) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-4 pt-nav">
         <StatusMessage
           type="error"
           title={t('resume.preview.errorTitle')}
@@ -110,10 +104,7 @@ export default function ResumePreviewPage() {
   }
 
   return (
-    <div
-      className="w-full min-h-screen bg-theme-bg-page"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className="w-full min-h-screen bg-theme-bg-page pt-nav">
       {/* Action Bar - V0.0.1 Style with owner mode (all actions enabled) */}
       <ResumeActionBar resume={resume} mode="owner" />
 

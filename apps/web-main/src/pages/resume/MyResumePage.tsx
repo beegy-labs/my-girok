@@ -190,10 +190,7 @@ export default function MyResumePage() {
   }
 
   return (
-    <main
-      className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header - V0.0.1 Editorial Style */}
         <header className="mb-12 sm:mb-16">

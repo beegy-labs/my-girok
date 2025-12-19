@@ -218,8 +218,7 @@ export default function HomePage() {
 
       <main
         id="main-content"
-        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pb-32"
-        style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
+        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pb-32 pt-nav"
         role="main"
       >
         {isAuthenticated ? (
@@ -459,7 +458,7 @@ export default function HomePage() {
 
               {/* Grid View */}
               {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-14">
                   {MENU_ITEMS.map((menu, index) => {
                     const IconComponent = menu.icon;
                     const isDisabled = menu.status === 'coming-soon';

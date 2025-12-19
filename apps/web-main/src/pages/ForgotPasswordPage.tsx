@@ -29,10 +29,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700"
-      style={{ paddingTop: 'var(--nav-height-editorial, 80px)' }}
-    >
+    <div className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-700 pt-nav">
       <main className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
         <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}

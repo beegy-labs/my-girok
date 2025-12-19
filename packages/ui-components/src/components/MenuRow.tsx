@@ -160,7 +160,6 @@ export const MenuRow = memo(function MenuRow({
       aria-disabled={isDisabled}
       aria-label={ariaLabel || title}
       className={`group ${baseClasses} ${isPinned ? pinnedClasses : ''} ${isDisabled ? disabledClasses : enabledClasses} ${focusClasses} ${className}`}
-      style={{ transitionTimingFunction: 'var(--ease-editorial, cubic-bezier(0.2, 1, 0.3, 1))' }}
     >
       {/* Index */}
       <span className="text-xs font-bold tracking-brand text-theme-primary w-8 flex-shrink-0 font-mono-brand">
