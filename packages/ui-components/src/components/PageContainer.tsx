@@ -77,16 +77,14 @@ export function PageContainer({
 }: PageContainerProps) {
   if (centered) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4 bg-theme-bg-page transition-colors duration-200">
-        <div className={`${maxWidthClasses[maxWidth]} w-full ${className}`}>
-          {children}
-        </div>
-      </div>
+      <main className="min-h-[80vh] flex items-center justify-center px-4 bg-theme-bg-page transition-colors duration-200 pt-nav">
+        <div className={`${maxWidthClasses[maxWidth]} w-full ${className}`}>{children}</div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-theme-bg-page transition-colors duration-200">
+    <main className="min-h-screen bg-theme-bg-page transition-colors duration-200 pt-nav">
       <div
         className={`
           ${maxWidthClasses[maxWidth]} mx-auto
@@ -96,6 +94,6 @@ export function PageContainer({
       >
         {children}
       </div>
-    </div>
+    </main>
   );
 }
