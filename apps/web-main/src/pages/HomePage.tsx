@@ -556,7 +556,7 @@ export default function HomePage() {
                   variant="primary"
                   size="xl"
                   rounded="full"
-                  className="px-16 sm:px-20 py-6 sm:py-8 text-[14px] font-black uppercase tracking-brand shadow-theme-xl hover:scale-105 transition-transform"
+                  className="px-16 sm:px-20 shadow-theme-xl hover:scale-105"
                 >
                   {t('auth.enter', { defaultValue: 'Enter' })}
                 </Button>
