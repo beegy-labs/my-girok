@@ -27,15 +27,19 @@ My-Girok is a personal record-keeping platform where users document their life s
 
 ### Key Visual Characteristics
 
-| Element         | Specification                                |
-| --------------- | -------------------------------------------- |
-| Card Radius     | 48px (forms), 56px (promos), 64px (sections) |
-| Border Width    | 2px (`border-2`) for interactive elements    |
-| Primary Padding | `p-10 md:p-14` for main cards                |
-| Touch Targets   | 44px minimum, 56px for prominent actions     |
-| Title Font      | Playfair Display (italic)                    |
-| Brand Font      | System monospace                             |
-| Letter Spacing  | `tracking-[0.3em]` for uppercase labels      |
+| Element         | Specification                                 |
+| --------------- | --------------------------------------------- |
+| Card Radius     | 48px (forms), 56px (promos), 64px (sections)  |
+| Border Width    | 2px (`border-2`) for interactive elements     |
+| Primary Padding | `p-10 md:p-14` for main cards                 |
+| Touch Targets   | 44px minimum, 56px for prominent actions      |
+| Focus Ring      | 4px width, 4px offset (AAA spec)              |
+| Icon Stroke     | 1.5 (all lucide-react icons)                  |
+| Nav Height      | 80px (`h-nav`, `pt-nav`)                      |
+| Title Font      | Playfair Display (italic)                     |
+| Brand Font      | System monospace                              |
+| Letter Spacing  | `tracking-brand` (0.3em) for uppercase labels |
+| Footer Links    | 11px, `tracking-brand-md` (0.25em)            |
 
 ### Typography Hierarchy
 
@@ -196,17 +200,18 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 
 ## Border Radius Guide (V0.0.1)
 
-| Token            | Size | Usage                            |
-| ---------------- | ---- | -------------------------------- |
-| `rounded-xl`     | 12px | Inputs (default size)            |
-| `rounded-2xl`    | 16px | Secondary buttons, ViewToggle    |
-| `rounded-3xl`    | 24px | MenuRow                          |
-| `rounded-[24px]` | 24px | Input (lg size), primary buttons |
-| `rounded-[40px]` | 40px | Archive support banner           |
-| `rounded-[48px]` | 48px | Form cards (Login, Register)     |
-| `rounded-[56px]` | 56px | Promo carousel                   |
-| `rounded-[64px]` | 64px | MenuCard, Workstation section    |
-| `rounded-full`   | 50%  | Circular buttons, hero button    |
+| Token                   | Size | Usage                            |
+| ----------------------- | ---- | -------------------------------- |
+| `rounded-xl`            | 12px | Inputs (default size)            |
+| `rounded-2xl`           | 16px | Secondary buttons, ViewToggle    |
+| `rounded-3xl`           | 24px | MenuRow                          |
+| `rounded-input`         | 24px | Input (lg size), primary buttons |
+| `rounded-widget`        | 32px | Widgets, modals                  |
+| `rounded-editorial`     | 40px | Archive support banner           |
+| `rounded-editorial-lg`  | 48px | Form cards (Login, Register)     |
+| `rounded-editorial-xl`  | 56px | Promo carousel                   |
+| `rounded-editorial-2xl` | 64px | MenuCard, Workstation section    |
+| `rounded-full`          | 50%  | Circular buttons, hero button    |
 
 ## Component Specifications (V0.0.1)
 
@@ -449,29 +454,32 @@ Simple 2-character language toggle with dropdown.
 ### Footer
 
 ```tsx
-<footer className="mt-40 py-16 sm:py-24 border-t-2 border-theme-border-default bg-theme-bg-secondary/40">
-  <p
-    className="text-lg text-theme-text-primary font-black uppercase tracking-[0.5em] sm:tracking-[0.6em]"
-    style={{ fontFamily: 'var(--font-family-mono-brand)' }}
-  >
-    girok.dev
-    <span className="text-theme-primary ml-2">© 2025</span>
-  </p>
-  <p className="text-[12px] font-bold uppercase tracking-widest">System V0.0.1 AAA Enhanced</p>
+<footer className="w-full pt-24 pb-32 border-t-2 border-theme-border-default bg-theme-bg-secondary/40">
+  <div className="max-w-5xl mx-auto px-8">
+    <p
+      className="text-lg text-theme-text-primary font-black uppercase tracking-brand-lg"
+      style={{ fontFamily: 'var(--font-family-mono-brand)' }}
+    >
+      girok.dev
+      <span className="text-theme-primary ml-2">© 2025</span>
+    </p>
+    <p className="text-[12px] font-bold uppercase tracking-widest">System V0.0.1 AAA Enhanced</p>
+  </div>
 </footer>
 ```
 
 ## Spacing Patterns (V0.0.1)
 
-| Context           | Mobile   | Desktop  |
-| ----------------- | -------- | -------- |
-| Form card padding | `p-10`   | `p-14`   |
-| Section padding   | `p-10`   | `p-14`   |
-| Widget card       | `p-10`   | `p-12`   |
-| Card gap          | `gap-6`  | `gap-8`  |
-| Widget gap        | `gap-10` | `gap-10` |
-| Section margin    | `mb-16`  | `mb-20`  |
-| Footer margin     | `mt-40`  | `mt-40`  |
+| Context           | Mobile             | Desktop  |
+| ----------------- | ------------------ | -------- |
+| Form card padding | `p-10`             | `p-14`   |
+| Section padding   | `p-10`             | `p-14`   |
+| Widget card       | `p-10`             | `p-12`   |
+| Menu card gap     | `gap-14`           | `gap-14` |
+| Widget gap        | `gap-10`           | `gap-10` |
+| Section margin    | `mb-16`            | `mb-20`  |
+| Footer padding    | `pt-24 pb-32 px-8` |
+| TopWidget height  | `min-h-[280px]`    |
 
 ## Touch Targets (WCAG 2.5.5)
 
