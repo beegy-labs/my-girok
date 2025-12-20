@@ -314,7 +314,7 @@ export default function HomePage() {
                     <div className="flex justify-between items-center mb-8">
                       <div className="flex items-center gap-4">
                         <div
-                          className="p-3 bg-theme-bg-secondary rounded-xl text-theme-primary border border-theme-border-subtle"
+                          className="p-3 bg-theme-bg-secondary rounded-input text-theme-primary border border-theme-border-subtle"
                           aria-hidden="true"
                         >
                           <Calendar size={20} />

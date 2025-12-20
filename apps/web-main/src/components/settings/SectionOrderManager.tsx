@@ -27,7 +27,7 @@ const SectionItem = memo(function SectionItem({
   t,
 }: SectionItemProps) {
   return (
-    <div className="flex items-center justify-between bg-theme-bg-elevated border border-theme-border-default rounded-xl p-4 transition-colors duration-200">
+    <div className="flex items-center justify-between bg-theme-bg-elevated border border-theme-border-default rounded-input p-4 transition-colors duration-200">
       <div className="flex items-center space-x-4">
         <div className="flex flex-col space-y-1">
           <button

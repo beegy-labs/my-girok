@@ -342,6 +342,74 @@ export function Button({ ref, ...props }: ButtonProps) {
 }
 ```
 
+## Storybook (2025)
+
+Interactive component documentation with **Storybook 10.x**.
+
+### Architecture
+
+Storybook is separated into two concerns:
+
+| Concern       | Location                                 | Responsibility          |
+| ------------- | ---------------------------------------- | ----------------------- |
+| Configuration | `packages/ui-components/.storybook/`     | Build settings, addons  |
+| Story files   | `packages/ui-components/src/components/` | Component documentation |
+| Deployment    | `apps/storybook/`                        | Docker, Helm, CI/CD     |
+
+See [apps/storybook.md](../apps/storybook.md) for deployment details.
+
+### Commands
+
+```bash
+# Development server (port 6006)
+pnpm --filter @my-girok/ui-components storybook
+
+# Build static site
+pnpm --filter @my-girok/ui-components build-storybook
+
+# Via storybook app
+pnpm --filter @my-girok/storybook dev
+pnpm --filter @my-girok/storybook build
+```
+
+### Features
+
+- **WCAG AAA Testing**: `@storybook/addon-a11y` with strict mode
+- **Auto-generated Docs**: TypeScript props documentation
+- **Design Tokens**: Integrated with `@my-girok/design-tokens`
+- **Theme Toggle**: Light/Dark mode in toolbar
+- **Visual Regression**: Chromatic integration ready
+
+### Story Files (CSF 3.0)
+
+Each component has a `.stories.tsx` file:
+
+```
+src/components/
+├── Button.tsx
+├── Button.stories.tsx    # CSF 3.0 format
+├── Card.tsx
+├── Card.stories.tsx
+└── ...
+```
+
+### Deployment
+
+Storybook deploys as an independent Kubernetes service:
+
+| Environment | URL                          | Trigger           |
+| ----------- | ---------------------------- | ----------------- |
+| Development | https://design-dev.girok.dev | Push to `develop` |
+| Production  | https://design.girok.dev     | Tag `ui-v*`       |
+
+```bash
+# Create release
+git tag ui-v0.1.0
+git push origin ui-v0.1.0
+```
+
+Pipeline: `.github/workflows/ci-storybook.yml`
+
 ## References
 
 | Document                             | Content              |

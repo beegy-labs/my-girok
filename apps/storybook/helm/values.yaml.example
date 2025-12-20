@@ -1,0 +1,231 @@
+# =============================================================================
+# Storybook Helm Values - Design System Documentation
+# V0.0.1 AAA Workstation (2025)
+# =============================================================================
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install storybook . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit secrets
+#   - Environment-specific files: values-dev.yaml, values-prod.yaml
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Deployment Configuration
+# -----------------------------------------------------------------------------
+
+# Number of replicas (1-2 for static documentation)
+replicaCount: 1
+
+image:
+  repository: harbor.girok.dev/my-girok/storybook
+  pullPolicy: IfNotPresent
+  # Tag format: v0.1.0, v0.2.0, develop, latest
+  # Empty = use Chart.AppVersion
+  tag: ""
+
+# Private registry credentials (if needed)
+imagePullSecrets: []
+  # - name: harbor-credentials
+
+# Override release name
+nameOverride: ""
+fullnameOverride: ""
+
+# -----------------------------------------------------------------------------
+# Service Account
+# -----------------------------------------------------------------------------
+
+serviceAccount:
+  # Create a dedicated service account
+  create: true
+  # Annotations (e.g., for Workload Identity)
+  annotations: {}
+    # iam.gke.io/gcp-service-account: storybook@project.iam.gserviceaccount.com
+  # Custom name (default: release-name)
+  name: ""
+
+# -----------------------------------------------------------------------------
+# Pod Configuration
+# -----------------------------------------------------------------------------
+
+# Pod annotations (e.g., for Prometheus scraping)
+podAnnotations: {}
+  # prometheus.io/scrape: "true"
+  # prometheus.io/port: "6006"
+
+# Pod labels (additional to selector labels)
+podLabels: {}
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 101
+  runAsNonRoot: true
+  runAsUser: 101
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -----------------------------------------------------------------------------
+# Service Configuration
+# -----------------------------------------------------------------------------
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 6006
+  # annotations: {}
+
+# -----------------------------------------------------------------------------
+# Ingress Configuration
+# -----------------------------------------------------------------------------
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate limiting (optional)
+    # nginx.ingress.kubernetes.io/limit-rps: "10"
+  hosts:
+    # CHANGE THIS: Update with your domain
+    - host: design.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: storybook-tls
+      hosts:
+        - design.example.com
+
+# -----------------------------------------------------------------------------
+# Resource Limits
+# -----------------------------------------------------------------------------
+
+# Storybook is static content - very lightweight
+resources:
+  limits:
+    cpu: 100m
+    memory: 64Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi
+
+# -----------------------------------------------------------------------------
+# Auto-scaling (HPA)
+# -----------------------------------------------------------------------------
+
+# Typically disabled for documentation sites
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -----------------------------------------------------------------------------
+# Pod Disruption Budget
+# -----------------------------------------------------------------------------
+
+# Only effective when replicaCount > 1
+podDisruptionBudget:
+  enabled: true
+  # minAvailable: 1
+  maxUnavailable: 1
+
+# -----------------------------------------------------------------------------
+# Scheduling
+# -----------------------------------------------------------------------------
+
+nodeSelector: {}
+  # kubernetes.io/arch: amd64
+
+tolerations: []
+  # - key: "dedicated"
+  #   operator: "Equal"
+  #   value: "storybook"
+  #   effect: "NoSchedule"
+
+affinity: {}
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 100
+  #       podAffinityTerm:
+  #         labelSelector:
+  #           matchLabels:
+  #             app.kubernetes.io/name: storybook
+  #         topologyKey: kubernetes.io/hostname
+
+# Priority class for pod scheduling
+priorityClassName: ""
+
+# Topology spread constraints
+topologySpreadConstraints: []
+
+# -----------------------------------------------------------------------------
+# Health Checks
+# -----------------------------------------------------------------------------
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+# Optional: Startup probe for slow-starting containers
+startupProbe: {}
+  # httpGet:
+  #   path: /health
+  #   port: http
+  # initialDelaySeconds: 5
+  # periodSeconds: 5
+  # failureThreshold: 30
+
+# =============================================================================
+# DEPLOYMENT EXAMPLES
+# =============================================================================
+#
+# Development:
+#   helm upgrade --install storybook . \
+#     -f values.yaml \
+#     --set image.tag=develop \
+#     --set ingress.hosts[0].host=design-dev.girok.dev
+#
+# Production:
+#   helm upgrade --install storybook . \
+#     -f values.yaml \
+#     --set image.tag=v0.1.0 \
+#     --set ingress.hosts[0].host=design.girok.dev \
+#     --set replicaCount=2
+#
+# GitOps (ArgoCD/Flux):
+#   - Use kustomize overlays for environment-specific values
+#   - Sync on ui-v* tags from GitHub Actions
+#
+# =============================================================================

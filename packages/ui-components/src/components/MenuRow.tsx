@@ -58,7 +58,7 @@ const disabledClasses = 'cursor-not-allowed opacity-50';
 const pinnedClasses = 'border-theme-primary';
 
 const pinButtonBaseClasses =
-  'p-2.5 rounded-xl border-2 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center';
+  'p-2.5 rounded-input border-2 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center';
 
 const pinButtonActiveClasses = 'bg-theme-primary text-btn-primary-text border-theme-primary';
 

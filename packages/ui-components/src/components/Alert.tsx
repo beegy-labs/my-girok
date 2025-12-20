@@ -108,7 +108,7 @@ export function Alert({ variant = 'info', title, children, onClose, className = 
         <button
           type="button"
           onClick={onClose}
-          className={`flex-shrink-0 ml-2 -mr-2 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-theme-text-primary/10 transition-colors ${focusClasses}`}
+          className={`flex-shrink-0 ml-2 -mr-2 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-input hover:bg-theme-text-primary/10 transition-colors ${focusClasses}`}
           aria-label="Close alert"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">

@@ -62,8 +62,8 @@ export default function ResumeContent({
         boxSizing: 'border-box',
       }}
     >
-      {/* Header - Grayscale design for print compatibility */}
-      <div className="border-b-2 border-gray-800 pb-6 mb-6">
+      {/* Header - Theme-aware design with SSOT tokens */}
+      <div className="border-b-2 border-theme-border-strong pb-6 mb-6">
         <div className="flex items-start gap-6">
           {/* Profile Photo */}
           {resume.profileImage && (
@@ -72,7 +72,7 @@ export default function ResumeContent({
                 src={getProxyImageUrl(resume.profileImage) || resume.profileImage}
                 alt={resume.name}
                 crossOrigin="anonymous"
-                className={`w-32 h-40 object-cover rounded-xl border-2 border-gray-300 transition-all ${
+                className={`w-32 h-40 object-cover rounded-input border-2 border-theme-border-subtle transition-all ${
                   isGrayscaleMode ? 'filter grayscale' : ''
                 }`}
                 onError={(e) => {
@@ -87,10 +87,10 @@ export default function ResumeContent({
 
           {/* Name and Contact Info */}
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-theme-text-primary mb-2">
               {resume.name}
               {(resume.gender || resume.birthDate || resume.birthYear) && (
-                <span className="ml-3 text-lg font-normal text-gray-600">
+                <span className="ml-3 text-lg font-normal text-theme-text-tertiary">
                   {resume.gender && <span>{t(getGenderLabelKey(resume.gender))}</span>}
                   {resume.gender && (resume.birthDate || resume.birthYear) && <span>, </span>}
                   {(() => {
@@ -108,7 +108,7 @@ export default function ResumeContent({
                 </span>
               )}
             </h1>
-            <div className="flex flex-col gap-y-0.5 text-sm text-gray-700 mb-2">
+            <div className="flex flex-col gap-y-0.5 text-sm text-theme-text-secondary mb-2">
               <div>
                 <span className="font-semibold">{t('resume.contactInfo.email')}:</span>{' '}
                 {resume.email}
@@ -128,7 +128,7 @@ export default function ResumeContent({
             </div>
             {/* Military Service Information */}
             {resume.militaryService && resume.militaryService !== 'NOT_APPLICABLE' && (
-              <div className="text-sm text-gray-700 mb-2">
+              <div className="text-sm text-theme-text-secondary mb-2">
                 <span className="font-semibold">{t('resume.militaryService.title')}:</span>{' '}
                 {resume.militaryService === 'EXEMPTED' ? (
                   <span>{t('resume.militaryService.exempted')}</span>
@@ -171,7 +171,7 @@ export default function ResumeContent({
                 )}
               </div>
             )}
-            <div className="flex flex-col gap-y-0.5 text-sm text-gray-900">
+            <div className="flex flex-col gap-y-0.5 text-sm text-theme-text-primary">
               {resume.github?.trim() && (
                 <div>
                   <span className="font-semibold">GitHub:</span> {resume.github}
@@ -200,7 +200,7 @@ export default function ResumeContent({
       {/* Summary */}
       {resume.summary?.trim() && (
         <div className="mb-6 resume-section">
-          <p className="text-gray-700 leading-relaxed">{resume.summary}</p>
+          <p className="text-theme-text-secondary leading-relaxed">{resume.summary}</p>
         </div>
       )}
 
@@ -208,14 +208,14 @@ export default function ResumeContent({
       {resume.keyAchievements &&
         resume.keyAchievements.filter((a: string) => a?.trim()).length > 0 && (
           <div className="mb-6 resume-section">
-            <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+            <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
               ⭐ {t('resume.preview.keyAchievements')}
             </h2>
             <ul className="list-disc list-outside pl-5 space-y-2">
               {resume.keyAchievements
                 .filter((a: string) => a?.trim())
                 .map((achievement: string, index: number) => (
-                  <li key={index} className="text-gray-700 leading-relaxed">
+                  <li key={index} className="text-theme-text-secondary leading-relaxed">
                     {achievement}
                   </li>
                 ))}
@@ -226,10 +226,10 @@ export default function ResumeContent({
       {/* Application Reason */}
       {resume.applicationReason?.trim() && (
         <div className="mb-6 resume-section">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+          <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
             {t('resume.preview.applicationReason')}
           </h2>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+          <p className="text-theme-text-secondary leading-relaxed whitespace-pre-wrap">
             {resume.applicationReason}
           </p>
         </div>
@@ -281,10 +281,12 @@ export default function ResumeContent({
       {/* Cover Letter (at the bottom) */}
       {resume.coverLetter?.trim() && (
         <div className="mb-6 resume-section">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+          <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
             {t('resume.preview.coverLetter')}
           </h2>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{resume.coverLetter}</p>
+          <p className="text-theme-text-secondary leading-relaxed whitespace-pre-wrap">
+            {resume.coverLetter}
+          </p>
         </div>
       )}
     </div>
@@ -317,7 +319,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
 
   return (
     <div className="mb-6 resume-section">
-      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
         {t('resume.sections.skills')}
       </h2>
       <div className="space-y-4">
@@ -325,7 +327,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
           .sort((a, b) => a.order - b.order)
           .map((skill, idx) => (
             <div key={idx}>
-              <h3 className="font-bold text-gray-900 mb-2">{skill.category}</h3>
+              <h3 className="font-bold text-theme-text-primary mb-2">{skill.category}</h3>
               <div className="space-y-2 ml-4">
                 {Array.isArray(skill.items) &&
                   skill.items
@@ -335,7 +337,7 @@ function SkillsSection({ skills }: { skills: any[] }) {
                     .map((item: any, itemIdx: number) => {
                       if (typeof item === 'string') {
                         return (
-                          <div key={itemIdx} className="text-sm text-gray-700">
+                          <div key={itemIdx} className="text-sm text-theme-text-secondary">
                             • {item}
                           </div>
                         );
@@ -344,18 +346,18 @@ function SkillsSection({ skills }: { skills: any[] }) {
                       return (
                         <div key={itemIdx} className="text-sm">
                           <div className="flex items-start gap-2">
-                            <span className="text-gray-700 flex-shrink-0">•</span>
+                            <span className="text-theme-text-secondary flex-shrink-0">•</span>
                             <div className="flex-1 min-w-0">
-                              <span className="font-semibold text-gray-900 break-words">
+                              <span className="font-semibold text-theme-text-primary break-words">
                                 {item.name}
                               </span>
                               {item.descriptions && item.descriptions.length > 0 && (
-                                <div className="mt-2 text-gray-700">
+                                <div className="mt-2 text-theme-text-secondary">
                                   {renderDescriptions(item.descriptions)}
                                 </div>
                               )}
                               {item.description && !item.descriptions?.length && (
-                                <p className="text-gray-700 mt-1 ml-0 break-words">
+                                <p className="text-theme-text-secondary mt-1 ml-0 break-words">
                                   {item.description}
                                 </p>
                               )}
@@ -406,7 +408,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
 
   return (
     <div className="mb-6 resume-section">
-      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
         {t('resume.sections.experience')}
         {durationText}
       </h2>
@@ -416,9 +418,9 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
           <div key={idx} className="mb-5 resume-item">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="font-bold text-gray-900 text-lg">{exp.company}</h3>
+                <h3 className="font-bold text-theme-text-primary text-lg">{exp.company}</h3>
                 {exp.startDate && (
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-theme-text-tertiary mt-1">
                     {(() => {
                       const duration = calculateExperienceDuration(
                         exp.startDate,
@@ -433,7 +435,7 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                   </p>
                 )}
               </div>
-              <span className="text-sm text-gray-700 whitespace-nowrap">
+              <span className="text-sm text-theme-text-secondary whitespace-nowrap">
                 {exp.startDate} -{' '}
                 {exp.isCurrentlyWorking
                   ? t('resume.experience.currentlyWorking')
@@ -442,10 +444,10 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
             </div>
 
             <div className="mb-3">
-              <h4 className="font-semibold text-gray-900">{exp.finalPosition}</h4>
-              <p className="text-sm text-gray-700 italic">{exp.jobTitle}</p>
+              <h4 className="font-semibold text-theme-text-primary">{exp.finalPosition}</h4>
+              <p className="text-sm text-theme-text-secondary italic">{exp.jobTitle}</p>
               {exp.showSalary && exp.salary && (
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-theme-text-tertiary mt-1">
                   <span className="font-semibold">{t('resume.experienceForm.salary')}:</span>{' '}
                   {exp.salary.toLocaleString()}{' '}
                   {exp.salaryUnit || t('resume.experienceForm.salaryUnits.manwon')}
@@ -461,35 +463,37 @@ function ExperienceSection({ experiences }: { experiences: any[] }) {
                     <div key={projectIdx} className="ml-4">
                       <div className="mb-2">
                         <div className="flex justify-between items-start">
-                          <h5 className="font-semibold text-gray-900">{project.name}</h5>
-                          <span className="text-xs text-gray-600 whitespace-nowrap ml-2">
+                          <h5 className="font-semibold text-theme-text-primary">{project.name}</h5>
+                          <span className="text-xs text-theme-text-tertiary whitespace-nowrap ml-2">
                             {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
                           </span>
                         </div>
                         {project.role?.trim() && (
-                          <p className="text-sm text-gray-700 italic">{project.role}</p>
+                          <p className="text-sm text-theme-text-secondary italic">{project.role}</p>
                         )}
                       </div>
 
                       {project.description?.trim() && (
-                        <p className="text-sm text-gray-700 mb-2">{project.description}</p>
+                        <p className="text-sm text-theme-text-secondary mb-2">
+                          {project.description}
+                        </p>
                       )}
 
                       {project.techStack && project.techStack.length > 0 && (
-                        <p className="text-xs text-gray-600 mb-2">
+                        <p className="text-xs text-theme-text-tertiary mb-2">
                           <span className="font-semibold">{t('resume.preview.tech')}:</span>{' '}
                           {project.techStack.join(', ')}
                         </p>
                       )}
 
                       {project.achievements && project.achievements.length > 0 && (
-                        <div className="text-sm text-gray-700 mb-2">
+                        <div className="text-sm text-theme-text-secondary mb-2">
                           {renderAchievements(project.achievements)}
                         </div>
                       )}
 
                       {(project.url?.trim() || project.githubUrl?.trim()) && (
-                        <div className="text-xs text-gray-900 flex flex-col gap-0.5">
+                        <div className="text-xs text-theme-text-primary flex flex-col gap-0.5">
                           {project.url?.trim() && (
                             <div>
                               <span className="font-semibold">{t('resume.preview.demo')}:</span>{' '}
@@ -521,7 +525,7 @@ function ProjectsSection({ projects }: { projects: any[] }) {
 
   return (
     <div className="mb-6 resume-section">
-      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
         {t('resume.sections.projects')}
       </h2>
       {projects
@@ -530,17 +534,19 @@ function ProjectsSection({ projects }: { projects: any[] }) {
           <div key={idx} className="mb-4">
             <div className="flex justify-between items-start mb-1">
               <div>
-                <h3 className="font-semibold text-gray-900">{project.name}</h3>
-                {project.role?.trim() && <p className="text-sm text-gray-700">{project.role}</p>}
+                <h3 className="font-semibold text-theme-text-primary">{project.name}</h3>
+                {project.role?.trim() && (
+                  <p className="text-sm text-theme-text-secondary">{project.role}</p>
+                )}
               </div>
-              <span className="text-sm text-gray-700 whitespace-nowrap">
+              <span className="text-sm text-theme-text-secondary whitespace-nowrap">
                 {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
               </span>
             </div>
-            <p className="text-sm text-gray-700 mb-2">{project.description}</p>
+            <p className="text-sm text-theme-text-secondary mb-2">{project.description}</p>
             {project.achievements &&
               project.achievements.filter((a: string) => a?.trim()).length > 0 && (
-                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-2">
+                <ul className="list-disc list-inside text-sm text-theme-text-secondary space-y-1 ml-2">
                   {project.achievements
                     .filter((a: string) => a?.trim())
                     .map((achievement: string, i: number) => (
@@ -549,13 +555,13 @@ function ProjectsSection({ projects }: { projects: any[] }) {
                 </ul>
               )}
             {project.techStack && project.techStack.length > 0 && (
-              <p className="text-sm text-gray-700 mt-2">
+              <p className="text-sm text-theme-text-secondary mt-2">
                 <span className="font-semibold">{t('resume.preview.tech')}:</span>{' '}
                 {project.techStack.join(', ')}
               </p>
             )}
             {(project.url?.trim() || project.githubUrl?.trim()) && (
-              <div className="flex flex-col gap-1 mt-2 text-sm text-gray-900">
+              <div className="flex flex-col gap-1 mt-2 text-sm text-theme-text-primary">
                 {project.url?.trim() && (
                   <div>
                     <span className="font-semibold">{t('resume.preview.demo')}:</span> {project.url}
@@ -582,7 +588,7 @@ function EducationSection({ educations }: { educations: any[] }) {
 
   return (
     <div className="mb-6 resume-section">
-      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
         {t('resume.sections.education')}
       </h2>
       {educations
@@ -591,14 +597,16 @@ function EducationSection({ educations }: { educations: any[] }) {
           <div key={idx} className="mb-3">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="font-semibold text-gray-900">{edu.school}</h3>
-                <p className="text-gray-700">
+                <h3 className="font-semibold text-theme-text-primary">{edu.school}</h3>
+                <p className="text-theme-text-secondary">
                   {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : t('resume.preview.degree')}{' '}
                   {t('resume.preview.in')} {edu.major}
                 </p>
-                {edu.gpa?.trim() && <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>}
+                {edu.gpa?.trim() && (
+                  <p className="text-sm text-theme-text-secondary">GPA: {edu.gpa}</p>
+                )}
               </div>
-              <span className="text-sm text-gray-700 whitespace-nowrap">
+              <span className="text-sm text-theme-text-secondary whitespace-nowrap">
                 {edu.startDate} - {edu.endDate || t('resume.preview.present')}
               </span>
             </div>
@@ -615,7 +623,7 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
 
   return (
     <div className="mb-6 resume-section">
-      <h2 className="text-xl font-bold text-gray-900 mb-3 border-b border-gray-400 pb-1">
+      <h2 className="text-xl font-bold text-theme-text-primary mb-3 border-b border-theme-border-default pb-1">
         {t('resume.sections.certifications')}
       </h2>
       {certificates
@@ -624,16 +632,16 @@ function CertificatesSection({ certificates }: { certificates: any[] }) {
           <div key={idx} className="mb-3">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="font-semibold text-gray-900">{cert.name}</h3>
-                <p className="text-gray-700">{cert.issuer}</p>
+                <h3 className="font-semibold text-theme-text-primary">{cert.name}</h3>
+                <p className="text-theme-text-secondary">{cert.issuer}</p>
                 {cert.credentialUrl?.trim() && (
-                  <div className="mt-1 text-sm text-gray-900">
+                  <div className="mt-1 text-sm text-theme-text-primary">
                     <span className="font-semibold">{t('resume.preview.verify')}:</span>{' '}
                     {cert.credentialUrl}
                   </div>
                 )}
               </div>
-              <span className="text-sm text-gray-700 whitespace-nowrap">
+              <span className="text-sm text-theme-text-secondary whitespace-nowrap">
                 {cert.issueDate}
                 {cert.expiryDate && ` - ${cert.expiryDate}`}
               </span>

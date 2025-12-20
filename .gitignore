@@ -118,6 +118,10 @@ playwright-report/
 test-results/
 playwright/.cache/
 
+# Storybook
+storybook-static/
+*storybook.log
+
 # Local development
 .local/
 *.local
