@@ -92,40 +92,159 @@ export interface ButtonProps {
 </Button>
 ```
 
-### TextInput
+### TextInput (2025 Best Practices)
+
+Flexbox-based input component with leading/trailing icon slots, built-in features, and full WCAG 2.1 AAA compliance.
 
 ```typescript
+export type TextInputSize = 'sm' | 'default' | 'lg' | 'xl';
+export type TextInputVariant = 'default' | 'filled' | 'outlined' | 'ghost';
+export type TextInputState = 'default' | 'success' | 'warning' | 'error';
+
+export interface IconSlotProps {
+  icon: ReactNode;
+  onClick?: () => void;
+  ariaLabel?: string;
+  decorative?: boolean;
+}
+
 export interface TextInputProps {
   label?: string;
   error?: string;
   hint?: string;
   onChange: (value: string) => void;
   required?: boolean;
-  icon?: ReactNode; // Left icon (V0.0.1)
-  size?: 'default' | 'lg'; // lg = h-16, rounded-input
+
+  // Icons (simple API - backwards compatible)
+  icon?: ReactNode; // Leading icon
+  trailingIcon?: ReactNode; // Trailing icon
+
+  // Icon slots (advanced API - 2025 best practice)
+  leadingSlot?: IconSlotProps; // Full control over leading icon
+  trailingSlot?: IconSlotProps; // Full control over trailing icon
+
+  // Variants & States
+  size?: TextInputSize; // sm | default | lg | xl
+  variant?: TextInputVariant; // default | filled | outlined | ghost
+  state?: TextInputState; // Auto-detected from error prop
+
+  // Built-in Features
+  showPasswordToggle?: boolean; // Auto eye/eye-off icon for password
+  clearable?: boolean; // Show clear button when has value
+  onClear?: () => void;
+  showCharCount?: boolean; // Show character counter
+  maxLength?: number;
+
+  // Styling
+  containerClassName?: string;
+  wrapperClassName?: string;
+  inputClassName?: string;
 }
 ```
 
 **Size Reference:**
 
-| Size    | Height | SSOT Token    | Font      |
-| ------- | ------ | ------------- | --------- |
-| default | 48px   | rounded-xl    | normal    |
-| lg      | 64px   | rounded-input | font-bold |
+| Size    | Height | Icon Size | Gap     | Typography            |
+| ------- | ------ | --------- | ------- | --------------------- |
+| sm      | 40px   | 16px      | gap-2   | text-sm               |
+| default | 48px   | 18px      | gap-3   | text-base             |
+| lg      | 56px   | 20px      | gap-3.5 | text-base font-medium |
+| xl      | 64px   | 22px      | gap-4   | text-lg font-bold     |
 
-**Usage:**
+**Variant Reference:**
+
+| Variant  | Background            | Border             | Use Case         |
+| -------- | --------------------- | ------------------ | ---------------- |
+| default  | bg-theme-bg-secondary | border-subtle      | Standard forms   |
+| filled   | bg-theme-bg-tertiary  | border-transparent | Compact UI       |
+| outlined | bg-transparent        | border-default     | Prominent fields |
+| ghost    | bg-transparent        | border-transparent | Inline editing   |
+
+**State Colors:**
+
+| State   | Border Color                | Icon Color                |
+| ------- | --------------------------- | ------------------------- |
+| default | (variant default)           | text-theme-text-secondary |
+| success | border-theme-status-success | text-theme-status-success |
+| warning | border-theme-status-warning | text-theme-status-warning |
+| error   | border-theme-status-error   | text-theme-status-error   |
+
+**Usage Examples:**
 
 ```tsx
+// Basic with leading icon (backwards compatible)
 <TextInput
   label="Email"
   type="email"
   size="lg"
-  icon={<Mail size={18} />}
+  icon={<Mail size={20} />}
   value={email}
   onChange={setEmail}
   required
 />
+
+// Password with visibility toggle (2025 feature)
+<TextInput
+  label="Password"
+  type="password"
+  size="lg"
+  icon={<Lock size={20} />}
+  showPasswordToggle
+  value={password}
+  onChange={setPassword}
+/>
+
+// Clearable input with character count
+<TextInput
+  label="Username"
+  size="lg"
+  icon={<AtSign size={20} />}
+  clearable
+  showCharCount
+  maxLength={20}
+  value={username}
+  onChange={setUsername}
+/>
+
+// Advanced: Custom trailing slot with action
+<TextInput
+  label="Search"
+  size="lg"
+  icon={<Search size={20} />}
+  trailingSlot={{
+    icon: <Mic size={20} />,
+    onClick: startVoiceSearch,
+    ariaLabel: "Voice search"
+  }}
+  value={query}
+  onChange={setQuery}
+/>
+
+// Outlined variant with success state
+<TextInput
+  label="Verified Email"
+  variant="outlined"
+  state="success"
+  size="lg"
+  icon={<Mail size={20} />}
+  trailingIcon={<CheckCircle size={20} />}
+  value={email}
+  onChange={setEmail}
+/>
 ```
+
+**2025 Architecture Features:**
+
+| Feature                  | Description                                           |
+| ------------------------ | ----------------------------------------------------- |
+| Flexbox Layout           | No absolute positioning hacks                         |
+| Slot-based Icons         | Leading/trailing with click handlers & aria-labels    |
+| Built-in Password Toggle | Automatic eye/eye-off for type="password"             |
+| Built-in Clear Button    | Shows when `clearable` and has value                  |
+| Character Counter        | Live count with max limit warning                     |
+| Validation States        | Auto-detected from error prop or manual override      |
+| WCAG 2.5.5 AAA           | 48px+ touch targets, proper aria attributes           |
+| Design Token Based       | Centralized SIZE_CONFIG, VARIANT_CONFIG, STATE_CONFIG |
 
 ### Card
 

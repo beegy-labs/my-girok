@@ -25,6 +25,10 @@ export { focusClasses } from './styles/constants';
 // Re-export commonly used types
 export type {
   TextInputProps,
+  TextInputSize,
+  TextInputVariant,
+  TextInputState,
+  IconSlotProps,
   SelectInputProps,
   SelectOption,
   ButtonProps,
