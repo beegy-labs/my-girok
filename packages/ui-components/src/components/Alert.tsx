@@ -94,7 +94,7 @@ export function Alert({ variant = 'info', title, children, onClose, className = 
 
   return (
     <div
-      className={`border px-4 py-3 rounded-xl flex items-start ${style.container} ${className}`}
+      className={`border px-4 py-3 rounded-input flex items-start ${style.container} ${className}`}
       role="alert"
     >
       <span className="flex-shrink-0 mr-2 mt-0.5">{style.icon}</span>

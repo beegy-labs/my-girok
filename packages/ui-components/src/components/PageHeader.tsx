@@ -9,7 +9,11 @@ export interface PageHeaderProps {
   action?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  backLinkComponent?: React.ElementType<{ to: string; className?: string; children: React.ReactNode }>;
+  backLinkComponent?: React.ElementType<{
+    to: string;
+    className?: string;
+    children: React.ReactNode;
+  }>;
 }
 
 export function PageHeader({
@@ -60,7 +64,7 @@ export function PageHeader({
       className={`
         bg-theme-bg-card
         border border-theme-border-subtle
-        rounded-xl sm:rounded-2xl
+        rounded-input sm:rounded-widget
         shadow-theme-lg
         ${styles.wrapper}
         transition-colors duration-200
@@ -68,26 +72,21 @@ export function PageHeader({
       `}
     >
       {/* Back Link */}
-      {backLink && (
-        BackLinkComponent ? (
+      {backLink &&
+        (BackLinkComponent ? (
           <BackLinkComponent to={backLink} className="no-underline">
             {backLinkContent}
           </BackLinkComponent>
         ) : (
-          <a href={backLink}>
-            {backLinkContent}
-          </a>
-        )
-      )}
+          <a href={backLink}>{backLinkContent}</a>
+        ))}
 
       {/* Header Content */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className={`flex items-center ${styles.gap} mb-1 sm:mb-2`}>
             {icon && <span className={styles.iconSize}>{icon}</span>}
-            <h1 className={`${styles.titleSize} text-theme-text-primary break-words`}>
-              {title}
-            </h1>
+            <h1 className={`${styles.titleSize} text-theme-text-primary break-words`}>{title}</h1>
           </div>
           {subtitle && (
             <p

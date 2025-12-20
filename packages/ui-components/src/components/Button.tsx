@@ -64,9 +64,9 @@ const sizeClasses = {
 } as const;
 
 // Border radius options - SSOT tokens from tokens.css
-// V0.0.1: default (16px) for secondary, editorial (24px) for primary
+// V0.0.1: default (24px) for consistent curves, editorial (24px) same for compatibility
 const roundedClasses = {
-  default: 'rounded-2xl',
+  default: 'rounded-input', // SSOT: --border-radius-input: 24px
   editorial: 'rounded-input', // SSOT: --border-radius-input: 24px
   full: 'rounded-full',
 } as const;

@@ -48,7 +48,7 @@ export interface MenuRowProps {
 // V0.0.1 AAA Workstation Design System
 
 const baseClasses =
-  'w-full flex items-center gap-6 px-8 py-5 bg-theme-bg-card border-2 border-theme-border-subtle rounded-3xl transition-all duration-300 shadow-theme-sm';
+  'w-full flex items-center gap-6 px-8 py-5 bg-theme-bg-card border-2 border-theme-border-subtle rounded-widget transition-all duration-300 shadow-theme-sm';
 
 const enabledClasses =
   'cursor-pointer hover:bg-theme-bg-hover hover:border-theme-primary hover:-translate-y-0.5';

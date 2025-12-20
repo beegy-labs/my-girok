@@ -47,7 +47,7 @@ const paddingClasses = {
 
 // V0.0.1 Editorial radius options - SSOT tokens from tokens.css
 const radiusClasses = {
-  default: 'rounded-2xl', // 16px (Tailwind default)
+  default: 'rounded-input', // SSOT: --border-radius-input: 24px
   lg: 'rounded-editorial', // SSOT: --border-radius-editorial: 40px
   xl: 'rounded-editorial-lg', // SSOT: --border-radius-editorial-lg: 48px
   '2xl': 'rounded-editorial-2xl', // SSOT: --border-radius-editorial-2xl: 64px
