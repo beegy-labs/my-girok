@@ -739,7 +739,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               type="date"
               value={formData.birthDate || ''}
               onChange={handleBirthDateChange}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               placeholder={t('resume.birthDatePlaceholder')}
               min="1900-01-01"
               max={new Date().toISOString().split('T')[0]}
@@ -755,7 +755,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <select
               value={formData.gender || ''}
               onChange={handleGenderChange}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             >
               <option value="">{t('resume.genderPlaceholder')}</option>
               <option value="MALE">{t('resume.genderOptions.MALE')}</option>
@@ -861,7 +861,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <select
             value={formData.militaryService || ''}
             onChange={handleSelectChange('militaryService')}
-            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
           >
             <option value="">{t('resume.form.militaryServiceSelect')}</option>
             <option value="COMPLETED">{t('resume.form.militaryServiceCompleted')}</option>
@@ -878,7 +878,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               <select
                 value={formData.militaryRank || ''}
                 onChange={handleSelectChange('militaryRank')}
-                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               >
                 <option value="">{t('resume.form.militaryRankSelect')}</option>
                 <option value="병장">{t('resume.militaryRanks.sergeant')}</option>
@@ -894,7 +894,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               <select
                 value={formData.militaryDischargeType || ''}
                 onChange={handleSelectChange('militaryDischargeType')}
-                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               >
                 <option value="">{t('resume.form.militaryDischargeSelect')}</option>
                 <option value="만기전역">{t('resume.dischargeTypes.honorable')}</option>
@@ -910,14 +910,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   type="month"
                   value={formData.militaryServiceStartDate || ''}
                   onChange={handleInputChange('militaryServiceStartDate')}
-                  className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                  className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
                 <span className="text-theme-text-tertiary text-sm">~</span>
                 <input
                   type="month"
                   value={formData.militaryServiceEndDate || ''}
                   onChange={handleInputChange('militaryServiceEndDate')}
-                  className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                  className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
               </div>
               <p className="text-xs text-theme-text-tertiary mt-1 hidden sm:block">
@@ -1325,7 +1325,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           value={formData.coverLetter || ''}
           onChange={handleCoverLetterChange}
           rows={6}
-          className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+          className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
           placeholder={t('resume.form.coverLetterPlaceholder')}
         />
         <p className="text-xs text-theme-text-tertiary mt-1">{t('resume.form.coverLetterHint')}</p>
