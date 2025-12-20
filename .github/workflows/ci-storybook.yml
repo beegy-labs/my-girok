@@ -41,7 +41,6 @@ env:
   REGISTRY: harbor.girok.dev
   IMAGE_NAME: my-girok/storybook
   NODE_VERSION: '24'
-  PNPM_VERSION: '9'
 
 # Minimum permissions
 permissions:
@@ -65,8 +64,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
