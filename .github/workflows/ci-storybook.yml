@@ -1,0 +1,272 @@
+# =============================================================================
+# CI/CD Storybook - Design System Documentation
+# Builds, tests, and deploys Storybook to Kubernetes
+# =============================================================================
+
+name: CI/CD Storybook
+
+on:
+  push:
+    tags:
+      - 'ui-v*'
+    branches:
+      - develop
+    paths:
+      - 'packages/ui-components/**'
+      - 'packages/design-tokens/**'
+      - 'apps/storybook/**'
+      - '.github/workflows/ci-storybook.yml'
+  pull_request:
+    paths:
+      - 'packages/ui-components/**'
+      - 'packages/design-tokens/**'
+      - 'apps/storybook/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 0.1.0)'
+        required: false
+        default: ''
+      deploy_k8s:
+        description: 'Deploy to Kubernetes'
+        type: boolean
+        default: false
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: harbor.girok.dev
+  IMAGE_NAME: my-girok/storybook
+  NODE_VERSION: '24'
+
+# Minimum permissions
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  # ===========================================================================
+  # Build and test Storybook
+  # ===========================================================================
+  build:
+    name: Build Storybook
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+      should_deploy: ${{ steps.check.outputs.SHOULD_DEPLOY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build design tokens
+        run: pnpm --filter @my-girok/design-tokens build
+
+      - name: Build UI components
+        run: pnpm --filter @my-girok/ui-components build
+
+      - name: Build Storybook
+        run: pnpm --filter @my-girok/ui-components build-storybook
+
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/ui-v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/ui-v}"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ "${{ github.ref_name }}" = "develop" ]; then
+            VERSION="develop"
+          else
+            VERSION="$(node -p "require('./packages/ui-components/package.json').version")"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "::notice::Version: $VERSION"
+
+      - name: Check if should deploy
+        id: check
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/ui-v* ]] || \
+             [[ "${{ github.ref_name }}" == "develop" ]] || \
+             [[ "${{ github.event.inputs.deploy_k8s }}" == "true" ]]; then
+            echo "SHOULD_DEPLOY=true" >> $GITHUB_OUTPUT
+            echo "::notice::Deployment enabled"
+          else
+            echo "SHOULD_DEPLOY=false" >> $GITHUB_OUTPUT
+            echo "::notice::Deployment skipped (PR build only)"
+          fi
+
+      - name: Upload Storybook artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: packages/ui-components/storybook-static
+          retention-days: 7
+          if-no-files-found: error
+
+  # ===========================================================================
+  # Build and push Docker image
+  # ===========================================================================
+  docker:
+    name: Build Docker Image
+    needs: build
+    if: needs.build.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Harbor Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.build.outputs.version }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/storybook/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      - name: Summary
+        run: |
+          echo "## Docker Image Built" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' | tr ',' '\n' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+  # ===========================================================================
+  # Deploy to Kubernetes
+  # ===========================================================================
+  deploy-k8s:
+    name: Deploy to Kubernetes
+    needs: [build, docker]
+    if: needs.build.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'development' }}
+      url: ${{ startsWith(github.ref, 'refs/tags/') && 'https://design.girok.dev' || 'https://design-dev.girok.dev' }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.0'
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Validate Helm chart
+        run: |
+          cd apps/storybook/helm
+          helm lint .
+
+      - name: Deploy to Kubernetes
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          NAMESPACE="${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'development' }}"
+
+          # Determine values file
+          if [ "$NAMESPACE" = "production" ]; then
+            VALUES_FILE="values-prod.yaml"
+          else
+            VALUES_FILE="values-dev.yaml"
+          fi
+
+          cd apps/storybook/helm
+
+          # Create values file if not exists
+          if [ ! -f "$VALUES_FILE" ]; then
+            cp values.yaml.example "$VALUES_FILE"
+          fi
+
+          # Dry run first
+          helm upgrade --install storybook . \
+            --namespace "$NAMESPACE" \
+            --create-namespace \
+            -f "$VALUES_FILE" \
+            --set image.tag="$VERSION" \
+            --set image.repository="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
+            --dry-run
+
+          # Actual deployment
+          helm upgrade --install storybook . \
+            --namespace "$NAMESPACE" \
+            --create-namespace \
+            -f "$VALUES_FILE" \
+            --set image.tag="$VERSION" \
+            --set image.repository="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
+            --wait \
+            --timeout 5m
+
+      - name: Verify deployment
+        run: |
+          NAMESPACE="${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'development' }}"
+          kubectl rollout status deployment/storybook -n "$NAMESPACE" --timeout=3m
+          kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=storybook
+
+      - name: Summary
+        run: |
+          NAMESPACE="${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'development' }}"
+          echo "## Kubernetes Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Namespace | \`$NAMESPACE\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | \`${{ needs.build.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          if [ "$NAMESPACE" = "production" ]; then
+            echo "| URL | https://design.girok.dev |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| URL | https://design-dev.girok.dev |" >> $GITHUB_STEP_SUMMARY
+          fi

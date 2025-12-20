@@ -625,7 +625,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       <Card
         variant="secondary"
         padding="responsive"
-        className="shadow-sm rounded-xl sm:rounded-input lg:rounded-widget"
+        className="shadow-sm rounded-input sm:rounded-input lg:rounded-widget"
       >
         <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-3 sm:mb-4 lg:mb-6">
           ⚙️ {t('resume.sections.settings')}
@@ -787,7 +787,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   type="button"
                   onClick={handleProfilePhotoCancel}
                   disabled={uploading}
-                  className="px-3 py-1 text-xs bg-theme-bg-elevated text-theme-text-secondary rounded-xl hover:bg-theme-bg-hover disabled:opacity-50"
+                  className="px-3 py-1 text-xs bg-theme-bg-elevated text-theme-text-secondary rounded-input hover:bg-theme-bg-hover disabled:opacity-50"
                 >
                   {t('common.cancel')}
                 </button>
@@ -812,7 +812,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   type="button"
                   onClick={handleProfilePhotoDelete}
                   disabled={uploading}
-                  className="px-3 py-2 text-xs sm:text-sm bg-theme-status-error-bg text-theme-status-error-text rounded-xl hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                  className="px-3 py-2 text-xs sm:text-sm bg-theme-status-error-bg text-theme-status-error-text rounded-input hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                 >
                   {uploading ? t('resume.form.deletingPhoto') : t('resume.form.deletePhoto')}
                 </button>
@@ -822,7 +822,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           {!profilePhotoPreview &&
             formData.profileImage &&
             formData.profileImage.startsWith('blob:') && (
-              <div className="mb-3 p-3 bg-theme-status-error-bg border border-theme-status-error-border rounded-xl">
+              <div className="mb-3 p-3 bg-theme-status-error-bg border border-theme-status-error-border rounded-input">
                 <p className="text-xs text-theme-status-error-text">
                   ⚠️ {t('resume.form.invalidImageUrl')}
                 </p>
@@ -837,7 +837,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 accept="image/*"
                 onChange={handleProfilePhotoChange}
                 disabled={uploading}
-                className="block w-full text-sm text-theme-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-theme-bg-hover file:text-theme-primary hover:file:bg-theme-bg-elevated disabled:opacity-50 disabled:cursor-not-allowed"
+                className="block w-full text-sm text-theme-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-input file:border-0 file:text-sm file:font-semibold file:bg-theme-bg-hover file:text-theme-primary hover:file:bg-theme-bg-elevated disabled:opacity-50 disabled:cursor-not-allowed"
               />
               {uploading && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-theme-primary">
@@ -1040,7 +1040,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {formData.certificates.map((cert, index) => (
               <div
                 key={index}
-                className="border border-theme-border-subtle rounded-xl p-3 sm:p-4 bg-theme-bg-input transition-colors duration-200"
+                className="border border-theme-border-subtle rounded-input p-3 sm:p-4 bg-theme-bg-input transition-colors duration-200"
               >
                 <div className="flex justify-between items-center mb-3 sm:mb-4">
                   <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">
@@ -1116,7 +1116,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </CollapsibleSection>
 
       {/* Attachments Section */}
-      <div className="bg-theme-bg-card border border-theme-border-subtle rounded-xl sm:rounded-input lg:rounded-widget shadow-theme-sm transition-colors duration-200 p-3 sm:p-6 lg:p-8">
+      <div className="bg-theme-bg-card border border-theme-border-subtle rounded-input sm:rounded-input lg:rounded-widget shadow-theme-sm transition-colors duration-200 p-3 sm:p-6 lg:p-8">
         <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-1 sm:mb-2 lg:mb-4">
           📎 {t('resume.form.attachments')}
         </h2>
@@ -1125,13 +1125,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </p>
 
         {!resume?.id && (
-          <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-xl p-4 mb-4">
+          <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-input p-4 mb-4">
             <p className="text-theme-status-info-text text-sm">💡 {t('resume.form.saveFirst')}</p>
           </div>
         )}
 
         {uploadError && (
-          <div className="bg-theme-status-error-bg border border-theme-status-error-border rounded-xl p-4 mb-4">
+          <div className="bg-theme-status-error-bg border border-theme-status-error-border rounded-input p-4 mb-4">
             <p className="text-theme-status-error-text text-sm">⚠️ {uploadError}</p>
           </div>
         )}
@@ -1148,7 +1148,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {getAttachmentsByType(AttachmentType.PROFILE_PHOTO).map((attachment) => (
               <div
                 key={attachment.id}
-                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-xl p-3 transition-colors duration-200"
+                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-input p-3 transition-colors duration-200"
               >
                 <div className="flex items-center gap-3">
                   {attachment.fileUrl && (
@@ -1186,7 +1186,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={handleFileChange(AttachmentType.PROFILE_PHOTO)}
                 className="hidden"
               />
-              <div className="border-2 border-dashed border-theme-border-default rounded-xl p-4 text-center hover:border-theme-primary transition-colors">
+              <div className="border-2 border-dashed border-theme-border-default rounded-input p-4 text-center hover:border-theme-primary transition-colors">
                 <p className="text-sm text-theme-text-secondary">
                   {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPhoto')}
                 </p>
@@ -1205,7 +1205,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {getAttachmentsByType(AttachmentType.PORTFOLIO).map((attachment) => (
               <div
                 key={attachment.id}
-                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-xl p-3 transition-colors duration-200"
+                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-input p-3 transition-colors duration-200"
               >
                 <div>
                   <p className="text-sm font-medium text-theme-text-primary">
@@ -1237,7 +1237,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={handleFileChange(AttachmentType.PORTFOLIO)}
                 className="hidden"
               />
-              <div className="border-2 border-dashed border-theme-border-default rounded-xl p-4 text-center hover:border-theme-primary transition-colors">
+              <div className="border-2 border-dashed border-theme-border-default rounded-input p-4 text-center hover:border-theme-primary transition-colors">
                 <p className="text-sm text-theme-text-secondary">
                   {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPortfolio')}
                 </p>
@@ -1258,7 +1258,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {getAttachmentsByType(AttachmentType.CERTIFICATE).map((attachment) => (
               <div
                 key={attachment.id}
-                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-xl p-3 transition-colors duration-200"
+                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-input p-3 transition-colors duration-200"
               >
                 <div>
                   <p className="text-sm font-medium text-theme-text-primary">
@@ -1290,7 +1290,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 onChange={handleFileChange(AttachmentType.CERTIFICATE)}
                 className="hidden"
               />
-              <div className="border-2 border-dashed border-theme-border-default rounded-xl p-4 text-center hover:border-theme-primary transition-colors">
+              <div className="border-2 border-dashed border-theme-border-default rounded-input p-4 text-center hover:border-theme-primary transition-colors">
                 <p className="text-sm text-theme-text-secondary">
                   {uploading
                     ? t('resume.form.uploading')
@@ -1335,7 +1335,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       {/* Auto-save indicator */}
       {draftSaved && (
         <div className="flex justify-end">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-theme-status-success-bg border border-theme-status-success-border rounded-xl text-theme-status-success-text text-xs sm:text-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-theme-status-success-bg border border-theme-status-success-border rounded-input text-theme-status-success-text text-xs sm:text-sm">
             <span>✓</span>
             <span>{t('resume.success.saved')}</span>
           </div>
@@ -1357,21 +1357,21 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <button
             type="submit"
             disabled={submitting}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-theme-primary/30 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-sm sm:text-base"
+            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white font-semibold rounded-input transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-theme-primary/30 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-sm sm:text-base"
           >
             {submitting ? t('resume.form.saving') : t('resume.form.saveAndPreview')}
           </button>
           <button
             type="button"
             onClick={handleSaveDraft}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-input hover:bg-theme-bg-hover text-theme-primary rounded-xl font-semibold border-2 border-theme-primary transition-all touch-manipulation text-sm sm:text-base"
+            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-input hover:bg-theme-bg-hover text-theme-primary rounded-input font-semibold border-2 border-theme-primary transition-all touch-manipulation text-sm sm:text-base"
           >
             📝 {t('common.save')}
           </button>
           <button
             type="button"
             onClick={handleBack}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-elevated hover:bg-theme-bg-hover text-theme-text-secondary rounded-xl font-semibold border border-theme-border-default transition-all touch-manipulation text-sm sm:text-base"
+            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-elevated hover:bg-theme-bg-hover text-theme-text-secondary rounded-input font-semibold border border-theme-border-default transition-all touch-manipulation text-sm sm:text-base"
           >
             {t('common.cancel')}
           </button>

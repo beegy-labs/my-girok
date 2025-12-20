@@ -63,7 +63,7 @@ const baseInputClasses =
 const defaultBorderClasses = 'border-2 border-theme-border-subtle';
 
 const sizeClasses = {
-  default: 'min-h-[48px] px-4 py-3 rounded-xl',
+  default: 'min-h-[48px] px-4 py-3 rounded-input', // SSOT: --border-radius-input: 24px
   lg: 'h-16 px-6 py-4 rounded-input font-bold', // SSOT: --border-radius-input: 24px
 } as const;
 

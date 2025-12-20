@@ -10,7 +10,7 @@ ENV VITE_PERSONAL_API_URL=${VITE_PERSONAL_API_URL}
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Copy workspace configuration
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./

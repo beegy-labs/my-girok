@@ -24,6 +24,8 @@ import NotificationsPage from './pages/NotificationsPage';
 // Legal pages
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+// Design System
+import DesignSystemPage from './pages/DesignSystemPage';
 
 export const router = createBrowserRouter([
   // Main layout - standard pages with container constraints
@@ -136,6 +138,11 @@ export const router = createBrowserRouter([
       {
         path: 'terms',
         element: <TermsPage />,
+      },
+      // Design System (public - for development reference)
+      {
+        path: 'design-system',
+        element: <DesignSystemPage />,
       },
       {
         path: '*',

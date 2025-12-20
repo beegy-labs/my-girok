@@ -412,7 +412,7 @@ export default function MyResumePage() {
                               {activeShares.map((link) => (
                                 <div
                                   key={link.id}
-                                  className="bg-theme-bg-card border border-theme-border-subtle rounded-xl p-3 sm:p-4 transition-colors duration-200"
+                                  className="bg-theme-bg-card border border-theme-border-subtle rounded-input p-3 sm:p-4 transition-colors duration-200"
                                 >
                                   <div className="flex items-start justify-between gap-3 mb-2">
                                     <div className="flex-1 min-w-0">
