@@ -44,7 +44,7 @@ jobs:
   # ===========================================================================
   build:
     name: Build Storybook
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, kubernetes, gitops]
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
 
@@ -101,7 +101,7 @@ jobs:
     name: Build Docker Image
     needs: build
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/ui-v'))
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, kubernetes, gitops]
 
     steps:
       - name: Checkout
