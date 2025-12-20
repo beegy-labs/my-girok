@@ -1,6 +1,29 @@
-import type { Preview } from '@storybook/react-vite';
+import type { Preview, StoryContext } from '@storybook/react-vite';
+import { useEffect } from 'react';
 // Import design tokens for SSOT styling
 import '@my-girok/design-tokens/tokens.css';
+
+/**
+ * Theme decorator - Synchronizes Storybook theme toggle with data-theme attribute
+ * Enables live theme switching without page reload
+ */
+function ThemeDecorator(Story: React.ComponentType, context: StoryContext) {
+  const theme = context.globals.theme || 'light';
+
+  useEffect(() => {
+    // Update document root for components that read from :root
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  return (
+    <div
+      data-theme={theme}
+      className="bg-theme-bg-page p-8 min-h-screen transition-colors duration-200"
+    >
+      <Story />
+    </div>
+  );
+}
 
 const preview: Preview = {
   parameters: {
@@ -10,16 +33,8 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
-    // V0.0.1 AAA Workstation - Background options
-    backgrounds: {
-      default: 'light',
-      values: [
-        { name: 'light', value: '#FAF9F7' }, // --bg-page light
-        { name: 'dark', value: '#1C1917' }, // --bg-page dark
-        { name: 'card-light', value: '#FFFFFF' },
-        { name: 'card-dark', value: '#292524' },
-      ],
-    },
+    // V0.0.1 AAA Workstation - Backgrounds disabled (use theme toggle instead)
+    backgrounds: { disable: true },
     // WCAG AAA accessibility testing
     a11y: {
       // 'error' - fail CI on a11y violations (strict AAA compliance)
@@ -37,13 +52,7 @@ const preview: Preview = {
     },
   },
   // Global decorators
-  decorators: [
-    (Story) => (
-      <div data-theme="light" className="bg-theme-bg-page p-8 min-h-screen">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [ThemeDecorator],
   // Theme toggle in toolbar
   globalTypes: {
     theme: {
@@ -53,8 +62,8 @@ const preview: Preview = {
       toolbar: {
         icon: 'sun',
         items: [
-          { value: 'light', title: 'Light', icon: 'sun' },
-          { value: 'dark', title: 'Dark', icon: 'moon' },
+          { value: 'light', title: 'Clean White Oak', icon: 'sun' },
+          { value: 'dark', title: 'Midnight Gentle Study', icon: 'moon' },
         ],
         dynamicTitle: true,
       },

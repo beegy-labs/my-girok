@@ -120,6 +120,17 @@ All text combinations meet 7:1+ contrast ratio (AAA standard).
 - Chrome 85+, Firefox 128+, Safari 15.4+ (for @property)
 - Graceful degradation in older browsers
 
+## Storybook Sync
+
+When updating tokens, also update Storybook documentation:
+
+1. **Color changes** → `packages/ui-components/src/DesignTokens.mdx`
+2. **Branding colors** → `.storybook/manager.ts` (sidebar, buttons)
+3. **New tokens** → Add to color palette or token tables in MDX
+4. **Verify** → `pnpm --filter @my-girok/ui-components storybook`
+
+Live preview: https://design-dev.girok.dev
+
 ## References
 
 | Document                                | Content                           |

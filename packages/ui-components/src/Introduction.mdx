@@ -1,0 +1,116 @@
+{/* Introduction.mdx - GIROK Design System Documentation */}
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# GIROK Design System
+
+**V0.0.1 AAA Workstation** - WCAG 2.1 AAA Compliant Component Library
+
+---
+
+## Overview
+
+This design system provides accessible, theme-aware components for the GIROK platform.
+All components meet **WCAG 2.1 AAA** standards with 7:1+ contrast ratios.
+
+### Key Features
+
+- **WCAG 2.1 AAA Compliance** - All text meets 7:1+ contrast ratio
+- **Theme Support** - Light ("Clean White Oak") and Dark ("Midnight Gentle Study")
+- **SSOT Design Tokens** - Single source of truth via Tailwind CSS 4 `@theme`
+- **44px+ Touch Targets** - Meets minimum accessibility requirements
+- **Keyboard Navigation** - Full keyboard support with visible focus rings
+
+---
+
+## Themes
+
+Use the **Theme** toggle in the toolbar above to switch between themes.
+
+### Clean White Oak (Light)
+
+| Token | Color | Usage |
+|-------|-------|-------|
+| `--light-bg-page` | `#FFFFFF` | Page background |
+| `--light-bg-card` | `#F8F7F4` | Card background |
+| `--light-text-primary` | `#262220` | Primary text (15.76:1) |
+| `--light-primary` | `#6B4A2E` | Brand accent (7.94:1) |
+
+### Midnight Gentle Study (Dark)
+
+| Token | Color | Usage |
+|-------|-------|-------|
+| `--dark-bg-page` | `#1E1C1A` | Page background |
+| `--dark-bg-card` | `#282522` | Card background |
+| `--dark-text-primary` | `#CCC5BD` | Primary text (9.94:1) |
+| `--dark-primary` | `#D0B080` | Brand accent (8.25:1) |
+
+---
+
+## Installation
+
+```bash
+# Install design tokens and UI components
+pnpm add @my-girok/design-tokens @my-girok/ui-components
+```
+
+```css
+/* Import design tokens in your CSS entry point */
+@import '@my-girok/design-tokens/tokens.css';
+```
+
+```tsx
+// Import components
+import { Button, Card, TextInput } from '@my-girok/ui-components';
+```
+
+---
+
+## SSOT Utility Classes
+
+All styling uses **SSOT (Single Source of Truth)** tokens. Never use hardcoded values.
+
+### Border Radius
+
+| Utility | Value | Usage |
+|---------|-------|-------|
+| `rounded-input` | 24px | Inputs, buttons |
+| `rounded-widget` | 32px | Widgets, modals |
+| `rounded-editorial` | 40px | Cards |
+| `rounded-editorial-lg` | 48px | Form cards |
+| `rounded-editorial-xl` | 56px | Hero sections |
+| `rounded-editorial-2xl` | 64px | Menu cards |
+
+### Typography
+
+| Utility | Usage |
+|---------|-------|
+| `font-serif-title` | Serif headings (Playfair Display) |
+| `font-mono-brand` | Brand labels |
+| `tracking-brand` | Letter spacing 0.3em |
+| `tracking-editorial` | Tight tracking -0.05em |
+
+---
+
+## Component Status
+
+| Component | Status | A11y |
+|-----------|--------|------|
+| Button | Stable | AAA |
+| Card | Stable | AAA |
+| Badge | Stable | AAA |
+| Alert | Stable | AAA |
+| TextInput | Stable | AAA |
+| MenuCard | Stable | AAA |
+| MenuRow | Stable | AAA |
+| ViewToggle | Stable | AAA |
+| TopWidget | Stable | AAA |
+
+---
+
+## Resources
+
+- [SSOT Strategy](.ai/ssot.md) - Design token naming conventions
+- [Design Tokens Package](packages/design-tokens) - Source of truth
+- [WCAG 2.1 AAA Guidelines](https://www.w3.org/WAI/WCAG21/Understanding/)

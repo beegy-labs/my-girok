@@ -30,13 +30,18 @@ apps/storybook/                    # Deployment configuration
 
 packages/ui-components/            # Component source
 ├── .storybook/                    # Storybook configuration
-│   ├── main.ts
-│   ├── preview.tsx
+│   ├── main.ts                    # Addons, framework config
+│   ├── manager.ts                 # Custom GIROK branding
+│   ├── preview.tsx                # Theme decorator, a11y config
+│   ├── preview-head.html          # Custom fonts (Playfair Display)
 │   └── vitest.setup.ts
-└── src/components/
-    ├── Button.tsx
-    ├── Button.stories.tsx         # CSF 3.0 stories
-    └── ...
+└── src/
+    ├── Introduction.mdx           # Getting started page
+    ├── DesignTokens.mdx           # Color palette documentation
+    └── components/
+        ├── Button.tsx
+        ├── Button.stories.tsx     # CSF 3.0 stories
+        └── ...
 ```
 
 ## Relationship with ui-components
@@ -199,6 +204,58 @@ Storybook serves static files only - very lightweight:
 | -------- | ------- | ----- |
 | CPU      | 10m     | 100m  |
 | Memory   | 32Mi    | 64Mi  |
+
+## Storybook Features (2025)
+
+### Theme Toggle
+
+The toolbar includes a theme switcher:
+
+- **Clean White Oak** (Light) - Default theme
+- **Midnight Gentle Study** (Dark) - Dark mode
+
+Theme changes are synchronized to `data-theme` attribute on document root.
+
+### Custom Branding
+
+`manager.ts` applies GIROK design tokens to Storybook UI:
+
+- Oak Brown primary color (#6B4A2E)
+- Clean White Oak background colors
+- System fonts with monospace code
+
+### Documentation Pages
+
+| Page          | Path                       | Content                           |
+| ------------- | -------------------------- | --------------------------------- |
+| Introduction  | `Introduction.mdx`         | Getting started, component status |
+| Design Tokens | `Foundation/Design Tokens` | Color palettes, typography tokens |
+
+### Accessibility Testing
+
+`@storybook/addon-a11y` is configured with WCAG AAA enforcement:
+
+- 7:1+ contrast ratio requirement
+- `test: 'error'` fails CI on violations
+
+---
+
+## Design System Updates
+
+**When updating design tokens, Storybook must be updated:**
+
+1. Edit `packages/design-tokens/src/tokens.css`
+2. If adding new tokens, update:
+   - `DesignTokens.mdx` - Add to color/token tables
+   - `preview.tsx` - If theme-related changes
+   - `manager.ts` - If branding colors change
+3. Update component stories if props change
+4. Run `pnpm --filter @my-girok/ui-components storybook` to verify
+5. Build: `pnpm --filter @my-girok/storybook build`
+
+**Deployment triggers automatically** on push to `develop`.
+
+---
 
 ## Troubleshooting
 
