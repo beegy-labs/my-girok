@@ -214,7 +214,7 @@ const SkillCategory = memo(function SkillCategory({
   }, [onAddSkillItem, skillIndex]);
 
   return (
-    <div className="border border-theme-border-default rounded-xl p-3 sm:p-5 bg-theme-bg-hover transition-colors duration-200">
+    <div className="border border-theme-border-default rounded-input p-3 sm:p-5 bg-theme-bg-hover transition-colors duration-200">
       <div className="flex justify-between items-center mb-3 sm:mb-4">
         <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">
           {t('resume.form.categoryNumber', { index: skillIndex + 1 })}
@@ -273,7 +273,7 @@ const SkillCategory = memo(function SkillCategory({
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-input rounded-xl border border-dashed border-theme-border-default transition-colors duration-200">
+          <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-input rounded-input border border-dashed border-theme-border-default transition-colors duration-200">
             <p>{t('resume.form.clickToAddSkills')}</p>
           </div>
         )}
@@ -340,7 +340,7 @@ const SkillItemCard = memo(function SkillItemCard({
   );
 
   return (
-    <div className="border border-theme-border-subtle rounded-xl p-2 sm:p-4 bg-theme-bg-card transition-colors duration-200">
+    <div className="border border-theme-border-subtle rounded-input p-2 sm:p-4 bg-theme-bg-card transition-colors duration-200">
       <div className="flex justify-between items-center mb-2 sm:mb-3">
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Move buttons - stacked vertically */}
@@ -403,7 +403,7 @@ const SkillItemCard = memo(function SkillItemCard({
 
       {/* Legacy Description (for backward compatibility) */}
       {itemData.description && !itemData.descriptions?.length && (
-        <div className="mt-3 p-3 bg-theme-status-warning-bg border border-theme-status-warning-border rounded-xl">
+        <div className="mt-3 p-3 bg-theme-status-warning-bg border border-theme-status-warning-border rounded-input">
           <p className="text-xs text-theme-status-warning-text mb-2">
             <strong>{t('resume.form.legacyDescriptionTitle')}</strong> {itemData.description}
           </p>

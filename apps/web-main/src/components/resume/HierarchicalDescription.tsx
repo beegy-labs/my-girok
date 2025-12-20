@@ -20,12 +20,28 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 
-// Depth colors for visual hierarchy
+// Depth colors for visual hierarchy - WCAG AAA 7:1+ compliant
 const DEPTH_COLORS = {
-  1: { bg: 'bg-theme-level-1-bg', border: 'border-l-theme-level-1-border' },
-  2: { bg: 'bg-theme-level-2-bg', border: 'border-l-theme-level-2-border' },
-  3: { bg: 'bg-theme-level-3-bg', border: 'border-l-theme-level-3-border' },
-  4: { bg: 'bg-theme-level-4-bg', border: 'border-l-theme-level-4-border' },
+  1: {
+    bg: 'bg-theme-level-1-bg',
+    border: 'border-l-theme-level-1-border',
+    text: 'text-theme-level-1-text',
+  },
+  2: {
+    bg: 'bg-theme-level-2-bg',
+    border: 'border-l-theme-level-2-border',
+    text: 'text-theme-level-2-text',
+  },
+  3: {
+    bg: 'bg-theme-level-3-bg',
+    border: 'border-l-theme-level-3-border',
+    text: 'text-theme-level-3-text',
+  },
+  4: {
+    bg: 'bg-theme-level-4-bg',
+    border: 'border-l-theme-level-4-border',
+    text: 'text-theme-level-4-text',
+  },
 } as const;
 
 // Generic type for hierarchical descriptions
@@ -126,7 +142,7 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
     <div className="space-y-1 sm:space-y-2">
       {/* Color-coded card by depth */}
       <div
-        className={`${depthColor.bg} rounded-xl p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
+        className={`${depthColor.bg} rounded-input p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{
           marginLeft: `${mobileMargin}rem`,
           maxWidth: `calc(100% - ${mobileMargin}rem)`,
@@ -140,17 +156,17 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
           }}
         >
           <div className="flex items-center gap-1 min-w-[50px] flex-shrink-0">
-            <span className="text-theme-text-secondary font-bold text-sm select-none">
+            <span className={`${depthColor.text} font-bold text-sm select-none`}>
               {getBulletSymbol(depth)}
             </span>
-            <span className="text-xs text-theme-text-tertiary">({depth})</span>
+            <span className={`text-xs ${depthColor.text} opacity-70`}>({depth})</span>
           </div>
 
           <input
             type="text"
             value={item.content}
             onChange={handleContentChange}
-            className="flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm text-theme-text-primary min-w-0 transition-colors duration-200"
+            className={`flex-1 px-2 py-1 border-0 bg-transparent focus:outline-none text-sm ${depthColor.text} min-w-0 transition-colors duration-200`}
             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             placeholder={t('resume.hierarchical.enterDescription')}
           />
@@ -192,14 +208,16 @@ const HierarchicalItemComponent = memo(function HierarchicalItemComponent({
         {/* Mobile: compact layout with inline action buttons */}
         <div className="sm:hidden">
           <div className="flex items-center gap-1.5">
-            <span className="text-theme-text-secondary font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200">
+            <span
+              className={`${depthColor.text} font-bold text-[11px] select-none flex-shrink-0 transition-colors duration-200`}
+            >
               {getBulletSymbol(depth)}
             </span>
             <input
               type="text"
               value={item.content}
               onChange={handleContentChange}
-              className="flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs text-theme-text-primary min-w-0 transition-colors duration-200"
+              className={`flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs ${depthColor.text} min-w-0 transition-colors duration-200`}
               placeholder={t('resume.hierarchical.enterDescription')}
             />
             {/* Inline action buttons for mobile */}
@@ -288,7 +306,7 @@ function SortableHierarchicalItem({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-1 sm:space-y-2">
-      <div className="flex items-start gap-1.5 sm:gap-2 bg-theme-bg-elevated rounded-xl p-1.5 sm:p-2 border border-theme-border-default transition-colors duration-200">
+      <div className="flex items-start gap-1.5 sm:gap-2 bg-theme-bg-elevated rounded-input p-1.5 sm:p-2 border border-theme-border-default transition-colors duration-200">
         <button
           type="button"
           {...attributes}
@@ -425,7 +443,7 @@ export default function HierarchicalDescription({
         <button
           type="button"
           onClick={addItem}
-          className="px-2 py-1 bg-theme-primary text-white text-xs rounded-xl hover:bg-theme-primary-light transition-all transition-colors duration-200"
+          className="px-2 py-1 bg-theme-primary text-white text-xs rounded-input hover:bg-theme-primary-light transition-all duration-200"
         >
           + {t('common.add')}
         </button>

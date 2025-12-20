@@ -111,7 +111,7 @@ services:
     #   - ./services/auth-service/src:/app/services/auth-service/src:ro
     # command: ["pnpm", "dev"]
 
-  # Web Test Application
+  # Web Main Application
   web-main:
     build:
       context: .
@@ -131,6 +131,24 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - my-girok-network
+
+  # Storybook - Design System Documentation
+  storybook:
+    build:
+      context: .
+      dockerfile: apps/storybook/Dockerfile
+    container_name: my-girok-storybook
+    restart: unless-stopped
+    ports:
+      - "6006:6006"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6006/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - my-girok-network
 

@@ -101,7 +101,7 @@ export default function ResumeList() {
         <h1 className="text-3xl font-bold text-theme-text-primary">{t('resume.list.title')}</h1>
         <Link
           to="/resume/new"
-          className="px-4 py-2 bg-gradient-to-r from-theme-primary-dark to-theme-primary text-white rounded-xl hover:from-theme-primary hover:to-theme-primary-light transition"
+          className="px-4 py-2 bg-gradient-to-r from-theme-primary-dark to-theme-primary text-white rounded-input hover:from-theme-primary hover:to-theme-primary-light transition"
         >
           {t('resume.list.createNew')}
         </Link>
@@ -112,7 +112,7 @@ export default function ResumeList() {
           <p className="text-theme-text-secondary mb-4">{t('resume.list.noResumes')}</p>
           <Link
             to="/resume/new"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-theme-primary-dark to-theme-primary text-white rounded-xl hover:from-theme-primary hover:to-theme-primary-light transition"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-theme-primary-dark to-theme-primary text-white rounded-input hover:from-theme-primary hover:to-theme-primary-light transition"
           >
             {t('resume.list.createFirst')}
           </Link>
@@ -166,7 +166,7 @@ const ResumeCard = memo(function ResumeCard({
   }, [onDelete, resume.id]);
 
   return (
-    <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 hover:shadow-theme-lg transition">
+    <div className="bg-theme-bg-card border border-theme-border-default rounded-input p-6 hover:shadow-theme-lg transition">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">

@@ -13,7 +13,7 @@ export interface SelectOption {
 // - text-base (16px) for readability
 // - focus ring via focusClasses (4px, SSOT)
 const baseSelectClasses =
-  'w-full min-h-[48px] px-4 py-3 text-base rounded-xl bg-theme-bg-input text-theme-text-primary focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
+  'w-full min-h-[48px] px-4 py-3 text-base rounded-input bg-theme-bg-input text-theme-text-primary focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
 
 const defaultBorderClasses = 'border border-theme-border-default';
 

@@ -99,7 +99,7 @@ export default function NotificationButton() {
 
   // Get status badge styling
   const getStatusBadgeClass = useCallback((_status: Notification['status'], read: boolean) => {
-    const baseClass = 'text-[11px] font-black uppercase px-3 py-1 rounded-xl border';
+    const baseClass = 'text-[11px] font-black uppercase px-3 py-1 rounded-input border';
     if (read) {
       return `${baseClass} border-theme-border-default text-theme-text-secondary`;
     }
@@ -117,7 +117,7 @@ export default function NotificationButton() {
           defaultValue: `Notifications (${unreadCount} unread)`,
           count: unreadCount,
         })}
-        className={`p-3 rounded-xl transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center ${focusClasses} ${
+        className={`p-3 rounded-input transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center ${focusClasses} ${
           isOpen
             ? 'bg-theme-bg-secondary text-theme-primary border border-theme-border-default'
             : 'text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover'
@@ -175,7 +175,7 @@ export default function NotificationButton() {
                         {!notification.read && (
                           <button
                             onClick={handleMarkAsRead(notification.id)}
-                            className={`p-2.5 text-theme-primary hover:bg-theme-primary/10 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center ${focusClasses}`}
+                            className={`p-2.5 text-theme-primary hover:bg-theme-primary/10 rounded-input min-w-[44px] min-h-[44px] flex items-center justify-center ${focusClasses}`}
                             aria-label={t('notifications.markAsRead', {
                               defaultValue: 'Mark as read',
                             })}
@@ -185,7 +185,7 @@ export default function NotificationButton() {
                         )}
                         <button
                           onClick={handleDelete(notification.id)}
-                          className={`p-2.5 text-theme-status-error-text hover:bg-theme-status-error-bg rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center ${focusClasses}`}
+                          className={`p-2.5 text-theme-status-error-text hover:bg-theme-status-error-bg rounded-input min-w-[44px] min-h-[44px] flex items-center justify-center ${focusClasses}`}
                           aria-label={t('notifications.delete', {
                             defaultValue: 'Delete notification',
                           })}

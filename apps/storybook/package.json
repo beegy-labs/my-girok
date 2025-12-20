@@ -1,0 +1,14 @@
+{
+  "name": "@my-girok/storybook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Design System Documentation - V0.0.1 AAA Workstation",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @my-girok/ui-components storybook",
+    "build": "pnpm --filter @my-girok/design-tokens build && pnpm --filter @my-girok/ui-components build && pnpm --filter @my-girok/ui-components build-storybook",
+    "preview": "pnpm dlx http-server ../../packages/ui-components/storybook-static -p 6006"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
