@@ -135,7 +135,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1">
           {/* Create New Share Link */}
-          <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-5 mb-6 transition-colors duration-200">
+          <div className="bg-theme-bg-card border border-theme-border-default rounded-input p-5 mb-6 transition-colors duration-200">
             <h3 className="font-bold text-theme-primary mb-3 flex items-center gap-2">
               ✨ {t('share.createNew')}
             </h3>
@@ -149,7 +149,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                   <select
                     value={duration}
                     onChange={handleDurationChange}
-                    className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
+                    className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
                   >
                     <option value={ShareDuration.ONE_WEEK}>⏱️ {t('resume.oneWeek')}</option>
                     <option value={ShareDuration.ONE_MONTH}>📅 {t('resume.oneMonth')}</option>
@@ -168,7 +168,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                       value={customDate}
                       onChange={handleCustomDateChange}
                       min={new Date().toISOString().slice(0, 16)}
-                      className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-xl focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
+                      className="w-full px-4 py-3 bg-theme-bg-elevated text-theme-text-primary border border-theme-border-default rounded-input focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all transition-colors duration-200"
                     />
                   </div>
                 )}
@@ -194,7 +194,7 @@ export default function ShareLinkModal({ onClose, resumeId }: ShareLinkModalProp
                 <p className="mt-3 text-theme-text-secondary">{t('share.loadingLinks')}</p>
               </div>
             ) : shareLinks.length === 0 ? (
-              <div className="text-center py-12 bg-theme-bg-secondary rounded-xl border border-theme-border-subtle transition-colors duration-200">
+              <div className="text-center py-12 bg-theme-bg-secondary rounded-input border border-theme-border-subtle transition-colors duration-200">
                 <div className="text-5xl mb-3">🔗</div>
                 <p className="text-theme-text-secondary font-medium">{t('share.noLinksYet')}</p>
                 <p className="text-sm text-theme-text-tertiary mt-1">
@@ -257,7 +257,7 @@ const ShareLinkCard = memo(function ShareLinkCard({
 
   return (
     <div
-      className={`border rounded-xl p-4 transition-all transition-colors duration-200 ${
+      className={`border rounded-input p-4 transition-all transition-colors duration-200 ${
         link.isActive
           ? 'border-theme-border-default bg-theme-primary/10'
           : 'border-theme-border-subtle bg-theme-bg-secondary'
@@ -283,7 +283,7 @@ const ShareLinkCard = memo(function ShareLinkCard({
       </div>
 
       <div className="mb-3">
-        <code className="text-sm bg-theme-bg-elevated px-3 py-2 rounded-xl border border-theme-border-subtle block overflow-x-auto font-mono transition-colors duration-200">
+        <code className="text-sm bg-theme-bg-elevated px-3 py-2 rounded-input border border-theme-border-subtle block overflow-x-auto font-mono transition-colors duration-200">
           {link.shareUrl}
         </code>
       </div>
