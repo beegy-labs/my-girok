@@ -83,6 +83,7 @@ docker run -p 6006:6006 storybook:latest
 - **Gzip compression**: Enabled for all text assets
 - **Static caching**: 1 year for immutable assets
 - **Health check**: `/health` endpoint
+- **robots.txt**: AI crawlers blocked (GPTBot, ClaudeBot, etc.)
 
 ## Kubernetes Deployment
 

@@ -129,6 +129,27 @@ const posts = await prisma.post.findMany({
 - Validate file uploads (type, size)
 - Sanitize HTML (DOMPurify)
 
+**Crawler/Bot Control (2025 Best Practices):**
+
+| Layer         | Method              | Location                    |
+| ------------- | ------------------- | --------------------------- |
+| Web (nginx)   | robots.txt          | `nginx.conf` location block |
+| API (Gateway) | X-Robots-Tag header | Cilium Gateway HTTPRoute    |
+
+- ✅ Allow search engines (Googlebot, Bingbot)
+- ❌ Block AI training crawlers:
+  - OpenAI: GPTBot, ChatGPT-User
+  - Anthropic: ClaudeBot, anthropic-ai, Claude-Web
+  - Perplexity: PerplexityBot
+  - Common Crawl: CCBot
+  - Apple: Applebot-Extended
+  - Meta: FacebookBot
+  - ByteDance: Bytespider
+  - Amazon: Amazonbot
+  - Cohere: cohere-ai
+- API returns `X-Robots-Tag: noindex, nofollow` header
+- Review quarterly for new AI crawlers
+
 **CORS for Mobile Browsers:**
 
 ```typescript
