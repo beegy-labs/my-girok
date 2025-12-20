@@ -1,0 +1,218 @@
+{/* DesignTokens.mdx - Design Token Documentation */}
+import { Meta, ColorPalette, ColorItem } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundation/Design Tokens" />
+
+# Design Tokens
+
+**V0.0.1 AAA Workstation** - WCAG 2.1 AAA Compliant Color System
+
+All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via Tailwind CSS 4 `@theme` inline.
+
+---
+
+## Color Palette
+
+### Light Theme - "Clean White Oak"
+
+<ColorPalette>
+  <ColorItem
+    title="Background"
+    subtitle="Page and surface colors"
+    colors={{
+      'bg-page': '#FFFFFF',
+      'bg-card': '#F8F7F4',
+      'bg-secondary': '#F5F4F1',
+      'bg-elevated': '#FFFFFF',
+      'bg-hover': '#F0EFEC',
+    }}
+  />
+  <ColorItem
+    title="Text"
+    subtitle="All meet AAA 7:1+ contrast"
+    colors={{
+      'text-primary (15.76:1)': '#262220',
+      'text-secondary (9.23:1)': '#4A4744',
+      'text-tertiary (7.08:1)': '#5A5856',
+      'text-muted (7.66:1)': '#555351',
+      'text-accent (7.94:1)': '#6B4A2E',
+    }}
+  />
+  <ColorItem
+    title="Primary"
+    subtitle="Brand colors"
+    colors={{
+      'primary (7.94:1)': '#6B4A2E',
+      'primary-dark (9.42:1)': '#5D4028',
+      'primary-light (5.58:1 AA)': '#8B5E3C',
+    }}
+  />
+  <ColorItem
+    title="Border"
+    subtitle="SC 1.4.11 compliance"
+    colors={{
+      'border-subtle (1.5:1)': '#D4D2CF',
+      'border-default (3.0:1)': '#A09D9A',
+      'border-strong (3.8:1)': '#8A8785',
+    }}
+  />
+</ColorPalette>
+
+### Dark Theme - "Midnight Gentle Study"
+
+<ColorPalette>
+  <ColorItem
+    title="Background"
+    subtitle="Page and surface colors"
+    colors={{
+      'bg-page': '#1E1C1A',
+      'bg-card': '#282522',
+      'bg-secondary': '#2D2A27',
+      'bg-elevated': '#322F2C',
+      'bg-hover': '#3A3734',
+    }}
+  />
+  <ColorItem
+    title="Text"
+    subtitle="All meet AAA 7:1+ contrast"
+    colors={{
+      'text-primary (9.94:1)': '#CCC5BD',
+      'text-secondary (7.65:1)': '#B4ADA5',
+      'text-tertiary (7.31:1)': '#B0A9A1',
+      'text-muted (6.65:1 AA)': '#A8A199',
+      'text-accent (8.25:1)': '#D0B080',
+    }}
+  />
+  <ColorItem
+    title="Primary"
+    subtitle="Brand colors (inverted for dark)"
+    colors={{
+      'primary (8.25:1)': '#D0B080',
+      'primary-dark (7.56:1)': '#C9A876',
+      'primary-light (9.04:1)': '#D8B890',
+    }}
+  />
+</ColorPalette>
+
+---
+
+## Status Colors
+
+<ColorPalette>
+  <ColorItem
+    title="Success"
+    subtitle="Positive feedback"
+    colors={{
+      'bg': '#E8F5E9',
+      'border': '#C8E6C9',
+      'text (7.87:1)': '#1B5E20',
+    }}
+  />
+  <ColorItem
+    title="Error"
+    subtitle="Error states"
+    colors={{
+      'bg': '#FFEBEE',
+      'border': '#FFCDD2',
+      'text (7.77:1)': '#A31818',
+    }}
+  />
+  <ColorItem
+    title="Warning"
+    subtitle="Caution states"
+    colors={{
+      'bg': '#FFF8E1',
+      'border': '#FFE082',
+      'text (7.59:1)': '#8B3D06',
+    }}
+  />
+  <ColorItem
+    title="Info"
+    subtitle="Informational"
+    colors={{
+      'bg': '#E3F2FD',
+      'border': '#BBDEFB',
+      'text (8.63:1)': '#0D47A1',
+    }}
+  />
+</ColorPalette>
+
+---
+
+## Typography Tokens
+
+### Font Families
+
+| Token | Value | Tailwind |
+|-------|-------|----------|
+| `--font-family-serif-title` | Playfair Display, Georgia, serif | `font-serif-title` |
+| `--font-family-mono-brand` | ui-monospace, SFMono-Regular, monospace | `font-mono-brand` |
+
+### Letter Spacing
+
+| Token | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| `--letter-spacing-brand-sm` | 0.2em | `tracking-brand-sm` | Small labels |
+| `--letter-spacing-brand-md` | 0.25em | `tracking-brand-md` | Footer links |
+| `--letter-spacing-brand` | 0.3em | `tracking-brand` | Default brand |
+| `--letter-spacing-brand-lg` | 0.5em | `tracking-brand-lg` | Large brand |
+| `--letter-spacing-editorial` | -0.05em | `tracking-editorial` | Serif headings |
+
+---
+
+## Spacing Tokens
+
+| Token | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| `--spacing-nav` | 80px | `pt-nav`, `h-nav` | Navigation height |
+| `--spacing-section` | 96px | `mb-section` | Section margin |
+| `--spacing-footer-top` | 96px | `pt-footer-top` | Footer top padding |
+| `--spacing-footer-bottom` | 128px | `pb-footer-bottom` | Footer bottom padding |
+
+---
+
+## Border Radius Tokens
+
+| Token | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| `--border-radius-input` | 24px | `rounded-input` | Inputs, buttons |
+| `--border-radius-widget` | 32px | `rounded-widget` | Widgets, modals |
+| `--border-radius-editorial` | 40px | `rounded-editorial` | Cards |
+| `--border-radius-editorial-lg` | 48px | `rounded-editorial-lg` | Form cards |
+| `--border-radius-editorial-xl` | 56px | `rounded-editorial-xl` | Hero sections |
+| `--border-radius-editorial-2xl` | 64px | `rounded-editorial-2xl` | Menu cards |
+
+---
+
+## Usage Examples
+
+```tsx
+// SSOT Pattern - ALWAYS use token-based utilities
+<h1 className="font-serif-title tracking-editorial italic">
+  Page Title
+</h1>
+
+<div className="rounded-editorial-lg bg-theme-bg-card border border-theme-border-subtle p-10">
+  Form Card
+</div>
+
+<span className="font-mono-brand tracking-brand uppercase text-theme-text-accent">
+  GIROK.
+</span>
+
+// Anti-Pattern - NEVER use hardcoded values
+<div className="rounded-[48px]">  // BAD
+<h1 style={{ fontFamily: 'var(--font-family-serif-title)' }}>  // BAD
+<span className="tracking-[0.3em]">  // BAD
+```
+
+---
+
+## Maintenance
+
+When updating design tokens:
+
+1. Edit `packages/design-tokens/src/tokens.css`
+2. Update this documentation if new tokens are added
+3. Run `pnpm --filter @my-girok/ui-components build-storybook` to verify
+4. Ensure all components still meet WCAG AAA contrast requirements

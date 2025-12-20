@@ -354,9 +354,19 @@ Storybook is separated into two concerns:
 | ------------- | ---------------------------------------- | ----------------------- |
 | Configuration | `packages/ui-components/.storybook/`     | Build settings, addons  |
 | Story files   | `packages/ui-components/src/components/` | Component documentation |
+| MDX docs      | `packages/ui-components/src/*.mdx`       | Introduction, tokens    |
 | Deployment    | `apps/storybook/`                        | Docker, Helm, CI/CD     |
 
 See [apps/storybook.md](../apps/storybook.md) for deployment details.
+
+### Configuration Files
+
+| File                | Purpose                                         |
+| ------------------- | ----------------------------------------------- |
+| `main.ts`           | Addons: a11y, vitest, docs, chromatic           |
+| `manager.ts`        | Custom GIROK branding (Oak Brown theme)         |
+| `preview.tsx`       | Theme decorator with live theme toggle          |
+| `preview-head.html` | Google Fonts (Playfair Display for serif-title) |
 
 ### Commands
 
@@ -409,6 +419,16 @@ git push origin ui-v0.1.0
 ```
 
 Pipeline: `.github/workflows/ci-storybook.yml`
+
+### Updating Storybook
+
+When modifying the design system:
+
+1. **Token changes** → Update `DesignTokens.mdx` color tables
+2. **Component changes** → Update corresponding `.stories.tsx`
+3. **New component** → Create new `.stories.tsx` with autodocs
+4. **Theme changes** → Update `manager.ts` branding colors
+5. **Always verify** → `pnpm --filter @my-girok/ui-components storybook`
 
 ## References
 
