@@ -110,17 +110,17 @@ helm upgrade --install storybook . \
 
 ### Helm Values
 
-| Value                         | Default                             | Description    |
-| ----------------------------- | ----------------------------------- | -------------- |
-| `replicaCount`                | 1                                   | Number of pods |
-| `image.repository`            | harbor.girok.dev/my-girok/storybook | Image registry |
-| `image.tag`                   | Chart.AppVersion                    | Image version  |
-| `ingress.enabled`             | true                                | Enable ingress |
-| `ingress.hosts[0].host`       | design.example.com                  | Domain name    |
-| `resources.limits.cpu`        | 100m                                | CPU limit      |
-| `resources.limits.memory`     | 64Mi                                | Memory limit   |
-| `autoscaling.enabled`         | false                               | Enable HPA     |
-| `podDisruptionBudget.enabled` | true                                | Enable PDB     |
+| Value                         | Default                              | Description    |
+| ----------------------------- | ------------------------------------ | -------------- |
+| `replicaCount`                | 1                                    | Number of pods |
+| `image.repository`            | gitea.girok.dev/beegy-labs/storybook | Image registry |
+| `image.tag`                   | Chart.AppVersion                     | Image version  |
+| `ingress.enabled`             | true                                 | Enable ingress |
+| `ingress.hosts[0].host`       | design.example.com                   | Domain name    |
+| `resources.limits.cpu`        | 100m                                 | CPU limit      |
+| `resources.limits.memory`     | 64Mi                                 | Memory limit   |
+| `autoscaling.enabled`         | false                                | Enable HPA     |
+| `podDisruptionBudget.enabled` | true                                 | Enable PDB     |
 
 ### Security Context
 
@@ -170,7 +170,7 @@ git tag ui-v0.1.0
 git push origin ui-v0.1.0
 
 # Triggers:
-# - Docker image: harbor.girok.dev/my-girok/storybook:0.1.0
+# - Docker image: gitea.girok.dev/beegy-labs/storybook:0.1.0
 # - K8s deploy: production namespace
 # - URL: https://design.girok.dev
 ```

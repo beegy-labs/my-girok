@@ -22,7 +22,7 @@
 replicaCount: 1
 
 image:
-  repository: harbor.girok.dev/my-girok/storybook
+  repository: gitea.girok.dev/beegy-labs/storybook
   pullPolicy: IfNotPresent
   # Tag format: v0.1.0, v0.2.0, develop, latest
   # Empty = use Chart.AppVersion
