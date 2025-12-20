@@ -89,25 +89,75 @@
 - **TopWidget**: `min-h-[280px] rounded-editorial-lg`, `font-serif-title`
 - **Footer**: `pt-24 pb-32 px-8`, `tracking-brand-lg`, `font-mono-brand`
 
+### Layout Components (2025 Consolidation)
+
+Unified layouts to reduce duplicate patterns:
+
+**AuthLayout** - Login, Register, ForgotPassword pages
+
+```tsx
+import { AuthLayout } from '../layouts';
+
+<AuthLayout
+  title={t('auth.login')}
+  subtitle={t('auth.archiveAccess')}
+  error={error}
+  secondaryActions={<Link to="/register">...</Link>}
+>
+  <form onSubmit={handleSubmit}>...</form>
+</AuthLayout>;
+```
+
+**LegalPageLayout** - Privacy, Terms pages
+
+```tsx
+import { LegalPageLayout } from '../layouts';
+
+<LegalPageLayout
+  icon={<Shield className="w-8 h-8 text-theme-text-secondary" />}
+  title={t('footer.privacy')}
+>
+  <p>Privacy policy content...</p>
+</LegalPageLayout>;
+```
+
+**PlaceholderPage** - Coming Soon pages (Journal, Schedule, Finance, etc.)
+
+```tsx
+import PlaceholderPage from '../components/PlaceholderPage';
+
+<PlaceholderPage
+  icon={<Book className="w-10 h-10" />}
+  titleKey="home.journal.title"
+  descriptionKey="placeholder.journal"
+/>;
+```
+
 ## Structure
 
 ```
 apps/web-main/src/
+├── layouts/            # Unified layout components (2025)
+│   ├── index.ts               # Barrel exports
+│   ├── MainLayout.tsx         # Default layout with Navbar
+│   ├── FullWidthLayout.tsx    # Full-width without max-width
+│   ├── AuthLayout.tsx         # Auth pages (Login, Register, ForgotPassword)
+│   └── LegalPageLayout.tsx    # Legal pages (Privacy, Terms)
 ├── pages/              # Route pages
 │   ├── HomePage.tsx           # V0.0.1 Landing + Dashboard (Promo, Workstation, Index)
-│   ├── LoginPage.tsx          # V0.0.1 Editorial login form (48px card, lg inputs)
-│   ├── RegisterPage.tsx       # V0.0.1 Editorial registration
-│   ├── ForgotPasswordPage.tsx # V0.0.1 Password recovery (UI only)
+│   ├── LoginPage.tsx          # Uses AuthLayout (2025 consolidated)
+│   ├── RegisterPage.tsx       # Uses AuthLayout (2025 consolidated)
+│   ├── ForgotPasswordPage.tsx # Uses AuthLayout (2025 consolidated)
 │   ├── ChangePasswordPage.tsx
 │   ├── NotFoundPage.tsx
-│   ├── JournalPage.tsx        # Placeholder (Coming Soon)
-│   ├── FinancePage.tsx        # Placeholder (Coming Soon)
-│   ├── LibraryPage.tsx        # Placeholder (Coming Soon)
-│   ├── NetworkPage.tsx        # Placeholder (Coming Soon)
-│   ├── StatsPage.tsx          # Placeholder (Coming Soon)
-│   ├── NotificationsPage.tsx  # Placeholder (Coming Soon)
-│   ├── PrivacyPage.tsx        # Privacy Policy (Legal)
-│   ├── TermsPage.tsx          # Terms of Service (Legal)
+│   ├── JournalPage.tsx        # Uses PlaceholderPage (Coming Soon)
+│   ├── FinancePage.tsx        # Uses PlaceholderPage (Coming Soon)
+│   ├── LibraryPage.tsx        # Uses PlaceholderPage (Coming Soon)
+│   ├── NetworkPage.tsx        # Uses PlaceholderPage (Coming Soon)
+│   ├── StatsPage.tsx          # Uses PlaceholderPage (Coming Soon)
+│   ├── NotificationsPage.tsx  # Uses PlaceholderPage (Coming Soon)
+│   ├── PrivacyPage.tsx        # Uses LegalPageLayout (2025 consolidated)
+│   ├── TermsPage.tsx          # Uses LegalPageLayout (2025 consolidated)
 │   ├── resume/
 │   │   ├── MyResumePage.tsx      # Resume management (/resume/my)
 │   │   ├── PublicResumePage.tsx  # Public view (/resume/:username)
@@ -1177,6 +1227,90 @@ const MenuItem = memo(function MenuItem({ item, onClick }: Props) {
   return <div onClick={onClick}>{item.name}</div>;
 });
 ```
+
+## Custom Hooks (2025 Best Practices)
+
+### useResumeViewer
+
+Generic hook for Resume viewer pages. Extracts common data fetching, loading, and error handling logic.
+
+**Location**: `src/hooks/useResumeViewer.ts`
+
+**Used By**: ResumePreviewPage, SharedResumePage, PublicResumePage
+
+**Why Hook Instead of Layout?**
+
+| Consideration | Layout Component                              | Custom Hook                     |
+| ------------- | --------------------------------------------- | ------------------------------- |
+| DRY Principle | Over-applied (different modification reasons) | Appropriate (shared logic only) |
+| Coupling      | High (3 pages affected by changes)            | Low (independent evolution)     |
+| Testing       | Complex (conditional rendering)               | Simple (hook unit tests)        |
+| Flexibility   | Limited                                       | High                            |
+
+**Type-Safe Error Handling**:
+
+```typescript
+// Types
+export enum ResumeViewerError {
+  NOT_FOUND = 'NOT_FOUND',
+  EXPIRED = 'EXPIRED',
+  INACTIVE = 'INACTIVE',
+  NETWORK = 'NETWORK',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export interface UseResumeViewerResult<T> {
+  data: T | null;
+  loading: boolean;
+  error: ResumeViewerError | null;
+  retry: () => void;
+}
+```
+
+**Usage**:
+
+```typescript
+// ResumePreviewPage.tsx
+const {
+  data: resume,
+  loading,
+  error,
+  retry,
+} = useResumeViewer({
+  fetchFn: () => getResume(resumeId!),
+  deps: [resumeId],
+  skip: !resumeId,
+  errorMapper: (err) => {
+    if (err.response?.status === 404) return ResumeViewerError.NOT_FOUND;
+    return ResumeViewerError.UNKNOWN;
+  },
+});
+
+// SharedResumePage.tsx - different error mapping
+const {
+  data: resume,
+  loading,
+  error,
+} = useResumeViewer({
+  fetchFn: () => getPublicResume(token!),
+  deps: [token],
+  skip: !token,
+  errorMapper: (err) => {
+    if (err.response?.status === 404) return ResumeViewerError.NOT_FOUND;
+    if (err.response?.status === 410) return ResumeViewerError.EXPIRED;
+    if (err.response?.status === 403) return ResumeViewerError.INACTIVE;
+    return ResumeViewerError.UNKNOWN;
+  },
+});
+```
+
+**Benefits**:
+
+- Type-safe error handling with enum
+- Memoized retry function
+- Configurable error mapping per page
+- Skip option for conditional fetching
+- Follows 2025 React best practices (useCallback, proper deps)
 
 ## References
 
