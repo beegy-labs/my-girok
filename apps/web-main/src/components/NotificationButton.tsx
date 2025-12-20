@@ -99,7 +99,7 @@ export default function NotificationButton() {
 
   // Get status badge styling
   const getStatusBadgeClass = useCallback((_status: Notification['status'], read: boolean) => {
-    const baseClass = 'text-[11px] font-black uppercase px-3 py-1 rounded-lg border';
+    const baseClass = 'text-[11px] font-black uppercase px-3 py-1 rounded-xl border';
     if (read) {
       return `${baseClass} border-theme-border-default text-theme-text-secondary`;
     }

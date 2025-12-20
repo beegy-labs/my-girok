@@ -58,14 +58,18 @@ tokens.css (@theme)  →  Tailwind Utility Classes  →  Components
 
 #### Border Radius
 
-| Tailwind Default | SSOT Token                | Size |
-| ---------------- | ------------------------- | ---- |
-| `rounded-lg`     | `rounded-xl` (acceptable) | 12px |
-| `rounded-xl`     | `rounded-xl`              | 12px |
-| `rounded-2xl`    | `rounded-input`           | 24px |
-| `rounded-3xl`    | `rounded-widget`          | 32px |
-| -                | `rounded-editorial`       | 40px |
-| -                | `rounded-editorial-lg`    | 48px |
+| Tailwind Default | SSOT Token              | Size | Usage                      |
+| ---------------- | ----------------------- | ---- | -------------------------- |
+| `rounded-lg`     | ❌ Avoid                | 8px  | Too small                  |
+| `rounded-xl`     | `rounded-xl`            | 12px | Small buttons, badges      |
+| `rounded-2xl`    | ❌ Use `rounded-input`  | 16px | Too angular                |
+| `rounded-3xl`    | ❌ Use `rounded-widget` | 24px | Non-SSOT                   |
+| -                | `rounded-input`         | 24px | Default for cards, buttons |
+| -                | `rounded-widget`        | 32px | Menu rows, containers      |
+| -                | `rounded-editorial`     | 40px | Large cards                |
+| -                | `rounded-editorial-lg`  | 48px | Form cards                 |
+| -                | `rounded-editorial-xl`  | 56px | Hero sections              |
+| -                | `rounded-editorial-2xl` | 64px | Feature cards              |
 
 #### Letter Spacing
 

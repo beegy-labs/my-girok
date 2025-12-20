@@ -38,7 +38,7 @@ const containerClasses =
   'p-10 sm:p-12 min-h-[280px] rounded-editorial-lg bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
 
 const iconContainerClasses =
-  'p-3 bg-theme-bg-secondary border border-theme-border-default rounded-2xl text-theme-primary';
+  'p-3 bg-theme-bg-secondary border border-theme-border-default rounded-input text-theme-primary';
 
 /**
  * TopWidget Component - Pinned Widget for Dashboard (2025 Accessible Pattern)
