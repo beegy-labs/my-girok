@@ -1,50 +1,68 @@
 {/* Introduction.mdx - GIROK Design System Documentation */}
-import { Meta } from '@storybook/addon-docs/blocks';
+import { Meta, Subtitle } from '@storybook/addon-docs/blocks';
 
 <Meta title="Introduction" />
 
 # GIROK Design System
 
-**V0.0.1 AAA Workstation** - WCAG 2.1 AAA Compliant Component Library
+<Subtitle>V0.0.1 AAA Workstation - WCAG 2.1 AAA Compliant Component Library</Subtitle>
+
+---
+
+## Quick Links
+
+| Resource | Link |
+|----------|------|
+| GitHub Repository | [beegy-labs/my-girok](https://github.com/beegy-labs/my-girok) |
+| Design Tokens | [Foundation/Design Tokens](?path=/docs/foundation-design-tokens--docs) |
+| Live Preview (Dev) | [design-dev.girok.dev](https://design-dev.girok.dev) |
+| Live Preview (Prod) | [design.girok.dev](https://design.girok.dev) |
 
 ---
 
 ## Overview
 
-This design system provides accessible, theme-aware components for the GIROK platform.
+The GIROK Design System provides accessible, theme-aware components for the GIROK platform.
 All components meet **WCAG 2.1 AAA** standards with 7:1+ contrast ratios.
 
 ### Key Features
 
-- **WCAG 2.1 AAA Compliance** - All text meets 7:1+ contrast ratio
-- **Theme Support** - Light ("Clean White Oak") and Dark ("Midnight Gentle Study")
-- **SSOT Design Tokens** - Single source of truth via Tailwind CSS 4 `@theme`
-- **44px+ Touch Targets** - Meets minimum accessibility requirements
-- **Keyboard Navigation** - Full keyboard support with visible focus rings
+| Feature | Description |
+|---------|-------------|
+| **WCAG 2.1 AAA** | All text meets 7:1+ contrast ratio |
+| **Dual Themes** | Light ("Clean White Oak") and Dark ("Midnight Gentle Study") |
+| **SSOT Tokens** | Single source of truth via Tailwind CSS 4 `@theme` |
+| **44px+ Touch Targets** | Meets minimum accessibility requirements |
+| **Keyboard Navigation** | Full support with visible focus rings (4px) |
+| **React 19** | Built for latest React with ref-as-prop pattern |
 
 ---
 
-## Themes
+## Theme Preview
 
 Use the **Theme** toggle in the toolbar above to switch between themes.
 
 ### Clean White Oak (Light)
 
-| Token | Color | Usage |
-|-------|-------|-------|
-| `--light-bg-page` | `#FFFFFF` | Page background |
-| `--light-bg-card` | `#F8F7F4` | Card background |
-| `--light-text-primary` | `#262220` | Primary text (15.76:1) |
-| `--light-primary` | `#6B4A2E` | Brand accent (7.94:1) |
+The default light theme featuring warm beige tones and oak brown accents.
+
+| Token | Color | Contrast |
+|-------|-------|----------|
+| `--light-bg-page` | `#FFFFFF` | - |
+| `--light-bg-card` | `#F8F7F4` | - |
+| `--light-text-primary` | `#262220` | 15.76:1 AAA |
+| `--light-primary` | `#6B4A2E` | 7.94:1 AAA |
 
 ### Midnight Gentle Study (Dark)
 
-| Token | Color | Usage |
-|-------|-------|-------|
-| `--dark-bg-page` | `#1E1C1A` | Page background |
-| `--dark-bg-card` | `#282522` | Card background |
-| `--dark-text-primary` | `#CCC5BD` | Primary text (9.94:1) |
-| `--dark-primary` | `#D0B080` | Brand accent (8.25:1) |
+A sophisticated dark theme with warm sand tones and golden bronze accents.
+
+| Token | Color | Contrast |
+|-------|-------|----------|
+| `--dark-bg-page` | `#1E1C1A` | - |
+| `--dark-bg-card` | `#282522` | - |
+| `--dark-text-primary` | `#CCC5BD` | 9.94:1 AAA |
+| `--dark-primary` | `#D0B080` | 8.25:1 AAA |
 
 ---
 
@@ -62,7 +80,10 @@ pnpm add @my-girok/design-tokens @my-girok/ui-components
 
 ```tsx
 // Import components
-import { Button, Card, TextInput } from '@my-girok/ui-components';
+import { Button, Card, TextInput, Alert, Badge } from '@my-girok/ui-components';
+
+// Import hooks
+import { useAsyncOperation, useDebounce, useClickOutside } from '@my-girok/ui-components';
 ```
 
 ---
@@ -87,30 +108,156 @@ All styling uses **SSOT (Single Source of Truth)** tokens. Never use hardcoded v
 | Utility | Usage |
 |---------|-------|
 | `font-serif-title` | Serif headings (Playfair Display) |
-| `font-mono-brand` | Brand labels |
+| `font-mono-brand` | Brand labels, monospace text |
 | `tracking-brand` | Letter spacing 0.3em |
-| `tracking-editorial` | Tight tracking -0.05em |
+| `tracking-editorial` | Tight tracking -0.05em for serif |
+
+### Theme Colors
+
+| Utility | Usage |
+|---------|-------|
+| `bg-theme-bg-page` | Page background |
+| `bg-theme-bg-card` | Card/surface background |
+| `text-theme-text-primary` | Primary text |
+| `text-theme-primary` | Brand accent color |
+| `border-theme-border-default` | Interactive borders |
 
 ---
 
-## Component Status
+## Component Catalog
 
-| Component | Status | A11y |
-|-----------|--------|------|
-| Button | Stable | AAA |
-| Card | Stable | AAA |
-| Badge | Stable | AAA |
-| Alert | Stable | AAA |
-| TextInput | Stable | AAA |
-| MenuCard | Stable | AAA |
-| MenuRow | Stable | AAA |
-| ViewToggle | Stable | AAA |
-| TopWidget | Stable | AAA |
+### Core Components
+
+| Component | Status | A11y | Description |
+|-----------|--------|------|-------------|
+| [Button](?path=/docs/components-button--docs) | Stable | AAA | Primary, secondary, danger, ghost variants |
+| [Card](?path=/docs/components-card--docs) | Stable | AAA | Editorial radius options (24-64px) |
+| [Badge](?path=/docs/components-badge--docs) | Stable | AAA | Status indicators with variants |
+| [Alert](?path=/docs/components-alert--docs) | Stable | AAA | Success, error, warning, info |
+| [TextInput](?path=/docs/components-textinput--docs) | Stable | AAA | With label, error, hint support |
+
+### Navigation Components
+
+| Component | Status | A11y | Description |
+|-----------|--------|------|-------------|
+| [MenuCard](?path=/docs/components-menucard--docs) | Stable | AAA | Editorial 64px navigation card |
+| [MenuRow](?path=/docs/components-menurow--docs) | Stable | AAA | Compact list row with pin support |
+| [ViewToggle](?path=/docs/components-viewtoggle--docs) | Stable | AAA | Grid/List toggle (56px targets) |
+| [TopWidget](?path=/docs/components-topwidget--docs) | Stable | AAA | Pinned dashboard widget |
+
+### Hooks
+
+| Hook | Description |
+|------|-------------|
+| `useAsyncOperation` | Async state management with loading/error |
+| `useDebounce` | Debounced value for search inputs |
+| `useClickOutside` | Detect clicks outside a ref element |
+
+---
+
+## Accessibility Compliance
+
+### WCAG 2.1 AAA Requirements
+
+| Requirement | Implementation |
+|-------------|----------------|
+| **Contrast Ratio** | 7:1+ for all text |
+| **Touch Targets** | 44x44px minimum |
+| **Focus Indicators** | 4px ring with high contrast |
+| **Keyboard Navigation** | Full support with skip links |
+| **Reduced Motion** | Respects `prefers-reduced-motion` |
+| **Screen Readers** | ARIA labels and roles |
+
+### Testing
+
+All components are tested with:
+- `@storybook/addon-a11y` with strict AAA mode
+- `axe-core` automated accessibility testing
+- Manual keyboard navigation testing
+
+---
+
+## Version History
+
+| Version | Date | Highlights |
+|---------|------|------------|
+| **0.1.0** | 2025-12 | Initial release with WCAG AAA compliance |
+
+### Changelog
+
+#### v0.1.0 (2025-12)
+
+**Added**
+- 9 core components (Button, Card, Badge, Alert, TextInput, MenuCard, MenuRow, ViewToggle, TopWidget)
+- 3 custom hooks (useAsyncOperation, useDebounce, useClickOutside)
+- WCAG 2.1 AAA compliant design tokens
+- Dual theme support (Light/Dark)
+- Storybook documentation with A11y testing
+
+**Technical**
+- React 19 with ref-as-prop pattern
+- Tailwind CSS 4 with `@theme` inline
+- CSS `@property` for type-safe tokens
+- Storybook 10.x with addon-docs, addon-a11y
+
+---
+
+## Contributing
+
+### Development Setup
+
+```bash
+# Clone repository
+git clone git@github.com:beegy-labs/my-girok.git
+cd my-girok
+
+# Install dependencies
+pnpm install
+
+# Start Storybook
+pnpm --filter @my-girok/ui-components storybook
+```
+
+### Adding Components
+
+1. Create component in `packages/ui-components/src/components/`
+2. Create story file with `.stories.tsx` extension
+3. Export from `packages/ui-components/src/index.ts`
+4. Update this Introduction if needed
+5. Ensure WCAG AAA compliance
+
+### Code Style
+
+- Use SSOT token utilities (never hardcode values)
+- Follow CSF 3.0 story format
+- Include `autodocs` tag for auto-generated docs
+- Add accessibility descriptions in story metadata
 
 ---
 
 ## Resources
 
-- [SSOT Strategy](.ai/ssot.md) - Design token naming conventions
-- [Design Tokens Package](packages/design-tokens) - Source of truth
-- [WCAG 2.1 AAA Guidelines](https://www.w3.org/WAI/WCAG21/Understanding/)
+| Document | Description |
+|----------|-------------|
+| [Design Tokens](?path=/docs/foundation-design-tokens--docs) | Complete token reference |
+| [SSOT Strategy](https://github.com/beegy-labs/my-girok/blob/develop/.ai/ssot.md) | Tailwind CSS 4 naming conventions |
+| [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/Understanding/) | Official accessibility guidelines |
+| [Storybook Docs](https://storybook.js.org/docs) | Storybook documentation |
+
+---
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/beegy-labs/my-girok/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/beegy-labs/my-girok/discussions)
+
+---
+
+<div style={{ textAlign: 'center', marginTop: '48px', color: 'var(--theme-text-muted)' }}>
+  <p style={{ fontFamily: 'var(--font-family-mono-brand)', letterSpacing: '0.3em', fontSize: '12px' }}>
+    GIROK DESIGN SYSTEM
+  </p>
+  <p style={{ fontSize: '14px' }}>
+    V0.0.1 AAA Workstation
+  </p>
+</div>
