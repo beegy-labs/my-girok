@@ -94,6 +94,15 @@ tokens.css (@theme)  →  Tailwind Utility Classes  →  Components
 | Form       | `space-y-6` (24px gap between fields)                       |
 | Buttons    | `h-14` (lg) or `h-16` (xl) with `tracking-brand`            |
 
+#### Input Icon Positioning (SSOT)
+
+Icon position must match input horizontal padding for visual consistency:
+
+| Size    | Input Padding | Icon Position | Text Padding |
+| ------- | ------------- | ------------- | ------------ |
+| default | `px-4` (16px) | `left-4`      | `pl-12`      |
+| lg      | `px-6` (24px) | `left-6`      | `pl-16`      |
+
 #### Card Styling (Editorial)
 
 | Size    | Token                   | Radius |
