@@ -124,7 +124,11 @@ export function TextInput({
     onChange(event.target.value);
   };
 
-  const iconPaddingClass = icon ? (size === 'lg' ? 'pl-14' : 'pl-12') : '';
+  // Icon positioning must match input horizontal padding for visual consistency (SSOT)
+  // default: px-4 (16px) → icon at left-4, text padding pl-12
+  // lg: px-6 (24px) → icon at left-6, text padding pl-16
+  const iconPositionClass = size === 'lg' ? 'left-6' : 'left-4';
+  const iconPaddingClass = icon ? (size === 'lg' ? 'pl-16' : 'pl-12') : '';
 
   return (
     <div className={finalContainerClassName}>
@@ -145,7 +149,9 @@ export function TextInput({
 
       <div className="relative">
         {icon && (
-          <div className={`absolute left-5 top-1/2 -translate-y-1/2 text-theme-text-secondary`}>
+          <div
+            className={`absolute ${iconPositionClass} top-1/2 -translate-y-1/2 text-theme-text-secondary`}
+          >
             {icon}
           </div>
         )}

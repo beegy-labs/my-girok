@@ -116,7 +116,7 @@ export function SelectInput({
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-base font-semibold text-theme-text-secondary mb-2"
+          className="block text-[12px] font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
         >
           {label}
           {required && (
