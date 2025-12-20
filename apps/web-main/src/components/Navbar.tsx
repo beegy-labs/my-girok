@@ -66,7 +66,7 @@ export default function Navbar() {
             {/* User profile (authenticated) - V0.0.1 Style */}
             {isAuthenticated && (
               <>
-                <div className="flex items-center gap-3 px-4 py-2 hover:bg-theme-bg-secondary rounded-2xl transition-colors cursor-default group border border-transparent hover:border-theme-border-default">
+                <div className="flex items-center gap-3 px-4 py-2 hover:bg-theme-bg-secondary rounded-input transition-colors cursor-default group border border-transparent hover:border-theme-border-default">
                   <div className="w-8 h-8 rounded-full bg-theme-bg-secondary group-hover:bg-theme-bg-card border border-theme-border-default flex items-center justify-center transition-colors">
                     <User size={16} className="text-theme-primary" aria-hidden="true" />
                   </div>
