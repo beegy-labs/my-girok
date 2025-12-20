@@ -1,5 +1,6 @@
 {/* DesignTokens.mdx - Design Token Documentation */}
-import { Meta, ColorPalette, ColorItem } from '@storybook/addon-docs/blocks';
+import { Meta, ColorPalette, ColorItem, Typeset, IconGallery, IconItem } from '@storybook/addon-docs/blocks';
+import { useEffect, useState } from 'react';
 
 <Meta title="Foundation/Design Tokens" />
 
@@ -8,6 +9,8 @@ import { Meta, ColorPalette, ColorItem } from '@storybook/addon-docs/blocks';
 **V0.0.1 AAA Workstation** - WCAG 2.1 AAA Compliant Color System
 
 All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via Tailwind CSS 4 `@theme` inline.
+
+> **Note**: Use the Theme toggle in the toolbar to preview colors in Light and Dark mode.
 
 ---
 
@@ -40,7 +43,7 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
   />
   <ColorItem
     title="Primary"
-    subtitle="Brand colors"
+    subtitle="Brand colors - Oak Brown"
     colors={{
       'primary (7.94:1)': '#6B4A2E',
       'primary-dark (9.42:1)': '#5D4028',
@@ -49,7 +52,7 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
   />
   <ColorItem
     title="Border"
-    subtitle="SC 1.4.11 compliance"
+    subtitle="WCAG SC 1.4.11 compliance"
     colors={{
       'border-subtle (1.5:1)': '#D4D2CF',
       'border-default (3.0:1)': '#A09D9A',
@@ -85,11 +88,20 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
   />
   <ColorItem
     title="Primary"
-    subtitle="Brand colors (inverted for dark)"
+    subtitle="Brand colors - Warm Golden Bronze"
     colors={{
       'primary (8.25:1)': '#D0B080',
       'primary-dark (7.56:1)': '#C9A876',
       'primary-light (9.04:1)': '#D8B890',
+    }}
+  />
+  <ColorItem
+    title="Border"
+    subtitle="Dark mode borders"
+    colors={{
+      'border-subtle (1.8:1)': '#4A4744',
+      'border-default (3.0:1)': '#6B6663',
+      'border-strong (4.0:1)': '#8A8583',
     }}
   />
 </ColorPalette>
@@ -97,6 +109,8 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
 ---
 
 ## Status Colors
+
+### Light Mode
 
 <ColorPalette>
   <ColorItem
@@ -137,16 +151,99 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
   />
 </ColorPalette>
 
+### Dark Mode
+
+<ColorPalette>
+  <ColorItem
+    title="Success (Dark)"
+    subtitle="Semi-transparent backgrounds"
+    colors={{
+      'bg': 'rgba(46, 125, 50, 0.15)',
+      'text': '#81C784',
+    }}
+  />
+  <ColorItem
+    title="Error (Dark)"
+    colors={{
+      'bg': 'rgba(198, 40, 40, 0.15)',
+      'text': '#EF9A9A',
+    }}
+  />
+  <ColorItem
+    title="Warning (Dark)"
+    colors={{
+      'bg': 'rgba(245, 127, 23, 0.15)',
+      'text': '#FFE082',
+    }}
+  />
+  <ColorItem
+    title="Info (Dark)"
+    colors={{
+      'bg': 'rgba(21, 101, 192, 0.15)',
+      'text': '#90CAF9',
+    }}
+  />
+</ColorPalette>
+
+---
+
+## Level Colors (Nested Items)
+
+Used for hierarchical content like nested lists or tree views.
+
+<ColorPalette>
+  <ColorItem
+    title="Level 1"
+    subtitle="Top level"
+    colors={{
+      'bg': '#E3F2FD',
+      'border': '#1976D2',
+      'text (8.63:1)': '#0D47A1',
+    }}
+  />
+  <ColorItem
+    title="Level 2"
+    colors={{
+      'bg': '#E8F5E9',
+      'border': '#388E3C',
+      'text (7.87:1)': '#1B5E20',
+    }}
+  />
+  <ColorItem
+    title="Level 3"
+    colors={{
+      'bg': '#F3E5F5',
+      'border': '#7B1FA2',
+      'text (9.12:1)': '#4A148C',
+    }}
+  />
+  <ColorItem
+    title="Level 4"
+    colors={{
+      'bg': '#FFF3E0',
+      'border': '#F57C00',
+      'text (7.59:1)': '#8B3D06',
+    }}
+  />
+</ColorPalette>
+
 ---
 
 ## Typography Tokens
 
 ### Font Families
 
-| Token | Value | Tailwind |
-|-------|-------|----------|
-| `--font-family-serif-title` | Playfair Display, Georgia, serif | `font-serif-title` |
-| `--font-family-mono-brand` | ui-monospace, SFMono-Regular, monospace | `font-mono-brand` |
+<Typeset
+  fontSizes={['16px', '20px', '24px', '32px', '48px']}
+  fontWeight={400}
+  sampleText="The quick brown fox jumps over the lazy dog"
+  fontFamily="'Playfair Display', Georgia, 'Times New Roman', serif"
+/>
+
+| Token | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| `--font-family-serif-title` | Playfair Display, Georgia, serif | `font-serif-title` | Editorial headings |
+| `--font-family-mono-brand` | ui-monospace, SFMono-Regular, monospace | `font-mono-brand` | Brand labels, code |
 
 ### Letter Spacing
 
@@ -154,9 +251,9 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
 |-------|-------|----------|-------|
 | `--letter-spacing-brand-sm` | 0.2em | `tracking-brand-sm` | Small labels |
 | `--letter-spacing-brand-md` | 0.25em | `tracking-brand-md` | Footer links |
-| `--letter-spacing-brand` | 0.3em | `tracking-brand` | Default brand |
-| `--letter-spacing-brand-lg` | 0.5em | `tracking-brand-lg` | Large brand |
-| `--letter-spacing-editorial` | -0.05em | `tracking-editorial` | Serif headings |
+| `--letter-spacing-brand` | 0.3em | `tracking-brand` | Default brand text |
+| `--letter-spacing-brand-lg` | 0.5em | `tracking-brand-lg` | Large brand displays |
+| `--letter-spacing-editorial` | -0.05em | `tracking-editorial` | Serif headings (tight) |
 
 ---
 
@@ -164,6 +261,7 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
 
 | Token | Value | Tailwind | Usage |
 |-------|-------|----------|-------|
+| `--spacing-editorial` | 40px | `p-editorial` | Editorial padding |
 | `--spacing-nav` | 80px | `pt-nav`, `h-nav` | Navigation height |
 | `--spacing-section` | 96px | `mb-section` | Section margin |
 | `--spacing-footer-top` | 96px | `pt-footer-top` | Footer top padding |
@@ -184,15 +282,33 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
 
 ---
 
+## Shadow Tokens
+
+| Token | Light Mode | Dark Mode |
+|-------|------------|-----------|
+| `--theme-shadow-sm` | `0 1px 2px rgba(38, 34, 32, 0.05)` | `0 2px 4px rgba(0, 0, 0, 0.2)` |
+| `--theme-shadow-md` | `0 4px 8px rgba(38, 34, 32, 0.08)` | `0 4px 8px rgba(0, 0, 0, 0.3)` |
+| `--theme-shadow-lg` | `0 8px 24px rgba(38, 34, 32, 0.12)` | `0 8px 24px rgba(0, 0, 0, 0.4)` |
+
+---
+
+## Animation Tokens
+
+| Token | Value | Tailwind | Usage |
+|-------|-------|----------|-------|
+| `--ease-editorial` | `cubic-bezier(0.2, 1, 0.3, 1)` | `ease-editorial` | Smooth, elegant transitions |
+
+---
+
 ## Usage Examples
 
 ```tsx
 // SSOT Pattern - ALWAYS use token-based utilities
-<h1 className="font-serif-title tracking-editorial italic">
+<h1 className="font-serif-title tracking-editorial italic text-theme-text-primary">
   Page Title
 </h1>
 
-<div className="rounded-editorial-lg bg-theme-bg-card border border-theme-border-subtle p-10">
+<div className="rounded-editorial-lg bg-theme-bg-card border border-theme-border-subtle p-10 shadow-theme-md">
   Form Card
 </div>
 
@@ -200,10 +316,51 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
   GIROK.
 </span>
 
-// Anti-Pattern - NEVER use hardcoded values
-<div className="rounded-[48px]">  // BAD
-<h1 style={{ fontFamily: 'var(--font-family-serif-title)' }}>  // BAD
-<span className="tracking-[0.3em]">  // BAD
+<button className="
+  bg-gradient-to-r from-btn-primary-from to-btn-primary-to
+  text-btn-primary-text rounded-input px-6 py-3
+  focus-visible:ring-4 focus-visible:ring-theme-focus-ring
+  transition-all duration-200 ease-editorial
+">
+  Primary Button
+</button>
+```
+
+### Anti-Patterns (DO NOT USE)
+
+```tsx
+// BAD: Hardcoded pixel values
+<div className="rounded-[48px]">
+
+// BAD: Inline styles with CSS variables
+<h1 style={{ fontFamily: 'var(--font-family-serif-title)' }}>
+
+// BAD: Arbitrary tracking values
+<span className="tracking-[0.3em]">
+
+// BAD: Hardcoded colors
+<div className="bg-[#6b4a2e]">
+```
+
+---
+
+## CSS Variable Reference
+
+All tokens are CSS custom properties. Access them directly when needed:
+
+```css
+/* In CSS */
+.custom-element {
+  background: var(--theme-bg-card);
+  color: var(--theme-text-primary);
+  border-radius: var(--border-radius-editorial);
+}
+```
+
+```tsx
+// In JavaScript/TypeScript
+const bgColor = getComputedStyle(document.documentElement)
+  .getPropertyValue('--theme-bg-page');
 ```
 
 ---
@@ -212,7 +369,10 @@ All colors are defined in `@my-girok/design-tokens/tokens.css` and exposed via T
 
 When updating design tokens:
 
-1. Edit `packages/design-tokens/src/tokens.css`
-2. Update this documentation if new tokens are added
-3. Run `pnpm --filter @my-girok/ui-components build-storybook` to verify
-4. Ensure all components still meet WCAG AAA contrast requirements
+1. **Edit source file**: `packages/design-tokens/src/tokens.css`
+2. **Update this documentation**: Add new colors/tokens to tables above
+3. **Update manager.ts**: If branding colors change, sync `GIROK_TOKENS` object
+4. **Verify locally**: `pnpm --filter @my-girok/ui-components storybook`
+5. **Check WCAG compliance**: Ensure all text meets 7:1+ contrast ratio
+
+See [SSOT Strategy](?path=/docs/introduction--docs#ssot-utility-classes) for naming conventions.
