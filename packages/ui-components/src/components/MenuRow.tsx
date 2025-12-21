@@ -48,7 +48,7 @@ export interface MenuRowProps {
 // V0.0.1 AAA Workstation Design System
 
 const baseClasses =
-  'w-full flex items-center gap-6 px-8 py-5 bg-theme-bg-card border-2 border-theme-border-subtle rounded-widget transition-all duration-300 shadow-theme-sm';
+  'w-full flex items-center gap-6 px-8 py-5 bg-theme-bg-card border-2 border-theme-border-subtle rounded-soft transition-all duration-300 shadow-theme-sm';
 
 const enabledClasses =
   'cursor-pointer hover:bg-theme-bg-hover hover:border-theme-primary hover:-translate-y-0.5';
@@ -58,7 +58,7 @@ const disabledClasses = 'cursor-not-allowed opacity-50';
 const pinnedClasses = 'border-theme-primary';
 
 const pinButtonBaseClasses =
-  'p-2.5 rounded-input border-2 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center';
+  'p-2.5 rounded-soft border-2 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center';
 
 const pinButtonActiveClasses = 'bg-theme-primary text-btn-primary-text border-theme-primary';
 

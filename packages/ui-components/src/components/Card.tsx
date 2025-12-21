@@ -46,15 +46,15 @@ const paddingClasses = {
 } as const;
 
 // V0.0.1 Radius options - SSOT tokens from tokens.css
-// Default uses subtle (8px) to remove sharpness while keeping rectangular appearance
+// Unified radius policy - all use rounded-soft (8px)
 const radiusClasses = {
   none: 'rounded-none', // 0px - Sharp corners
-  subtle: 'rounded-subtle', // SSOT: 8px - Minimal rounding (removes sharpness)
-  default: 'rounded-soft', // SSOT: 12px - Soft corners (default)
-  md: 'rounded-input', // SSOT: 24px
-  lg: 'rounded-widget', // SSOT: 32px
-  xl: 'rounded-editorial', // SSOT: 40px
-  '2xl': 'rounded-editorial-lg', // SSOT: 48px
+  subtle: 'rounded-subtle', // SSOT: 4px - Minimal rounding
+  default: 'rounded-soft', // SSOT: 8px - Soft corners (default)
+  md: 'rounded-soft', // SSOT: 8px - unified (was 24px)
+  lg: 'rounded-soft', // SSOT: 8px - unified (was 32px)
+  xl: 'rounded-soft', // SSOT: 8px - unified (was 40px)
+  '2xl': 'rounded-soft', // SSOT: 8px - unified (was 48px)
 } as const;
 
 /**

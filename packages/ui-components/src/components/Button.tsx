@@ -74,11 +74,11 @@ const sizeClasses = {
 } as const;
 
 // Border radius options - SSOT tokens from tokens.css
-// V0.0.1: default uses soft (12px) for subtle rounding - rectangular but not sharp
+// V0.0.1: Unified radius policy - all use rounded-soft (8px)
 const roundedClasses = {
-  default: 'rounded-soft', // SSOT: 12px - soft corners
-  subtle: 'rounded-subtle', // SSOT: 8px - minimal rounding
-  editorial: 'rounded-input', // SSOT: 24px - more rounded
+  default: 'rounded-soft', // SSOT: 8px - soft corners
+  subtle: 'rounded-subtle', // SSOT: 4px - minimal rounding
+  editorial: 'rounded-soft', // SSOT: 8px - unified (was 24px)
   full: 'rounded-full',
 } as const;
 
