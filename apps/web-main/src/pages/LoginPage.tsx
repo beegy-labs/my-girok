@@ -71,8 +71,8 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      title={t('auth.login', { defaultValue: 'Login' })}
-      subtitle={t('auth.archiveAccess', { defaultValue: 'Archive Access' })}
+      title={t('auth.login')}
+      subtitle={t('auth.archiveAccess')}
       error={error}
       secondaryActions={
         <>
@@ -85,7 +85,7 @@ export default function LoginPage() {
           <Link to="/forgot-password" className="block">
             <Button variant="ghost" size="lg" rounded="default" fullWidth>
               <Key size={16} />
-              {t('auth.forgotPassword', { defaultValue: 'Forgot Password' })}
+              {t('auth.forgotPassword')}
             </Button>
           </Link>
         </>

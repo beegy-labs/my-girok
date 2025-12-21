@@ -125,6 +125,8 @@
     "supportMessage": "Your archive grows with every story you record."
   },
   "auth": {
+    "login": "Login",
+    "archiveAccess": "Archive Access",
     "loginTitle": "Login",
     "registerTitle": "Create New Record",
     "email": "Email",
@@ -148,7 +150,17 @@
     "termsAgreement": "By signing up, you agree to our Terms of Service and Privacy Policy",
     "rememberEmail": "Remember my email",
     "welcomeBack": "WELCOME BACK",
-    "createAccount": "CREATE ACCOUNT"
+    "createAccount": "CREATE ACCOUNT",
+    "forgotPassword": "Forgot Password"
+  },
+  "forgotPassword": {
+    "title": "Reset",
+    "subtitle": "Password Recovery",
+    "description": "Enter your email address and we will send you a link to reset your password.",
+    "checkEmail": "Check Your Email",
+    "emailSent": "We sent a password reset link to your email address.",
+    "backToLogin": "Back to Login",
+    "sendLink": "Send Reset Link"
   },
   "footer": {
     "tagline": "Recording your own story",

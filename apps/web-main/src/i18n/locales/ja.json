@@ -125,6 +125,8 @@
     "supportMessage": "記録するたびにあなたのアーカイブは成長します。"
   },
   "auth": {
+    "login": "ログイン",
+    "archiveAccess": "アーカイブアクセス",
     "loginTitle": "ログイン",
     "registerTitle": "新しい記録帳を作成",
     "email": "メールアドレス",
@@ -148,7 +150,17 @@
     "termsAgreement": "登録することで、利用規約とプライバシーポリシーに同意したことになります",
     "rememberEmail": "メールアドレスを記憶する",
     "welcomeBack": "おかえりなさい",
-    "createAccount": "アカウント作成"
+    "createAccount": "アカウント作成",
+    "forgotPassword": "パスワードをお忘れですか"
+  },
+  "forgotPassword": {
+    "title": "リセット",
+    "subtitle": "パスワード復旧",
+    "description": "メールアドレスを入力してください。パスワードリセット用のリンクをお送りします。",
+    "checkEmail": "メールを確認してください",
+    "emailSent": "パスワードリセット用のリンクをメールで送信しました。",
+    "backToLogin": "ログインに戻る",
+    "sendLink": "リセットリンクを送信"
   },
   "footer": {
     "tagline": "あなたの物語を記録する",
