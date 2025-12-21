@@ -47,24 +47,38 @@ Layer 3: Tailwind (@theme inline) → Utility classes (dynamic)
 
 LLM 작업 시 아래 유틸리티 클래스를 사용:
 
-| Category       | Utility Class           | Usage                    |
-| -------------- | ----------------------- | ------------------------ |
-| Border Radius  | `rounded-input`         | Inputs, buttons (24px)   |
-|                | `rounded-widget`        | Widgets, modals (32px)   |
-|                | `rounded-editorial`     | Cards (40px)             |
-|                | `rounded-editorial-lg`  | Form cards (48px)        |
-|                | `rounded-editorial-xl`  | Hero sections (56px)     |
-|                | `rounded-editorial-2xl` | Menu cards (64px)        |
-| Typography     | `font-serif-title`      | Serif headings           |
-|                | `font-mono-brand`       | Brand labels             |
-| Letter Spacing | `tracking-brand-sm`     | Small labels (0.2em)     |
-|                | `tracking-brand-md`     | Footer links (0.25em)    |
-|                | `tracking-brand`        | Default brand (0.3em)    |
-|                | `tracking-brand-lg`     | Large brand (0.5em)      |
-|                | `tracking-editorial`    | Serif headings (-0.05em) |
-| Spacing        | `pt-nav`, `h-nav`       | Navigation height (80px) |
-|                | `mb-section`            | Section margin (96px)    |
-| Focus Ring     | `ring-[4px]`            | AAA focus ring (4px)     |
+| Category         | Utility Class           | Usage                      |
+| ---------------- | ----------------------- | -------------------------- |
+| Border Radius    | `rounded-input`         | Inputs, buttons (24px)     |
+|                  | `rounded-input-sm`      | Small inputs (12px)        |
+|                  | `rounded-widget`        | Widgets, modals (32px)     |
+|                  | `rounded-editorial`     | Cards (40px)               |
+|                  | `rounded-editorial-lg`  | Form cards (48px)          |
+|                  | `rounded-editorial-xl`  | Hero sections (56px)       |
+|                  | `rounded-editorial-2xl` | Menu cards (64px)          |
+| Typography       | `font-serif-title`      | Serif headings             |
+|                  | `font-mono-brand`       | Brand labels               |
+| Brand Font Sizes | `text-brand-2xs`        | 10px                       |
+|                  | `text-brand-xs`         | 11px (Button lg, Badge sm) |
+|                  | `text-brand-sm`         | 12px (Labels)              |
+|                  | `text-brand-md`         | 13px                       |
+|                  | `text-brand-base`       | 14px (Button xl, Badge lg) |
+|                  | `text-brand-lg`         | 15px                       |
+|                  | `text-brand-xl`         | 16px                       |
+|                  | `text-brand-2xl`        | 18px                       |
+| Letter Spacing   | `tracking-brand-sm`     | Small labels (0.2em)       |
+|                  | `tracking-brand-md`     | Footer links (0.25em)      |
+|                  | `tracking-brand`        | Default brand (0.3em)      |
+|                  | `tracking-brand-lg`     | Large brand (0.5em)        |
+|                  | `tracking-editorial`    | Serif headings (-0.05em)   |
+| Input Heights    | `min-h-touch-aa`        | 44px (WCAG AA minimum)     |
+|                  | `min-h-input`           | 48px (WCAG AAA)            |
+|                  | `min-h-input-lg`        | 56px (Button/Input lg)     |
+|                  | `min-h-input-xl`        | 64px (Button/Input xl)     |
+| Spacing          | `pt-nav`, `h-nav`       | Navigation height (80px)   |
+|                  | `mb-section`            | Section margin (96px)      |
+| Container Width  | `max-w-auth-form`       | Auth form (576px)          |
+| Focus Ring       | `ring-[4px]`            | AAA focus ring (4px)       |
 
 ### Usage Pattern
 

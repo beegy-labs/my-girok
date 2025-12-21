@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 export interface BadgeProps {
   /**
@@ -36,10 +36,17 @@ const variantClasses = {
   accent: 'bg-theme-accent-pale text-theme-primary border-theme-primary',
 } as const;
 
+/**
+ * Badge size classes - 8pt Grid & SSOT Typography
+ * - px-3 = 12px (fine for small badges)
+ * - px-4 = 16px (8pt grid ✓)
+ * - px-6 = 24px (8pt grid ✓, was px-5)
+ * - SSOT: text-brand-xs (11px), text-brand-base (14px)
+ */
 const sizeClasses = {
-  sm: 'px-3 py-1 text-[11px]',
-  md: 'px-4 py-1.5 text-xs',
-  lg: 'px-5 py-2 text-[14px]',
+  sm: 'px-3 py-1 text-brand-xs', // 11px
+  md: 'px-4 py-1.5 text-xs', // 12px (Tailwind default)
+  lg: 'px-6 py-2 text-brand-base', // 14px, 24px horizontal (was px-5)
 } as const;
 
 const roundedClasses = {
@@ -57,6 +64,7 @@ const roundedClasses = {
  * - Rounded options (default: lg, full: pill shape)
  * - WCAG AAA compliant text contrast
  * - Wider tracking for improved readability
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
@@ -64,7 +72,7 @@ const roundedClasses = {
  * <Badge variant="warning" size="sm" rounded="full">Pending</Badge>
  * ```
  */
-export function Badge({
+export const Badge = memo(function Badge({
   children,
   variant = 'default',
   size = 'md',
@@ -78,7 +86,7 @@ export function Badge({
       {children}
     </span>
   );
-}
+});
 
 export interface SectionBadgeProps {
   /**
@@ -99,18 +107,22 @@ export interface SectionBadgeProps {
  * - Uppercase text with wide letter-spacing (0.3em)
  * - Monospace font for technical feel
  * - Subtle border and background
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
  * <SectionBadge>MY ARCHIVE</SectionBadge>
  * ```
  */
-export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
+export const SectionBadge = memo(function SectionBadge({
+  children,
+  className = '',
+}: SectionBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-4 py-1.5 text-[11px] font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-xl font-mono-brand ${className}`}
+      className={`inline-flex items-center px-4 py-1.5 text-brand-xs font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-xl font-mono-brand ${className}`}
     >
       {children}
     </span>
   );
-}
+});

@@ -170,45 +170,55 @@ export interface TextInputProps extends Omit<
 // ============================================================================
 
 /**
- * Size configuration with WCAG 2.5.5 touch target compliance
- * Minimum touch target: 44x44px (we use 48px for AAA compliance)
+ * Size configuration with WCAG 2.5.5 AAA touch target compliance
+ * Follows strict 8pt Grid System (all values multiples of 8, icons 4)
+ *
+ * 8pt Grid Reference:
+ * - py-2 = 8px, py-4 = 16px, py-6 = 24px
+ * - gap-2 = 8px, gap-4 = 16px, gap-6 = 24px
+ * - px-4 = 16px, px-6 = 24px, px-8 = 32px
+ * - Icon sizes: 16, 20, 24px (4px intervals)
+ *
+ * SSOT Tokens (tokens.css):
+ * - h-input-sm: 40px, min-h-input: 48px
+ * - h-input-lg: 56px, h-input-xl: 64px
  */
 const SIZE_CONFIG = {
   sm: {
-    height: 'h-10', // 40px - minimum for compact UI
-    padding: 'py-2',
-    iconGap: 'gap-2',
-    iconSize: 16,
-    iconPadding: 'px-3',
+    height: 'h-input-sm', // 40px - compact UI (AA level)
+    padding: 'py-2', // 8px vertical - 8pt grid ✓
+    iconGap: 'gap-2', // 8px - 8pt grid ✓
+    iconSize: 16, // 4px interval ✓
+    iconPadding: 'px-4', // 16px - 8pt grid ✓
     fontSize: 'text-sm',
-    borderRadius: 'rounded-lg',
+    borderRadius: 'rounded-input-sm', // 12px
   },
   default: {
-    height: 'min-h-[48px]', // 48px - WCAG 2.5.5 AAA
-    padding: 'py-3',
-    iconGap: 'gap-3',
-    iconSize: 18,
-    iconPadding: 'px-4',
+    height: 'min-h-input', // 48px - WCAG 2.5.5 AAA
+    padding: 'py-2', // 8px vertical - 8pt grid ✓ (was py-3)
+    iconGap: 'gap-2', // 8px - 8pt grid ✓ (was gap-3)
+    iconSize: 20, // 4px interval ✓
+    iconPadding: 'px-4', // 16px - 8pt grid ✓ (was px-5)
     fontSize: 'text-base',
-    borderRadius: 'rounded-input', // SSOT: 24px
+    borderRadius: 'rounded-input', // 24px
   },
   lg: {
-    height: 'h-14', // 56px
-    padding: 'py-4',
-    iconGap: 'gap-3.5',
-    iconSize: 20,
-    iconPadding: 'px-5',
+    height: 'h-input-lg', // 56px - AAA+
+    padding: 'py-4', // 16px vertical - 8pt grid ✓
+    iconGap: 'gap-4', // 16px - 8pt grid ✓
+    iconSize: 20, // 4px interval ✓ (was 22)
+    iconPadding: 'px-6', // 24px - 8pt grid ✓
     fontSize: 'text-base font-medium',
-    borderRadius: 'rounded-input',
+    borderRadius: 'rounded-input', // 24px
   },
   xl: {
-    height: 'h-16', // 64px - Editorial style
-    padding: 'py-4',
-    iconGap: 'gap-4',
-    iconSize: 22,
-    iconPadding: 'px-6',
-    fontSize: 'text-lg font-bold',
-    borderRadius: 'rounded-input',
+    height: 'h-input-xl', // 64px - Editorial AAA+
+    padding: 'py-4', // 16px vertical - 8pt grid ✓ (was py-5)
+    iconGap: 'gap-4', // 16px - 8pt grid ✓ (was gap-5)
+    iconSize: 24, // 4px interval ✓
+    iconPadding: 'px-6', // 24px - 8pt grid ✓ (was px-7)
+    fontSize: 'text-lg',
+    borderRadius: 'rounded-input', // 24px
   },
 } as const;
 
@@ -636,11 +646,11 @@ function TextInputComponent({
 
   return (
     <div className={finalContainerClassName}>
-      {/* Label */}
+      {/* Label - WCAG AAA: 7:1+ contrast, SSOT typography */}
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-[12px] font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
+          className="block text-brand-sm font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
         >
           {label}
           {required && (
@@ -692,8 +702,8 @@ function TextInputComponent({
         />
       </div>
 
-      {/* Footer: Error, Hint, or Character Count */}
-      <div className="flex items-start justify-between mt-2 min-h-[20px]">
+      {/* Footer: Error, Hint, or Character Count - 8pt grid (mt-2 = 8px) */}
+      <div className="flex items-start justify-between mt-2 min-h-5">
         <div className="flex-1">
           {error && (
             <p

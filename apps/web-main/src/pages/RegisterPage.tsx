@@ -69,8 +69,8 @@ export default function RegisterPage() {
           id="name"
           label={t('auth.name')}
           type="text"
-          size="lg"
-          icon={<User size={18} />}
+          size="xl"
+          icon={<User size={24} />}
           value={name}
           onChange={setName}
           required
@@ -82,8 +82,8 @@ export default function RegisterPage() {
           id="username"
           label={t('auth.usernameHint')}
           type="text"
-          size="lg"
-          icon={<AtSign size={18} />}
+          size="xl"
+          icon={<AtSign size={24} />}
           value={username}
           onChange={handleUsernameChange}
           required
@@ -96,8 +96,8 @@ export default function RegisterPage() {
           id="email"
           label={t('auth.email')}
           type="email"
-          size="lg"
-          icon={<Mail size={18} />}
+          size="xl"
+          icon={<Mail size={24} />}
           value={email}
           onChange={setEmail}
           required
@@ -109,8 +109,8 @@ export default function RegisterPage() {
           id="password"
           label={t('auth.password')}
           type="password"
-          size="lg"
-          icon={<Lock size={18} />}
+          size="xl"
+          icon={<Lock size={24} />}
           showPasswordToggle
           value={password}
           onChange={setPassword}

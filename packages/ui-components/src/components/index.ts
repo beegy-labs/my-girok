@@ -8,8 +8,6 @@ export * from './MenuRow';
 export * from './PageContainer';
 export * from './PageHeader';
 export * from './SelectInput';
-export * from './SortableItem';
-export * from './SortableList';
 export * from './TextArea';
 export * from './TextInput';
 export * from './TopWidget';
