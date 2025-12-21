@@ -47,55 +47,59 @@ Layer 3: Tailwind (@theme inline) → Utility classes (dynamic)
 
 LLM 작업 시 아래 유틸리티 클래스를 사용:
 
-| Category         | Utility Class           | Usage                      |
-| ---------------- | ----------------------- | -------------------------- |
-| Border Radius    | `rounded-subtle`        | Minimal (4px) - corners    |
-|                  | `rounded-soft`          | **Default (8px)** - all UI |
-|                  | `rounded-input`         | Inputs, buttons (24px)     |
-|                  | `rounded-input-sm`      | Small inputs (12px)        |
-|                  | `rounded-widget`        | Widgets, modals (32px)     |
-|                  | `rounded-editorial`     | Cards (40px)               |
-|                  | `rounded-editorial-lg`  | Form cards (48px)          |
-|                  | `rounded-editorial-xl`  | Hero sections (56px)       |
-|                  | `rounded-editorial-2xl` | Menu cards (64px)          |
-| Typography       | `font-serif-title`      | Serif headings             |
-|                  | `font-mono-brand`       | Brand labels               |
-| Brand Font Sizes | `text-brand-2xs`        | 10px                       |
-|                  | `text-brand-xs`         | 11px (Button lg, Badge sm) |
-|                  | `text-brand-sm`         | 12px (Labels)              |
-|                  | `text-brand-md`         | 13px                       |
-|                  | `text-brand-base`       | 14px (Button xl, Badge lg) |
-|                  | `text-brand-lg`         | 15px                       |
-|                  | `text-brand-xl`         | 16px                       |
-|                  | `text-brand-2xl`        | 18px                       |
-| Letter Spacing   | `tracking-brand-sm`     | Small labels (0.2em)       |
-|                  | `tracking-brand-md`     | Footer links (0.25em)      |
-|                  | `tracking-brand`        | Default brand (0.3em)      |
-|                  | `tracking-brand-lg`     | Large brand (0.5em)        |
-|                  | `tracking-editorial`    | Serif headings (-0.05em)   |
-| Input Heights    | `min-h-touch-aa`        | 44px (WCAG AA minimum)     |
-|                  | `min-h-input`           | 48px (WCAG AAA)            |
-|                  | `min-h-input-lg`        | 56px (Button/Input lg)     |
-|                  | `min-h-input-xl`        | 64px (Button/Input xl)     |
-| Spacing          | `pt-nav`, `h-nav`       | Navigation height (80px)   |
-|                  | `mb-section`            | Section margin (96px)      |
-| Container Width  | `max-w-auth-form`       | Auth form (576px)          |
-| Focus Ring       | `ring-[4px]`            | AAA focus ring (4px)       |
+| Category         | Utility Class        | Usage                              |
+| ---------------- | -------------------- | ---------------------------------- |
+| Border Radius    | `rounded-subtle`     | Minimal (4px) - corners            |
+|                  | `rounded-soft`       | **Default (8px)** - ALL UI         |
+|                  | `rounded-full`       | Circular elements (avatars, pills) |
+| Typography       | `font-serif-title`   | Serif headings                     |
+|                  | `font-mono-brand`    | Brand labels                       |
+| Brand Font Sizes | `text-brand-2xs`     | 10px                               |
+|                  | `text-brand-xs`      | 11px (Button lg, Badge sm)         |
+|                  | `text-brand-sm`      | 12px (Labels)                      |
+|                  | `text-brand-md`      | 13px                               |
+|                  | `text-brand-base`    | 14px (Button xl, Badge lg)         |
+|                  | `text-brand-lg`      | 15px                               |
+|                  | `text-brand-xl`      | 16px                               |
+|                  | `text-brand-2xl`     | 18px                               |
+| Letter Spacing   | `tracking-brand-sm`  | Small labels (0.2em)               |
+|                  | `tracking-brand-md`  | Footer links (0.25em)              |
+|                  | `tracking-brand`     | Default brand (0.3em)              |
+|                  | `tracking-brand-lg`  | Large brand (0.5em)                |
+|                  | `tracking-editorial` | Serif headings (-0.05em)           |
+| Input Heights    | `min-h-touch-aa`     | 44px (WCAG AA minimum)             |
+|                  | `min-h-input`        | 48px (WCAG AAA)                    |
+|                  | `min-h-input-lg`     | 56px (Button/Input lg)             |
+|                  | `min-h-input-xl`     | 64px (Button/Input xl)             |
+| Spacing          | `pt-nav`, `h-nav`    | Navigation height (80px)           |
+|                  | `mb-section`         | Section margin (96px)              |
+| Container Width  | `max-w-auth-form`    | Auth form (576px)                  |
+| Focus Ring       | `ring-[4px]`         | AAA focus ring (4px)               |
 
-### Default Radius Policy (V0.0.1)
+### Unified Radius Policy (V0.0.1 - 2025-12)
 
-**All UI components use `rounded-soft` (8px) by default** - removes sharp corners while maintaining rectangular appearance.
+**All UI components use `rounded-soft` (8px)** - unified, consistent border radius across the entire application.
 
 ```tsx
-// ✅ Components automatically use soft radius (8px)
+// ✅ ALL components use soft radius (8px)
 <Card>...</Card>           // rounded-soft (8px)
 <Button>...</Button>       // rounded-soft (8px)
 <TextInput />              // rounded-soft (8px)
+<SelectInput />            // rounded-soft (8px)
+<TextArea />               // rounded-soft (8px)
+<CollapsibleSection />     // rounded-soft (8px)
+<PageHeader />             // rounded-soft (8px)
 <Alert>...</Alert>         // rounded-soft (8px)
 
-// ✅ For larger editorial radius, use explicit props
-<Card radius="xl">...</Card>  // rounded-editorial (40px)
+// ✅ Exceptions
+<Avatar />                 // rounded-full (circular)
 ```
+
+**Deprecated (DO NOT USE):**
+
+- ~~`rounded-input`~~ (24px) → Use `rounded-soft`
+- ~~`rounded-widget`~~ (32px) → Use `rounded-soft`
+- ~~`rounded-editorial*`~~ (40-64px) → Use `rounded-soft`
 
 ### Usage Pattern
 
