@@ -113,7 +113,8 @@ jobs:
           case "${DEPLOY_ENV}" in
             main) P="" ;;
             develop) P="develop-" ;;
-            *) P="release-" ;;
+            release) P="release-" ;;
+            *) P="develop-" ;;
           esac
           curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/auth-service" | \
             jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \

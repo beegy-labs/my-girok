@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Resume,
@@ -294,9 +294,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [resume?.id],
   );
 
-  // Memoized attachment filter by type (2025 best practice)
-  const getAttachmentsByType = useCallback(
-    (type: AttachmentType) => attachments.filter((a) => a.type === type),
+  // Memoized attachment lists by type (2025 best practice - useMemo for derived arrays)
+  const profilePhotoAttachments = useMemo(
+    () => attachments.filter((a) => a.type === AttachmentType.PROFILE_PHOTO),
+    [attachments],
+  );
+  const portfolioAttachments = useMemo(
+    () => attachments.filter((a) => a.type === AttachmentType.PORTFOLIO),
+    [attachments],
+  );
+  const certificateAttachments = useMemo(
+    () => attachments.filter((a) => a.type === AttachmentType.CERTIFICATE),
     [attachments],
   );
 
@@ -1158,7 +1166,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {t('resume.form.profilePhotoDesc')}
           </p>
           <div className="space-y-3">
-            {getAttachmentsByType(AttachmentType.PROFILE_PHOTO).map((attachment) => (
+            {profilePhotoAttachments.map((attachment) => (
               <div
                 key={attachment.id}
                 className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
@@ -1215,7 +1223,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </h3>
           <p className="text-sm text-theme-text-secondary mb-3">{t('resume.form.portfolioDesc')}</p>
           <div className="space-y-3">
-            {getAttachmentsByType(AttachmentType.PORTFOLIO).map((attachment) => (
+            {portfolioAttachments.map((attachment) => (
               <div
                 key={attachment.id}
                 className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
@@ -1268,7 +1276,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {t('resume.form.certificatesDesc')}
           </p>
           <div className="space-y-3">
-            {getAttachmentsByType(AttachmentType.CERTIFICATE).map((attachment) => (
+            {certificateAttachments.map((attachment) => (
               <div
                 key={attachment.id}
                 className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"

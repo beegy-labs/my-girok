@@ -26,6 +26,12 @@ import {
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 import { TextInput, TextArea, Button } from '@my-girok/ui-components';
 
+// Sensor activation options - extracted to module scope (2025 best practice)
+const SENSOR_OPTIONS = {
+  pointer: { activationConstraint: { distance: 8 } },
+  touch: { activationConstraint: { delay: 200, tolerance: 5 } },
+} as const;
+
 // Depth colors for visual hierarchy in achievements - WCAG AAA 7:1+ compliant
 const DEPTH_COLORS = {
   1: {
@@ -167,23 +173,29 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     [],
   );
 
-  const handleProjectDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  // Memoized project drag end handler (2025 React best practice)
+  const handleProjectDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
 
-    const oldIndex = projects.findIndex(
-      (p) => (p.id || `proj-${projects.indexOf(p)}`) === active.id,
-    );
-    const newIndex = projects.findIndex((p) => (p.id || `proj-${projects.indexOf(p)}`) === over.id);
+      const oldIndex = projects.findIndex(
+        (p) => (p.id || `proj-${projects.indexOf(p)}`) === active.id,
+      );
+      const newIndex = projects.findIndex(
+        (p) => (p.id || `proj-${projects.indexOf(p)}`) === over.id,
+      );
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-      const newProjects = arrayMove(projects, oldIndex, newIndex).map((p, idx) => ({
-        ...p,
-        order: idx,
-      }));
-      onUpdate({ ...experience, projects: newProjects });
-    }
-  };
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newProjects = arrayMove(projects, oldIndex, newIndex).map((p, idx) => ({
+          ...p,
+          order: idx,
+        }));
+        onUpdate({ ...experience, projects: newProjects });
+      }
+    },
+    [projects, experience, onUpdate],
+  );
 
   // Curried handler for achievement drag end (2025 React best practice)
   const handleAchievementDragEnd = useCallback(
@@ -214,7 +226,8 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     [projects, experience, onUpdate],
   );
 
-  const addProject = () => {
+  // Memoized add project handler (2025 React best practice)
+  const addProject = useCallback(() => {
     const newProject: ExperienceProject = {
       name: '',
       startDate: '',
@@ -227,7 +240,10 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     };
     onUpdate({ ...experience, projects: [...projects, newProject] });
     setExpandedProjects((prev) => ({ ...prev, [projects.length]: true }));
-  };
+  }, [projects, experience, onUpdate]);
+
+  // Memoize project IDs for SortableContext (2025 best practice)
+  const projectIds = useMemo(() => projects.map((p, i) => p.id || `proj-${i}`), [projects]);
 
   // Curried handler for updating project (2025 React best practice)
   const updateProject = useCallback(
@@ -294,8 +310,8 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
+    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -554,10 +570,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
               collisionDetection={closestCenter}
               onDragEnd={handleProjectDragEnd}
             >
-              <SortableContext
-                items={projects.map((p, i) => p.id || `proj-${i}`)}
-                strategy={verticalListSortingStrategy}
-              >
+              <SortableContext items={projectIds} strategy={verticalListSortingStrategy}>
                 <div className="space-y-3">
                   {projects.map((project, projectIndex) => (
                     <SortableProject
@@ -638,8 +651,8 @@ const SortableProject = memo(function SortableProject({
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
+    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -1197,35 +1210,47 @@ const SortableAchievement = memo(function SortableAchievement({
   );
 });
 
-// Main Experience Section Component
-export default function ExperienceSection({ experiences, onChange, t }: ExperienceSectionProps) {
+/**
+ * Main Experience Section Component
+ * Memoized to prevent unnecessary re-renders (rules.md:275)
+ */
+const ExperienceSection = memo(function ExperienceSection({
+  experiences,
+  onChange,
+  t,
+}: ExperienceSectionProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
+    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  // Memoized drag end handler (2025 React best practice)
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
 
-    const oldIndex = experiences.findIndex(
-      (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === active.id,
-    );
-    const newIndex = experiences.findIndex(
-      (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === over.id,
-    );
+      const oldIndex = experiences.findIndex(
+        (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === active.id,
+      );
+      const newIndex = experiences.findIndex(
+        (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === over.id,
+      );
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-      const newExperiences = arrayMove(experiences, oldIndex, newIndex).map((exp, idx) => ({
-        ...exp,
-        order: idx,
-      }));
-      onChange(newExperiences);
-    }
-  };
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newExperiences = arrayMove(experiences, oldIndex, newIndex).map((exp, idx) => ({
+          ...exp,
+          order: idx,
+        }));
+        onChange(newExperiences);
+      }
+    },
+    [experiences, onChange],
+  );
 
-  const addExperience = () => {
+  // Memoized add experience handler (2025 React best practice)
+  const addExperience = useCallback(() => {
     const newExperience: Experience = {
       company: '',
       startDate: '',
@@ -1237,7 +1262,13 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
       visible: true,
     };
     onChange([...experiences, newExperience]);
-  };
+  }, [experiences, onChange]);
+
+  // Memoize experience IDs for SortableContext (2025 best practice)
+  const experienceIds = useMemo(
+    () => experiences.map((exp, i) => exp.id || `exp-${i}`),
+    [experiences],
+  );
 
   // Curried handler for updating experience (2025 React best practice)
   const updateExperience = useCallback(
@@ -1280,10 +1311,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
 
       {experiences && experiences.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext
-            items={experiences.map((exp, i) => exp.id || `exp-${i}`)}
-            strategy={verticalListSortingStrategy}
-          >
+          <SortableContext items={experienceIds} strategy={verticalListSortingStrategy}>
             <div className="space-y-3 sm:space-y-6 lg:space-y-8">
               {experiences.map((exp, index) => (
                 <SortableExperienceCard
@@ -1305,4 +1333,6 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
       )}
     </div>
   );
-}
+});
+
+export default ExperienceSection;
