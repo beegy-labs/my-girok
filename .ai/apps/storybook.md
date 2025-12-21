@@ -1,10 +1,18 @@
 # @my-girok/storybook
 
-> Design System Documentation - V0.0.1 AAA Workstation
+> Design System Documentation - V0.0.1 AAA Workstation (2025 Best Practices)
 
 ## Purpose
 
 Storybook application for interactive component documentation. Deployed as an independent service in Kubernetes, serving the Design System documentation for the my-girok project.
+
+**2025 Enhancements:**
+
+- SSR-safe theme handling with Error Boundaries
+- Real-time system theme detection
+- Interactive token preview with copy-to-clipboard
+- Vitest integration for component testing
+- WCAG AAA accessibility enforcement
 
 ## Architecture
 
@@ -30,14 +38,19 @@ apps/storybook/                    # Deployment configuration
 
 packages/ui-components/            # Component source
 ├── .storybook/                    # Storybook configuration
-│   ├── main.ts                    # Addons, framework config
-│   ├── manager.ts                 # Custom GIROK branding
-│   ├── preview.tsx                # Theme decorator, a11y config
+│   ├── main.ts                    # Addons, framework config (enhanced)
+│   ├── manager.ts                 # Custom GIROK branding + system theme sync
+│   ├── preview.tsx                # Theme decorator, Error Boundary, SSR-safe
 │   ├── preview-head.html          # Custom fonts (Playfair Display)
-│   └── vitest.setup.ts
+│   └── vitest.setup.ts            # Test setup with custom matchers
+├── vitest.config.ts               # Storybook test configuration
+├── public/                        # Static assets
 └── src/
     ├── Introduction.mdx           # Getting started page
-    ├── DesignTokens.mdx           # Color palette documentation
+    ├── DesignTokens.mdx           # Interactive color palette documentation
+    ├── docs/                      # Documentation components
+    │   ├── index.ts
+    │   └── TokenPreview.tsx       # Interactive token preview
     └── components/
         ├── Button.tsx
         ├── Button.stories.tsx     # CSF 3.0 stories
@@ -205,7 +218,7 @@ Storybook serves static files only - very lightweight:
 | CPU      | 10m     | 100m  |
 | Memory   | 32Mi    | 64Mi  |
 
-## Storybook Features (2025)
+## Storybook Features (2025 Best Practices)
 
 ### Theme Toggle
 
@@ -216,20 +229,56 @@ The toolbar includes a theme switcher:
 
 Theme changes are synchronized to `data-theme` attribute on document root.
 
+### 2025 Enhancements
+
+| Feature           | Implementation                     | Benefit                  |
+| ----------------- | ---------------------------------- | ------------------------ |
+| SSR Safety        | `isBrowser` checks, Error Boundary | No hydration errors      |
+| System Theme Sync | `matchMedia` listener              | Respects user preference |
+| Reduced Motion    | `prefers-reduced-motion` support   | Accessibility            |
+| Type Safety       | `satisfies` pattern, type guards   | Compile-time validation  |
+| Error Boundary    | `StoryErrorBoundary` component     | Graceful error handling  |
+
 ### Custom Branding
 
 `manager.ts` applies GIROK design tokens to Storybook UI:
 
-- Oak Brown primary color (#6B4A2E)
-- Clean White Oak background colors
-- System fonts with monospace code
+```typescript
+// Type-safe token access
+const GIROK_TOKENS: GirokTokens = {
+  light: {
+    /* Clean White Oak palette */
+  },
+  dark: {
+    /* Midnight Gentle Study palette */
+  },
+  typography: {
+    /* Font stacks */
+  },
+} as const satisfies GirokTokens;
+
+// Real-time system theme detection
+if (isBrowser) {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  mediaQuery.addEventListener('change', handleThemeChange);
+}
+```
+
+### Interactive Documentation
+
+| Component          | Location                    | Features                       |
+| ------------------ | --------------------------- | ------------------------------ |
+| `TokenItem`        | `src/docs/TokenPreview.tsx` | Copy-to-clipboard, WCAG badge  |
+| `TokenGroup`       | `src/docs/TokenPreview.tsx` | Grouped token display          |
+| `LiveTokenPreview` | `src/docs/TokenPreview.tsx` | Real-time CSS variable preview |
+| `ContrastChecker`  | `src/docs/TokenPreview.tsx` | WCAG contrast calculator       |
 
 ### Documentation Pages
 
-| Page          | Path                       | Content                           |
-| ------------- | -------------------------- | --------------------------------- |
-| Introduction  | `Introduction.mdx`         | Getting started, component status |
-| Design Tokens | `Foundation/Design Tokens` | Color palettes, typography tokens |
+| Page          | Path                       | Content                                      |
+| ------------- | -------------------------- | -------------------------------------------- |
+| Introduction  | `Introduction.mdx`         | Getting started, component status            |
+| Design Tokens | `Foundation/Design Tokens` | Interactive color palettes, contrast checker |
 
 ### Accessibility Testing
 
@@ -237,6 +286,29 @@ Theme changes are synchronized to `data-theme` attribute on document root.
 
 - 7:1+ contrast ratio requirement
 - `test: 'error'` fails CI on violations
+
+### Component Testing (Vitest Integration)
+
+```bash
+# Run Storybook tests
+pnpm --filter @my-girok/ui-components test:storybook
+
+# Run with UI
+pnpm --filter @my-girok/ui-components test:storybook:ui
+
+# Run a11y tests only
+pnpm --filter @my-girok/ui-components test:a11y
+
+# Run with coverage
+pnpm --filter @my-girok/ui-components test:coverage
+```
+
+**Features:**
+
+- Browser-based testing with Playwright
+- Stories automatically become tests
+- Coverage reporting with 80% thresholds
+- Custom a11y matchers (`toHaveNoA11yViolations`, `toMeetContrastRatio`)
 
 ---
 

@@ -1,6 +1,7 @@
 {/* DesignTokens.mdx - Design Token Documentation */}
-import { Meta, ColorPalette, ColorItem, Typeset, IconGallery, IconItem } from '@storybook/addon-docs/blocks';
+import { Meta, ColorPalette, ColorItem, Typeset } from '@storybook/addon-docs/blocks';
 import { useEffect, useState } from 'react';
+import { TokenItem, TokenGroup, LiveTokenPreview, ContrastChecker } from './docs';
 
 <Meta title="Foundation/Design Tokens" />
 
@@ -297,6 +298,60 @@ Used for hierarchical content like nested lists or tree views.
 | Token | Value | Tailwind | Usage |
 |-------|-------|----------|-------|
 | `--ease-editorial` | `cubic-bezier(0.2, 1, 0.3, 1)` | `ease-editorial` | Smooth, elegant transitions |
+
+---
+
+## Interactive Token Preview
+
+Click on any token to copy its value. Tokens update in real-time with theme changes.
+
+### Live Theme Colors
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+  <LiveTokenPreview tokenName="--theme-bg-page" label="Page Background" />
+  <LiveTokenPreview tokenName="--theme-bg-card" label="Card Background" />
+  <LiveTokenPreview tokenName="--theme-text-primary" label="Primary Text" />
+  <LiveTokenPreview tokenName="--theme-primary" label="Primary Color" />
+</div>
+
+### Contrast Ratio Checker
+
+Verify WCAG AAA compliance (7:1+) for text colors.
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+  <ContrastChecker
+    foreground="#262220"
+    background="#ffffff"
+    sampleText="Light Theme Text"
+  />
+  <ContrastChecker
+    foreground="#ccc5bd"
+    background="#1e1c1a"
+    sampleText="Dark Theme Text"
+  />
+</div>
+
+### Copyable Token Reference
+
+<TokenGroup
+  title="Primary Text Colors"
+  description="All text colors meet WCAG 2.1 AAA requirements (7:1+ contrast ratio)"
+  tokens={[
+    { name: '--theme-text-primary', value: '#262220', contrast: '15.76:1', wcagLevel: 'AAA', description: 'Main body text' },
+    { name: '--theme-text-secondary', value: '#4A4744', contrast: '9.23:1', wcagLevel: 'AAA', description: 'Secondary content' },
+    { name: '--theme-text-muted', value: '#555351', contrast: '7.66:1', wcagLevel: 'AAA', description: 'Subdued text' },
+  ]}
+/>
+
+<TokenGroup
+  title="Brand Colors"
+  description="Oak Brown palette for primary actions and accents"
+  tokens={[
+    { name: '--theme-primary', value: '#6B4A2E', contrast: '7.94:1', wcagLevel: 'AAA', description: 'Primary actions' },
+    { name: '--theme-primary-dark', value: '#5D4028', contrast: '9.42:1', wcagLevel: 'AAA', description: 'Hover states' },
+    { name: '--theme-primary-light', value: '#8B5E3C', contrast: '5.58:1', wcagLevel: 'AA', description: 'Decorative' },
+  ]}
+/>
 
 ---
 

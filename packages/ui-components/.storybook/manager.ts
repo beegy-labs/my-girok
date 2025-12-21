@@ -1,13 +1,47 @@
 import { addons } from 'storybook/manager-api';
-import { create, themes } from 'storybook/theming';
+import { create } from 'storybook/theming';
 
 /**
  * GIROK Design Tokens - Synchronized with tokens.css
  *
  * These values MUST match packages/design-tokens/src/tokens.css
  * When updating tokens.css, update these values accordingly.
+ *
+ * @see packages/design-tokens/src/tokens.css
+ * @version 0.1.0
  */
-const GIROK_TOKENS = {
+
+// Type definitions for type-safe token access
+interface ThemeTokens {
+  readonly bgPage: string;
+  readonly bgCard: string;
+  readonly bgSecondary: string;
+  readonly bgElevated: string;
+  readonly bgHover: string;
+  readonly textPrimary: string;
+  readonly textSecondary: string;
+  readonly textTertiary: string;
+  readonly textMuted: string;
+  readonly primary: string;
+  readonly primaryDark: string;
+  readonly primaryLight: string;
+  readonly borderSubtle: string;
+  readonly borderDefault: string;
+  readonly borderStrong: string;
+}
+
+interface TypographyTokens {
+  readonly fontBase: string;
+  readonly fontCode: string;
+}
+
+interface GirokTokens {
+  readonly light: ThemeTokens;
+  readonly dark: ThemeTokens;
+  readonly typography: TypographyTokens;
+}
+
+const GIROK_TOKENS: GirokTokens = {
   // Light Theme: "Clean White Oak"
   light: {
     // Backgrounds
@@ -58,7 +92,7 @@ const GIROK_TOKENS = {
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans KR', sans-serif",
     fontCode: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
   },
-} as const;
+} as const satisfies GirokTokens;
 
 /**
  * Light Theme - "Clean White Oak"
@@ -165,16 +199,37 @@ const girokDarkTheme = create({
 });
 
 /**
- * Detect system preference for initial theme
+ * SSR-safe browser environment check
  */
-const prefersDark =
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
+/**
+ * Detect system color scheme preference
+ * Falls back to 'light' if not in browser environment
+ */
+function getSystemThemePreference(): 'light' | 'dark' {
+  if (!isBrowser) return 'light';
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+/**
+ * Get the appropriate theme based on system preference
+ */
+function getInitialTheme() {
+  const preference = getSystemThemePreference();
+  return preference === 'dark' ? girokDarkTheme : girokLightTheme;
+}
+
+/**
+ * Configure Storybook addons with GIROK branding
+ */
 addons.setConfig({
-  theme: prefersDark ? girokDarkTheme : girokLightTheme,
+  theme: getInitialTheme(),
   sidebar: {
     showRoots: true,
     collapsedRoots: ['other'],
+    // Render label for better accessibility
+    renderLabel: ({ name, type }) => (type === 'story' ? name : name.toUpperCase()),
   },
   toolbar: {
     title: { hidden: false },
@@ -183,9 +238,47 @@ addons.setConfig({
     copy: { hidden: false },
     fullscreen: { hidden: false },
   },
+  // Enable keyboard shortcuts
+  enableShortcuts: true,
 });
 
 /**
- * Export tokens for potential reuse in other Storybook configs
+ * Real-time system theme detection
+ * Updates Storybook manager theme when system preference changes
+ *
+ * Note: This is a best-effort approach. Storybook manager doesn't fully
+ * support runtime theme switching, but this handles initial load and
+ * some edge cases.
+ */
+if (isBrowser) {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const handleThemeChange = (event: MediaQueryListEvent) => {
+    const newTheme = event.matches ? girokDarkTheme : girokLightTheme;
+    addons.setConfig({ theme: newTheme });
+
+    // Log theme change for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.info(
+        `[GIROK] System theme changed to: ${event.matches ? 'Midnight Gentle Study' : 'Clean White Oak'}`,
+      );
+    }
+  };
+
+  // Modern API with fallback
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener('change', handleThemeChange);
+  } else {
+    // Legacy Safari support
+    mediaQuery.addListener(handleThemeChange);
+  }
+}
+
+/**
+ * Export tokens and themes for potential reuse
+ * - Use in custom addons
+ * - Use in documentation
+ * - Use in testing utilities
  */
 export { GIROK_TOKENS, girokLightTheme, girokDarkTheme };
+export type { ThemeTokens, TypographyTokens, GirokTokens };

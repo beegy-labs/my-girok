@@ -19,7 +19,11 @@
     "type-check": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "build-storybook:versioned": "storybook build -o storybook-static/v$npm_package_version"
+    "build-storybook:versioned": "storybook build -o storybook-static/v$npm_package_version",
+    "test:storybook": "vitest --project=storybook",
+    "test:storybook:ui": "vitest --project=storybook --ui",
+    "test:a11y": "vitest --project=storybook --grep='a11y'",
+    "test:coverage": "vitest --project=storybook --coverage"
   },
   "peerDependencies": {
     "@my-girok/design-tokens": "workspace:*",
@@ -33,7 +37,6 @@
     "typescript": "catalog:",
     "storybook": "^10.1.10",
     "@storybook/react-vite": "^10.1.10",
-    "@chromatic-com/storybook": "^4.1.3",
     "@storybook/addon-vitest": "^10.1.10",
     "@storybook/addon-a11y": "^10.1.10",
     "@storybook/addon-docs": "^10.1.10",

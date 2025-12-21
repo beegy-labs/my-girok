@@ -1,39 +1,64 @@
 import type { Preview, StoryContext, ReactRenderer } from '@storybook/react-vite';
 import type { PartialStoryFn } from 'storybook/internal/types';
-import { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback, useState, Component, type ReactNode } from 'react';
 // Import design tokens for SSOT styling
 import '@my-girok/design-tokens/tokens.css';
 
 /**
- * Theme configuration
+ * Theme configuration with type-safe structure
+ * @see packages/design-tokens/src/tokens.css for token definitions
  */
 const THEMES = {
   light: {
     name: 'Clean White Oak',
     icon: 'sun',
     colorScheme: 'light',
+    metaColor: '#ffffff',
   },
   dark: {
     name: 'Midnight Gentle Study',
     icon: 'moon',
     colorScheme: 'dark',
+    metaColor: '#1e1c1a',
   },
-} as const;
+} as const satisfies Record<string, ThemeConfig>;
+
+interface ThemeConfig {
+  readonly name: string;
+  readonly icon: string;
+  readonly colorScheme: 'light' | 'dark';
+  readonly metaColor: string;
+}
 
 type ThemeKey = keyof typeof THEMES;
 
 /**
- * Apply theme to document root
+ * Type guard for theme validation
+ */
+function isValidTheme(value: unknown): value is ThemeKey {
+  return typeof value === 'string' && value in THEMES;
+}
+
+/**
+ * SSR-safe document check
+ */
+const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+
+/**
+ * Apply theme to document root (SSR-safe)
  * - Sets data-theme attribute for CSS variable switching
  * - Sets color-scheme for native browser theming (scrollbars, form controls)
  * - Updates meta theme-color for mobile browsers
+ * - Respects prefers-reduced-motion for transitions
  */
 function applyTheme(theme: ThemeKey): void {
-  const { colorScheme } = THEMES[theme];
+  if (!isBrowser) return;
+
+  const config = THEMES[theme];
 
   // Update document attributes
   document.documentElement.setAttribute('data-theme', theme);
-  document.documentElement.style.colorScheme = colorScheme;
+  document.documentElement.style.colorScheme = config.colorScheme;
 
   // Update meta theme-color for mobile browsers
   let metaThemeColor = document.querySelector('meta[name="theme-color"]');
@@ -42,7 +67,92 @@ function applyTheme(theme: ThemeKey): void {
     metaThemeColor.setAttribute('name', 'theme-color');
     document.head.appendChild(metaThemeColor);
   }
-  metaThemeColor.setAttribute('content', theme === 'dark' ? '#1e1c1a' : '#ffffff');
+  metaThemeColor.setAttribute('content', config.metaColor);
+
+  // Add reduced-motion class if user prefers
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.toggle('reduce-motion', prefersReducedMotion);
+}
+
+/**
+ * Error Boundary for Story rendering
+ * Catches render errors and displays fallback UI instead of crashing
+ */
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class StoryErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    console.error('[Storybook] Story render error:', error, errorInfo);
+  }
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        this.props.fallback || (
+          <div
+            role="alert"
+            className="p-6 rounded-widget bg-status-error-bg border border-status-error-border"
+          >
+            <h3 className="text-lg font-semibold text-status-error-text mb-2">
+              Story Render Error
+            </h3>
+            <pre className="text-sm font-mono text-status-error-text overflow-auto">
+              {this.state.error?.message || 'Unknown error'}
+            </pre>
+            <button
+              type="button"
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="mt-4 px-4 py-2 rounded-input bg-theme-primary text-white text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        )
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+/**
+ * Custom hook for theme management
+ * Handles theme application with SSR safety and reduced motion support
+ */
+function useThemeSync(theme: ThemeKey): void {
+  const applyThemeCallback = useCallback(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    applyThemeCallback();
+
+    // Listen for reduced-motion preference changes
+    if (!isBrowser) return;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleChange = () => applyThemeCallback();
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [applyThemeCallback]);
 }
 
 /**
@@ -54,26 +164,38 @@ function applyTheme(theme: ThemeKey): void {
  * - Native color-scheme support for browser UI elements
  * - Mobile meta theme-color support
  * - Memoized Story component to prevent unnecessary re-renders
+ * - SSR-safe with proper hydration handling
+ * - Error boundary for graceful error handling
+ * - Reduced motion support
  */
 function ThemeDecorator(
   Story: PartialStoryFn<ReactRenderer>,
   context: StoryContext<ReactRenderer>,
 ) {
-  const theme = (context.globals.theme as ThemeKey) || 'light';
+  // Validate and extract theme with type safety
+  const rawTheme = context.globals.theme;
+  const theme: ThemeKey = isValidTheme(rawTheme) ? rawTheme : 'light';
 
-  // Apply theme to document root
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+  // Apply theme to document root with SSR safety
+  useThemeSync(theme);
 
   // Memoize the Story component to prevent unnecessary re-renders
-  const MemoizedStory = useMemo(() => <Story />, [Story, context.args, context.id]);
+  const MemoizedStory = useMemo(
+    () => (
+      <StoryErrorBoundary>
+        <Story />
+      </StoryErrorBoundary>
+    ),
+    [Story, context.args, context.id],
+  );
+
+  // Get transition classes based on reduced motion preference
+  const transitionClasses = isBrowser
+    ? 'transition-colors duration-200 ease-editorial motion-reduce:transition-none'
+    : '';
 
   return (
-    <div
-      data-theme={theme}
-      className="bg-theme-bg-page p-8 min-h-screen transition-colors duration-200 ease-editorial"
-    >
+    <div data-theme={theme} className={`bg-theme-bg-page p-8 min-h-screen ${transitionClasses}`}>
       {MemoizedStory}
     </div>
   );
