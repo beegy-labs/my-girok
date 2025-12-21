@@ -45,6 +45,10 @@ Read: `.ai/pull-requests.md` + `.ai/git-flow.md`
 **Working on resume features?**
 Read: `.ai/resume.md` + `.ai/services/personal-service.md`
 
+**Working on legal/consent features?**
+Read: `.ai/services/auth-service.md` (Legal API section) + `.ai/packages/types.md`
+Policy: `docs/policies/LEGAL_CONSENT.md`
+
 ## Documentation Structure
 
 ```

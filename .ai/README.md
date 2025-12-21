@@ -35,8 +35,8 @@
 
 ### Services (Implemented)
 
-- **[services/auth-service.md](services/auth-service.md)** - Authentication & authorization (REST + gRPC)
-- **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST + gRPC)
+- **[services/auth-service.md](services/auth-service.md)** - Authentication, authorization & Legal/Consent API (REST)
+- **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST)
 
 ### Frontend Apps (Implemented)
 
@@ -99,6 +99,10 @@
 
 **"I need to create a PR..."**
 → Read: `pull-requests.md` + `git-flow.md`
+
+**"I need to work on legal/consent features..."**
+→ Read: `services/auth-service.md` (Legal API section) + `packages/types.md` (Legal Types)
+→ Policy: `docs/policies/LEGAL_CONSENT.md`
 
 ## Current Architecture
 
