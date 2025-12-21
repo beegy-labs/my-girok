@@ -31,6 +31,20 @@ Read: `.ai/rules.md` + `.ai/apps/web-main.md`
 **Working on design tokens/styling?**
 Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
 
+**Working on Storybook?**
+Read: `.ai/apps/storybook.md`
+
+**Working on i18n/localization?**
+Read: `.ai/i18n-locale.md` + `.ai/apps/web-main.md`
+
+### Other Tasks
+
+**Creating a PR?**
+Read: `.ai/pull-requests.md` + `.ai/git-flow.md`
+
+**Working on resume features?**
+Read: `.ai/resume.md` + `.ai/services/personal-service.md`
+
 ## Documentation Structure
 
 ```
@@ -43,8 +57,13 @@ my-girok/
 │   ├── rules.md              # Core rules (READ FIRST)
 │   ├── architecture.md       # Architecture patterns (2025)
 │   ├── ssot.md               # Single Source of Truth strategy (2025)
+│   ├── i18n-locale.md        # Internationalization & Locale
+│   ├── design-system-principles.md # Design system guidelines
+│   ├── resume.md             # Resume feature documentation
+│   ├── user-preferences.md   # User preferences system
+│   ├── pull-requests.md      # PR guidelines
 │   ├── services/             # Backend service APIs
-│   │   ├── auth-service.md   # Authentication (REST + gRPC)
+│   │   ├── auth-service.md   # Authentication (REST + Legal API)
 │   │   └── personal-service.md # Resume, Profile
 │   ├── packages/             # Shared packages
 │   │   ├── design-tokens.md  # WCAG 2.1 AAA design tokens (SSOT)
@@ -52,7 +71,8 @@ my-girok/
 │   │   ├── types.md
 │   │   └── ui-components.md
 │   └── apps/                 # Frontend app guides
-│       └── web-main.md
+│       ├── web-main.md
+│       └── storybook.md      # Storybook configuration
 │
 └── docs/                     # Human-readable docs
     ├── policies/             # Detailed policies
