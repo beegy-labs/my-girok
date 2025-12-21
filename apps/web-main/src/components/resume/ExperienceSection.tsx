@@ -30,6 +30,7 @@ import { TextInput, TextArea, Button } from '@my-girok/ui-components';
 const SENSOR_OPTIONS = {
   pointer: { activationConstraint: { distance: 8 } },
   touch: { activationConstraint: { delay: 200, tolerance: 5 } },
+  keyboard: { coordinateGetter: sortableKeyboardCoordinates },
 } as const;
 
 // Depth colors for visual hierarchy in achievements - WCAG AAA 7:1+ compliant
@@ -245,6 +246,20 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
   // Memoize project IDs for SortableContext (2025 best practice)
   const projectIds = useMemo(() => projects.map((p, i) => p.id || `proj-${i}`), [projects]);
 
+  // Memoize experience duration text (2025 best practice - avoid IIFE in JSX)
+  const experienceDurationText = useMemo(() => {
+    if (!experience.startDate) return null;
+    const duration = calculateExperienceDuration(
+      experience.startDate,
+      experience.endDate,
+      experience.isCurrentlyWorking,
+    );
+    return t('resume.experience.duration', {
+      years: duration.years,
+      months: duration.months,
+    });
+  }, [experience.startDate, experience.endDate, experience.isCurrentlyWorking, t]);
+
   // Curried handler for updating project (2025 React best practice)
   const updateProject = useCallback(
     (projectIndex: number) => (project: ExperienceProject) => {
@@ -309,10 +324,11 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     [projects, experience, onUpdate],
   );
 
+  // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
     useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
     useSensor(TouchSensor, SENSOR_OPTIONS.touch),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
   );
 
   return (
@@ -464,21 +480,10 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </label>
 
         {/* Experience Duration */}
-        {experience.startDate && (
+        {experienceDurationText && (
           <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-soft transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-theme-primary-light transition-colors duration-200">
-              {t('resume.experienceForm.experiencePeriod')}{' '}
-              {(() => {
-                const duration = calculateExperienceDuration(
-                  experience.startDate,
-                  experience.endDate,
-                  experience.isCurrentlyWorking,
-                );
-                return t('resume.experience.duration', {
-                  years: duration.years,
-                  months: duration.months,
-                });
-              })()}
+              {t('resume.experienceForm.experiencePeriod')} {experienceDurationText}
             </span>
           </div>
         )}
@@ -650,10 +655,11 @@ const SortableProject = memo(function SortableProject({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
     useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
     useSensor(TouchSensor, SENSOR_OPTIONS.touch),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
   );
 
   // Memoized project date handlers (2025 React best practice)
@@ -684,6 +690,16 @@ const SortableProject = memo(function SortableProject({
   const handleTechStackInputChange = useCallback((value: string) => {
     setTechStackInput(value);
   }, []);
+
+  // Memoized techStack onBlur handler (2025 React best practice)
+  const handleTechStackBlur = useCallback(() => {
+    const parsed = techStackInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    onUpdate({ ...project, techStack: parsed });
+    setTechStackInput(parsed.join(', '));
+  }, [techStackInput, project, onUpdate]);
 
   // Curried handler for updating achievement (2025 React best practice)
   const handleUpdateAchievement = useCallback(
@@ -849,14 +865,7 @@ const SortableProject = memo(function SortableProject({
               label={t('resume.experienceForm.techStack')}
               value={techStackInput}
               onChange={handleTechStackInputChange}
-              onBlur={() => {
-                const parsed = techStackInput
-                  .split(',')
-                  .map((s) => s.trim())
-                  .filter(Boolean);
-                onUpdate({ ...project, techStack: parsed });
-                setTechStackInput(parsed.join(', '));
-              }}
+              onBlur={handleTechStackBlur}
               placeholder={t('resume.experienceForm.techStackPlaceholder')}
             />
 
@@ -1222,10 +1231,11 @@ const ExperienceSection = memo(function ExperienceSection({
   onChange,
   t,
 }: ExperienceSectionProps) {
+  // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
     useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
     useSensor(TouchSensor, SENSOR_OPTIONS.touch),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
   );
 
   // Memoized drag end handler (2025 React best practice)
