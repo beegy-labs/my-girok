@@ -83,14 +83,20 @@ Tailwind CSS 4에서는 `@theme` 블록의 **CSS 변수 네이밍**에 따라 **
 
 ### Border Radius
 
-| Current (❌)     | SSOT (✅)               | Token                           |
-| ---------------- | ----------------------- | ------------------------------- |
-| `rounded-[24px]` | `rounded-input`         | `--border-radius-input`         |
-| `rounded-[32px]` | `rounded-widget`        | `--border-radius-widget`        |
-| `rounded-[40px]` | `rounded-editorial`     | `--border-radius-editorial`     |
-| `rounded-[48px]` | `rounded-editorial-lg`  | `--border-radius-editorial-lg`  |
-| `rounded-[56px]` | `rounded-editorial-xl`  | `--border-radius-editorial-xl`  |
-| `rounded-[64px]` | `rounded-editorial-2xl` | `--border-radius-editorial-2xl` |
+**Unified Radius Policy (2025-12)**: All cards, containers, form elements use `rounded-soft` (8px).
+
+| Current (❌)                      | SSOT (✅)      | Token           | Value |
+| --------------------------------- | -------------- | --------------- | ----- |
+| `rounded-lg`, `rounded-xl`        | `rounded-soft` | `--radius-soft` | 8px   |
+| `rounded-input`, `rounded-widget` | `rounded-soft` | `--radius-soft` | 8px   |
+| `rounded-editorial*` (for cards)  | `rounded-soft` | `--radius-soft` | 8px   |
+
+**Keep as-is:**
+
+| Usage            | Class            | Token             | Value  |
+| ---------------- | ---------------- | ----------------- | ------ |
+| Circular avatars | `rounded-full`   | -                 | 9999px |
+| Minimal corners  | `rounded-subtle` | `--radius-subtle` | 4px    |
 
 ### Typography
 
@@ -221,6 +227,7 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 - [x] `min-h-[56px]` → `min-h-input-lg` 교체
 - [x] `min-h-[64px]` → `min-h-input-xl` 교체
 - [x] 8pt Grid 위반 수정 (py-3→py-2, gap-3→gap-2, px-5→px-4/px-6, px-7→px-6)
+- [x] **Unified Radius Migration (2025-12)**: `rounded-input`, `rounded-widget`, `rounded-editorial*` → `rounded-soft`
 
 ## File Impact
 

@@ -232,7 +232,7 @@ export default function HomePage() {
               className="mb-16"
               aria-label={t('aria.featuredPromotions', { defaultValue: 'Featured Promotions' })}
             >
-              <div className="relative group w-full h-[300px] rounded-editorial-xl border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
+              <div className="relative group w-full h-[300px] rounded-soft border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
                 <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
                   <span className="text-[12px] font-black uppercase tracking-brand text-theme-primary mb-4 block font-mono-brand">
                     {t(PROMOS[currentPromo].tagKey, { defaultValue: 'Premium' })}
@@ -277,7 +277,7 @@ export default function HomePage() {
               className="mb-20"
               aria-label={t('aria.workstationControls', { defaultValue: 'Workstation Controls' })}
             >
-              <div className="p-10 md:p-14 rounded-editorial-2xl bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
+              <div className="p-10 md:p-14 rounded-soft bg-theme-bg-secondary border-2 border-theme-border-default shadow-theme-sm">
                 {/* Workstation Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12 border-b-2 border-theme-border-default pb-10">
                   <div className="flex items-center gap-6">
@@ -310,7 +310,7 @@ export default function HomePage() {
                 {/* Widget Grid - V0.0.1 Style */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {/* Today Widget - Active */}
-                  <article className="bg-theme-bg-card rounded-editorial-lg border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
+                  <article className="bg-theme-bg-card rounded-soft border-2 border-theme-border-default shadow-theme-sm p-10 flex flex-col group hover:border-theme-primary transition-all relative overflow-hidden focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
                     <div className="flex justify-between items-center mb-8">
                       <div className="flex items-center gap-4">
                         <div
@@ -361,7 +361,7 @@ export default function HomePage() {
                   {[2, 3].map((slot) => (
                     <div
                       key={slot}
-                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-editorial-lg border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
+                      className="widget-slot h-[300px] md:h-full min-h-[300px] rounded-soft border-2 border-dashed border-theme-border-default bg-theme-bg-card/40 flex flex-col items-center justify-center group hover:border-theme-primary transition-all cursor-pointer relative overflow-hidden focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
                       tabIndex={0}
                       role="button"
                       aria-label={t('aria.addWidgetToSlot', {
@@ -531,7 +531,7 @@ export default function HomePage() {
 
             {/* Archive Support Banner - V0.0.1 Style */}
             <section className="mt-12 sm:mt-16">
-              <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-editorial p-8 sm:p-10 text-center font-medium">
+              <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-soft p-8 sm:p-10 text-center font-medium">
                 <SectionBadge className="mb-4">{t('badge.archiveSupport')}</SectionBadge>
                 <p className="text-theme-text-secondary text-sm sm:text-base max-w-lg mx-auto">
                   {t('home.supportMessage', {

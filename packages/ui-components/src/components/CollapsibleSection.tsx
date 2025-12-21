@@ -106,7 +106,7 @@ export function CollapsibleSection({
     <div
       className={`
         ${variantClasses[variant]}
-        rounded-input sm:rounded-widget
+        rounded-soft
         transition-all duration-200
         ${className}
       `}

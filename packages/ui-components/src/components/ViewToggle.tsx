@@ -23,7 +23,7 @@ export interface ViewToggleProps {
 
 // p-4 ensures reliable 56px touch target with larger icons
 const buttonBaseClasses =
-  'p-4 rounded-input transition-all duration-200 min-h-[56px] min-w-[56px] flex items-center justify-center border-2 border-transparent';
+  'p-4 rounded-soft transition-all duration-200 min-h-[56px] min-w-[56px] flex items-center justify-center border-2 border-transparent';
 
 const buttonActiveClasses = 'bg-theme-primary text-btn-primary-text shadow-theme-lg';
 

@@ -35,10 +35,10 @@ export interface TopWidgetProps {
 // Static class definitions (2025 best practice - outside component)
 // V0.0.1 AAA Workstation Design System - SSOT tokens from tokens.css
 const containerClasses =
-  'p-10 sm:p-12 min-h-[280px] rounded-editorial-lg bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
+  'p-10 sm:p-12 min-h-[280px] rounded-soft bg-theme-bg-card border-2 border-theme-primary shadow-theme-lg';
 
 const iconContainerClasses =
-  'p-3 bg-theme-bg-secondary border border-theme-border-default rounded-input text-theme-primary';
+  'p-3 bg-theme-bg-secondary border border-theme-border-default rounded-soft text-theme-primary';
 
 /**
  * TopWidget Component - Pinned Widget for Dashboard (2025 Accessible Pattern)
@@ -95,7 +95,7 @@ export const TopWidget = memo(function TopWidget({
           <button
             type="button"
             onClick={onChangeFocus}
-            className={`text-xs font-bold uppercase tracking-brand-sm text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover transition-all rounded-input px-4 py-3 min-h-[44px] min-w-[44px] flex items-center border-2 border-transparent hover:border-theme-border-default ${focusClasses}`}
+            className={`text-xs font-bold uppercase tracking-brand-sm text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover transition-all rounded-soft px-4 py-3 min-h-[44px] min-w-[44px] flex items-center border-2 border-transparent hover:border-theme-border-default ${focusClasses}`}
           >
             {changeFocusText}
           </button>

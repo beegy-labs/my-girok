@@ -233,7 +233,7 @@ export default function ResumeEditPage() {
               <Card
                 variant="secondary"
                 padding="lg"
-                radius="lg"
+                radius="default"
                 className="mb-4 sm:mb-6 border-2 border-theme-border-default"
               >
                 <h2 className="text-xl sm:text-2xl text-theme-text-primary tracking-editorial italic mb-2 flex items-center gap-3 font-serif-title">
@@ -249,7 +249,7 @@ export default function ResumeEditPage() {
                 <ResumePreviewContainer
                   resume={previewData}
                   maxHeight="calc(100vh - 320px)"
-                  containerClassName="border-2 border-theme-border-default rounded-input"
+                  containerClassName="border-2 border-theme-border-default rounded-soft"
                 />
               ) : (
                 <Card

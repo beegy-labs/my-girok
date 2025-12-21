@@ -206,7 +206,7 @@ export default function ConsentPage() {
               <button
                 type="button"
                 onClick={toggleCountrySelector}
-                className="flex items-center justify-between w-full p-4 bg-theme-bg-secondary rounded-lg border border-theme-border-subtle hover:border-theme-border-default transition-colors"
+                className="flex items-center justify-between w-full p-4 bg-theme-bg-secondary rounded-soft border border-theme-border-subtle hover:border-theme-border-default transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-theme-primary/10 rounded-full">
@@ -237,7 +237,7 @@ export default function ConsentPage() {
 
               {/* Country Dropdown */}
               {showCountrySelector && (
-                <div className="absolute z-50 w-full mt-1 border border-theme-border-default rounded-lg shadow-xl overflow-hidden bg-theme-bg-elevated">
+                <div className="absolute z-50 w-full mt-1 border border-theme-border-default rounded-soft shadow-xl overflow-hidden bg-theme-bg-elevated">
                   {enabledCountries.map((country) => (
                     <button
                       key={country.code}
@@ -259,7 +259,7 @@ export default function ConsentPage() {
         )}
 
         {/* Privacy Icon Header */}
-        <div className="flex items-center gap-4 p-4 bg-theme-bg-secondary rounded-lg border border-theme-border-subtle">
+        <div className="flex items-center gap-4 p-4 bg-theme-bg-secondary rounded-soft border border-theme-border-subtle">
           <div className="p-2 bg-theme-primary/10 rounded-full">
             <Shield size={24} className="text-theme-primary" />
           </div>

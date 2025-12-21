@@ -191,7 +191,7 @@ const SIZE_CONFIG = {
     iconSize: 16, // 4px interval ✓
     iconPadding: 'px-4', // 16px - 8pt grid ✓
     fontSize: 'text-sm',
-    borderRadius: 'rounded-subtle', // 8px - minimal rounding
+    borderRadius: 'rounded-soft', // SSOT: 8px - unified
   },
   default: {
     height: 'h-12', // 48px - WCAG 2.5.5 AAA
@@ -200,7 +200,7 @@ const SIZE_CONFIG = {
     iconSize: 20, // 4px interval ✓
     iconPadding: 'px-4', // 16px - 8pt grid ✓
     fontSize: 'text-base',
-    borderRadius: 'rounded-soft', // 12px - soft corners
+    borderRadius: 'rounded-soft', // SSOT: 8px - unified
   },
   lg: {
     height: 'h-14', // 56px (3.5rem) - AAA+
@@ -209,7 +209,7 @@ const SIZE_CONFIG = {
     iconSize: 20, // 4px interval ✓
     iconPadding: 'px-6', // 24px - 8pt grid ✓
     fontSize: 'text-base font-medium',
-    borderRadius: 'rounded-soft', // 12px - soft corners
+    borderRadius: 'rounded-soft', // SSOT: 8px - unified
   },
   xl: {
     height: 'h-16', // 64px (4rem) - Editorial AAA+
@@ -218,7 +218,7 @@ const SIZE_CONFIG = {
     iconSize: 24, // 4px interval ✓
     iconPadding: 'px-6', // 24px - 8pt grid ✓
     fontSize: 'text-lg',
-    borderRadius: 'rounded-soft', // 12px - soft corners
+    borderRadius: 'rounded-soft', // SSOT: 8px - unified
   },
 } as const;
 

@@ -64,7 +64,7 @@ export function PageHeader({
       className={`
         bg-theme-bg-card
         border border-theme-border-subtle
-        rounded-input sm:rounded-widget
+        rounded-soft
         shadow-theme-lg
         ${styles.wrapper}
         transition-colors duration-200

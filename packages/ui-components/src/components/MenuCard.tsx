@@ -57,7 +57,7 @@ const ChevronRightIcon = () => (
 // V0.0.1 AAA Workstation Design System
 
 const baseClasses =
-  'w-full text-left bg-theme-bg-card border-2 border-theme-border-subtle rounded-editorial-2xl p-10 md:p-12 min-h-[380px] flex flex-col transition-all duration-300 shadow-theme-sm';
+  'w-full text-left bg-theme-bg-card border-2 border-theme-border-subtle rounded-soft p-10 md:p-12 min-h-[380px] flex flex-col transition-all duration-300 shadow-theme-sm';
 
 const enabledClasses =
   'cursor-pointer hover:shadow-theme-lg hover:border-theme-primary hover:-translate-y-1';
@@ -67,7 +67,7 @@ const disabledClasses = 'cursor-not-allowed opacity-50';
 const pinnedClasses = 'border-theme-primary';
 
 const pinButtonBaseClasses =
-  'p-2.5 rounded-input border-2 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center';
+  'p-2.5 rounded-soft border-2 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center';
 
 const pinButtonActiveClasses = 'bg-theme-primary text-btn-primary-text border-theme-primary';
 
@@ -75,7 +75,7 @@ const pinButtonInactiveClasses =
   'bg-transparent border-theme-border-default text-theme-text-secondary hover:text-theme-text-primary hover:border-theme-primary';
 
 const iconContainerClasses =
-  'p-6 rounded-input bg-theme-bg-secondary border-2 border-theme-border-subtle text-theme-text-secondary group-hover:text-theme-primary transition-all w-fit shadow-theme-sm';
+  'p-6 rounded-soft bg-theme-bg-secondary border-2 border-theme-border-subtle text-theme-text-secondary group-hover:text-theme-primary transition-all w-fit shadow-theme-sm';
 
 /**
  * Pin Icon SVG component (inline to avoid external dependency)

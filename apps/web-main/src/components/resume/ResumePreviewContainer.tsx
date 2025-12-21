@@ -125,7 +125,7 @@ export default function ResumePreviewContainer({
   const outerClasses = [
     'bg-theme-bg-secondary',
     responsivePadding ? 'p-1 sm:p-2 md:p-4' : 'p-2 sm:p-4',
-    'rounded-input shadow-theme-inner',
+    'rounded-soft shadow-theme-inner',
     'transition-colors duration-200',
     'w-full',
     containerClassName,

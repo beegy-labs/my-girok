@@ -23,12 +23,12 @@ export default function SettingsPage() {
           {/* Settings Cards - Editorial Style */}
           <div className="space-y-6 sm:space-y-8">
             {/* Theme Settings */}
-            <section className="bg-theme-bg-card border border-theme-border-default rounded-editorial p-8 sm:p-10">
+            <section className="bg-theme-bg-card border border-theme-border-default rounded-soft p-8 sm:p-10">
               <ThemeToggle />
             </section>
 
             {/* Section Order Settings */}
-            <section className="bg-theme-bg-card border border-theme-border-default rounded-editorial p-8 sm:p-10">
+            <section className="bg-theme-bg-card border border-theme-border-default rounded-soft p-8 sm:p-10">
               <SectionOrderManager />
             </section>
           </div>

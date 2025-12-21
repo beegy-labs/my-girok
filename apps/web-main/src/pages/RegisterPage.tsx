@@ -134,7 +134,7 @@ export default function RegisterPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Consent Summary Badge */}
-        <div className="flex items-center gap-2 p-3 bg-theme-status-success/10 rounded-lg border border-theme-status-success/20">
+        <div className="flex items-center gap-2 p-3 bg-theme-status-success/10 rounded-soft border border-theme-status-success/20">
           <CheckCircle size={18} className="text-theme-status-success shrink-0" />
           <span className="text-sm text-theme-text-primary">
             {t('consent.agreedCount', {
