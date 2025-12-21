@@ -38,7 +38,7 @@ export interface TextAreaProps extends Omit<
  * - focus ring via focusClasses (4px, SSOT)
  */
 const baseTextareaClasses =
-  'w-full min-h-[120px] px-4 py-3 text-base rounded-input bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 resize-y';
+  'w-full min-h-[120px] px-4 py-3 text-base rounded-soft bg-theme-bg-input text-theme-text-primary placeholder:text-theme-text-muted focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 resize-y';
 
 const defaultBorderClasses = 'border border-theme-border-default';
 

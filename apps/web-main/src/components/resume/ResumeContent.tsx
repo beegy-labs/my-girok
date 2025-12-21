@@ -72,7 +72,7 @@ export default function ResumeContent({
                 src={getProxyImageUrl(resume.profileImage) || resume.profileImage}
                 alt={resume.name}
                 crossOrigin="anonymous"
-                className={`w-32 h-40 object-cover rounded-input border-2 border-theme-border-subtle transition-all ${
+                className={`w-32 h-40 object-cover rounded-soft border-2 border-theme-border-subtle transition-all ${
                   isGrayscaleMode ? 'filter grayscale' : ''
                 }`}
                 onError={(e) => {

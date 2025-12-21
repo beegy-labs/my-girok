@@ -136,7 +136,7 @@ export default function NotificationButton() {
       {/* Notification Panel */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-4 w-80 sm:w-[420px] bg-theme-bg-card border-2 border-theme-border-default rounded-editorial shadow-theme-lg overflow-hidden z-[100]"
+          className="absolute right-0 mt-4 w-80 sm:w-[420px] bg-theme-bg-card border-2 border-theme-border-default rounded-soft shadow-theme-lg overflow-hidden z-[100]"
           role="dialog"
           aria-modal="true"
           aria-label={t('aria.notificationCenter', { defaultValue: 'Notification Center' })}

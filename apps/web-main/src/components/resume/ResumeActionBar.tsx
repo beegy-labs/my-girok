@@ -131,7 +131,7 @@ export default function ResumeActionBar({
     <>
       {/* V0.0.1 Action Bar */}
       <div className="print:hidden px-4 sm:px-8 pt-6 sm:pt-10">
-        <div className="max-w-5xl mx-auto bg-theme-bg-card border-2 border-theme-border-default rounded-editorial shadow-theme-md px-8 py-6 sm:px-10 sm:py-8 transition-colors duration-200">
+        <div className="max-w-5xl mx-auto bg-theme-bg-card border-2 border-theme-border-default rounded-soft shadow-theme-md px-8 py-6 sm:px-10 sm:py-8 transition-colors duration-200">
           {/* Header - V0.0.1 Style */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 pb-6 border-b-2 border-theme-border-default">
             <div>
