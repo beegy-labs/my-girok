@@ -719,6 +719,12 @@ const SortableProject = memo(function SortableProject({
     [onUpdateAchievement],
   );
 
+  // Memoize achievement IDs for SortableContext (2025 best practice)
+  const achievementIds = useMemo(
+    () => (project.achievements || []).map((a, i) => a.id || `ach-${i}`),
+    [project.achievements],
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -897,10 +903,7 @@ const SortableProject = memo(function SortableProject({
                 collisionDetection={closestCenter}
                 onDragEnd={onAchievementDragEnd}
               >
-                <SortableContext
-                  items={project.achievements.map((a, i) => a.id || `ach-${i}`)}
-                  strategy={verticalListSortingStrategy}
-                >
+                <SortableContext items={achievementIds} strategy={verticalListSortingStrategy}>
                   <div className="space-y-2">
                     {project.achievements.map((achievement, achIndex) => (
                       <SortableAchievement

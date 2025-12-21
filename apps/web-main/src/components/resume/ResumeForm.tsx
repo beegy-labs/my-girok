@@ -308,64 +308,69 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [attachments],
   );
 
-  const handleSaveDraft = () => {
+  // Memoized save draft handler (2025 React best practice)
+  const handleSaveDraft = useCallback(() => {
     const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
     localStorage.setItem(draftKey, JSON.stringify(formData));
     setDraftSaved(true);
     setTimeout(() => setDraftSaved(false), 2000);
-  };
+  }, [resume?.id, formData]);
 
-  const handleClearDraft = () => {
+  // Memoized clear draft handler (2025 React best practice)
+  const handleClearDraft = useCallback(() => {
     if (confirm(t('resume.form.clearDraftConfirm'))) {
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);
       alert(t('resume.form.clearDraftSuccess'));
     }
-  };
+  }, [resume?.id, t]);
 
-  // Handle profile photo file selection - auto-uploads to temp storage
-  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Memoized profile photo change handler (2025 React best practice)
+  const handleProfilePhotoChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setUploadError(t('resume.form.selectImageFile'));
-      return;
-    }
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError(t('resume.form.imageSizeTooLarge'));
-      return;
-    }
-
-    setUploading(true);
-    setUploadError(null);
-
-    try {
-      // Clean up previous temp file if exists
-      if (profilePhotoTempKey) {
-        try {
-          await deleteTempFile(profilePhotoTempKey);
-        } catch {
-          // Ignore cleanup errors
-        }
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setUploadError(t('resume.form.selectImageFile'));
+        return;
       }
 
-      // Auto-upload to temp storage
-      const result = await uploadToTemp(file);
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError(t('resume.form.imageSizeTooLarge'));
+        return;
+      }
 
-      setProfilePhotoTempKey(result.tempKey);
-      setProfilePhotoPreview(result.previewUrl);
-    } catch (error: unknown) {
-      console.error('Failed to upload to temp storage:', error);
-      const err = error as { response?: { data?: { message?: string } } };
-      setUploadError(err.response?.data?.message || t('resume.form.photoUploadFailed'));
-    } finally {
-      setUploading(false);
-    }
-  };
+      setUploading(true);
+      setUploadError(null);
+
+      try {
+        // Clean up previous temp file if exists
+        if (profilePhotoTempKey) {
+          try {
+            await deleteTempFile(profilePhotoTempKey);
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
+
+        // Auto-upload to temp storage
+        const result = await uploadToTemp(file);
+
+        setProfilePhotoTempKey(result.tempKey);
+        setProfilePhotoPreview(result.previewUrl);
+      } catch (error: unknown) {
+        console.error('Failed to upload to temp storage:', error);
+        const err = error as { response?: { data?: { message?: string } } };
+        setUploadError(err.response?.data?.message || t('resume.form.photoUploadFailed'));
+      } finally {
+        setUploading(false);
+      }
+    },
+    [profilePhotoTempKey, t],
+  );
 
   // Memoized back navigation handler (2025 best practice)
   const handleBack = useCallback(() => {
@@ -385,8 +390,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     setProfilePhotoPreview(null);
   }, [profilePhotoTempKey]);
 
-  // Delete profile photo
-  const handleProfilePhotoDelete = async () => {
+  // Memoized delete profile photo handler (2025 React best practice)
+  const handleProfilePhotoDelete = useCallback(async () => {
     if (!resume?.id) return;
 
     const profilePhoto = attachments.find((a) => a.type === AttachmentType.PROFILE_PHOTO);
@@ -412,7 +417,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     } finally {
       setUploading(false);
     }
-  };
+  }, [resume?.id, attachments, t, loadAttachments]);
 
   // Birth date and gender change handlers
   const handleBirthDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -592,57 +597,67 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     setFormData((prev) => ({ ...prev, educations }));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Memoized handler for sections reorder (2025 React best practice)
+  const handleSectionsReorder = useCallback((newSections: typeof sections) => {
+    setSections(newSections);
+    // Update will be saved when form is submitted
+  }, []);
 
-    // Validate required fields manually before submitting
-    const validationErrors: string[] = [];
-    if (!formData.title?.trim()) {
-      validationErrors.push(t('resume.validation.titleRequired'));
-    }
-    if (!formData.name?.trim()) {
-      validationErrors.push(t('resume.validation.nameRequired'));
-      // Expand basicInfo section if name is missing
-      setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
-    }
-    if (!formData.email?.trim()) {
-      validationErrors.push(t('resume.validation.emailRequired'));
-      // Expand basicInfo section if email is missing
-      setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
-    }
+  // Memoized form submit handler (2025 React best practice)
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (validationErrors.length > 0) {
-      alert(validationErrors.join('\n'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // Remove projects field before submitting (no longer supported by API)
-      // Note: Empty string handling is done by stripIds() in resume.ts API layer
-      // which converts empty strings to null for proper database clearing
-      const { projects: _projects, ...dataToSubmit } = formData as any;
-
-      // Include profileImageTempKey if a new image was uploaded to temp storage
-      if (profilePhotoTempKey) {
-        dataToSubmit.profileImageTempKey = profilePhotoTempKey;
+      // Validate required fields manually before submitting
+      const validationErrors: string[] = [];
+      if (!formData.title?.trim()) {
+        validationErrors.push(t('resume.validation.titleRequired'));
+      }
+      if (!formData.name?.trim()) {
+        validationErrors.push(t('resume.validation.nameRequired'));
+        // Expand basicInfo section if name is missing
+        setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
+      }
+      if (!formData.email?.trim()) {
+        validationErrors.push(t('resume.validation.emailRequired'));
+        // Expand basicInfo section if email is missing
+        setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
       }
 
-      await onSubmit(dataToSubmit);
-
-      // Clear temp state after successful save (backend moved file to permanent storage)
-      if (profilePhotoTempKey) {
-        setProfilePhotoTempKey(null);
-        setProfilePhotoPreview(null);
+      if (validationErrors.length > 0) {
+        alert(validationErrors.join('\n'));
+        return;
       }
 
-      // Clear draft after successful submission
-      const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
-      localStorage.removeItem(draftKey);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      setSubmitting(true);
+      try {
+        // Remove projects field before submitting (no longer supported by API)
+        // Note: Empty string handling is done by stripIds() in resume.ts API layer
+        // which converts empty strings to null for proper database clearing
+        const { projects: _projects, ...dataToSubmit } = formData as any;
+
+        // Include profileImageTempKey if a new image was uploaded to temp storage
+        if (profilePhotoTempKey) {
+          dataToSubmit.profileImageTempKey = profilePhotoTempKey;
+        }
+
+        await onSubmit(dataToSubmit);
+
+        // Clear temp state after successful save (backend moved file to permanent storage)
+        if (profilePhotoTempKey) {
+          setProfilePhotoTempKey(null);
+          setProfilePhotoPreview(null);
+        }
+
+        // Clear draft after successful submission
+        const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+        localStorage.removeItem(draftKey);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [formData, profilePhotoTempKey, onSubmit, resume?.id, t],
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
@@ -1324,15 +1339,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </div>
 
       {/* Section Order Manager */}
-      {resume?.id && (
-        <SectionOrderManager
-          sections={sections}
-          onReorder={(newSections) => {
-            setSections(newSections);
-            // Update will be saved when form is submitted
-          }}
-        />
-      )}
+      {resume?.id && <SectionOrderManager sections={sections} onReorder={handleSectionsReorder} />}
 
       {/* Cover Letter (자기소개서) - At the bottom */}
       <CollapsibleSection

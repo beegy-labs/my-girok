@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { register } from '../api/auth';
@@ -122,13 +122,16 @@ export default function RegisterPage() {
     ],
   );
 
+  // Memoize agreed count for display (2025 React best practice)
+  const agreedCount = useMemo(
+    () => (consents ? Object.values(consents).filter(Boolean).length : 0),
+    [consents],
+  );
+
   // Show nothing while loading consents
   if (consents === null) {
     return null;
   }
-
-  // Count agreed consents for display
-  const agreedCount = Object.values(consents).filter(Boolean).length;
 
   return (
     <AuthLayout
