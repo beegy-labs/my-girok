@@ -179,46 +179,46 @@ export interface TextInputProps extends Omit<
  * - px-4 = 16px, px-6 = 24px, px-8 = 32px
  * - Icon sizes: 16, 20, 24px (4px intervals)
  *
- * SSOT Tokens (tokens.css):
- * - h-input-sm: 40px, min-h-input: 48px
- * - h-input-lg: 56px, h-input-xl: 64px
+ * Tailwind height utilities:
+ * - h-10: 40px, h-12: 48px
+ * - h-14: 56px, h-16: 64px
  */
 const SIZE_CONFIG = {
   sm: {
-    height: 'h-input-sm', // 40px - compact UI (AA level)
+    height: 'h-10', // 40px - compact UI (AA level)
     padding: 'py-2', // 8px vertical - 8pt grid ✓
     iconGap: 'gap-2', // 8px - 8pt grid ✓
     iconSize: 16, // 4px interval ✓
     iconPadding: 'px-4', // 16px - 8pt grid ✓
     fontSize: 'text-sm',
-    borderRadius: 'rounded-input-sm', // 12px
+    borderRadius: 'rounded-subtle', // 8px - minimal rounding
   },
   default: {
-    height: 'min-h-input', // 48px - WCAG 2.5.5 AAA
-    padding: 'py-2', // 8px vertical - 8pt grid ✓ (was py-3)
-    iconGap: 'gap-2', // 8px - 8pt grid ✓ (was gap-3)
+    height: 'h-12', // 48px - WCAG 2.5.5 AAA
+    padding: 'py-2', // 8px vertical - 8pt grid ✓
+    iconGap: 'gap-2', // 8px - 8pt grid ✓
     iconSize: 20, // 4px interval ✓
-    iconPadding: 'px-4', // 16px - 8pt grid ✓ (was px-5)
+    iconPadding: 'px-4', // 16px - 8pt grid ✓
     fontSize: 'text-base',
-    borderRadius: 'rounded-input', // 24px
+    borderRadius: 'rounded-soft', // 12px - soft corners
   },
   lg: {
-    height: 'h-input-lg', // 56px - AAA+
+    height: 'h-14', // 56px (3.5rem) - AAA+
     padding: 'py-4', // 16px vertical - 8pt grid ✓
     iconGap: 'gap-4', // 16px - 8pt grid ✓
-    iconSize: 20, // 4px interval ✓ (was 22)
+    iconSize: 20, // 4px interval ✓
     iconPadding: 'px-6', // 24px - 8pt grid ✓
     fontSize: 'text-base font-medium',
-    borderRadius: 'rounded-input', // 24px
+    borderRadius: 'rounded-soft', // 12px - soft corners
   },
   xl: {
-    height: 'h-input-xl', // 64px - Editorial AAA+
-    padding: 'py-4', // 16px vertical - 8pt grid ✓ (was py-5)
-    iconGap: 'gap-4', // 16px - 8pt grid ✓ (was gap-5)
+    height: 'h-16', // 64px (4rem) - Editorial AAA+
+    padding: 'py-4', // 16px vertical - 8pt grid ✓
+    iconGap: 'gap-4', // 16px - 8pt grid ✓
     iconSize: 24, // 4px interval ✓
-    iconPadding: 'px-6', // 24px - 8pt grid ✓ (was px-7)
+    iconPadding: 'px-6', // 24px - 8pt grid ✓
     fontSize: 'text-lg',
-    borderRadius: 'rounded-input', // 24px
+    borderRadius: 'rounded-soft', // 12px - soft corners
   },
 } as const;
 

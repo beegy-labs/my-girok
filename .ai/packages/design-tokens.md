@@ -49,7 +49,9 @@ LLM 작업 시 아래 유틸리티 클래스를 사용:
 
 | Category         | Utility Class           | Usage                      |
 | ---------------- | ----------------------- | -------------------------- |
-| Border Radius    | `rounded-input`         | Inputs, buttons (24px)     |
+| Border Radius    | `rounded-subtle`        | Minimal (4px) - corners    |
+|                  | `rounded-soft`          | **Default (8px)** - all UI |
+|                  | `rounded-input`         | Inputs, buttons (24px)     |
 |                  | `rounded-input-sm`      | Small inputs (12px)        |
 |                  | `rounded-widget`        | Widgets, modals (32px)     |
 |                  | `rounded-editorial`     | Cards (40px)               |
@@ -80,12 +82,27 @@ LLM 작업 시 아래 유틸리티 클래스를 사용:
 | Container Width  | `max-w-auth-form`       | Auth form (576px)          |
 | Focus Ring       | `ring-[4px]`            | AAA focus ring (4px)       |
 
+### Default Radius Policy (V0.0.1)
+
+**All UI components use `rounded-soft` (8px) by default** - removes sharp corners while maintaining rectangular appearance.
+
+```tsx
+// ✅ Components automatically use soft radius (8px)
+<Card>...</Card>           // rounded-soft (8px)
+<Button>...</Button>       // rounded-soft (8px)
+<TextInput />              // rounded-soft (8px)
+<Alert>...</Alert>         // rounded-soft (8px)
+
+// ✅ For larger editorial radius, use explicit props
+<Card radius="xl">...</Card>  // rounded-editorial (40px)
+```
+
 ### Usage Pattern
 
 ```tsx
 // ✅ SSOT Pattern
 <h1 className="font-serif-title tracking-editorial italic">Title</h1>
-<div className="rounded-editorial-lg border-2 p-10">Form Card</div>
+<div className="rounded-soft border p-10">Form Card</div>
 <span className="font-mono-brand tracking-brand uppercase">GIROK.</span>
 
 // ❌ Anti-Pattern (DO NOT USE)

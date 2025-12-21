@@ -77,19 +77,19 @@ function AuthLayoutComponent({
   return (
     <main className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-200 pt-nav">
       <div className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
-        <div className="w-full max-w-auth-form">
+        <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}
           <div className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl text-theme-text-primary mb-3 tracking-editorial italic font-serif-title">
               {title}
             </h1>
-            <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
+            <p className="text-brand-xs font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
               {subtitle}
             </p>
           </div>
 
-          {/* Form Card - V0.0.1 Editorial Style */}
-          <div className="bg-theme-bg-card border-2 border-theme-border-default rounded-editorial-lg p-10 md:p-14 shadow-theme-lg">
+          {/* Form Card - V0.0.1 Soft corners (12px) - rectangular but not sharp */}
+          <div className="bg-theme-bg-card border border-theme-border-subtle rounded-soft p-10 md:p-14 shadow-theme-lg">
             {error && (
               <Alert variant="error" className="mb-6">
                 {error}
@@ -100,7 +100,7 @@ function AuthLayoutComponent({
             {children}
 
             {/* Secondary Actions */}
-            {secondaryActions && <div className="mt-8 flex flex-col gap-3">{secondaryActions}</div>}
+            {secondaryActions && <div className="mt-8 flex flex-col gap-4">{secondaryActions}</div>}
           </div>
 
           {/* Footer Note */}
