@@ -36,6 +36,19 @@ interface ResumeFormProps {
 }
 
 /**
+ * Format file size in human-readable format (2025 best practice: pure function outside component)
+ * @param bytes - File size in bytes
+ * @returns Formatted string (e.g., "1.5 MB")
+ */
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
+};
+
+/**
  * ResumeForm - V0.0.1 AAA Workstation Design
  * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
  */
@@ -281,15 +294,11 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [resume?.id],
   );
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
-  };
-
-  const getAttachmentsByType = (type: AttachmentType) => attachments.filter((a) => a.type === type);
+  // Memoized attachment filter by type (2025 best practice)
+  const getAttachmentsByType = useCallback(
+    (type: AttachmentType) => attachments.filter((a) => a.type === type),
+    [attachments],
+  );
 
   const handleSaveDraft = () => {
     const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';

@@ -87,8 +87,11 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
   // Mobile: collapse company details by default for existing items
   const [isCompanyExpanded, setIsCompanyExpanded] = useState(true);
 
-  // Memoize projects to prevent useCallback dependency changes on every render (ESLint react-hooks/exhaustive-deps)
-  const projects = useMemo(() => experience.projects || [], [experience.projects]);
+  // Memoize projects with defensive Array.isArray check (2025 over-engineering best practice)
+  const projects = useMemo(
+    () => (Array.isArray(experience.projects) ? experience.projects : []),
+    [experience.projects],
+  );
 
   const toggleCompanyExpand = useCallback(() => {
     setIsCompanyExpanded((prev) => !prev);
