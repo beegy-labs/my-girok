@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link to="/login" className="block">
             <Button variant="secondary" size="lg" rounded="default" fullWidth>
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft size={16} />
               {t('forgotPassword.backToLogin', { defaultValue: 'Back to Login' })}
             </Button>
           </Link>
@@ -72,13 +72,13 @@ export default function ForgotPasswordPage() {
         <>
           <Link to="/login" className="block">
             <Button variant="secondary" size="lg" rounded="default" fullWidth>
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft size={16} />
               {t('forgotPassword.backToLogin', { defaultValue: 'Back to Login' })}
             </Button>
           </Link>
           <Link to="/register" className="block">
             <Button variant="ghost" size="lg" rounded="default" fullWidth>
-              <Key className="w-4 h-4" />
+              <Key size={16} />
               {t('auth.registerHere', { defaultValue: 'Create Account' })}
             </Button>
           </Link>
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
           label={t('auth.emailAddress', { defaultValue: 'Email' })}
           type="email"
           size="xl"
-          icon={<Mail size={24} />}
+          icon={<Mail size={20} />}
           value={email}
           onChange={setEmail}
           required
@@ -111,7 +111,6 @@ export default function ForgotPasswordPage() {
           variant="primary"
           type="submit"
           size="xl"
-          rounded="editorial"
           disabled={loading}
           loading={loading}
           fullWidth

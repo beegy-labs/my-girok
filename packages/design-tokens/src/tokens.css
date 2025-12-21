@@ -636,13 +636,17 @@
   --letter-spacing-brand-lg: 0.5em;
   --letter-spacing-editorial: -0.05em;
 
-  /* Border Radius - SSOT: generates rounded-* utilities */
-  --border-radius-input: 24px;
-  --border-radius-widget: 32px;
-  --border-radius-editorial: 40px;
-  --border-radius-editorial-lg: 48px;
-  --border-radius-editorial-xl: 56px;
-  --border-radius-editorial-2xl: 64px;
+  /* Border Radius - SSOT: generates rounded-* utilities
+   * Tailwind CSS 4 uses --radius-* namespace for rounded-* utilities */
+  --radius-subtle: 4px; /* Minimal rounding - just removes sharpness */
+  --radius-soft: 8px; /* Soft corners - still rectangular */
+  --radius-input: 24px;
+  --radius-input-sm: 12px;
+  --radius-widget: 32px;
+  --radius-editorial: 40px;
+  --radius-editorial-lg: 48px;
+  --radius-editorial-xl: 56px;
+  --radius-editorial-2xl: 64px;
 
   /* Spacing - V0.0.1 AAA Workstation */
   --spacing-editorial: 40px;
@@ -672,9 +676,6 @@
   --min-height-touch-aa: 44px; /* Button sm/md: WCAG AA */
   --min-height-input-lg: 56px; /* Button lg / Input lg */
   --min-height-input-xl: 64px; /* Button xl / Input xl */
-
-  /* Input Border Radius - sm variant */
-  --border-radius-input-sm: 12px;
 
   /* Brand Typography Sizes - SSOT
    * Generates text-brand-* utilities for consistent typography

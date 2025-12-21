@@ -200,26 +200,42 @@ UI components (borders, icons) require 3:1 minimum contrast per WCAG SC 1.4.11.
 
 ## Border Radius Guide (V0.0.1)
 
-| Token                   | Size | Usage                            |
-| ----------------------- | ---- | -------------------------------- |
-| `rounded-xl`            | 12px | Inputs (default size)            |
-| `rounded-2xl`           | 16px | Secondary buttons, ViewToggle    |
-| `rounded-3xl`           | 24px | MenuRow                          |
-| `rounded-input`         | 24px | Input (lg size), primary buttons |
-| `rounded-widget`        | 32px | Widgets, modals                  |
-| `rounded-editorial`     | 40px | Archive support banner           |
-| `rounded-editorial-lg`  | 48px | Form cards (Login, Register)     |
-| `rounded-editorial-xl`  | 56px | Promo carousel                   |
-| `rounded-editorial-2xl` | 64px | MenuCard, Workstation section    |
-| `rounded-full`          | 50%  | Circular buttons, hero button    |
+### Default Radius Policy
+
+**All UI components use `rounded-soft` (8px) by default** - removes sharp corners while maintaining a rectangular appearance. This provides a modern, clean look without excessive rounding.
+
+### Radius Tokens
+
+| Token                   | Size | Usage                             |
+| ----------------------- | ---- | --------------------------------- |
+| `rounded-subtle`        | 4px  | Minimal rounding - just corners   |
+| `rounded-soft`          | 8px  | **Default for all UI components** |
+| `rounded-input-sm`      | 12px | Small inputs                      |
+| `rounded-input`         | 24px | Legacy editorial inputs           |
+| `rounded-widget`        | 32px | Widgets, modals                   |
+| `rounded-editorial`     | 40px | Editorial cards                   |
+| `rounded-editorial-lg`  | 48px | Form cards (Login, Register)      |
+| `rounded-editorial-xl`  | 56px | Promo carousel                    |
+| `rounded-editorial-2xl` | 64px | MenuCard, Workstation section     |
+| `rounded-full`          | 50%  | Circular buttons, hero button     |
+
+### Component Defaults (V0.0.1)
+
+| Component  | Default Radius | Token          |
+| ---------- | -------------- | -------------- |
+| Button     | 8px            | `rounded-soft` |
+| TextInput  | 8px            | `rounded-soft` |
+| Card       | 8px            | `rounded-soft` |
+| Alert      | 8px            | `rounded-soft` |
+| AuthLayout | 8px            | `rounded-soft` |
 
 ## Component Specifications (V0.0.1)
 
 ### Form Cards (Login, Register, ForgotPassword)
 
 ```tsx
-// Card container
-<div className="bg-theme-bg-card border-2 border-theme-border-default rounded-[48px] p-10 md:p-14 shadow-theme-lg">
+// Card container (V0.0.1 - soft 8px radius)
+<div className="bg-theme-bg-card border border-theme-border-subtle rounded-soft p-10 md:p-14 shadow-theme-lg">
 
 // Page title
 <h1

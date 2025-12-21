@@ -97,7 +97,7 @@ export default function LoginPage() {
           label={t('auth.emailAddress')}
           type="email"
           size="xl"
-          icon={<Mail size={24} />}
+          icon={<Mail size={20} />}
           value={email}
           onChange={setEmail}
           required
@@ -110,7 +110,7 @@ export default function LoginPage() {
           label={t('auth.password')}
           type="password"
           size="xl"
-          icon={<Lock size={24} />}
+          icon={<Lock size={20} />}
           showPasswordToggle
           value={password}
           onChange={setPassword}
@@ -122,7 +122,7 @@ export default function LoginPage() {
         {/* Checkbox with 44x44px touch target for WCAG 2.5.5 accessibility */}
         <label
           htmlFor="rememberEmail"
-          className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none group"
+          className="flex items-center gap-4 min-h-touch-aa cursor-pointer select-none group"
         >
           <span className="relative flex items-center justify-center w-11 h-11">
             <input
@@ -154,7 +154,6 @@ export default function LoginPage() {
           variant="primary"
           type="submit"
           size="xl"
-          rounded="editorial"
           disabled={loading}
           loading={loading}
           fullWidth

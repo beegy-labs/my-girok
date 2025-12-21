@@ -13,7 +13,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   /**
    * Border radius style
    */
-  rounded?: 'default' | 'editorial' | 'full';
+  rounded?: 'default' | 'subtle' | 'editorial' | 'full';
   /**
    * Shows loading state with spinner
    */
@@ -45,42 +45,40 @@ const baseClasses =
 
 const variantClasses = {
   primary:
-    'bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text shadow-theme-md hover:shadow-theme-lg hover:scale-[1.02] active:scale-[0.98]',
+    'bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text border border-btn-primary-to/50 shadow-theme-md hover:shadow-theme-lg hover:scale-[1.02] active:scale-[0.98]',
   secondary:
-    'bg-btn-secondary-bg border-2 border-btn-secondary-border text-btn-secondary-text hover:bg-btn-secondary-bg-hover hover:scale-[1.01] active:scale-[0.99]',
-  danger: 'bg-btn-danger-bg text-btn-danger-text hover:bg-btn-danger-bg-hover active:scale-[0.98]',
+    'bg-btn-secondary-bg border border-theme-border-default text-btn-secondary-text hover:bg-btn-secondary-bg-hover hover:border-btn-secondary-border hover:scale-[1.01] active:scale-[0.99]',
+  danger:
+    'bg-btn-danger-bg border border-btn-danger-bg-hover text-btn-danger-text hover:bg-btn-danger-bg-hover active:scale-[0.98]',
   ghost:
-    'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover border-2 border-transparent hover:border-theme-border-default',
+    'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover border border-transparent hover:border-theme-border-default',
 } as const;
 
 /**
  * Button size classes - WCAG 2.5.5 AAA & 8pt Grid compliant
  *
- * Touch targets:
- * - sm/md: 44px (WCAG AA minimum)
- * - lg: 56px (AAA+)
- * - xl: 64px (Editorial AAA+)
+ * Height utilities (must match TextInput for consistency):
+ * - sm/md: min-h-11 (44px WCAG AA minimum)
+ * - lg: h-14 (56px / 3.5rem)
+ * - xl: h-16 (64px / 4rem)
  *
  * 8pt Grid compliance:
  * - py-2 = 8px, py-4 = 16px
  * - px-4 = 16px, px-6 = 24px, px-8 = 32px
- * - py-2.5 (10px) and py-3 (12px) are exceptions for visual balance at sm/md
- *
- * SSOT Typography:
- * - text-brand-xs = 11px, text-brand-base = 14px
  */
 const sizeClasses = {
-  sm: 'min-h-touch-aa px-4 py-2.5 text-sm', // 44px touch, 16px horizontal
-  md: 'min-h-touch-aa px-4 py-3 text-base', // 44px touch, 16px horizontal (was px-5)
-  lg: 'h-14 min-h-input-lg px-6 py-4 text-brand-xs font-black uppercase tracking-brand', // 56px, 8pt grid
-  xl: 'h-16 min-h-input-xl px-8 py-4 text-brand-base font-black uppercase tracking-brand', // 64px, 8pt grid
+  sm: 'min-h-11 px-4 py-2.5 text-sm', // 44px touch, 16px horizontal
+  md: 'min-h-11 px-4 py-3 text-base', // 44px touch, 16px horizontal
+  lg: 'h-14 px-6 py-4 text-brand-xs font-black uppercase tracking-brand', // 56px (3.5rem)
+  xl: 'h-16 px-8 py-4 text-brand-base font-black uppercase tracking-brand', // 64px (4rem)
 } as const;
 
 // Border radius options - SSOT tokens from tokens.css
-// V0.0.1: default (24px) for consistent curves, editorial (24px) same for compatibility
+// V0.0.1: default uses soft (12px) for subtle rounding - rectangular but not sharp
 const roundedClasses = {
-  default: 'rounded-input', // SSOT: --border-radius-input: 24px
-  editorial: 'rounded-input', // SSOT: --border-radius-input: 24px
+  default: 'rounded-soft', // SSOT: 12px - soft corners
+  subtle: 'rounded-subtle', // SSOT: 8px - minimal rounding
+  editorial: 'rounded-input', // SSOT: 24px - more rounded
   full: 'rounded-full',
 } as const;
 
