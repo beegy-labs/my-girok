@@ -12,7 +12,7 @@
  * @see packages/design-tokens/src/tokens.css
  */
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
 
 // ============================================================================
 // Types
@@ -51,7 +51,14 @@ interface CopyButtonProps {
 // Copy Button Component
 // ============================================================================
 
-function CopyButton({ text, label = 'Copy to clipboard' }: CopyButtonProps) {
+/**
+ * Memoized copy button component (rules.md:275)
+ * Prevents unnecessary re-renders in token lists
+ */
+const CopyButton = memo(function CopyButton({
+  text,
+  label = 'Copy to clipboard',
+}: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -129,44 +136,62 @@ function CopyButton({ text, label = 'Copy to clipboard' }: CopyButtonProps) {
       )}
     </button>
   );
-}
+});
+
+// ============================================================================
+// WCAG Badge Component - Static Styles (rules.md:278-279)
+// ============================================================================
+
+const WCAG_BADGE_STYLES = {
+  AAA: 'bg-status-success-bg text-status-success-text border-status-success-border',
+  AA: 'bg-status-warning-bg text-status-warning-text border-status-warning-border',
+  decorative: 'bg-theme-bg-secondary text-theme-text-muted border-theme-border-subtle',
+} as const;
+
+const WCAG_BADGE_LABELS = {
+  AAA: 'WCAG AAA (7:1+)',
+  AA: 'WCAG AA (4.5:1+)',
+  decorative: 'Decorative',
+} as const;
 
 // ============================================================================
 // WCAG Badge Component
 // ============================================================================
 
-function WcagBadge({ level }: { level: 'AAA' | 'AA' | 'decorative' }) {
-  const styles = {
-    AAA: 'bg-status-success-bg text-status-success-text border-status-success-border',
-    AA: 'bg-status-warning-bg text-status-warning-text border-status-warning-border',
-    decorative: 'bg-theme-bg-secondary text-theme-text-muted border-theme-border-subtle',
-  };
-
-  const labels = {
-    AAA: 'WCAG AAA (7:1+)',
-    AA: 'WCAG AA (4.5:1+)',
-    decorative: 'Decorative',
-  };
-
+/**
+ * Memoized WCAG badge component (rules.md:275)
+ * Displays accessibility compliance level
+ */
+const WcagBadge = memo(function WcagBadge({ level }: { level: 'AAA' | 'AA' | 'decorative' }) {
   return (
     <span
       className={`
         inline-flex items-center px-2 py-0.5
         text-xs font-medium rounded-full border
-        ${styles[level]}
+        ${WCAG_BADGE_STYLES[level]}
       `}
-      title={labels[level]}
+      title={WCAG_BADGE_LABELS[level]}
     >
       {level}
     </span>
   );
-}
+});
 
 // ============================================================================
 // Token Item Component
 // ============================================================================
 
-export function TokenItem({ name, value, contrast, wcagLevel, description }: TokenItemProps) {
+/**
+ * Memoized token item component (rules.md:275)
+ * Renders a single design token with preview and copy functionality
+ */
+export const TokenItem = memo(function TokenItem({
+  name,
+  value,
+  contrast,
+  wcagLevel,
+  description,
+}: TokenItemProps) {
   const isColor = value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl');
 
   return (
@@ -209,13 +234,21 @@ export function TokenItem({ name, value, contrast, wcagLevel, description }: Tok
       </div>
     </div>
   );
-}
+});
 
 // ============================================================================
 // Token Group Component
 // ============================================================================
 
-export function TokenGroup({ title, description, tokens }: TokenGroupProps) {
+/**
+ * Memoized token group component (rules.md:275)
+ * Renders a group of design tokens with title and description
+ */
+export const TokenGroup = memo(function TokenGroup({
+  title,
+  description,
+  tokens,
+}: TokenGroupProps) {
   return (
     <div className="mb-8">
       <h3 className="text-lg font-semibold text-theme-text-primary mb-2">{title}</h3>
@@ -227,7 +260,7 @@ export function TokenGroup({ title, description, tokens }: TokenGroupProps) {
       </div>
     </div>
   );
-}
+});
 
 // ============================================================================
 // Live Token Preview Component
@@ -240,7 +273,14 @@ interface LiveTokenPreviewProps {
   label?: string;
 }
 
-export function LiveTokenPreview({ tokenName, label }: LiveTokenPreviewProps) {
+/**
+ * Memoized live token preview component (rules.md:275)
+ * Displays real-time CSS variable value with copy functionality
+ */
+export const LiveTokenPreview = memo(function LiveTokenPreview({
+  tokenName,
+  label,
+}: LiveTokenPreviewProps) {
   const [value, setValue] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
@@ -289,7 +329,7 @@ export function LiveTokenPreview({ tokenName, label }: LiveTokenPreviewProps) {
       <CopyButton text={value} label={`Copy value: ${value}`} />
     </div>
   );
-}
+});
 
 // ============================================================================
 // Contrast Ratio Calculator Component
@@ -344,7 +384,11 @@ function getContrastRatio(foreground: string, background: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-export function ContrastChecker({
+/**
+ * Memoized contrast checker component (rules.md:275)
+ * Calculates and displays WCAG contrast ratio between two colors
+ */
+export const ContrastChecker = memo(function ContrastChecker({
   foreground,
   background,
   sampleText = 'Sample Text',
@@ -377,7 +421,7 @@ export function ContrastChecker({
       </div>
     </div>
   );
-}
+});
 
 // ============================================================================
 // Default Export
