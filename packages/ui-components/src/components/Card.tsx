@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { focusClasses } from '../styles/constants';
 
 export interface CardProps {
@@ -65,9 +65,10 @@ const radiusClasses = {
  * - Multiple variants (primary, secondary, elevated)
  * - Interactive mode with proper keyboard and focus support
  * - Configurable padding and border radius
- * - Editorial radius options (40px, 48px, 64px) for V0.0.1 design
+ * - Unified rounded-soft (8px) for all radius options
  * - High contrast focus ring for keyboard navigation
  * - border-2 for modern aesthetic
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
@@ -77,7 +78,7 @@ const radiusClasses = {
  * </Card>
  * ```
  */
-export function Card({
+export const Card = memo(function Card({
   children,
   variant = 'primary',
   interactive = false,
@@ -115,4 +116,4 @@ export function Card({
       {children}
     </div>
   );
-}
+});

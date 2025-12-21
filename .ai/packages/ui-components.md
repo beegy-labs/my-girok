@@ -59,13 +59,13 @@ export interface ButtonProps {
 | lg   | 56px       | `font-black uppercase tracking-brand text-brand-xs`   | `min-h-input-lg` |
 | xl   | 64px       | `font-black uppercase tracking-brand text-brand-base` | `min-h-input-xl` |
 
-**Rounded Options:**
+**Rounded Options (V0.0.1 Unified):**
 
 | Option    | SSOT Token     | Size | Usage                    |
 | --------- | -------------- | ---- | ------------------------ |
 | default   | rounded-soft   | 8px  | **All buttons (V0.0.1)** |
 | subtle    | rounded-subtle | 4px  | Minimal rounding         |
-| editorial | rounded-input  | 24px | Legacy editorial style   |
+| editorial | rounded-soft   | 8px  | Unified (was 24px)       |
 | full      | rounded-full   | 50%  | Hero buttons, circular   |
 
 **Usage:**
@@ -252,17 +252,17 @@ export interface CardProps {
 }
 ```
 
-**Radius Options (V0.0.1):**
+**Radius Options (V0.0.1 Unified):**
 
-| Option  | SSOT Token           | Size | Usage                  |
-| ------- | -------------------- | ---- | ---------------------- |
-| none    | rounded-none         | 0px  | Sharp corners          |
-| subtle  | rounded-subtle       | 4px  | Minimal rounding       |
-| default | rounded-soft         | 8px  | **All cards (V0.0.1)** |
-| md      | rounded-input        | 24px | Medium rounded         |
-| lg      | rounded-widget       | 32px | Large rounded          |
-| xl      | rounded-editorial    | 40px | Editorial cards        |
-| 2xl     | rounded-editorial-lg | 48px | Form cards             |
+| Option  | SSOT Token     | Size | Usage                  |
+| ------- | -------------- | ---- | ---------------------- |
+| none    | rounded-none   | 0px  | Sharp corners          |
+| subtle  | rounded-subtle | 4px  | Minimal rounding       |
+| default | rounded-soft   | 8px  | **All cards (V0.0.1)** |
+| md      | rounded-soft   | 8px  | Unified (was 24px)     |
+| lg      | rounded-soft   | 8px  | Unified (was 32px)     |
+| xl      | rounded-soft   | 8px  | Unified (was 40px)     |
+| 2xl     | rounded-soft   | 8px  | Unified (was 48px)     |
 
 ### Badge
 
@@ -285,7 +285,7 @@ export interface BadgeProps {
 
 ### MenuCard
 
-Editorial navigation card with `rounded-editorial-2xl`.
+Editorial navigation card with unified `rounded-soft`.
 
 ```typescript
 export interface MenuCardProps {
@@ -302,7 +302,9 @@ export interface MenuCardProps {
 
 **V0.0.1 Styling:**
 
-- Card: `rounded-editorial-2xl border-2 p-10 md:p-12`
+- Card: `rounded-soft border-2 p-10 md:p-12`
+- Pin button: `rounded-soft min-w-[44px] min-h-[44px]`
+- Icon container: `rounded-soft`
 - Index: `font-mono-brand tracking-brand font-black`
 - Title: `font-serif-title`
 
@@ -324,8 +326,8 @@ export interface MenuRowProps {
 
 **V0.0.1 Styling:**
 
-- `rounded-3xl border-2`
-- Pin support in list view
+- Row: `rounded-soft border-2`
+- Pin button: `rounded-soft min-w-[44px] min-h-[44px]`
 
 ### ViewToggle
 
@@ -340,9 +342,8 @@ export interface ViewToggleProps {
 
 **V0.0.1 Styling:**
 
-- `min-h-[56px]` touch targets
-- `rounded-2xl`
-- `shadow-theme-lg`
+- Button: `rounded-soft min-h-[56px] min-w-[56px]`
+- Active: `shadow-theme-lg`
 
 ### TopWidget
 
@@ -361,7 +362,9 @@ export interface TopWidgetProps {
 
 **V0.0.1 Styling:**
 
-- Card: `min-h-[280px] rounded-editorial-lg`
+- Container: `rounded-soft min-h-[280px] border-2 border-theme-primary`
+- Icon container: `rounded-soft`
+- Change button: `rounded-soft min-h-[44px] min-w-[44px]`
 - Title: `font-serif-title`
 - Badge: `font-mono-brand tracking-brand`
 

@@ -91,7 +91,7 @@ const roundedClasses = {
  * - High contrast focus ring for keyboard navigation
  * - Proper disabled states
  * - Loading state with spinner
- * - Editorial radius option (24px) for V0.0.1 styling
+ * - Unified rounded-soft (8px) for all radius options
  * - React 19 compatible (ref as prop)
  * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
@@ -100,7 +100,6 @@ const roundedClasses = {
  * <Button
  *   variant="primary"
  *   size="xl"
- *   rounded="editorial"
  *   loading={isSubmitting}
  *   onClick={handleSubmit}
  * >
