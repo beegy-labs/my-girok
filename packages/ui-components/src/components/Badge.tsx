@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 export interface BadgeProps {
   /**
@@ -64,6 +64,7 @@ const roundedClasses = {
  * - Rounded options (default: lg, full: pill shape)
  * - WCAG AAA compliant text contrast
  * - Wider tracking for improved readability
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
@@ -71,7 +72,7 @@ const roundedClasses = {
  * <Badge variant="warning" size="sm" rounded="full">Pending</Badge>
  * ```
  */
-export function Badge({
+export const Badge = memo(function Badge({
   children,
   variant = 'default',
   size = 'md',
@@ -85,7 +86,7 @@ export function Badge({
       {children}
     </span>
   );
-}
+});
 
 export interface SectionBadgeProps {
   /**
@@ -106,13 +107,17 @@ export interface SectionBadgeProps {
  * - Uppercase text with wide letter-spacing (0.3em)
  * - Monospace font for technical feel
  * - Subtle border and background
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
  * <SectionBadge>MY ARCHIVE</SectionBadge>
  * ```
  */
-export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
+export const SectionBadge = memo(function SectionBadge({
+  children,
+  className = '',
+}: SectionBadgeProps) {
   return (
     <span
       className={`inline-flex items-center px-4 py-1.5 text-brand-xs font-bold uppercase tracking-brand text-theme-primary bg-theme-bg-secondary border border-theme-border-default rounded-xl font-mono-brand ${className}`}
@@ -120,4 +125,4 @@ export function SectionBadge({ children, className = '' }: SectionBadgeProps) {
       {children}
     </span>
   );
-}
+});

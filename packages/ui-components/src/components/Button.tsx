@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
+import { ButtonHTMLAttributes, ReactNode, Ref, memo } from 'react';
 import { focusClasses } from '../styles/constants';
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
@@ -95,6 +95,7 @@ const roundedClasses = {
  * - Loading state with spinner
  * - Editorial radius option (24px) for V0.0.1 styling
  * - React 19 compatible (ref as prop)
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
@@ -109,7 +110,7 @@ const roundedClasses = {
  * </Button>
  * ```
  */
-export function Button({
+function ButtonComponent({
   variant = 'primary',
   size = 'md',
   rounded = 'default',
@@ -140,7 +141,17 @@ export function Button({
   );
 }
 
-function LoadingSpinner() {
+/**
+ * Memoized Button component (rules.md:275)
+ * Prevents unnecessary re-renders when parent components update
+ */
+export const Button = memo(ButtonComponent);
+
+/**
+ * Memoized loading spinner component (rules.md:275)
+ * Prevents unnecessary re-renders during button state changes
+ */
+const LoadingSpinner = memo(function LoadingSpinner() {
   return (
     <svg
       className="animate-spin -ml-1 mr-2 h-5 w-5"
@@ -157,4 +168,4 @@ function LoadingSpinner() {
       />
     </svg>
   );
-}
+});

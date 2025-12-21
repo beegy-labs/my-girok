@@ -1,4 +1,4 @@
-import { SelectHTMLAttributes, ChangeEvent, Ref, useId } from 'react';
+import { SelectHTMLAttributes, ChangeEvent, Ref, useId, useCallback, memo } from 'react';
 import { focusClasses } from '../styles/constants';
 
 export interface SelectOption {
@@ -76,6 +76,7 @@ export interface SelectInputProps extends Omit<
  * - High contrast focus ring for keyboard navigation
  * - 16px minimum font size for optimal readability
  * - React 19 compatible (ref as prop)
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
@@ -88,7 +89,7 @@ export interface SelectInputProps extends Omit<
  * />
  * ```
  */
-export function SelectInput({
+function SelectInputComponent({
   label,
   error,
   hint,
@@ -110,9 +111,13 @@ export function SelectInput({
     ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'
     : defaultBorderClasses;
 
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    onChange(event.target.value);
-  };
+  // Memoized change handler (rules.md:276)
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      onChange(event.target.value);
+    },
+    [onChange],
+  );
 
   return (
     <div className={containerClassName}>
@@ -166,3 +171,9 @@ export function SelectInput({
     </div>
   );
 }
+
+/**
+ * Memoized SelectInput component (rules.md:275)
+ * Prevents unnecessary re-renders when parent components update
+ */
+export const SelectInput = memo(SelectInputComponent);
