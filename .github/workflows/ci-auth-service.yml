@@ -1,13 +1,17 @@
 name: CI - Auth Service
 
 on:
-  push:
-    branches: [develop, 'release/**', main]
-    paths: ['services/auth-service/**', 'packages/types/**', 'packages/nest-common/**', '.github/workflows/ci-auth-service.yml']
-  pull_request:
-    branches: [develop, 'release/**', main]
-    paths: ['services/auth-service/**', 'packages/types/**', 'packages/nest-common/**']
   workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy environment'
+        required: false
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - release
+          - main
 
 env:
   REGISTRY: gitea.girok.dev
@@ -39,7 +43,7 @@ jobs:
 
   build:
     name: Build
-    if: github.event_name == 'push'
+    needs: check
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 10
     outputs:
@@ -75,8 +79,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: [check, build]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    needs: build
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 5
     steps:

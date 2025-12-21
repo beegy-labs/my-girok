@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -87,8 +87,8 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
   // Mobile: collapse company details by default for existing items
   const [isCompanyExpanded, setIsCompanyExpanded] = useState(true);
 
-  // Ensure projects is always an array (handle undefined from API)
-  const projects = experience.projects || [];
+  // Memoize projects to prevent useCallback dependency changes on every render (ESLint react-hooks/exhaustive-deps)
+  const projects = useMemo(() => experience.projects || [], [experience.projects]);
 
   const toggleCompanyExpand = useCallback(() => {
     setIsCompanyExpanded((prev) => !prev);

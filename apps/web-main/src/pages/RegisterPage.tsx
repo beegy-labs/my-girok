@@ -107,7 +107,19 @@ export default function RegisterPage() {
         setLoading(false);
       }
     },
-    [email, username, password, name, consents, setAuth, navigate, t],
+    [
+      email,
+      username,
+      password,
+      name,
+      consents,
+      localeInfo?.country,
+      localeInfo?.language,
+      localeInfo?.timezone,
+      setAuth,
+      navigate,
+      t,
+    ],
   );
 
   // Show nothing while loading consents

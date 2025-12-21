@@ -242,36 +242,44 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   }, [resume?.id, loadAttachments]);
 
-  const handleFileUpload = async (file: File, type: AttachmentType) => {
-    if (!resume?.id) {
-      setUploadError(t('resume.form.saveResumeFirstUpload'));
-      return;
-    }
+  // Memoized file upload handler (2025 React best practice)
+  const handleFileUpload = useCallback(
+    async (file: File, type: AttachmentType) => {
+      if (!resume?.id) {
+        setUploadError(t('resume.form.saveResumeFirstUpload'));
+        return;
+      }
 
-    setUploading(true);
-    setUploadError(null);
+      setUploading(true);
+      setUploadError(null);
 
-    try {
-      const attachment = await uploadAttachment(resume.id, file, type);
-      setAttachments([...attachments, attachment]);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setUploadError(err.response?.data?.message || t('resume.form.uploadFailed'));
-    } finally {
-      setUploading(false);
-    }
-  };
+      try {
+        const attachment = await uploadAttachment(resume.id, file, type);
+        setAttachments((prev) => [...prev, attachment]);
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        setUploadError(err.response?.data?.message || t('resume.form.uploadFailed'));
+      } finally {
+        setUploading(false);
+      }
+    },
+    [resume?.id, t],
+  );
 
-  const handleDeleteAttachment = async (attachmentId: string) => {
-    if (!resume?.id) return;
+  // Memoized delete attachment handler (2025 React best practice)
+  const handleDeleteAttachment = useCallback(
+    async (attachmentId: string) => {
+      if (!resume?.id) return;
 
-    try {
-      await deleteAttachment(resume.id, attachmentId);
-      setAttachments(attachments.filter((a) => a.id !== attachmentId));
-    } catch (error) {
-      console.error('Failed to delete attachment:', error);
-    }
-  };
+      try {
+        await deleteAttachment(resume.id, attachmentId);
+        setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+      } catch (error) {
+        console.error('Failed to delete attachment:', error);
+      }
+    },
+    [resume?.id],
+  );
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
@@ -464,7 +472,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     (attachmentId: string) => () => {
       handleDeleteAttachment(attachmentId);
     },
-    [],
+    [handleDeleteAttachment],
   );
 
   // Memoized handler for adding key achievement (2025 React best practice)
@@ -513,7 +521,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         handleFileUpload(file, type);
       }
     },
-    [],
+    [handleFileUpload],
   );
 
   // Cover letter change handler (2025 React best practice)
