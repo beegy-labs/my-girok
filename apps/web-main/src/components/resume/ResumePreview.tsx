@@ -111,14 +111,14 @@ export default function ResumePreview({
       {/* Toolbar (hidden in print) */}
       {showToolbar && (
         <div className="print:hidden mb-6 relative z-0">
-          <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-input sm:rounded-input shadow-sm shadow-theme-sm px-4 py-3 transition-colors duration-200">
+          <div className="max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-sm shadow-theme-sm px-4 py-3 transition-colors duration-200">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 {/* Paper Size Selector */}
-                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-input p-1">
+                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-soft p-1">
                   <button
                     onClick={handlePaperSizeChange('A4')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-input transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-soft transition-all ${
                       paperSize === 'A4'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -129,7 +129,7 @@ export default function ResumePreview({
                   </button>
                   <button
                     onClick={handlePaperSizeChange('LETTER')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-input transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-soft transition-all ${
                       paperSize === 'LETTER'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -141,21 +141,21 @@ export default function ResumePreview({
                     Letter
                   </button>
                 </div>
-                <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-input px-2 py-1 text-xs text-theme-status-info-text">
+                <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-soft px-2 py-1 text-xs text-theme-status-info-text">
                   {Math.round(scale * 100)}%
                 </div>
                 {numPages > 0 && (
-                  <div className="bg-theme-status-success-bg border border-theme-status-success-border rounded-input px-2 py-1 text-xs text-theme-status-success-text">
+                  <div className="bg-theme-status-success-bg border border-theme-status-success-border rounded-soft px-2 py-1 text-xs text-theme-status-success-text">
                     {numPages} {t('resume.preview.pages', { defaultValue: 'pages' })}
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 {/* View Mode Toggle */}
-                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-input p-1">
+                <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-soft p-1">
                   <button
                     onClick={handleSetContinuousView}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-input transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-soft transition-all ${
                       viewMode === 'continuous'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -166,7 +166,7 @@ export default function ResumePreview({
                   </button>
                   <button
                     onClick={handleSetPaginatedView}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-input transition-all ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-soft transition-all ${
                       viewMode === 'paginated'
                         ? 'bg-theme-bg-card text-theme-text-primary shadow-sm'
                         : 'text-theme-text-secondary hover:text-theme-text-primary'
@@ -179,7 +179,7 @@ export default function ResumePreview({
                 {/* Grayscale Toggle */}
                 <button
                   onClick={handleToggleGrayscale}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-input border-2 transition-all ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-soft border-2 transition-all ${
                     isGrayscaleMode
                       ? 'bg-theme-bg-elevated text-theme-text-primary border-theme-border-strong'
                       : 'bg-theme-bg-card text-theme-text-primary border-theme-border-default hover:border-theme-border-strong hover:bg-theme-bg-hover'
@@ -224,7 +224,7 @@ export default function ResumePreview({
                 <button
                   onClick={goToPrevPage}
                   disabled={currentPage <= 1}
-                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-input hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-soft hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('resume.preview.prevPage', { defaultValue: 'Previous' })}
                 </button>
@@ -234,7 +234,7 @@ export default function ResumePreview({
                 <button
                   onClick={goToNextPage}
                   disabled={currentPage >= numPages}
-                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-input hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm font-medium text-theme-text-primary bg-theme-bg-card border border-theme-border-default rounded-soft hover:bg-theme-bg-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('resume.preview.nextPage', { defaultValue: 'Next' })}
                 </button>

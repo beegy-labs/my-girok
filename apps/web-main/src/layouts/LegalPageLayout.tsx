@@ -74,7 +74,7 @@ function LegalPageLayoutComponent({ icon, title, badge, children }: LegalPageLay
           </div>
 
           {/* Content */}
-          <div className="bg-theme-bg-card border border-theme-border-default rounded-editorial p-8 sm:p-10 mb-10">
+          <div className="bg-theme-bg-card border border-theme-border-default rounded-soft p-8 sm:p-10 mb-10">
             {children}
           </div>
 
