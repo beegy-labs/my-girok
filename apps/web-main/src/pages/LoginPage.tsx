@@ -76,7 +76,7 @@ export default function LoginPage() {
       error={error}
       secondaryActions={
         <>
-          <Link to="/register" className="block">
+          <Link to="/consent" className="block">
             <Button variant="secondary" size="lg" rounded="default" fullWidth>
               <UserPlus size={16} />
               {t('auth.registerHere')}

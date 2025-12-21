@@ -9,3 +9,6 @@ export * from './common/index.js';
 
 // Resume types
 export * from './resume/index.js';
+
+// Legal/Consent types
+export * from './legal/index.js';

@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
               {t('forgotPassword.backToLogin')}
             </Button>
           </Link>
-          <Link to="/register" className="block">
+          <Link to="/consent" className="block">
             <Button variant="ghost" size="lg" rounded="default" fullWidth>
               <Key size={16} />
               {t('auth.registerHere')}

@@ -100,13 +100,17 @@ authApi.interceptors.response.use(
   },
 );
 
-import type { RegisterDto as IRegisterDto, LoginDto as ILoginDto, ChangePasswordDto as IChangePasswordDto } from '@my-girok/types';
+import type {
+  RegisterWithConsentsDto,
+  LoginDto as ILoginDto,
+  ChangePasswordDto as IChangePasswordDto,
+} from '@my-girok/types';
 
 /**
- * Register a new user
+ * Register a new user with consents
  * Uses publicApi - 401 on validation errors should show error message, not trigger token refresh
  */
-export const register = async (data: IRegisterDto) => {
+export const register = async (data: RegisterWithConsentsDto) => {
   const response = await publicApi.post('/v1/auth/register', data);
   return response.data;
 };
