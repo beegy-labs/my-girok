@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
+import { ButtonHTMLAttributes, ReactNode, Ref, memo } from 'react';
 import { focusClasses } from '../styles/constants';
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
@@ -53,14 +53,27 @@ const variantClasses = {
     'text-theme-text-primary bg-transparent hover:bg-theme-bg-hover border-2 border-transparent hover:border-theme-border-default',
 } as const;
 
-// All sizes meet WCAG 44x44px minimum touch target
-// V0.0.1 Editorial sizes: lg (56px) and xl (64px) have editorial typography
-// SSOT tracking tokens: tracking-brand (0.3em)
+/**
+ * Button size classes - WCAG 2.5.5 AAA & 8pt Grid compliant
+ *
+ * Touch targets:
+ * - sm/md: 44px (WCAG AA minimum)
+ * - lg: 56px (AAA+)
+ * - xl: 64px (Editorial AAA+)
+ *
+ * 8pt Grid compliance:
+ * - py-2 = 8px, py-4 = 16px
+ * - px-4 = 16px, px-6 = 24px, px-8 = 32px
+ * - py-2.5 (10px) and py-3 (12px) are exceptions for visual balance at sm/md
+ *
+ * SSOT Typography:
+ * - text-brand-xs = 11px, text-brand-base = 14px
+ */
 const sizeClasses = {
-  sm: 'min-h-[44px] px-4 py-2.5 text-sm',
-  md: 'min-h-[44px] px-5 py-3 text-base',
-  lg: 'h-14 min-h-[56px] px-6 py-3.5 text-[11px] font-black uppercase tracking-brand',
-  xl: 'h-16 min-h-[64px] px-8 py-4 text-[14px] font-black uppercase tracking-brand',
+  sm: 'min-h-touch-aa px-4 py-2.5 text-sm', // 44px touch, 16px horizontal
+  md: 'min-h-touch-aa px-4 py-3 text-base', // 44px touch, 16px horizontal (was px-5)
+  lg: 'h-14 min-h-input-lg px-6 py-4 text-brand-xs font-black uppercase tracking-brand', // 56px, 8pt grid
+  xl: 'h-16 min-h-input-xl px-8 py-4 text-brand-base font-black uppercase tracking-brand', // 64px, 8pt grid
 } as const;
 
 // Border radius options - SSOT tokens from tokens.css
@@ -82,6 +95,7 @@ const roundedClasses = {
  * - Loading state with spinner
  * - Editorial radius option (24px) for V0.0.1 styling
  * - React 19 compatible (ref as prop)
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
@@ -96,7 +110,7 @@ const roundedClasses = {
  * </Button>
  * ```
  */
-export function Button({
+function ButtonComponent({
   variant = 'primary',
   size = 'md',
   rounded = 'default',
@@ -127,7 +141,17 @@ export function Button({
   );
 }
 
-function LoadingSpinner() {
+/**
+ * Memoized Button component (rules.md:275)
+ * Prevents unnecessary re-renders when parent components update
+ */
+export const Button = memo(ButtonComponent);
+
+/**
+ * Memoized loading spinner component (rules.md:275)
+ * Prevents unnecessary re-renders during button state changes
+ */
+const LoadingSpinner = memo(function LoadingSpinner() {
   return (
     <svg
       className="animate-spin -ml-1 mr-2 h-5 w-5"
@@ -144,4 +168,4 @@ function LoadingSpinner() {
       />
     </svg>
   );
-}
+});

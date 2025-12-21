@@ -98,8 +98,8 @@ export default function ForgotPasswordPage() {
           id="email"
           label={t('auth.emailAddress', { defaultValue: 'Email' })}
           type="email"
-          size="lg"
-          icon={<Mail size={18} />}
+          size="xl"
+          icon={<Mail size={24} />}
           value={email}
           onChange={setEmail}
           required

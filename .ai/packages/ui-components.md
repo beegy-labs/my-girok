@@ -21,20 +21,14 @@ packages/ui-components/
 │   │   ├── MenuRow.tsx         # Editorial list row with pin support
 │   │   ├── PageContainer.tsx
 │   │   ├── PageHeader.tsx
-│   │   ├── PageLayout.tsx
-│   │   ├── SectionHeader.tsx
 │   │   ├── SelectInput.tsx
-│   │   ├── SortableItem.tsx
-│   │   ├── SortableList.tsx
 │   │   ├── TextArea.tsx
 │   │   ├── TextInput.tsx       # default/lg sizes, icon support
 │   │   ├── TopWidget.tsx       # Pinned dashboard widget
 │   │   ├── ViewToggle.tsx      # Grid/List toggle (56px)
 │   │   └── index.ts
 │   ├── hooks/
-│   │   ├── useAsyncOperation.ts
 │   │   ├── useClickOutside.ts
-│   │   ├── useDebounce.ts
 │   │   └── index.ts
 │   └── index.ts
 ├── package.json
@@ -56,14 +50,14 @@ export interface ButtonProps {
 }
 ```
 
-**Size Reference:**
+**Size Reference (8pt Grid Compliant):**
 
-| Size | Min Height | Typography                                         |
-| ---- | ---------- | -------------------------------------------------- |
-| sm   | 44px       | Standard                                           |
-| md   | 44px       | Standard                                           |
-| lg   | 56px       | `font-black uppercase tracking-widest text-[11px]` |
-| xl   | 64px       | `font-black uppercase tracking-brand text-[14px]`  |
+| Size | Min Height | Typography                                            | SSOT Token       |
+| ---- | ---------- | ----------------------------------------------------- | ---------------- |
+| sm   | 44px       | Standard                                              | `min-h-touch-aa` |
+| md   | 44px       | Standard                                              | `min-h-touch-aa` |
+| lg   | 56px       | `font-black uppercase tracking-brand text-brand-xs`   | `min-h-input-lg` |
+| xl   | 64px       | `font-black uppercase tracking-brand text-brand-base` | `min-h-input-xl` |
 
 **Rounded Options:**
 
@@ -142,14 +136,14 @@ export interface TextInputProps {
 }
 ```
 
-**Size Reference:**
+**Size Reference (8pt Grid Compliant):**
 
-| Size    | Height | Icon Size | Gap     | Typography            |
-| ------- | ------ | --------- | ------- | --------------------- |
-| sm      | 40px   | 16px      | gap-2   | text-sm               |
-| default | 48px   | 18px      | gap-3   | text-base             |
-| lg      | 56px   | 20px      | gap-3.5 | text-base font-medium |
-| xl      | 64px   | 22px      | gap-4   | text-lg font-bold     |
+| Size    | Height | Icon | Gap   | Padding | Typography            |
+| ------- | ------ | ---- | ----- | ------- | --------------------- |
+| sm      | 40px   | 16px | gap-2 | px-4    | text-sm               |
+| default | 48px   | 20px | gap-2 | px-4    | text-base             |
+| lg      | 56px   | 20px | gap-4 | px-6    | text-base font-medium |
+| xl      | 64px   | 24px | gap-4 | px-6    | text-lg               |
 
 **Variant Reference:**
 
@@ -276,12 +270,14 @@ export interface BadgeProps {
 }
 ```
 
-**V0.0.1 Styling:**
+**V0.0.1 Styling (8pt Grid Compliant):**
 
 - `font-black` (was font-bold)
-- `tracking-widest`
-- lg size: `text-[14px]`
-- rounded options: `default` (rounded-lg) or `full` (rounded-full)
+- `tracking-brand-lg`
+- sm size: `text-brand-xs` (11px), `px-3`
+- md size: `text-xs` (12px), `px-4`
+- lg size: `text-brand-base` (14px), `px-6`
+- rounded options: `default` (rounded-xl) or `full` (rounded-full)
 
 ### MenuCard
 
@@ -376,41 +372,13 @@ export interface AlertProps {
 }
 ```
 
-### SortableList (DnD Kit)
-
-```typescript
-export interface SortableListProps<T> {
-  items: T[];
-  getItemId: (item: T) => string;
-  onReorder: (items: T[]) => void;
-  renderItem: (item: T, index: number) => ReactNode;
-}
-```
-
 ## Hooks
-
-### useAsyncOperation
-
-```typescript
-const { execute, loading, error, data, reset } = useAsyncOperation({
-  onSuccess: (data) => navigate('/dashboard'),
-  onError: (error) => console.error(error),
-});
-
-await execute(() => api.createPost(data));
-```
 
 ### useClickOutside
 
 ```typescript
 const ref = useRef<HTMLDivElement>(null);
 useClickOutside(ref, isOpen, () => setIsOpen(false));
-```
-
-### useDebounce
-
-```typescript
-const debouncedSearch = useDebounce(searchTerm, 300);
 ```
 
 ## Theme Tokens

@@ -9,8 +9,6 @@ export * from './components/MenuRow';
 export * from './components/PageContainer';
 export * from './components/PageHeader';
 export * from './components/SelectInput';
-export * from './components/SortableItem';
-export * from './components/SortableList';
 export * from './components/TextArea';
 export * from './components/TextInput';
 export * from './components/TopWidget';
@@ -33,8 +31,6 @@ export type {
   SelectOption,
   ButtonProps,
   AlertProps,
-  SortableListProps,
-  SortableItemProps,
   CardProps,
   PageHeaderProps,
   PageContainerProps,

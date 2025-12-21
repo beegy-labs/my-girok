@@ -1,4 +1,4 @@
-import { SelectHTMLAttributes, ChangeEvent, Ref, useId } from 'react';
+import { SelectHTMLAttributes, ChangeEvent, Ref, useId, useCallback, memo } from 'react';
 import { focusClasses } from '../styles/constants';
 
 export interface SelectOption {
@@ -6,14 +6,17 @@ export interface SelectOption {
   label: string;
 }
 
-// Static class definitions (defined outside component for performance)
-// V0.0.1 AAA Workstation Design System
-// Base select classes with WCAG compliance:
-// - min-h-[48px] for touch target (WCAG 2.5.5)
-// - text-base (16px) for readability
-// - focus ring via focusClasses (4px, SSOT)
+/**
+ * Static class definitions (defined outside component for performance)
+ * V0.0.1 AAA Workstation Design System
+ *
+ * Base select classes with WCAG compliance:
+ * - min-h-input = 48px (WCAG 2.5.5 AAA touch target) - SSOT
+ * - text-base (16px) for readability
+ * - focus ring via focusClasses (4px, SSOT)
+ */
 const baseSelectClasses =
-  'w-full min-h-[48px] px-4 py-3 text-base rounded-input bg-theme-bg-input text-theme-text-primary focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
+  'w-full min-h-input px-4 py-3 text-base rounded-input bg-theme-bg-input text-theme-text-primary focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
 
 const defaultBorderClasses = 'border border-theme-border-default';
 
@@ -73,6 +76,7 @@ export interface SelectInputProps extends Omit<
  * - High contrast focus ring for keyboard navigation
  * - 16px minimum font size for optimal readability
  * - React 19 compatible (ref as prop)
+ * - Memoized to prevent unnecessary re-renders (rules.md:275)
  *
  * @example
  * ```tsx
@@ -85,7 +89,7 @@ export interface SelectInputProps extends Omit<
  * />
  * ```
  */
-export function SelectInput({
+function SelectInputComponent({
   label,
   error,
   hint,
@@ -107,16 +111,20 @@ export function SelectInput({
     ? 'border-theme-status-error-text focus-visible:ring-theme-status-error-text'
     : defaultBorderClasses;
 
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    onChange(event.target.value);
-  };
+  // Memoized change handler (rules.md:276)
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      onChange(event.target.value);
+    },
+    [onChange],
+  );
 
   return (
     <div className={containerClassName}>
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-[12px] font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
+          className="block text-brand-sm font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
         >
           {label}
           {required && (
@@ -163,3 +171,9 @@ export function SelectInput({
     </div>
   );
 }
+
+/**
+ * Memoized SelectInput component (rules.md:275)
+ * Prevents unnecessary re-renders when parent components update
+ */
+export const SelectInput = memo(SelectInputComponent);
