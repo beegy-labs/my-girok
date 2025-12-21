@@ -82,12 +82,34 @@
 ### Key Components (V0.0.1)
 
 - **Navbar**: Fixed 80px, backdrop-blur, `font-mono-brand`
-- **LanguageSwitcher**: 2-char code, dropdown `rounded-input`
+- **LanguageSwitcher**: 2-char code (KO/EN/JA/HI), dropdown `rounded-soft`, no flags
 - **MenuCard**: `rounded-editorial-2xl`, border-2, hover lift
 - **MenuRow**: rounded-3xl border-2
 - **ViewToggle**: 56px touch targets, rounded-2xl
 - **TopWidget**: `min-h-[280px] rounded-editorial-lg`, `font-serif-title`
 - **Footer**: `pt-24 pb-32 px-8`, `tracking-brand-lg`, `font-mono-brand`
+
+### Locale System (2025-12)
+
+**Language/Country separation for UI localization and legal compliance.**
+
+See [i18n-locale.md](../i18n-locale.md) for full documentation.
+
+| Component          | Location        | Purpose                           |
+| ------------------ | --------------- | --------------------------------- |
+| LanguageSwitcher   | Header (Navbar) | UI language selection             |
+| Country Selector   | ConsentPage     | Legal jurisdiction for consent    |
+| localeConfig.ts    | utils/          | SSOT: Languages, Countries config |
+| regionDetection.ts | utils/          | Detection & cookie storage        |
+
+**Languages (4)**: Korean, English, Japanese, Hindi
+**Countries (5)**: KR, JP, US, GB, IN
+
+```typescript
+// Detection priority: Cookie → DB → Auto-detect
+const localeInfo = getUserLocale(userFromDB);
+// { language: 'ko', country: 'KR', timezone: 'Asia/Seoul', source: 'auto' }
+```
 
 ### Layout Components (2025 Consolidation)
 

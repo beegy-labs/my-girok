@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { Lock, KeyRound, ShieldCheck } from 'lucide-react';
 import { changePassword } from '../api/auth';
 import { TextInput, Button, Card, Alert, PageContainer, PageHeader } from '@my-girok/ui-components';
 
@@ -81,11 +82,14 @@ export default function ChangePasswordPage() {
         {error && <Alert variant="error">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           <TextInput
             id="currentPassword"
             label={t('changePassword.currentPassword')}
             type="password"
+            size="xl"
+            icon={<Lock size={20} />}
+            showPasswordToggle
             value={currentPassword}
             onChange={setCurrentPassword}
             required
@@ -97,6 +101,9 @@ export default function ChangePasswordPage() {
             id="newPassword"
             label={t('changePassword.newPassword')}
             type="password"
+            size="xl"
+            icon={<KeyRound size={20} />}
+            showPasswordToggle
             value={newPassword}
             onChange={setNewPassword}
             required
@@ -108,6 +115,9 @@ export default function ChangePasswordPage() {
             id="confirmPassword"
             label={t('changePassword.confirmPassword')}
             type="password"
+            size="xl"
+            icon={<ShieldCheck size={20} />}
+            showPasswordToggle
             value={confirmPassword}
             onChange={setConfirmPassword}
             required
@@ -116,7 +126,14 @@ export default function ChangePasswordPage() {
           />
 
           <div className="pt-2">
-            <Button variant="primary" type="submit" disabled={loading} loading={loading} fullWidth>
+            <Button
+              variant="primary"
+              type="submit"
+              size="xl"
+              disabled={loading}
+              loading={loading}
+              fullWidth
+            >
               {loading ? t('changePassword.changing') : t('changePassword.changeButton')}
             </Button>
           </div>

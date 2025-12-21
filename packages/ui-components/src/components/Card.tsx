@@ -12,7 +12,7 @@ export interface CardProps {
   /**
    * Border radius - multiple options for V0.0.1 editorial design
    */
-  radius?: 'default' | 'lg' | 'xl' | '2xl';
+  radius?: 'none' | 'subtle' | 'default' | 'md' | 'lg' | 'xl' | '2xl';
   className?: string;
   onClick?: () => void;
   /**
@@ -45,12 +45,16 @@ const paddingClasses = {
   responsive: 'p-4 sm:p-6 lg:p-8', // Mobile-first responsive padding
 } as const;
 
-// V0.0.1 Editorial radius options - SSOT tokens from tokens.css
+// V0.0.1 Radius options - SSOT tokens from tokens.css
+// Default uses subtle (8px) to remove sharpness while keeping rectangular appearance
 const radiusClasses = {
-  default: 'rounded-input', // SSOT: --border-radius-input: 24px
-  lg: 'rounded-editorial', // SSOT: --border-radius-editorial: 40px
-  xl: 'rounded-editorial-lg', // SSOT: --border-radius-editorial-lg: 48px
-  '2xl': 'rounded-editorial-2xl', // SSOT: --border-radius-editorial-2xl: 64px
+  none: 'rounded-none', // 0px - Sharp corners
+  subtle: 'rounded-subtle', // SSOT: 8px - Minimal rounding (removes sharpness)
+  default: 'rounded-soft', // SSOT: 12px - Soft corners (default)
+  md: 'rounded-input', // SSOT: 24px
+  lg: 'rounded-widget', // SSOT: 32px
+  xl: 'rounded-editorial', // SSOT: 40px
+  '2xl': 'rounded-editorial-lg', // SSOT: 48px
 } as const;
 
 /**

@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router';
 import { MainLayout, FullWidthLayout } from './layouts';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import ConsentPage from './pages/ConsentPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
@@ -40,6 +41,10 @@ export const router = createBrowserRouter([
       {
         path: 'login',
         element: <LoginPage />,
+      },
+      {
+        path: 'consent',
+        element: <ConsentPage />,
       },
       {
         path: 'register',

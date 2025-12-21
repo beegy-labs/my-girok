@@ -43,7 +43,7 @@ packages/ui-components/
 export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg' | 'xl'; // xl = 64px, font-black
-  rounded?: 'default' | 'editorial' | 'full'; // editorial = 24px
+  rounded?: 'default' | 'subtle' | 'editorial' | 'full';
   loading?: boolean;
   fullWidth?: boolean;
   icon?: ReactNode;
@@ -61,22 +61,23 @@ export interface ButtonProps {
 
 **Rounded Options:**
 
-| Option    | SSOT Token    | Usage                      |
-| --------- | ------------- | -------------------------- |
-| default   | rounded-2xl   | Secondary buttons (V0.0.1) |
-| editorial | rounded-input | Primary buttons (V0.0.1)   |
-| full      | rounded-full  | Hero buttons, circular     |
+| Option    | SSOT Token     | Size | Usage                    |
+| --------- | -------------- | ---- | ------------------------ |
+| default   | rounded-soft   | 8px  | **All buttons (V0.0.1)** |
+| subtle    | rounded-subtle | 4px  | Minimal rounding         |
+| editorial | rounded-input  | 24px | Legacy editorial style   |
+| full      | rounded-full   | 50%  | Hero buttons, circular   |
 
 **Usage:**
 
 ```tsx
-// Primary submit (xl size, editorial rounded)
-<Button variant="primary" size="xl" rounded="editorial" icon={<ArrowRight />}>
+// Primary submit (xl size, default soft rounded)
+<Button variant="primary" size="xl" icon={<ArrowRight />}>
   Sign In
 </Button>
 
 // Secondary action (lg size)
-<Button variant="secondary" size="lg" rounded="default">
+<Button variant="secondary" size="lg">
   Create Account
 </Button>
 
@@ -247,18 +248,21 @@ export interface CardProps {
   variant?: 'primary' | 'secondary' | 'elevated';
   interactive?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  radius?: 'default' | 'lg' | 'xl' | '2xl'; // V0.0.1 options
+  radius?: 'none' | 'subtle' | 'default' | 'md' | 'lg' | 'xl' | '2xl';
 }
 ```
 
 **Radius Options (V0.0.1):**
 
-| Option  | SSOT Token            | Usage              |
-| ------- | --------------------- | ------------------ |
-| default | rounded-xl            | Standard cards     |
-| lg      | rounded-editorial     | Editorial cards    |
-| xl      | rounded-editorial-lg  | Form cards         |
-| 2xl     | rounded-editorial-2xl | Section containers |
+| Option  | SSOT Token           | Size | Usage                  |
+| ------- | -------------------- | ---- | ---------------------- |
+| none    | rounded-none         | 0px  | Sharp corners          |
+| subtle  | rounded-subtle       | 4px  | Minimal rounding       |
+| default | rounded-soft         | 8px  | **All cards (V0.0.1)** |
+| md      | rounded-input        | 24px | Medium rounded         |
+| lg      | rounded-widget       | 32px | Large rounded          |
+| xl      | rounded-editorial    | 40px | Editorial cards        |
+| 2xl     | rounded-editorial-lg | 48px | Form cards             |
 
 ### Badge
 

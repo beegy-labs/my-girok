@@ -1,35 +1,40 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { useClickOutside } from '@my-girok/ui-components';
-
-// Static language options (2025 best practice - define constants outside component)
-const LANGUAGES = [
-  { code: 'ko', label: '한국어', flag: '🇰🇷' },
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'ja', label: '日本語', flag: '🇯🇵' },
-] as const;
+import {
+  getEnabledLanguages,
+  saveLanguageToCookie,
+  type SupportedLanguage,
+} from '../utils/regionDetection';
 
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentLanguage = LANGUAGES.find((lang) => lang.code === i18n.language) || LANGUAGES[0];
+  // Get languages from centralized config (cached)
+  const languages = useMemo(() => getEnabledLanguages(), []);
+
+  const currentLanguage = useMemo(
+    () => languages.find((lang) => lang.code === i18n.language) || languages[0],
+    [languages, i18n.language],
+  );
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
   }, []);
 
-  // Memoized toggle handler (2025 best practice)
+  // Memoized toggle handler
   const handleToggle = useCallback(() => {
     setIsOpen((prev) => !prev);
   }, []);
 
-  // Memoized language change handler (2025 best practice)
+  // Memoized language change handler
   const handleLanguageChange = useCallback(
-    (lng: string) => () => {
+    (lng: SupportedLanguage) => () => {
       i18n.changeLanguage(lng);
+      saveLanguageToCookie(lng);
       localStorage.setItem('language', lng);
       setIsOpen(false);
     },
@@ -39,7 +44,7 @@ export default function LanguageSwitcher() {
   // Close dropdown when clicking outside or pressing Escape
   useClickOutside(dropdownRef, isOpen, handleClose);
 
-  // V0.0.1 Style: Simple 2-letter code (KO, EN, JA)
+  // V0.0.1 Style: Simple 2-letter code (KO, EN, JA, HI)
   const langCode = i18n.language?.toUpperCase().slice(0, 2) || 'KO';
 
   return (
@@ -47,7 +52,7 @@ export default function LanguageSwitcher() {
       {/* V0.0.1: 48px touch target, font-black uppercase */}
       <button
         onClick={handleToggle}
-        aria-label={t('aria.selectLanguage', { current: currentLanguage.label })}
+        aria-label={t('aria.selectLanguage', { current: currentLanguage?.nativeName })}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         className="p-3 text-[12px] font-black uppercase text-theme-text-primary hover:bg-theme-bg-hover rounded-input transition-colors w-12 min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring tracking-editorial"
@@ -57,28 +62,25 @@ export default function LanguageSwitcher() {
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-4 w-48 bg-theme-bg-card border-2 border-theme-border-default rounded-input shadow-theme-lg overflow-hidden z-50 py-2"
+          className="absolute right-0 mt-4 w-40 bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-theme-lg overflow-hidden z-50 py-2"
           role="listbox"
           aria-label={t('aria.languageOptions')}
         >
-          {LANGUAGES.map((lang) => (
+          {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={handleLanguageChange(lang.code)}
               role="option"
               aria-selected={i18n.language === lang.code}
-              className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-inset focus-visible:ring-theme-focus-ring ${
+              className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-inset focus-visible:ring-theme-focus-ring ${
                 i18n.language === lang.code
-                  ? 'bg-theme-primary/10 text-theme-primary font-bold'
+                  ? 'bg-theme-primary/10 text-theme-primary font-medium'
                   : 'text-theme-text-secondary hover:bg-theme-bg-hover'
               }`}
             >
-              <span className="text-xl" aria-hidden="true">
-                {lang.flag}
-              </span>
-              <span>{lang.label}</span>
+              <span>{lang.nativeName}</span>
               {i18n.language === lang.code && (
-                <Check className="w-4 h-4 ml-auto text-theme-primary" aria-hidden="true" />
+                <Check className="w-4 h-4 text-theme-primary" aria-hidden="true" />
               )}
             </button>
           ))}

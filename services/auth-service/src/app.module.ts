@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OAuthConfigModule } from './oauth-config/oauth-config.module';
+import { LegalModule } from './legal/legal.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { OAuthConfigModule } from './oauth-config/oauth-config.module';
     AuthModule,
     UsersModule,
     OAuthConfigModule,
+    LegalModule,
     HealthModule,
   ],
   providers: [

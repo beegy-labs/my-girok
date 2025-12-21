@@ -17,6 +17,7 @@
 - **[rules.md](rules.md)** - Essential DO/DON'T rules (READ FIRST)
 - **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
 - **[ssot.md](ssot.md)** - Single Source of Truth strategy (Tailwind CSS 4, 2025)
+- **[i18n-locale.md](i18n-locale.md)** - Internationalization & Locale system (Language/Country separation)
 
 ### Development & Deployment
 
@@ -81,6 +82,9 @@
 
 **"I need to add design tokens or styling..."**
 → Read: `ssot.md` + `packages/design-tokens.md`
+
+**"I need to work on i18n or locale settings..."**
+→ Read: `i18n-locale.md` + `apps/web-main.md`
 
 ## Current Architecture
 
