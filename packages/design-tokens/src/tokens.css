@@ -233,12 +233,6 @@
   initial-value: 40px;
 }
 
-@property --nav-height-editorial {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 80px;
-}
-
 @property --spacing-nav {
   syntax: '<length>';
   inherits: true;
@@ -249,18 +243,6 @@
   syntax: '<length>';
   inherits: true;
   initial-value: 96px;
-}
-
-@property --spacing-footer-top {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 96px;
-}
-
-@property --spacing-footer-bottom {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 128px;
 }
 
 /* Transition Timing */
@@ -664,14 +646,49 @@
 
   /* Spacing - V0.0.1 AAA Workstation */
   --spacing-editorial: 40px;
-  --nav-height-editorial: 80px;
 
   /* Navigation & Layout Spacing - SSOT: generates pt-nav, h-nav, mb-section utilities */
   --spacing-nav: 80px;
   --spacing-section: 96px;
-  --spacing-footer-top: 96px;
-  --spacing-footer-bottom: 128px;
 
   /* Editorial Transitions */
   --ease-editorial: cubic-bezier(0.2, 1, 0.3, 1);
+
+  /* ============================================
+     INPUT COMPONENT TOKENS (2025 SSOT)
+     WCAG 2.5.5 AAA Touch Target Compliance
+     ============================================ */
+
+  /* Input Heights - SSOT for TextInput size variants */
+  --spacing-input-sm: 40px; /* Compact UI - minimum touch target */
+  --spacing-input: 48px; /* Default - WCAG 2.5.5 AAA */
+  --spacing-input-lg: 56px; /* Large - comfortable touch */
+  --spacing-input-xl: 64px; /* Extra Large - Editorial style */
+
+  /* Touch Target Minimums - generates spacing utilities */
+  --spacing-touch-aa: 44px; /* WCAG 2.5.5 AA minimum */
+
+  /* Min Height Utilities - for Button and Input components */
+  --min-height-touch-aa: 44px; /* Button sm/md: WCAG AA */
+  --min-height-input-lg: 56px; /* Button lg / Input lg */
+  --min-height-input-xl: 64px; /* Button xl / Input xl */
+
+  /* Input Border Radius - sm variant */
+  --border-radius-input-sm: 12px;
+
+  /* Brand Typography Sizes - SSOT
+   * Generates text-brand-* utilities for consistent typography
+   * Usage: text-brand-xs (11px), text-brand-sm (12px), etc.
+   */
+  --font-size-brand-2xs: 10px;
+  --font-size-brand-xs: 11px;
+  --font-size-brand-sm: 12px;
+  --font-size-brand-md: 13px;
+  --font-size-brand-base: 14px;
+  --font-size-brand-lg: 15px;
+  --font-size-brand-xl: 16px;
+  --font-size-brand-2xl: 18px;
+
+  /* Layout Container Widths - SSOT */
+  --width-auth-form: 576px; /* Auth form container - AAA comfortable */
 }

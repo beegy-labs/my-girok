@@ -6,14 +6,17 @@ export interface SelectOption {
   label: string;
 }
 
-// Static class definitions (defined outside component for performance)
-// V0.0.1 AAA Workstation Design System
-// Base select classes with WCAG compliance:
-// - min-h-[48px] for touch target (WCAG 2.5.5)
-// - text-base (16px) for readability
-// - focus ring via focusClasses (4px, SSOT)
+/**
+ * Static class definitions (defined outside component for performance)
+ * V0.0.1 AAA Workstation Design System
+ *
+ * Base select classes with WCAG compliance:
+ * - min-h-input = 48px (WCAG 2.5.5 AAA touch target) - SSOT
+ * - text-base (16px) for readability
+ * - focus ring via focusClasses (4px, SSOT)
+ */
 const baseSelectClasses =
-  'w-full min-h-[48px] px-4 py-3 text-base rounded-input bg-theme-bg-input text-theme-text-primary focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
+  'w-full min-h-input px-4 py-3 text-base rounded-input bg-theme-bg-input text-theme-text-primary focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer';
 
 const defaultBorderClasses = 'border border-theme-border-default';
 
@@ -116,7 +119,7 @@ export function SelectInput({
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-[12px] font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
+          className="block text-brand-sm font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
         >
           {label}
           {required && (

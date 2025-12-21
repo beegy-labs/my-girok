@@ -96,8 +96,8 @@ export default function LoginPage() {
           id="email"
           label={t('auth.emailAddress')}
           type="email"
-          size="lg"
-          icon={<Mail size={18} />}
+          size="xl"
+          icon={<Mail size={24} />}
           value={email}
           onChange={setEmail}
           required
@@ -109,8 +109,8 @@ export default function LoginPage() {
           id="password"
           label={t('auth.password')}
           type="password"
-          size="lg"
-          icon={<Lock size={18} />}
+          size="xl"
+          icon={<Lock size={24} />}
           showPasswordToggle
           value={password}
           onChange={setPassword}

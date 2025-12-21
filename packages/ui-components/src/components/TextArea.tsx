@@ -84,7 +84,7 @@ export function TextArea({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-[12px] font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
+          className="block text-brand-sm font-black uppercase tracking-brand text-theme-text-primary mb-3 ml-1"
         >
           {label}
           {props.required && (

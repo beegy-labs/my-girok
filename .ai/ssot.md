@@ -117,6 +117,50 @@ Tailwind CSS 4에서는 `@theme` 블록의 **CSS 변수 네이밍**에 따라 **
 | ------------ | ------------ | ------------------------------ |
 | `ring-[3px]` | `ring-[4px]` | V0.0.1 spec: outline-width 4px |
 
+### Brand Typography (SSOT)
+
+| Current (❌)  | SSOT (✅)         | Token                    |
+| ------------- | ----------------- | ------------------------ |
+| `text-[10px]` | `text-brand-2xs`  | `--font-size-brand-2xs`  |
+| `text-[11px]` | `text-brand-xs`   | `--font-size-brand-xs`   |
+| `text-[12px]` | `text-brand-sm`   | `--font-size-brand-sm`   |
+| `text-[13px]` | `text-brand-md`   | `--font-size-brand-md`   |
+| `text-[14px]` | `text-brand-base` | `--font-size-brand-base` |
+| `text-[15px]` | `text-brand-lg`   | `--font-size-brand-lg`   |
+| `text-[16px]` | `text-brand-xl`   | `--font-size-brand-xl`   |
+| `text-[18px]` | `text-brand-2xl`  | `--font-size-brand-2xl`  |
+
+### Input Component Heights (SSOT)
+
+| Current (❌)   | SSOT (✅)        | Token                   |
+| -------------- | ---------------- | ----------------------- |
+| `min-h-[44px]` | `min-h-touch-aa` | `--min-height-touch-aa` |
+| `min-h-[48px]` | `min-h-input`    | `--spacing-input`       |
+| `min-h-[56px]` | `min-h-input-lg` | `--min-height-input-lg` |
+| `min-h-[64px]` | `min-h-input-xl` | `--min-height-input-xl` |
+
+### 8pt Grid System Compliance
+
+모든 spacing은 8의 배수 (아이콘은 4 허용):
+
+| Tailwind Class | Value | 8pt Grid |
+| -------------- | ----- | -------- |
+| `py-2`         | 8px   | ✅       |
+| `py-3`         | 12px  | ❌       |
+| `py-4`         | 16px  | ✅       |
+| `py-5`         | 20px  | ❌       |
+| `py-6`         | 24px  | ✅       |
+| `gap-2`        | 8px   | ✅       |
+| `gap-3`        | 12px  | ❌       |
+| `gap-4`        | 16px  | ✅       |
+| `px-4`         | 16px  | ✅       |
+| `px-5`         | 20px  | ❌       |
+| `px-6`         | 24px  | ✅       |
+| `px-7`         | 28px  | ❌       |
+| `px-8`         | 32px  | ✅       |
+
+**Icon Sizes (4px intervals):** 12, 16, 20, 24px
+
 ## Benefits
 
 ### 1. 관리포인트 최소화
@@ -169,6 +213,14 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 - [x] `style={{ height: 'var(--nav-height-...)' }}` → `h-nav` 교체
 - [x] `ring-[3px]` → `ring-[4px]` 교체 (AAA spec)
 - [x] `strokeWidth={2}` or `{3}` → `strokeWidth={1.5}` 표준화
+- [x] `text-[11px]` → `text-brand-xs` 교체
+- [x] `text-[12px]` → `text-brand-sm` 교체
+- [x] `text-[14px]` → `text-brand-base` 교체
+- [x] `min-h-[44px]` → `min-h-touch-aa` 교체
+- [x] `min-h-[48px]` → `min-h-input` 교체
+- [x] `min-h-[56px]` → `min-h-input-lg` 교체
+- [x] `min-h-[64px]` → `min-h-input-xl` 교체
+- [x] 8pt Grid 위반 수정 (py-3→py-2, gap-3→gap-2, px-5→px-4/px-6, px-7→px-6)
 
 ## File Impact
 
