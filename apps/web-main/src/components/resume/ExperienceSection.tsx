@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -56,8 +56,11 @@ interface ExperienceSectionProps {
   t: (key: string) => string;
 }
 
-// Sortable Experience Card Component
-function SortableExperienceCard({
+/**
+ * Sortable Experience Card Component
+ * Memoized to prevent unnecessary re-renders (rules.md:275)
+ */
+const SortableExperienceCard = memo(function SortableExperienceCard({
   experience,
   index,
   onUpdate,
@@ -581,10 +584,13 @@ function SortableExperienceCard({
       </div>
     </div>
   );
-}
+});
 
-// Sortable Project Component
-function SortableProject({
+/**
+ * Sortable Project Component
+ * Memoized to prevent unnecessary re-renders (rules.md:275)
+ */
+const SortableProject = memo(function SortableProject({
   project,
   projectIndex,
   isExpanded,
@@ -904,10 +910,13 @@ function SortableProject({
       )}
     </div>
   );
-}
+});
 
-// Recursive Hierarchical Achievement Component
-function HierarchicalAchievement({
+/**
+ * Recursive Hierarchical Achievement Component
+ * Memoized to prevent unnecessary re-renders (rules.md:275)
+ */
+const HierarchicalAchievement = memo(function HierarchicalAchievement({
   achievement,
   depth,
   onUpdate,
@@ -1119,10 +1128,13 @@ function HierarchicalAchievement({
       )}
     </div>
   );
-}
+});
 
-// Sortable Achievement Component (for drag-and-drop at root level)
-function SortableAchievement({
+/**
+ * Sortable Achievement Component (for drag-and-drop at root level)
+ * Memoized to prevent unnecessary re-renders (rules.md:275)
+ */
+const SortableAchievement = memo(function SortableAchievement({
   achievement,
   achIndex,
   onUpdate,
@@ -1180,7 +1192,7 @@ function SortableAchievement({
       </div>
     </div>
   );
-}
+});
 
 // Main Experience Section Component
 export default function ExperienceSection({ experiences, onChange, t }: ExperienceSectionProps) {

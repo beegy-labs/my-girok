@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -26,8 +26,11 @@ interface EducationSectionProps {
   t: (key: string) => string;
 }
 
-// Sortable Education Card Component
-function SortableEducationCard({
+/**
+ * Sortable Education Card Component
+ * Memoized to prevent unnecessary re-renders (rules.md:275)
+ */
+const SortableEducationCard = memo(function SortableEducationCard({
   education,
   index,
   onUpdate,
@@ -262,7 +265,7 @@ function SortableEducationCard({
       </div>
     </div>
   );
-}
+});
 
 export default function EducationSection({ educations, onChange, t }: EducationSectionProps) {
   const sensors = useSensors(
