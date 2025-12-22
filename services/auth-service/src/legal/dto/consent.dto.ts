@@ -1,6 +1,6 @@
 import { IsBoolean, IsEnum, IsOptional, IsString, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ConsentType, LegalDocumentType } from '@prisma/client';
+import { ConsentType, LegalDocumentType } from '.prisma/auth-client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -9,23 +9,23 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class ConsentRequirementDto {
   @ApiProperty({ enum: ConsentType })
   @IsEnum(ConsentType)
-  type: ConsentType;
+  type!: ConsentType;
 
   @ApiProperty({ description: 'Whether this consent is required for registration' })
   @IsBoolean()
-  required: boolean;
+  required!: boolean;
 
   @ApiProperty({ enum: LegalDocumentType })
   @IsEnum(LegalDocumentType)
-  documentType: LegalDocumentType;
+  documentType!: LegalDocumentType;
 
   @ApiProperty({ description: 'i18n key for label' })
   @IsString()
-  labelKey: string;
+  labelKey!: string;
 
   @ApiProperty({ description: 'i18n key for description' })
   @IsString()
-  descriptionKey: string;
+  descriptionKey!: string;
 }
 
 /**
@@ -34,11 +34,11 @@ export class ConsentRequirementDto {
 export class CreateConsentDto {
   @ApiProperty({ enum: ConsentType })
   @IsEnum(ConsentType)
-  type: ConsentType;
+  type!: ConsentType;
 
   @ApiProperty({ description: 'Whether user agreed to this consent' })
   @IsBoolean()
-  agreed: boolean;
+  agreed!: boolean;
 
   @ApiPropertyOptional({ description: 'Legal document ID for audit trail' })
   @IsOptional()
@@ -54,7 +54,7 @@ export class CreateConsentsDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateConsentDto)
-  consents: CreateConsentDto[];
+  consents!: CreateConsentDto[];
 }
 
 /**
@@ -63,11 +63,11 @@ export class CreateConsentsDto {
 export class UpdateConsentDto {
   @ApiProperty({ enum: ConsentType })
   @IsEnum(ConsentType)
-  type: ConsentType;
+  type!: ConsentType;
 
   @ApiProperty({ description: 'New consent status' })
   @IsBoolean()
-  agreed: boolean;
+  agreed!: boolean;
 }
 
 /**
@@ -85,28 +85,28 @@ export class GetDocumentQueryDto {
  */
 export class LegalDocumentResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty({ enum: LegalDocumentType })
-  type: LegalDocumentType;
+  type!: LegalDocumentType;
 
   @ApiProperty()
-  version: string;
+  version!: string;
 
   @ApiProperty()
-  locale: string;
+  locale!: string;
 
   @ApiProperty()
-  title: string;
+  title!: string;
 
   @ApiProperty()
-  content: string;
+  content!: string;
 
   @ApiPropertyOptional()
   summary?: string;
 
   @ApiProperty()
-  effectiveDate: Date;
+  effectiveDate!: Date;
 }
 
 /**
@@ -114,16 +114,16 @@ export class LegalDocumentResponseDto {
  */
 export class UserConsentResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty({ enum: ConsentType })
-  consentType: ConsentType;
+  consentType!: ConsentType;
 
   @ApiProperty()
-  agreed: boolean;
+  agreed!: boolean;
 
   @ApiProperty()
-  agreedAt: Date;
+  agreedAt!: Date;
 
   @ApiPropertyOptional()
   withdrawnAt?: Date;

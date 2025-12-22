@@ -184,6 +184,8 @@
     "marketingPushNightDesc": "Receive push notifications during night hours (21:00-08:00). If declined, no notifications will be sent during these hours.",
     "personalizedAds": "Personalized Advertising",
     "personalizedAdsDesc": "Receive personalized content and ads based on your usage. This includes sharing information with third-party advertising platforms.",
+    "thirdPartySharing": "Third-Party Data Sharing",
+    "thirdPartySharingDesc": "We share your personal information with third parties for service improvement and partner collaboration. See our Privacy Policy for details on what data is shared and with whom.",
     "allRequired": "Agree to all required items",
     "allOptional": "Agree to all optional items",
     "requiredConsentsError": "Please agree to the required terms",
