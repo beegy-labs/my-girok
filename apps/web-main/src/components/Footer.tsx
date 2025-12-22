@@ -11,7 +11,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full mt-40 py-24 border-t-2 border-theme-border-default bg-theme-bg-secondary/40">
-      <div className="max-w-5xl mx-auto px-8">
+      <div className="w-full lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-10 sm:gap-14">
           {/* Brand & Version */}
           <div className="flex flex-col items-center md:items-start gap-4">

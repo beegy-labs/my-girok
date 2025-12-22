@@ -55,14 +55,14 @@ export default function LanguageSwitcher() {
         aria-label={t('aria.selectLanguage', { current: currentLanguage?.nativeName })}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className="p-3 text-[12px] font-black uppercase text-theme-text-primary hover:bg-theme-bg-hover rounded-input transition-colors w-12 min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring tracking-editorial"
+        className="p-3 text-[12px] font-black uppercase text-theme-text-primary hover:bg-theme-bg-hover rounded-soft transition-colors w-12 min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring tracking-editorial"
       >
         {langCode}
       </button>
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-4 w-40 bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-theme-lg overflow-hidden z-50 py-2"
+          className="absolute right-0 mt-4 w-48 bg-theme-bg-card border-2 border-theme-border-default rounded-soft shadow-theme-lg overflow-hidden z-50 py-2"
           role="listbox"
           aria-label={t('aria.languageOptions')}
         >

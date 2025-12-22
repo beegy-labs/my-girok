@@ -31,6 +31,28 @@ import {
   GripVertical,
 } from 'lucide-react';
 
+// Promo slides - shown when no ads available
+const PROMOS = [
+  {
+    tagKey: 'promo.premium.tag',
+    titleKey: 'promo.premium.title',
+    descKey: 'promo.premium.desc',
+    ctaKey: 'promo.premium.cta',
+  },
+  {
+    tagKey: 'promo.theme.tag',
+    titleKey: 'promo.theme.title',
+    descKey: 'promo.theme.desc',
+    ctaKey: 'promo.theme.cta',
+  },
+  {
+    tagKey: 'promo.mobile.tag',
+    titleKey: 'promo.mobile.title',
+    descKey: 'promo.mobile.desc',
+    ctaKey: 'promo.mobile.cta',
+  },
+];
+
 interface MenuItem {
   id: string;
   nameKey: string;
@@ -119,28 +141,6 @@ const MENU_ITEMS: MenuItem[] = [
 // Widget-enabled menu IDs (can be pinned to top)
 const WIDGET_ENABLED_IDS = ['schedule', 'finance'] as const;
 
-// Promo slides - V0.0.1 mockup style (i18n keys)
-const PROMOS = [
-  {
-    tagKey: 'promo.premium.tag',
-    titleKey: 'promo.premium.title',
-    descKey: 'promo.premium.desc',
-    ctaKey: 'promo.premium.cta',
-  },
-  {
-    tagKey: 'promo.theme.tag',
-    titleKey: 'promo.theme.title',
-    descKey: 'promo.theme.desc',
-    ctaKey: 'promo.theme.cta',
-  },
-  {
-    tagKey: 'promo.mobile.tag',
-    titleKey: 'promo.mobile.title',
-    descKey: 'promo.mobile.desc',
-    ctaKey: 'promo.mobile.cta',
-  },
-];
-
 /**
  * HomePage - V0.0.1 AAA Workstation Design
  * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
@@ -152,6 +152,9 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [pinnedWidgetId, setPinnedWidgetId] = useState<string | null>(null);
   const [currentPromo, setCurrentPromo] = useState(0);
+
+  // TODO: Replace with actual ad availability check (e.g., from AdSense callback or feature flag)
+  const isAdEnabled = true; // Set to true when AdSense is configured
 
   // Memoized pinned widget data
   const pinnedWidget = useMemo(
@@ -226,50 +229,118 @@ export default function HomePage() {
       >
         {isAuthenticated ? (
           /* Authenticated Dashboard - V0.0.1 Style */
-          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-16">
-            {/* Promo Carousel Section - V0.0.1 Style */}
+          <div className="w-full lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+            {/* Banner Section - Promo or AdSense */}
             <section
-              className="mb-16"
-              aria-label={t('aria.featuredPromotions', { defaultValue: 'Featured Promotions' })}
+              className="mb-8 sm:mb-12 lg:mb-16"
+              aria-label={
+                isAdEnabled
+                  ? t('aria.advertisement', { defaultValue: 'Advertisement' })
+                  : t('aria.featuredPromotions', { defaultValue: 'Featured Promotions' })
+              }
             >
-              <div className="relative group w-full h-[300px] rounded-soft border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-10 transition-all hover:border-theme-primary focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
-                <div className="flex-1 flex flex-col justify-center h-full" key={currentPromo}>
-                  <span className="text-[12px] font-black uppercase tracking-brand text-theme-primary mb-4 block font-mono-brand">
-                    {t(PROMOS[currentPromo].tagKey, { defaultValue: 'Premium' })}
-                  </span>
-                  <h2 className="text-3xl sm:text-5xl text-theme-text-primary mb-6 leading-tight font-serif-title">
-                    {t(PROMOS[currentPromo].titleKey, { defaultValue: 'Gold Edition.' })}
-                  </h2>
-                  <p className="text-lg font-bold text-theme-text-secondary mb-10 leading-relaxed max-w-xl">
-                    {t(PROMOS[currentPromo].descKey, {
-                      defaultValue: 'Unlimited storage and enhanced security.',
-                    })}
-                  </p>
-                  <button
-                    type="button"
-                    className="text-[12px] font-black uppercase tracking-brand-sm text-theme-primary border-b-2 border-theme-primary pb-2 hover:opacity-80 transition-all w-fit min-h-[44px]"
-                    aria-label={t('aria.viewPromoDetails', { defaultValue: 'View promo details' })}
+              {isAdEnabled ? (
+                /* ========== Google AdSense Banner (Full Width Responsive) ========== */
+                <>
+                  {/* Ad Label - Required by AdSense policy */}
+                  <div className="flex justify-end mb-1">
+                    <span className="text-[10px] text-theme-text-muted uppercase tracking-wide">
+                      {t('ad.sponsored', { defaultValue: 'Sponsored' })}
+                    </span>
+                  </div>
+
+                  {/* Ad Container - Full width responsive (AdSense recommended) */}
+                  <div
+                    className="ad-container relative w-full overflow-hidden rounded-soft border-2 border-theme-border-default bg-theme-bg-card"
+                    data-ad-slot="homepage-banner"
+                    data-ad-format="auto"
+                    data-full-width-responsive="true"
                   >
-                    {t(PROMOS[currentPromo].ctaKey, { defaultValue: 'Learn More' })}
-                  </button>
+                    {/* Responsive banner - min-height prevents CLS, allows larger ads */}
+                    <div className="w-full min-h-[100px] sm:min-h-[120px] lg:min-h-[160px] flex items-center justify-center">
+                      {/* Placeholder for development - will be replaced by AdSense */}
+                      <div className="ad-placeholder w-full min-h-[100px] sm:min-h-[120px] lg:min-h-[160px] border-2 border-dashed border-theme-border-subtle rounded-soft flex flex-col items-center justify-center bg-theme-bg-secondary/50 gap-2">
+                        <span className="text-sm font-mono text-theme-text-muted">
+                          {t('ad.placeholder', { defaultValue: 'Advertisement' })}
+                        </span>
+                        <span className="text-[10px] font-mono text-theme-text-muted/60">
+                          Full Width Responsive
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ========== Self Promo Carousel ========== */
+                <div className="relative group w-full min-h-[200px] sm:min-h-[240px] lg:min-h-[300px] rounded-soft border-2 border-theme-border-default bg-theme-bg-card shadow-theme-md overflow-hidden transition-all hover:border-theme-primary focus-within:ring-[4px] focus-within:ring-theme-focus-ring">
+                  {/* Content wrapper */}
+                  <div className="h-full p-4 sm:p-8 lg:p-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 lg:gap-10">
+                    {/* Text content */}
+                    <div className="flex-1 flex flex-col justify-center" key={currentPromo}>
+                      <span className="text-[10px] sm:text-[11px] lg:text-[12px] font-black uppercase tracking-brand text-theme-primary mb-2 sm:mb-3 lg:mb-4 block font-mono-brand">
+                        {t(PROMOS[currentPromo].tagKey, { defaultValue: 'Premium' })}
+                      </span>
+                      <h2 className="text-xl sm:text-3xl lg:text-5xl text-theme-text-primary mb-2 sm:mb-4 lg:mb-6 leading-tight font-serif-title">
+                        {t(PROMOS[currentPromo].titleKey, { defaultValue: 'Gold Edition.' })}
+                      </h2>
+                      <p className="hidden sm:block text-sm lg:text-lg font-bold text-theme-text-secondary mb-4 sm:mb-6 lg:mb-10 leading-relaxed max-w-xl">
+                        {t(PROMOS[currentPromo].descKey, {
+                          defaultValue: 'Unlimited storage and enhanced security.',
+                        })}
+                      </p>
+                      <button
+                        type="button"
+                        className="text-[10px] sm:text-[11px] lg:text-[12px] font-black uppercase tracking-brand-sm text-theme-primary border-b-2 border-theme-primary pb-1 sm:pb-2 hover:opacity-80 transition-all w-fit min-h-[36px] sm:min-h-[44px]"
+                        aria-label={t('aria.viewPromoDetails', {
+                          defaultValue: 'View promo details',
+                        })}
+                      >
+                        {t(PROMOS[currentPromo].ctaKey, { defaultValue: 'Learn More' })}
+                      </button>
+                    </div>
+
+                    {/* Navigation buttons */}
+                    <div className="flex gap-2 sm:gap-3 lg:gap-4 self-end sm:self-center">
+                      <button
+                        onClick={handlePrevPromo}
+                        className="p-2 sm:p-3 lg:p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[40px] sm:min-w-[48px] lg:min-w-[56px] min-h-[40px] sm:min-h-[48px] lg:min-h-[56px] flex items-center justify-center"
+                        aria-label={t('aria.previousPromo', { defaultValue: 'Previous Promo' })}
+                      >
+                        <ChevronLeft
+                          className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                          aria-hidden="true"
+                        />
+                      </button>
+                      <button
+                        onClick={handleNextPromo}
+                        className="p-2 sm:p-3 lg:p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[40px] sm:min-w-[48px] lg:min-w-[56px] min-h-[40px] sm:min-h-[48px] lg:min-h-[56px] flex items-center justify-center"
+                        aria-label={t('aria.nextPromo', { defaultValue: 'Next Promo' })}
+                      >
+                        <ChevronRight
+                          className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Slide indicators - mobile only */}
+                  <div className="flex sm:hidden justify-center gap-2 pb-4">
+                    {PROMOS.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentPromo(index)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          currentPromo === index
+                            ? 'bg-theme-primary w-4'
+                            : 'bg-theme-border-default'
+                        }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={handlePrevPromo}
-                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
-                    aria-label={t('aria.previousPromo', { defaultValue: 'Previous Promo' })}
-                  >
-                    <ChevronLeft size={24} aria-hidden="true" />
-                  </button>
-                  <button
-                    onClick={handleNextPromo}
-                    className="p-5 border-2 border-theme-border-default rounded-full hover:bg-theme-bg-secondary focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring transition-all shadow-theme-sm min-w-[56px] min-h-[56px] flex items-center justify-center"
-                    aria-label={t('aria.nextPromo', { defaultValue: 'Next Promo' })}
-                  >
-                    <ChevronRight size={24} aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
+              )}
             </section>
 
             {/* Workstation Section - V0.0.1 Style */}
