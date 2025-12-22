@@ -1,61 +1,61 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { ConsentType, LegalDocumentType } from '.prisma/auth-client';
-import { CreateConsentDto, ConsentRequirementDto } from './dto/consent.dto';
+import { CreateConsentDto } from './dto/consent.dto';
+import {
+  getConsentPolicy,
+  localeToRegion,
+  type ConsentRequirement,
+} from './config/consent-policy.config';
 
 /**
- * Consent requirements configuration
- * Based on 2025 GDPR, CCPA, PIPA, APPI requirements
+ * Legal service for managing consent requirements and legal documents
+ *
+ * Handles GDPR/CCPA/PIPA/APPI 2025 compliant consent management including:
+ * - Region-specific consent policies
+ * - Legal document versioning
+ * - User consent tracking with audit trail
+ *
+ * @example
+ * ```typescript
+ * const legalService = app.get(LegalService);
+ *
+ * // Get consent requirements for Korean users
+ * const requirements = await legalService.getConsentRequirements('ko');
+ *
+ * // Create user consents
+ * await legalService.createConsents(userId, consents, ipAddress, userAgent);
+ * ```
  */
-const CONSENT_REQUIREMENTS: ConsentRequirementDto[] = [
-  {
-    type: ConsentType.TERMS_OF_SERVICE,
-    required: true,
-    documentType: LegalDocumentType.TERMS_OF_SERVICE,
-    labelKey: 'consent.termsOfService',
-    descriptionKey: 'consent.termsOfServiceDesc',
-  },
-  {
-    type: ConsentType.PRIVACY_POLICY,
-    required: true,
-    documentType: LegalDocumentType.PRIVACY_POLICY,
-    labelKey: 'consent.privacyPolicy',
-    descriptionKey: 'consent.privacyPolicyDesc',
-  },
-  {
-    type: ConsentType.MARKETING_EMAIL,
-    required: false,
-    documentType: LegalDocumentType.MARKETING_POLICY,
-    labelKey: 'consent.marketingEmail',
-    descriptionKey: 'consent.marketingEmailDesc',
-  },
-  {
-    type: ConsentType.MARKETING_PUSH,
-    required: false,
-    documentType: LegalDocumentType.MARKETING_POLICY,
-    labelKey: 'consent.marketingPush',
-    descriptionKey: 'consent.marketingPushDesc',
-  },
-  {
-    type: ConsentType.PERSONALIZED_ADS,
-    required: false,
-    documentType: LegalDocumentType.PERSONALIZED_ADS,
-    labelKey: 'consent.personalizedAds',
-    descriptionKey: 'consent.personalizedAdsDesc',
-  },
-];
-
 @Injectable()
 export class LegalService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Get consent requirements for registration
-   * Returns list of consents with their requirements and latest document versions
+   * Get consent requirements for registration based on user's locale/region
+   *
+   * Returns region-specific consent requirements with associated document info.
+   * Uses SSOT consent-policy.config.ts for region-based policies.
+   *
+   * @param locale - User's locale (ko, en, ja, etc.). Defaults to 'ko'
+   * @returns Array of consent requirements with document metadata
+   *
+   * @example
+   * ```typescript
+   * // Get Korean consent requirements
+   * const requirements = await legalService.getConsentRequirements('ko');
+   * // Returns: [{ type: 'TERMS_OF_SERVICE', required: true, document: {...} }, ...]
+   *
+   * // Get EU (GDPR) consent requirements
+   * const euRequirements = await legalService.getConsentRequirements('de-DE');
+   * ```
    */
   async getConsentRequirements(locale: string = 'ko') {
+    const region = localeToRegion(locale);
+    const policy = getConsentPolicy(region);
+
     const requirements = await Promise.all(
-      CONSENT_REQUIREMENTS.map(async (req) => {
+      policy.requirements.map(async (req: ConsentRequirement) => {
         const document = await this.prisma.legalDocument.findFirst({
           where: {
             type: req.documentType,
@@ -72,17 +72,44 @@ export class LegalService {
         });
 
         return {
-          ...req,
+          type: req.type,
+          required: req.required,
+          labelKey: req.labelKey,
+          descriptionKey: req.descriptionKey,
+          documentType: req.documentType,
+          nightTimeHours: req.nightTimeHours,
           document,
         };
       }),
     );
 
-    return requirements;
+    return {
+      region: policy.region,
+      law: policy.law,
+      nightTimePushRestriction: policy.nightTimePushRestriction,
+      requirements,
+    };
   }
 
   /**
    * Get a specific legal document by type and locale
+   *
+   * Returns the latest active version of the document.
+   * Falls back to Korean locale if the requested locale is not available.
+   *
+   * @param type - Legal document type (TERMS_OF_SERVICE, PRIVACY_POLICY, etc.)
+   * @param locale - Document locale (ko, en, ja). Defaults to 'ko'
+   * @returns Full legal document with content and metadata
+   * @throws NotFoundException if document is not found
+   *
+   * @example
+   * ```typescript
+   * // Get Terms of Service in English
+   * const tos = await legalService.getDocument(LegalDocumentType.TERMS_OF_SERVICE, 'en');
+   *
+   * // Get Privacy Policy (defaults to Korean)
+   * const privacy = await legalService.getDocument(LegalDocumentType.PRIVACY_POLICY);
+   * ```
    */
   async getDocument(
     type: LegalDocumentType,
@@ -121,7 +148,18 @@ export class LegalService {
   }
 
   /**
-   * Get document by ID
+   * Get legal document by unique ID
+   *
+   * Retrieves a specific document version for audit trail purposes.
+   *
+   * @param id - Document UUID
+   * @returns Legal document with full metadata
+   * @throws NotFoundException if document is not found
+   *
+   * @example
+   * ```typescript
+   * const document = await legalService.getDocumentById('uuid-here');
+   * ```
    */
   async getDocumentById(id: string) {
     const document = await this.prisma.legalDocument.findUnique({
@@ -137,6 +175,29 @@ export class LegalService {
 
   /**
    * Create user consents during registration
+   *
+   * Records user's consent decisions with full audit trail including
+   * IP address, user agent, and document version at time of consent.
+   *
+   * @param userId - User UUID
+   * @param consents - Array of consent decisions
+   * @param ipAddress - Client IP address for audit
+   * @param userAgent - Client user agent for audit
+   * @returns Array of created consent records
+   *
+   * @example
+   * ```typescript
+   * await legalService.createConsents(
+   *   userId,
+   *   [
+   *     { type: ConsentType.TERMS_OF_SERVICE, agreed: true, documentId: 'doc-id' },
+   *     { type: ConsentType.PRIVACY_POLICY, agreed: true, documentId: 'doc-id' },
+   *     { type: ConsentType.MARKETING_EMAIL, agreed: false },
+   *   ],
+   *   '192.168.1.1',
+   *   'Mozilla/5.0...'
+   * );
+   * ```
    */
   async createConsents(
     userId: string,
@@ -174,7 +235,18 @@ export class LegalService {
   }
 
   /**
-   * Get user's current consents
+   * Get user's current active consents
+   *
+   * Returns all consents that have not been withdrawn.
+   *
+   * @param userId - User UUID
+   * @returns Array of active user consents with document info
+   *
+   * @example
+   * ```typescript
+   * const consents = await legalService.getUserConsents(userId);
+   * // Returns: [{ consentType: 'MARKETING_EMAIL', agreed: true, agreedAt: Date, ... }]
+   * ```
    */
   async getUserConsents(userId: string) {
     const consents = await this.prisma.userConsent.findMany({
@@ -200,20 +272,46 @@ export class LegalService {
 
   /**
    * Update (withdraw or re-consent) a specific consent
+   *
+   * Allows users to withdraw optional consents or re-consent to previously withdrawn ones.
+   * Required consents (TERMS_OF_SERVICE, PRIVACY_POLICY) cannot be withdrawn.
+   *
+   * @param userId - User UUID
+   * @param consentType - Type of consent to update
+   * @param agreed - New consent status
+   * @param locale - User's locale for region policy lookup (defaults to 'ko')
+   * @param ipAddress - Client IP address for audit
+   * @param userAgent - Client user agent for audit
+   * @returns Updated or created consent record
+   * @throws BadRequestException if attempting to withdraw required consent
+   *
+   * @example
+   * ```typescript
+   * // Withdraw marketing email consent
+   * await legalService.updateConsent(userId, ConsentType.MARKETING_EMAIL, false);
+   *
+   * // Re-consent to push notifications
+   * await legalService.updateConsent(userId, ConsentType.MARKETING_PUSH, true);
+   * ```
    */
   async updateConsent(
     userId: string,
     consentType: ConsentType,
     agreed: boolean,
+    locale: string = 'ko',
     ipAddress?: string,
     userAgent?: string,
   ) {
     const now = new Date();
 
-    // Check if consent type is required
-    const requirement = CONSENT_REQUIREMENTS.find((r) => r.type === consentType);
+    // Get region-specific requirements from SSOT config
+    const region = localeToRegion(locale);
+    const policy = getConsentPolicy(region);
+    const requirement = policy.requirements.find((r: ConsentRequirement) => r.type === consentType);
+
+    // Check if consent type is required and cannot be withdrawn
     if (requirement?.required && !agreed) {
-      throw new Error('Cannot withdraw required consent');
+      throw new BadRequestException('Cannot withdraw required consent');
     }
 
     // Find existing active consent
@@ -234,13 +332,15 @@ export class LegalService {
       });
     } else if (!existingConsent && agreed) {
       // Create new consent
-      const document = await this.prisma.legalDocument.findFirst({
-        where: {
-          type: requirement?.documentType,
-          isActive: true,
-        },
-        orderBy: { effectiveDate: 'desc' },
-      });
+      const document = requirement
+        ? await this.prisma.legalDocument.findFirst({
+            where: {
+              type: requirement.documentType,
+              isActive: true,
+            },
+            orderBy: { effectiveDate: 'desc' },
+          })
+        : null;
 
       return this.prisma.userConsent.create({
         data: {
@@ -260,10 +360,29 @@ export class LegalService {
   }
 
   /**
-   * Check if user has all required consents
+   * Check if user has all required consents for their region
+   *
+   * Validates that user has agreed to all mandatory consents
+   * (typically TERMS_OF_SERVICE and PRIVACY_POLICY).
+   *
+   * @param userId - User UUID
+   * @param locale - User's locale for region policy lookup (defaults to 'ko')
+   * @returns True if user has all required consents
+   *
+   * @example
+   * ```typescript
+   * const hasRequired = await legalService.hasRequiredConsents(userId);
+   * if (!hasRequired) {
+   *   throw new ForbiddenException('Missing required consents');
+   * }
+   * ```
    */
-  async hasRequiredConsents(userId: string): Promise<boolean> {
-    const requiredTypes = CONSENT_REQUIREMENTS.filter((r) => r.required).map((r) => r.type);
+  async hasRequiredConsents(userId: string, locale: string = 'ko'): Promise<boolean> {
+    const region = localeToRegion(locale);
+    const policy = getConsentPolicy(region);
+    const requiredTypes = policy.requirements
+      .filter((r: ConsentRequirement) => r.required)
+      .map((r: ConsentRequirement) => r.type);
 
     const consents = await this.prisma.userConsent.findMany({
       where: {

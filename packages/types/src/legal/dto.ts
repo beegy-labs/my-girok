@@ -21,7 +21,7 @@ export interface ConsentSubmission {
 }
 
 /**
- * Legal document payload
+ * Legal document payload (public response)
  */
 export interface LegalDocumentPayload {
   id: string;
@@ -32,6 +32,26 @@ export interface LegalDocumentPayload {
   content: string;
   summary?: string;
   effectiveDate: Date;
+}
+
+/**
+ * Legal document with full metadata (internal use)
+ * Includes isActive, createdAt, updatedAt for admin/service operations
+ */
+export interface LegalDocumentFull extends LegalDocumentPayload {
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Consent requirement with document reference
+ * Extended consent requirement including associated document type
+ */
+export interface ConsentRequirementWithDocument extends ConsentRequirement {
+  documentType: LegalDocumentType;
+  /** Night-time restriction hours (if applicable) */
+  nightTimeHours?: { start: number; end: number };
 }
 
 /**
