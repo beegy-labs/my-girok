@@ -18,6 +18,10 @@
 - **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
 - **[ssot.md](ssot.md)** - Single Source of Truth strategy (Tailwind CSS 4, 2025)
 - **[i18n-locale.md](i18n-locale.md)** - Internationalization & Locale system (Language/Country separation)
+- **[design-system-principles.md](design-system-principles.md)** - Design system guidelines
+- **[resume.md](resume.md)** - Resume feature documentation
+- **[user-preferences.md](user-preferences.md)** - User preferences system
+- **[pull-requests.md](pull-requests.md)** - PR creation and review guidelines
 
 ### Development & Deployment
 
@@ -31,12 +35,13 @@
 
 ### Services (Implemented)
 
-- **[services/auth-service.md](services/auth-service.md)** - Authentication & authorization (REST + gRPC)
-- **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST + gRPC)
+- **[services/auth-service.md](services/auth-service.md)** - Authentication, authorization & Legal/Consent API (REST)
+- **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST)
 
 ### Frontend Apps (Implemented)
 
 - **[apps/web-main.md](apps/web-main.md)** - Main web application (React + Vite)
+- **[apps/storybook.md](apps/storybook.md)** - Storybook component documentation
 
 ### Shared Packages
 
@@ -85,6 +90,19 @@
 
 **"I need to work on i18n or locale settings..."**
 → Read: `i18n-locale.md` + `apps/web-main.md`
+
+**"I need to work on resume features..."**
+→ Read: `resume.md` + `services/personal-service.md`
+
+**"I need to work on Storybook..."**
+→ Read: `apps/storybook.md`
+
+**"I need to create a PR..."**
+→ Read: `pull-requests.md` + `git-flow.md`
+
+**"I need to work on legal/consent features..."**
+→ Read: `services/auth-service.md` (Legal API section) + `packages/types.md` (Legal Types)
+→ Policy: `docs/policies/LEGAL_CONSENT.md`
 
 ## Current Architecture
 

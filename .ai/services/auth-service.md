@@ -8,21 +8,23 @@ Handles user authentication, session management, and access control.
 
 ## Implementation Status
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| REST API | ✅ Implemented | External-facing API |
-| gRPC API | 🔲 Planned | For internal BFF communication |
-| Rust Migration | 🔲 Planned | Target: Rust + Axum + Tonic |
+| Component      | Status         | Notes                          |
+| -------------- | -------------- | ------------------------------ |
+| REST API       | ✅ Implemented | External-facing API            |
+| gRPC API       | 🔲 Planned     | For internal BFF communication |
+| Rust Migration | 🔲 Planned     | Target: Rust + Axum + Tonic    |
 
 ## Tech Stack
 
 **Current:**
+
 - **Framework**: NestJS 11 + TypeScript 5.9
 - **Database**: PostgreSQL 16 + Prisma 6
 - **Auth**: Passport.js + JWT
 - **Protocols**: REST (external)
 
 **Planned (Future):**
+
 - **Framework**: Rust + Axum (REST) + Tonic (gRPC)
 - **Database**: PostgreSQL + SQLx
 - **Protocols**: REST :3002 (external) + gRPC :50051 (internal)
@@ -98,6 +100,7 @@ Auth Service: /v1/auth/register
 ```
 
 **Example URLs:**
+
 - Registration: `https://my-api-dev.girok.dev/auth/v1/auth/register`
 - Login: `https://my-api-dev.girok.dev/auth/v1/auth/login`
 - Profile: `https://my-api-dev.girok.dev/auth/v1/users/me`
@@ -390,15 +393,18 @@ getAllUsers() {
 ## Integration Points
 
 ### Current (REST)
+
 - **web-main**: Direct REST calls for auth (login, register, profile)
 - **personal-service**: No direct integration (same DB user ID)
 
 ### Planned (gRPC) 🔲
+
 - **graphql-bff**: Login, register, token validation, user lookup
 - **ws-gateway**: Token validation for WebSocket auth
 - **personal-service**: User lookup
 
 ### Events (NATS) 🔲 Planned
+
 - Publish: `auth.user.registered`, `auth.user.logged_in`, `auth.user.password_changed`
 - Subscribe: None
 
@@ -510,6 +516,121 @@ kakaoAuth() {}
 kakaoAuthCallback(@Req() req, @Res() res) {
   const tokens = this.authService.generateTokens(req.user);
   res.redirect(`${FRONTEND_URL}?token=${tokens.accessToken}`);
+}
+```
+
+## Legal & Consent API (`/v1/legal`)
+
+### REST Endpoints
+
+```typescript
+// Get consent requirements (public - no auth)
+GET /v1/legal/consent-requirements
+Query: { locale?: string }  // 'ko' | 'en' | 'ja'
+Response: ConsentRequirement[]
+
+// Get legal document by type (public - no auth)
+GET /v1/legal/documents/:type
+Params: type = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY' | 'MARKETING_POLICY' | 'PERSONALIZED_ADS'
+Query: { locale?: string, version?: string }
+Response: LegalDocumentResponseDto
+
+// Get legal document by ID (public - no auth)
+GET /v1/legal/documents/id/:id
+Response: LegalDocumentResponseDto
+
+// Get current user's consents (auth required)
+GET /v1/legal/consents
+Headers: Authorization: Bearer {token}
+Response: UserConsentResponseDto[]
+
+// Create consents during registration (auth required)
+POST /v1/legal/consents
+Headers: Authorization: Bearer {token}
+Body: { consents: [{ type: ConsentType, agreed: boolean }] }
+Response: UserConsentResponseDto[]
+
+// Update consent (agree or withdraw) (auth required)
+PUT /v1/legal/consents/:type
+Headers: Authorization: Bearer {token}
+Body: { agreed: boolean }
+Response: UserConsentResponseDto
+
+// Check if user has all required consents (auth required)
+GET /v1/legal/consents/check
+Headers: Authorization: Bearer {token}
+Response: { hasAllRequired: boolean }
+```
+
+### Consent Types
+
+```typescript
+enum ConsentType {
+  TERMS_OF_SERVICE      // [Required] 이용약관 동의
+  PRIVACY_POLICY        // [Required] 개인정보 수집·이용 동의
+  MARKETING_EMAIL       // [Optional] 마케팅 이메일 수신 동의
+  MARKETING_PUSH        // [Optional] 마케팅 푸시 알림 동의
+  MARKETING_PUSH_NIGHT  // [Optional] 야간 푸시 알림 동의 (21:00-08:00)
+  MARKETING_SMS         // [Optional] 마케팅 SMS 수신 동의
+  PERSONALIZED_ADS      // [Optional] 맞춤형 광고 동의
+  THIRD_PARTY_SHARING   // [Optional] 제3자 정보 제공 동의
+}
+
+enum LegalDocumentType {
+  TERMS_OF_SERVICE      // 이용약관
+  PRIVACY_POLICY        // 개인정보처리방침
+  MARKETING_POLICY      // 마케팅 정보 수신 동의
+  PERSONALIZED_ADS      // 맞춤형 광고 동의
+}
+```
+
+### Registration with Consents Flow
+
+```typescript
+1. Client fetches: GET /v1/legal/consent-requirements
+2. User reviews documents and agrees to required/optional consents
+3. Client sends registration:
+   POST /v1/auth/register
+   Body: {
+     email, username, password, name,
+     consents: [{ type: ConsentType, agreed: boolean }],
+     language?: string,  // User's locale
+     country?: string,   // Region for consent policy
+     timezone?: string   // User's timezone
+   }
+4. Server creates user + consent records in transaction
+5. Response: { user, accessToken, refreshToken }
+```
+
+### Database Models
+
+```prisma
+model LegalDocument {
+  id            String           @id @default(uuid())
+  type          LegalDocumentType
+  version       String           // "1.0.0", "1.1.0"
+  locale        String           @default("ko")
+  title         String
+  content       String           @db.Text
+  summary       String?          @db.Text
+  effectiveDate DateTime
+  isActive      Boolean          @default(true)
+  consents      UserConsent[]
+}
+
+model UserConsent {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User
+  consentType     ConsentType
+  documentId      String?
+  document        LegalDocument?
+  documentVersion String?
+  agreed          Boolean          @default(true)
+  agreedAt        DateTime
+  withdrawnAt     DateTime?
+  ipAddress       String?          // Audit trail
+  userAgent       String?          // Audit trail
 }
 ```
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Resume,
@@ -35,6 +35,40 @@ interface ResumeFormProps {
   onChange?: (data: CreateResumeDto) => void;
 }
 
+// Initial collapsed sections state - extracted to module scope (2025 best practice)
+const INITIAL_COLLAPSED_SECTIONS: Record<string, boolean> = {
+  basicInfo: false,
+  skills: false,
+  experience: false,
+  education: false,
+  certificates: false,
+  military: false,
+  applicationReason: false,
+  coverLetter: false,
+} as const;
+
+// Default sections order - extracted to module scope (2025 best practice)
+const DEFAULT_SECTIONS = [
+  { id: '1', type: SectionType.SKILLS, order: 0, visible: true },
+  { id: '2', type: SectionType.EXPERIENCE, order: 1, visible: true },
+  { id: '3', type: SectionType.PROJECT, order: 2, visible: true },
+  { id: '4', type: SectionType.EDUCATION, order: 3, visible: true },
+  { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
+] as const;
+
+/**
+ * Format file size in human-readable format (2025 best practice: pure function outside component)
+ * @param bytes - File size in bytes
+ * @returns Formatted string (e.g., "1.5 MB")
+ */
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
+};
+
 /**
  * ResumeForm - V0.0.1 AAA Workstation Design
  * WCAG 2.1 AAA compliant with 7:1+ contrast ratio
@@ -42,17 +76,10 @@ interface ResumeFormProps {
 export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormProps) {
   const { t } = useTranslation();
 
-  // Collapsible section states
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    basicInfo: false,
-    skills: false,
-    experience: false,
-    education: false,
-    certificates: false,
-    military: false,
-    applicationReason: false,
-    coverLetter: false,
-  });
+  // Collapsible section states - using module-scope constant (2025 best practice)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(
+    INITIAL_COLLAPSED_SECTIONS,
+  );
 
   // Curried handler for toggling section (2025 React best practice)
   const toggleSection = useCallback(
@@ -160,15 +187,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const [profilePhotoTempKey, setProfilePhotoTempKey] = useState<string | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null); // Presigned URL from temp upload
 
-  // Section ordering
+  // Section ordering - using module-scope constant (2025 best practice)
   const [sections, setSections] = useState(
-    resume?.sections?.sort((a, b) => a.order - b.order) || [
-      { id: '1', type: SectionType.SKILLS, order: 0, visible: true },
-      { id: '2', type: SectionType.EXPERIENCE, order: 1, visible: true },
-      { id: '3', type: SectionType.PROJECT, order: 2, visible: true },
-      { id: '4', type: SectionType.EDUCATION, order: 3, visible: true },
-      { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
-    ],
+    resume?.sections?.sort((a, b) => a.order - b.order) || [...DEFAULT_SECTIONS],
   );
 
   // Load draft from localStorage on mount
@@ -242,105 +263,122 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   }, [resume?.id, loadAttachments]);
 
-  const handleFileUpload = async (file: File, type: AttachmentType) => {
-    if (!resume?.id) {
-      setUploadError(t('resume.form.saveResumeFirstUpload'));
-      return;
-    }
+  // Memoized file upload handler (2025 React best practice)
+  const handleFileUpload = useCallback(
+    async (file: File, type: AttachmentType) => {
+      if (!resume?.id) {
+        setUploadError(t('resume.form.saveResumeFirstUpload'));
+        return;
+      }
 
-    setUploading(true);
-    setUploadError(null);
+      setUploading(true);
+      setUploadError(null);
 
-    try {
-      const attachment = await uploadAttachment(resume.id, file, type);
-      setAttachments([...attachments, attachment]);
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      setUploadError(err.response?.data?.message || t('resume.form.uploadFailed'));
-    } finally {
-      setUploading(false);
-    }
-  };
+      try {
+        const attachment = await uploadAttachment(resume.id, file, type);
+        setAttachments((prev) => [...prev, attachment]);
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        setUploadError(err.response?.data?.message || t('resume.form.uploadFailed'));
+      } finally {
+        setUploading(false);
+      }
+    },
+    [resume?.id, t],
+  );
 
-  const handleDeleteAttachment = async (attachmentId: string) => {
-    if (!resume?.id) return;
+  // Memoized delete attachment handler (2025 React best practice)
+  const handleDeleteAttachment = useCallback(
+    async (attachmentId: string) => {
+      if (!resume?.id) return;
 
-    try {
-      await deleteAttachment(resume.id, attachmentId);
-      setAttachments(attachments.filter((a) => a.id !== attachmentId));
-    } catch (error) {
-      console.error('Failed to delete attachment:', error);
-    }
-  };
+      try {
+        await deleteAttachment(resume.id, attachmentId);
+        setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+      } catch (error) {
+        console.error('Failed to delete attachment:', error);
+      }
+    },
+    [resume?.id],
+  );
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
-  };
+  // Memoized attachment lists by type (2025 best practice - useMemo for derived arrays)
+  const profilePhotoAttachments = useMemo(
+    () => attachments.filter((a) => a.type === AttachmentType.PROFILE_PHOTO),
+    [attachments],
+  );
+  const portfolioAttachments = useMemo(
+    () => attachments.filter((a) => a.type === AttachmentType.PORTFOLIO),
+    [attachments],
+  );
+  const certificateAttachments = useMemo(
+    () => attachments.filter((a) => a.type === AttachmentType.CERTIFICATE),
+    [attachments],
+  );
 
-  const getAttachmentsByType = (type: AttachmentType) => attachments.filter((a) => a.type === type);
-
-  const handleSaveDraft = () => {
+  // Memoized save draft handler (2025 React best practice)
+  const handleSaveDraft = useCallback(() => {
     const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
     localStorage.setItem(draftKey, JSON.stringify(formData));
     setDraftSaved(true);
     setTimeout(() => setDraftSaved(false), 2000);
-  };
+  }, [resume?.id, formData]);
 
-  const handleClearDraft = () => {
+  // Memoized clear draft handler (2025 React best practice)
+  const handleClearDraft = useCallback(() => {
     if (confirm(t('resume.form.clearDraftConfirm'))) {
       const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
       localStorage.removeItem(draftKey);
       alert(t('resume.form.clearDraftSuccess'));
     }
-  };
+  }, [resume?.id, t]);
 
-  // Handle profile photo file selection - auto-uploads to temp storage
-  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Memoized profile photo change handler (2025 React best practice)
+  const handleProfilePhotoChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setUploadError(t('resume.form.selectImageFile'));
-      return;
-    }
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError(t('resume.form.imageSizeTooLarge'));
-      return;
-    }
-
-    setUploading(true);
-    setUploadError(null);
-
-    try {
-      // Clean up previous temp file if exists
-      if (profilePhotoTempKey) {
-        try {
-          await deleteTempFile(profilePhotoTempKey);
-        } catch {
-          // Ignore cleanup errors
-        }
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setUploadError(t('resume.form.selectImageFile'));
+        return;
       }
 
-      // Auto-upload to temp storage
-      const result = await uploadToTemp(file);
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError(t('resume.form.imageSizeTooLarge'));
+        return;
+      }
 
-      setProfilePhotoTempKey(result.tempKey);
-      setProfilePhotoPreview(result.previewUrl);
-    } catch (error: unknown) {
-      console.error('Failed to upload to temp storage:', error);
-      const err = error as { response?: { data?: { message?: string } } };
-      setUploadError(err.response?.data?.message || t('resume.form.photoUploadFailed'));
-    } finally {
-      setUploading(false);
-    }
-  };
+      setUploading(true);
+      setUploadError(null);
+
+      try {
+        // Clean up previous temp file if exists
+        if (profilePhotoTempKey) {
+          try {
+            await deleteTempFile(profilePhotoTempKey);
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
+
+        // Auto-upload to temp storage
+        const result = await uploadToTemp(file);
+
+        setProfilePhotoTempKey(result.tempKey);
+        setProfilePhotoPreview(result.previewUrl);
+      } catch (error: unknown) {
+        console.error('Failed to upload to temp storage:', error);
+        const err = error as { response?: { data?: { message?: string } } };
+        setUploadError(err.response?.data?.message || t('resume.form.photoUploadFailed'));
+      } finally {
+        setUploading(false);
+      }
+    },
+    [profilePhotoTempKey, t],
+  );
 
   // Memoized back navigation handler (2025 best practice)
   const handleBack = useCallback(() => {
@@ -360,8 +398,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     setProfilePhotoPreview(null);
   }, [profilePhotoTempKey]);
 
-  // Delete profile photo
-  const handleProfilePhotoDelete = async () => {
+  // Memoized delete profile photo handler (2025 React best practice)
+  const handleProfilePhotoDelete = useCallback(async () => {
     if (!resume?.id) return;
 
     const profilePhoto = attachments.find((a) => a.type === AttachmentType.PROFILE_PHOTO);
@@ -387,7 +425,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     } finally {
       setUploading(false);
     }
-  };
+  }, [resume?.id, attachments, t, loadAttachments]);
 
   // Birth date and gender change handlers
   const handleBirthDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -464,7 +502,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     (attachmentId: string) => () => {
       handleDeleteAttachment(attachmentId);
     },
-    [],
+    [handleDeleteAttachment],
   );
 
   // Memoized handler for adding key achievement (2025 React best practice)
@@ -513,7 +551,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         handleFileUpload(file, type);
       }
     },
-    [],
+    [handleFileUpload],
   );
 
   // Cover letter change handler (2025 React best practice)
@@ -550,6 +588,15 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [],
   );
 
+  // Memoized paper size options (2025 best practice - avoid inline arrays)
+  const paperSizeOptions = useMemo(
+    () => [
+      { value: 'A4', label: t('resume.form.paperSizeA4') },
+      { value: 'LETTER', label: t('resume.form.paperSizeLetter') },
+    ],
+    [t],
+  );
+
   // Memoized handler for experiences change (2025 React best practice)
   const handleExperiencesChange = useCallback((experiences: Experience[]) => {
     // Only update formData - useEffect will call onChange automatically
@@ -567,57 +614,67 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     setFormData((prev) => ({ ...prev, educations }));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Memoized handler for sections reorder (2025 React best practice)
+  const handleSectionsReorder = useCallback((newSections: typeof sections) => {
+    setSections(newSections);
+    // Update will be saved when form is submitted
+  }, []);
 
-    // Validate required fields manually before submitting
-    const validationErrors: string[] = [];
-    if (!formData.title?.trim()) {
-      validationErrors.push(t('resume.validation.titleRequired'));
-    }
-    if (!formData.name?.trim()) {
-      validationErrors.push(t('resume.validation.nameRequired'));
-      // Expand basicInfo section if name is missing
-      setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
-    }
-    if (!formData.email?.trim()) {
-      validationErrors.push(t('resume.validation.emailRequired'));
-      // Expand basicInfo section if email is missing
-      setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
-    }
+  // Memoized form submit handler (2025 React best practice)
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (validationErrors.length > 0) {
-      alert(validationErrors.join('\n'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // Remove projects field before submitting (no longer supported by API)
-      // Note: Empty string handling is done by stripIds() in resume.ts API layer
-      // which converts empty strings to null for proper database clearing
-      const { projects: _projects, ...dataToSubmit } = formData as any;
-
-      // Include profileImageTempKey if a new image was uploaded to temp storage
-      if (profilePhotoTempKey) {
-        dataToSubmit.profileImageTempKey = profilePhotoTempKey;
+      // Validate required fields manually before submitting
+      const validationErrors: string[] = [];
+      if (!formData.title?.trim()) {
+        validationErrors.push(t('resume.validation.titleRequired'));
+      }
+      if (!formData.name?.trim()) {
+        validationErrors.push(t('resume.validation.nameRequired'));
+        // Expand basicInfo section if name is missing
+        setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
+      }
+      if (!formData.email?.trim()) {
+        validationErrors.push(t('resume.validation.emailRequired'));
+        // Expand basicInfo section if email is missing
+        setCollapsedSections((prev) => ({ ...prev, basicInfo: false }));
       }
 
-      await onSubmit(dataToSubmit);
-
-      // Clear temp state after successful save (backend moved file to permanent storage)
-      if (profilePhotoTempKey) {
-        setProfilePhotoTempKey(null);
-        setProfilePhotoPreview(null);
+      if (validationErrors.length > 0) {
+        alert(validationErrors.join('\n'));
+        return;
       }
 
-      // Clear draft after successful submission
-      const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
-      localStorage.removeItem(draftKey);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      setSubmitting(true);
+      try {
+        // Remove projects field before submitting (no longer supported by API)
+        // Note: Empty string handling is done by stripIds() in resume.ts API layer
+        // which converts empty strings to null for proper database clearing
+        const { projects: _projects, ...dataToSubmit } = formData as any;
+
+        // Include profileImageTempKey if a new image was uploaded to temp storage
+        if (profilePhotoTempKey) {
+          dataToSubmit.profileImageTempKey = profilePhotoTempKey;
+        }
+
+        await onSubmit(dataToSubmit);
+
+        // Clear temp state after successful save (backend moved file to permanent storage)
+        if (profilePhotoTempKey) {
+          setProfilePhotoTempKey(null);
+          setProfilePhotoPreview(null);
+        }
+
+        // Clear draft after successful submission
+        const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
+        localStorage.removeItem(draftKey);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [formData, profilePhotoTempKey, onSubmit, resume?.id, t],
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
@@ -639,10 +696,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.paperSize')}
             value={formData.paperSize || 'A4'}
             onChange={handleSelectFieldChange('paperSize')}
-            options={[
-              { value: 'A4', label: t('resume.form.paperSizeA4') },
-              { value: 'LETTER', label: t('resume.form.paperSizeLetter') },
-            ]}
+            options={paperSizeOptions}
             required
           />
         </div>
@@ -1141,7 +1195,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {t('resume.form.profilePhotoDesc')}
           </p>
           <div className="space-y-3">
-            {getAttachmentsByType(AttachmentType.PROFILE_PHOTO).map((attachment) => (
+            {profilePhotoAttachments.map((attachment) => (
               <div
                 key={attachment.id}
                 className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
@@ -1198,7 +1252,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </h3>
           <p className="text-sm text-theme-text-secondary mb-3">{t('resume.form.portfolioDesc')}</p>
           <div className="space-y-3">
-            {getAttachmentsByType(AttachmentType.PORTFOLIO).map((attachment) => (
+            {portfolioAttachments.map((attachment) => (
               <div
                 key={attachment.id}
                 className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
@@ -1251,7 +1305,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             {t('resume.form.certificatesDesc')}
           </p>
           <div className="space-y-3">
-            {getAttachmentsByType(AttachmentType.CERTIFICATE).map((attachment) => (
+            {certificateAttachments.map((attachment) => (
               <div
                 key={attachment.id}
                 className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
@@ -1299,15 +1353,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       </div>
 
       {/* Section Order Manager */}
-      {resume?.id && (
-        <SectionOrderManager
-          sections={sections}
-          onReorder={(newSections) => {
-            setSections(newSections);
-            // Update will be saved when form is submitted
-          }}
-        />
-      )}
+      {resume?.id && <SectionOrderManager sections={sections} onReorder={handleSectionsReorder} />}
 
       {/* Cover Letter (자기소개서) - At the bottom */}
       <CollapsibleSection

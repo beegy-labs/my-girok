@@ -15,6 +15,10 @@ packages/types/
 │   │   ├── user.ts
 │   │   ├── token.ts
 │   │   └── session.ts
+│   ├── legal/          # Legal & consent types
+│   │   ├── enums.ts
+│   │   ├── dto.ts
+│   │   └── index.ts
 │   ├── resume/         # Resume types
 │   │   ├── resume.ts
 │   │   ├── experience.ts
@@ -94,7 +98,7 @@ export interface TokenPair {
 }
 
 export interface TokenPayload {
-  sub: string;      // userId
+  sub: string; // userId
   email: string;
   role: UserRole;
   iat: number;
@@ -109,6 +113,67 @@ export interface Session {
   refreshToken: string;
   createdAt: number;
   expiresAt: number;
+}
+```
+
+## Legal Types
+
+```typescript
+// src/legal/enums.ts
+export enum ConsentType {
+  TERMS_OF_SERVICE = 'TERMS_OF_SERVICE', // [Required] 이용약관 동의
+  PRIVACY_POLICY = 'PRIVACY_POLICY', // [Required] 개인정보 수집·이용 동의
+  MARKETING_EMAIL = 'MARKETING_EMAIL', // [Optional] 마케팅 이메일
+  MARKETING_PUSH = 'MARKETING_PUSH', // [Optional] 마케팅 푸시
+  MARKETING_PUSH_NIGHT = 'MARKETING_PUSH_NIGHT', // [Optional] 야간 푸시 (21:00-08:00)
+  MARKETING_SMS = 'MARKETING_SMS', // [Optional] 마케팅 SMS
+  PERSONALIZED_ADS = 'PERSONALIZED_ADS', // [Optional] 맞춤형 광고
+  THIRD_PARTY_SHARING = 'THIRD_PARTY_SHARING', // [Optional] 제3자 정보 제공
+}
+
+export enum LegalDocumentType {
+  TERMS_OF_SERVICE = 'TERMS_OF_SERVICE',
+  PRIVACY_POLICY = 'PRIVACY_POLICY',
+  MARKETING_POLICY = 'MARKETING_POLICY',
+  PERSONALIZED_ADS = 'PERSONALIZED_ADS',
+}
+
+// src/legal/dto.ts
+export interface ConsentItemDto {
+  type: ConsentType;
+  agreed: boolean;
+}
+
+export interface CreateConsentsDto {
+  consents: ConsentItemDto[];
+}
+
+export interface ConsentRequirementDto {
+  type: ConsentType;
+  required: boolean;
+  label: string;
+  description: string;
+  documentType?: LegalDocumentType;
+}
+
+export interface LegalDocumentResponseDto {
+  id: string;
+  type: LegalDocumentType;
+  version: string;
+  locale: string;
+  title: string;
+  content: string;
+  summary?: string;
+  effectiveDate: Date;
+}
+
+export interface UserConsentResponseDto {
+  id: string;
+  consentType: ConsentType;
+  agreed: boolean;
+  agreedAt: Date;
+  withdrawnAt?: Date;
+  documentVersion?: string;
 }
 ```
 
