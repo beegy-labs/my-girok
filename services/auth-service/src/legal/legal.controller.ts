@@ -32,6 +32,15 @@ import {
 import { Request } from 'express';
 
 /**
+ * Extract audit information from request
+ * Used for GDPR/CCPA compliance tracking
+ */
+const extractAuditInfo = (req: Request) => ({
+  ipAddress: req.ip || req.socket.remoteAddress,
+  userAgent: req.headers['user-agent'],
+});
+
+/**
  * Legal API Controller
  *
  * Handles legal document management and user consent operations.
@@ -245,9 +254,7 @@ export class LegalController {
     @Body() dto: CreateConsentsDto,
     @Req() req: Request,
   ) {
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.headers['user-agent'];
-
+    const { ipAddress, userAgent } = extractAuditInfo(req);
     return this.legalService.createConsents(user.id, dto.consents, ipAddress, userAgent);
   }
 
@@ -299,9 +306,7 @@ export class LegalController {
     @Body() dto: UpdateConsentDto,
     @Req() req: Request,
   ) {
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.headers['user-agent'];
-
+    const { ipAddress, userAgent } = extractAuditInfo(req);
     return this.legalService.updateConsent(
       user.id,
       type,

@@ -221,7 +221,7 @@ export class LegalService {
    * const document = await legalService.getDocumentById('uuid-here');
    * ```
    */
-  async getDocumentById(id: string) {
+  async getDocumentById(id: string): Promise<LegalDocumentResult> {
     const document = await this.prisma.legalDocument.findUnique({
       where: { id },
     });
