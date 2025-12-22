@@ -168,11 +168,14 @@ apps/web-main/src/
 ├── pages/              # Route pages
 │   ├── HomePage.tsx           # V0.0.1 Landing + Dashboard (Promo, Workstation, Index)
 │   ├── LoginPage.tsx          # Uses AuthLayout (2025 consolidated)
+│   ├── ConsentPage.tsx        # Legal consent flow before registration
 │   ├── RegisterPage.tsx       # Uses AuthLayout (2025 consolidated)
 │   ├── ForgotPasswordPage.tsx # Uses AuthLayout (2025 consolidated)
 │   ├── ChangePasswordPage.tsx
 │   ├── NotFoundPage.tsx
+│   ├── DesignSystemPage.tsx   # Design system reference (dev only)
 │   ├── JournalPage.tsx        # Uses PlaceholderPage (Coming Soon)
+│   ├── SchedulePage.tsx       # Uses PlaceholderPage (Coming Soon)
 │   ├── FinancePage.tsx        # Uses PlaceholderPage (Coming Soon)
 │   ├── LibraryPage.tsx        # Uses PlaceholderPage (Coming Soon)
 │   ├── NetworkPage.tsx        # Uses PlaceholderPage (Coming Soon)
@@ -191,20 +194,61 @@ apps/web-main/src/
 ├── components/
 │   ├── Navbar.tsx               # V0.0.1 nav (80px, 'girok.' + walnut dot, 48px icons)
 │   ├── Footer.tsx               # V0.0.1 footer (mt-40 py-24 border-t-2 tracking-[0.6em])
+│   ├── LanguageSwitcher.tsx     # Language dropdown (KO/EN/JA/HI)
+│   ├── NotificationButton.tsx   # Notification bell icon
 │   ├── PlaceholderPage.tsx      # Coming Soon template
 │   ├── PrivateRoute.tsx
 │   ├── LoadingSpinner.tsx
 │   ├── StatusMessage.tsx
 │   ├── ErrorBoundary.tsx
-│   └── resume/
-│       ├── ResumeForm.tsx
-│       ├── ResumePreview.tsx
-│       └── ResumePreviewContainer.tsx
+│   ├── SEO.tsx                  # SEO meta tags + structured data
+│   ├── resume/
+│   │   ├── ResumeForm.tsx           # Full resume editor form
+│   │   ├── ResumePreview.tsx        # PDF viewer (react-pdf)
+│   │   ├── ResumePreviewContainer.tsx # Responsive wrapper
+│   │   ├── ResumePdfDocument.tsx    # @react-pdf/renderer document
+│   │   ├── ResumeContent.tsx        # Resume content renderer
+│   │   ├── ResumeList.tsx           # Resume list for MyResumePage
+│   │   ├── ResumeActionBar.tsx      # Action toolbar (edit, print, share)
+│   │   ├── ShareLinkModal.tsx       # Share link dialog
+│   │   ├── SectionOrderManager.tsx  # Drag-and-drop section reorder
+│   │   ├── ExperienceSection.tsx    # Experience form section
+│   │   ├── EducationSection.tsx     # Education form section
+│   │   ├── SkillsSection.tsx        # Skills form section
+│   │   └── HierarchicalDescription.tsx # Nested achievement renderer
+│   └── settings/
+│       ├── ThemeToggle.tsx          # Light/Dark theme switch
+│       └── SectionOrderManager.tsx  # Section order settings
 ├── api/
-│   ├── auth.ts
-│   └── resume.ts
+│   ├── auth.ts              # Auth API (publicApi, authApi)
+│   ├── resume.ts            # Resume API (personalApi)
+│   ├── legal.ts             # Legal/Consent API
+│   └── userPreferences.ts   # User preferences API
 ├── stores/
-│   └── authStore.ts
+│   ├── authStore.ts             # Auth state (Zustand)
+│   └── userPreferencesStore.ts  # User preferences state
+├── hooks/
+│   ├── index.ts             # Barrel exports
+│   ├── useTheme.ts          # Theme hook
+│   └── useResumeViewer.ts   # Resume viewer data fetching
+├── contexts/
+│   └── ThemeContext.tsx     # Theme context provider
+├── types/
+│   ├── index.ts             # Common types
+│   └── theme.ts             # Theme types
+├── constants/
+│   └── paper.ts             # Paper size constants (A4, Letter)
+├── utils/
+│   ├── cookies.ts           # Cookie utilities
+│   ├── pdf.ts               # PDF export utilities
+│   ├── imageProxy.ts        # Image proxy for CORS
+│   ├── localeConfig.ts      # SSOT: Languages, Countries config
+│   ├── regionDetection.ts   # Detection & cookie storage
+│   ├── tokenUtils.ts        # Token management
+│   ├── structuredData.ts    # SEO structured data helpers
+│   └── hierarchical-renderer.ts # Nested data renderer
+├── i18n/
+│   └── config.ts            # i18next configuration
 ├── router.tsx          # Router config (createBrowserRouter)
 └── App.tsx
 ```
@@ -215,10 +259,12 @@ apps/web-main/src/
 
 - `/` - HomePage (V0.0.1 dashboard for logged-in, landing for visitors)
 - `/login` - LoginPage (V0.0.1 editorial form)
+- `/consent` - ConsentPage (legal consent before registration)
 - `/register` - RegisterPage (V0.0.1 editorial form)
 - `/forgot-password` - ForgotPasswordPage (V0.0.1 password recovery, UI only)
 - `/resume/:username` - PublicResumePage (public resume view)
 - `/shared/:token` - SharedResumePage (shared resume via token)
+- `/design-system` - DesignSystemPage (design token reference, dev only)
 
 ### Protected Routes (PrivateRoute)
 
@@ -489,6 +535,62 @@ console.log(requirements.requirements); // ConsentRequirementWithDocument[]
 3. On continue: consents saved to `sessionStorage` for registration step
 4. RegisterPage reads consents from `sessionStorage` and sends to API
 
+## User Preferences API
+
+**Location**: `api/userPreferences.ts`
+
+Manages user preferences (theme, section order) with cookie-first strategy for performance.
+
+```typescript
+import {
+  getUserPreferences,
+  updateUserPreferences,
+  Theme,
+  SectionType,
+} from '../api/userPreferences';
+
+// Get preferences (creates default if not exists)
+const prefs = await getUserPreferences();
+console.log(prefs.theme); // Theme.LIGHT or Theme.DARK
+console.log(prefs.sectionOrder); // SectionOrderItem[]
+
+// Update preferences
+await updateUserPreferences({ theme: Theme.DARK });
+```
+
+**Available Functions**:
+
+| Function                | Description                            |
+| ----------------------- | -------------------------------------- |
+| `getUserPreferences`    | Get user preferences (creates if new)  |
+| `upsertUserPreferences` | Create or replace preferences          |
+| `updateUserPreferences` | Partial update (theme or sectionOrder) |
+| `deleteUserPreferences` | Reset to default                       |
+
+**User Preferences Store** (`stores/userPreferencesStore.ts`):
+
+Zustand store with cookie caching for fast theme/section order loading.
+
+```typescript
+import { useUserPreferencesStore } from '../stores/userPreferencesStore';
+
+const { preferences, loadPreferences, setTheme, setSectionOrder } = useUserPreferencesStore();
+
+// Load preferences on app init
+await loadPreferences();
+
+// Update theme (optimistic: cookie → local state → server)
+await setTheme(Theme.DARK);
+
+// Update section order
+await setSectionOrder([
+  { type: SectionType.EXPERIENCE, order: 1, visible: true },
+  { type: SectionType.SKILLS, order: 2, visible: true },
+]);
+```
+
+**Storage Priority**: Cookie → Server → Default
+
 ## UI Component Library
 
 **Location**: `packages/ui-components/src/`
@@ -703,9 +805,15 @@ All components now use unified `theme-*` tokens.
 ## Environment Variables
 
 ```bash
-VITE_GRAPHQL_URL=https://api.girok.dev/graphql
-VITE_WS_URL=wss://ws.girok.dev
-VITE_AUTH_API_URL=https://api.girok.dev  # REST fallback for auth
+# Auth Service API (login, register, profile)
+VITE_API_URL=https://auth.girok.dev
+
+# Personal Service API (resume, user preferences)
+VITE_PERSONAL_API_URL=https://my.girok.dev
+
+# Future (not yet used)
+# VITE_GRAPHQL_URL=https://api.girok.dev/graphql
+# VITE_WS_URL=wss://ws.girok.dev
 ```
 
 ## Common Patterns

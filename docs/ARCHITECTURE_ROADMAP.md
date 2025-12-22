@@ -1,22 +1,22 @@
-# Architecture 2025 (확정)
+# Architecture 2025 (Final)
 
-> 최종 아키텍처 설계 문서
+> Final architecture design document
 
-## 확정된 통신 전략
+## Communication Strategy
 
-### 하이브리드 (REST + gRPC + GraphQL)
+### Hybrid (REST + gRPC + GraphQL)
 
-| 구간 | 프로토콜 | 용도 |
-|------|----------|------|
-| **Client → BFF** | GraphQL | 메인 API, 유연한 쿼리 |
-| **Client → Service** | REST | OAuth 콜백, 단순 API |
-| **BFF → Service** | gRPC | 내부 통신 |
-| **Service → Service** | gRPC | 내부 통신 |
-| **Event** | NATS JetStream | 비동기 이벤트 |
+| Route                 | Protocol       | Purpose                    |
+| --------------------- | -------------- | -------------------------- |
+| **Client → BFF**      | GraphQL        | Main API, flexible queries |
+| **Client → Service**  | REST           | OAuth callback, simple API |
+| **BFF → Service**     | gRPC           | Internal communication     |
+| **Service → Service** | gRPC           | Internal communication     |
+| **Event**             | NATS JetStream | Async events               |
 
 ---
 
-## 전체 구조
+## Overall Structure
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -33,7 +33,7 @@
 │   :4000     │    │ REST :3002  │    │   :9000     │
 └──────┬──────┘    └─────────────┘    └─────────────┘
        │
-       │ gRPC (내부 통신)
+       │ gRPC (internal)
        │
 ┌──────┴──────────────────────────────────────────────────────┐
 │                      Domain Services                         │
@@ -55,35 +55,36 @@
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    NATS JetStream                            │
-│              (이벤트 기반 비동기 통신)                        │
+│                (Event-based async communication)             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 현재 구현 상태
+## Current Implementation Status
 
-| 서비스 | 상태 | 기술 |
-|--------|------|------|
-| auth-service | ✅ 구현됨 | NestJS, REST |
-| personal-service | ✅ 구현됨 | NestJS, REST |
-| web-main | ✅ 구현됨 | React 19.2, Vite |
+| Service          | Status         | Technology       |
+| ---------------- | -------------- | ---------------- |
+| auth-service     | ✅ Implemented | NestJS, REST     |
+| personal-service | ✅ Implemented | NestJS, REST     |
+| web-main         | ✅ Implemented | React 19.2, Vite |
 
 ---
 
-## 서비스별 상세
+## Service Details
 
 ### 1. Auth Service
 
-**현재:** NestJS + REST
-**목표:** Rust + REST + gRPC
+**Current:** NestJS + REST
+**Target:** Rust + REST + gRPC
 
-| 포트 | 프로토콜 | 용도 |
-|------|----------|------|
-| :3002 | REST | 외부 (OAuth, 로그인, 프로필) |
-| :50051 | gRPC | 내부 (토큰 검증, 사용자 조회) |
+| Port   | Protocol | Purpose                                  |
+| ------ | -------- | ---------------------------------------- |
+| :3002  | REST     | External (OAuth, login, profile)         |
+| :50051 | gRPC     | Internal (token validation, user lookup) |
 
-**REST API (외부 - 유지):**
+**REST API (External - maintain):**
+
 ```
 POST   /v1/auth/register
 POST   /v1/auth/login
@@ -100,7 +101,8 @@ PATCH  /v1/users/me
 POST   /v1/users/me/change-password
 ```
 
-**gRPC API (내부 - 추가 예정):**
+**gRPC API (Internal - planned):**
+
 ```protobuf
 service AuthService {
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
@@ -112,7 +114,8 @@ service AuthService {
 }
 ```
 
-**기술 스택 (목표):**
+**Target Stack:**
+
 - Rust + Axum (REST)
 - Rust + Tonic (gRPC)
 - PostgreSQL + SQLx
@@ -122,15 +125,16 @@ service AuthService {
 
 ### 2. Personal Service
 
-**현재:** NestJS + REST
-**목표:** NestJS + REST + gRPC
+**Current:** NestJS + REST
+**Target:** NestJS + REST + gRPC
 
-| 포트 | 프로토콜 | 용도 |
-|------|----------|------|
-| :3003 | REST | 외부 (공개 프로필) |
-| :50052 | gRPC | 내부 (BFF 연동) |
+| Port   | Protocol | Purpose                    |
+| ------ | -------- | -------------------------- |
+| :3003  | REST     | External (public profile)  |
+| :50052 | gRPC     | Internal (BFF integration) |
 
-**gRPC API (추가 예정):**
+**gRPC API (planned):**
+
 ```protobuf
 service PersonalService {
   rpc GetResume(GetResumeRequest) returns (Resume);
@@ -143,31 +147,32 @@ service PersonalService {
 
 ---
 
-### 3. GraphQL BFF (미구현)
+### 3. GraphQL BFF (Not Implemented)
 
-**역할:** 클라이언트 단일 진입점, 세션 관리
+**Role:** Single entry point for clients, session management
 
-| 포트 | 프로토콜 | 용도 |
-|------|----------|------|
-| :4000 | GraphQL | 외부 (클라이언트) |
-| - | gRPC Client | 내부 서비스 호출 |
+| Port  | Protocol    | Purpose                |
+| ----- | ----------- | ---------------------- |
+| :4000 | GraphQL     | External (client)      |
+| -     | gRPC Client | Internal service calls |
 
-**핵심 설계:**
+**Core Design:**
+
 ```typescript
-// 세션 기반 인증 (Full BFF Pattern)
+// Session-based auth (Full BFF Pattern)
 @Mutation(() => AuthResponse)
 async login(@Args('input') input: LoginInput, @Context() ctx: GqlContext) {
-  // 1. Auth Service gRPC 호출
+  // 1. Auth Service gRPC call
   const tokens = await this.authGrpc.login(input);
 
-  // 2. 세션 생성 (서버 사이드 토큰 저장)
+  // 2. Create session (server-side token storage)
   const sessionId = await this.sessionService.create({
     userId: tokens.userId,
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
   });
 
-  // 3. HttpOnly 쿠키 설정 (토큰 노출 안함)
+  // 3. Set HttpOnly cookie (no token exposure)
   ctx.res.cookie('session_id', sessionId, {
     httpOnly: true,
     secure: true,
@@ -180,36 +185,39 @@ async login(@Args('input') input: LoginInput, @Context() ctx: GqlContext) {
 
 ---
 
-### 4. WebSocket Gateway (미구현)
+### 4. WebSocket Gateway (Not Implemented)
 
-**역할:** 실시간 이벤트
+**Role:** Real-time events
 
-| 포트 | 프로토콜 | 용도 |
-|------|----------|------|
-| :3001 | WebSocket | 외부 (클라이언트) |
+| Port  | Protocol  | Purpose           |
+| ----- | --------- | ----------------- |
+| :3001 | WebSocket | External (client) |
 
-**네임스페이스:**
+**Namespaces:**
+
 ```
-/chat          → 채팅 메시지
-/feed          → 피드 업데이트
-/notifications → 알림
-/matching      → 매칭 상태
+/chat          → Chat messages
+/feed          → Feed updates
+/notifications → Notifications
+/matching      → Matching status
 ```
 
-**기술 스택:**
+**Stack:**
+
 - NestJS 11 + Socket.io
-- Valkey Adapter (Pod 간 브로드캐스팅)
-- NATS 구독 → 클라이언트 push
+- Valkey Adapter (Pod broadcasting)
+- NATS subscription → Client push
 
 ---
 
-### 5. Feed Service (미구현)
+### 5. Feed Service (Not Implemented)
 
-| 포트 | 프로토콜 |
-|------|----------|
-| :50053 | gRPC |
+| Port   | Protocol |
+| ------ | -------- |
+| :50053 | gRPC     |
 
 **gRPC API:**
+
 ```protobuf
 service FeedService {
   rpc GetTimeline(GetTimelineRequest) returns (TimelineResponse);
@@ -219,17 +227,18 @@ service FeedService {
 }
 ```
 
-**기술 스택:** NestJS + MongoDB + Fan-out on Write
+**Stack:** NestJS + MongoDB + Fan-out on Write
 
 ---
 
-### 6. Chat Service (미구현)
+### 6. Chat Service (Not Implemented)
 
-| 포트 | 프로토콜 |
-|------|----------|
-| :50054 | gRPC |
+| Port   | Protocol |
+| ------ | -------- |
+| :50054 | gRPC     |
 
 **gRPC API:**
+
 ```protobuf
 service ChatService {
   rpc GetRooms(GetRoomsRequest) returns (RoomsResponse);
@@ -239,17 +248,18 @@ service ChatService {
 }
 ```
 
-**기술 스택:** NestJS + MongoDB + TTL Index
+**Stack:** NestJS + MongoDB + TTL Index
 
 ---
 
-### 7. Matching Service (미구현)
+### 7. Matching Service (Not Implemented)
 
-| 포트 | 프로토콜 |
-|------|----------|
-| :50055 | gRPC |
+| Port   | Protocol |
+| ------ | -------- |
+| :50055 | gRPC     |
 
 **gRPC API:**
+
 ```protobuf
 service MatchingService {
   rpc JoinQueue(JoinQueueRequest) returns (QueueResponse);
@@ -258,17 +268,18 @@ service MatchingService {
 }
 ```
 
-**기술 스택:** NestJS + Valkey (Sorted Set)
+**Stack:** NestJS + Valkey (Sorted Set)
 
 ---
 
-### 8. Media Service (미구현)
+### 8. Media Service (Not Implemented)
 
-| 포트 | 프로토콜 |
-|------|----------|
-| :50056 | gRPC |
+| Port   | Protocol |
+| ------ | -------- |
+| :50056 | gRPC     |
 
 **gRPC API:**
+
 ```protobuf
 service MediaService {
   rpc GetUploadUrl(GetUploadUrlRequest) returns (UploadUrlResponse);
@@ -277,23 +288,24 @@ service MediaService {
 }
 ```
 
-**기술 스택:** NestJS + MinIO + Sharp + BullMQ
+**Stack:** NestJS + MinIO + Sharp + BullMQ
 
 ---
 
-### 9. LLM API (미구현)
+### 9. LLM API (Not Implemented)
 
-| 포트 | 프로토콜 |
-|------|----------|
-| :8000 | REST |
+| Port  | Protocol |
+| ----- | -------- |
+| :8000 | REST     |
 
-**기술 스택:** Python 3.13 + FastAPI + LangChain
+**Stack:** Python 3.13 + FastAPI + LangChain
 
 ---
 
-## NATS JetStream 이벤트
+## NATS JetStream Events
 
-### 스트림 설계
+### Stream Design
+
 ```yaml
 AUTH:     subjects: ["auth.>"],     max_age: 7d
 FEED:     subjects: ["feed.>"],     max_age: 30d
@@ -301,22 +313,24 @@ CHAT:     subjects: ["chat.>"],     max_age: 7d
 MATCHING: subjects: ["matching.>"], max_age: 1d
 ```
 
-### 이벤트 목록
+### Event List
+
 ```
-auth.user.registered  → 기본 데이터 생성
-auth.user.logged_in   → 활동 로그
-feed.post.created     → Timeline fan-out, WS 브로드캐스트
-feed.post.liked       → 알림, 카운터 업데이트
-chat.message.sent     → WS 브로드캐스트
-chat.room.created     → 참여자 알림
-matching.matched      → 방 생성, WS 알림
+auth.user.registered  → Create default data
+auth.user.logged_in   → Activity log
+feed.post.created     → Timeline fan-out, WS broadcast
+feed.post.liked       → Notification, counter update
+chat.message.sent     → WS broadcast
+chat.room.created     → Participant notification
+matching.matched      → Create room, WS notification
 ```
 
 ---
 
-## Kubernetes 구조
+## Kubernetes Structure
 
-### Namespace
+### Namespaces
+
 ```
 gateway:       Cilium Gateway, GraphQL BFF, WS Gateway
 services:      auth, personal, feed, chat, matching, media
@@ -325,6 +339,7 @@ observability: Prometheus, Grafana, Jaeger
 ```
 
 ### Cilium Gateway API
+
 ```yaml
 api.girok.dev   → graphql-bff:4000
 ws.girok.dev    → ws-gateway:3001
@@ -335,7 +350,7 @@ s3.girok.dev    → minio:9000
 
 ---
 
-## Proto 파일 위치
+## Proto File Location
 
 ```
 packages/proto/
@@ -350,32 +365,32 @@ packages/proto/
 
 ---
 
-## 구현 우선순위
+## Implementation Priority
 
-| 순서 | 서비스 | 현재 상태 | 다음 작업 |
-|------|--------|-----------|-----------|
-| 1 | auth-service | NestJS 구현됨 | Rust + gRPC 전환 |
-| 2 | personal-service | NestJS 구현됨 | gRPC 추가 |
-| 3 | graphql-bff | 미구현 | 신규 개발 |
-| 4 | ws-gateway | 미구현 | 신규 개발 |
-| 5 | feed-service | 미구현 | 신규 개발 |
-| 6 | chat-service | 미구현 | 신규 개발 |
-| 7 | matching-service | 미구현 | 신규 개발 |
-| 8 | media-service | 미구현 | 신규 개발 |
-| 9 | llm-api | 미구현 | 신규 개발 |
+| Order | Service          | Current Status     | Next Action           |
+| ----- | ---------------- | ------------------ | --------------------- |
+| 1     | auth-service     | NestJS implemented | Rust + gRPC migration |
+| 2     | personal-service | NestJS implemented | Add gRPC              |
+| 3     | graphql-bff      | Not implemented    | New development       |
+| 4     | ws-gateway       | Not implemented    | New development       |
+| 5     | feed-service     | Not implemented    | New development       |
+| 6     | chat-service     | Not implemented    | New development       |
+| 7     | matching-service | Not implemented    | New development       |
+| 8     | media-service    | Not implemented    | New development       |
+| 9     | llm-api          | Not implemented    | New development       |
 
 ---
 
-## 기술 스택 요약
+## Tech Stack Summary
 
-| 분류 | 기술 |
-|------|------|
-| **Gateway** | Cilium Gateway API |
-| **BFF** | NestJS + Apollo Federation |
-| **Auth** | Rust + Axum + Tonic |
-| **Services** | NestJS + @grpc/grpc-js |
-| **Database** | PostgreSQL, MongoDB, Valkey |
-| **Event** | NATS JetStream |
-| **Storage** | MinIO (S3) |
-| **WebSocket** | Socket.io + Valkey Adapter |
-| **Frontend** | React 19.2, iOS (Swift), Android (Kotlin) |
+| Category      | Technology                                |
+| ------------- | ----------------------------------------- |
+| **Gateway**   | Cilium Gateway API                        |
+| **BFF**       | NestJS + Apollo Federation                |
+| **Auth**      | Rust + Axum + Tonic                       |
+| **Services**  | NestJS + @grpc/grpc-js                    |
+| **Database**  | PostgreSQL, MongoDB, Valkey               |
+| **Event**     | NATS JetStream                            |
+| **Storage**   | MinIO (S3)                                |
+| **WebSocket** | Socket.io + Valkey Adapter                |
+| **Frontend**  | React 19.2, iOS (Swift), Android (Kotlin) |

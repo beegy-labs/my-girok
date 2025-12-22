@@ -82,11 +82,31 @@ Headers: Authorization: Bearer {token}
 Body: { currentPassword: string, newPassword: string }
 Response: { message: 'Password changed successfully' }
 
+// Get User by Username (public profile lookup)
+GET /v1/users/by-username/:username
+Response: User (public fields only)
+
 // Domain Access Token (Time-limited)
-POST /v1/domain-access/grant
+POST /v1/auth/domain-access
 Headers: Authorization: Bearer {token}
 Body: { domain: string, expiresInHours: number, recipientEmail?: string }
 Response: { accessToken: string, expiresAt: string, accessUrl: string }
+
+// Kakao OAuth (implemented, disabled until credentials configured)
+GET /v1/auth/kakao
+Response: Redirect to Kakao OAuth
+
+GET /v1/auth/kakao/callback
+Query: { code: string }
+Response: { accessToken: string, refreshToken: string }
+
+// Naver OAuth (implemented, disabled until credentials configured)
+GET /v1/auth/naver
+Response: Redirect to Naver OAuth
+
+GET /v1/auth/naver/callback
+Query: { code: string }
+Response: { accessToken: string, refreshToken: string }
 ```
 
 ### Access via Domain (Production/Staging)
@@ -223,7 +243,7 @@ export class AuthGrpcController {
 3. Check if email exists → 409 Conflict if exists
 4. Hash password (bcrypt, 12 rounds)
 5. Create user in DB
-6. Generate JWT tokens (Access 15min, Refresh 7days)
+6. Generate JWT tokens (Access 15min, Refresh 14days)
 7. Return { user, accessToken, refreshToken }
 ```
 
@@ -295,9 +315,11 @@ export class AuthGrpcController {
 ```typescript
 // Supported providers
 enum AuthProvider {
-  LOCAL = 'local',
-  GOOGLE = 'google',
-  // Future: KAKAO, NAVER, APPLE, GITHUB
+  LOCAL = 'LOCAL', // ✅ Implemented
+  GOOGLE = 'GOOGLE', // ✅ Implemented (disabled until credentials configured)
+  KAKAO = 'KAKAO', // ⏸️ Implemented but disabled (enable in auth.module.ts)
+  NAVER = 'NAVER', // ⏸️ Implemented but disabled (enable in auth.module.ts)
+  APPLE = 'APPLE', // 🔲 Planned
 }
 
 // Strategy interface
@@ -318,58 +340,49 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
 ## Database Schema
 
+### User
+
 ```prisma
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String?   // null for OAuth users
+  id            String       @id @default(uuid())
+  externalId    String       @unique  // 10-char ID for external partners
+  email         String       @unique
+  username      String       @unique  // Public profile URL (/:username)
+  password      String?      // null for OAuth users
   name          String?
   avatar        String?
-  role          Role      @default(USER)
+  role          Role         @default(USER)
   provider      AuthProvider @default(LOCAL)
-  providerId    String?   // Google ID, etc.
-  emailVerified Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  providerId    String?      // OAuth provider user ID
+  emailVerified Boolean      @default(false)
+  region        String?      // KR, JP, EU, US (for consent policy)
+  locale        String?      // ko, en, ja
+  timezone      String?      // Asia/Seoul, etc.
 
   sessions      Session[]
   domainAccess  DomainAccessToken[]
-}
-
-model Session {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  refreshToken String   @unique
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-
-  @@index([userId])
-}
-
-model DomainAccessToken {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  domain    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([domain])
-}
-
-enum Role {
-  USER
-  ADMIN
-}
-
-enum AuthProvider {
-  LOCAL
-  GOOGLE
+  consents      UserConsent[]
 }
 ```
+
+### Supporting Models
+
+| Model                 | Purpose                  | Key Fields                                |
+| --------------------- | ------------------------ | ----------------------------------------- |
+| `Session`             | Refresh token management | userId, refreshToken, expiresAt           |
+| `DomainAccessToken`   | Time-limited sharing     | domain, token, expiresAt                  |
+| `OAuthProviderConfig` | OAuth provider settings  | provider, enabled, clientId               |
+| `LegalDocument`       | Legal document versions  | type, version, locale, content            |
+| `UserConsent`         | Consent audit trail      | consentType, documentId, agreed, agreedAt |
+
+### Enums
+
+| Enum                | Values                                                                                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Role`              | GUEST, USER, MANAGER, MASTER                                                                                                                  |
+| `AuthProvider`      | LOCAL ✅, GOOGLE ⏸️, KAKAO ⏸️, NAVER ⏸️, APPLE 🔲                                                                                             |
+| `LegalDocumentType` | TERMS_OF_SERVICE, PRIVACY_POLICY, MARKETING_POLICY, PERSONALIZED_ADS                                                                          |
+| `ConsentType`       | TERMS_OF_SERVICE, PRIVACY_POLICY, MARKETING_EMAIL, MARKETING_PUSH, MARKETING_PUSH_NIGHT, MARKETING_SMS, PERSONALIZED_ADS, THIRD_PARTY_SHARING |
 
 ## Guards
 
@@ -424,7 +437,7 @@ getAllUsers() {
 # JWT
 JWT_SECRET=your-secret-key
 JWT_ACCESS_EXPIRATION=15m
-JWT_REFRESH_EXPIRATION=7d
+JWT_REFRESH_EXPIRATION=14d
 
 # Google OAuth
 GOOGLE_CLIENT_ID=your-client-id
@@ -467,7 +480,7 @@ generateTokens(user: User) {
 
   return {
     accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }),
-    refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
+    refreshToken: this.jwtService.sign(payload, { expiresIn: '14d' }),
   };
 }
 ```
@@ -634,7 +647,48 @@ model UserConsent {
 }
 ```
 
+## OAuth Configuration API (`/v1/oauth-config`)
+
+Admin API for managing OAuth provider settings.
+
+```typescript
+// Get all OAuth providers (MASTER role only)
+GET /v1/oauth-config
+Headers: Authorization: Bearer {token}
+Response: [{ provider: AuthProvider, enabled: boolean, hasCredentials: boolean }]
+
+// Get specific provider config (MASTER role only)
+GET /v1/oauth-config/:provider
+Headers: Authorization: Bearer {token}
+Params: provider = 'GOOGLE' | 'KAKAO' | 'NAVER' | 'APPLE'
+Response: { provider, enabled, clientId?, hasSecret: boolean }
+
+// Enable/disable OAuth provider (MASTER role only)
+PATCH /v1/oauth-config/:provider/toggle
+Headers: Authorization: Bearer {token}
+Body: { enabled: boolean }
+Response: { provider, enabled, message: string }
+
+// Check provider status (public - no auth)
+GET /v1/oauth-config/:provider/status
+Response: { provider, available: boolean, message?: string }
+```
+
+## Rate Limiting
+
+Rate limiting is implemented using NestJS Throttler:
+
+| Endpoint Category | Limit    | Window | Notes                         |
+| ----------------- | -------- | ------ | ----------------------------- |
+| Auth (register)   | 5 req    | 1 min  | Per IP address                |
+| Auth (login)      | 5 req    | 1 min  | Per IP address                |
+| Legal (public)    | 30 req   | 1 min  | consent-requirements, docs    |
+| Global default    | 100 req  | 1 min  | All other endpoints           |
+| Account lockout   | 5 failed | 30 min | After 5 failed login attempts |
+
 ## Health Check
+
+Health endpoints are provided by the shared `@my-girok/nest-common` HealthModule.
 
 ```typescript
 GET /health
@@ -643,3 +697,5 @@ Response: { status: 'ok', database: 'up' }
 GET /health/ready
 Response: { status: 'ok', database: 'up', redis: 'up' }
 ```
+
+Note: Health endpoints are excluded from the `/v1` prefix.
