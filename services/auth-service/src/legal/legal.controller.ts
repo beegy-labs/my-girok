@@ -11,6 +11,7 @@ import {
   ParseEnumPipe,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -90,6 +91,7 @@ export class LegalController {
    * ```
    */
   @Get('consent-requirements')
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute for public endpoint
   @ApiOperation({
     summary: 'Get consent requirements for registration',
     description: 'Returns region-specific consent requirements based on locale. No auth required.',
@@ -133,6 +135,7 @@ export class LegalController {
    * ```
    */
   @Get('documents/:type')
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute for public endpoint
   @ApiOperation({
     summary: 'Get legal document by type',
     description: 'Returns latest active version. Falls back to Korean if locale unavailable.',
@@ -158,10 +161,11 @@ export class LegalController {
    *
    * @example
    * ```
-   * GET /legal/documents/id/550e8400-e29b-41d4-a716-446655440000
+   * GET /legal/documents/by-id/550e8400-e29b-41d4-a716-446655440000
    * ```
    */
-  @Get('documents/id/:id')
+  @Get('documents/by-id/:id')
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute for public endpoint
   @ApiOperation({
     summary: 'Get legal document by ID',
     description: 'Retrieves specific document version for audit purposes.',
