@@ -290,12 +290,32 @@ interface Skill {
 
 ### Supporting Types
 
-| Type                   | Purpose                                     |
-| ---------------------- | ------------------------------------------- |
-| `Education`            | school, major, degree, gpa, gpaFormat       |
-| `Certificate`          | name, issuer, issueDate, credentialUrl      |
-| `ResumeSection`        | type (SectionType), order, visible          |
-| `ResumeAttachmentBase` | type, fileName, fileUrl, fileSize, mimeType |
+| Type            | Purpose                                |
+| --------------- | -------------------------------------- |
+| `Education`     | school, major, degree, gpa, gpaFormat  |
+| `Certificate`   | name, issuer, issueDate, credentialUrl |
+| `ResumeSection` | type (SectionType), order, visible     |
+
+```typescript
+interface ResumeAttachmentBase {
+  id: string;
+  resumeId: string;
+  type: AttachmentType;
+  fileName: string;
+  fileKey: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  isProcessed: boolean;
+  originalUrl?: string;
+  title?: string;
+  description?: string;
+  order: number;
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+```
 
 ### Utility Functions
 

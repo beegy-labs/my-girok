@@ -647,7 +647,48 @@ model UserConsent {
 }
 ```
 
+## OAuth Configuration API (`/v1/oauth-config`)
+
+Admin API for managing OAuth provider settings.
+
+```typescript
+// Get all OAuth providers (MASTER role only)
+GET /v1/oauth-config
+Headers: Authorization: Bearer {token}
+Response: [{ provider: AuthProvider, enabled: boolean, hasCredentials: boolean }]
+
+// Get specific provider config (MASTER role only)
+GET /v1/oauth-config/:provider
+Headers: Authorization: Bearer {token}
+Params: provider = 'GOOGLE' | 'KAKAO' | 'NAVER' | 'APPLE'
+Response: { provider, enabled, clientId?, hasSecret: boolean }
+
+// Enable/disable OAuth provider (MASTER role only)
+PATCH /v1/oauth-config/:provider/toggle
+Headers: Authorization: Bearer {token}
+Body: { enabled: boolean }
+Response: { provider, enabled, message: string }
+
+// Check provider status (public - no auth)
+GET /v1/oauth-config/:provider/status
+Response: { provider, available: boolean, message?: string }
+```
+
+## Rate Limiting
+
+Rate limiting is implemented using NestJS Throttler:
+
+| Endpoint Category | Limit    | Window | Notes                         |
+| ----------------- | -------- | ------ | ----------------------------- |
+| Auth (register)   | 5 req    | 1 min  | Per IP address                |
+| Auth (login)      | 5 req    | 1 min  | Per IP address                |
+| Legal (public)    | 30 req   | 1 min  | consent-requirements, docs    |
+| Global default    | 100 req  | 1 min  | All other endpoints           |
+| Account lockout   | 5 failed | 30 min | After 5 failed login attempts |
+
 ## Health Check
+
+Health endpoints are provided by the shared `@my-girok/nest-common` HealthModule.
 
 ```typescript
 GET /health
@@ -656,3 +697,5 @@ Response: { status: 'ok', database: 'up' }
 GET /health/ready
 Response: { status: 'ok', database: 'up', redis: 'up' }
 ```
+
+Note: Health endpoints are excluded from the `/v1` prefix.

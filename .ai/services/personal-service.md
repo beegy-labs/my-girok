@@ -4,13 +4,13 @@
 
 ## Tech Stack
 
-| Component | Technology                |
-| --------- | ------------------------- |
-| Framework | NestJS 11, TypeScript 5.9 |
-| Database  | PostgreSQL 16, Prisma 6   |
-| Storage   | MinIO (S3-compatible)     |
-| Queue     | BullMQ (resume copy)      |
-| Port      | REST :3002                |
+| Component | Technology                     |
+| --------- | ------------------------------ |
+| Framework | NestJS 11, TypeScript 5.9      |
+| Database  | PostgreSQL 16, Prisma 6        |
+| Storage   | MinIO (S3-compatible)          |
+| Queue     | BullMQ + Valkey (Redis-compat) |
+| Port      | REST :3002                     |
 
 ## Database Schema
 
@@ -236,31 +236,55 @@ model ResumeAttachment {
 
 ### Structure
 
+Files are stored in a flat structure with type tracked in the database:
+
 ```
 resumes/
 └── {userId}/
     └── {resumeId}/
-        ├── profile/       # Profile photos (grayscale converted)
-        ├── portfolio/     # Portfolio files
-        ├── certificate/   # Certificate images
-        └── other/         # Other attachments
+        └── {uuid}.{ext}    # All file types in flat structure
 
-temp/
+tmp/
 └── {userId}/
-    └── {uuid}.{ext}       # Temporary uploads (auto-cleanup)
+    └── {uuid}.{ext}        # Temporary uploads (24hr auto-cleanup via MinIO lifecycle)
 ```
+
+> **Note**: File type (PROFILE_PHOTO, PORTFOLIO, CERTIFICATE, OTHER) is stored in the database `ResumeAttachment.type` field, not in the folder structure.
 
 ### Upload Flow
 
 1. **Temp upload**: `POST /resume/temp-upload` → returns `tempKey` + `previewUrl`
 2. **Preview**: Client displays image using `previewUrl`
 3. **Save resume**: Backend moves temp file to permanent storage
-4. **Cleanup**: Cron job removes orphan temp files
+4. **Cleanup**: MinIO lifecycle policy removes temp files after 24 hours
+
+### File Validation
+
+| Constraint  | Value                |
+| ----------- | -------------------- |
+| Max size    | 10 MB                |
+| Image types | JPEG, PNG, GIF, WEBP |
+| Doc types   | PDF, DOCX            |
 
 ### Image Proxy
 
 - `GET /resume/image-proxy?key={fileKey}` - Serves MinIO images with CORS headers
 - Used by PDF export (html2canvas) to avoid CORS issues
+
+### CORS Configuration
+
+The image proxy requires proper CORS setup for PDF export to work:
+
+```typescript
+// CORS headers set by image-proxy endpoint
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, OPTIONS
+Access-Control-Allow-Headers: Content-Type
+
+// MinIO bucket policy must allow public read for image-proxy to work
+```
+
+> **Note**: Grayscale conversion for profile photos is handled by frontend CSS filter, not backend processing.
 
 ## Queue (BullMQ)
 
@@ -294,17 +318,22 @@ MINIO_ACCESS_KEY=xxx
 MINIO_SECRET_KEY=xxx
 MINIO_BUCKET=my-girok-resumes
 
-# Redis (BullMQ)
-REDIS_URL=redis://redis:6379
+# Valkey (Redis-compatible, for BullMQ)
+VALKEY_HOST=localhost
+VALKEY_PORT=6379
+VALKEY_PASSWORD=xxx     # Optional
+VALKEY_DB=1             # Database index (default: 1)
 
 # JWT
 JWT_SECRET=xxx
 ```
 
+> **Note**: This service uses [Valkey](https://valkey.io/) (Redis fork) for BullMQ. Environment variables use `VALKEY_*` prefix.
+
 ## Integration
 
-| Direction  | Service | Protocol                 | Purpose |
-| ---------- | ------- | ------------------------ | ------- |
-| ← web-main | REST    | Resume CRUD, file upload |
-| → MinIO    | S3 API  | File storage             |
-| → Redis    | BullMQ  | Async job queue          |
+| Direction  | Service | Protocol                 | Purpose           |
+| ---------- | ------- | ------------------------ | ----------------- |
+| ← web-main | REST    | Resume CRUD, file upload |                   |
+| → MinIO    | S3 API  | File storage             |                   |
+| → Valkey   | BullMQ  | Async job queue          | Resume copy, etc. |
