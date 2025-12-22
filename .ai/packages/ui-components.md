@@ -247,7 +247,7 @@ export interface TextInputProps {
 export interface CardProps {
   variant?: 'primary' | 'secondary' | 'elevated';
   interactive?: boolean;
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'responsive';
   radius?: 'none' | 'subtle' | 'default' | 'md' | 'lg' | 'xl' | '2xl';
 }
 ```
@@ -282,6 +282,24 @@ export interface BadgeProps {
 - md size: `text-xs` (12px), `px-4`
 - lg size: `text-brand-base` (14px), `px-6`
 - rounded options: `default` (rounded-xl) or `full` (rounded-full)
+
+### SectionBadge
+
+Editorial-style section header badge with uppercase styling.
+
+```typescript
+export interface SectionBadgeProps {
+  children: ReactNode;
+  className?: string;
+}
+```
+
+**V0.0.1 Styling:**
+
+- `font-mono-brand uppercase tracking-brand`
+- `border border-theme-border-subtle`
+- `bg-theme-bg-secondary rounded-soft`
+- `px-3 py-1.5 text-brand-xs`
 
 ### MenuCard
 
@@ -372,10 +390,87 @@ export interface TopWidgetProps {
 
 ```typescript
 export interface AlertProps {
-  variant: 'success' | 'error' | 'warning' | 'info';
+  variant?: 'success' | 'error' | 'warning' | 'info'; // default: 'info'
   title?: string;
   children: ReactNode;
   onClose?: () => void;
+  className?: string;
+}
+```
+
+### SelectInput
+
+```typescript
+export interface SelectInputProps {
+  label?: string;
+  error?: string;
+  hint?: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  options: SelectOption[];
+  placeholder?: string;
+  containerClassName?: string;
+  selectClassName?: string;
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+```
+
+### TextArea
+
+```typescript
+export interface TextAreaProps {
+  label?: string;
+  error?: string;
+  hint?: string;
+  onChange?: (value: string) => void;
+  // Extends TextareaHTMLAttributes
+}
+```
+
+### CollapsibleSection
+
+```typescript
+export interface CollapsibleSectionProps {
+  title: string;
+  icon?: string;
+  defaultExpanded?: boolean;
+  isExpanded?: boolean; // Controlled mode
+  onToggle?: () => void;
+  collapsible?: boolean; // false = always expanded
+  headerAction?: ReactNode;
+  variant?: 'primary' | 'secondary';
+  count?: number; // Item count badge
+  children: ReactNode;
+}
+```
+
+### PageContainer
+
+```typescript
+export interface PageContainerProps {
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  padding?: 'default' | 'none' | 'compact';
+  centered?: boolean; // Vertical center (auth pages)
+  children: ReactNode;
+}
+```
+
+### PageHeader
+
+```typescript
+export interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  icon?: string;
+  backLink?: string;
+  backText?: string;
+  action?: ReactNode;
+  size?: 'sm' | 'md' | 'lg';
+  backLinkComponent?: React.ElementType; // For react-router Link
 }
 ```
 

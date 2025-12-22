@@ -132,7 +132,7 @@ Full details: [.ai/git-flow.md](.ai/git-flow.md)
 ### Stack
 
 - **Web**: React 19.2, TypeScript 5.9, Tailwind CSS 4.1, Vite 7.2
-- **Mobile**: iOS (Swift), Android (Kotlin)
+- **Mobile**: iOS (Swift), Android (Kotlin), Flutter (cross-platform)
 - **Backend**: Node.js 24, NestJS 11
 - **Database**: PostgreSQL 16 + Prisma 6 + Redis
 - **AI**: Python 3.13, FastAPI
