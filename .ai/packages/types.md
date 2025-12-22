@@ -1,89 +1,39 @@
 # @my-girok/types
 
-> Shared TypeScript types and Protobuf definitions
-
-## Purpose
-
-Central repository for all shared types across the monorepo. Includes TypeScript interfaces, DTOs, and Protobuf definitions for gRPC services.
+> Shared TypeScript types across the monorepo
 
 ## Structure
 
 ```
-packages/types/
-├── src/
-│   ├── auth/           # Authentication types
-│   │   ├── user.ts
-│   │   ├── token.ts
-│   │   └── session.ts
-│   ├── legal/          # Legal & consent types
-│   │   ├── enums.ts
-│   │   ├── dto.ts
-│   │   └── index.ts
-│   ├── resume/         # Resume types
-│   │   ├── resume.ts
-│   │   ├── experience.ts
-│   │   └── share.ts
-│   ├── feed/           # Feed types
-│   │   ├── post.ts
-│   │   ├── comment.ts
-│   │   └── timeline.ts
-│   ├── chat/           # Chat types
-│   │   ├── room.ts
-│   │   ├── message.ts
-│   │   └── participant.ts
-│   ├── common/         # Common types
-│   │   ├── pagination.ts
-│   │   ├── response.ts
-│   │   └── error.ts
-│   └── index.ts        # Barrel exports
-├── proto/              # Protobuf definitions
-│   ├── auth.proto
-│   ├── feed.proto
-│   ├── chat.proto
-│   ├── matching.proto
-│   └── media.proto
-├── package.json
-└── tsconfig.json
+packages/types/src/
+├── auth/
+│   ├── enums.ts      # Role, AuthProvider, TokenType
+│   ├── dto.ts        # Auth DTOs (Login, Register, JWT, etc.)
+│   └── index.ts
+├── user/
+│   └── user.ts       # User, Session, DomainAccessToken
+├── resume/
+│   └── index.ts      # Resume, Experience, Skill, etc.
+├── legal/
+│   ├── enums.ts      # ConsentType, LegalDocumentType
+│   └── dto.ts        # Consent DTOs, Legal Documents
+├── common/
+│   ├── api-response.ts  # ApiResponse, Pagination
+│   └── index.ts
+└── index.ts
 ```
 
-## Usage
+## Auth Enums
 
 ```typescript
-import {
-  User,
-  Resume,
-  Post,
-  ChatRoom,
-  Message,
-  PaginatedResponse,
-  ApiErrorResponse,
-} from '@my-girok/types';
-```
-
-## Auth Types
-
-```typescript
-// src/auth/user.ts
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  name?: string;
-  avatar?: string;
-  role: UserRole;
-  provider: AuthProvider;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export enum UserRole {
+enum Role {
   GUEST = 'GUEST',
   USER = 'USER',
   MANAGER = 'MANAGER',
   MASTER = 'MASTER',
 }
 
-export enum AuthProvider {
+enum AuthProvider {
   LOCAL = 'LOCAL',
   GOOGLE = 'GOOGLE',
   KAKAO = 'KAKAO',
@@ -91,93 +41,328 @@ export enum AuthProvider {
   APPLE = 'APPLE',
 }
 
-// src/auth/token.ts
-export interface TokenPair {
+enum TokenType {
+  ACCESS = 'ACCESS',
+  REFRESH = 'REFRESH',
+  DOMAIN_ACCESS = 'DOMAIN_ACCESS',
+}
+```
+
+## Auth DTOs
+
+```typescript
+interface RegisterDto {
+  email: string;
+  username: string;
+  password: string;
+  name: string;
+}
+
+interface LoginDto {
+  email: string;
+  password: string;
+}
+
+interface AuthPayload {
+  user: UserPayload;
   accessToken: string;
   refreshToken: string;
 }
 
-export interface TokenPayload {
-  sub: string; // userId
+interface UserPayload {
+  id: string;
   email: string;
-  role: UserRole;
-  iat: number;
-  exp: number;
+  username: string;
+  name: string | null;
+  avatar: string | null;
+  role: Role;
+  provider: AuthProvider;
+  emailVerified: boolean;
+  createdAt: Date;
 }
 
-// src/auth/session.ts
-export interface Session {
+interface RefreshTokenDto {
+  refreshToken: string;
+}
+
+interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface GrantDomainAccessDto {
+  domain: string;
+  expiresInHours: number;
+  recipientEmail?: string;
+}
+
+interface DomainAccessPayload {
+  accessToken: string;
+  expiresAt: Date;
+  accessUrl: string;
+}
+
+interface UpdateProfileDto {
+  username?: string;
+  name?: string;
+  avatar?: string;
+}
+
+interface ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
+}
+
+interface JwtPayload {
+  sub: string; // User ID
+  email: string;
+  role: Role;
+  type: 'ACCESS' | 'REFRESH' | 'DOMAIN_ACCESS';
+  domain?: string;
+  iat?: number;
+  exp?: number;
+}
+```
+
+## User Types
+
+```typescript
+interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  avatar: string | null;
+  role: Role;
+  provider: AuthProvider;
+  providerId: string | null;
+  emailVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Session {
   id: string;
   userId: string;
-  accessToken: string;
   refreshToken: string;
-  createdAt: number;
-  expiresAt: number;
+  expiresAt: Date;
+  createdAt: Date;
 }
+
+interface DomainAccessToken {
+  id: string;
+  userId: string;
+  domain: string;
+  token: string;
+  expiresAt: Date;
+  createdAt: Date;
+}
+```
+
+## Resume Types
+
+### Enums
+
+| Enum             | Values                                                             |
+| ---------------- | ------------------------------------------------------------------ |
+| `SectionType`    | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE                |
+| `DegreeType`     | HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE |
+| `GpaFormat`      | SCALE_4_0, SCALE_4_5, SCALE_100                                    |
+| `AttachmentType` | PROFILE_PHOTO, PORTFOLIO, CERTIFICATE, OTHER                       |
+| `Gender`         | MALE, FEMALE, OTHER                                                |
+| `PaperSize`      | 'A4' \| 'LETTER' (type, not enum)                                  |
+
+### Core Interfaces
+
+```typescript
+interface Resume {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  isDefault: boolean;
+  paperSize?: PaperSize;
+
+  // Basic Info
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  github?: string;
+  blog?: string;
+  linkedin?: string;
+  portfolio?: string;
+  summary?: string;
+  keyAchievements?: string[];
+  profileImage?: string;
+
+  // Personal Info
+  birthYear?: number; // deprecated, use birthDate
+  birthDate?: string; // YYYY-MM-DD
+  gender?: Gender;
+
+  // Korean-specific (Military Service)
+  militaryService?: 'COMPLETED' | 'EXEMPTED' | 'NOT_APPLICABLE';
+  militaryDischarge?: string; // e.g., "병장 제대"
+  militaryRank?: string; // e.g., "병장", "상병"
+  militaryDischargeType?: string; // e.g., "만기전역"
+  militaryServiceStartDate?: string; // YYYY-MM
+  militaryServiceEndDate?: string; // YYYY-MM
+  coverLetter?: string;
+  applicationReason?: string;
+
+  // Sections
+  sections: ResumeSection[];
+  skills: Skill[];
+  experiences: Experience[];
+  projects: Project[]; // @deprecated - use ExperienceProject
+  educations: Education[];
+  certificates: Certificate[];
+  attachments?: ResumeAttachmentBase[];
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Experience {
+  id?: string;
+  company: string;
+  startDate: string; // YYYY-MM
+  endDate?: string;
+  isCurrentlyWorking?: boolean;
+  finalPosition: string; // "Backend Team Lead"
+  jobTitle: string; // "Senior Developer"
+  salary?: number;
+  salaryUnit?: string; // "만원", "USD"
+  showSalary?: boolean;
+  projects: ExperienceProject[];
+  order: number;
+  visible: boolean;
+}
+
+interface ExperienceProject {
+  id?: string;
+  name: string;
+  startDate: string;
+  endDate?: string;
+  description: string;
+  role?: string;
+  achievements: ProjectAchievement[]; // 4-depth hierarchy
+  techStack: string[];
+  url?: string;
+  githubUrl?: string;
+  order: number;
+}
+
+interface ProjectAchievement {
+  id?: string;
+  content: string;
+  depth: number; // 1-4
+  order: number;
+  children?: ProjectAchievement[];
+}
+```
+
+### Skill Types
+
+```typescript
+interface SkillDescription {
+  id?: string;
+  content: string;
+  depth: number; // 1-4 (indentation level)
+  order: number;
+  children?: SkillDescription[];
+}
+
+interface SkillItem {
+  name: string;
+  description?: string; // Legacy (backward compatibility)
+  descriptions?: SkillDescription[]; // Hierarchical (4 depth levels)
+}
+
+interface Skill {
+  id?: string;
+  category: string; // "Language", "Framework", "Database"
+  items: SkillItem[];
+  order: number;
+  visible: boolean;
+}
+```
+
+### Supporting Types
+
+| Type                   | Purpose                                     |
+| ---------------------- | ------------------------------------------- |
+| `Education`            | school, major, degree, gpa, gpaFormat       |
+| `Certificate`          | name, issuer, issueDate, credentialUrl      |
+| `ResumeSection`        | type (SectionType), order, visible          |
+| `ResumeAttachmentBase` | type, fileName, fileUrl, fileSize, mimeType |
+
+### Utility Functions
+
+```typescript
+// Calculate Korean age from birth date
+calculateKoreanAge(birthDate: string | Date): number
+
+// Calculate age from birth year (approximate)
+calculateAgeFromYear(birthYear: number): number
+
+// Get age from Resume (uses birthDate or falls back to birthYear)
+getAge(resume: Pick<Resume, 'birthDate' | 'birthYear'>): number | undefined
 ```
 
 ## Legal Types
 
+### Enums
+
 ```typescript
-// src/legal/enums.ts
-export enum ConsentType {
-  TERMS_OF_SERVICE = 'TERMS_OF_SERVICE', // [Required] 이용약관 동의
-  PRIVACY_POLICY = 'PRIVACY_POLICY', // [Required] 개인정보 수집·이용 동의
-  MARKETING_EMAIL = 'MARKETING_EMAIL', // [Optional] 마케팅 이메일
-  MARKETING_PUSH = 'MARKETING_PUSH', // [Optional] 마케팅 푸시
-  MARKETING_PUSH_NIGHT = 'MARKETING_PUSH_NIGHT', // [Optional] 야간 푸시 (21:00-08:00)
-  MARKETING_SMS = 'MARKETING_SMS', // [Optional] 마케팅 SMS
-  PERSONALIZED_ADS = 'PERSONALIZED_ADS', // [Optional] 맞춤형 광고
-  THIRD_PARTY_SHARING = 'THIRD_PARTY_SHARING', // [Optional] 제3자 정보 제공
+enum ConsentType {
+  TERMS_OF_SERVICE      // Required
+  PRIVACY_POLICY        // Required
+  MARKETING_EMAIL       // Optional
+  MARKETING_PUSH        // Optional
+  MARKETING_PUSH_NIGHT  // Optional (Korea 21:00-08:00)
+  MARKETING_SMS         // Optional
+  PERSONALIZED_ADS      // Optional
+  THIRD_PARTY_SHARING   // Optional
 }
 
-export enum LegalDocumentType {
-  TERMS_OF_SERVICE = 'TERMS_OF_SERVICE',
-  PRIVACY_POLICY = 'PRIVACY_POLICY',
-  MARKETING_POLICY = 'MARKETING_POLICY',
-  PERSONALIZED_ADS = 'PERSONALIZED_ADS',
+enum LegalDocumentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_POLICY
+  PERSONALIZED_ADS
+}
+```
+
+### Consent Types
+
+```typescript
+interface ConsentRequirement {
+  type: ConsentType;
+  required: boolean;
+  labelKey: string;
+  descriptionKey: string;
 }
 
-// src/legal/dto.ts - Key Types
+interface ConsentSubmission {
+  type: ConsentType;
+  agreed: boolean;
+}
 
-/** Document summary for consent requirement */
-export interface ConsentDocumentSummary {
+interface ConsentDocumentSummary {
   id: string;
   version: string;
   title: string;
   summary: string | null;
 }
 
-export interface ConsentRequirementWithDocument {
-  type: ConsentType;
-  required: boolean;
-  labelKey: string; // i18n key for label
-  descriptionKey: string; // i18n key for description
+interface ConsentRequirementWithDocument extends ConsentRequirement {
   documentType: LegalDocumentType;
   nightTimeHours?: { start: number; end: number };
   document: ConsentDocumentSummary | null;
 }
 
-/** API response from GET /v1/legal/consent-requirements */
-export interface ConsentRequirementsWithRegionResponse {
-  region: string; // 'KR', 'JP', 'EU', 'US', 'DEFAULT'
-  law: string; // 'PIPA (개인정보보호법)'
-  nightTimePushRestriction?: { start: number; end: number };
-  requirements: ConsentRequirementWithDocument[];
-}
-
-export interface LegalDocumentPayload {
-  id: string;
-  type: LegalDocumentType;
-  version: string;
-  locale: string;
-  title: string;
-  content: string;
-  summary: string | null;
-  effectiveDate: Date;
-}
-
-export interface UserConsentPayload {
+interface UserConsentPayload {
   id: string;
   userId: string;
   consentType: ConsentType;
@@ -188,279 +373,141 @@ export interface UserConsentPayload {
   withdrawnAt?: Date;
 }
 
-export interface CreateConsentDto {
+interface CreateConsentDto {
   consentType: ConsentType;
   documentId?: string;
   agreed: boolean;
 }
+
+interface UpdateConsentDto {
+  agreed: boolean;
+}
 ```
 
-### Legal API Usage (Frontend)
+### Document Types
 
 ```typescript
-import { getConsentRequirements, type ConsentRequirementsWithRegionResponse } from '../api/legal';
-
-// Fetch region-specific consent requirements
-const requirements = await getConsentRequirements('ko');
-console.log(requirements.region); // 'KR'
-console.log(requirements.law); // 'PIPA (개인정보보호법)'
-```
-
-## Resume Types
-
-```typescript
-// src/resume/resume.ts
-export interface Resume {
+interface LegalDocumentPayload {
   id: string;
-  userId: string;
+  type: LegalDocumentType;
+  version: string;
+  locale: string;
   title: string;
-  description?: string;
-  isDefault: boolean;
-  paperSize: PaperSize;
+  content: string;
+  summary: string | null;
+  effectiveDate: Date;
+}
 
-  // Personal info
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  summary?: string;
-  profilePhotoUrl?: string;
-
-  // Relations
-  experiences: Experience[];
-  educations: Education[];
-  skills: Skill[];
-  certificates: Certificate[];
-
+interface LegalDocumentFull extends LegalDocumentPayload {
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
+```
 
-export enum PaperSize {
-  A4 = 'A4',
-  LETTER = 'LETTER',
+### Response Types
+
+```typescript
+interface ConsentRequirementsResponse {
+  requirements: ConsentRequirement[];
 }
 
-// src/resume/experience.ts
-export interface Experience {
-  id: string;
-  resumeId: string;
-  company: string;
-  position: string;
-  location?: string;
-  startDate: Date;
-  endDate?: Date;
-  isCurrent: boolean;
-  description?: string;
-  achievements: string[];
-  projects: Project[];
-  sortOrder: number;
+interface ConsentRequirementsWithRegionResponse {
+  region: string; // 'KR', 'JP', 'EU', 'US', 'DEFAULT'
+  law: string; // 'PIPA (개인정보보호법)'
+  nightTimePushRestriction?: { start: number; end: number };
+  requirements: ConsentRequirementWithDocument[];
 }
 
-export interface Project {
-  id: string;
+interface RegisterWithConsentsDto {
+  email: string;
+  username: string;
+  password: string;
   name: string;
-  description?: string;
-  achievements: string[];
-  technologies: string[];
-}
-```
-
-## Feed Types
-
-```typescript
-// src/feed/post.ts
-export interface Post {
-  id: string;
-  authorId: string;
-  content: string;
-  mediaUrls: string[];
-  tags: string[];
-  likesCount: number;
-  commentsCount: number;
-  status: PostStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export enum PostStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-  ARCHIVED = 'archived',
-}
-
-// src/feed/timeline.ts
-export interface TimelineItem {
-  post: Post;
-  author: User;
-  isLiked: boolean;
-}
-
-export interface TimelineConnection {
-  edges: TimelineEdge[];
-  pageInfo: PageInfo;
-}
-
-export interface TimelineEdge {
-  node: TimelineItem;
-  cursor: string;
-}
-```
-
-## Chat Types
-
-```typescript
-// src/chat/room.ts
-export interface ChatRoom {
-  id: string;
-  type: RoomType;
-  name?: string;
-  memberIds: string[];
-  lastMessage?: Message;
-  lastMessageAt?: Date;
-  createdAt: Date;
-}
-
-export enum RoomType {
-  DIRECT = 'direct',
-  GROUP = 'group',
-  RANDOM = 'random',
-}
-
-// src/chat/message.ts
-export interface Message {
-  id: string;
-  roomId: string;
-  authorId: string;
-  content: string;
-  type: MessageType;
-  metadata?: Record<string, string>;
-  isDeleted: boolean;
-  createdAt: Date;
-}
-
-export enum MessageType {
-  TEXT = 'text',
-  IMAGE = 'image',
-  FILE = 'file',
-  SYSTEM = 'system',
+  consents: ConsentSubmission[];
+  language?: string; // 'ko', 'en', 'ja', 'hi'
+  country?: string; // 'KR', 'JP', 'US', 'GB', 'IN'
+  timezone?: string; // 'Asia/Seoul'
 }
 ```
 
 ## Common Types
 
+### API Response
+
 ```typescript
-// src/common/pagination.ts
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+  meta?: ResponseMeta;
+}
+
+interface ApiError {
+  code: string;
+  message: string;
+  details?: any;
+}
+
+interface ResponseMeta {
+  timestamp: string;
+  requestId?: string;
+  pagination?: PaginationMeta;
+}
+```
+
+### Pagination
+
+```typescript
+interface PaginationMeta {
   page: number;
   limit: number;
-  hasMore: boolean;
-}
-
-export interface CursorPaginatedResponse<T> {
-  edges: Array<{ node: T; cursor: string }>;
-  pageInfo: PageInfo;
-}
-
-export interface PageInfo {
+  total: number;
+  totalPages: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
-  startCursor?: string;
-  endCursor?: string;
 }
 
-// src/common/response.ts
-export interface ApiSuccessResponse<T = unknown> {
-  success: true;
-  data: T;
-  timestamp: string;
+interface PaginationDto {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
-export interface ApiErrorResponse {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-  timestamp: string;
+interface PaginatedResponse<T> {
+  items: T[];
+  meta: PaginationMeta;
 }
-
-export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 ```
 
-## DTOs
+## Usage
 
 ```typescript
-// src/auth/dto.ts
-export interface LoginDto {
-  email: string;
-  password: string;
-}
-
-export interface RegisterDto {
-  email: string;
-  password: string;
-  username: string;
-  name?: string;
-}
-
-// src/resume/dto.ts
-export interface CreateResumeDto {
-  title: string;
-  description?: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  paperSize?: PaperSize;
-}
-
-export interface UpdateResumeDto extends Partial<CreateResumeDto> {
-  experiences?: Omit<Experience, 'id' | 'resumeId'>[];
-  educations?: Omit<Education, 'id' | 'resumeId'>[];
-  skills?: Omit<Skill, 'id' | 'resumeId'>[];
-}
-```
-
-## Protobuf Definitions
-
-```protobuf
-// proto/common.proto
-syntax = "proto3";
-
-package common;
-
-message Empty {}
-
-message Timestamp {
-  int64 seconds = 1;
-  int32 nanos = 2;
-}
-
-message PageInfo {
-  bool has_next_page = 1;
-  bool has_previous_page = 2;
-  string start_cursor = 3;
-  string end_cursor = 4;
-}
-```
-
-## Installation
-
-```bash
-# Add as workspace dependency
-pnpm add @my-girok/types --filter @my-girok/auth-service
-pnpm add @my-girok/types --filter @my-girok/graphql-bff
+import {
+  // Auth
+  User,
+  Role,
+  AuthProvider,
+  AuthPayload,
+  JwtPayload,
+  // Resume
+  Resume,
+  Experience,
+  Skill,
+  SkillItem,
+  // Legal
+  ConsentType,
+  ConsentRequirementsWithRegionResponse,
+  UserConsentPayload,
+  // Common
+  ApiResponse,
+  PaginatedResponse,
+} from '@my-girok/types';
 ```
 
 ## Build
 
 ```bash
-# Build TypeScript
 pnpm --filter @my-girok/types build
-
-# Generate Protobuf (if using protoc)
-pnpm --filter @my-girok/types proto:generate
 ```

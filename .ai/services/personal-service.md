@@ -1,373 +1,291 @@
 # Personal Service
 
-> Resume and profile management with PostgreSQL
-
-## Purpose
-
-Manages user resumes, profiles, and share links. Primary service for the resume builder feature. Uses PostgreSQL for complex queries and relational data.
-
-## Implementation Status
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| REST API | ✅ Implemented | External-facing API |
-| gRPC API | 🔲 Planned | For internal BFF communication |
-| MinIO Storage | ✅ Implemented | File storage |
-| PDF Generation | 🔲 Planned | BullMQ queue |
+> Resume management with PostgreSQL + MinIO
 
 ## Tech Stack
 
-**Current:**
-- **Framework**: NestJS 11 + TypeScript 5.9
-- **Database**: PostgreSQL 16 + Prisma 6
-- **Storage**: MinIO (files)
-- **Protocol**: REST :3003 (external)
+| Component | Technology                |
+| --------- | ------------------------- |
+| Framework | NestJS 11, TypeScript 5.9 |
+| Database  | PostgreSQL 16, Prisma 6   |
+| Storage   | MinIO (S3-compatible)     |
+| Queue     | BullMQ (resume copy)      |
+| Port      | REST :3002                |
 
-**Planned (Future):**
-- **Protocol**: REST :3003 (external) + gRPC :50052 (internal)
-- **Queue**: BullMQ (PDF generation)
-- **Events**: NATS JetStream (publish)
+## Database Schema
 
-## Database Schema (Prisma)
+### Resume (Core)
 
 ```prisma
-// prisma/schema.prisma
 model Resume {
-  id          String   @id @default(cuid())
+  id          String    @id @default(uuid())
   userId      String
-  title       String
+  title       String    // "회사용", "프리랜서용"
   description String?
-  isDefault   Boolean  @default(false)
-  paperSize   PaperSize @default(A4)
+  isDefault   Boolean   @default(false)
+  paperSize   PaperSize @default(A4)  // A4, LETTER
 
-  // Personal info
+  // Basic Info
   name        String
-  email       String?
+  email       String
   phone       String?
-  address     String?
+  address     String?   // City/District level
+  github      String?
+  blog        String?
+  linkedin    String?
+  portfolio   String?
   summary     String?
-  profilePhotoUrl String?
+  keyAchievements String[] @default([])  // 3-5 major accomplishments
+  profileImage    String?  // MinIO URL
 
-  // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Korean-specific (optional)
+  birthYear       Int?            // deprecated, use birthDate
+  birthDate       String?         // YYYY-MM-DD
+  gender          Gender?         // MALE, FEMALE, OTHER
+  militaryService MilitaryService? // COMPLETED, EXEMPTED, NOT_APPLICABLE
+  militaryDischarge String?       // e.g., "병장 제대"
+  militaryRank    String?         // e.g., "병장", "상병"
+  militaryDischargeType String?   // e.g., "만기전역"
+  militaryServiceStartDate String? // YYYY-MM
+  militaryServiceEndDate String?  // YYYY-MM
+  coverLetter     String?
+  applicationReason String?
+
+  // Async copy status (BullMQ)
+  copyStatus      CopyStatus?  // PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED
+  copyJobId       String?
+  copyCompletedAt DateTime?    // Timestamp when copy completed
 
   // Relations
-  experiences Experience[]
-  educations  Education[]
-  skills      Skill[]
+  sections     ResumeSection[]
+  attachments  ResumeAttachment[]
+  skills       Skill[]
+  experiences  Experience[]
+  educations   Education[]
   certificates Certificate[]
-  shareLinks  ShareLink[]
-
-  @@index([userId])
+  shares       ShareLink[]
 }
+```
 
+### Experience & Projects
+
+```prisma
 model Experience {
-  id          String   @id @default(cuid())
-  resumeId    String
-  resume      Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  id        String @id @default(uuid())
+  resumeId  String
+  company   String
+  startDate String   // "2023-01"
+  endDate   String?  // null = currently working
+  isCurrentlyWorking Boolean @default(false)
+  finalPosition String  // "Backend Team Lead"
+  jobTitle      String  // "Senior Developer"
+  salary        Int?
+  salaryUnit    String? // "만원", "USD"
+  showSalary    Boolean? @default(false)
+  order         Int @default(0)
+  visible       Boolean @default(true)
 
-  company     String
-  position    String
-  location    String?
-  startDate   DateTime
-  endDate     DateTime?
-  isCurrent   Boolean  @default(false)
+  projects ExperienceProject[]
+}
+
+model ExperienceProject {
+  id           String @id @default(uuid())
+  experienceId String
+  name         String
+  startDate    String
+  endDate      String?
+  description  String
+  role         String?
+  techStack    String[]
+  url          String?
+  githubUrl    String?
+  order        Int @default(0)
+
+  achievements ProjectAchievement[]  // 4-depth hierarchy
+}
+
+model ProjectAchievement {
+  id        String  @id @default(uuid())
+  projectId String
+  content   String
+  depth     Int     // 1-4 levels
+  order     Int @default(0)
+  parentId  String? // Self-referencing for hierarchy
+}
+```
+
+### Section & Attachments
+
+```prisma
+model ResumeSection {
+  id       String      @id @default(uuid())
+  resumeId String
+  type     SectionType // SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE
+  order    Int @default(0)
+  visible  Boolean @default(true)
+}
+
+model ResumeAttachment {
+  id          String         @id @default(uuid())
+  resumeId    String
+  type        AttachmentType // PROFILE_PHOTO, PORTFOLIO, CERTIFICATE, OTHER
+  fileName    String
+  fileKey     String         // MinIO object key
+  fileUrl     String
+  fileSize    Int
+  mimeType    String
+  isProcessed Boolean @default(false)  // Grayscale conversion
+  originalUrl String?        // Before grayscale
+  title       String?
   description String?
-
-  // Nested
-  projects    Project[]
-  achievements String[]
-
-  sortOrder   Int      @default(0)
-
-  @@index([resumeId])
-}
-
-model ShareLink {
-  id          String   @id @default(cuid())
-  resumeId    String
-  resume      Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  token       String   @unique @default(cuid())
-  expiresAt   DateTime?
-  maxViews    Int?
-  viewCount   Int      @default(0)
-  lastViewedAt DateTime?
-
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  @@index([token])
-  @@index([resumeId])
-}
-
-enum PaperSize {
-  A4
-  LETTER
+  order       Int @default(0)
+  visible     Boolean @default(true)
 }
 ```
 
-## REST API Endpoints
+### Supporting Models
+
+| Model             | Purpose          | Key Fields                                   |
+| ----------------- | ---------------- | -------------------------------------------- |
+| `Skill`           | Technical skills | category, items (JSON), order                |
+| `Education`       | Academic history | school, major, degree (enum), gpa, gpaFormat |
+| `Certificate`     | Certifications   | name, issuer, issueDate, credentialUrl       |
+| `ShareLink`       | Public sharing   | token, resourceType, expiresAt, viewCount    |
+| `UserPreferences` | User settings    | theme (LIGHT/DARK), sectionOrder (JSON)      |
+
+### Enums
+
+| Enum              | Values                                                             |
+| ----------------- | ------------------------------------------------------------------ |
+| `PaperSize`       | A4, LETTER                                                         |
+| `Gender`          | MALE, FEMALE, OTHER                                                |
+| `MilitaryService` | COMPLETED, EXEMPTED, NOT_APPLICABLE                                |
+| `DegreeType`      | HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE |
+| `GpaFormat`       | SCALE_4_0, SCALE_4_5, SCALE_100                                    |
+| `SectionType`     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE                |
+| `AttachmentType`  | PROFILE_PHOTO, PORTFOLIO, CERTIFICATE, OTHER                       |
+| `CopyStatus`      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED                   |
+
+## REST API
+
+### Resume CRUD
+
+| Method   | Path                        | Auth | Description        |
+| -------- | --------------------------- | ---- | ------------------ |
+| `GET`    | `/resume`                   | ✅   | List my resumes    |
+| `GET`    | `/resume/default`           | ✅   | Get default resume |
+| `GET`    | `/resume/:resumeId`         | ✅   | Get resume by ID   |
+| `POST`   | `/resume`                   | ✅   | Create resume      |
+| `PUT`    | `/resume/:resumeId`         | ✅   | Update resume      |
+| `DELETE` | `/resume/:resumeId`         | ✅   | Delete resume      |
+| `PATCH`  | `/resume/:resumeId/default` | ✅   | Set as default     |
+| `POST`   | `/resume/:resumeId/copy`    | ✅   | Duplicate resume   |
+
+### Section Management
+
+| Method  | Path                                    | Auth | Description               |
+| ------- | --------------------------------------- | ---- | ------------------------- |
+| `PATCH` | `/resume/:resumeId/sections/order`      | ✅   | Reorder sections          |
+| `PATCH` | `/resume/:resumeId/sections/visibility` | ✅   | Toggle section visibility |
+
+### Attachments
+
+| Method   | Path                                    | Auth | Description             |
+| -------- | --------------------------------------- | ---- | ----------------------- |
+| `POST`   | `/resume/:resumeId/attachments`         | ✅   | Upload file (multipart) |
+| `GET`    | `/resume/:resumeId/attachments`         | ✅   | List attachments        |
+| `PATCH`  | `/resume/:resumeId/attachments/:id`     | ✅   | Update metadata         |
+| `DELETE` | `/resume/:resumeId/attachments/:id`     | ✅   | Delete attachment       |
+| `PATCH`  | `/resume/:resumeId/attachments/reorder` | ✅   | Reorder attachments     |
+
+### Temp Upload (Preview Flow)
+
+| Method   | Path                  | Auth | Description            |
+| -------- | --------------------- | ---- | ---------------------- |
+| `POST`   | `/resume/temp-upload` | ✅   | Upload to temp storage |
+| `DELETE` | `/resume/temp-upload` | ✅   | Delete temp file       |
+
+### Public Access
+
+| Method | Path                       | Auth | Description                    |
+| ------ | -------------------------- | ---- | ------------------------------ |
+| `GET`  | `/resume/public/:username` | ❌   | Get default resume by username |
+| `GET`  | `/resume/image-proxy?key=` | ❌   | Image proxy for PDF export     |
+
+### Share Links
+
+| Method   | Path                      | Auth | Description          |
+| -------- | ------------------------- | ---- | -------------------- |
+| `POST`   | `/share/resume/:resumeId` | ✅   | Create share link    |
+| `GET`    | `/share`                  | ✅   | List my share links  |
+| `GET`    | `/share/:id`              | ✅   | Get share link       |
+| `PATCH`  | `/share/:id`              | ✅   | Update share link    |
+| `DELETE` | `/share/:id`              | ✅   | Delete share link    |
+| `GET`    | `/share/public/:token`    | ❌   | Access shared resume |
+
+### User Preferences
+
+| Method   | Path                   | Auth | Description            |
+| -------- | ---------------------- | ---- | ---------------------- |
+| `GET`    | `/v1/user-preferences` | ✅   | Get preferences        |
+| `POST`   | `/v1/user-preferences` | ✅   | Create/update (upsert) |
+| `PUT`    | `/v1/user-preferences` | ✅   | Partial update         |
+| `DELETE` | `/v1/user-preferences` | ✅   | Reset to defaults      |
+
+## File Storage (MinIO)
+
+### Structure
+
+```
+resumes/
+└── {userId}/
+    └── {resumeId}/
+        ├── profile/       # Profile photos (grayscale converted)
+        ├── portfolio/     # Portfolio files
+        ├── certificate/   # Certificate images
+        └── other/         # Other attachments
+
+temp/
+└── {userId}/
+    └── {uuid}.{ext}       # Temporary uploads (auto-cleanup)
+```
+
+### Upload Flow
+
+1. **Temp upload**: `POST /resume/temp-upload` → returns `tempKey` + `previewUrl`
+2. **Preview**: Client displays image using `previewUrl`
+3. **Save resume**: Backend moves temp file to permanent storage
+4. **Cleanup**: Cron job removes orphan temp files
+
+### Image Proxy
+
+- `GET /resume/image-proxy?key={fileKey}` - Serves MinIO images with CORS headers
+- Used by PDF export (html2canvas) to avoid CORS issues
+
+## Queue (BullMQ)
+
+### Resume Copy Job
+
+When copying resume with attachments:
+
+1. Resume created immediately with `copyStatus: PENDING`
+2. BullMQ job queued for file copy
+3. Job updates `copyStatus` as it progresses
+4. Frontend polls or uses websocket for status
 
 ```typescript
-// Resume CRUD
-GET    /v1/resume              # List user's resumes
-GET    /v1/resume/:id          # Get resume by ID
-POST   /v1/resume              # Create resume
-PUT    /v1/resume/:id          # Update resume
-DELETE /v1/resume/:id          # Delete resume
-
-// Default resume
-GET    /v1/resume/default      # Get user's default resume
-PUT    /v1/resume/:id/default  # Set as default
-
-// Public resume (no auth)
-GET    /v1/resume/public/:username  # Get public resume by username
-
-// Share links
-GET    /v1/share               # List user's share links
-POST   /v1/share               # Create share link
-DELETE /v1/share/:id           # Delete share link
-GET    /v1/share/public/:token # Access shared resume (no auth, increments view)
-
-// File upload
-POST   /v1/resume/:id/photo    # Upload profile photo
-POST   /v1/resume/:id/files    # Upload attachments
-```
-
-## Controller
-
-```typescript
-// src/resume/resume.controller.ts
-@Controller('v1/resume')
-@UseGuards(JwtAuthGuard)
-export class ResumeController {
-  constructor(private readonly resumeService: ResumeService) {}
-
-  @Get()
-  async findAll(@CurrentUser() user: User): Promise<Resume[]> {
-    return this.resumeService.findAllByUserId(user.id);
-  }
-
-  @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-  ): Promise<Resume> {
-    const resume = await this.resumeService.findById(id);
-    if (resume.userId !== user.id) {
-      throw new ForbiddenException();
-    }
-    return resume;
-  }
-
-  @Post()
-  async create(
-    @Body() dto: CreateResumeDto,
-    @CurrentUser() user: User,
-  ): Promise<Resume> {
-    return this.resumeService.create(user.id, dto);
-  }
-
-  @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateResumeDto,
-    @CurrentUser() user: User,
-  ): Promise<Resume> {
-    await this.verifyOwnership(id, user.id);
-    return this.resumeService.update(id, dto);
-  }
-
-  @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-  ): Promise<void> {
-    await this.verifyOwnership(id, user.id);
-    return this.resumeService.remove(id);
-  }
-
-  @Public()
-  @Get('public/:username')
-  async getPublicResume(@Param('username') username: string): Promise<Resume> {
-    return this.resumeService.findPublicByUsername(username);
-  }
-}
-```
-
-## Service
-
-```typescript
-// src/resume/resume.service.ts
-@Injectable()
-export class ResumeService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly minioService: MinioService,
-  ) {}
-
-  async findAllByUserId(userId: string): Promise<Resume[]> {
-    return this.prisma.resume.findMany({
-      where: { userId },
-      include: {
-        experiences: {
-          include: { projects: true },
-          orderBy: { sortOrder: 'asc' },
-        },
-        educations: { orderBy: { sortOrder: 'asc' } },
-        skills: { orderBy: { sortOrder: 'asc' } },
-        certificates: { orderBy: { sortOrder: 'asc' } },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
-  }
-
-  async findPublicByUsername(username: string): Promise<Resume> {
-    // Get user from auth service (via HTTP or gRPC)
-    const user = await this.authClient.getUserByUsername(username);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const resume = await this.prisma.resume.findFirst({
-      where: {
-        userId: user.id,
-        isDefault: true,
-      },
-      include: {
-        experiences: { include: { projects: true } },
-        educations: true,
-        skills: true,
-        certificates: true,
-      },
-    });
-
-    if (!resume) {
-      throw new NotFoundException('No public resume');
-    }
-
-    return resume;
-  }
-
-  @Transactional()
-  async create(userId: string, dto: CreateResumeDto): Promise<Resume> {
-    // If this is the first resume, make it default
-    const existingCount = await this.prisma.resume.count({ where: { userId } });
-
-    return this.prisma.resume.create({
-      data: {
-        ...dto,
-        userId,
-        isDefault: existingCount === 0,
-      },
-    });
-  }
-
-  async uploadPhoto(resumeId: string, file: Express.Multer.File): Promise<string> {
-    const key = `resumes/${resumeId}/photo/${file.originalname}`;
-    const url = await this.minioService.upload(key, file.buffer, file.mimetype);
-
-    await this.prisma.resume.update({
-      where: { id: resumeId },
-      data: { profilePhotoUrl: url },
-    });
-
-    return url;
-  }
-}
-```
-
-## Share Link Service
-
-```typescript
-// src/share/share.service.ts
-@Injectable()
-export class ShareService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async create(resumeId: string, dto: CreateShareLinkDto): Promise<ShareLink> {
-    return this.prisma.shareLink.create({
-      data: {
-        resumeId,
-        expiresAt: dto.expiresAt,
-        maxViews: dto.maxViews,
-      },
-    });
-  }
-
-  async accessSharedResume(token: string): Promise<Resume> {
-    const shareLink = await this.prisma.shareLink.findUnique({
-      where: { token },
-      include: {
-        resume: {
-          include: {
-            experiences: { include: { projects: true } },
-            educations: true,
-            skills: true,
-            certificates: true,
-          },
-        },
-      },
-    });
-
-    if (!shareLink || !shareLink.isActive) {
-      throw new NotFoundException('Share link not found');
-    }
-
-    // Check expiration
-    if (shareLink.expiresAt && shareLink.expiresAt < new Date()) {
-      throw new GoneException('Share link expired');
-    }
-
-    // Check max views
-    if (shareLink.maxViews && shareLink.viewCount >= shareLink.maxViews) {
-      throw new GoneException('Share link view limit reached');
-    }
-
-    // Increment view count
-    await this.prisma.shareLink.update({
-      where: { id: shareLink.id },
-      data: {
-        viewCount: { increment: 1 },
-        lastViewedAt: new Date(),
-      },
-    });
-
-    return shareLink.resume;
-  }
-}
-```
-
-## gRPC Service 🔲 PLANNED
-
-> **Note**: gRPC will be implemented when GraphQL BFF is added.
-
-```protobuf
-// proto/personal.proto (planned)
-syntax = "proto3";
-
-package personal;
-
-service PersonalService {
-  rpc GetResume(GetResumeRequest) returns (Resume);
-  rpc GetResumesByUserId(GetResumesByUserIdRequest) returns (ResumesResponse);
-  rpc GetPublicResume(GetPublicResumeRequest) returns (Resume);
-  rpc CreateResume(CreateResumeRequest) returns (Resume);
-  rpc UpdateResume(UpdateResumeRequest) returns (Resume);
-  rpc DeleteResume(DeleteResumeRequest) returns (Empty);
-  rpc Health(Empty) returns (HealthResponse);
-}
+// Resume copy statuses
+PENDING     → Job queued
+IN_PROGRESS → Copying files
+COMPLETED   → All files copied
+PARTIAL     → Some files failed
+FAILED      → All files failed
 ```
 
 ## Environment Variables
 
 ```bash
 PORT=3002
-NODE_ENV=production
-
-# Database
 DATABASE_URL=postgresql://user:pass@postgres:5432/personal
 
 # MinIO
@@ -376,68 +294,17 @@ MINIO_ACCESS_KEY=xxx
 MINIO_SECRET_KEY=xxx
 MINIO_BUCKET=my-girok-resumes
 
-# Auth Service
-AUTH_SERVICE_URL=http://auth-service:3001
+# Redis (BullMQ)
+REDIS_URL=redis://redis:6379
 
-# JWT (for validation)
+# JWT
 JWT_SECRET=xxx
 ```
 
-## Integration Points
+## Integration
 
-### Current (REST)
-- **web-main**: Direct REST calls for resume management
-
-### Planned (gRPC) 🔲
-- **graphql-bff**: Resume CRUD, share links via gRPC
-
-### Outgoing
-- **auth-service**: User lookup (currently none, planned gRPC)
-- **MinIO**: File storage ✅
-
-## File Upload (MinIO)
-
-```typescript
-// src/storage/minio.service.ts
-@Injectable()
-export class MinioService {
-  private client: Minio.Client;
-
-  constructor() {
-    this.client = new Minio.Client({
-      endPoint: process.env.MINIO_ENDPOINT,
-      useSSL: true,
-      accessKey: process.env.MINIO_ACCESS_KEY,
-      secretKey: process.env.MINIO_SECRET_KEY,
-    });
-  }
-
-  async upload(key: string, buffer: Buffer, contentType: string): Promise<string> {
-    await this.client.putObject(
-      process.env.MINIO_BUCKET,
-      key,
-      buffer,
-      buffer.length,
-      { 'Content-Type': contentType },
-    );
-
-    return `https://s3.girok.dev/${process.env.MINIO_BUCKET}/${key}`;
-  }
-}
-```
-
-## Performance
-
-- **Prisma Select**: Only fetch needed fields
-- **Eager Loading**: Include relations in single query
-- **Connection Pooling**: PgBouncer for scaling
-
-## Health Check
-
-```typescript
-@Get('health')
-async healthCheck() {
-  await this.prisma.$queryRaw`SELECT 1`;
-  return { status: 'ok' };
-}
-```
+| Direction  | Service | Protocol                 | Purpose |
+| ---------- | ------- | ------------------------ | ------- |
+| ← web-main | REST    | Resume CRUD, file upload |
+| → MinIO    | S3 API  | File storage             |
+| → Redis    | BullMQ  | Async job queue          |
