@@ -1,4 +1,4 @@
-import { ConsentType, LegalDocumentType } from '@prisma/client';
+import { ConsentType, LegalDocumentType } from '.prisma/auth-client';
 
 /**
  * Supported regions for consent policies

@@ -12,9 +12,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { LegalService } from './legal.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { ConsentType, LegalDocumentType } from '@prisma/client';
+import { JwtAuthGuard, CurrentUser } from '@my-girok/nest-common';
+import { ConsentType, LegalDocumentType } from '.prisma/auth-client';
 import {
   CreateConsentsDto,
   UpdateConsentDto,

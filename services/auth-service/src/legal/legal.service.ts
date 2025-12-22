@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { ConsentType, LegalDocumentType } from '@prisma/client';
+import { ConsentType, LegalDocumentType } from '.prisma/auth-client';
 import { CreateConsentDto, ConsentRequirementDto } from './dto/consent.dto';
 
 /**
@@ -84,7 +84,22 @@ export class LegalService {
   /**
    * Get a specific legal document by type and locale
    */
-  async getDocument(type: LegalDocumentType, locale: string = 'ko') {
+  async getDocument(
+    type: LegalDocumentType,
+    locale: string = 'ko',
+  ): Promise<{
+    id: string;
+    type: LegalDocumentType;
+    version: string;
+    locale: string;
+    title: string;
+    content: string;
+    summary: string | null;
+    effectiveDate: Date;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
     const document = await this.prisma.legalDocument.findFirst({
       where: {
         type,
