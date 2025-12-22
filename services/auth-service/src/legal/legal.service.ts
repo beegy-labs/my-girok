@@ -297,28 +297,39 @@ export class LegalService {
   ): Promise<UserConsentResult[]> {
     const now = new Date();
 
-    const consentRecords = await Promise.all(
-      consents.map(async (consent) => {
-        // Get the latest document version for audit
-        const document = consent.documentId
-          ? await this.prisma.legalDocument.findUnique({
-              where: { id: consent.documentId },
-            })
-          : null;
+    // Batch fetch: Get all document IDs that need version lookup
+    const documentIds = consents
+      .map((c) => c.documentId)
+      .filter((id): id is string => id !== undefined);
 
-        return this.prisma.userConsent.create({
+    // Single query for all documents (prevents N+1)
+    const documents =
+      documentIds.length > 0
+        ? await this.prisma.legalDocument.findMany({
+            where: { id: { in: documentIds } },
+            select: { id: true, version: true },
+          })
+        : [];
+
+    // O(1) lookup map
+    const documentMap = new Map(documents.map((d) => [d.id, d.version]));
+
+    // Atomic transaction: Create all consents or rollback on failure
+    const consentRecords = await this.prisma.$transaction(
+      consents.map((consent) =>
+        this.prisma.userConsent.create({
           data: {
             userId,
             consentType: consent.type,
             documentId: consent.documentId,
-            documentVersion: document?.version,
+            documentVersion: consent.documentId ? documentMap.get(consent.documentId) : undefined,
             agreed: consent.agreed,
             agreedAt: now,
             ipAddress,
             userAgent,
           },
-        });
-      }),
+        }),
+      ),
     );
 
     return consentRecords;
