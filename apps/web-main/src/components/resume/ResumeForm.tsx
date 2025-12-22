@@ -35,6 +35,27 @@ interface ResumeFormProps {
   onChange?: (data: CreateResumeDto) => void;
 }
 
+// Initial collapsed sections state - extracted to module scope (2025 best practice)
+const INITIAL_COLLAPSED_SECTIONS: Record<string, boolean> = {
+  basicInfo: false,
+  skills: false,
+  experience: false,
+  education: false,
+  certificates: false,
+  military: false,
+  applicationReason: false,
+  coverLetter: false,
+} as const;
+
+// Default sections order - extracted to module scope (2025 best practice)
+const DEFAULT_SECTIONS = [
+  { id: '1', type: SectionType.SKILLS, order: 0, visible: true },
+  { id: '2', type: SectionType.EXPERIENCE, order: 1, visible: true },
+  { id: '3', type: SectionType.PROJECT, order: 2, visible: true },
+  { id: '4', type: SectionType.EDUCATION, order: 3, visible: true },
+  { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
+] as const;
+
 /**
  * Format file size in human-readable format (2025 best practice: pure function outside component)
  * @param bytes - File size in bytes
@@ -55,17 +76,10 @@ const formatFileSize = (bytes: number): string => {
 export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormProps) {
   const { t } = useTranslation();
 
-  // Collapsible section states
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    basicInfo: false,
-    skills: false,
-    experience: false,
-    education: false,
-    certificates: false,
-    military: false,
-    applicationReason: false,
-    coverLetter: false,
-  });
+  // Collapsible section states - using module-scope constant (2025 best practice)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(
+    INITIAL_COLLAPSED_SECTIONS,
+  );
 
   // Curried handler for toggling section (2025 React best practice)
   const toggleSection = useCallback(
@@ -173,15 +187,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const [profilePhotoTempKey, setProfilePhotoTempKey] = useState<string | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null); // Presigned URL from temp upload
 
-  // Section ordering
+  // Section ordering - using module-scope constant (2025 best practice)
   const [sections, setSections] = useState(
-    resume?.sections?.sort((a, b) => a.order - b.order) || [
-      { id: '1', type: SectionType.SKILLS, order: 0, visible: true },
-      { id: '2', type: SectionType.EXPERIENCE, order: 1, visible: true },
-      { id: '3', type: SectionType.PROJECT, order: 2, visible: true },
-      { id: '4', type: SectionType.EDUCATION, order: 3, visible: true },
-      { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
-    ],
+    resume?.sections?.sort((a, b) => a.order - b.order) || [...DEFAULT_SECTIONS],
   );
 
   // Load draft from localStorage on mount
@@ -580,6 +588,15 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [],
   );
 
+  // Memoized paper size options (2025 best practice - avoid inline arrays)
+  const paperSizeOptions = useMemo(
+    () => [
+      { value: 'A4', label: t('resume.form.paperSizeA4') },
+      { value: 'LETTER', label: t('resume.form.paperSizeLetter') },
+    ],
+    [t],
+  );
+
   // Memoized handler for experiences change (2025 React best practice)
   const handleExperiencesChange = useCallback((experiences: Experience[]) => {
     // Only update formData - useEffect will call onChange automatically
@@ -679,10 +696,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             label={t('resume.form.paperSize')}
             value={formData.paperSize || 'A4'}
             onChange={handleSelectFieldChange('paperSize')}
-            options={[
-              { value: 'A4', label: t('resume.form.paperSizeA4') },
-              { value: 'LETTER', label: t('resume.form.paperSizeLetter') },
-            ]}
+            options={paperSizeOptions}
             required
           />
         </div>

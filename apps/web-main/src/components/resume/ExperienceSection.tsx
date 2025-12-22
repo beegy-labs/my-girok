@@ -84,11 +84,15 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     id: experience.id || `exp-${index}`,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  // Memoize style object to prevent recreation on every render (2025 best practice)
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }),
+    [transform, transition, isDragging],
+  );
 
   const [expandedProjects, setExpandedProjects] = useState<{ [key: number]: boolean }>({});
   // Mobile: collapse company details by default for existing items
@@ -649,11 +653,15 @@ const SortableProject = memo(function SortableProject({
     id: project.id || `proj-${projectIndex}`,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  // Memoize style object to prevent recreation on every render (2025 best practice)
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }),
+    [transform, transition, isDragging],
+  );
 
   // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
@@ -1012,11 +1020,14 @@ const HierarchicalAchievement = memo(function HierarchicalAchievement({
     [achievement, depth, onUpdate],
   );
 
-  // Get depth color with fallback
-  const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
+  // Memoize depth color with fallback (2025 best practice)
+  const depthColor = useMemo(
+    () => DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4],
+    [depth],
+  );
 
-  // Calculate margin based on screen size (smaller on mobile)
-  const mobileMargin = (depth - 1) * 0.25; // 0.25rem per depth on mobile
+  // Memoize margin based on screen size (2025 best practice)
+  const mobileMargin = useMemo(() => (depth - 1) * 0.25, [depth]); // 0.25rem per depth on mobile
 
   return (
     <div className="space-y-1 sm:space-y-2">
@@ -1181,11 +1192,15 @@ const SortableAchievement = memo(function SortableAchievement({
     id: achievement.id || `ach-${achIndex}`,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  // Memoize style object to prevent recreation on every render (2025 best practice)
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }),
+    [transform, transition, isDragging],
+  );
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">

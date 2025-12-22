@@ -9,6 +9,17 @@ import { Mail, Lock, User, AtSign, ArrowRight, ArrowLeft, CheckCircle } from 'lu
 import { ConsentType } from '@my-girok/types';
 import type { UserLocaleInfo } from '../utils/regionDetection';
 
+// Memoized icon components - extracted to module scope (2025 best practice)
+const ICONS = {
+  user: <User size={20} />,
+  atSign: <AtSign size={20} />,
+  mail: <Mail size={20} />,
+  lock: <Lock size={20} />,
+  arrowRight: <ArrowRight size={18} />,
+  arrowLeft: <ArrowLeft size={16} />,
+  checkCircle: <CheckCircle size={18} />,
+} as const;
+
 /**
  * Consent state type
  */
@@ -141,7 +152,7 @@ export default function RegisterPage() {
       secondaryActions={
         <Link to="/consent" className="block">
           <Button variant="secondary" size="lg" rounded="default" fullWidth>
-            <ArrowLeft size={16} />
+            {ICONS.arrowLeft}
             {t('auth.backToConsent', { defaultValue: 'Back to Consent' })}
           </Button>
         </Link>
@@ -150,7 +161,7 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Consent Summary Badge */}
         <div className="flex items-center gap-2 p-3 bg-theme-status-success/10 rounded-soft border border-theme-status-success/20">
-          <CheckCircle size={18} className="text-theme-status-success shrink-0" />
+          <span className="text-theme-status-success shrink-0">{ICONS.checkCircle}</span>
           <span className="text-sm text-theme-text-primary">
             {t('consent.agreedCount', {
               defaultValue: '{{count}} consents agreed',
@@ -167,7 +178,7 @@ export default function RegisterPage() {
           label={t('auth.name')}
           type="text"
           size="xl"
-          icon={<User size={20} />}
+          icon={ICONS.user}
           value={name}
           onChange={setName}
           required
@@ -180,7 +191,7 @@ export default function RegisterPage() {
           label={t('auth.usernameHint')}
           type="text"
           size="xl"
-          icon={<AtSign size={20} />}
+          icon={ICONS.atSign}
           value={username}
           onChange={handleUsernameChange}
           required
@@ -194,7 +205,7 @@ export default function RegisterPage() {
           label={t('auth.email')}
           type="email"
           size="xl"
-          icon={<Mail size={20} />}
+          icon={ICONS.mail}
           value={email}
           onChange={setEmail}
           required
@@ -207,7 +218,7 @@ export default function RegisterPage() {
           label={t('auth.password')}
           type="password"
           size="xl"
-          icon={<Lock size={20} />}
+          icon={ICONS.lock}
           showPasswordToggle
           value={password}
           onChange={setPassword}
@@ -224,7 +235,7 @@ export default function RegisterPage() {
           disabled={loading}
           loading={loading}
           fullWidth
-          icon={<ArrowRight size={18} />}
+          icon={ICONS.arrowRight}
         >
           {loading ? t('auth.registering') : t('auth.registerButton')}
         </Button>
