@@ -54,6 +54,36 @@ interface LegalDocumentResult {
 }
 
 /**
+ * User consent record result
+ * Matches Prisma UserConsent model
+ */
+interface UserConsentResult {
+  id: string;
+  userId: string;
+  consentType: ConsentType;
+  documentId: string | null;
+  documentVersion: string | null;
+  agreed: boolean;
+  agreedAt: Date;
+  withdrawnAt: Date | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+}
+
+/**
+ * User consent with document info for getUserConsents
+ */
+interface UserConsentWithDocument extends UserConsentResult {
+  document: {
+    id: string;
+    type: LegalDocumentType;
+    version: string;
+    title: string;
+  } | null;
+}
+
+/**
  * Consent requirements response with region policy
  */
 interface ConsentRequirementsResult {
@@ -264,7 +294,7 @@ export class LegalService {
     consents: CreateConsentDto[],
     ipAddress?: string,
     userAgent?: string,
-  ) {
+  ): Promise<UserConsentResult[]> {
     const now = new Date();
 
     const consentRecords = await Promise.all(
@@ -308,7 +338,7 @@ export class LegalService {
    * // Returns: [{ consentType: 'MARKETING_EMAIL', agreed: true, agreedAt: Date, ... }]
    * ```
    */
-  async getUserConsents(userId: string) {
+  async getUserConsents(userId: string): Promise<UserConsentWithDocument[]> {
     const consents = await this.prisma.userConsent.findMany({
       where: {
         userId,
@@ -352,7 +382,7 @@ export class LegalService {
     locale: string = 'ko',
     ipAddress?: string,
     userAgent?: string,
-  ) {
+  ): Promise<UserConsentResult | null> {
     const now = new Date();
 
     // Get region-specific requirements from SSOT config
