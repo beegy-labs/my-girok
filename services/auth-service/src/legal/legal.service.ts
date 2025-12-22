@@ -6,7 +6,75 @@ import {
   getConsentPolicy,
   localeToRegion,
   type ConsentRequirement,
+  type Region,
 } from './config/consent-policy.config';
+
+/**
+ * Document selection fields for list queries
+ * Reduces payload size by selecting only necessary fields
+ */
+const DOCUMENT_SELECT_FIELDS = {
+  id: true,
+  version: true,
+  title: true,
+  summary: true,
+} as const;
+
+/**
+ * Document include fields for consent queries
+ * Minimal document info for consent records
+ */
+const CONSENT_DOCUMENT_INCLUDE = {
+  document: {
+    select: {
+      id: true,
+      type: true,
+      version: true,
+      title: true,
+    },
+  },
+} as const;
+
+/**
+ * Full legal document return type
+ * Matches Prisma LegalDocument model exactly
+ */
+interface LegalDocumentResult {
+  id: string;
+  type: LegalDocumentType;
+  version: string;
+  locale: string;
+  title: string;
+  content: string;
+  summary: string | null;
+  effectiveDate: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Consent requirements response with region policy
+ */
+interface ConsentRequirementsResult {
+  region: Region;
+  law: string;
+  nightTimePushRestriction?: { start: number; end: number };
+  requirements: Array<{
+    type: ConsentType;
+    required: boolean;
+    labelKey: string;
+    descriptionKey: string;
+    documentType: LegalDocumentType;
+    nightTimeHours?: { start: number; end: number };
+    document: {
+      id: string;
+      version: string;
+      title: string;
+      summary: string | null;
+    } | null;
+  }>;
+}
 
 /**
  * Legal service for managing consent requirements and legal documents
@@ -50,7 +118,7 @@ export class LegalService {
    * const euRequirements = await legalService.getConsentRequirements('de-DE');
    * ```
    */
-  async getConsentRequirements(locale: string = 'ko') {
+  async getConsentRequirements(locale: string = 'ko'): Promise<ConsentRequirementsResult> {
     const region = localeToRegion(locale);
     const policy = getConsentPolicy(region);
 
@@ -63,12 +131,7 @@ export class LegalService {
             isActive: true,
           },
           orderBy: { effectiveDate: 'desc' },
-          select: {
-            id: true,
-            version: true,
-            title: true,
-            summary: true,
-          },
+          select: DOCUMENT_SELECT_FIELDS,
         });
 
         return {
@@ -111,22 +174,7 @@ export class LegalService {
    * const privacy = await legalService.getDocument(LegalDocumentType.PRIVACY_POLICY);
    * ```
    */
-  async getDocument(
-    type: LegalDocumentType,
-    locale: string = 'ko',
-  ): Promise<{
-    id: string;
-    type: LegalDocumentType;
-    version: string;
-    locale: string;
-    title: string;
-    content: string;
-    summary: string | null;
-    effectiveDate: Date;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-  }> {
+  async getDocument(type: LegalDocumentType, locale: string = 'ko'): Promise<LegalDocumentResult> {
     const document = await this.prisma.legalDocument.findFirst({
       where: {
         type,
@@ -254,16 +302,7 @@ export class LegalService {
         userId,
         withdrawnAt: null,
       },
-      include: {
-        document: {
-          select: {
-            id: true,
-            type: true,
-            version: true,
-            title: true,
-          },
-        },
-      },
+      include: CONSENT_DOCUMENT_INCLUDE,
       orderBy: { agreedAt: 'desc' },
     });
 

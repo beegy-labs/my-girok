@@ -254,17 +254,19 @@ export class LegalController {
    *
    * Allows users to withdraw optional consents or re-consent.
    * Required consents (TERMS_OF_SERVICE, PRIVACY_POLICY) cannot be withdrawn.
+   * Uses locale to determine region-specific consent requirements.
    * Requires authentication.
    *
    * @param user - Authenticated user from JWT
    * @param type - Consent type to update
+   * @param locale - User's locale for region policy lookup
    * @param dto - New consent status
    * @param req - Express request for IP/user agent extraction
    * @returns Updated consent record
    *
    * @example
    * ```
-   * PUT /legal/consents/MARKETING_EMAIL
+   * PUT /legal/consents/MARKETING_EMAIL?locale=ko
    * Authorization: Bearer <token>
    * Content-Type: application/json
    *
@@ -279,34 +281,50 @@ export class LegalController {
     description: 'Update optional consent. Required consents cannot be withdrawn.',
   })
   @ApiParam({ name: 'type', enum: ConsentType, description: 'Consent type to update' })
+  @ApiQuery({
+    name: 'locale',
+    required: false,
+    description: 'User locale for region policy lookup (ko, en, ja)',
+    example: 'ko',
+  })
   @ApiResponse({ status: 200, type: UserConsentResponseDto })
   @ApiResponse({ status: 400, description: 'Cannot withdraw required consent' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateConsent(
     @CurrentUser() user: { id: string },
     @Param('type', new ParseEnumPipe(ConsentType)) type: ConsentType,
+    @Query('locale') locale: string | undefined,
     @Body() dto: UpdateConsentDto,
     @Req() req: Request,
   ) {
     const ipAddress = req.ip || req.socket.remoteAddress;
     const userAgent = req.headers['user-agent'];
 
-    return this.legalService.updateConsent(user.id, type, dto.agreed, 'ko', ipAddress, userAgent);
+    return this.legalService.updateConsent(
+      user.id,
+      type,
+      dto.agreed,
+      locale || 'ko',
+      ipAddress,
+      userAgent,
+    );
   }
 
   /**
    * Check if user has all required consents
    *
    * Validates that user has agreed to mandatory consents.
+   * Uses locale to determine region-specific required consents.
    * Useful for middleware or access control checks.
    * Requires authentication.
    *
    * @param user - Authenticated user from JWT
+   * @param locale - User's locale for region policy lookup
    * @returns Object with hasAllRequired boolean
    *
    * @example
    * ```
-   * GET /legal/consents/check
+   * GET /legal/consents/check?locale=ko
    * Authorization: Bearer <token>
    *
    * Response:
@@ -318,12 +336,21 @@ export class LegalController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Check if user has all required consents',
-    description: 'Validates mandatory consents (Terms of Service, Privacy Policy).',
+    description: 'Validates mandatory consents based on region (Terms of Service, Privacy Policy).',
+  })
+  @ApiQuery({
+    name: 'locale',
+    required: false,
+    description: 'User locale for region policy lookup (ko, en, ja)',
+    example: 'ko',
   })
   @ApiResponse({ status: 200, schema: { properties: { hasAllRequired: { type: 'boolean' } } } })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async checkRequiredConsents(@CurrentUser() user: { id: string }) {
-    const hasAllRequired = await this.legalService.hasRequiredConsents(user.id);
+  async checkRequiredConsents(
+    @CurrentUser() user: { id: string },
+    @Query('locale') locale?: string,
+  ) {
+    const hasAllRequired = await this.legalService.hasRequiredConsents(user.id, locale || 'ko');
     return { hasAllRequired };
   }
 }

@@ -30,13 +30,14 @@ export interface LegalDocumentPayload {
   locale: string;
   title: string;
   content: string;
-  summary?: string;
+  summary: string | null;
   effectiveDate: Date;
 }
 
 /**
  * Legal document with full metadata (internal use)
  * Includes isActive, createdAt, updatedAt for admin/service operations
+ * Compatible with Prisma LegalDocument model
  */
 export interface LegalDocumentFull extends LegalDocumentPayload {
   isActive: boolean;
