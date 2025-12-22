@@ -27,7 +27,8 @@
 
 body {
   margin: 0;
-  min-width: 320px;
+  /* 2025 minimum viewport: 375px (iPhone SE 2nd gen, modern Android) */
+  min-width: 375px;
   min-height: 100vh;
   background-color: var(--theme-bg-page);
   color: var(--theme-text-primary);

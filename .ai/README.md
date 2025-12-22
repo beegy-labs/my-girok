@@ -104,6 +104,10 @@
 → Read: `services/auth-service.md` (Legal API section) + `packages/types.md` (Legal Types)
 → Policy: `docs/policies/LEGAL_CONSENT.md`
 
+**"I need to work on ads/promotions..."**
+→ Read: `apps/web-main.md` (Advertisement section)
+→ Full guide: `docs/guides/ADSENSE_GUIDE.md`
+
 ## Current Architecture
 
 ```

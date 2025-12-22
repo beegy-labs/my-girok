@@ -1479,6 +1479,26 @@ const {
 - Skip option for conditional fetching
 - Follows 2025 React best practices (useCallback, proper deps)
 
+## Advertisement / Promo Banner
+
+**Location**: `HomePage.tsx`
+
+```tsx
+const isAdEnabled = true; // Toggle ads
+
+// AdSense recommended settings
+data-ad-format="auto"
+data-full-width-responsive="true"
+min-h-[100px] sm:min-h-[120px] lg:min-h-[160px]  // CLS prevention
+```
+
+| Mode    | Display                         |
+| ------- | ------------------------------- |
+| `false` | PromoCarousel                   |
+| `true`  | AdSense (full-width responsive) |
+
+**Full guide**: `docs/guides/ADSENSE_GUIDE.md`
+
 ## References
 
 - **Design System**: `/docs/DESIGN_SYSTEM.md`
