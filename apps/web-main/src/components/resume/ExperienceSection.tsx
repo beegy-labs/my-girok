@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -25,6 +25,13 @@ import {
 } from '../../api/resume';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
 import { TextInput, TextArea, Button } from '@my-girok/ui-components';
+
+// Sensor activation options - extracted to module scope (2025 best practice)
+const SENSOR_OPTIONS = {
+  pointer: { activationConstraint: { distance: 8 } },
+  touch: { activationConstraint: { delay: 200, tolerance: 5 } },
+  keyboard: { coordinateGetter: sortableKeyboardCoordinates },
+} as const;
 
 // Depth colors for visual hierarchy in achievements - WCAG AAA 7:1+ compliant
 const DEPTH_COLORS = {
@@ -77,18 +84,25 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     id: experience.id || `exp-${index}`,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  // Memoize style object to prevent recreation on every render (2025 best practice)
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }),
+    [transform, transition, isDragging],
+  );
 
   const [expandedProjects, setExpandedProjects] = useState<{ [key: number]: boolean }>({});
   // Mobile: collapse company details by default for existing items
   const [isCompanyExpanded, setIsCompanyExpanded] = useState(true);
 
-  // Ensure projects is always an array (handle undefined from API)
-  const projects = experience.projects || [];
+  // Memoize projects with defensive Array.isArray check (2025 over-engineering best practice)
+  const projects = useMemo(
+    () => (Array.isArray(experience.projects) ? experience.projects : []),
+    [experience.projects],
+  );
 
   const toggleCompanyExpand = useCallback(() => {
     setIsCompanyExpanded((prev) => !prev);
@@ -164,23 +178,29 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     [],
   );
 
-  const handleProjectDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  // Memoized project drag end handler (2025 React best practice)
+  const handleProjectDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
 
-    const oldIndex = projects.findIndex(
-      (p) => (p.id || `proj-${projects.indexOf(p)}`) === active.id,
-    );
-    const newIndex = projects.findIndex((p) => (p.id || `proj-${projects.indexOf(p)}`) === over.id);
+      const oldIndex = projects.findIndex(
+        (p) => (p.id || `proj-${projects.indexOf(p)}`) === active.id,
+      );
+      const newIndex = projects.findIndex(
+        (p) => (p.id || `proj-${projects.indexOf(p)}`) === over.id,
+      );
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-      const newProjects = arrayMove(projects, oldIndex, newIndex).map((p, idx) => ({
-        ...p,
-        order: idx,
-      }));
-      onUpdate({ ...experience, projects: newProjects });
-    }
-  };
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newProjects = arrayMove(projects, oldIndex, newIndex).map((p, idx) => ({
+          ...p,
+          order: idx,
+        }));
+        onUpdate({ ...experience, projects: newProjects });
+      }
+    },
+    [projects, experience, onUpdate],
+  );
 
   // Curried handler for achievement drag end (2025 React best practice)
   const handleAchievementDragEnd = useCallback(
@@ -211,7 +231,8 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     [projects, experience, onUpdate],
   );
 
-  const addProject = () => {
+  // Memoized add project handler (2025 React best practice)
+  const addProject = useCallback(() => {
     const newProject: ExperienceProject = {
       name: '',
       startDate: '',
@@ -224,7 +245,24 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     };
     onUpdate({ ...experience, projects: [...projects, newProject] });
     setExpandedProjects((prev) => ({ ...prev, [projects.length]: true }));
-  };
+  }, [projects, experience, onUpdate]);
+
+  // Memoize project IDs for SortableContext (2025 best practice)
+  const projectIds = useMemo(() => projects.map((p, i) => p.id || `proj-${i}`), [projects]);
+
+  // Memoize experience duration text (2025 best practice - avoid IIFE in JSX)
+  const experienceDurationText = useMemo(() => {
+    if (!experience.startDate) return null;
+    const duration = calculateExperienceDuration(
+      experience.startDate,
+      experience.endDate,
+      experience.isCurrentlyWorking,
+    );
+    return t('resume.experience.duration', {
+      years: duration.years,
+      months: duration.months,
+    });
+  }, [experience.startDate, experience.endDate, experience.isCurrentlyWorking, t]);
 
   // Curried handler for updating project (2025 React best practice)
   const updateProject = useCallback(
@@ -290,10 +328,11 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
     [projects, experience, onUpdate],
   );
 
+  // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
+    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
+    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
   );
 
   return (
@@ -445,21 +484,10 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </label>
 
         {/* Experience Duration */}
-        {experience.startDate && (
+        {experienceDurationText && (
           <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-soft transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-theme-primary-light transition-colors duration-200">
-              {t('resume.experienceForm.experiencePeriod')}{' '}
-              {(() => {
-                const duration = calculateExperienceDuration(
-                  experience.startDate,
-                  experience.endDate,
-                  experience.isCurrentlyWorking,
-                );
-                return t('resume.experience.duration', {
-                  years: duration.years,
-                  months: duration.months,
-                });
-              })()}
+              {t('resume.experienceForm.experiencePeriod')} {experienceDurationText}
             </span>
           </div>
         )}
@@ -551,10 +579,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
               collisionDetection={closestCenter}
               onDragEnd={handleProjectDragEnd}
             >
-              <SortableContext
-                items={projects.map((p, i) => p.id || `proj-${i}`)}
-                strategy={verticalListSortingStrategy}
-              >
+              <SortableContext items={projectIds} strategy={verticalListSortingStrategy}>
                 <div className="space-y-3">
                   {projects.map((project, projectIndex) => (
                     <SortableProject
@@ -628,16 +653,21 @@ const SortableProject = memo(function SortableProject({
     id: project.id || `proj-${projectIndex}`,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  // Memoize style object to prevent recreation on every render (2025 best practice)
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }),
+    [transform, transition, isDragging],
+  );
 
+  // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
+    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
+    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
   );
 
   // Memoized project date handlers (2025 React best practice)
@@ -668,6 +698,16 @@ const SortableProject = memo(function SortableProject({
   const handleTechStackInputChange = useCallback((value: string) => {
     setTechStackInput(value);
   }, []);
+
+  // Memoized techStack onBlur handler (2025 React best practice)
+  const handleTechStackBlur = useCallback(() => {
+    const parsed = techStackInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    onUpdate({ ...project, techStack: parsed });
+    setTechStackInput(parsed.join(', '));
+  }, [techStackInput, project, onUpdate]);
 
   // Curried handler for updating achievement (2025 React best practice)
   const handleUpdateAchievement = useCallback(
@@ -701,6 +741,12 @@ const SortableProject = memo(function SortableProject({
       onUpdateAchievement(achIndex, updatedAchievement);
     },
     [onUpdateAchievement],
+  );
+
+  // Memoize achievement IDs for SortableContext (2025 best practice)
+  const achievementIds = useMemo(
+    () => (project.achievements || []).map((a, i) => a.id || `ach-${i}`),
+    [project.achievements],
   );
 
   return (
@@ -827,14 +873,7 @@ const SortableProject = memo(function SortableProject({
               label={t('resume.experienceForm.techStack')}
               value={techStackInput}
               onChange={handleTechStackInputChange}
-              onBlur={() => {
-                const parsed = techStackInput
-                  .split(',')
-                  .map((s) => s.trim())
-                  .filter(Boolean);
-                onUpdate({ ...project, techStack: parsed });
-                setTechStackInput(parsed.join(', '));
-              }}
+              onBlur={handleTechStackBlur}
               placeholder={t('resume.experienceForm.techStackPlaceholder')}
             />
 
@@ -881,10 +920,7 @@ const SortableProject = memo(function SortableProject({
                 collisionDetection={closestCenter}
                 onDragEnd={onAchievementDragEnd}
               >
-                <SortableContext
-                  items={project.achievements.map((a, i) => a.id || `ach-${i}`)}
-                  strategy={verticalListSortingStrategy}
-                >
+                <SortableContext items={achievementIds} strategy={verticalListSortingStrategy}>
                   <div className="space-y-2">
                     {project.achievements.map((achievement, achIndex) => (
                       <SortableAchievement
@@ -984,11 +1020,14 @@ const HierarchicalAchievement = memo(function HierarchicalAchievement({
     [achievement, depth, onUpdate],
   );
 
-  // Get depth color with fallback
-  const depthColor = DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4];
+  // Memoize depth color with fallback (2025 best practice)
+  const depthColor = useMemo(
+    () => DEPTH_COLORS[depth as keyof typeof DEPTH_COLORS] || DEPTH_COLORS[4],
+    [depth],
+  );
 
-  // Calculate margin based on screen size (smaller on mobile)
-  const mobileMargin = (depth - 1) * 0.25; // 0.25rem per depth on mobile
+  // Memoize margin based on screen size (2025 best practice)
+  const mobileMargin = useMemo(() => (depth - 1) * 0.25, [depth]); // 0.25rem per depth on mobile
 
   return (
     <div className="space-y-1 sm:space-y-2">
@@ -1153,11 +1192,15 @@ const SortableAchievement = memo(function SortableAchievement({
     id: achievement.id || `ach-${achIndex}`,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  // Memoize style object to prevent recreation on every render (2025 best practice)
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    }),
+    [transform, transition, isDragging],
+  );
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
@@ -1194,35 +1237,48 @@ const SortableAchievement = memo(function SortableAchievement({
   );
 });
 
-// Main Experience Section Component
-export default function ExperienceSection({ experiences, onChange, t }: ExperienceSectionProps) {
+/**
+ * Main Experience Section Component
+ * Memoized to prevent unnecessary re-renders (rules.md:275)
+ */
+const ExperienceSection = memo(function ExperienceSection({
+  experiences,
+  onChange,
+  t,
+}: ExperienceSectionProps) {
+  // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
+    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
+    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  // Memoized drag end handler (2025 React best practice)
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
 
-    const oldIndex = experiences.findIndex(
-      (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === active.id,
-    );
-    const newIndex = experiences.findIndex(
-      (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === over.id,
-    );
+      const oldIndex = experiences.findIndex(
+        (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === active.id,
+      );
+      const newIndex = experiences.findIndex(
+        (exp) => (exp.id || `exp-${experiences.indexOf(exp)}`) === over.id,
+      );
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-      const newExperiences = arrayMove(experiences, oldIndex, newIndex).map((exp, idx) => ({
-        ...exp,
-        order: idx,
-      }));
-      onChange(newExperiences);
-    }
-  };
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newExperiences = arrayMove(experiences, oldIndex, newIndex).map((exp, idx) => ({
+          ...exp,
+          order: idx,
+        }));
+        onChange(newExperiences);
+      }
+    },
+    [experiences, onChange],
+  );
 
-  const addExperience = () => {
+  // Memoized add experience handler (2025 React best practice)
+  const addExperience = useCallback(() => {
     const newExperience: Experience = {
       company: '',
       startDate: '',
@@ -1234,7 +1290,13 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
       visible: true,
     };
     onChange([...experiences, newExperience]);
-  };
+  }, [experiences, onChange]);
+
+  // Memoize experience IDs for SortableContext (2025 best practice)
+  const experienceIds = useMemo(
+    () => experiences.map((exp, i) => exp.id || `exp-${i}`),
+    [experiences],
+  );
 
   // Curried handler for updating experience (2025 React best practice)
   const updateExperience = useCallback(
@@ -1277,10 +1339,7 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
 
       {experiences && experiences.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext
-            items={experiences.map((exp, i) => exp.id || `exp-${i}`)}
-            strategy={verticalListSortingStrategy}
-          >
+          <SortableContext items={experienceIds} strategy={verticalListSortingStrategy}>
             <div className="space-y-3 sm:space-y-6 lg:space-y-8">
               {experiences.map((exp, index) => (
                 <SortableExperienceCard
@@ -1302,4 +1361,6 @@ export default function ExperienceSection({ experiences, onChange, t }: Experien
       )}
     </div>
   );
-}
+});
+
+export default ExperienceSection;

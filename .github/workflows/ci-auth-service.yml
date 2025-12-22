@@ -1,13 +1,17 @@
 name: CI - Auth Service
 
 on:
-  push:
-    branches: [develop, 'release/**', main]
-    paths: ['services/auth-service/**', 'packages/types/**', 'packages/nest-common/**', '.github/workflows/ci-auth-service.yml']
-  pull_request:
-    branches: [develop, 'release/**', main]
-    paths: ['services/auth-service/**', 'packages/types/**', 'packages/nest-common/**']
   workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy environment'
+        required: false
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - release
+          - main
 
 env:
   REGISTRY: gitea.girok.dev
@@ -39,7 +43,7 @@ jobs:
 
   build:
     name: Build
-    if: github.event_name == 'push'
+    needs: check
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 10
     outputs:
@@ -56,14 +60,16 @@ jobs:
         id: meta
         run: |
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          case "${{ github.ref }}" in
-            refs/heads/main) TAG="${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" ;;
-            refs/heads/develop) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop" ;;
-            refs/heads/release/*) TAG="release-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release" ;;
-            *) TAG="$(echo ${{ github.ref }} | sed 's|refs/heads/||;s|/|-|g')-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}" ;;
+          DEPLOY_ENV="${{ inputs.deploy_env || 'develop' }}"
+          case "${DEPLOY_ENV}" in
+            main) TAG="${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" ;;
+            develop) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop" ;;
+            release) TAG="release-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release" ;;
+            *) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}" ;;
           esac
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "deploy_env=${DEPLOY_ENV}" >> $GITHUB_OUTPUT
       - uses: docker/build-push-action@v5
         with:
           context: .
@@ -75,8 +81,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: [check, build]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    needs: build
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 5
     steps:
@@ -88,10 +93,12 @@ jobs:
       - name: Update & Push
         run: |
           cd gitops && git pull --rebase
-          case "${{ github.ref }}" in
-            refs/heads/main) FILE="clusters/home/values/my-girok-auth-service-prod.yaml"; ENV="production" ;;
-            refs/heads/develop) FILE="clusters/home/values/my-girok-auth-service-dev.yaml"; ENV="development" ;;
-            *) FILE="clusters/home/values/my-girok-auth-service-staging.yaml"; ENV="staging" ;;
+          DEPLOY_ENV="${{ inputs.deploy_env || 'develop' }}"
+          case "${DEPLOY_ENV}" in
+            main) FILE="clusters/home/values/my-girok-auth-service-prod.yaml"; ENV="production" ;;
+            develop) FILE="clusters/home/values/my-girok-auth-service-dev.yaml"; ENV="development" ;;
+            release) FILE="clusters/home/values/my-girok-auth-service-staging.yaml"; ENV="staging" ;;
+            *) FILE="clusters/home/values/my-girok-auth-service-dev.yaml"; ENV="development" ;;
           esac
           sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
           git config user.name "GitHub Actions Bot"
@@ -102,7 +109,13 @@ jobs:
       - name: Cleanup
         env: { GITEA_TOKEN: "${{ secrets.GITEA_TOKEN }}" }
         run: |
-          [[ "${{ github.ref }}" == "refs/heads/main" ]] && P="" || P="${{ github.ref == 'refs/heads/develop' && 'develop-' || 'release-' }}"
+          DEPLOY_ENV="${{ inputs.deploy_env || 'develop' }}"
+          case "${DEPLOY_ENV}" in
+            main) P="" ;;
+            develop) P="develop-" ;;
+            release) P="release-" ;;
+            *) P="develop-" ;;
+          esac
           curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/auth-service" | \
             jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \
             while IFS='|' read -r _ v; do curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/auth-service/${v}"; done
