@@ -292,6 +292,28 @@ export const REGION_CONSENT_POLICIES: Record<Region, RegionConsentPolicy> = {
 
 /**
  * Get consent policy for a region
+ *
+ * Returns region-specific consent requirements based on privacy laws.
+ * Falls back to DEFAULT (GDPR-aligned) policy for unknown regions.
+ *
+ * @param region - Region code (KR, JP, EU, US, DEFAULT). Case-insensitive.
+ * @returns Region-specific consent policy with requirements and restrictions
+ *
+ * @example
+ * ```typescript
+ * // Get Korean consent policy
+ * const krPolicy = getConsentPolicy('KR');
+ * console.log(krPolicy.law); // 'PIPA (개인정보보호법)'
+ * console.log(krPolicy.nightTimePushRestriction); // { start: 21, end: 8 }
+ *
+ * // Get default policy for unknown region
+ * const defaultPolicy = getConsentPolicy('UNKNOWN');
+ * console.log(defaultPolicy.region); // 'DEFAULT'
+ *
+ * // Handle undefined input
+ * const fallbackPolicy = getConsentPolicy(undefined);
+ * console.log(fallbackPolicy.region); // 'DEFAULT'
+ * ```
  */
 export function getConsentPolicy(region?: string): RegionConsentPolicy {
   const normalizedRegion = region?.toUpperCase() as Region;
@@ -300,7 +322,34 @@ export function getConsentPolicy(region?: string): RegionConsentPolicy {
 
 /**
  * Map locale to region
- * Used when region is not explicitly provided
+ *
+ * Converts a locale string to a region code for consent policy lookup.
+ * Used when region is not explicitly provided by the client.
+ *
+ * @param locale - Locale string (e.g., 'ko', 'ko-KR', 'en-US', 'de-DE')
+ * @returns Region code (KR, JP, EU, US, DEFAULT)
+ *
+ * @example
+ * ```typescript
+ * // Korean locale
+ * localeToRegion('ko');    // 'KR'
+ * localeToRegion('ko-KR'); // 'KR'
+ *
+ * // Japanese locale
+ * localeToRegion('ja');    // 'JP'
+ *
+ * // European locales
+ * localeToRegion('de-DE'); // 'EU'
+ * localeToRegion('fr');    // 'EU'
+ * localeToRegion('en-GB'); // 'EU'
+ *
+ * // US locale
+ * localeToRegion('en-US'); // 'US'
+ * localeToRegion('en');    // 'US' (default English)
+ *
+ * // Unknown locale
+ * localeToRegion('zh');    // 'DEFAULT'
+ * ```
  */
 export function localeToRegion(locale: string): Region {
   const localeMap: Record<string, Region> = {

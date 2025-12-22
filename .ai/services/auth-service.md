@@ -536,7 +536,7 @@ Query: { locale?: string, version?: string }
 Response: LegalDocumentResponseDto
 
 // Get legal document by ID (public - no auth)
-GET /v1/legal/documents/id/:id
+GET /v1/legal/documents/by-id/:id
 Response: LegalDocumentResponseDto
 
 // Get current user's consents (auth required)
