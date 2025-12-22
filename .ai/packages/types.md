@@ -138,43 +138,72 @@ export enum LegalDocumentType {
   PERSONALIZED_ADS = 'PERSONALIZED_ADS',
 }
 
-// src/legal/dto.ts
-export interface ConsentItemDto {
-  type: ConsentType;
-  agreed: boolean;
+// src/legal/dto.ts - Key Types
+
+/** Document summary for consent requirement */
+export interface ConsentDocumentSummary {
+  id: string;
+  version: string;
+  title: string;
+  summary: string | null;
 }
 
-export interface CreateConsentsDto {
-  consents: ConsentItemDto[];
-}
-
-export interface ConsentRequirementDto {
+export interface ConsentRequirementWithDocument {
   type: ConsentType;
   required: boolean;
-  label: string;
-  description: string;
-  documentType?: LegalDocumentType;
+  labelKey: string; // i18n key for label
+  descriptionKey: string; // i18n key for description
+  documentType: LegalDocumentType;
+  nightTimeHours?: { start: number; end: number };
+  document: ConsentDocumentSummary | null;
 }
 
-export interface LegalDocumentResponseDto {
+/** API response from GET /v1/legal/consent-requirements */
+export interface ConsentRequirementsWithRegionResponse {
+  region: string; // 'KR', 'JP', 'EU', 'US', 'DEFAULT'
+  law: string; // 'PIPA (개인정보보호법)'
+  nightTimePushRestriction?: { start: number; end: number };
+  requirements: ConsentRequirementWithDocument[];
+}
+
+export interface LegalDocumentPayload {
   id: string;
   type: LegalDocumentType;
   version: string;
   locale: string;
   title: string;
   content: string;
-  summary?: string;
+  summary: string | null;
   effectiveDate: Date;
 }
 
-export interface UserConsentResponseDto {
+export interface UserConsentPayload {
   id: string;
+  userId: string;
   consentType: ConsentType;
+  documentId?: string;
+  documentVersion?: string;
   agreed: boolean;
   agreedAt: Date;
   withdrawnAt?: Date;
-  documentVersion?: string;
 }
+
+export interface CreateConsentDto {
+  consentType: ConsentType;
+  documentId?: string;
+  agreed: boolean;
+}
+```
+
+### Legal API Usage (Frontend)
+
+```typescript
+import { getConsentRequirements, type ConsentRequirementsWithRegionResponse } from '../api/legal';
+
+// Fetch region-specific consent requirements
+const requirements = await getConsentRequirements('ko');
+console.log(requirements.region); // 'KR'
+console.log(requirements.law); // 'PIPA (개인정보보호법)'
 ```
 
 ## Resume Types

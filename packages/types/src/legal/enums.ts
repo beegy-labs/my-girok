@@ -1,12 +1,19 @@
 /**
  * Legal document type enumeration
  * Types of legal documents that require user consent
+ *
+ * @remarks
+ * Must be synchronized with Prisma schema: services/auth-service/prisma/schema.prisma
  */
 export enum LegalDocumentType {
+  /** Terms of Service document */
   TERMS_OF_SERVICE = 'TERMS_OF_SERVICE',
+  /** Privacy Policy document */
   PRIVACY_POLICY = 'PRIVACY_POLICY',
-  COOKIE_POLICY = 'COOKIE_POLICY',
-  DATA_PROCESSING = 'DATA_PROCESSING',
+  /** Marketing information consent policy */
+  MARKETING_POLICY = 'MARKETING_POLICY',
+  /** Personalized advertising consent policy */
+  PERSONALIZED_ADS = 'PERSONALIZED_ADS',
 }
 
 /**

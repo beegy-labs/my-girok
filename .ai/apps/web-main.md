@@ -452,6 +452,43 @@ interface AuthState {
 </PrivateRoute>
 ```
 
+## Legal API Client
+
+**Location**: `api/legal.ts`
+
+Legal API provides consent requirements from backend (SSOT with `consent-policy.config.ts`).
+
+Types are imported from `@my-girok/types` (SSOT compliance).
+
+```typescript
+import { getConsentRequirements, type ConsentRequirementsWithRegionResponse } from '../api/legal';
+
+// Get region-specific consent requirements
+const requirements = await getConsentRequirements('ko'); // or 'en', 'ja', 'de'
+console.log(requirements.region); // 'KR', 'JP', 'EU', 'US', 'DEFAULT'
+console.log(requirements.law); // 'PIPA (개인정보보호법)'
+console.log(requirements.requirements); // ConsentRequirementWithDocument[]
+```
+
+**Available Functions**:
+
+| Function                 | API Client  | Description                                |
+| ------------------------ | ----------- | ------------------------------------------ |
+| `getConsentRequirements` | `publicApi` | Get region-specific consent requirements   |
+| `getLegalDocument`       | `publicApi` | Get legal document by type (e.g., TERMS)   |
+| `getLegalDocumentById`   | `publicApi` | Get legal document by UUID                 |
+| `getUserConsents`        | `authApi`   | Get current user's consent records         |
+| `createConsents`         | `authApi`   | Create consent records for user            |
+| `updateConsent`          | `authApi`   | Update a specific consent (agree/withdraw) |
+| `checkRequiredConsents`  | `authApi`   | Check if user has all required consents    |
+
+**ConsentPage Flow**:
+
+1. On mount: `getConsentRequirements(i18n.language)` fetches region-specific consents
+2. User agrees to required consents
+3. On continue: consents saved to `sessionStorage` for registration step
+4. RegisterPage reads consents from `sessionStorage` and sends to API
+
 ## UI Component Library
 
 **Location**: `packages/ui-components/src/`
