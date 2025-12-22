@@ -122,29 +122,41 @@ export class LegalService {
     const region = localeToRegion(locale);
     const policy = getConsentPolicy(region);
 
-    const requirements = await Promise.all(
-      policy.requirements.map(async (req: ConsentRequirement) => {
-        const document = await this.prisma.legalDocument.findFirst({
-          where: {
-            type: req.documentType,
-            locale,
-            isActive: true,
-          },
-          orderBy: { effectiveDate: 'desc' },
-          select: DOCUMENT_SELECT_FIELDS,
-        });
+    // Batch query: fetch all required documents in single query (prevents N+1)
+    const documentTypes = policy.requirements.map((r) => r.documentType);
+    const documents = await this.prisma.legalDocument.findMany({
+      where: {
+        type: { in: documentTypes },
+        locale,
+        isActive: true,
+      },
+      orderBy: { effectiveDate: 'desc' },
+      select: { ...DOCUMENT_SELECT_FIELDS, type: true },
+    });
 
-        return {
-          type: req.type,
-          required: req.required,
-          labelKey: req.labelKey,
-          descriptionKey: req.descriptionKey,
-          documentType: req.documentType,
-          nightTimeHours: req.nightTimeHours,
-          document,
-        };
-      }),
-    );
+    // Create lookup map for O(1) access (latest document per type)
+    const documentMap = new Map<LegalDocumentType, (typeof documents)[0]>();
+    for (const doc of documents) {
+      if (!documentMap.has(doc.type)) {
+        documentMap.set(doc.type, doc);
+      }
+    }
+
+    // Map requirements with documents from cache
+    const requirements = policy.requirements.map((req) => {
+      const doc = documentMap.get(req.documentType);
+      return {
+        type: req.type,
+        required: req.required,
+        labelKey: req.labelKey,
+        descriptionKey: req.descriptionKey,
+        documentType: req.documentType,
+        nightTimeHours: req.nightTimeHours,
+        document: doc
+          ? { id: doc.id, version: doc.version, title: doc.title, summary: doc.summary }
+          : null,
+      };
+    });
 
     return {
       region: policy.region,

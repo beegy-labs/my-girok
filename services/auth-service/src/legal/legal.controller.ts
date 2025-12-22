@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   ParseEnumPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -143,7 +144,7 @@ export class LegalController {
    * Retrieves a specific document version for audit purposes.
    * Public endpoint - no authentication required.
    *
-   * @param id - Document UUID
+   * @param id - Document UUID (validated)
    * @returns Legal document content and metadata
    *
    * @example
@@ -156,10 +157,11 @@ export class LegalController {
     summary: 'Get legal document by ID',
     description: 'Retrieves specific document version for audit purposes.',
   })
-  @ApiParam({ name: 'id', description: 'Document UUID' })
+  @ApiParam({ name: 'id', description: 'Document UUID', format: 'uuid' })
   @ApiResponse({ status: 200, type: LegalDocumentResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid UUID format' })
   @ApiResponse({ status: 404, description: 'Document not found' })
-  async getDocumentById(@Param('id') id: string) {
+  async getDocumentById(@Param('id', ParseUUIDPipe) id: string) {
     return this.legalService.getDocumentById(id);
   }
 
