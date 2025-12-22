@@ -96,7 +96,7 @@ export default function ResumeList() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="w-full lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-theme-text-primary">{t('resume.list.title')}</h1>
         <Link

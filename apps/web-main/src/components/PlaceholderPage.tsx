@@ -23,7 +23,7 @@ export default function PlaceholderPage({
   return (
     <>
       <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div className="w-full lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="text-center">
             {/* Icon */}
             <div className="inline-flex items-center justify-center w-20 h-20 mb-8 rounded-full bg-theme-bg-card border border-theme-border-default">

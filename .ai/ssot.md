@@ -244,6 +244,22 @@ rounded-[48px]        ❌ No autocomplete, easy typos
 - [Design Tokens with Tailwind CSS: Complete Integration Guide 2025](https://nicolalazzari.ai/articles/integrating-design-tokens-with-tailwind-css)
 - [Exploring Typesafe design tokens in Tailwind 4](https://dev.to/wearethreebears/exploring-typesafe-design-tokens-in-tailwind-4-372d)
 
+## Responsive Design (2025)
+
+**min-width**: 375px (index.css)
+
+### Container Pattern
+
+```tsx
+<div className="w-full lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+```
+
+| Breakpoint  | Width     | Padding |
+| ----------- | --------- | ------- |
+| base        | full      | 16px    |
+| sm (640px)  | full      | 24px    |
+| lg (1024px) | max-w-5xl | 32px    |
+
 ## Version
 
 **V0.0.1 AAA Workstation** (2025-12)
