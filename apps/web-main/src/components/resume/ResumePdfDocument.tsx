@@ -554,21 +554,24 @@ interface ResumePdfDocumentProps {
  */
 function sanitizeText(text: string | undefined | null): string {
   if (!text) return '';
-  return String(text)
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
-    .replace(/[\u{2600}-\u{26FF}]/gu, '')
-    .replace(/[\u{2700}-\u{27BF}]/gu, '')
-    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
-    .replace(/[\u{1F000}-\u{1F02F}]/gu, '')
-    .replace(/[\u{1F0A0}-\u{1F0FF}]/gu, '')
-    .replace(/[\u{E0000}-\u{E007F}]/gu, '')
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
-    .replace(/[\u{1F100}-\u{1F1FF}]/gu, '')
-    .replace(/[\u{1FA00}-\u{1FAFF}]/gu, '')
-    .replace(/[\u{2300}-\u{23FF}]/gu, '')
-    .replace(/[\u{2B00}-\u{2BFF}]/gu, '')
-    .replace(/\u3000/g, ' ');
+  return (
+    String(text)
+      .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+      .replace(/[\u{2600}-\u{26FF}]/gu, '')
+      .replace(/[\u{2700}-\u{27BF}]/gu, '')
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+      .replace(/[\u{1F000}-\u{1F02F}]/gu, '')
+      .replace(/[\u{1F0A0}-\u{1F0FF}]/gu, '')
+      .replace(/[\u{E0000}-\u{E007F}]/gu, '')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      // eslint-disable-next-line no-control-regex -- Intentionally removing ASCII control chars
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+      .replace(/[\u{1F100}-\u{1F1FF}]/gu, '')
+      .replace(/[\u{1FA00}-\u{1FAFF}]/gu, '')
+      .replace(/[\u{2300}-\u{23FF}]/gu, '')
+      .replace(/[\u{2B00}-\u{2BFF}]/gu, '')
+      .replace(/\u3000/g, ' ')
+  );
 }
 
 // Hierarchical description renderer for PDF

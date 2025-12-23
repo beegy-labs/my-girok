@@ -59,7 +59,7 @@ export async function imageToBase64(imageUrl: string | null | undefined): Promis
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          console.warn('Failed to get canvas context');
+          devWarn('Failed to get canvas context');
           resolve(null);
           return;
         }
