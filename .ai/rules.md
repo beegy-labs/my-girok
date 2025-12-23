@@ -24,6 +24,10 @@
 - ❌ Return inconsistent error formats → Use `HttpExceptionFilter`
 - ❌ Prisma in Controllers → Use Services
 - ❌ Hardcode secrets → Use ConfigService
+- ❌ Use `prisma migrate` → Use goose (SSOT)
+- ❌ Modify existing migration files
+- ❌ Use UUID type for IDs → Use TEXT with gen_random_uuid()::TEXT
+- ❌ Auto-sync ArgoCD for DB changes → Manual Sync only
 - ❌ Make sync service-to-service calls → Use HTTP
 - ❌ Skip async/await
 - ❌ Omit error handling
@@ -50,6 +54,10 @@
 - ✅ Use `configureApp()` factory for NestJS bootstrapping
 - ✅ Use DTO validation (class-validator)
 - ✅ Apply `@Transactional()` for multi-step DB ops
+- ✅ Use goose for schema migrations → `services/<service>/migrations/`
+- ✅ Use Prisma for client generation only → `prisma db pull` + `prisma generate`
+- ✅ Include `-- +goose Down` in all migrations
+- ✅ Use `TIMESTAMPTZ(6)` for timestamps
 - ✅ Use Guards for protected endpoints
 - ✅ Prevent N+1 queries (Prisma include/select)
 - ✅ Paginate large queries
@@ -397,6 +405,52 @@ import {
 4. Use `SortableList` for drag-and-drop
 5. Write tests (80% coverage)
 6. Create PR
+
+## Database Migrations
+
+**goose is SSOT for schema changes. Prisma is for client generation only.**
+
+### Migration Workflow
+
+```bash
+# 1. Create migration
+cd services/auth-service
+goose -dir migrations create add_feature sql
+
+# 2. Apply locally
+goose -dir migrations postgres "$DATABASE_URL" up
+
+# 3. Sync Prisma schema
+pnpm prisma db pull
+pnpm prisma generate
+
+# 4. Commit both
+git add migrations/ prisma/schema.prisma
+```
+
+### SQL Patterns
+
+```sql
+-- +goose Up
+CREATE TABLE features (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+);
+
+-- +goose Down
+DROP TABLE IF EXISTS features;
+```
+
+### PL/pgSQL Functions
+
+```sql
+-- +goose StatementBegin
+CREATE FUNCTION ... $$ ... $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+```
+
+**Full guide**: `.ai/database.md`
 
 ## Stack Reference
 

@@ -4,768 +4,641 @@ Complete guide for database setup, migrations, and management across environment
 
 ## Table of Contents
 
+- [Overview](#overview)
 - [Database Structure](#database-structure)
-- [Database Setup](#database-setup)
-- [Migration Strategy](#migration-strategy)
-- [Data Synchronization](#data-synchronization)
-- [Collaboration Guidelines](#collaboration-guidelines)
+- [Migration Strategy (goose + ArgoCD)](#migration-strategy-goose--argocd)
+- [Local Development](#local-development)
+- [Deployment Workflow](#deployment-workflow)
+- [Prisma Integration](#prisma-integration)
+- [Timezone Handling](#timezone-handling)
 - [Backup & Restore](#backup--restore)
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
+
+## Overview
+
+### Technology Stack
+
+| Component | Tool          | Purpose                                     |
+| --------- | ------------- | ------------------------------------------- |
+| Migration | goose (MIT)   | SQL-based schema versioning (SSOT)          |
+| ORM       | Prisma 6      | Type-safe client generation                 |
+| Database  | PostgreSQL 16 | Primary data store                          |
+| GitOps    | ArgoCD        | Deployment orchestration with PreSync hooks |
+
+### Why goose + Prisma?
+
+- **goose**: Language-agnostic SQL migrations, works with Node.js, Python, Rust, Java
+- **Prisma**: Type-safe ORM client for TypeScript/JavaScript services
+- **Separation of concerns**: goose handles schema changes, Prisma handles queries
+- **MIT License**: goose is fully open source, no vendor lock-in
+
+### Migration Ownership
+
+```
+goose migrations/       -> SSOT for schema changes
+prisma/schema.prisma    -> Client generation only (synced from DB)
+```
 
 ## Database Structure
 
 ### Three-Tier Environment
 
+| Environment | Auth Database  | Personal Database  | Branch     |
+| ----------- | -------------- | ------------------ | ---------- |
+| Development | girok_auth_dev | girok_personal_dev | develop    |
+| Staging     | girok_auth_stg | girok_personal_stg | release/\* |
+| Production  | girok_auth     | girok_personal     | main       |
+
+### Services and Databases
+
+| Service          | Dev Database       | Prod Database  | Namespace    |
+| ---------------- | ------------------ | -------------- | ------------ |
+| auth-service     | girok_auth_dev     | girok_auth     | dev-my-girok |
+| personal-service | girok_personal_dev | girok_personal | dev-my-girok |
+
+### Connection Management
+
+**Vault Paths:**
+
+- `secret/apps/my-girok/auth-service/postgres`
+- `secret/apps/my-girok/personal-service/postgres`
+
+**K8s Secrets (via ESO):**
+
+- `my-girok-dev-auth-service-secret`
+- `my-girok-dev-personal-service-secret`
+
+## Migration Strategy (goose + ArgoCD)
+
+### SSOT Architecture
+
 ```
-┌─────────────┬──────────────────────┬──────────────────────────────────┐
-│ Environment │ Database             │ Purpose                          │
-├─────────────┼──────────────────────┼──────────────────────────────────┤
-│ Development │ dev_girok_user       │ Dev/Testing/Free experimentation │
-│ Staging     │ staging_girok_user   │ QA/Migration verification        │
-│ Production  │ girok_user           │ Live production service          │
-└─────────────┴──────────────────────┴──────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    Single Source of Truth                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  services/auth-service/migrations/                               │
+│  ├── 20251220000000_baseline.sql                                │
+│  ├── 20251221000000_add_legal_consent.sql                       │
+│  └── ...                                                        │
+│                           │                                      │
+│                           ▼                                      │
+│               Docker Image (migrations baked in)                 │
+│               - goose binary installed                           │
+│               - migrations/ folder copied                        │
+│                           │                                      │
+│                           ▼                                      │
+│          ArgoCD PreSync Hook Job (goose up)                     │
+│          - Runs before app deployment                           │
+│          - Manual Sync required                                 │
+│                           │                                      │
+│                           ▼                                      │
+│                   Database Updated                               │
+│                           │                                      │
+│                           ▼                                      │
+│                    App Pods Deploy                               │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Git Branch → Database Mapping
+### File Structure
 
-| Git Branch  | Database             | Namespace        | Manual Migration |
-| ----------- | -------------------- | ---------------- | ---------------- |
-| `develop`   | `dev_girok_user`     | my-girok-dev     | ✅ Required      |
-| `release/*` | `staging_girok_user` | my-girok-staging | ✅ Required      |
-| `main`      | `girok_user`         | my-girok-prod    | ✅ Required      |
-
-**Note**: All migrations are manual for team collaboration safety.
-
-## Database Setup
-
-### PostgreSQL Installation
-
-#### Option A: Docker (Development)
-
-```bash
-# Development DB
-docker run -d \
-  --name postgres-dev \
-  -e POSTGRES_DB=dev_girok_user \
-  -e POSTGRES_USER=dev_girok_user \
-  -e POSTGRES_PASSWORD=dev_password \
-  -p 5432:5432 \
-  postgres:16
-
-# Staging DB (separate instance or different port on same server)
-docker run -d \
-  --name postgres-staging \
-  -e POSTGRES_DB=staging_girok_user \
-  -e POSTGRES_USER=staging_girok_user \
-  -e POSTGRES_PASSWORD=staging_password \
-  -p 5433:5432 \
-  postgres:16
-
-# Production DB (separate server recommended)
-docker run -d \
-  --name postgres-prod \
-  -e POSTGRES_DB=girok_user \
-  -e POSTGRES_USER=girok_user \
-  -e POSTGRES_PASSWORD=prod_password \
-  -p 5434:5432 \
-  postgres:16
+```
+services/
+├── auth-service/
+│   ├── Dockerfile              # Includes goose binary + migrations
+│   ├── migrations/             # goose SQL migrations (SSOT)
+│   │   ├── 20251220000000_baseline.sql
+│   │   ├── 20251221000000_add_legal_consent.sql
+│   │   └── ...
+│   ├── helm/
+│   │   └── templates/
+│   │       └── migration-job.yaml  # ArgoCD PreSync Job
+│   └── prisma/
+│       └── schema.prisma       # For client generation only
+│
+└── personal-service/
+    ├── Dockerfile
+    ├── migrations/
+    │   ├── 20251211000000_baseline.sql
+    │   ├── 20251212000000_add_copy_status.sql
+    │   └── ...
+    ├── helm/
+    │   └── templates/
+    │       └── migration-job.yaml
+    └── prisma/
+        └── schema.prisma
 ```
 
-#### Option B: Native PostgreSQL
+### Dockerfile Configuration
+
+goose binary is installed in the production image:
+
+```dockerfile
+# Production stage
+FROM node:22-alpine AS production
+
+# Install security updates and goose for migrations
+RUN apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates && \
+    wget -qO- https://github.com/pressly/goose/releases/download/v3.24.1/goose_linux_x86_64 -O /usr/local/bin/goose && \
+    chmod +x /usr/local/bin/goose
+
+# ... other setup ...
+
+# Copy goose migrations
+COPY --chown=node:node --from=builder /app/services/<service>/migrations ./services/<service>/migrations
+```
+
+### ArgoCD PreSync Job
+
+Located at `helm/templates/migration-job.yaml`:
+
+```yaml
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "<service>.fullname" . }}-migrate
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              goose -dir /app/services/<service>/migrations postgres "$DATABASE_URL" up
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "<service>.fullname" . }}-secret
+                  key: database-url
+{{- end }}
+```
+
+### goose_db_version Table
+
+goose automatically creates and manages this table:
 
 ```sql
--- Development Database
-CREATE DATABASE dev_girok_user;
-CREATE USER dev_girok_user WITH PASSWORD 'dev_password';
-GRANT ALL PRIVILEGES ON DATABASE dev_girok_user TO dev_girok_user;
+SELECT * FROM goose_db_version;
 
--- Staging Database
-CREATE DATABASE staging_girok_user;
-CREATE USER staging_girok_user WITH PASSWORD 'staging_password';
-GRANT ALL PRIVILEGES ON DATABASE staging_girok_user TO staging_girok_user;
-
--- Production Database
-CREATE DATABASE girok_user;
-CREATE USER girok_user WITH PASSWORD 'prod_password';
-GRANT ALL PRIVILEGES ON DATABASE girok_user TO girok_user;
+ id | version_id     | is_applied |        tstamp
+----+----------------+------------+------------------------
+  1 | 0              | t          | 2025-12-20 00:00:00+00
+  2 | 20251220000000 | t          | 2025-12-20 01:20:00+00
+  3 | 20251221000000 | t          | 2025-12-21 01:24:19+00
 ```
 
-#### Option C: Managed Service (Recommended for Production)
+## Local Development
 
-**AWS RDS:**
-
-```
-Development:  dev-girok.xxxxx.rds.amazonaws.com
-Staging:      staging-girok.xxxxx.rds.amazonaws.com
-Production:   prod-girok.xxxxx.rds.amazonaws.com
-```
-
-**Features**: PostgreSQL 16, Multi-AZ, Automated Backups
-
-### Connection Strings
+### Prerequisites
 
 ```bash
-# Development
-DATABASE_URL="postgresql://dev_girok_user:dev_password@localhost:5432/dev_girok_user?schema=public"
+# Install goose (Ubuntu/Debian)
+go install github.com/pressly/goose/v3/cmd/goose@latest
+export PATH=$PATH:$(go env GOPATH)/bin
 
-# Staging
-DATABASE_URL="postgresql://staging_girok_user:staging_password@localhost:5433/staging_girok_user?schema=public"
+# Or via Homebrew (macOS)
+brew install goose
 
-# Production
-DATABASE_URL="postgresql://girok_user:prod_password@localhost:5434/girok_user?schema=public"
+# Verify installation
+goose --version
 ```
 
-## Migration Strategy
-
-**All environments require manual migrations for team collaboration safety.**
-
-### Development Environment
-
-**Create migration locally:**
+### Create New Migration
 
 ```bash
 cd services/auth-service
 
-# 1. Modify schema (edit prisma/schema.prisma)
+# Create migration file
+goose -dir migrations create add_user_preferences sql
 
-# 2. Generate migration
-pnpm prisma migrate dev --name add_user_profile
-
-# 3. Commit to Git
-git add prisma/migrations
-git commit -m "feat: add user profile migration"
-git push
+# This creates: migrations/20250123120000_add_user_preferences.sql
 ```
 
-**Apply migration to server:**
+### Write Migration SQL
 
-```bash
-# Run manually after deployment
-kubectl run migration-dev \
-  --image=harbor.girok.dev/my-girok/auth-service:develop:latest \
-  --restart=Never \
-  --namespace=my-girok-dev \
-  --env="DATABASE_URL=postgresql://dev_girok_user:xxx@db-host:5432/dev_girok_user" \
-  --command -- pnpm prisma migrate deploy
+```sql
+-- +goose Up
+CREATE TABLE user_preferences (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    theme VARCHAR(20) DEFAULT 'light',
+    locale VARCHAR(10) DEFAULT 'ko',
+    timezone VARCHAR(50) DEFAULT 'Asia/Seoul',
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+);
 
-# Check logs
-kubectl logs -f migration-dev -n my-girok-dev
+CREATE INDEX idx_user_preferences_user_id ON user_preferences(user_id);
 
-# Delete after success
-kubectl delete pod migration-dev -n my-girok-dev
+-- +goose Down
+DROP TABLE IF EXISTS user_preferences;
 ```
 
-**Quick prototyping (local only):**
+### PL/pgSQL Functions
+
+For functions with `$$` syntax, use StatementBegin/End:
+
+```sql
+-- +goose Up
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+CREATE TRIGGER update_user_preferences_updated_at
+    BEFORE UPDATE ON user_preferences
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- +goose Down
+DROP TRIGGER IF EXISTS update_user_preferences_updated_at ON user_preferences;
+DROP FUNCTION IF EXISTS update_updated_at_column;
+```
+
+### Apply Migration Locally
 
 ```bash
-# Apply immediately without migration file (Warning: local dev only!)
+# Get DATABASE_URL from Vault
+export VAULT_ADDR=https://vault.girok.dev
+export VAULT_TOKEN="your-token"
+export DATABASE_URL=$(vault kv get -field=url secret/apps/my-girok/auth-service/postgres)
+
+# Apply all pending migrations
+goose -dir migrations postgres "$DATABASE_URL" up
+
+# Check status
+goose -dir migrations postgres "$DATABASE_URL" status
+
+# Rollback last migration
+goose -dir migrations postgres "$DATABASE_URL" down
+
+# Rollback to specific version
+goose -dir migrations postgres "$DATABASE_URL" down-to 20251220000000
+```
+
+### Common goose Commands
+
+| Command                   | Description                         |
+| ------------------------- | ----------------------------------- |
+| `goose create <name> sql` | Create new SQL migration            |
+| `goose up`                | Apply all pending migrations        |
+| `goose up-by-one`         | Apply next pending migration        |
+| `goose down`              | Rollback last migration             |
+| `goose down-to VERSION`   | Rollback to specific version        |
+| `goose status`            | Show migration status               |
+| `goose version`           | Show current version                |
+| `goose redo`              | Rollback and reapply last migration |
+
+## Deployment Workflow
+
+### Step-by-Step Process
+
+#### 1. Create Migration
+
+```bash
+cd services/auth-service
+goose -dir migrations create add_feature sql
+vim migrations/20250123120000_add_feature.sql
+```
+
+#### 2. Test Locally
+
+```bash
+goose -dir migrations postgres "$DATABASE_URL" up
+goose -dir migrations postgres "$DATABASE_URL" status
+```
+
+#### 3. Update Prisma Schema
+
+```bash
+pnpm prisma db pull
+pnpm prisma generate
+```
+
+#### 4. Commit and Push
+
+```bash
+git add migrations/ prisma/schema.prisma
+git commit -m "feat(db): add feature table"
+git push origin develop
+```
+
+#### 5. CI Builds Image
+
+GitHub Actions:
+
+- Builds Docker image with goose binary and migrations folder
+- Pushes to registry: `gitea.girok.dev/beegy-labs/auth-service:develop-abc123`
+
+#### 6. Update GitOps Repo
+
+```bash
+# In platform-gitops
+vim clusters/home/values/my-girok-auth-service-dev.yaml
+# Update image.tag and ensure migration.enabled: true
+
+git add . && git commit -m "chore(auth): update image tag"
+git push origin develop
+```
+
+#### 7. Manual Sync in ArgoCD
+
+1. Open ArgoCD UI: https://argocd.girok.dev
+2. Find application: `my-girok-auth-service-dev`
+3. Click **Sync** button
+4. Review PreSync Job (migration-job)
+5. Click **Synchronize**
+
+#### 8. Verify Migration
+
+```bash
+# Check Job logs
+kubectl logs job/auth-service-migrate -n dev-my-girok
+
+# Verify in database
+psql "$DATABASE_URL" -c "SELECT * FROM goose_db_version ORDER BY version_id DESC LIMIT 5;"
+```
+
+## Prisma Integration
+
+### Role of Prisma
+
+| Task              | Tool                   |
+| ----------------- | ---------------------- |
+| Schema changes    | goose (SQL migrations) |
+| Client generation | Prisma                 |
+| Type-safe queries | Prisma Client          |
+| DB introspection  | Prisma db pull         |
+
+### Workflow
+
+```
+1. Create goose migration (SQL)
+2. Apply migration: goose up
+3. Sync Prisma: pnpm prisma db pull
+4. Generate client: pnpm prisma generate
+5. Commit both migrations/ and prisma/schema.prisma
+```
+
+### Prisma Commands (Client Only)
+
+```bash
+# Generate client from schema
+pnpm prisma generate
+
+# Pull schema from database
+pnpm prisma db pull
+
+# Open Prisma Studio (GUI)
+pnpm prisma studio
+
+# Validate schema
+pnpm prisma validate
+```
+
+### DO NOT Use
+
+```bash
+# These commands are DISABLED - use goose instead
+pnpm prisma migrate dev
+pnpm prisma migrate deploy
 pnpm prisma db push
-```
-
-### Staging Environment
-
-**Manual migration before release deployment:**
-
-```bash
-# 1. When creating release branch
-git checkout -b release/v1.0.0
-
-# 2. Apply migration to staging DB (manual)
-kubectl run migration-staging \
-  --image=harbor.girok.dev/my-girok/auth-service:release:latest \
-  --restart=Never \
-  --namespace=my-girok-staging \
-  --env="DATABASE_URL=postgresql://staging_girok_user:xxx@staging-db:5432/staging_girok_user" \
-  --command -- pnpm prisma migrate deploy
-
-# 3. Check logs
-kubectl logs -f migration-staging -n my-girok-staging
-
-# 4. Delete after success
-kubectl delete pod migration-staging -n my-girok-staging
-
-# 5. Deploy application to staging (ArgoCD)
-# 6. QA testing
-```
-
-**Rollback on failure:**
-
-```bash
-# Rollback migration
-pnpm prisma migrate resolve --rolled-back <migration-name>
-
-# Or restore from backup
-psql -h staging-db -U staging_girok_user staging_girok_user < backup.sql
-```
-
-### Production Environment
-
-**Very careful manual migration:**
-
-```bash
-# 1. Complete testing in staging
-
-# 2. Backup production DB (REQUIRED!)
-pg_dump -h prod-db -U girok_user girok_user > prod_backup_$(date +%Y%m%d_%H%M%S).sql
-
-# 3. Apply migration
-kubectl run migration-prod \
-  --image=harbor.girok.dev/my-girok/auth-service:latest \
-  --restart=Never \
-  --namespace=my-girok-prod \
-  --env="DATABASE_URL=postgresql://girok_user:xxx@prod-db:5432/girok_user" \
-  --command -- pnpm prisma migrate deploy
-
-# 4. Check logs thoroughly
-kubectl logs -f migration-prod -n my-girok-prod
-
-# 5. Delete after verification
-kubectl delete pod migration-prod -n my-girok-prod
-
-# 6. Deploy production application (ArgoCD or manual)
-
-# 7. Monitor for errors and performance
-```
-
-## Data Synchronization
-
-### Staging ← Production (Weekly Recommended)
-
-#### Automated Sync Script
-
-Located at `scripts/sync-staging-db.sh`:
-
-```bash
-#!/bin/bash
-# Syncs production data to staging with masking
-# Run weekly: Sunday 3am recommended
-
-./scripts/sync-staging-db.sh
-```
-
-**Features:**
-
-- Dumps production database
-- Masks sensitive data (emails, names, tokens)
-- Restores to staging
-- Verifies data integrity
-- Cleans up old backups
-
-#### Cron Job Setup
-
-```bash
-# Run every Sunday at 3am
-0 3 * * 0 /path/to/scripts/sync-staging-db.sh >> /var/log/db-sync.log 2>&1
-```
-
-#### Data Masking
-
-The script automatically masks:
-
-- User emails: `user_<id>@test.example.com`
-- User names: `Test User <id>`
-- Provider IDs: `masked_<id>`
-- Refresh tokens: Replaced with random hash
-- OAuth secrets: `masked_secret_<id>`
-
-#### Manual Sync
-
-```bash
-# Set environment variables
-export PROD_DB_HOST="prod-db.example.com"
-export PROD_DB_USER="girok_user"
-export STAGING_DB_HOST="staging-db.example.com"
-export STAGING_DB_USER="staging_girok_user"
-
-# Run sync
-./scripts/sync-staging-db.sh
-```
-
-## Collaboration Guidelines
-
-### Migration Workflow for Teams
-
-**Developer A creates migration:**
-
-```bash
-# 1. Update develop branch
-git checkout develop
-git pull origin develop
-
-# 2. Create feature branch
-git checkout -b feature/add-user-profile
-
-# 3. Modify schema
-# Edit prisma/schema.prisma
-
-# 4. Generate migration
-cd services/auth-service
-pnpm prisma migrate dev --name add_user_profile
-
-# 5. Commit to Git
-git add .
-git commit -m "feat: add user profile fields to User model"
-git push origin feature/add-user-profile
-
-# 6. Create Pull Request
-# Create PR on GitHub → develop
-```
-
-**Developer B works on different migration simultaneously:**
-
-```bash
-# 1. Pull latest develop
-git checkout develop
-git pull origin develop
-
-# 2. Create different feature branch
-git checkout -b feature/add-oauth-provider
-
-# 3. Modify schema & generate migration
-pnpm prisma migrate dev --name add_oauth_provider_table
-
-# 4. Commit & create PR
-```
-
-**Resolving migration conflicts:**
-
-```bash
-# When PR has migration conflicts
-
-# 1. Update develop
-git checkout develop
-git pull origin develop
-
-# 2. Go back to feature branch and rebase
-git checkout feature/my-feature
-git rebase develop
-
-# 3. Regenerate migration if needed
-cd services/auth-service
-rm -rf prisma/migrations/<my-migration>
-pnpm prisma migrate dev --name my_migration_new
-
-# 4. Push again
-git add .
-git commit -m "fix: regenerate migration after rebase"
-git push origin feature/my-feature --force
-```
-
-### Migration Review Checklist
-
-When reviewing PRs, check:
-
-- [ ] Migration files are included
-- [ ] Migration name is clear and descriptive
-- [ ] No data loss potential
-- [ ] Indexes added for queried fields
-- [ ] Foreign key constraints are correct
-- [ ] Rollback is possible (if needed)
-- [ ] Migration tested locally
-
-## Backup & Restore
-
-### Automated Backups
-
-```bash
-#!/bin/bash
-# scripts/backup-db.sh
-
-BACKUP_DIR="/backups/postgresql"
-RETENTION_DAYS=30
-
-# Development (daily)
-pg_dump -h dev-db -U dev_girok_user dev_girok_user | \
-  gzip > ${BACKUP_DIR}/dev_$(date +%Y%m%d).sql.gz
-
-# Staging (daily)
-pg_dump -h staging-db -U staging_girok_user staging_girok_user | \
-  gzip > ${BACKUP_DIR}/staging_$(date +%Y%m%d).sql.gz
-
-# Production (hourly)
-pg_dump -h prod-db -U girok_user girok_user | \
-  gzip > ${BACKUP_DIR}/prod_$(date +%Y%m%d_%H%M).sql.gz
-
-# Delete old backups
-find ${BACKUP_DIR} -name "*.sql.gz" -mtime +${RETENTION_DAYS} -delete
-```
-
-### Restore from Backup
-
-```bash
-# Restore from gzipped backup
-gunzip < backup.sql.gz | psql -h db-host -U user database
-
-# Restore from plain SQL
-psql -h db-host -U user database < backup.sql
 ```
 
 ## Timezone Handling
 
 ### Standard: UTC with TIMESTAMPTZ
 
-**All timestamps in the database MUST use TIMESTAMPTZ (TIMESTAMP WITH TIME ZONE) with UTC.**
+All timestamps use TIMESTAMPTZ with UTC timezone.
 
-#### Why TIMESTAMPTZ?
+#### SQL Convention
 
-1. **Explicit Timezone Information**
-   - Stores timezone metadata with each timestamp
-   - Eliminates ambiguity in distributed systems
-   - PostgreSQL handles timezone conversions automatically
+```sql
+-- Correct: Use TIMESTAMPTZ
+created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 
-2. **Global Consistency**
-   - Same timestamp value regardless of server location
-   - Safe for multi-region deployments
-   - Consistent behavior across all environments
-
-3. **Better Developer Experience**
-   - Clear timezone guarantees in schema
-   - Easier debugging of time-related issues
-   - Reduced mental overhead
+-- Incorrect: Missing timezone
+created_at TIMESTAMP DEFAULT NOW()  -- DON'T
+```
 
 #### Prisma Schema Convention
 
 ```prisma
 model User {
   id        String   @id @default(uuid())
-  email     String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 }
 ```
 
-**Key Points:**
-
-- Always add `@db.Timestamptz(6)` to DateTime fields
-- Use 6 digits of microsecond precision
-- Database timezone is set to `Etc/UTC`
-
-#### Migration Pattern
-
-When adding new timestamp columns:
-
-```sql
--- Correct: Use TIMESTAMPTZ
-ALTER TABLE "users"
-  ADD COLUMN "last_login" TIMESTAMPTZ(6) DEFAULT now();
-
--- Incorrect: Don't use TIMESTAMP without timezone
-ALTER TABLE "users"
-  ADD COLUMN "last_login" TIMESTAMP DEFAULT now();  -- ❌ WRONG
-```
-
-When converting existing TIMESTAMP columns:
-
-```sql
--- Safe conversion preserving data as UTC
-ALTER TABLE "users"
-  ALTER COLUMN "created_at" TYPE TIMESTAMPTZ(6)
-  USING "created_at" AT TIME ZONE 'UTC';
-```
-
-#### Application Code Guidelines
-
-**Backend (Node.js/TypeScript):**
-
-```typescript
-// ✅ Correct: Use Date.now() or new Date()
-const now = Date.now(); // Returns UTC milliseconds
-const date = new Date(); // Stores UTC internally
-
-// ✅ Correct: Prisma handles UTC automatically
-const user = await prisma.user.create({
-  data: {
-    email: 'user@example.com',
-    createdAt: new Date(), // Automatically stored as UTC
-  },
-});
-
-// ❌ Wrong: Don't manually convert timezones
-const date = new Date().toLocaleString('Asia/Seoul'); // Returns string, not Date
-```
-
-**Frontend (JavaScript):**
-
-```typescript
-// ✅ Correct: Let JavaScript handle timezone conversion
-const date = new Date(user.createdAt); // UTC timestamp from server
-const localTime = date.toLocaleString(); // Converts to user's timezone
-
-// ✅ Correct: Display in user's locale
-date.toLocaleDateString('ko-KR'); // "2025. 1. 11."
-date.toLocaleDateString('en-US'); // "1/11/2025"
-
-// ❌ Wrong: Don't assume server timezone
-const date = new Date(user.createdAt + ' KST'); // Wrong!
-```
-
 #### API Response Format
 
-Always return timestamps in ISO 8601 format with UTC timezone:
+Always return ISO 8601 with UTC:
 
 ```json
 {
-  "id": "123e4567-e89b-12d3-a456-426614174000",
-  "email": "user@example.com",
-  "createdAt": "2025-01-11T14:40:01.708Z", // ✅ ISO 8601 with Z (UTC)
-  "updatedAt": "2025-01-11T14:40:01.708Z"
+  "createdAt": "2025-01-23T14:30:00.000Z"
 }
 ```
 
-**Do NOT:**
+## Backup & Restore
 
-- Return timestamps without timezone: `"2025-01-11T14:40:01"` ❌
-- Return in server's local timezone: `"2025-01-11T23:40:01+09:00"` ❌
-- Return as Unix timestamp: `1704983041708` ❌ (unless specifically needed)
+### Automated Backup Schedule
 
-#### Verification Checklist
+| Environment | Frequency | Retention |
+| ----------- | --------- | --------- |
+| Development | Daily     | 7 days    |
+| Staging     | Daily     | 14 days   |
+| Production  | Hourly    | 30 days   |
 
-Before deploying:
+### Manual Backup
 
-1. **Schema Check**
+```bash
+# Create backup
+pg_dump -h db-host -U girok_auth girok_auth > backup_$(date +%Y%m%d_%H%M%S).sql
 
-   ```sql
-   -- All timestamp columns should be TIMESTAMPTZ
-   SELECT table_name, column_name, data_type
-   FROM information_schema.columns
-   WHERE table_schema = 'public'
-     AND data_type LIKE '%timestamp%';
-   ```
-
-2. **Timezone Check**
-
-   ```sql
-   -- Database timezone should be UTC
-   SHOW timezone;  -- Should return: Etc/UTC
-   ```
-
-3. **Prisma Schema Check**
-   ```bash
-   # All DateTime fields should have @db.Timestamptz(6)
-   grep -n "DateTime" prisma/schema.prisma | grep -v "Timestamptz"
-   ```
-
-#### Common Pitfalls
-
-❌ **Pitfall 1: Forgetting @db.Timestamptz**
-
-```prisma
-// Wrong: Missing @db.Timestamptz annotation
-createdAt DateTime @default(now()) @map("created_at")
-
-// Correct
-createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+# Compressed backup
+pg_dump -h db-host -U girok_auth girok_auth | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
-❌ **Pitfall 2: Manual Timezone Conversion**
+### Restore from Backup
 
-```typescript
-// Wrong: Manual conversion can introduce bugs
-const kstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+```bash
+# Plain SQL
+psql -h db-host -U girok_auth girok_auth < backup.sql
 
-// Correct: Let system handle it
-const localDate = utcDate.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+# Compressed
+gunzip < backup.sql.gz | psql -h db-host -U girok_auth girok_auth
 ```
-
-❌ **Pitfall 3: Comparing Timestamps Without Timezone**
-
-```typescript
-// Wrong: String comparison doesn't work
-if (date1 > date2) {
-} // May fail if formats differ
-
-// Correct: Compare as Date objects or milliseconds
-if (new Date(date1).getTime() > new Date(date2).getTime()) {
-}
-```
-
-#### Reference Implementation
-
-Example files:
-
-- `services/auth-service/prisma/schema.prisma`
-- `services/auth-service/src/common/utils/id-generator.ts`
-- `services/auth-service/prisma/migrations/20250111120000_convert_to_timestamptz/`
 
 ## Best Practices
 
-### 1. Migration Safety
+### Migration Files
 
-✅ **DO:**
+**DO:**
 
-- Always backup before migration
-- Test in staging first
-- Run migrations manually
-- Keep migration history in Git
-- Review migration PRs carefully
+- Always include `-- +goose Down` section
 - Use descriptive migration names
+- Test migrations locally before commit
+- Keep migrations small and focused
+- Add indexes for queried columns
+- Use `TEXT` for ID columns (matches Prisma)
+- Use `TIMESTAMPTZ(6)` for timestamps
+- Use `-- +goose StatementBegin/End` for PL/pgSQL functions
 
-❌ **DON'T:**
+**DON'T:**
 
-- Auto-migrate production (team collaboration risk)
-- Skip staging tests
-- Modify existing migrations
+- Modify existing migration files
 - Delete migration files
-- Change migration order
+- Skip version numbers
+- Use `prisma migrate` commands
+- Use UUID type directly (use TEXT with gen_random_uuid()::TEXT)
+- Auto-sync in ArgoCD for DB changes
 
-### 2. Data Security
+### Zero-Downtime Migrations
 
-✅ **DO:**
+For production, use safe patterns:
 
-- Mask sensitive data in non-production
-- Use SSL/TLS connections
-- Use strong passwords
-- Regular security updates
-- Rotate credentials periodically
+```sql
+-- Adding nullable column (safe)
+ALTER TABLE users ADD COLUMN nickname VARCHAR(50);
 
-❌ **DON'T:**
-
-- Copy production data without masking
-- Use plain text passwords
-- Expose database to public network
-- Share production credentials
-
-### 3. Performance
-
-✅ **DO:**
-
-- Optimize indexes
-- Use connection pooling
-- Regular VACUUM operations
-- Monitor query performance
-- Set appropriate resource limits
-
-❌ **DON'T:**
-
-- Over-index (slows writes)
-- Skip maintenance
-- Use SELECT \* in production
-- Ignore slow query warnings
-
-### 4. Monitoring
-
-```bash
-# Connection count
-SELECT count(*) FROM pg_stat_activity;
-
-# Long-running queries
-SELECT pid, now() - pg_stat_activity.query_start AS duration, query
-FROM pg_stat_activity
-WHERE (now() - pg_stat_activity.query_start) > interval '5 minutes';
-
-# Database size
-SELECT pg_size_pretty(pg_database_size('girok_user'));
-
-# Table sizes
-SELECT
-  schemaname,
-  tablename,
-  pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
-FROM pg_tables
-WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+-- Adding NOT NULL column (2-phase)
+-- Phase 1: Add nullable
+ALTER TABLE users ADD COLUMN status VARCHAR(20);
+-- Phase 2: Populate + add constraint (separate migration)
+UPDATE users SET status = 'active' WHERE status IS NULL;
+ALTER TABLE users ALTER COLUMN status SET NOT NULL;
 ```
+
+### Code Review Checklist
+
+- [ ] Migration file included
+- [ ] Down migration works
+- [ ] No data loss potential
+- [ ] Indexes added for queried fields
+- [ ] Prisma schema synced
+- [ ] Tested locally
+- [ ] Uses TEXT for IDs, TIMESTAMPTZ for dates
 
 ## Troubleshooting
 
-### Migration Failed
+### Check Migration Status
 
 ```bash
-# Check migration status
-pnpm prisma migrate status
+# Local
+goose -dir migrations postgres "$DATABASE_URL" status
 
-# Mark migration as applied
-pnpm prisma migrate resolve --applied <migration-name>
+# Kubernetes
+kubectl logs job/<service>-migrate -n dev-my-girok
+```
 
-# Mark migration as rolled back
-pnpm prisma migrate resolve --rolled-back <migration-name>
+### Migration Failed
 
-# Reset database (development only!)
-pnpm prisma migrate reset
+1. Check Job logs in ArgoCD
+2. Identify SQL error
+3. Fix migration file (if not yet applied) or create new migration
+4. Rebuild Docker image
+5. Update GitOps repo
+6. Sync again
+
+### Common Errors
+
+#### Foreign Key Type Mismatch
+
+```
+ERROR: foreign key constraint ... cannot be implemented
+DETAIL: Key columns ... are of incompatible types: uuid and text
+```
+
+**Solution**: Use `TEXT` instead of `UUID` for foreign keys:
+
+```sql
+-- Wrong
+user_id UUID REFERENCES users(id)
+
+-- Correct
+user_id TEXT REFERENCES users(id)
+```
+
+#### PL/pgSQL Parsing Error
+
+```
+ERROR: unterminated dollar-quoted string
+```
+
+**Solution**: Add StatementBegin/End:
+
+```sql
+-- +goose StatementBegin
+CREATE FUNCTION ... $$ ... $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+```
+
+### Rollback Procedure
+
+#### Development
+
+```bash
+goose -dir migrations postgres "$DATABASE_URL" down
+```
+
+#### Production
+
+Create a new migration to reverse changes (never modify existing migrations):
+
+```bash
+goose -dir migrations create rollback_feature sql
+# Write reversal SQL
+git add . && git commit -m "fix(db): rollback feature"
+# Rebuild, deploy, sync
+```
+
+### Prisma Schema Drift
+
+```bash
+# Reset Prisma from DB
+pnpm prisma db pull
+
+# Regenerate client
+pnpm prisma generate
 ```
 
 ### Connection Issues
 
 ```bash
 # Test connection
-psql -h db-host -U user -d database -c "SELECT 1"
+psql "$DATABASE_URL" -c "SELECT 1"
 
-# Check connection limit
-SELECT max_connections FROM pg_settings WHERE name = 'max_connections';
-
-# Check current connections
-SELECT count(*) FROM pg_stat_activity;
-
-# Kill stuck connection
-SELECT pg_terminate_backend(pid)
-FROM pg_stat_activity
-WHERE pid <> pg_backend_pid()
-AND datname = 'your_database';
-```
-
-### Performance Issues
-
-```bash
-# Enable slow query log
-ALTER SYSTEM SET log_min_duration_statement = 1000;  -- 1 second
-SELECT pg_reload_conf();
-
-# Check locks
-SELECT * FROM pg_locks WHERE NOT granted;
-
-# Check blocking queries
-SELECT blocked_locks.pid AS blocked_pid,
-       blocked_activity.usename AS blocked_user,
-       blocking_locks.pid AS blocking_pid,
-       blocking_activity.usename AS blocking_user,
-       blocked_activity.query AS blocked_statement,
-       blocking_activity.query AS blocking_statement
-FROM pg_catalog.pg_locks blocked_locks
-JOIN pg_catalog.pg_stat_activity blocked_activity ON blocked_activity.pid = blocked_locks.pid
-JOIN pg_catalog.pg_locks blocking_locks
-    ON blocking_locks.locktype = blocked_locks.locktype
-    AND blocking_locks.database IS NOT DISTINCT FROM blocked_locks.database
-    AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
-    AND blocking_locks.page IS NOT DISTINCT FROM blocked_locks.page
-    AND blocking_locks.tuple IS NOT DISTINCT FROM blocked_locks.tuple
-    AND blocking_locks.virtualxid IS NOT DISTINCT FROM blocked_locks.virtualxid
-    AND blocking_locks.transactionid IS NOT DISTINCT FROM blocked_locks.transactionid
-    AND blocking_locks.classid IS NOT DISTINCT FROM blocked_locks.classid
-    AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
-    AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
-    AND blocking_locks.pid != blocked_locks.pid
-JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
-WHERE NOT blocked_locks.granted;
-```
-
-### Data Consistency Issues
-
-```bash
-# Check for inconsistencies
-pnpm prisma validate
-
-# Regenerate Prisma client
-pnpm prisma generate
-
-# Compare schema with database
-pnpm prisma migrate diff \
-  --from-schema-datamodel prisma/schema.prisma \
-  --to-schema-datasource prisma/schema.prisma
+# From Kubernetes
+kubectl run psql-test --rm -it --restart=Never \
+  --image=postgres:16 \
+  -- psql "$DATABASE_URL" -c "SELECT 1"
 ```
 
 ## Resources
 
-- **Prisma Migrations**: https://www.prisma.io/docs/concepts/components/prisma-migrate
-- **PostgreSQL Backup**: https://www.postgresql.org/docs/current/backup.html
-- **PostgreSQL Performance**: https://www.postgresql.org/docs/current/performance-tips.html
-- **Data Masking**: https://postgresql-anonymizer.readthedocs.io/
-
-## Support
-
-For database issues:
-
-- Check migration status: `pnpm prisma migrate status`
-- View application logs: `kubectl logs <pod-name> -n <namespace>`
-- Check PostgreSQL logs
-- GitHub Issues: https://github.com/your-org/my-girok/issues
+- **goose Documentation**: https://github.com/pressly/goose
+- **Prisma Documentation**: https://www.prisma.io/docs
+- **PostgreSQL Documentation**: https://www.postgresql.org/docs/16/
+- **Quick Reference**: `.ai/database.md`

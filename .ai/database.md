@@ -1,133 +1,255 @@
 # Database Quick Reference
 
+## Stack
+
+| Component | Tool          | Purpose                              |
+| --------- | ------------- | ------------------------------------ |
+| Migration | goose (MIT)   | Schema versioning, SQL SSOT          |
+| ORM       | Prisma 6      | Client generation, type-safe queries |
+| Database  | PostgreSQL 16 | Primary data store                   |
+
 ## Environment Structure
 
 ```
-Development:  dev_girok_user       (develop branch)
-Staging:      staging_girok_user   (release/* branch)
-Production:   girok_user           (main branch)
+Development:  girok_auth_dev / girok_personal_dev  (develop branch)
+Staging:      girok_auth_stg / girok_personal_stg  (release/* branch)
+Production:   girok_auth / girok_personal          (main branch)
 ```
 
-## Connection Strings
+## Migration Strategy (goose + ArgoCD)
 
-```bash
-# Development
-DATABASE_URL="postgresql://dev_girok_user:password@host:5432/dev_girok_user"
+### SSOT Principle
 
-# Staging
-DATABASE_URL="postgresql://staging_girok_user:password@host:5432/staging_girok_user"
-
-# Production
-DATABASE_URL="postgresql://girok_user:password@host:5432/girok_user"
+```
+my-girok/services/<service>/migrations/  <- Single Source of Truth
+                    |
+              Docker Image (baked in)
+                    |
+         ArgoCD PreSync Hook Job (goose up)
+                    |
+              App Deployment
 ```
 
-## Migration Strategy
+### File Structure
 
-**ALL environments: Manual migrations only (for team collaboration safety)**
-
-**Development:**
-```bash
-# Create migration locally
-pnpm prisma migrate dev --name my_migration
-
-# Commit to Git
-git add prisma/migrations
-git commit -m "feat: add migration"
-
-# Apply to server (after deployment)
-kubectl run migration-dev \
-  --image=harbor.girok.dev/my-girok/auth-service:develop:latest \
-  --restart=Never \
-  --namespace=my-girok-dev \
-  --env="DATABASE_URL=..." \
-  --command -- pnpm prisma migrate deploy
+```
+services/
+├── auth-service/
+│   ├── migrations/
+│   │   ├── 20251220000000_baseline.sql
+│   │   ├── 20251221000000_add_legal_consent.sql
+│   │   └── ...
+│   └── prisma/
+│       └── schema.prisma  <- For client generation only
+└── personal-service/
+    ├── migrations/
+    │   ├── 20251211000000_baseline.sql
+    │   ├── 20251212000000_add_copy_status.sql
+    │   └── ...
+    └── prisma/
+        └── schema.prisma
 ```
 
-**Staging:**
+## Local Development
+
+### Create Migration
+
 ```bash
-# Manual execution before release deployment
-kubectl run migration-staging \
-  --image=harbor.girok.dev/my-girok/auth-service:release:latest \
-  --restart=Never \
-  --namespace=my-girok-staging \
-  --env="DATABASE_URL=..." \
-  --command -- pnpm prisma migrate deploy
+cd services/auth-service
+
+# Create new migration file
+goose -dir migrations create add_user_preferences sql
+
+# Edit the generated file
+vim migrations/20250123120000_add_user_preferences.sql
 ```
 
-**Production:**
-```bash
-# 1. Backup first (REQUIRED!)
-pg_dump ... > backup.sql
+### SQL File Format
 
-# 2. Apply migration
-kubectl run migration-prod \
-  --image=harbor.girok.dev/my-girok/auth-service:latest \
-  --restart=Never \
-  --namespace=my-girok-prod \
-  --env="DATABASE_URL=..." \
-  --command -- pnpm prisma migrate deploy
+```sql
+-- +goose Up
+CREATE TABLE user_preferences (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    theme VARCHAR(20) DEFAULT 'light',
+    created_at TIMESTAMPTZ(6) DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_preferences_user_id ON user_preferences(user_id);
+
+-- +goose Down
+DROP TABLE IF EXISTS user_preferences;
 ```
 
-## Data Sync
+### PL/pgSQL Functions
 
-**Staging ← Production (Weekly)**
-```bash
-# Automated script
-./scripts/sync-staging-db.sh
+Use `StatementBegin/End` for functions with `$$`:
 
-# Cron: Sunday 3am
-0 3 * * 0 /path/to/sync-staging-db.sh
+```sql
+-- +goose Up
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- +goose Down
+DROP FUNCTION IF EXISTS update_updated_at;
 ```
 
-## Common Commands
+### Apply Locally
 
 ```bash
-# Check migration status
-pnpm prisma migrate status
+# Get DATABASE_URL from Vault
+export VAULT_ADDR=https://vault.girok.dev
+vault kv get -field=url secret/apps/my-girok/auth-service/postgres
 
-# Apply migrations
-pnpm prisma migrate deploy
+# Apply all pending migrations
+goose -dir migrations postgres "$DATABASE_URL" up
 
-# Reset database (dev only!)
-pnpm prisma migrate reset
+# Check status
+goose -dir migrations postgres "$DATABASE_URL" status
 
-# Studio (GUI)
-pnpm prisma studio
+# Rollback last
+goose -dir migrations postgres "$DATABASE_URL" down
+```
+
+### Update Prisma Schema
+
+After goose migration, sync Prisma schema:
+
+```bash
+# Pull schema from DB
+pnpm prisma db pull
 
 # Generate client
 pnpm prisma generate
 ```
 
-## Collaboration Tips
+## Deployment (GitOps)
 
-**Avoid migration conflicts:**
-1. Always update develop before working
-2. Create migrations in feature branches
-3. Rebase before merging PR
-4. Regenerate migration if conflicts occur
+### Workflow
 
-**PR Review Checklist:**
-- [ ] Migration files included?
-- [ ] No data loss potential?
-- [ ] Indexes added where needed?
-- [ ] Can be rolled back?
+1. Create migration SQL in `services/<service>/migrations/`
+2. Update `prisma/schema.prisma` to match
+3. Commit and push to develop
+4. CI builds Docker image with migrations baked in
+5. Update image tag in `platform-gitops`
+6. **Manual Sync** in ArgoCD
+7. PreSync Job runs `goose up`
+8. App pods deploy
+
+### ArgoCD PreSync Hook
+
+Located at `helm/templates/migration-job.yaml`:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migrate
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["goose", "-dir", "/app/services/<service>/migrations", "postgres", "$(DATABASE_URL)", "up"]
+```
+
+Enable in platform-gitops values:
+
+```yaml
+migration:
+  enabled: true
+```
+
+## Common Commands
+
+```bash
+# goose commands
+goose -dir migrations create <name> sql    # Create migration
+goose -dir migrations postgres $DB up      # Apply all
+goose -dir migrations postgres $DB down    # Rollback 1
+goose -dir migrations postgres $DB status  # Show status
+goose -dir migrations postgres $DB version # Current version
+
+# Prisma commands (client generation only)
+pnpm prisma generate     # Generate client
+pnpm prisma db pull      # Introspect DB -> schema.prisma
+pnpm prisma studio       # GUI browser
+```
 
 ## Best Practices
 
-✅ **DO:**
-- Manual migrations in all environments
-- Backup before migration
-- Test in staging first
-- Mask sensitive data
-- Commit migrations to Git
+### DO
 
-❌ **DON'T:**
-- Auto-migrate (team collaboration risk)
-- Copy prod data without masking
-- Skip staging tests
-- Change migration order
+- Write reversible migrations (always include `-- +goose Down`)
+- Use `TEXT` for ID columns (matches Prisma default)
+- Use `TIMESTAMPTZ(6)` for timestamps
+- Test migrations locally before commit
+- Keep schema.prisma in sync with migrations
+- Use Manual Sync for production deployments
+
+### DON'T
+
+- Use `prisma migrate` (goose is SSOT)
+- Skip down migration
+- Modify existing migration files
+- Auto-sync in ArgoCD for DB changes
+- Use UUID type directly (use TEXT with gen_random_uuid()::TEXT)
+
+## Database Connections
+
+| Service          | Dev Database       | Host                      |
+| ---------------- | ------------------ | ------------------------- |
+| auth-service     | girok_auth_dev     | db-postgres-001.beegy.net |
+| personal-service | girok_personal_dev | db-postgres-001.beegy.net |
+
+**Vault paths**:
+
+- `secret/apps/my-girok/auth-service/postgres`
+- `secret/apps/my-girok/personal-service/postgres`
+
+## Troubleshooting
+
+### Check Migration Status
+
+```bash
+# Local
+goose -dir migrations postgres "$DATABASE_URL" status
+
+# Kubernetes
+kubectl logs job/<service>-migrate -n dev-my-girok
+```
+
+### Migration Failed
+
+1. Check Job logs in ArgoCD
+2. Fix SQL syntax
+3. Rebuild image
+4. Sync again
+
+### Prisma Schema Drift
+
+```bash
+# Reset Prisma schema from DB
+pnpm prisma db pull
+
+# Regenerate client
+pnpm prisma generate
+```
 
 ## See Also
 
-- **[Full Guide](../docs/DATABASE.md)** - Complete database documentation
-- **[Sync Script](../scripts/sync-staging-db.sh)** - Staging sync automation
+- **Full Guide**: `docs/DATABASE.md`
+- **goose docs**: https://github.com/pressly/goose
+- **Prisma docs**: https://www.prisma.io/docs

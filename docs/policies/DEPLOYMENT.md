@@ -53,30 +53,31 @@ Deployment Environment (Kubernetes):
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: gateway        # Cilium Gateway, GraphQL BFF, WS Gateway
+  name: gateway # Cilium Gateway, GraphQL BFF, WS Gateway
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: services       # Domain services (auth, personal, feed, etc.)
+  name: services # Domain services (auth, personal, feed, etc.)
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: data           # PostgreSQL, MongoDB, Valkey, NATS
+  name: data # PostgreSQL, MongoDB, Valkey, NATS
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: realtime       # LiveKit, additional WebSocket services
+  name: realtime # LiveKit, additional WebSocket services
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: observability  # Prometheus, Grafana, Jaeger
+  name: observability # Prometheus, Grafana, Jaeger
 ```
 
 **Namespace Rules:**
+
 - `gateway`: Edge routing and BFF layer
 - `services`: All domain microservices
 - `data`: Databases and message brokers
@@ -172,7 +173,7 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: "*.girok.dev"
+      hostname: '*.girok.dev'
       tls:
         mode: Terminate
         certificateRefs:
@@ -184,7 +185,7 @@ spec:
     - name: websocket
       protocol: HTTPS
       port: 443
-      hostname: "ws.girok.dev"
+      hostname: 'ws.girok.dev'
       tls:
         mode: Terminate
         certificateRefs:
@@ -206,7 +207,7 @@ spec:
     - name: mygirok-gateway
       namespace: gateway
   hostnames:
-    - "api.girok.dev"
+    - 'api.girok.dev'
   rules:
     - matches:
         - path:
@@ -238,7 +239,7 @@ spec:
     - name: mygirok-gateway
       namespace: gateway
   hostnames:
-    - "ws.girok.dev"
+    - 'ws.girok.dev'
   rules:
     - matches:
         - path:
@@ -263,7 +264,7 @@ spec:
     - name: mygirok-gateway
       namespace: gateway
   hostnames:
-    - "auth.girok.dev"
+    - 'auth.girok.dev'
   rules:
     - matches:
         - path:
@@ -292,17 +293,17 @@ spec:
     - name: graphql-bff
       namespace: gateway
   resources:
-    - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+    - '@type': type.googleapis.com/envoy.config.listener.v3.Listener
       name: rate_limit_listener
       filter_chains:
         - filters:
             - name: envoy.filters.network.http_connection_manager
               typed_config:
-                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 http_filters:
                   - name: envoy.filters.http.local_ratelimit
                     typed_config:
-                      "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                       stat_prefix: http_local_rate_limiter
                       token_bucket:
                         max_tokens: 100
@@ -381,18 +382,19 @@ metadata:
 spec:
   provider:
     vault:
-      server: "https://vault.girok.dev"
-      path: "secret"
-      version: "v2"
+      server: 'https://vault.girok.dev'
+      path: 'secret'
+      version: 'v2'
       auth:
         kubernetes:
-          mountPath: "kubernetes"
-          role: "mygirok-services"
+          mountPath: 'kubernetes'
+          role: 'mygirok-services'
 ```
 
 ### Secrets Management Best Practices
 
 **DO:**
+
 - Use Sealed Secrets or External Secrets Operator
 - Use different secrets per environment (staging/production)
 - Automate secret rotation (every 90 days)
@@ -400,6 +402,7 @@ spec:
 - Enable audit logging
 
 **DON'T:**
+
 - Commit plain text Secrets to Git
 - Store sensitive info in ConfigMap
 - Share same secrets across environments
@@ -432,50 +435,50 @@ spec:
         version: v1
     spec:
       containers:
-      - name: graphql-bff
-        image: mygirok/graphql-bff:latest
-        ports:
-        - containerPort: 4000
-          name: http
-        env:
-        # From ConfigMap
-        - name: NODE_ENV
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: NODE_ENV
-        # From Secret
-        - name: SESSION_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: bff-secrets
-              key: SESSION_SECRET
-        # gRPC endpoints
-        - name: AUTH_GRPC_URL
-          value: "auth-service.services.svc.cluster.local:50051"
-        - name: PERSONAL_GRPC_URL
-          value: "personal-service.services.svc.cluster.local:50052"
-        - name: FEED_GRPC_URL
-          value: "feed-service.services.svc.cluster.local:50053"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health/ready
-            port: 4000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: graphql-bff
+          image: mygirok/graphql-bff:latest
+          ports:
+            - containerPort: 4000
+              name: http
+          env:
+            # From ConfigMap
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: NODE_ENV
+            # From Secret
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bff-secrets
+                  key: SESSION_SECRET
+            # gRPC endpoints
+            - name: AUTH_GRPC_URL
+              value: 'auth-service.services.svc.cluster.local:50051'
+            - name: PERSONAL_GRPC_URL
+              value: 'personal-service.services.svc.cluster.local:50052'
+            - name: FEED_GRPC_URL
+              value: 'feed-service.services.svc.cluster.local:50053'
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
@@ -486,9 +489,9 @@ spec:
   selector:
     app: graphql-bff
   ports:
-  - port: 4000
-    targetPort: 4000
-    name: http
+    - port: 4000
+      targetPort: 4000
+      name: http
   type: ClusterIP
 ```
 
@@ -514,25 +517,25 @@ spec:
         app: ws-gateway
     spec:
       containers:
-      - name: ws-gateway
-        image: mygirok/ws-gateway:latest
-        ports:
-        - containerPort: 3001
-          name: http
-        env:
-        - name: VALKEY_URL
-          value: "redis://valkey-adapter.data.svc.cluster.local:6379"
-        - name: NATS_URL
-          value: "nats://nats.data.svc.cluster.local:4222"
-        - name: AUTH_GRPC_URL
-          value: "auth-service.services.svc.cluster.local:50051"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        - name: ws-gateway
+          image: mygirok/ws-gateway:latest
+          ports:
+            - containerPort: 3001
+              name: http
+          env:
+            - name: VALKEY_URL
+              value: 'redis://valkey-adapter.data.svc.cluster.local:6379'
+            - name: NATS_URL
+              value: 'nats://nats.data.svc.cluster.local:4222'
+            - name: AUTH_GRPC_URL
+              value: 'auth-service.services.svc.cluster.local:50051'
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
 ---
 apiVersion: v1
 kind: Service
@@ -543,9 +546,9 @@ spec:
   selector:
     app: ws-gateway
   ports:
-  - port: 3001
-    targetPort: 3001
-    name: http
+    - port: 3001
+      targetPort: 3001
+      name: http
   type: ClusterIP
 ```
 
@@ -571,39 +574,39 @@ spec:
         app: auth-service
     spec:
       containers:
-      - name: auth-service
-        image: mygirok/auth-service:latest
-        ports:
-        - containerPort: 3002
-          name: http
-        - containerPort: 50051
-          name: grpc
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: auth-secrets
-              key: DATABASE_URL
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: auth-secrets
-              key: JWT_SECRET
-        - name: NATS_URL
-          value: "nats://nats.data.svc.cluster.local:4222"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3002
-          initialDelaySeconds: 30
-          periodSeconds: 10
+        - name: auth-service
+          image: mygirok/auth-service:latest
+          ports:
+            - containerPort: 3002
+              name: http
+            - containerPort: 50051
+              name: grpc
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secrets
+                  key: JWT_SECRET
+            - name: NATS_URL
+              value: 'nats://nats.data.svc.cluster.local:4222'
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 30
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -614,12 +617,12 @@ spec:
   selector:
     app: auth-service
   ports:
-  - port: 3002
-    targetPort: 3002
-    name: http
-  - port: 50051
-    targetPort: 50051
-    name: grpc
+    - port: 3002
+      targetPort: 3002
+      name: http
+    - port: 50051
+      targetPort: 50051
+      name: grpc
   type: ClusterIP
 ```
 
@@ -640,18 +643,18 @@ spec:
   minReplicas: 3
   maxReplicas: 20
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
 ```
 
 ## Database Deployments
@@ -677,42 +680,42 @@ spec:
         app: postgres
     spec:
       containers:
-      - name: postgres
-        image: postgres:16-alpine
-        ports:
-        - containerPort: 5432
-          name: postgres
-        env:
-        - name: POSTGRES_DB
-          value: mygirok
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: database-credentials
-              key: POSTGRES_USER
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: database-credentials
-              key: POSTGRES_PASSWORD
-        volumeMounts:
-        - name: postgres-storage
-          mountPath: /var/lib/postgresql/data
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: mygirok
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-credentials
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: '1Gi'
+              cpu: '500m'
+            limits:
+              memory: '2Gi'
+              cpu: '1000m'
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ['ReadWriteOnce']
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "500m"
-          limits:
-            memory: "2Gi"
-            cpu: "1000m"
-  volumeClaimTemplates:
-  - metadata:
-      name: postgres-storage
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 20Gi
+            storage: 20Gi
 ```
 
 ### MongoDB StatefulSet
@@ -736,33 +739,33 @@ spec:
         app: mongodb
     spec:
       containers:
-      - name: mongodb
-        image: mongo:8.0
-        ports:
-        - containerPort: 27017
-          name: mongodb
-        env:
-        - name: MONGO_INITDB_ROOT_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: mongodb-credentials
-              key: MONGO_USER
-        - name: MONGO_INITDB_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mongodb-credentials
-              key: MONGO_PASSWORD
-        volumeMounts:
-        - name: mongodb-storage
-          mountPath: /data/db
+        - name: mongodb
+          image: mongo:8.0
+          ports:
+            - containerPort: 27017
+              name: mongodb
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: MONGO_USER
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: MONGO_PASSWORD
+          volumeMounts:
+            - name: mongodb-storage
+              mountPath: /data/db
   volumeClaimTemplates:
-  - metadata:
-      name: mongodb-storage
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 50Gi
+    - metadata:
+        name: mongodb-storage
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 50Gi
 ```
 
 ### NATS JetStream
@@ -786,31 +789,31 @@ spec:
         app: nats
     spec:
       containers:
-      - name: nats
-        image: nats:2.10-alpine
-        args:
-          - "--jetstream"
-          - "--cluster_name=mygirok-nats"
-          - "--cluster=nats://0.0.0.0:6222"
-          - "--routes=nats://nats-0.nats:6222,nats://nats-1.nats:6222,nats://nats-2.nats:6222"
-        ports:
-        - containerPort: 4222
-          name: client
-        - containerPort: 6222
-          name: cluster
-        - containerPort: 8222
-          name: monitor
-        volumeMounts:
-        - name: nats-storage
-          mountPath: /data
+        - name: nats
+          image: nats:2.10-alpine
+          args:
+            - '--jetstream'
+            - '--cluster_name=mygirok-nats'
+            - '--cluster=nats://0.0.0.0:6222'
+            - '--routes=nats://nats-0.nats:6222,nats://nats-1.nats:6222,nats://nats-2.nats:6222'
+          ports:
+            - containerPort: 4222
+              name: client
+            - containerPort: 6222
+              name: cluster
+            - containerPort: 8222
+              name: monitor
+          volumeMounts:
+            - name: nats-storage
+              mountPath: /data
   volumeClaimTemplates:
-  - metadata:
-      name: nats-storage
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 10Gi
+    - metadata:
+        name: nats-storage
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 10Gi
 ```
 
 ## Using Kustomize
@@ -823,18 +826,18 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- namespaces.yaml
-- services/gateway/graphql-bff/deployment.yaml
-- services/gateway/graphql-bff/service.yaml
-- services/gateway/graphql-bff/hpa.yaml
-- services/gateway/ws-gateway/deployment.yaml
-- services/gateway/ws-gateway/service.yaml
-- services/auth-service/deployment.yaml
-- services/auth-service/service.yaml
-- services/personal-service/deployment.yaml
-- services/feed-service/deployment.yaml
-- services/chat-service/deployment.yaml
-- services/matching-service/deployment.yaml
+  - namespaces.yaml
+  - services/gateway/graphql-bff/deployment.yaml
+  - services/gateway/graphql-bff/service.yaml
+  - services/gateway/graphql-bff/hpa.yaml
+  - services/gateway/ws-gateway/deployment.yaml
+  - services/gateway/ws-gateway/service.yaml
+  - services/auth-service/deployment.yaml
+  - services/auth-service/service.yaml
+  - services/personal-service/deployment.yaml
+  - services/feed-service/deployment.yaml
+  - services/chat-service/deployment.yaml
+  - services/matching-service/deployment.yaml
 
 commonLabels:
   app.kubernetes.io/name: mygirok
@@ -849,29 +852,29 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- ../../base
-- ../../gateway/gateway.yaml
-- ../../gateway/httproute-graphql.yaml
-- ../../gateway/httproute-websocket.yaml
-- ../../gateway/httproute-auth.yaml
-- sealed-secrets.yaml
+  - ../../base
+  - ../../gateway/gateway.yaml
+  - ../../gateway/httproute-graphql.yaml
+  - ../../gateway/httproute-websocket.yaml
+  - ../../gateway/httproute-auth.yaml
+  - sealed-secrets.yaml
 
 configMapGenerator:
-- name: app-config
-  literals:
-  - NODE_ENV=production
-  - LOG_LEVEL=info
+  - name: app-config
+    literals:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
 
 patchesStrategicMerge:
-- hpa-overrides.yaml
+  - hpa-overrides.yaml
 
 images:
-- name: mygirok/graphql-bff
-  newTag: v1.2.3
-- name: mygirok/ws-gateway
-  newTag: v1.2.3
-- name: mygirok/auth-service
-  newTag: v1.2.3
+  - name: mygirok/graphql-bff
+    newTag: v1.2.3
+  - name: mygirok/ws-gateway
+    newTag: v1.2.3
+  - name: mygirok/auth-service
+    newTag: v1.2.3
 ```
 
 ### Deployment Commands
@@ -986,9 +989,9 @@ spec:
     matchNames:
       - gateway
   endpoints:
-  - port: http
-    path: /metrics
-    interval: 30s
+    - port: http
+      path: /metrics
+      interval: 30s
 ```
 
 ### Distributed Tracing (Jaeger)
@@ -1012,16 +1015,22 @@ spec:
 ## Deployment Checklist
 
 ### Before Deployment
+
 - [ ] Build Docker images and push to registry
+- [ ] Verify goose migrations are in Docker image
 - [ ] Create and encrypt Sealed Secrets
 - [ ] Verify Kustomize overlays
-- [ ] Prepare database migrations
+- [ ] Test goose migrations locally (`goose up/down`)
 - [ ] Validate ConfigMap values
 - [ ] Verify resource limits
 - [ ] Configure Cilium Gateway routes
+- [ ] Enable `migration.enabled: true` in values (platform-gitops)
 
 ### During Deployment
-- [ ] Run kubectl apply -k
+
+- [ ] Use **Manual Sync** for DB changes (not auto-sync)
+- [ ] Monitor PreSync Job (migration-job) in ArgoCD
+- [ ] Check migration Job logs: `kubectl logs job/<service>-migrate`
 - [ ] Monitor rollout status
 - [ ] Check pod status across namespaces
 - [ ] Test GraphQL endpoint
@@ -1029,12 +1038,51 @@ spec:
 - [ ] Verify health checks pass
 
 ### After Deployment
+
+- [ ] Verify `goose_db_version` table updated
 - [ ] Verify application functionality
 - [ ] Check logs (no errors)
 - [ ] Monitor metrics (CPU, memory)
 - [ ] Test gRPC connections between services
 - [ ] Verify NATS event flow
 - [ ] Prepare rollback plan
+
+## Database Migration Deployment
+
+### goose + ArgoCD PreSync Strategy
+
+```
+services/<service>/migrations/  <- SSOT
+            ↓
+      Docker Image (baked in)
+            ↓
+   ArgoCD PreSync Hook Job (goose up)
+            ↓
+        App Deployment
+```
+
+### Key Files
+
+| File                                  | Purpose                            |
+| ------------------------------------- | ---------------------------------- |
+| `services/<service>/migrations/*.sql` | goose SQL migrations               |
+| `services/<service>/Dockerfile`       | Includes goose binary + migrations |
+| `helm/templates/migration-job.yaml`   | ArgoCD PreSync Job                 |
+
+### Verify Migration
+
+```bash
+# Check Job status
+kubectl get jobs -n dev-my-girok | grep migrate
+
+# Check Job logs
+kubectl logs job/auth-service-migrate -n dev-my-girok
+
+# Verify in database
+psql "$DATABASE_URL" -c "SELECT * FROM goose_db_version ORDER BY version_id DESC LIMIT 5;"
+```
+
+**Full guide**: `docs/DATABASE.md`
 
 ## Troubleshooting
 
