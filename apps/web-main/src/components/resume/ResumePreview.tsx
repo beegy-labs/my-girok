@@ -1,15 +1,19 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePDF } from '@react-pdf/renderer';
 import { Resume } from '../../api/resume';
 import { PAPER_SIZES, PaperSizeKey } from '../../constants/paper';
 import ResumePdfDocument from './ResumePdfDocument';
+import { imageToBase64 } from '../../utils/imageProxy';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+// PDF generation timeout (15 seconds)
+const PDF_GENERATION_TIMEOUT = 15000;
 
 /**
  * Get capped device pixel ratio for high-quality rendering
@@ -53,10 +57,40 @@ export default function ResumePreview({
   const [internalPaperSize, setInternalPaperSize] = useState<PaperSizeKey>(
     (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey,
   );
+  const [isTimedOut, setIsTimedOut] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [profileImageBase64, setProfileImageBase64] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use external paper size if provided, otherwise use internal state
   const paperSize = externalPaperSize || internalPaperSize;
   const paper = PAPER_SIZES[paperSize];
+
+  // Load profile image as base64 (Best Practice 2025: avoids CORS issues in PDF generation)
+  useEffect(() => {
+    let isMounted = true;
+
+    if (resume.profileImage) {
+      imageToBase64(resume.profileImage)
+        .then((base64) => {
+          if (isMounted) {
+            setProfileImageBase64(base64);
+          }
+        })
+        .catch(() => {
+          // Silently handle errors - placeholder will be shown in PDF
+          if (isMounted) {
+            setProfileImageBase64(null);
+          }
+        });
+    } else {
+      setProfileImageBase64(null);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [resume.profileImage]);
 
   // Handle paper size change (curried - 2025 best practice)
   const handlePaperSizeChange = useCallback(
@@ -67,12 +101,44 @@ export default function ResumePreview({
     [onPaperSizeChange],
   );
 
-  // Generate PDF document
+  // Create safe resume object to prevent PDF rendering crashes on empty strings
+  // @react-pdf/renderer reconciler bug: crashes when dynamic content is deleted
+  const safeResume = useMemo(
+    () => ({
+      ...resume,
+      name: resume.name || '',
+      email: resume.email || '',
+      phone: resume.phone || '',
+      address: resume.address || '',
+      github: resume.github || '',
+      blog: resume.blog || '',
+      linkedin: resume.linkedin || '',
+      portfolio: resume.portfolio || '',
+      summary: resume.summary || '',
+      applicationReason: resume.applicationReason || '',
+      coverLetter: resume.coverLetter || '',
+      keyAchievements: resume.keyAchievements || [],
+      skills: resume.skills || [],
+      experiences: resume.experiences || [],
+      projects: resume.projects || [],
+      educations: resume.educations || [],
+      certificates: resume.certificates || [],
+      sections: resume.sections || [],
+    }),
+    [resume],
+  );
+
+  // Generate PDF document (uses base64 image to avoid CORS issues)
   const pdfDocument = useMemo(
     () => (
-      <ResumePdfDocument resume={resume} paperSize={paperSize} isGrayscaleMode={isGrayscaleMode} />
+      <ResumePdfDocument
+        resume={safeResume}
+        paperSize={paperSize}
+        isGrayscaleMode={isGrayscaleMode}
+        profileImageBase64={profileImageBase64}
+      />
     ),
-    [resume, paperSize, isGrayscaleMode],
+    [safeResume, paperSize, isGrayscaleMode, profileImageBase64],
   );
 
   // Use PDF hook to generate blob
@@ -80,6 +146,31 @@ export default function ResumePreview({
 
   // Re-generate PDF when resume or settings change
   useEffect(() => {
+    updateInstance(pdfDocument);
+  }, [pdfDocument, updateInstance]);
+
+  // Timeout handling for PDF generation
+  useEffect(() => {
+    if (instance.loading) {
+      setIsTimedOut(false);
+      timeoutRef.current = setTimeout(() => {
+        if (instance.loading) {
+          setIsTimedOut(true);
+        }
+      }, PDF_GENERATION_TIMEOUT);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [instance.loading, retryCount]);
+
+  // Retry handler
+  const handleRetry = useCallback(() => {
+    setIsTimedOut(false);
+    setRetryCount((prev) => prev + 1);
     updateInstance(pdfDocument);
   }, [pdfDocument, updateInstance]);
 
@@ -202,12 +293,30 @@ export default function ResumePreview({
 
       {/* PDF Viewer */}
       <div className="flex flex-col items-center">
-        {instance.loading ? (
+        {instance.loading && !isTimedOut ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary"></div>
             <span className="ml-3 text-theme-text-secondary">
               {t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}
             </span>
+          </div>
+        ) : isTimedOut ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <span className="text-theme-text-secondary text-center">
+              {t('resume.preview.timeout', {
+                defaultValue: 'PDF generation is taking longer than expected.',
+              })}
+              <br />
+              {t('resume.preview.timeoutHint', {
+                defaultValue: 'This may be due to font loading issues.',
+              })}
+            </span>
+            <button
+              onClick={handleRetry}
+              className="px-4 py-2 text-sm font-medium text-white bg-theme-primary rounded-soft hover:bg-theme-primary-hover transition-colors"
+            >
+              {t('resume.preview.retry', { defaultValue: 'Retry' })}
+            </button>
           </div>
         ) : instance.error ? (
           <div className="flex items-center justify-center py-20 text-theme-status-error-text">

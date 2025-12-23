@@ -577,6 +577,19 @@ const handleSubmit = async (data) => {
 
 ## Recent Updates
 
+**2025-12-23**: PDF rendering crash fix and stability improvements (#321)
+
+- Fixed @react-pdf/renderer reconciler "Eo is not a function" crash when deleting all text
+- Added `key={Date.now()}` workaround to ResumePreviewContainer (GitHub issue #3153)
+- Added `sanitizeText()` to remove emojis and special Unicode chars that crash PDF font rendering
+- Added `safeResume` wrapper in ResumePreview for defensive empty value handling
+- Added `imageToBase64()` utility in imageProxy.ts for CORS-safe profile image loading
+- Added `profileImageBase64` prop to ResumePdfDocument for embedded image support
+- Added 800ms debounce to ResumeForm onChange using useRef pattern (no eslint-disable)
+- Fixed profile photo re-selection after deletion by resetting file input ref
+- Changed console.log/warn to dev-only logging in imageProxy.ts
+- Files changed: `ResumePdfDocument.tsx`, `ResumePreview.tsx`, `ResumeEditPage.tsx`, `ResumeForm.tsx`, `imageProxy.ts`
+
 **2025-11-20 (Part 2)**: Birth date field upgrade for accurate age calculation (#TBD)
 
 - **Breaking Change**: Upgraded `birthYear` (number) to `birthDate` (string, YYYY-MM-DD format)

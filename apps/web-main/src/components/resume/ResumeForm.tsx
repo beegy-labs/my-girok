@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Resume,
@@ -55,6 +55,10 @@ const DEFAULT_SECTIONS = [
   { id: '4', type: SectionType.EDUCATION, order: 3, visible: true },
   { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
 ] as const;
+
+// Debounce delay for form change callback (ms)
+// Prevents excessive PDF re-generation during typing (Over-Engineering Policy: <16ms render target)
+const FORM_CHANGE_DEBOUNCE_MS = 800;
 
 /**
  * Format file size in human-readable format (2025 best practice: pure function outside component)
@@ -186,6 +190,15 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   // Profile photo temp upload state
   const [profilePhotoTempKey, setProfilePhotoTempKey] = useState<string | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null); // Presigned URL from temp upload
+  // Ref for profile photo file input (to reset value after delete)
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to reset file input (allows re-selecting same file after delete)
+  const resetProfilePhotoInput = useCallback(() => {
+    if (profilePhotoInputRef.current) {
+      profilePhotoInputRef.current.value = '';
+    }
+  }, []);
 
   // Section ordering - using module-scope constant (2025 best practice)
   const [sections, setSections] = useState(
@@ -229,14 +242,22 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     };
   }, [formData, resume?.id]);
 
-  // Trigger onChange when formData or sections change
-  // Note: onChange is excluded from dependencies to prevent infinite loop
-  // Parent component should memoize onChange with useCallback
+  // Stable ref for onChange to avoid dependency issues (2025 best practice)
+  // This pattern is preferred over eslint-disable per project policy
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  // Trigger onChange when formData or sections change (debounced)
   useEffect(() => {
-    if (onChange) {
-      onChange(formData);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!onChangeRef.current) return;
+
+    const debounceTimeout = setTimeout(() => {
+      onChangeRef.current?.(formData);
+    }, FORM_CHANGE_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(debounceTimeout);
+    };
   }, [formData, sections]);
 
   // Memoize loadAttachments to use in useEffect
@@ -339,6 +360,12 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       const file = e.target.files?.[0];
       if (!file) return;
 
+      // Reset file input value to allow re-selecting the same file
+      // This is critical for the delete-then-reselect flow
+      if (e.target) {
+        e.target.value = '';
+      }
+
       // Validate file type
       if (!file.type.startsWith('image/')) {
         setUploadError(t('resume.form.selectImageFile'));
@@ -406,6 +433,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     if (!profilePhoto) {
       // Just clear the URL if no attachment exists
       setFormData((prev) => ({ ...prev, profileImage: '' }));
+      resetProfilePhotoInput();
       return;
     }
 
@@ -417,6 +445,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     try {
       await deleteAttachment(resume.id, profilePhoto.id);
       setFormData((prev) => ({ ...prev, profileImage: '' }));
+      resetProfilePhotoInput();
       await loadAttachments();
       alert(t('resume.form.photoDeleteSuccess'));
     } catch (error) {
@@ -425,7 +454,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     } finally {
       setUploading(false);
     }
-  }, [resume?.id, attachments, t, loadAttachments]);
+  }, [resume?.id, attachments, t, loadAttachments, resetProfilePhotoInput]);
 
   // Birth date and gender change handlers
   const handleBirthDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -883,6 +912,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <div className="space-y-2">
             <label className="relative block cursor-pointer">
               <input
+                ref={profilePhotoInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleProfilePhotoChange}
