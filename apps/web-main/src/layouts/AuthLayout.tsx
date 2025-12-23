@@ -75,7 +75,7 @@ function AuthLayoutComponent({
   const { t } = useTranslation();
 
   return (
-    <main className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-200 pt-nav">
+    <main className="min-h-screen bg-theme-bg-page flex flex-col transition-colors duration-200">
       <div className="flex-1 flex items-center justify-center px-4 sm:px-8 pb-20 mt-8">
         <div className="w-full max-w-md">
           {/* Header - V0.0.1 Editorial Style */}

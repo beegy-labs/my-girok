@@ -7,7 +7,7 @@ export default function NotFoundPage() {
   const { t } = useTranslation();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-theme-bg-page pt-nav">
+    <main className="min-h-screen flex items-center justify-center bg-theme-bg-page">
       <StatusMessage
         type="not-found"
         action={

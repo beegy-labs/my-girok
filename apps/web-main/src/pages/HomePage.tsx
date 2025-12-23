@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import { generateWebsiteSchema } from '../utils/structuredData';
+import { useTheme } from '../hooks/useTheme';
 import {
   Button,
   MenuCard,
@@ -29,6 +30,8 @@ import {
   ChevronRight,
   Layers,
   GripVertical,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 // Promo slides - shown when no ads available
@@ -149,6 +152,7 @@ export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { effectiveTheme, toggleTheme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [pinnedWidgetId, setPinnedWidgetId] = useState<string | null>(null);
   const [currentPromo, setCurrentPromo] = useState(0);
@@ -224,7 +228,7 @@ export default function HomePage() {
 
       <main
         id="main-content"
-        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700 pt-nav"
+        className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-700"
         role="main"
       >
         {isAuthenticated ? (
@@ -614,7 +618,24 @@ export default function HomePage() {
           </div>
         ) : (
           /* Landing Page - V0.0.1 Hero Style */
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-56">
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-56 relative">
+            {/* Theme Toggle - Top Right */}
+            <div className="absolute top-6 right-6">
+              <button
+                onClick={toggleTheme}
+                aria-label={
+                  effectiveTheme === 'dark' ? t('aria.switchToLight') : t('aria.switchToDark')
+                }
+                className="p-3 rounded-full hover:bg-theme-bg-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-[4px] focus-visible:ring-theme-focus-ring"
+              >
+                {effectiveTheme === 'dark' ? (
+                  <Sun size={20} aria-hidden="true" />
+                ) : (
+                  <Moon size={20} aria-hidden="true" />
+                )}
+              </button>
+            </div>
+
             <div className="text-center">
               {/* Giant Brand Title - V0.0.1 Style */}
               <h1 className="text-7xl sm:text-8xl md:text-[10rem] text-theme-text-primary mb-20 tracking-editorial italic font-serif-title">

@@ -58,7 +58,7 @@ function LegalPageLayoutComponent({ icon, title, badge, children }: LegalPageLay
 
   return (
     <>
-      <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
+      <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           {/* Header */}
           <div className="text-center mb-12">

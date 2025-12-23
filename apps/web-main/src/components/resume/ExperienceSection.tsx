@@ -24,7 +24,7 @@ import {
   calculateExperienceDuration,
 } from '../../api/resume';
 import { getBulletSymbol } from '../../utils/hierarchical-renderer';
-import { TextInput, TextArea, Button } from '@my-girok/ui-components';
+import { TextInput, TextArea, Button, CollapsibleSection } from '@my-girok/ui-components';
 
 // Sensor activation options - extracted to module scope (2025 best practice)
 const SENSOR_OPTIONS = {
@@ -61,6 +61,12 @@ interface ExperienceSectionProps {
   experiences: Experience[];
   onChange: (experiences: Experience[]) => void;
   t: (key: string) => string;
+  /** External control for category-level collapse (SSOT pattern) */
+  isExpanded?: boolean;
+  /** External toggle handler (SSOT pattern) */
+  onToggle?: () => void;
+  /** Additional header action (e.g., visibility toggle) */
+  headerAction?: React.ReactNode;
 }
 
 /**
@@ -95,8 +101,8 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
   );
 
   const [expandedProjects, setExpandedProjects] = useState<{ [key: number]: boolean }>({});
-  // Mobile: collapse company details by default for existing items
-  const [isCompanyExpanded, setIsCompanyExpanded] = useState(true);
+  // All cards collapsed by default
+  const [isCompanyExpanded, setIsCompanyExpanded] = useState(false);
 
   // Memoize projects with defensive Array.isArray check (2025 over-engineering best practice)
   const projects = useMemo(
@@ -367,27 +373,27 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
             </svg>
           </button>
 
-          {/* Company Title - clickable on mobile to expand/collapse */}
+          {/* Company Title - clickable to expand/collapse */}
           <button
             type="button"
             onClick={toggleCompanyExpand}
-            className="flex-1 flex items-center gap-2 text-left min-w-0 sm:cursor-default"
+            className="flex-1 flex items-center gap-2 text-left min-w-0 cursor-pointer"
           >
             <div className="flex-1 min-w-0">
               <h3 className="text-sm sm:text-lg font-bold text-theme-primary-light truncate transition-colors duration-200">
                 📚 {experience.company || t('resume.experienceForm.company')} #{index + 1}
               </h3>
-              {/* Show summary when collapsed on mobile */}
+              {/* Show summary when collapsed */}
               {!isCompanyExpanded && experience.startDate && (
-                <p className="text-xs text-theme-primary truncate sm:hidden">
+                <p className="text-xs text-theme-primary truncate">
                   {experience.finalPosition} • {experience.startDate} ~{' '}
                   {experience.isCurrentlyWorking ? t('common.present') : experience.endDate}
                 </p>
               )}
             </div>
-            {/* Expand/collapse indicator - mobile only */}
+            {/* Expand/collapse indicator */}
             <svg
-              className={`w-5 h-5 text-theme-primary transition-transform duration-200 sm:hidden flex-shrink-0 ${isCompanyExpanded ? 'rotate-180' : ''}`}
+              className={`w-5 h-5 text-theme-primary transition-transform duration-200 flex-shrink-0 ${isCompanyExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -403,8 +409,8 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </div>
       </div>
 
-      {/* Company Details - collapsible on mobile */}
-      <div className={`${isCompanyExpanded ? 'block' : 'hidden'} sm:block p-3 sm:p-6`}>
+      {/* Company Details - collapsible on all devices */}
+      <div className={`${isCompanyExpanded ? 'block' : 'hidden'} p-4 sm:p-6`}>
         {/* Desktop: title bar with delete button */}
         <div className="hidden sm:flex sm:items-center sm:justify-between gap-4 mb-4">
           <h3 className="text-lg font-bold text-theme-primary-light transition-colors duration-200">
@@ -416,7 +422,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </div>
 
         {/* Mobile: Delete button */}
-        <div className="sm:hidden flex justify-end mb-3">
+        <div className="sm:hidden flex justify-end mb-4">
           <Button
             variant="danger"
             onClick={onRemove}
@@ -428,7 +434,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </div>
 
         {/* Company Basic Info - Mobile optimized */}
-        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4 mb-4">
+        <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 gap-4 mb-4">
           <TextInput
             label={t('resume.experienceForm.company')}
             value={experience.company}
@@ -438,7 +444,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
           />
 
           {/* Date fields - side by side on mobile for better UX */}
-          <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-2 sm:gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:col-span-2">
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
                 <span className="hidden sm:inline">{t('resume.experienceForm.startDate')}</span>
@@ -470,7 +476,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </div>
 
         {/* Currently working checkbox - larger touch target */}
-        <label className="flex items-center p-2 -mx-2 mb-3 rounded-soft hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
+        <label className="flex items-center p-2 -mx-2 mb-4 rounded-soft hover:bg-theme-primary/10 cursor-pointer transition-colors duration-200 touch-manipulation">
           <input
             type="checkbox"
             checked={experience.isCurrentlyWorking || false}
@@ -485,7 +491,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
 
         {/* Experience Duration */}
         {experienceDurationText && (
-          <div className="mb-3 p-2 sm:p-3 bg-theme-primary/10 border border-theme-border-default rounded-soft transition-colors duration-200">
+          <div className="mb-4 p-2 sm:p-4 bg-theme-primary/10 border border-theme-border-default rounded-soft transition-colors duration-200">
             <span className="text-xs sm:text-sm font-semibold text-theme-primary-light transition-colors duration-200">
               {t('resume.experienceForm.experiencePeriod')} {experienceDurationText}
             </span>
@@ -493,7 +499,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         )}
 
         {/* Final Position and Job Title */}
-        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 mb-3">
+        <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 gap-4 mb-4">
           <TextInput
             label={t('resume.experienceForm.position')}
             value={experience.finalPosition}
@@ -512,12 +518,12 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </div>
 
         {/* Salary Section - Compact on mobile */}
-        <div className="mt-3 sm:mt-4">
-          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
+        <div className="mt-4">
+          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-2 transition-colors duration-200">
             <span className="hidden sm:inline">{t('resume.experienceForm.salaryOptional')}</span>
             <span className="sm:hidden">{t('resume.experienceForm.salaryOptional')}</span>
           </label>
-          <div className="flex gap-2 sm:gap-4">
+          <div className="flex gap-4">
             <input
               type="number"
               value={experience.salary || ''}
@@ -554,8 +560,8 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
         </div>
 
         {/* Projects Section */}
-        <div className="mt-3 sm:mt-6 border-t border-theme-border-default pt-3 sm:pt-4 transition-colors duration-200">
-          <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+        <div className="mt-4 lg:mt-6 border-t border-theme-border-default pt-4 transition-colors duration-200">
+          <div className="flex items-center justify-between gap-2 mb-4">
             <h4 className="text-xs sm:text-md font-bold text-theme-primary-light transition-colors duration-200">
               <span className="hidden sm:inline">{t('resume.experienceForm.projects')}</span>
               <span className="sm:hidden">
@@ -568,8 +574,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
               size="sm"
               className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3 touch-manipulation"
             >
-              <span className="hidden sm:inline">{t('resume.experienceForm.addProject')}</span>
-              <span className="sm:hidden">+ {t('common.add')}</span>
+              + {t('common.add')}
             </Button>
           </div>
 
@@ -580,7 +585,7 @@ const SortableExperienceCard = memo(function SortableExperienceCard({
               onDragEnd={handleProjectDragEnd}
             >
               <SortableContext items={projectIds} strategy={verticalListSortingStrategy}>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {projects.map((project, projectIndex) => (
                     <SortableProject
                       key={project.id || `proj-${projectIndex}`}
@@ -756,7 +761,7 @@ const SortableProject = memo(function SortableProject({
       className="border border-theme-border-strong rounded-soft bg-theme-bg-card transition-colors duration-200"
     >
       {/* Project Header */}
-      <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 bg-theme-bg-hover transition-colors duration-200">
+      <div className="flex items-center gap-2 sm:gap-4 p-4 bg-theme-bg-hover transition-colors duration-200">
         <button
           type="button"
           {...attributes}
@@ -814,9 +819,9 @@ const SortableProject = memo(function SortableProject({
 
       {/* Project Details (Collapsible) */}
       {isExpanded && (
-        <div className="p-2 sm:p-4 space-y-3 sm:space-y-4">
+        <div className="p-4 space-y-4">
           {/* Project Basic Info */}
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-4">
             <TextInput
               label={t('resume.experienceForm.projectName')}
               value={project.name}
@@ -825,7 +830,7 @@ const SortableProject = memo(function SortableProject({
               required
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-theme-text-secondary mb-2 transition-colors duration-200">
                   {t('resume.experienceForm.startDate')}{' '}
@@ -877,7 +882,7 @@ const SortableProject = memo(function SortableProject({
               placeholder={t('resume.experienceForm.techStackPlaceholder')}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <TextInput
                 label={t('resume.experienceForm.projectUrl')}
                 type="url"
@@ -898,20 +903,21 @@ const SortableProject = memo(function SortableProject({
 
           {/* Key Achievements */}
           <div className="border-t border-theme-border-default pt-4 transition-colors duration-200">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <label className="text-sm font-bold text-theme-primary-light flex items-center gap-2 transition-colors duration-200">
                 ⭐ {t('resume.experienceForm.keyAchievements')}
                 <span className="text-xs text-theme-text-tertiary font-normal transition-colors duration-200">
                   {t('resume.experienceForm.depthLevels')}
                 </span>
               </label>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={onAddAchievement}
-                className="px-2 py-1 bg-theme-primary text-white text-xs rounded-soft hover:bg-theme-primary-light transition-colors duration-200"
+                size="sm"
+                className="py-1.5 px-2 text-xs sm:text-sm touch-manipulation"
               >
-                {t('resume.experienceForm.addAchievement')}
-              </button>
+                + {t('common.add')}
+              </Button>
             </div>
 
             {project.achievements && project.achievements.length > 0 ? (
@@ -1067,9 +1073,9 @@ const HierarchicalAchievement = memo(function HierarchicalAchievement({
                 type="button"
                 onClick={onAddChild}
                 className="px-2 py-1 bg-theme-status-success-bg border border-theme-status-success-border text-theme-status-success-text text-xs rounded hover:opacity-80 transition-colors duration-200 font-semibold whitespace-nowrap"
-                title={t('resume.experienceForm.addSubItem')}
+                title={t('common.add')}
               >
-                {t('resume.experienceForm.addSubItem')}
+                +
               </button>
             )}
 
@@ -1121,7 +1127,7 @@ const HierarchicalAchievement = memo(function HierarchicalAchievement({
                   type="button"
                   onClick={onAddChild}
                   className="w-6 h-6 flex items-center justify-center bg-theme-status-success-bg text-theme-status-success-text text-[10px] rounded hover:opacity-80 transition-colors duration-200 touch-manipulation"
-                  title={t('resume.experienceForm.addSubItem')}
+                  title={t('common.add')}
                 >
                   +
                 </button>
@@ -1245,7 +1251,20 @@ const ExperienceSection = memo(function ExperienceSection({
   experiences,
   onChange,
   t,
+  isExpanded: externalExpanded,
+  onToggle: externalToggle,
+  headerAction: externalHeaderAction,
 }: ExperienceSectionProps) {
+  // Use external state if provided (SSOT), otherwise fallback to internal state
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const isExpanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
+  const handleToggle = useCallback(() => {
+    if (externalToggle) {
+      externalToggle();
+    } else {
+      setInternalExpanded((prev) => !prev);
+    }
+  }, [externalToggle]);
   // Memoized sensors using extracted SENSOR_OPTIONS (2025 best practice)
   const sensors = useSensors(
     useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
@@ -1318,29 +1337,36 @@ const ExperienceSection = memo(function ExperienceSection({
   );
 
   return (
-    <div className="bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
-      <div className="flex items-center justify-between mb-3 sm:mb-6 lg:mb-8">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary flex items-center gap-2 transition-colors duration-200">
-            💼 {t('resume.sections.experience')}
-          </h2>
-          <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary mt-1 transition-colors duration-200 hidden sm:block">
-            {t('resume.descriptions.experience')}
-          </p>
+    <CollapsibleSection
+      title={t('resume.sections.experience')}
+      icon="💼"
+      isExpanded={isExpanded}
+      onToggle={handleToggle}
+      count={experiences.length}
+      variant="primary"
+      collapsibleOnDesktop
+      headerAction={
+        <div className="flex items-center gap-2">
+          {externalHeaderAction}
+          <Button
+            variant="primary"
+            onClick={addExperience}
+            size="sm"
+            className="py-2 touch-manipulation"
+          >
+            + {t('common.add')}
+          </Button>
         </div>
-        <button
-          type="button"
-          onClick={addExperience}
-          className="px-2 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-theme-primary text-white rounded-soft hover:bg-theme-primary-light transition-colors duration-200 font-semibold text-xs sm:text-sm lg:text-base flex-shrink-0"
-        >
-          {t('resume.experienceForm.addExperience')}
-        </button>
-      </div>
+      }
+    >
+      <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+        {t('resume.descriptions.experience')}
+      </p>
 
       {experiences && experiences.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={experienceIds} strategy={verticalListSortingStrategy}>
-            <div className="space-y-3 sm:space-y-6 lg:space-y-8">
+            <div className="space-y-4 lg:space-y-6">
               {experiences.map((exp, index) => (
                 <SortableExperienceCard
                   key={exp.id || `exp-${index}`}
@@ -1359,7 +1385,7 @@ const ExperienceSection = memo(function ExperienceSection({
           <p>{t('resume.experienceForm.noExperience')}</p>
         </div>
       )}
-    </div>
+    </CollapsibleSection>
   );
 });
 

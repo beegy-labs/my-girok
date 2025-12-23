@@ -11,7 +11,7 @@ import {
 } from '../../api/resume';
 import ResumeForm from '../../components/resume/ResumeForm';
 import ResumePreviewContainer from '../../components/resume/ResumePreviewContainer';
-import { Button, Alert, Card, SectionBadge } from '@my-girok/ui-components';
+import { Button, Alert, Card } from '@my-girok/ui-components';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 /**
@@ -28,9 +28,13 @@ export default function ResumeEditPage() {
   const [previewData, setPreviewData] = useState<Resume | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Memoized navigation handlers (2025 best practice)
-  const handleBack = useCallback(() => navigate(-1), [navigate]);
+  // Memoized handlers (2025 best practice - rules.md)
   const togglePreview = useCallback(() => setShowPreview((prev) => !prev), []);
+  const handleGoBack = useCallback(() => navigate(-1), [navigate]);
+  const handleSaveClick = useCallback(() => {
+    const form = document.getElementById('resume-form') as HTMLFormElement | null;
+    form?.requestSubmit();
+  }, []);
 
   const loadResume = useCallback(async () => {
     if (!resumeId) return;
@@ -163,103 +167,57 @@ export default function ResumeEditPage() {
   }
 
   return (
-    <main className="min-h-screen bg-theme-bg-page transition-colors duration-200 pt-nav">
-      {/* Mobile: Fixed bottom navigation bar for preview toggle - V0.0.1 Style */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card border-t-2 border-theme-border-default p-4 lg:hidden safe-area-bottom">
-        <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
-          <Button
-            variant="secondary"
-            onClick={handleBack}
-            size="lg"
-            rounded="default"
-            className="flex-1"
-          >
-            ← {t('common.back')}
-          </Button>
-          <Button
-            variant="primary"
-            onClick={togglePreview}
-            size="lg"
-            rounded="editorial"
-            className="flex-1"
-          >
-            {showPreview ? '📝 ' + t('edit.showForm') : '👁️ ' + t('edit.showPreview')}
-          </Button>
+    <main className="min-h-screen bg-theme-bg-page transition-colors duration-200 pb-24">
+      {/* Fixed Bottom Action Bar - Always visible */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-theme-bg-card border-t border-theme-border-default safe-area-bottom">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3">
+          <div className="flex items-center justify-end gap-3">
+            <Button variant="ghost" onClick={handleGoBack}>
+              {t('common.goBack')}
+            </Button>
+            <Button variant="primary" onClick={handleSaveClick}>
+              {t('common.save')}
+            </Button>
+            {/* Mobile/Tablet: Preview toggle */}
+            <Button variant="secondary" onClick={togglePreview} className="lg:hidden">
+              {showPreview ? t('edit.showForm') : t('common.preview')}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12 pb-32 lg:pb-12">
-        {/* Header - V0.0.1 Editorial Style */}
-        <header className="mb-10 sm:mb-14">
-          <SectionBadge className="mb-4">{t('badge.careerArchive')}</SectionBadge>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div>
-              <h1 className="text-4xl sm:text-5xl text-theme-text-primary tracking-editorial italic mb-3 font-serif-title">
-                {resumeId ? t('edit.editResume') : t('edit.createNewResume')}
-              </h1>
-              <p className="text-[11px] font-black uppercase tracking-brand text-theme-text-secondary font-mono-brand">
-                {resumeId ? t('edit.updateInfo') : t('edit.fillInfo')}
-              </p>
-            </div>
-            <Button
-              variant="primary"
-              onClick={togglePreview}
-              size="lg"
-              rounded="editorial"
-              className="hidden lg:flex"
-            >
-              {showPreview ? t('edit.showForm') : t('edit.showPreview')}
-            </Button>
-          </div>
-        </header>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
         {error && (
-          <Alert variant="error" className="mb-4 sm:mb-6">
+          <Alert variant="error" className="mb-4">
             {t('edit.error')} {error}
           </Alert>
         )}
 
-        {/* Side-by-side layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Form Section */}
-          <div className={`${showPreview ? 'hidden lg:block' : 'block'}`}>
+        {/* PC: Side-by-side / Mobile: Toggle */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Form */}
+          <div className={showPreview ? 'hidden lg:block' : 'block'}>
             <ResumeForm resume={resume} onSubmit={handleSubmit} onChange={handleFormChange} />
           </div>
 
-          {/* Live Preview Section - V0.0.1 Style */}
-          <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
-            <div className="sticky top-4 sm:top-8">
-              {/* Preview Header - V0.0.1 Style */}
-              <Card
-                variant="secondary"
-                padding="lg"
-                radius="default"
-                className="mb-4 sm:mb-6 border-2 border-theme-border-default"
-              >
-                <h2 className="text-xl sm:text-2xl text-theme-text-primary tracking-editorial italic mb-2 flex items-center gap-3 font-serif-title">
-                  <span>👁️</span>
-                  {t('edit.livePreview')}
-                </h2>
-                <p className="text-[11px] font-black uppercase tracking-brand-sm text-theme-text-secondary font-mono-brand">
-                  {t('edit.previewDescription')}
-                </p>
-              </Card>
-
+          {/* Preview */}
+          <div className={showPreview ? 'block' : 'hidden lg:block'}>
+            <div className="lg:sticky lg:top-20">
               {previewData ? (
                 <ResumePreviewContainer
                   key={`preview-${previewData.id || 'new'}`}
                   resume={previewData}
-                  maxHeight="calc(100svh - 200px)"
-                  containerClassName="border-2 border-theme-border-default rounded-soft min-h-[60svh] lg:min-h-[500px]"
+                  maxHeight="calc(100svh - 180px)"
+                  containerClassName="border border-theme-border-default rounded-soft"
                 />
               ) : (
                 <Card
                   variant="secondary"
                   padding="xl"
-                  radius="lg"
-                  className="text-center border-2 border-theme-border-default min-h-[60svh] lg:min-h-[500px] flex items-center justify-center"
+                  radius="default"
+                  className="text-center border border-theme-border-default min-h-[50svh] flex items-center justify-center"
                 >
-                  <p className="text-theme-text-tertiary text-base">{t('errors.startFilling')}</p>
+                  <p className="text-theme-text-tertiary">{t('errors.startFilling')}</p>
                 </Card>
               )}
             </div>

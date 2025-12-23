@@ -38,7 +38,7 @@ export default function DesignSystemPage() {
   const handleViewModeChange = useCallback((mode: ViewMode) => setViewMode(mode), []);
 
   return (
-    <main className="min-h-screen bg-theme-bg-page pt-nav">
+    <main className="min-h-screen bg-theme-bg-page">
       <div className="max-w-7xl mx-auto px-6 py-16">
         {/* Header */}
         <header className="mb-section text-center">

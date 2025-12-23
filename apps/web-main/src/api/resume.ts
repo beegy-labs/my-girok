@@ -139,7 +139,10 @@ function calculateMonths(startDate: string, endDate?: string): number {
  * - Overlap: 2022-03 ~ 2022-06 (4 months)
  * - Total: 2020-01 ~ 2025-11 = 5 years 11 months (not 6 years 3 months)
  */
-export function calculateTotalExperienceWithOverlap(experiences: Experience[]): { years: number; months: number } {
+export function calculateTotalExperienceWithOverlap(experiences: Experience[]): {
+  years: number;
+  months: number;
+} {
   if (experiences.length === 0) {
     return { years: 0, months: 0 };
   }
@@ -151,19 +154,22 @@ export function calculateTotalExperienceWithOverlap(experiences: Experience[]): 
   }
 
   // Filter out experiences with invalid or empty startDate
-  const validExperiences = experiences.filter(exp => exp.startDate && exp.startDate.trim() !== '');
+  const validExperiences = experiences.filter(
+    (exp) => exp.startDate && exp.startDate.trim() !== '',
+  );
 
   if (validExperiences.length === 0) {
     return { years: 0, months: 0 };
   }
 
-  const intervals: DateInterval[] = validExperiences.map(exp => {
-    const start = new Date(exp.startDate + '-01');
-    const end = exp.isCurrentlyWorking || !exp.endDate
-      ? new Date()
-      : new Date(exp.endDate + '-01');
-    return { start, end };
-  }).filter(interval => !isNaN(interval.start.getTime()) && !isNaN(interval.end.getTime()));
+  const intervals: DateInterval[] = validExperiences
+    .map((exp) => {
+      const start = new Date(exp.startDate + '-01');
+      const end =
+        exp.isCurrentlyWorking || !exp.endDate ? new Date() : new Date(exp.endDate + '-01');
+      return { start, end };
+    })
+    .filter((interval) => !isNaN(interval.start.getTime()) && !isNaN(interval.end.getTime()));
 
   // Return early if no valid intervals after filtering
   if (intervals.length === 0) {
@@ -185,7 +191,7 @@ export function calculateTotalExperienceWithOverlap(experiences: Experience[]): 
       // Merge: extend current end to the later of the two ends
       current = {
         start: current.start,
-        end: new Date(Math.max(current.end.getTime(), next.end.getTime()))
+        end: new Date(Math.max(current.end.getTime(), next.end.getTime())),
       };
     } else {
       // No overlap: save current and move to next
@@ -214,7 +220,11 @@ export function calculateTotalExperienceWithOverlap(experiences: Experience[]): 
 /**
  * Calculate single experience duration
  */
-export function calculateExperienceDuration(startDate: string, endDate?: string, isCurrentlyWorking?: boolean): { years: number; months: number } {
+export function calculateExperienceDuration(
+  startDate: string,
+  endDate?: string,
+  isCurrentlyWorking?: boolean,
+): { years: number; months: number } {
   const totalMonths = calculateMonths(startDate, isCurrentlyWorking ? undefined : endDate);
 
   return {
@@ -235,24 +245,52 @@ function stripIds<T>(obj: T): T {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => stripIds(item)) as T;
+    return obj.map((item) => stripIds(item)) as T;
   }
 
   if (typeof obj === 'object') {
     const result: any = {};
     // List of database-generated fields that should be removed before API submission
-    const dbFields = ['id', 'projectId', 'resumeId', 'experienceId', 'parentId', 'createdAt', 'updatedAt'];
+    const dbFields = [
+      'id',
+      'projectId',
+      'resumeId',
+      'experienceId',
+      'parentId',
+      'createdAt',
+      'updatedAt',
+    ];
     // Optional fields that should convert empty string to null for proper clearing
     // Required fields (startDate, name, email, etc.) should NOT be converted to null
     const optionalNullableFields = [
       // Date fields
-      'endDate', 'expiryDate', 'birthDate', 'militaryDischarge',
-      'militaryServiceStartDate', 'militaryServiceEndDate',
+      'endDate',
+      'expiryDate',
+      'birthDate',
+      'militaryDischarge',
+      'militaryServiceStartDate',
+      'militaryServiceEndDate',
       // Text fields that can be cleared
-      'description', 'summary', 'coverLetter', 'applicationReason',
-      'phone', 'address', 'github', 'blog', 'linkedin', 'portfolio',
-      'profileImage', 'credentialId', 'credentialUrl', 'url', 'githubUrl',
-      'role', 'gpa', 'militaryRank', 'militaryDischargeType', 'salaryUnit',
+      'description',
+      'summary',
+      'coverLetter',
+      'applicationReason',
+      'phone',
+      'address',
+      'github',
+      'blog',
+      'linkedin',
+      'portfolio',
+      'profileImage',
+      'credentialId',
+      'credentialUrl',
+      'url',
+      'githubUrl',
+      'role',
+      'gpa',
+      'militaryRank',
+      'militaryDischargeType',
+      'salaryUnit',
     ];
 
     for (const [key, value] of Object.entries(obj)) {
@@ -354,8 +392,8 @@ let isRefreshingPersonal = false;
 personalApi.interceptors.request.use(
   async (config) => {
     // Skip auth for public endpoints (no authentication required)
-    const isPublicEndpoint = config.url?.includes('/share/public/') ||
-                             config.url?.includes('/resume/public/');
+    const isPublicEndpoint =
+      config.url?.includes('/share/public/') || config.url?.includes('/resume/public/');
 
     if (isPublicEndpoint) {
       return config;
@@ -402,8 +440,9 @@ personalApi.interceptors.response.use(
     const originalRequest = error.config;
 
     // Skip auth retry for public endpoints
-    const isPublicEndpoint = originalRequest.url?.includes('/share/public/') ||
-                             originalRequest.url?.includes('/resume/public/');
+    const isPublicEndpoint =
+      originalRequest.url?.includes('/share/public/') ||
+      originalRequest.url?.includes('/resume/public/');
 
     if (isPublicEndpoint) {
       return Promise.reject(error);
@@ -443,7 +482,9 @@ personalApi.interceptors.response.use(
       } catch (refreshError) {
         console.error('[API Error] Token refresh failed:', refreshError);
         useAuthStore.getState().clearAuth();
-        window.location.href = '/login';
+        // Preserve current URL to redirect back after login
+        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/login?returnUrl=${returnUrl}`;
         return Promise.reject(refreshError);
       }
     }
@@ -495,19 +536,28 @@ export const copyResume = async (resumeId: string): Promise<Resume> => {
   return response.data;
 };
 
-export const updateSectionOrder = async (resumeId: string, data: UpdateSectionOrderDto): Promise<Resume> => {
+export const updateSectionOrder = async (
+  resumeId: string,
+  data: UpdateSectionOrderDto,
+): Promise<Resume> => {
   const response = await personalApi.patch(`/v1/resume/${resumeId}/sections/order`, data);
   return response.data;
 };
 
-export const toggleSectionVisibility = async (resumeId: string, data: ToggleSectionVisibilityDto): Promise<Resume> => {
+export const toggleSectionVisibility = async (
+  resumeId: string,
+  data: ToggleSectionVisibilityDto,
+): Promise<Resume> => {
   const response = await personalApi.patch(`/v1/resume/${resumeId}/sections/visibility`, data);
   return response.data;
 };
 
 // ========== Share Link APIs ==========
 
-export const createResumeShare = async (resumeId: string, data: CreateShareLinkDto): Promise<ShareLink> => {
+export const createResumeShare = async (
+  resumeId: string,
+  data: CreateShareLinkDto,
+): Promise<ShareLink> => {
   const response = await personalApi.post(`/v1/share/resume/${resumeId}`, data);
   return response.data;
 };
@@ -570,7 +620,7 @@ export const uploadAttachment = async (
   file: File,
   type: AttachmentType,
   title?: string,
-  description?: string
+  description?: string,
 ): Promise<ResumeAttachment> => {
   const formData = new FormData();
   formData.append('file', file);
@@ -586,7 +636,10 @@ export const uploadAttachment = async (
   return response.data;
 };
 
-export const getAttachments = async (resumeId: string, type?: AttachmentType): Promise<ResumeAttachment[]> => {
+export const getAttachments = async (
+  resumeId: string,
+  type?: AttachmentType,
+): Promise<ResumeAttachment[]> => {
   const params = type ? { type } : {};
   const response = await personalApi.get(`/v1/resume/${resumeId}/attachments`, { params });
   return response.data;
@@ -595,9 +648,12 @@ export const getAttachments = async (resumeId: string, type?: AttachmentType): P
 export const updateAttachment = async (
   resumeId: string,
   attachmentId: string,
-  data: { title?: string; description?: string; visible?: boolean }
+  data: { title?: string; description?: string; visible?: boolean },
 ): Promise<ResumeAttachment> => {
-  const response = await personalApi.patch(`/v1/resume/${resumeId}/attachments/${attachmentId}`, data);
+  const response = await personalApi.patch(
+    `/v1/resume/${resumeId}/attachments/${attachmentId}`,
+    data,
+  );
   return response.data;
 };
 
@@ -608,7 +664,7 @@ export const deleteAttachment = async (resumeId: string, attachmentId: string): 
 export const reorderAttachments = async (
   resumeId: string,
   type: AttachmentType,
-  attachmentIds: string[]
+  attachmentIds: string[],
 ): Promise<void> => {
   await personalApi.patch(`/v1/resume/${resumeId}/attachments/reorder`, { type, attachmentIds });
 };

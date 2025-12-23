@@ -91,7 +91,9 @@ authApi.interceptors.response.use(
         return authApi(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().clearAuth();
-        window.location.href = '/login';
+        // Preserve current URL to redirect back after login
+        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/login?returnUrl=${returnUrl}`;
         return Promise.reject(refreshError);
       }
     }

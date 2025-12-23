@@ -31,7 +31,8 @@
     "overrides": {
       "jws": ">=3.2.3",
       "jsonwebtoken": ">=9.0.3",
-      "body-parser": ">=2.2.0"
+      "body-parser": ">=2.2.0",
+      "@react-pdf/reconciler>scheduler": "^0.27.0"
     }
   },
   "lint-staged": {

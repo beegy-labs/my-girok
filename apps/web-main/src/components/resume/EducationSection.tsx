@@ -18,12 +18,18 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Education, DegreeType, GpaFormat } from '../../api/resume';
-import { TextInput, SelectInput, Button } from '@my-girok/ui-components';
+import { TextInput, SelectInput, Button, CollapsibleSection } from '@my-girok/ui-components';
 
 interface EducationSectionProps {
   educations: Education[];
   onChange: (educations: Education[]) => void;
   t: (key: string) => string;
+  /** External control for category-level collapse (SSOT pattern) */
+  isExpanded?: boolean;
+  /** External toggle handler (SSOT pattern) */
+  onToggle?: () => void;
+  /** Additional header action (e.g., visibility toggle) */
+  headerAction?: React.ReactNode;
 }
 
 /**
@@ -43,7 +49,7 @@ const SortableEducationCard = memo(function SortableEducationCard({
   onRemove: () => void;
   t: (key: string) => string;
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const toggleExpand = useCallback(() => setIsExpanded((prev) => !prev), []);
 
   // Memoized education date handlers (2025 React best practice)
@@ -90,7 +96,7 @@ const SortableEducationCard = memo(function SortableEducationCard({
       className="border border-theme-border-subtle rounded-soft overflow-hidden bg-theme-bg-elevated transition-colors duration-200"
     >
       {/* Mobile-optimized Header */}
-      <div className="bg-gradient-to-r from-theme-bg-hover to-theme-bg-card p-2 sm:p-4">
+      <div className="bg-gradient-to-r from-theme-bg-hover to-theme-bg-card p-4">
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Drag Handle */}
           <button
@@ -115,24 +121,24 @@ const SortableEducationCard = memo(function SortableEducationCard({
             </svg>
           </button>
 
-          {/* Title - clickable on mobile */}
+          {/* Title - clickable to expand/collapse */}
           <button
             type="button"
             onClick={toggleExpand}
-            className="flex-1 flex items-center gap-2 text-left min-w-0 sm:cursor-default"
+            className="flex-1 flex items-center gap-2 text-left min-w-0 cursor-pointer"
           >
             <div className="flex-1 min-w-0">
               <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary transition-colors duration-200 truncate">
                 🎓 {education.school || 'Education'} #{index + 1}
               </h3>
               {!isExpanded && education.major && (
-                <p className="text-xs text-theme-text-tertiary truncate sm:hidden">
+                <p className="text-xs text-theme-text-tertiary truncate">
                   {education.major} • {education.startDate}
                 </p>
               )}
             </div>
             <svg
-              className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-text-tertiary transition-transform duration-200 sm:hidden ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-text-tertiary transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -159,9 +165,9 @@ const SortableEducationCard = memo(function SortableEducationCard({
       </div>
 
       {/* Collapsible Content */}
-      <div className={`${isExpanded ? 'block' : 'hidden'} sm:block p-3 sm:p-4`}>
+      <div className={`${isExpanded ? 'block' : 'hidden'} p-4`}>
         {/* Mobile delete button */}
-        <div className="sm:hidden flex justify-end mb-2">
+        <div className="sm:hidden flex justify-end mb-4">
           <Button
             variant="danger"
             onClick={onRemove}
@@ -173,7 +179,7 @@ const SortableEducationCard = memo(function SortableEducationCard({
         </div>
 
         {/* School and Major */}
-        <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 mb-3">
+        <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 gap-4 mb-4">
           <TextInput
             label="School"
             value={education.school}
@@ -192,7 +198,7 @@ const SortableEducationCard = memo(function SortableEducationCard({
         </div>
 
         {/* Degree and GPA Format */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <SelectInput
             label="Degree"
             value={education.degree || ''}
@@ -218,7 +224,7 @@ const SortableEducationCard = memo(function SortableEducationCard({
         </div>
 
         {/* GPA */}
-        <div className="mb-3">
+        <div className="mb-4">
           <TextInput
             label="GPA"
             value={education.gpa || ''}
@@ -234,7 +240,7 @@ const SortableEducationCard = memo(function SortableEducationCard({
         </div>
 
         {/* Dates - side by side */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2 transition-colors duration-200">
               <span className="hidden sm:inline">{t('resume.experienceForm.startDate')}</span>
@@ -267,7 +273,25 @@ const SortableEducationCard = memo(function SortableEducationCard({
   );
 });
 
-export default function EducationSection({ educations, onChange, t }: EducationSectionProps) {
+export default function EducationSection({
+  educations,
+  onChange,
+  t,
+  isExpanded: externalExpanded,
+  onToggle: externalToggle,
+  headerAction: externalHeaderAction,
+}: EducationSectionProps) {
+  // Use external state if provided (SSOT), otherwise fallback to internal state
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const isExpanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
+  const handleToggle = useCallback(() => {
+    if (externalToggle) {
+      externalToggle();
+    } else {
+      setInternalExpanded((prev) => !prev);
+    }
+  }, [externalToggle]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
@@ -330,25 +354,31 @@ export default function EducationSection({ educations, onChange, t }: EducationS
   };
 
   return (
-    <div className="bg-theme-bg-elevated border border-theme-border-subtle rounded-soft shadow-sm p-3 sm:p-6 lg:p-8 transition-colors duration-200">
-      <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 lg:mb-6">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary transition-colors duration-200">
-            🎓 {t('resume.sections.education')}
-          </h2>
-          <p className="text-xs sm:text-sm lg:text-base text-theme-text-secondary transition-colors duration-200 hidden sm:block">
-            {t('resume.descriptions.education')}
-          </p>
+    <CollapsibleSection
+      title={t('resume.sections.education')}
+      icon="🎓"
+      isExpanded={isExpanded}
+      onToggle={handleToggle}
+      count={educations.length}
+      variant="secondary"
+      collapsibleOnDesktop
+      headerAction={
+        <div className="flex items-center gap-2">
+          {externalHeaderAction}
+          <Button
+            variant="primary"
+            onClick={handleAdd}
+            size="sm"
+            className="py-2 touch-manipulation"
+          >
+            + {t('common.add')}
+          </Button>
         </div>
-        <Button
-          variant="primary"
-          onClick={handleAdd}
-          className="text-xs sm:text-sm lg:text-base px-3 py-2 lg:px-5 lg:py-2.5 flex-shrink-0 touch-manipulation"
-        >
-          + <span className="hidden sm:inline">{t('resume.form.addEducation')}</span>
-          <span className="sm:hidden">{t('common.add')}</span>
-        </Button>
-      </div>
+      }
+    >
+      <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+        {t('resume.descriptions.education')}
+      </p>
 
       {educations.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -356,7 +386,7 @@ export default function EducationSection({ educations, onChange, t }: EducationS
             items={educations.map((edu, idx) => edu.id || `edu-${idx}`)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+            <div className="space-y-4 lg:space-y-6">
               {educations.map((edu, index) => (
                 <SortableEducationCard
                   key={edu.id || `edu-${index}`}
@@ -375,6 +405,6 @@ export default function EducationSection({ educations, onChange, t }: EducationS
           {t('resume.emptyStates.education')}
         </div>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }

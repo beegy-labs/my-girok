@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
 import { login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
 import { TextInput, Button } from '@my-girok/ui-components';
 import { AuthLayout } from '../layouts';
-import { Mail, Lock, ArrowRight, UserPlus, Key } from 'lucide-react';
+import { Mail, Lock, UserPlus, Key } from 'lucide-react';
 
 const SAVED_EMAIL_COOKIE = 'my-girok-saved-email';
 const COOKIE_EXPIRY_DAYS = 30;
@@ -25,7 +25,18 @@ export default function LoginPage() {
   const [rememberEmail, setRememberEmail] = useState(true);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setAuth } = useAuthStore();
+
+  // Get returnUrl from query params, validate it's a local path for security
+  const returnUrl = useMemo(() => {
+    const url = searchParams.get('returnUrl');
+    // Only allow local paths (starting with /) to prevent open redirect attacks
+    if (url && url.startsWith('/') && !url.startsWith('//')) {
+      return url;
+    }
+    return '/';
+  }, [searchParams]);
 
   // Load saved email from cookie on component mount
   useEffect(() => {
@@ -58,7 +69,7 @@ export default function LoginPage() {
 
         const response = await login({ email, password });
         setAuth(response.user, response.accessToken, response.refreshToken);
-        navigate('/'); // Direct navigation (2025 best practice)
+        navigate(returnUrl); // Redirect to original page or home
       } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         setError(err.response?.data?.message || t('errors.loginFailed'));
@@ -66,7 +77,7 @@ export default function LoginPage() {
         setLoading(false);
       }
     },
-    [email, password, rememberEmail, setAuth, navigate, t],
+    [email, password, rememberEmail, setAuth, navigate, returnUrl, t],
   );
 
   return (
@@ -157,7 +168,6 @@ export default function LoginPage() {
           disabled={loading}
           loading={loading}
           fullWidth
-          icon={<ArrowRight size={18} />}
         >
           {t('auth.loginButton')}
         </Button>

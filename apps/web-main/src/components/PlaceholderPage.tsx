@@ -22,7 +22,7 @@ export default function PlaceholderPage({
 
   return (
     <>
-      <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
+      <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200">
         <div className="w-full lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="text-center">
             {/* Icon */}

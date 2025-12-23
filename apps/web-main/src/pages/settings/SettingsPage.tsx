@@ -9,7 +9,7 @@ export default function SettingsPage() {
 
   return (
     <>
-      <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200 pt-nav">
+      <main className="min-h-screen flex flex-col bg-theme-bg-page transition-colors duration-200">
         <div className="w-full lg:max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           {/* Header - Editorial Style */}
           <header className="mb-12 sm:mb-16">

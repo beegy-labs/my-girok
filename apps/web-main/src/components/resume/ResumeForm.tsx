@@ -1,6 +1,23 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   Resume,
   CreateResumeDto,
   AttachmentType,
@@ -25,7 +42,6 @@ import {
   SelectInput,
   TextArea,
   Button,
-  Card,
   CollapsibleSection,
 } from '@my-girok/ui-components';
 
@@ -35,26 +51,101 @@ interface ResumeFormProps {
   onChange?: (data: CreateResumeDto) => void;
 }
 
+// Frontend-only extended section types (not yet in DB)
+// TODO: Sync with backend when DB migration is done
+// Note: BASIC_INFO is always first and not manageable, PROJECT/MILITARY cards don't exist yet
+export enum FormSectionType {
+  EXPERIENCE = 'EXPERIENCE',
+  EDUCATION = 'EDUCATION',
+  SKILLS = 'SKILLS',
+  CERTIFICATE = 'CERTIFICATE',
+  KEY_ACHIEVEMENTS = 'KEY_ACHIEVEMENTS',
+  APPLICATION_REASON = 'APPLICATION_REASON',
+  ATTACHMENTS = 'ATTACHMENTS',
+  COVER_LETTER = 'COVER_LETTER',
+}
+
+// Form section interface for ordering
+export interface FormSection {
+  id: string;
+  type: FormSectionType;
+  order: number;
+  visible: boolean;
+}
+
 // Initial collapsed sections state - extracted to module scope (2025 best practice)
+// All sections collapsed by default (true = collapsed)
 const INITIAL_COLLAPSED_SECTIONS: Record<string, boolean> = {
-  basicInfo: false,
-  skills: false,
-  experience: false,
-  education: false,
-  certificates: false,
-  military: false,
-  applicationReason: false,
-  coverLetter: false,
+  basicInfo: true,
+  keyAchievements: true,
+  skills: true,
+  experience: true,
+  education: true,
+  certificates: true,
+  military: true,
+  applicationReason: true,
+  attachments: true,
+  coverLetter: true,
 } as const;
 
-// Default sections order - extracted to module scope (2025 best practice)
-const DEFAULT_SECTIONS = [
-  { id: '1', type: SectionType.SKILLS, order: 0, visible: true },
-  { id: '2', type: SectionType.EXPERIENCE, order: 1, visible: true },
-  { id: '3', type: SectionType.PROJECT, order: 2, visible: true },
-  { id: '4', type: SectionType.EDUCATION, order: 3, visible: true },
-  { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
-] as const;
+// Default sections order - excludes BASIC_INFO (always first, not reorderable)
+// Priority order (Korean resume standard): 경력 → 학력 → 기술 → 자격증 → 핵심성과 → 지원동기 → 첨부파일 → 자기소개서
+const DEFAULT_SECTIONS: FormSection[] = [
+  { id: '1', type: FormSectionType.EXPERIENCE, order: 0, visible: true },
+  { id: '2', type: FormSectionType.EDUCATION, order: 1, visible: true },
+  { id: '3', type: FormSectionType.SKILLS, order: 2, visible: true },
+  { id: '4', type: FormSectionType.CERTIFICATE, order: 3, visible: true },
+  { id: '5', type: FormSectionType.KEY_ACHIEVEMENTS, order: 4, visible: true },
+  { id: '6', type: FormSectionType.APPLICATION_REASON, order: 5, visible: true },
+  { id: '7', type: FormSectionType.ATTACHMENTS, order: 6, visible: true },
+  { id: '8', type: FormSectionType.COVER_LETTER, order: 7, visible: true },
+];
+
+/**
+ * Convert backend SectionType to frontend FormSectionType
+ * For sections not yet in DB, use default values
+ * Filters out backend types that don't exist in FormSectionType (e.g., PROJECT)
+ */
+const initializeSections = (
+  resumeSections?: { id: string; type: SectionType; order: number; visible: boolean }[],
+): FormSection[] => {
+  if (!resumeSections || resumeSections.length === 0) {
+    return [...DEFAULT_SECTIONS];
+  }
+
+  // Valid FormSectionType values
+  const validFormSectionTypes = new Set(Object.values(FormSectionType));
+
+  // Filter and map backend sections to FormSection (only types that exist in FormSectionType)
+  const validBackendSections = resumeSections.filter((s) =>
+    validFormSectionTypes.has(s.type as unknown as FormSectionType),
+  );
+
+  const backendSectionTypes = new Set(validBackendSections.map((s) => s.type as string));
+
+  // Start with valid backend sections, converted to FormSectionType
+  const result: FormSection[] = validBackendSections.map((s) => ({
+    id: s.id,
+    type: s.type as unknown as FormSectionType,
+    order: s.order,
+    visible: s.visible,
+  }));
+
+  // Add frontend-only sections that don't exist in backend
+  const frontendOnlySections = DEFAULT_SECTIONS.filter((s) => !backendSectionTypes.has(s.type));
+
+  // Append frontend-only sections with adjusted order
+  const maxOrder = Math.max(...result.map((s) => s.order), -1);
+  frontendOnlySections.forEach((s, idx) => {
+    result.push({
+      ...s,
+      id: `frontend-${s.type}`,
+      order: maxOrder + 1 + idx,
+    });
+  });
+
+  return result.sort((a, b) => a.order - b.order);
+};
 
 // Debounce delay for form change callback (ms)
 // Prevents excessive PDF re-generation during typing (Over-Engineering Policy: <16ms render target)
@@ -72,6 +163,66 @@ const formatFileSize = (bytes: number): string => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
 };
+
+/**
+ * SortableFormSection - Wrapper for draggable form sections
+ */
+interface SortableFormSectionProps {
+  id: string;
+  children: React.ReactNode;
+  dragHandleLabel: string;
+}
+
+function SortableFormSection({ id, children, dragHandleLabel }: SortableFormSectionProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    setActivatorNodeRef,
+  } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.7 : 1,
+    zIndex: isDragging ? 50 : 'auto',
+    position: 'relative' as const,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="group">
+      {/* Drag handle - uses activator node ref for proper isolation */}
+      <div
+        ref={setActivatorNodeRef}
+        {...listeners}
+        {...attributes}
+        className="absolute -left-2 top-4 sm:-left-4 sm:top-6 z-10 cursor-grab active:cursor-grabbing p-1.5 sm:p-2 bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-theme-sm opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 touch-none select-none"
+        title={dragHandleLabel}
+        role="button"
+        tabIndex={0}
+        style={{ touchAction: 'none' }}
+      >
+        <svg
+          className="w-4 h-4 text-theme-text-tertiary pointer-events-none"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M4 8h16M4 16h16"
+          />
+        </svg>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 /**
  * ResumeForm - V0.0.1 AAA Workstation Design
@@ -182,7 +333,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
       })) || [],
   });
 
-  const [submitting, setSubmitting] = useState(false);
+  // Submitting state to prevent double-submission (used in handleSubmit)
+  const [, setSubmitting] = useState(false);
   const [attachments, setAttachments] = useState<ResumeAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -200,10 +352,20 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     }
   }, []);
 
-  // Section ordering - using module-scope constant (2025 best practice)
-  const [sections, setSections] = useState(
-    resume?.sections?.sort((a, b) => a.order - b.order) || [...DEFAULT_SECTIONS],
+  // Section ordering - using initializeSections helper (2025 best practice)
+  const [sections, setSections] = useState<FormSection[]>(() =>
+    initializeSections(resume?.sections),
   );
+
+  // Cover Letter Sections - 2-depth structure (title + content)
+  // Frontend-only state for now, API integration will follow
+  interface CoverLetterSection {
+    id: string;
+    title: string;
+    content: string;
+    order: number;
+  }
+  const [coverLetterSections, setCoverLetterSections] = useState<CoverLetterSection[]>([]);
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -337,23 +499,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [attachments],
   );
 
-  // Memoized save draft handler (2025 React best practice)
-  const handleSaveDraft = useCallback(() => {
-    const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
-    localStorage.setItem(draftKey, JSON.stringify(formData));
-    setDraftSaved(true);
-    setTimeout(() => setDraftSaved(false), 2000);
-  }, [resume?.id, formData]);
-
-  // Memoized clear draft handler (2025 React best practice)
-  const handleClearDraft = useCallback(() => {
-    if (confirm(t('resume.form.clearDraftConfirm'))) {
-      const draftKey = resume?.id ? `resume-draft-${resume.id}` : 'resume-draft-new';
-      localStorage.removeItem(draftKey);
-      alert(t('resume.form.clearDraftSuccess'));
-    }
-  }, [resume?.id, t]);
-
   // Memoized profile photo change handler (2025 React best practice)
   const handleProfilePhotoChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -406,11 +551,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     },
     [profilePhotoTempKey, t],
   );
-
-  // Memoized back navigation handler (2025 best practice)
-  const handleBack = useCallback(() => {
-    window.history.back();
-  }, []);
 
   // Cancel profile photo selection
   const handleProfilePhotoCancel = useCallback(async () => {
@@ -526,14 +666,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [],
   );
 
-  // Memoized handler for deleting attachment (2025 React best practice)
-  const handleDeleteAttachmentClick = useCallback(
-    (attachmentId: string) => () => {
-      handleDeleteAttachment(attachmentId);
-    },
-    [handleDeleteAttachment],
-  );
-
   // Memoized handler for adding key achievement (2025 React best practice)
   const handleAddKeyAchievement = useCallback(() => {
     setFormData((prev) => ({
@@ -583,10 +715,36 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     [handleFileUpload],
   );
 
-  // Cover letter change handler (2025 React best practice)
-  const handleCoverLetterChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, coverLetter: e.target.value }));
+  // Cover Letter Sections handlers (2-depth structure)
+  const handleAddCoverLetterSection = useCallback(() => {
+    setCoverLetterSections((prev) => [
+      ...prev,
+      {
+        id: `cl-${Date.now()}`,
+        title: '',
+        content: '',
+        order: prev.length,
+      },
+    ]);
   }, []);
+
+  const handleRemoveCoverLetterSection = useCallback(
+    (id: string) => () => {
+      setCoverLetterSections((prev) =>
+        prev.filter((s) => s.id !== id).map((s, idx) => ({ ...s, order: idx })),
+      );
+    },
+    [],
+  );
+
+  const handleUpdateCoverLetterSection = useCallback(
+    (id: string, field: 'title' | 'content') => (value: string) => {
+      setCoverLetterSections((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
+      );
+    },
+    [],
+  );
 
   // TextInput field change handler (2025 React best practice - curried)
   // TextInput passes value directly, not event
@@ -649,6 +807,41 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     // Update will be saved when form is submitted
   }, []);
 
+  // All sections sorted by order (for rendering)
+  const sortedAllSections = useMemo(
+    () => [...sections].sort((a, b) => a.order - b.order),
+    [sections],
+  );
+
+  // DnD sensors for form sections - with strict activation constraints
+  const formSectionSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10, // Must move 10px before drag starts
+        delay: 150, // 150ms delay before drag activates
+        tolerance: 5, // 5px tolerance during delay
+      },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  // Handle drag end for form sections
+  const handleFormSectionDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        const oldIndex = sections.findIndex((s) => s.id === active.id);
+        const newIndex = sections.findIndex((s) => s.id === over.id);
+        const newSections = arrayMove(sections, oldIndex, newIndex).map((item, index) => ({
+          ...item,
+          order: index,
+        }));
+        setSections(newSections);
+      }
+    },
+    [sections],
+  );
+
   // Memoized form submit handler (2025 React best practice)
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -706,13 +899,17 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
-      {/* Resume Settings - Compact on mobile */}
-      <Card variant="secondary" padding="responsive" className="shadow-sm rounded-soft">
-        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-3 sm:mb-4 lg:mb-6">
-          ⚙️ {t('resume.sections.settings')}
-        </h2>
-        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-6">
+    <form id="resume-form" onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
+      {/* Resume Settings - Always expanded, not collapsible */}
+      <CollapsibleSection
+        title={t('resume.sections.settings')}
+        icon="⚙️"
+        isExpanded={true}
+        onToggle={() => {}}
+        variant="secondary"
+        collapsibleOnDesktop={false}
+      >
+        <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 gap-4 lg:gap-6">
           <TextInput
             label={t('resume.form.resumeTitle')}
             value={formData.title}
@@ -729,7 +926,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             required
           />
         </div>
-        <div className="mt-3 sm:mt-4">
+        <div className="mt-4">
           <TextInput
             label={t('resume.form.description')}
             value={formData.description || ''}
@@ -738,7 +935,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             className="mb-0"
           />
         </div>
-      </Card>
+
+        {/* Section Order & Display - Embedded in Settings with collapsible feature */}
+        <SectionOrderManager sections={sections} onReorder={handleSectionsReorder} embedded />
+      </CollapsibleSection>
 
       {/* Basic Info */}
       <CollapsibleSection
@@ -747,8 +947,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         isExpanded={!collapsedSections.basicInfo}
         onToggle={toggleSection('basicInfo')}
         variant="primary"
+        collapsibleOnDesktop
       >
-        <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6">
+        {/* Short fields: 3 columns */}
+        <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           <TextInput
             label={t('resume.form.name')}
             value={formData.name}
@@ -774,6 +976,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             placeholder={t('resume.form.phonePlaceholder')}
             className="mb-0"
           />
+        </div>
+
+        {/* Long fields: 1 column on mobile, 2 columns on tablet+ */}
+        <div className="mt-4 space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
           <TextInput
             label={t('resume.address')}
             value={formData.address || ''}
@@ -809,7 +1015,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
         </div>
 
         {/* Birth Date and Gender */}
-        <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="mt-4 grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
               {t('resume.birthDate')}
@@ -818,7 +1024,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               type="date"
               value={formData.birthDate || ''}
               onChange={handleBirthDateChange}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-4 py-2 sm:py-4 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               placeholder={t('resume.birthDatePlaceholder')}
               min="1900-01-01"
               max={new Date().toISOString().split('T')[0]}
@@ -834,7 +1040,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             <select
               value={formData.gender || ''}
               onChange={handleGenderChange}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+              className="w-full px-4 py-2 sm:py-4 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
             >
               <option value="">{t('resume.genderPlaceholder')}</option>
               <option value="MALE">{t('resume.genderOptions.MALE')}</option>
@@ -844,8 +1050,8 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </div>
         </div>
 
-        <div className="mt-3 sm:mt-4">
-          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
+        <div className="mt-4">
+          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-2">
             {t('resume.form.profilePhoto')}
           </label>
 
@@ -934,14 +1140,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           <p className="text-xs text-theme-text-tertiary mt-1">{t('resume.form.photoFormats')}</p>
         </div>
 
-        <div className="mt-3 sm:mt-4">
-          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
+        <div className="mt-4">
+          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-2">
             {t('resume.form.militaryServiceKorean')}
           </label>
           <select
             value={formData.militaryService || ''}
             onChange={handleSelectChange('militaryService')}
-            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+            className="w-full px-4 py-2 sm:py-4 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
           >
             <option value="">{t('resume.form.militaryServiceSelect')}</option>
             <option value="COMPLETED">{t('resume.form.militaryServiceCompleted')}</option>
@@ -950,15 +1156,15 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           </select>
         </div>
         {formData.militaryService === 'COMPLETED' && (
-          <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="mt-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-2">
                 {t('resume.militaryService.rank')}
               </label>
               <select
                 value={formData.militaryRank || ''}
                 onChange={handleSelectChange('militaryRank')}
-                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                className="w-full px-4 py-2 sm:py-4 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               >
                 <option value="">{t('resume.form.militaryRankSelect')}</option>
                 <option value="병장">{t('resume.militaryRanks.sergeant')}</option>
@@ -968,13 +1174,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               </select>
             </div>
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-2">
                 {t('resume.militaryService.dischargeType')}
               </label>
               <select
                 value={formData.militaryDischargeType || ''}
                 onChange={handleSelectChange('militaryDischargeType')}
-                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                className="w-full px-4 py-2 sm:py-4 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
               >
                 <option value="">{t('resume.form.militaryDischargeSelect')}</option>
                 <option value="만기전역">{t('resume.dischargeTypes.honorable')}</option>
@@ -982,7 +1188,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
               </select>
             </div>
             <div className="col-span-2">
-              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
+              <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-2">
                 {t('resume.militaryService.servicePeriod')}
               </label>
               <div className="flex gap-2 items-center">
@@ -990,14 +1196,14 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   type="month"
                   value={formData.militaryServiceStartDate || ''}
                   onChange={handleInputChange('militaryServiceStartDate')}
-                  className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                  className="flex-1 px-4 py-2 sm:py-4 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
                 <span className="text-theme-text-tertiary text-sm">~</span>
                 <input
                   type="month"
                   value={formData.militaryServiceEndDate || ''}
                   onChange={handleInputChange('militaryServiceEndDate')}
-                  className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
+                  className="flex-1 px-4 py-2 sm:py-4 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
                 />
               </div>
               <p className="text-xs text-theme-text-tertiary mt-1 hidden sm:block">
@@ -1006,458 +1212,620 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
             </div>
           </div>
         )}
-        <div className="mt-4">
-          <TextArea
-            label={t('resume.form.summary')}
-            value={formData.summary || ''}
-            onChange={handleTextAreaChange('summary')}
-            rows={4}
-            placeholder={t('resume.form.summaryPlaceholder')}
-          />
-        </div>
-
-        {/* Key Achievements */}
-        <div className="mt-4 sm:mt-6">
-          <label className="block text-xs sm:text-sm font-semibold text-theme-text-secondary mb-1 sm:mb-2">
-            {t('resume.form.keyAchievements')}
-          </label>
-          <p className="text-xs text-theme-text-tertiary mb-2 sm:mb-3">
-            {t('resume.form.keyAchievementsHint')}
-          </p>
-          {(formData.keyAchievements || []).map((achievement, index) => (
-            <div key={index} className="mb-2 sm:mb-3">
-              <div className="flex flex-col sm:flex-row sm:items-start gap-2">
-                <div className="flex-1">
-                  <TextArea
-                    value={achievement}
-                    onChange={handleUpdateKeyAchievement(index)}
-                    rows={2}
-                    placeholder={t('resume.form.achievementPlaceholder', { index: index + 1 })}
-                  />
-                </div>
-                <Button
-                  variant="danger"
-                  onClick={handleRemoveAchievement(index)}
-                  size="sm"
-                  className="self-end sm:self-start py-2 touch-manipulation"
-                >
-                  <span className="hidden sm:inline">{t('resume.form.remove')}</span>
-                  <span className="sm:hidden">✕ {t('common.delete')}</span>
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button
-            variant="secondary"
-            onClick={handleAddKeyAchievement}
-            size="sm"
-            className="py-2 touch-manipulation"
-          >
-            + {t('resume.experienceForm.addAchievement')}
-          </Button>
-        </div>
       </CollapsibleSection>
 
-      {/* Application Reason (지원 동기) */}
-      <CollapsibleSection
-        title={t('resume.form.applicationReason')}
-        icon="💼"
-        isExpanded={!collapsedSections.applicationReason}
-        onToggle={toggleSection('applicationReason')}
-        variant="primary"
+      {/* Dynamic Sections - Drag-and-drop reorderable, managed by SectionOrderManager */}
+      <DndContext
+        sensors={formSectionSensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleFormSectionDragEnd}
       >
-        <TextArea
-          value={formData.applicationReason || ''}
-          onChange={handleTextAreaChange('applicationReason')}
-          rows={4}
-          placeholder={t('resume.form.applicationReasonPlaceholder')}
-          hint={t('resume.form.applicationReasonHint')}
-        />
-      </CollapsibleSection>
-
-      {/* Work Experience Section */}
-      <ExperienceSection
-        experiences={formData.experiences || []}
-        onChange={handleExperiencesChange}
-        t={t}
-      />
-
-      {/* Skills Section */}
-      <SkillsSection skills={formData.skills || []} onChange={handleSkillsChange} t={t} />
-
-      {/* Education Section */}
-      <EducationSection
-        educations={formData.educations || []}
-        onChange={handleEducationsChange}
-        t={t}
-      />
-
-      {/* Certificates Section */}
-      <CollapsibleSection
-        title={t('resume.sections.certifications')}
-        icon="🏆"
-        isExpanded={!collapsedSections.certificates}
-        onToggle={toggleSection('certificates')}
-        count={formData.certificates?.length}
-        variant="secondary"
-        headerAction={
-          <Button
-            variant="primary"
-            onClick={handleAddCertificate}
-            size="sm"
-            className="py-2 touch-manipulation"
-          >
-            + {t('resume.form.addCertificate')}
-          </Button>
-        }
-      >
-        <p className="text-xs sm:text-sm text-theme-text-secondary mb-3 sm:mb-4">
-          {t('resume.descriptions.certifications')}
-        </p>
-
-        {formData.certificates && formData.certificates.length > 0 ? (
-          <div className="space-y-3 sm:space-y-4">
-            {formData.certificates.map((cert, index) => (
-              <div
-                key={index}
-                className="border border-theme-border-subtle rounded-soft p-3 sm:p-4 bg-theme-bg-input transition-colors duration-200"
-              >
-                <div className="flex justify-between items-center mb-3 sm:mb-4">
-                  <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">
-                    {t('resume.form.certificateNumber', { index: index + 1 })}
-                  </h3>
-                  <Button
-                    variant="danger"
-                    onClick={handleRemoveCertificate(index)}
-                    size="sm"
-                    className="py-1.5 px-2 text-xs touch-manipulation"
+        <SortableContext
+          items={sortedAllSections.map((s) => s.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {sortedAllSections.map((section) => {
+            switch (section.type) {
+              case FormSectionType.EXPERIENCE:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
                   >
-                    <span className="hidden sm:inline">{t('resume.form.remove')}</span>
-                    <span className="sm:hidden">✕</span>
-                  </Button>
-                </div>
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <ExperienceSection
+                        experiences={formData.experiences || []}
+                        onChange={handleExperiencesChange}
+                        t={t}
+                        isExpanded={!collapsedSections.experience}
+                        onToggle={toggleSection('experience')}
+                      />
+                    </div>
+                  </SortableFormSection>
+                );
 
-                <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6">
-                  <TextInput
-                    label={t('resume.form.certificateName')}
-                    value={cert.name}
-                    onChange={handleUpdateCertificateField(index, 'name')}
-                    placeholder={t('resume.form.certificatePlaceholder')}
-                    required
-                  />
+              case FormSectionType.SKILLS:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
+                  >
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <SkillsSection
+                        skills={formData.skills || []}
+                        onChange={handleSkillsChange}
+                        t={t}
+                        isExpanded={!collapsedSections.skills}
+                        onToggle={toggleSection('skills')}
+                      />
+                    </div>
+                  </SortableFormSection>
+                );
 
-                  <TextInput
-                    label={t('resume.form.issuer')}
-                    value={cert.issuer}
-                    onChange={handleUpdateCertificateField(index, 'issuer')}
-                    placeholder={t('resume.form.issuerPlaceholder')}
-                    required
-                  />
+              case FormSectionType.EDUCATION:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
+                  >
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <EducationSection
+                        educations={formData.educations || []}
+                        onChange={handleEducationsChange}
+                        t={t}
+                        isExpanded={!collapsedSections.education}
+                        onToggle={toggleSection('education')}
+                      />
+                    </div>
+                  </SortableFormSection>
+                );
 
-                  <TextInput
-                    label={t('resume.form.issueDate')}
-                    type="month"
-                    value={cert.issueDate}
-                    onChange={handleUpdateCertificateField(index, 'issueDate')}
-                    required
-                  />
+              case FormSectionType.CERTIFICATE:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
+                  >
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <CollapsibleSection
+                        title={t('resume.sections.certifications')}
+                        icon="🏆"
+                        isExpanded={!collapsedSections.certificates}
+                        onToggle={toggleSection('certificates')}
+                        count={formData.certificates?.length}
+                        variant="secondary"
+                        collapsibleOnDesktop
+                        headerAction={
+                          <Button
+                            variant="primary"
+                            onClick={handleAddCertificate}
+                            size="sm"
+                            className="py-2 touch-manipulation"
+                          >
+                            + {t('common.add')}
+                          </Button>
+                        }
+                      >
+                        <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+                          {t('resume.descriptions.certifications')}
+                        </p>
 
-                  <TextInput
-                    label={t('resume.form.expiryDate')}
-                    type="month"
-                    value={cert.expiryDate || ''}
-                    onChange={handleUpdateCertificateField(index, 'expiryDate')}
-                    placeholder={t('resume.form.expiryEmpty')}
-                  />
+                        {formData.certificates && formData.certificates.length > 0 ? (
+                          <div className="space-y-4">
+                            {formData.certificates.map((cert, index) => (
+                              <div
+                                key={index}
+                                className="border border-theme-border-subtle rounded-soft p-4 bg-theme-bg-input transition-colors duration-200"
+                              >
+                                <div className="flex justify-between items-center mb-4">
+                                  <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">
+                                    {t('resume.form.certificateNumber', { index: index + 1 })}
+                                  </h3>
+                                  <Button
+                                    variant="danger"
+                                    onClick={handleRemoveCertificate(index)}
+                                    size="sm"
+                                    className="py-1.5 px-2 text-xs touch-manipulation"
+                                  >
+                                    <span className="hidden sm:inline">
+                                      {t('resume.form.remove')}
+                                    </span>
+                                    <span className="sm:hidden">✕</span>
+                                  </Button>
+                                </div>
 
-                  <TextInput
-                    label={t('resume.form.credentialIdLabel')}
-                    value={cert.credentialId || ''}
-                    onChange={handleUpdateCertificateField(index, 'credentialId')}
-                    placeholder={t('resume.form.credentialId')}
-                  />
+                                <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                                  <TextInput
+                                    label={t('resume.form.certificateName')}
+                                    value={cert.name}
+                                    onChange={handleUpdateCertificateField(index, 'name')}
+                                    placeholder={t('resume.form.certificatePlaceholder')}
+                                    required
+                                  />
 
-                  <TextInput
-                    label={t('resume.form.credentialUrl')}
-                    type="url"
-                    value={cert.credentialUrl || ''}
-                    onChange={handleUpdateCertificateField(index, 'credentialUrl')}
-                    placeholder={t('resume.form.credentialUrlPlaceholder')}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-theme-text-tertiary">
-            <p>{t('resume.form.noCertificates')}</p>
-          </div>
-        )}
-      </CollapsibleSection>
+                                  <TextInput
+                                    label={t('resume.form.issuer')}
+                                    value={cert.issuer}
+                                    onChange={handleUpdateCertificateField(index, 'issuer')}
+                                    placeholder={t('resume.form.issuerPlaceholder')}
+                                    required
+                                  />
 
-      {/* Attachments Section */}
-      <div className="bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-theme-sm transition-colors duration-200 p-3 sm:p-6 lg:p-8">
-        <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-theme-text-primary mb-1 sm:mb-2 lg:mb-4">
-          📎 {t('resume.form.attachments')}
-        </h2>
-        <p className="text-xs sm:text-sm text-theme-text-secondary mb-3 sm:mb-4">
-          {t('resume.form.attachmentsDesc')}
-        </p>
+                                  <TextInput
+                                    label={t('resume.form.issueDate')}
+                                    type="month"
+                                    value={cert.issueDate}
+                                    onChange={handleUpdateCertificateField(index, 'issueDate')}
+                                    required
+                                  />
 
-        {!resume?.id && (
-          <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-soft p-4 mb-4">
-            <p className="text-theme-status-info-text text-sm">💡 {t('resume.form.saveFirst')}</p>
-          </div>
-        )}
+                                  <TextInput
+                                    label={t('resume.form.expiryDate')}
+                                    type="month"
+                                    value={cert.expiryDate || ''}
+                                    onChange={handleUpdateCertificateField(index, 'expiryDate')}
+                                    placeholder={t('resume.form.expiryEmpty')}
+                                  />
 
-        {uploadError && (
-          <div className="bg-theme-status-error-bg border border-theme-status-error-border rounded-soft p-4 mb-4">
-            <p className="text-theme-status-error-text text-sm">⚠️ {uploadError}</p>
-          </div>
-        )}
+                                  <TextInput
+                                    label={t('resume.form.credentialIdLabel')}
+                                    value={cert.credentialId || ''}
+                                    onChange={handleUpdateCertificateField(index, 'credentialId')}
+                                    placeholder={t('resume.form.credentialId')}
+                                  />
 
-        {/* Profile Photo */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">
-            📷 {t('resume.form.profilePhotoSection')}
-          </h3>
-          <p className="text-sm text-theme-text-secondary mb-3">
-            {t('resume.form.profilePhotoDesc')}
-          </p>
-          <div className="space-y-3">
-            {profilePhotoAttachments.map((attachment) => (
-              <div
-                key={attachment.id}
-                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
-              >
-                <div className="flex items-center gap-3">
-                  {attachment.fileUrl && (
-                    <img
-                      src={attachment.fileUrl}
-                      alt="Profile"
-                      className="w-12 h-12 rounded object-cover"
-                    />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-theme-text-primary">
-                      {attachment.fileName}
-                    </p>
-                    <p className="text-xs text-theme-text-tertiary">
-                      {formatFileSize(attachment.fileSize)}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleDeleteAttachmentClick(attachment.id)}
-                  className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
-                >
-                  {t('common.delete')}
-                </button>
-              </div>
-            ))}
-            <label
-              className={`block cursor-pointer ${!resume?.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                disabled={!resume?.id || uploading}
-                onChange={handleFileChange(AttachmentType.PROFILE_PHOTO)}
-                className="hidden"
-              />
-              <div className="border-2 border-dashed border-theme-border-default rounded-soft p-4 text-center hover:border-theme-primary transition-colors">
-                <p className="text-sm text-theme-text-secondary">
-                  {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPhoto')}
-                </p>
-              </div>
-            </label>
-          </div>
-        </div>
+                                  <TextInput
+                                    label={t('resume.form.credentialUrl')}
+                                    type="url"
+                                    value={cert.credentialUrl || ''}
+                                    onChange={handleUpdateCertificateField(index, 'credentialUrl')}
+                                    placeholder={t('resume.form.credentialUrlPlaceholder')}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-theme-text-tertiary">
+                            <p>{t('resume.form.noCertificates')}</p>
+                          </div>
+                        )}
+                      </CollapsibleSection>
+                    </div>
+                  </SortableFormSection>
+                );
 
-        {/* Portfolio Files */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">
-            🎨 {t('resume.form.portfolioSection')}
-          </h3>
-          <p className="text-sm text-theme-text-secondary mb-3">{t('resume.form.portfolioDesc')}</p>
-          <div className="space-y-3">
-            {portfolioAttachments.map((attachment) => (
-              <div
-                key={attachment.id}
-                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
-              >
-                <div>
-                  <p className="text-sm font-medium text-theme-text-primary">
-                    {attachment.fileName}
-                  </p>
-                  <p className="text-xs text-theme-text-tertiary">
-                    {formatFileSize(attachment.fileSize)}
-                  </p>
-                  {attachment.title && (
-                    <p className="text-xs text-theme-text-secondary mt-1">{attachment.title}</p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleDeleteAttachmentClick(attachment.id)}
-                  className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
-                >
-                  {t('common.delete')}
-                </button>
-              </div>
-            ))}
-            <label
-              className={`block cursor-pointer ${!resume?.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                disabled={!resume?.id || uploading}
-                onChange={handleFileChange(AttachmentType.PORTFOLIO)}
-                className="hidden"
-              />
-              <div className="border-2 border-dashed border-theme-border-default rounded-soft p-4 text-center hover:border-theme-primary transition-colors">
-                <p className="text-sm text-theme-text-secondary">
-                  {uploading ? t('resume.form.uploading') : t('resume.form.clickToUploadPortfolio')}
-                </p>
-              </div>
-            </label>
-          </div>
-        </div>
+              case FormSectionType.KEY_ACHIEVEMENTS:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
+                  >
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <CollapsibleSection
+                        title={t('resume.form.keyAchievements')}
+                        icon="🏅"
+                        isExpanded={!collapsedSections.keyAchievements}
+                        onToggle={toggleSection('keyAchievements')}
+                        count={formData.keyAchievements?.length}
+                        variant="secondary"
+                        collapsibleOnDesktop
+                        headerAction={
+                          <Button
+                            variant="primary"
+                            onClick={handleAddKeyAchievement}
+                            size="sm"
+                            className="py-2 touch-manipulation"
+                          >
+                            + {t('common.add')}
+                          </Button>
+                        }
+                      >
+                        <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+                          {t('resume.form.keyAchievementsHint')}
+                        </p>
+                        {(formData.keyAchievements || []).length > 0 ? (
+                          <div className="space-y-4">
+                            {(formData.keyAchievements || []).map((achievement, index) => (
+                              <div
+                                key={index}
+                                className="border border-theme-border-subtle rounded-soft p-4 bg-theme-bg-input transition-colors duration-200"
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+                                  <div className="flex-1">
+                                    <TextArea
+                                      value={achievement}
+                                      onChange={handleUpdateKeyAchievement(index)}
+                                      rows={2}
+                                      placeholder={t('resume.form.achievementPlaceholder', {
+                                        index: index + 1,
+                                      })}
+                                    />
+                                  </div>
+                                  <Button
+                                    variant="danger"
+                                    onClick={handleRemoveAchievement(index)}
+                                    size="sm"
+                                    className="self-end sm:self-start py-2 touch-manipulation"
+                                  >
+                                    <span className="hidden sm:inline">
+                                      {t('resume.form.remove')}
+                                    </span>
+                                    <span className="sm:hidden">✕</span>
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-theme-text-tertiary">
+                            <p>{t('resume.form.noKeyAchievements')}</p>
+                          </div>
+                        )}
+                      </CollapsibleSection>
+                    </div>
+                  </SortableFormSection>
+                );
 
-        {/* Certificate Files */}
-        <div>
-          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">
-            🏆 {t('resume.form.certificatesSection')}
-          </h3>
-          <p className="text-sm text-theme-text-secondary mb-3">
-            {t('resume.form.certificatesDesc')}
-          </p>
-          <div className="space-y-3">
-            {certificateAttachments.map((attachment) => (
-              <div
-                key={attachment.id}
-                className="flex items-center justify-between bg-theme-bg-hover border border-theme-border-subtle rounded-soft p-3 transition-colors duration-200"
-              >
-                <div>
-                  <p className="text-sm font-medium text-theme-text-primary">
-                    {attachment.fileName}
-                  </p>
-                  <p className="text-xs text-theme-text-tertiary">
-                    {formatFileSize(attachment.fileSize)}
-                  </p>
-                  {attachment.title && (
-                    <p className="text-xs text-theme-text-secondary mt-1">{attachment.title}</p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleDeleteAttachmentClick(attachment.id)}
-                  className="px-3 py-1 text-sm text-theme-status-error-text hover:bg-theme-status-error-bg rounded transition-colors"
-                >
-                  {t('common.delete')}
-                </button>
-              </div>
-            ))}
-            <label
-              className={`block cursor-pointer ${!resume?.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                disabled={!resume?.id || uploading}
-                onChange={handleFileChange(AttachmentType.CERTIFICATE)}
-                className="hidden"
-              />
-              <div className="border-2 border-dashed border-theme-border-default rounded-soft p-4 text-center hover:border-theme-primary transition-colors">
-                <p className="text-sm text-theme-text-secondary">
-                  {uploading
-                    ? t('resume.form.uploading')
-                    : t('resume.form.clickToUploadCertificate')}
-                </p>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
+              case FormSectionType.APPLICATION_REASON:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
+                  >
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <CollapsibleSection
+                        title={t('resume.form.applicationReason')}
+                        icon="💡"
+                        isExpanded={!collapsedSections.applicationReason}
+                        onToggle={toggleSection('applicationReason')}
+                        variant="primary"
+                        collapsibleOnDesktop
+                      >
+                        <TextArea
+                          value={formData.applicationReason || ''}
+                          onChange={handleTextAreaChange('applicationReason')}
+                          rows={4}
+                          placeholder={t('resume.form.applicationReasonPlaceholder')}
+                          hint={t('resume.form.applicationReasonHint')}
+                        />
+                      </CollapsibleSection>
+                    </div>
+                  </SortableFormSection>
+                );
 
-      {/* Section Order Manager */}
-      {resume?.id && <SectionOrderManager sections={sections} onReorder={handleSectionsReorder} />}
+              case FormSectionType.ATTACHMENTS:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
+                  >
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <CollapsibleSection
+                        title={t('resume.form.attachments')}
+                        icon="📎"
+                        isExpanded={!collapsedSections.attachments}
+                        onToggle={toggleSection('attachments')}
+                        count={
+                          profilePhotoAttachments.length +
+                          portfolioAttachments.length +
+                          certificateAttachments.length
+                        }
+                        variant="secondary"
+                        collapsibleOnDesktop
+                      >
+                        <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+                          {t('resume.form.attachmentsDesc')}
+                        </p>
 
-      {/* Cover Letter (자기소개서) - At the bottom */}
-      <CollapsibleSection
-        title={t('resume.form.coverLetter')}
-        icon="📝"
-        isExpanded={!collapsedSections.coverLetter}
-        onToggle={toggleSection('coverLetter')}
-        variant="primary"
-      >
-        <textarea
-          value={formData.coverLetter || ''}
-          onChange={handleCoverLetterChange}
-          rows={6}
-          className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-input border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary focus:border-transparent transition-all text-theme-text-primary"
-          placeholder={t('resume.form.coverLetterPlaceholder')}
-        />
-        <p className="text-xs text-theme-text-tertiary mt-1">{t('resume.form.coverLetterHint')}</p>
-      </CollapsibleSection>
+                        {!resume?.id && (
+                          <div className="bg-theme-status-info-bg border border-theme-status-info-border rounded-soft p-4 mb-4">
+                            <p className="text-theme-status-info-text text-sm">
+                              💡 {t('resume.form.saveFirst')}
+                            </p>
+                          </div>
+                        )}
 
-      {/* Submit Buttons */}
-      {/* Auto-save indicator */}
+                        {uploadError && (
+                          <div className="bg-theme-status-error-bg border border-theme-status-error-border rounded-soft p-4 mb-4">
+                            <p className="text-theme-status-error-text text-sm">⚠️ {uploadError}</p>
+                          </div>
+                        )}
+
+                        {/* Profile Photo */}
+                        <div className="mb-6 p-4 border border-theme-border-subtle rounded-soft bg-theme-bg-hover">
+                          <h4 className="text-sm font-semibold text-theme-text-primary mb-3">
+                            📷 {t('resume.form.profilePhoto')}
+                          </h4>
+
+                          {profilePhotoAttachments.length > 0 ? (
+                            <div className="space-y-2">
+                              {profilePhotoAttachments.map((file) => (
+                                <div
+                                  key={file.id}
+                                  className="flex items-center justify-between p-2 bg-theme-bg-card border border-theme-border-subtle rounded"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-lg">🖼️</span>
+                                    <span className="text-sm text-theme-text-primary truncate">
+                                      {file.fileName}
+                                    </span>
+                                    <span className="text-xs text-theme-text-tertiary flex-shrink-0">
+                                      ({formatFileSize(file.fileSize)})
+                                    </span>
+                                  </div>
+                                  <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => handleDeleteAttachment(file.id)}
+                                    className="flex-shrink-0"
+                                  >
+                                    ✕
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <label
+                              className={`block cursor-pointer ${!resume?.id || uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                            >
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange(AttachmentType.PROFILE_PHOTO)}
+                                disabled={!resume?.id || uploading}
+                              />
+                              <div className="border-2 border-dashed border-theme-border-default rounded-soft p-3 text-center hover:border-theme-primary transition-colors">
+                                <p className="text-xs sm:text-sm text-theme-text-secondary">
+                                  {uploading
+                                    ? t('resume.form.uploading')
+                                    : t('resume.form.clickToUploadPhoto')}
+                                </p>
+                              </div>
+                            </label>
+                          )}
+                        </div>
+
+                        {/* Portfolio Files */}
+                        <div className="mb-6 p-4 border border-theme-border-subtle rounded-soft bg-theme-bg-hover">
+                          <h4 className="text-sm font-semibold text-theme-text-primary mb-3">
+                            📁 {t('resume.form.portfolio')}
+                          </h4>
+
+                          {portfolioAttachments.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              {portfolioAttachments.map((file) => (
+                                <div
+                                  key={file.id}
+                                  className="flex items-center justify-between p-2 bg-theme-bg-card border border-theme-border-subtle rounded"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-lg">📄</span>
+                                    <span className="text-sm text-theme-text-primary truncate">
+                                      {file.fileName}
+                                    </span>
+                                    <span className="text-xs text-theme-text-tertiary flex-shrink-0">
+                                      ({formatFileSize(file.fileSize)})
+                                    </span>
+                                  </div>
+                                  <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => handleDeleteAttachment(file.id)}
+                                    className="flex-shrink-0"
+                                  >
+                                    ✕
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <label
+                            className={`block cursor-pointer ${!resume?.id || uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                          >
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.doc,.docx,.ppt,.pptx"
+                              onChange={handleFileChange(AttachmentType.PORTFOLIO)}
+                              disabled={!resume?.id || uploading}
+                            />
+                            <div className="border-2 border-dashed border-theme-border-default rounded-soft p-3 text-center hover:border-theme-primary transition-colors">
+                              <p className="text-xs sm:text-sm text-theme-text-secondary">
+                                {uploading
+                                  ? t('resume.form.uploading')
+                                  : t('resume.form.clickToUploadPortfolio')}
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+
+                        {/* Certificate Files */}
+                        <div className="p-4 border border-theme-border-subtle rounded-soft bg-theme-bg-hover">
+                          <h4 className="text-sm font-semibold text-theme-text-primary mb-3">
+                            📜 {t('resume.form.certificateFiles')}
+                          </h4>
+
+                          {certificateAttachments.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              {certificateAttachments.map((file) => (
+                                <div
+                                  key={file.id}
+                                  className="flex items-center justify-between p-2 bg-theme-bg-card border border-theme-border-subtle rounded"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-lg">📄</span>
+                                    <span className="text-sm text-theme-text-primary truncate">
+                                      {file.fileName}
+                                    </span>
+                                    <span className="text-xs text-theme-text-tertiary flex-shrink-0">
+                                      ({formatFileSize(file.fileSize)})
+                                    </span>
+                                  </div>
+                                  <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => handleDeleteAttachment(file.id)}
+                                    className="flex-shrink-0"
+                                  >
+                                    ✕
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <label
+                            className={`block cursor-pointer ${!resume?.id || uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                          >
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={handleFileChange(AttachmentType.CERTIFICATE)}
+                              disabled={!resume?.id || uploading}
+                            />
+                            <div className="border-2 border-dashed border-theme-border-default rounded-soft p-3 text-center hover:border-theme-primary transition-colors">
+                              <p className="text-xs sm:text-sm text-theme-text-secondary">
+                                {uploading
+                                  ? t('resume.form.uploading')
+                                  : t('resume.form.clickToUploadCertificate')}
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      </CollapsibleSection>
+                    </div>
+                  </SortableFormSection>
+                );
+
+              case FormSectionType.COVER_LETTER:
+                return (
+                  <SortableFormSection
+                    key={section.id}
+                    id={section.id}
+                    dragHandleLabel={t('common.dragToReorder')}
+                  >
+                    <div className={section.visible ? '' : 'opacity-50'}>
+                      <CollapsibleSection
+                        title={t('resume.form.coverLetter')}
+                        icon="📝"
+                        isExpanded={!collapsedSections.coverLetter}
+                        onToggle={toggleSection('coverLetter')}
+                        count={coverLetterSections.length}
+                        variant="primary"
+                        collapsibleOnDesktop
+                        headerAction={
+                          <Button
+                            variant="primary"
+                            onClick={handleAddCoverLetterSection}
+                            size="sm"
+                            className="py-2 touch-manipulation"
+                          >
+                            + {t('common.add')}
+                          </Button>
+                        }
+                      >
+                        <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+                          {t('resume.form.coverLetterDescription')}
+                        </p>
+
+                        {coverLetterSections.length > 0 ? (
+                          <div className="space-y-4">
+                            {coverLetterSections.map((clSection, index) => (
+                              <div
+                                key={clSection.id}
+                                className="border border-theme-border-subtle rounded-soft p-4 bg-theme-bg-input transition-colors duration-200"
+                              >
+                                <div className="flex justify-between items-center mb-4">
+                                  <span className="text-xs text-theme-text-tertiary">
+                                    #{index + 1}
+                                  </span>
+                                  <Button
+                                    variant="danger"
+                                    onClick={handleRemoveCoverLetterSection(clSection.id)}
+                                    size="sm"
+                                    className="py-1.5 px-2 text-xs touch-manipulation"
+                                  >
+                                    <span className="hidden sm:inline">
+                                      {t('resume.form.remove')}
+                                    </span>
+                                    <span className="sm:hidden">✕</span>
+                                  </Button>
+                                </div>
+
+                                <div className="space-y-4">
+                                  <TextInput
+                                    label={t('resume.coverLetter.sectionTitle')}
+                                    value={clSection.title}
+                                    onChange={handleUpdateCoverLetterSection(clSection.id, 'title')}
+                                    placeholder={t('resume.coverLetter.sectionTitlePlaceholder')}
+                                  />
+
+                                  <TextArea
+                                    label={t('resume.coverLetter.sectionContent')}
+                                    value={clSection.content}
+                                    onChange={handleUpdateCoverLetterSection(
+                                      clSection.id,
+                                      'content',
+                                    )}
+                                    rows={6}
+                                    placeholder={t('resume.coverLetter.sectionContentPlaceholder')}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-theme-text-tertiary">
+                            <p className="mb-4">{t('resume.coverLetter.empty')}</p>
+                            <Button
+                              variant="secondary"
+                              onClick={handleAddCoverLetterSection}
+                              size="sm"
+                              className="touch-manipulation"
+                            >
+                              + {t('resume.coverLetter.addSection')}
+                            </Button>
+                          </div>
+                        )}
+
+                        <div className="mt-4 p-3 sm:p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-soft">
+                          <p className="text-xs sm:text-sm text-theme-status-info-text">
+                            💡 <strong>{t('resume.coverLetter.tipTitle')}</strong>{' '}
+                            {t('resume.coverLetter.tipDescription')}
+                          </p>
+                        </div>
+                      </CollapsibleSection>
+                    </div>
+                  </SortableFormSection>
+                );
+
+              default:
+                return null;
+            }
+          })}
+        </SortableContext>
+      </DndContext>
+
+      {/* Submit Buttons - Simplified: Save + Go Back only */}
       {draftSaved && (
         <div className="flex justify-end">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-theme-status-success-bg border border-theme-status-success-border rounded-soft text-theme-status-success-text text-xs sm:text-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-theme-status-success-bg border border-theme-status-success-border rounded-soft text-theme-status-success-text text-xs sm:text-sm">
             <span>✓</span>
             <span>{t('resume.success.saved')}</span>
           </div>
         </div>
       )}
-
-      {/* Mobile: Stacked buttons, Desktop: Horizontal layout */}
-      <div className="space-y-3 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
-        <button
-          type="button"
-          onClick={handleClearDraft}
-          className="hidden sm:block px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary underline transition-all"
-        >
-          {t('resume.form.deleteDraft')}
-        </button>
-
-        {/* Mobile: Primary actions first */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-theme-primary-dark to-theme-primary hover:from-theme-primary hover:to-theme-primary-light text-white font-semibold rounded-soft transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-theme-primary/30 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-sm sm:text-base"
-          >
-            {submitting ? t('resume.form.saving') : t('resume.form.saveAndPreview')}
-          </button>
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-input hover:bg-theme-bg-hover text-theme-primary rounded-soft font-semibold border-2 border-theme-primary transition-all touch-manipulation text-sm sm:text-base"
-          >
-            📝 {t('common.save')}
-          </button>
-          <button
-            type="button"
-            onClick={handleBack}
-            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-theme-bg-elevated hover:bg-theme-bg-hover text-theme-text-secondary rounded-soft font-semibold border border-theme-border-default transition-all touch-manipulation text-sm sm:text-base"
-          >
-            {t('common.cancel')}
-          </button>
-        </div>
-
-        {/* Mobile: Clear draft at bottom */}
-        <button
-          type="button"
-          onClick={handleClearDraft}
-          className="sm:hidden w-full px-4 py-2 text-xs text-theme-text-tertiary hover:text-theme-text-secondary transition-all"
-        >
-          {t('resume.form.deleteDraft')}
-        </button>
-      </div>
     </form>
   );
 }

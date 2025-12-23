@@ -1,5 +1,7 @@
 {
   "common": {
+    "back": "뒤로",
+    "goBack": "뒤로가기",
     "save": "저장",
     "cancel": "취소",
     "delete": "삭제",
@@ -20,7 +22,8 @@
     "endDate": "종료일",
     "present": "현재",
     "currentlyWorking": "현재 재직 중",
-    "showInPreview": "미리보기에 표시"
+    "showInPreview": "미리보기에 표시",
+    "dragToReorder": "드래그하여 순서 변경"
   },
   "loading": {
     "darkMode": "고요한 밤에 기록을 찾는 중이에요...",
@@ -279,6 +282,24 @@
       "education": "학력",
       "certifications": "자격증"
     },
+    "sectionOrder": {
+      "title": "섹션 순서 및 표시",
+      "description": "드래그하여 순서를 변경하고, 토글로 표시 여부를 설정하세요",
+      "show": "표시",
+      "hide": "숨기기",
+      "tipTitle": "팁:",
+      "tipDescription": "이력서 미리보기와 PDF에 이 순서대로 표시됩니다"
+    },
+    "coverLetter": {
+      "sectionTitle": "제목",
+      "sectionTitlePlaceholder": "예: 성장과정, 지원동기, 입사 후 포부",
+      "sectionContent": "내용",
+      "sectionContentPlaceholder": "해당 항목에 대한 내용을 작성하세요...",
+      "empty": "자기소개서 항목이 없습니다",
+      "addSection": "항목 추가",
+      "tipTitle": "팁:",
+      "tipDescription": "성장과정, 지원동기, 입사 후 포부 등의 항목을 추가하여 체계적인 자기소개서를 작성하세요"
+    },
     "descriptions": {
       "experience": "회사에서의 업무 경험을 추가하세요",
       "projects": "개인 또는 팀 프로젝트를 추가하세요",
@@ -473,6 +494,7 @@
       "coverLetter": "자기소개서",
       "coverLetterPlaceholder": "귀하의 배경, 강점, 그리고 이 직무에 적합한 이유를 작성해주세요...",
       "coverLetterHint": "본인의 배경, 경험, 그리고 차별화된 점을 설명",
+      "coverLetterDescription": "항목별로 제목과 내용을 작성하여 체계적인 자기소개서를 만들어보세요",
       "applicationReason": "지원 동기",
       "applicationReasonPlaceholder": "귀사에 지원하게 된 동기와 이유를 작성해주세요...",
       "applicationReasonHint": "회사의 비전, 직무의 매력, 본인의 강점과의 연결성 등을 작성",
@@ -492,7 +514,8 @@
       "credentialId": "자격증 ID",
       "credentialUrl": "인증 URL",
       "remove": "삭제",
-      "noCertificates": "아직 추가된 자격증이 없습니다. \"자격증 추가\"를 눌러 시작하세요.",
+      "noCertificates": "아직 추가된 자격증이 없습니다. \"+ 추가\"를 눌러 시작하세요.",
+      "noKeyAchievements": "아직 추가된 주요 성과가 없습니다. \"+ 추가\"를 눌러 시작하세요.",
       "attachments": "첨부파일",
       "attachmentsDesc": "프로필 사진(흑백), 포트폴리오, 자격증을 업로드하세요. 파일당 최대 10MB.",
       "saveFirst": "파일 업로드를 위해 먼저 이력서를 저장해주세요.",
@@ -542,7 +565,7 @@
       "keyAchievements": "⭐ 주요 성과",
       "keyAchievementsHint": "경력에서의 주요 업적 3-5개를 강조하세요",
       "achievementPlaceholder": "성과 #{{index}} - 예: \"RDB → Redis 리팩토링으로 Latency 48% 개선 및 대규모 트래픽 안정화\"",
-      "addCategory": "+ 카테고리 추가",
+      "addCategory": "카테고리 추가",
       "categoryNumber": "📚 카테고리 #{{index}}",
       "skillNumber": "기술 #{{index}}",
       "skillStack": "기술 스택",
@@ -573,9 +596,15 @@
       "linkedinPlaceholder": "https://linkedin.com/in/username",
       "addressPlaceholder": "서울특별시 강남구",
       "required": "필수",
-      "addSkillButton": "+ 기술 추가",
+      "addSkillButton": "기술 추가",
+      "skillsCount": "개 스킬",
       "moveUpButton": "위로 이동",
-      "moveDownButton": "아래로 이동"
+      "moveDownButton": "아래로 이동",
+      "addEducation": "학력 추가"
+    },
+    "education": {
+      "universityPlaceholder": "예: 서울대학교",
+      "majorPlaceholder": "예: 컴퓨터공학"
     },
     "experienceForm": {
       "company": "회사",
@@ -588,7 +617,7 @@
       "removeCompany": "회사 삭제",
       "experiencePeriod": "경력 기간:",
       "projects": "📁 이 회사의 프로젝트",
-      "addProject": "+ 프로젝트 추가",
+      "addProject": "프로젝트 추가",
       "noProjects": "프로젝트가 없습니다. \"+ 프로젝트 추가\"를 눌러 추가하세요.",
       "projectName": "프로젝트명",
       "yourRole": "담당 역할",
@@ -597,13 +626,13 @@
       "githubUrl": "GitHub URL",
       "keyAchievements": "주요 성과",
       "depthLevels": "(4단계 깊이)",
-      "addAchievement": "+ 성과 추가",
+      "addAchievement": "성과 추가",
       "noAchievements": "성과가 없습니다. \"+ 성과 추가\"를 눌러 추가하세요.",
       "achievementPlaceholder": "성과 설명...",
       "addSubItem": "+ 하위",
       "collapse": "접기",
       "expand": "펼치기",
-      "addExperience": "+ 경력 추가",
+      "addExperience": "경력 추가",
       "noExperience": "경력이 없습니다. \"+ 경력 추가\"를 눌러 시작하세요.",
       "dragToReorder": "드래그하여 순서 변경",
       "ongoingProject": "진행중이면 비워두세요",
