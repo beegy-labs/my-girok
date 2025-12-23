@@ -946,6 +946,87 @@ type PdfLocale = 'ko' | 'en' | 'ja';
 - Duration format (1년 2개월 / 1 yrs 2 mos / 1年2ヶ月)
 - Degree types and gender labels
 
+### PDF Rendering Crash Prevention (Updated 2025-12)
+
+**@react-pdf/renderer Reconciler Bug Workaround**:
+
+When dynamic content is deleted (e.g., clearing applicationReason field), the reconciler crashes with "Eo is not a function" error. This is a known bug ([#3153](https://github.com/diegomura/react-pdf/issues/3153)).
+
+**Solution**: Use stable key with safeResume wrapper to prevent crashes:
+
+```typescript
+// ResumeEditPage.tsx - Stable key based on resume ID
+<ResumePreviewContainer
+  key={`preview-${previewData.id || 'new'}`}
+  resume={previewData}
+/>
+
+// ResumePreview.tsx - safeResume wrapper handles empty values
+const safeResume = useMemo(() => ({
+  ...resume,
+  name: resume.name || '',
+  applicationReason: resume.applicationReason || '',
+  // ... all fields with defaults
+}), [resume]);
+```
+
+**Text Sanitization for PDF**:
+
+Emojis and special Unicode characters crash PDF font rendering. Use `sanitizeText()`:
+
+```typescript
+// ResumePdfDocument.tsx - Remove problematic characters
+function sanitizeText(text: string | undefined | null): string {
+  if (!text) return '';
+  return String(text)
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')  // Emojis
+    .replace(/[\u{2600}-\u{26FF}]/gu, '')    // Misc symbols
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')   // Zero-width chars
+    // ... more patterns in source
+}
+
+// Apply to all user input text in PDF
+<Text>{sanitizeText(resume.applicationReason)}</Text>
+```
+
+**safeResume Wrapper** (ResumePreview.tsx):
+
+Prevents undefined/null errors in PDF generation:
+
+```typescript
+const safeResume = useMemo(
+  () => ({
+    ...resume,
+    name: resume.name || '',
+    email: resume.email || '',
+    skills: resume.skills || [],
+    experiences: resume.experiences || [],
+    // ... all fields with defaults
+  }),
+  [resume],
+);
+```
+
+**Profile Image Base64 Conversion** (imageProxy.ts):
+
+Avoids CORS issues in PDF generation by converting images to base64:
+
+```typescript
+import { imageToBase64 } from '../../utils/imageProxy';
+
+// In ResumePreview.tsx
+const [profileImageBase64, setProfileImageBase64] = useState<string | null>(null);
+
+useEffect(() => {
+  if (resume.profileImage) {
+    imageToBase64(resume.profileImage).then(setProfileImageBase64);
+  }
+}, [resume.profileImage]);
+
+// Pass to PDF document
+<ResumePdfDocument profileImageBase64={profileImageBase64} />
+```
+
 ### PDF Export
 
 ```typescript
@@ -1272,6 +1353,14 @@ const loadData = useCallback(async () => {
 useEffect(() => {
   loadData();
 }, [loadData]);
+
+// ✅ DO - Use useRef for callback props (when onChange comes from parent)
+const onChangeRef = useRef(onChange);
+onChangeRef.current = onChange;
+
+useEffect(() => {
+  onChangeRef.current?.(data);
+}, [data]);
 ```
 
 ### Unused Variables Pattern

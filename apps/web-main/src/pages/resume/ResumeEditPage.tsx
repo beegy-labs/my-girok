@@ -247,16 +247,17 @@ export default function ResumeEditPage() {
 
               {previewData ? (
                 <ResumePreviewContainer
+                  key={`preview-${previewData.id || 'new'}`}
                   resume={previewData}
-                  maxHeight="calc(100vh - 320px)"
-                  containerClassName="border-2 border-theme-border-default rounded-soft"
+                  maxHeight="calc(100svh - 200px)"
+                  containerClassName="border-2 border-theme-border-default rounded-soft min-h-[60svh] lg:min-h-[500px]"
                 />
               ) : (
                 <Card
                   variant="secondary"
                   padding="xl"
                   radius="lg"
-                  className="text-center border-2 border-theme-border-default"
+                  className="text-center border-2 border-theme-border-default min-h-[60svh] lg:min-h-[500px] flex items-center justify-center"
                 >
                   <p className="text-theme-text-tertiary text-base">{t('errors.startFilling')}</p>
                 </Card>
