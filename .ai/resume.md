@@ -603,7 +603,15 @@ const handleSubmit = async (data) => {
 
 ## Recent Updates
 
-**2025-12-24**: Section Order Manager restructuring and PDF image export fix (#322)
+**2025-12-24 (Part 2)**: 8pt Grid System compliance fix
+
+- Fixed remaining 8pt Grid violations across resume components:
+  - `ResumeForm.tsx`: `space-y-3` → `space-y-4`, `mb-3` → `mb-4`, `gap-3` → `gap-4`, `px-3` → `px-4`, `p-3` → `p-4`
+  - `ResumePreview.tsx`: `py-3` → `py-4`, `gap-3` → `gap-4`
+- All spacing now follows 8pt Grid System (8px, 16px, 24px, 32px increments)
+- Files changed: `ResumeForm.tsx`, `ResumePreview.tsx`
+
+**2025-12-24 (Part 1)**: Section Order Manager restructuring and PDF image export fix (#322)
 
 - Restructured `FormSectionType` enum to only include 8 existing sections (removed BASIC_INFO, PROJECT, MILITARY)
 - Updated `DEFAULT_SECTIONS` with Korean resume priority order:
@@ -612,7 +620,7 @@ const handleSubmit = async (data) => {
 - Fixed PDF image download using `imageToBase64()` from `imageProxy.ts` (canvas-based approach)
 - Removed visibility toggles from individual section cards (managed only in SectionOrderManager)
 - Extracted `SECTION_ICONS` and `SECTION_LABEL_KEYS` to module scope for performance
-- Fixed 8pt Grid violations: `p-3` → `p-2`, `gap-3` → `gap-4`
+- Fixed initial 8pt Grid violations: `p-3` → `p-2`, `gap-3` → `gap-4` in `SectionOrderManager.tsx`
 - Files changed: `ResumeForm.tsx`, `SectionOrderManager.tsx`, `pdf.ts`
 
 **2025-12-23**: PDF rendering crash fix and stability improvements (#321)

@@ -899,7 +899,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   );
 
   return (
-    <form id="resume-form" onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
+    <form id="resume-form" onSubmit={handleSubmit} className="space-y-4">
       {/* Resume Settings - Always expanded, not collapsible */}
       <CollapsibleSection
         title={t('resume.sections.settings')}
@@ -1058,7 +1058,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           {/* Display preview (pending upload) or current uploaded photo */}
           {/* New photo preview (from temp upload) */}
           {profilePhotoPreview && (
-            <div className="mb-3 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-4">
               <img
                 src={profilePhotoPreview}
                 alt="Profile Preview"
@@ -1072,7 +1072,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   type="button"
                   onClick={handleProfilePhotoCancel}
                   disabled={uploading}
-                  className="px-3 py-1 text-xs bg-theme-bg-elevated text-theme-text-secondary rounded-soft hover:bg-theme-bg-hover disabled:opacity-50"
+                  className="px-4 py-2 text-xs bg-theme-bg-elevated text-theme-text-secondary rounded-soft hover:bg-theme-bg-hover disabled:opacity-50"
                 >
                   {t('common.cancel')}
                 </button>
@@ -1083,7 +1083,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           {!profilePhotoPreview &&
             formData.profileImage &&
             !formData.profileImage.startsWith('blob:') && (
-              <div className="mb-3 flex items-center gap-3">
+              <div className="mb-4 flex items-center gap-4">
                 <img
                   src={formData.profileImage}
                   alt="Profile"
@@ -1097,7 +1097,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                   type="button"
                   onClick={handleProfilePhotoDelete}
                   disabled={uploading}
-                  className="px-3 py-2 text-xs sm:text-sm bg-theme-status-error-bg text-theme-status-error-text rounded-soft hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                  className="px-4 py-2 text-xs sm:text-sm bg-theme-status-error-bg text-theme-status-error-text rounded-soft hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                 >
                   {uploading ? t('resume.form.deletingPhoto') : t('resume.form.deletePhoto')}
                 </button>
@@ -1107,7 +1107,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           {!profilePhotoPreview &&
             formData.profileImage &&
             formData.profileImage.startsWith('blob:') && (
-              <div className="mb-3 p-3 bg-theme-status-error-bg border border-theme-status-error-border rounded-soft">
+              <div className="mb-4 p-4 bg-theme-status-error-bg border border-theme-status-error-border rounded-soft">
                 <p className="text-xs text-theme-status-error-text">
                   ⚠️ {t('resume.form.invalidImageUrl')}
                 </p>
@@ -1799,7 +1799,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                           </div>
                         )}
 
-                        <div className="mt-4 p-3 sm:p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-soft">
+                        <div className="mt-4 p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-soft">
                           <p className="text-xs sm:text-sm text-theme-status-info-text">
                             💡 <strong>{t('resume.coverLetter.tipTitle')}</strong>{' '}
                             {t('resume.coverLetter.tipDescription')}

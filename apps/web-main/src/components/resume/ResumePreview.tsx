@@ -265,8 +265,8 @@ export default function ResumePreview({
       {/* Toolbar (hidden in print) */}
       {showToolbar && (
         <div className="print:hidden mb-6 relative z-0">
-          <div className="w-full lg:max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-sm shadow-theme-sm px-4 py-3 transition-colors duration-200">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="w-full lg:max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-sm shadow-theme-sm px-4 py-4 transition-colors duration-200">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 {/* Paper Size Selector */}
                 <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-soft p-1">
