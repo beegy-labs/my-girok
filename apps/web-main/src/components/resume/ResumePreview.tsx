@@ -68,13 +68,28 @@ export default function ResumePreview({
 
   // Load profile image as base64 (Best Practice 2025: avoids CORS issues in PDF generation)
   useEffect(() => {
+    let isMounted = true;
+
     if (resume.profileImage) {
-      imageToBase64(resume.profileImage).then((base64) => {
-        setProfileImageBase64(base64);
-      });
+      imageToBase64(resume.profileImage)
+        .then((base64) => {
+          if (isMounted) {
+            setProfileImageBase64(base64);
+          }
+        })
+        .catch(() => {
+          // Silently handle errors - placeholder will be shown in PDF
+          if (isMounted) {
+            setProfileImageBase64(null);
+          }
+        });
     } else {
       setProfileImageBase64(null);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [resume.profileImage]);
 
   // Handle paper size change (curried - 2025 best practice)

@@ -56,6 +56,10 @@ const DEFAULT_SECTIONS = [
   { id: '5', type: SectionType.CERTIFICATE, order: 4, visible: true },
 ] as const;
 
+// Debounce delay for form change callback (ms)
+// Prevents excessive PDF re-generation during typing (Over-Engineering Policy: <16ms render target)
+const FORM_CHANGE_DEBOUNCE_MS = 800;
+
 /**
  * Format file size in human-readable format (2025 best practice: pure function outside component)
  * @param bytes - File size in bytes
@@ -189,6 +193,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   // Ref for profile photo file input (to reset value after delete)
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
 
+  // Helper to reset file input (allows re-selecting same file after delete)
+  const resetProfilePhotoInput = useCallback(() => {
+    if (profilePhotoInputRef.current) {
+      profilePhotoInputRef.current.value = '';
+    }
+  }, []);
+
   // Section ordering - using module-scope constant (2025 best practice)
   const [sections, setSections] = useState(
     resume?.sections?.sort((a, b) => a.order - b.order) || [...DEFAULT_SECTIONS],
@@ -236,14 +247,13 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
-  // Trigger onChange when formData or sections change (debounced 800ms)
-  // Debounce prevents excessive PDF re-generation during typing (Over-Engineering Policy: <16ms render target)
+  // Trigger onChange when formData or sections change (debounced)
   useEffect(() => {
     if (!onChangeRef.current) return;
 
     const debounceTimeout = setTimeout(() => {
       onChangeRef.current?.(formData);
-    }, 800);
+    }, FORM_CHANGE_DEBOUNCE_MS);
 
     return () => {
       clearTimeout(debounceTimeout);
@@ -423,10 +433,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     if (!profilePhoto) {
       // Just clear the URL if no attachment exists
       setFormData((prev) => ({ ...prev, profileImage: '' }));
-      // Reset file input to allow re-selecting after deletion
-      if (profilePhotoInputRef.current) {
-        profilePhotoInputRef.current.value = '';
-      }
+      resetProfilePhotoInput();
       return;
     }
 
@@ -438,10 +445,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     try {
       await deleteAttachment(resume.id, profilePhoto.id);
       setFormData((prev) => ({ ...prev, profileImage: '' }));
-      // Reset file input to allow re-selecting after deletion
-      if (profilePhotoInputRef.current) {
-        profilePhotoInputRef.current.value = '';
-      }
+      resetProfilePhotoInput();
       await loadAttachments();
       alert(t('resume.form.photoDeleteSuccess'));
     } catch (error) {
@@ -450,7 +454,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     } finally {
       setUploading(false);
     }
-  }, [resume?.id, attachments, t, loadAttachments]);
+  }, [resume?.id, attachments, t, loadAttachments, resetProfilePhotoInput]);
 
   // Birth date and gender change handlers
   const handleBirthDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

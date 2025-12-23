@@ -247,7 +247,7 @@ export default function ResumeEditPage() {
 
               {previewData ? (
                 <ResumePreviewContainer
-                  key={`preview-${Date.now()}`}
+                  key={`preview-${previewData.id || 'new'}`}
                   resume={previewData}
                   maxHeight="calc(100svh - 200px)"
                   containerClassName="border-2 border-theme-border-default rounded-soft min-h-[60svh] lg:min-h-[500px]"

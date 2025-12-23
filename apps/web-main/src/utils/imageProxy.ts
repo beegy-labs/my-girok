@@ -3,6 +3,9 @@
  * Converts MinIO image URLs to use backend proxy for CORS support
  */
 
+// Image load timeout for slow connections (ms)
+const IMAGE_LOAD_TIMEOUT_MS = 10000;
+
 // Dev-only logging helper (tree-shaken in production builds)
 const devLog = (message: string, ...args: unknown[]) => {
   if (import.meta.env.DEV) {
@@ -85,7 +88,7 @@ export async function imageToBase64(imageUrl: string | null | undefined): Promis
         devWarn('Image load timeout:', fixedUrl);
         resolve(null);
       }
-    }, 10000);
+    }, IMAGE_LOAD_TIMEOUT_MS);
 
     img.src = fixedUrl;
   });

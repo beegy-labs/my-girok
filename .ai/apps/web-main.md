@@ -952,14 +952,22 @@ type PdfLocale = 'ko' | 'en' | 'ja';
 
 When dynamic content is deleted (e.g., clearing applicationReason field), the reconciler crashes with "Eo is not a function" error. This is a known bug ([#3153](https://github.com/diegomura/react-pdf/issues/3153)).
 
-**Solution**: Force remount on data changes with dynamic key:
+**Solution**: Use stable key with safeResume wrapper to prevent crashes:
 
 ```typescript
-// ResumeEditPage.tsx - Force remount to avoid reconciler bug
+// ResumeEditPage.tsx - Stable key based on resume ID
 <ResumePreviewContainer
-  key={`preview-${Date.now()}`}
+  key={`preview-${previewData.id || 'new'}`}
   resume={previewData}
 />
+
+// ResumePreview.tsx - safeResume wrapper handles empty values
+const safeResume = useMemo(() => ({
+  ...resume,
+  name: resume.name || '',
+  applicationReason: resume.applicationReason || '',
+  // ... all fields with defaults
+}), [resume]);
 ```
 
 **Text Sanitization for PDF**:
