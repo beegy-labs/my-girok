@@ -36,8 +36,11 @@ RUN pnpm build
 # Production stage
 FROM node:22-alpine AS production
 
-# Install security updates
-RUN apk upgrade --no-cache
+# Install security updates and goose for migrations
+RUN apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates && \
+    wget -qO- https://github.com/pressly/goose/releases/download/v3.24.1/goose_linux_x86_64 -O /usr/local/bin/goose && \
+    chmod +x /usr/local/bin/goose
 
 WORKDIR /app
 
@@ -61,6 +64,9 @@ COPY --chown=node:node --from=builder /app/packages/types/package.json ./package
 COPY --chown=node:node --from=builder /app/packages/nest-common/dist ./packages/nest-common/dist
 COPY --chown=node:node --from=builder /app/packages/nest-common/package.json ./packages/nest-common/package.json
 COPY --chown=node:node --from=builder /app/services/auth-service/dist ./services/auth-service/dist
+
+# Copy goose migrations
+COPY --chown=node:node --from=builder /app/services/auth-service/migrations ./services/auth-service/migrations
 
 # Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production
