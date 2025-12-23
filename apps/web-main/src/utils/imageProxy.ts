@@ -4,6 +4,81 @@
  */
 
 /**
+ * Check if running in local development environment
+ */
+export function isLocalEnvironment(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+/**
+ * Fix bucket name in image URL (my-girok-resumes -> my-girok-dev-resumes for dev)
+ */
+export function fixBucketName(imageUrl: string | null | undefined): string | null {
+  if (!imageUrl) return null;
+  // Replace production bucket with dev bucket
+  return imageUrl.replace('/my-girok-resumes/', '/my-girok-dev-resumes/');
+}
+
+/**
+ * Convert image URL to base64 data URL
+ * Used in local environment to bypass CORS/proxy issues
+ * @param imageUrl - Image URL to convert
+ * @returns Promise<string | null> - Base64 data URL or null on failure
+ */
+export async function imageToBase64(imageUrl: string | null | undefined): Promise<string | null> {
+  if (!imageUrl) return null;
+
+  // Fix bucket name for dev environment
+  const fixedUrl = fixBucketName(imageUrl) || imageUrl;
+
+  // Use canvas approach to convert image to base64
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.warn('Failed to get canvas context');
+          resolve(null);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0);
+        const base64 = canvas.toDataURL('image/jpeg', 0.9);
+        console.log('Image converted to base64 successfully via canvas');
+        resolve(base64);
+      } catch (error) {
+        console.warn('Canvas toDataURL failed (CORS):', error);
+        resolve(null);
+      }
+    };
+
+    img.onerror = () => {
+      console.warn('Image load failed:', fixedUrl);
+      resolve(null);
+    };
+
+    // Set timeout for slow loading images
+    setTimeout(() => {
+      if (!img.complete) {
+        console.warn('Image load timeout:', fixedUrl);
+        resolve(null);
+      }
+    }, 10000);
+
+    img.src = fixedUrl;
+  });
+}
+
+/**
  * Convert MinIO image URL to proxy URL
  * @param imageUrl - Original MinIO image URL
  * @returns Proxy URL with CORS headers
@@ -21,7 +96,7 @@ export function getProxyImageUrl(imageUrl: string | null | undefined): string | 
 
     // Remove leading slash and bucket name
     // Expected format: /bucketName/fileKey
-    const parts = pathname.split('/').filter(p => p);
+    const parts = pathname.split('/').filter((p) => p);
 
     if (parts.length < 2) {
       // Invalid URL format, return original

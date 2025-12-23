@@ -1,16 +1,13 @@
+import { Document, Page, Text, View, Image, StyleSheet, Font } from '@react-pdf/renderer';
 import {
-  Document,
-  Page,
-  Text,
-  View,
-  Image,
-  StyleSheet,
-  Font,
-} from '@react-pdf/renderer';
-import { Resume, Gender, getAge, calculateExperienceDuration, calculateTotalExperienceWithOverlap } from '../../api/resume';
+  Resume,
+  Gender,
+  getAge,
+  calculateExperienceDuration,
+  calculateTotalExperienceWithOverlap,
+} from '../../api/resume';
 import { PaperSizeKey } from '../../constants/paper';
 import { sortByOrder, getBulletSymbol } from '../../utils/hierarchical-renderer';
-import { getProxyImageUrl } from '../../utils/imageProxy';
 
 // Supported locales for PDF
 export type PdfLocale = 'ko' | 'en' | 'ja';
@@ -125,6 +122,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: '#d1d5db',
+  },
+  profileImagePlaceholder: {
+    width: 85,
+    height: 105,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileImagePlaceholderText: {
+    fontSize: 8,
+    color: '#9ca3af',
+    textAlign: 'center',
   },
   headerInfo: {
     flex: 1,
@@ -378,7 +390,10 @@ const styles = StyleSheet.create({
 
 // Multilingual translations for PDF
 // Supports Korean (ko), English (en), and Japanese (ja)
-const translations: Record<PdfLocale, Record<string, string | ((params: Record<string, any>) => string)>> = {
+const translations: Record<
+  PdfLocale,
+  Record<string, string | ((params: Record<string, any>) => string)>
+> = {
   ko: {
     'resume.genderLabels.MALE': '남',
     'resume.genderLabels.FEMALE': '여',
@@ -529,6 +544,31 @@ interface ResumePdfDocumentProps {
   isGrayscaleMode?: boolean;
   /** Locale for PDF text (ko, en, ja). Defaults to 'ko' */
   locale?: PdfLocale;
+  /** Base64 encoded profile image (passed from ResumePreview to avoid CORS issues) */
+  profileImageBase64?: string | null;
+}
+
+/**
+ * Sanitize text for PDF rendering - removes characters that can cause errors
+ * @react-pdf/renderer crashes when rendering glyphs not present in the registered font
+ */
+function sanitizeText(text: string | undefined | null): string {
+  if (!text) return '';
+  return String(text)
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+    .replace(/[\u{2600}-\u{26FF}]/gu, '')
+    .replace(/[\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+    .replace(/[\u{1F000}-\u{1F02F}]/gu, '')
+    .replace(/[\u{1F0A0}-\u{1F0FF}]/gu, '')
+    .replace(/[\u{E0000}-\u{E007F}]/gu, '')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    .replace(/[\u{1F100}-\u{1F1FF}]/gu, '')
+    .replace(/[\u{1FA00}-\u{1FAFF}]/gu, '')
+    .replace(/[\u{2300}-\u{23FF}]/gu, '')
+    .replace(/[\u{2B00}-\u{2BFF}]/gu, '')
+    .replace(/\u3000/g, ' ');
 }
 
 // Hierarchical description renderer for PDF
@@ -545,7 +585,7 @@ function HierarchicalDescription({ items, depth = 0 }: { items: any[]; depth?: n
         <View key={idx}>
           <View style={[styles.hierarchicalItem, { paddingLeft: depth * 12 }]}>
             <Text style={styles.hierarchicalBullet}>{getBulletSymbol(depth)}</Text>
-            <Text style={styles.hierarchicalContent}>{item.content}</Text>
+            <Text style={styles.hierarchicalContent}>{sanitizeText(item.content)}</Text>
           </View>
           {item.children && item.children.length > 0 && (
             <HierarchicalDescription items={item.children} depth={depth + 1} />
@@ -566,32 +606,39 @@ function SkillsSection({ skills, t }: { skills: any[]; t: TranslateFn }) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{t('resume.sections.skills')}</Text>
-      {skills.sort((a, b) => a.order - b.order).map((skill, idx) => (
-        <View key={idx} style={styles.skillCategory}>
-          <Text style={styles.skillCategoryTitle}>{skill.category}</Text>
-          <View style={styles.skillItems}>
-            {Array.isArray(skill.items) && skill.items
-              .filter((item: any) => typeof item === 'string' ? item?.trim() : item?.name?.trim())
-              .map((item: any, itemIdx: number) => {
-              if (typeof item === 'string') {
-                return (
-                  <Text key={itemIdx} style={styles.skillItem}>• {item}</Text>
-                );
-              }
-              return (
-                <View key={itemIdx}>
-                  <Text style={styles.skillItem}>• {item.name}</Text>
-                  {item.descriptions && item.descriptions.length > 0 && (
-                    <View style={{ paddingLeft: 8 }}>
-                      <HierarchicalDescription items={item.descriptions} />
-                    </View>
-                  )}
-                </View>
-              );
-            })}
+      {skills
+        .sort((a, b) => a.order - b.order)
+        .map((skill, idx) => (
+          <View key={idx} style={styles.skillCategory}>
+            <Text style={styles.skillCategoryTitle}>{sanitizeText(skill.category)}</Text>
+            <View style={styles.skillItems}>
+              {Array.isArray(skill.items) &&
+                skill.items
+                  .filter((item: any) =>
+                    typeof item === 'string' ? item?.trim() : item?.name?.trim(),
+                  )
+                  .map((item: any, itemIdx: number) => {
+                    if (typeof item === 'string') {
+                      return (
+                        <Text key={itemIdx} style={styles.skillItem}>
+                          • {sanitizeText(item)}
+                        </Text>
+                      );
+                    }
+                    return (
+                      <View key={itemIdx}>
+                        <Text style={styles.skillItem}>• {sanitizeText(item.name)}</Text>
+                        {item.descriptions && item.descriptions.length > 0 && (
+                          <View style={{ paddingLeft: 8 }}>
+                            <HierarchicalDescription items={item.descriptions} />
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
+            </View>
           </View>
-        </View>
-      ))}
+        ))}
     </View>
   );
 }
@@ -601,72 +648,86 @@ function ExperienceSection({ experiences, t }: { experiences: any[]; t: Translat
   if (experiences.length === 0) return null;
 
   const totalDuration = calculateTotalExperienceWithOverlap(experiences);
-  const durationText = totalDuration.years > 0 || totalDuration.months > 0
-    ? ` (${t('resume.experience.duration', { years: totalDuration.years, months: totalDuration.months })})`
-    : '';
+  const durationText =
+    totalDuration.years > 0 || totalDuration.months > 0
+      ? ` (${t('resume.experience.duration', { years: totalDuration.years, months: totalDuration.months })})`
+      : '';
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
-        {t('resume.sections.experience')}{durationText}
+        {t('resume.sections.experience')}
+        {durationText}
       </Text>
-      {experiences.sort((a, b) => a.order - b.order).map((exp, idx) => (
-        <View key={idx} style={styles.experienceItem}>
-          <View style={styles.experienceHeader}>
-            <View>
-              <Text style={styles.companyName}>{exp.company}</Text>
-              {exp.startDate && (
-                <Text style={styles.duration}>
-                  {(() => {
-                    const duration = calculateExperienceDuration(
-                      exp.startDate,
-                      exp.endDate,
-                      exp.isCurrentlyWorking
-                    );
-                    return t('resume.experience.duration', { years: duration.years, months: duration.months });
-                  })()}
-                </Text>
-              )}
+      {experiences
+        .sort((a, b) => a.order - b.order)
+        .map((exp, idx) => (
+          <View key={idx} style={styles.experienceItem}>
+            <View style={styles.experienceHeader}>
+              <View>
+                <Text style={styles.companyName}>{sanitizeText(exp.company)}</Text>
+                {exp.startDate && (
+                  <Text style={styles.duration}>
+                    {(() => {
+                      const duration = calculateExperienceDuration(
+                        exp.startDate,
+                        exp.endDate,
+                        exp.isCurrentlyWorking,
+                      );
+                      return t('resume.experience.duration', {
+                        years: duration.years,
+                        months: duration.months,
+                      });
+                    })()}
+                  </Text>
+                )}
+              </View>
+              <Text style={styles.dateRange}>
+                {exp.startDate} -{' '}
+                {exp.isCurrentlyWorking
+                  ? t('resume.experience.currentlyWorking')
+                  : exp.endDate || t('resume.experience.currentlyWorking')}
+              </Text>
             </View>
-            <Text style={styles.dateRange}>
-              {exp.startDate} - {exp.isCurrentlyWorking ? t('resume.experience.currentlyWorking') : (exp.endDate || t('resume.experience.currentlyWorking'))}
-            </Text>
-          </View>
-          <Text style={styles.position}>{exp.finalPosition}</Text>
-          <Text style={styles.jobTitle}>{exp.jobTitle}</Text>
+            <Text style={styles.position}>{sanitizeText(exp.finalPosition)}</Text>
+            <Text style={styles.jobTitle}>{sanitizeText(exp.jobTitle)}</Text>
 
-          {exp.projects && exp.projects.length > 0 && (
-            <View style={styles.projectContainer}>
-              {exp.projects.sort((a: any, b: any) => a.order - b.order).map((project: any, projectIdx: number) => (
-                <View key={projectIdx} style={styles.projectItem}>
-                  <View style={styles.projectHeader}>
-                    <Text style={styles.projectName}>{project.name}</Text>
-                    <Text style={styles.dateRange}>
-                      {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
-                    </Text>
-                  </View>
-                  {project.role?.trim() && (
-                    <Text style={styles.projectRole}>{project.role}</Text>
-                  )}
-                  {project.description?.trim() && (
-                    <Text style={styles.projectDescription}>{project.description}</Text>
-                  )}
-                  {project.techStack && project.techStack.length > 0 && (
-                    <Text style={styles.techStack}>
-                      {t('resume.preview.tech')}: {project.techStack.join(', ')}
-                    </Text>
-                  )}
-                  {project.achievements && project.achievements.length > 0 && (
-                    <View style={{ marginTop: 4 }}>
-                      <HierarchicalDescription items={project.achievements} />
+            {exp.projects && exp.projects.length > 0 && (
+              <View style={styles.projectContainer}>
+                {exp.projects
+                  .sort((a: any, b: any) => a.order - b.order)
+                  .map((project: any, projectIdx: number) => (
+                    <View key={projectIdx} style={styles.projectItem}>
+                      <View style={styles.projectHeader}>
+                        <Text style={styles.projectName}>{sanitizeText(project.name)}</Text>
+                        <Text style={styles.dateRange}>
+                          {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
+                        </Text>
+                      </View>
+                      {project.role?.trim() && (
+                        <Text style={styles.projectRole}>{sanitizeText(project.role)}</Text>
+                      )}
+                      {project.description?.trim() && (
+                        <Text style={styles.projectDescription}>
+                          {sanitizeText(project.description)}
+                        </Text>
+                      )}
+                      {project.techStack && project.techStack.length > 0 && (
+                        <Text style={styles.techStack}>
+                          {t('resume.preview.tech')}: {project.techStack.join(', ')}
+                        </Text>
+                      )}
+                      {project.achievements && project.achievements.length > 0 && (
+                        <View style={{ marginTop: 4 }}>
+                          <HierarchicalDescription items={project.achievements} />
+                        </View>
+                      )}
                     </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-      ))}
+                  ))}
+              </View>
+            )}
+          </View>
+        ))}
     </View>
   );
 }
@@ -678,22 +739,25 @@ function EducationSection({ educations, t }: { educations: any[]; t: TranslateFn
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{t('resume.sections.education')}</Text>
-      {educations.sort((a, b) => a.order - b.order).map((edu, idx) => (
-        <View key={idx} style={styles.educationItem}>
-          <View style={styles.educationHeader}>
-            <View>
-              <Text style={styles.schoolName}>{edu.school}</Text>
-              <Text style={styles.degree}>
-                {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : t('resume.preview.degree')} {edu.major}
+      {educations
+        .sort((a, b) => a.order - b.order)
+        .map((edu, idx) => (
+          <View key={idx} style={styles.educationItem}>
+            <View style={styles.educationHeader}>
+              <View>
+                <Text style={styles.schoolName}>{sanitizeText(edu.school)}</Text>
+                <Text style={styles.degree}>
+                  {edu.degree ? t(`resume.degreeTypes.${edu.degree}`) : t('resume.preview.degree')}{' '}
+                  {sanitizeText(edu.major)}
+                </Text>
+                {edu.gpa?.trim() && <Text style={styles.gpa}>GPA: {sanitizeText(edu.gpa)}</Text>}
+              </View>
+              <Text style={styles.dateRange}>
+                {edu.startDate} - {edu.endDate || t('resume.preview.present')}
               </Text>
-              {edu.gpa?.trim() && <Text style={styles.gpa}>GPA: {edu.gpa}</Text>}
             </View>
-            <Text style={styles.dateRange}>
-              {edu.startDate} - {edu.endDate || t('resume.preview.present')}
-            </Text>
           </View>
-        </View>
-      ))}
+        ))}
     </View>
   );
 }
@@ -705,19 +769,22 @@ function CertificatesSection({ certificates, t }: { certificates: any[]; t: Tran
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{t('resume.sections.certifications')}</Text>
-      {certificates.sort((a, b) => a.order - b.order).map((cert, idx) => (
-        <View key={idx} style={styles.certItem}>
-          <View style={styles.certHeader}>
-            <View>
-              <Text style={styles.certName}>{cert.name}</Text>
-              <Text style={styles.certIssuer}>{cert.issuer}</Text>
+      {certificates
+        .sort((a, b) => a.order - b.order)
+        .map((cert, idx) => (
+          <View key={idx} style={styles.certItem}>
+            <View style={styles.certHeader}>
+              <View>
+                <Text style={styles.certName}>{sanitizeText(cert.name)}</Text>
+                <Text style={styles.certIssuer}>{sanitizeText(cert.issuer)}</Text>
+              </View>
+              <Text style={styles.dateRange}>
+                {cert.issueDate}
+                {cert.expiryDate && ` - ${cert.expiryDate}`}
+              </Text>
             </View>
-            <Text style={styles.dateRange}>
-              {cert.issueDate}{cert.expiryDate && ` - ${cert.expiryDate}`}
-            </Text>
           </View>
-        </View>
-      ))}
+        ))}
     </View>
   );
 }
@@ -729,37 +796,44 @@ function ProjectsSection({ projects, t }: { projects: any[]; t: TranslateFn }) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{t('resume.sections.projects')}</Text>
-      {projects.sort((a, b) => a.order - b.order).map((project, idx) => (
-        <View key={idx} style={styles.projectItem}>
-          <View style={styles.projectHeader}>
-            <View>
-              <Text style={styles.projectName}>{project.name}</Text>
-              {project.role?.trim() && <Text style={styles.projectRole}>{project.role}</Text>}
+      {projects
+        .sort((a, b) => a.order - b.order)
+        .map((project, idx) => (
+          <View key={idx} style={styles.projectItem}>
+            <View style={styles.projectHeader}>
+              <View>
+                <Text style={styles.projectName}>{sanitizeText(project.name)}</Text>
+                {project.role?.trim() && (
+                  <Text style={styles.projectRole}>{sanitizeText(project.role)}</Text>
+                )}
+              </View>
+              <Text style={styles.dateRange}>
+                {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
+              </Text>
             </View>
-            <Text style={styles.dateRange}>
-              {project.startDate} - {project.endDate || t('resume.preview.ongoing')}
-            </Text>
-          </View>
-          {project.description?.trim() && (
-            <Text style={styles.projectDescription}>{project.description}</Text>
-          )}
-          {project.achievements && project.achievements.filter((a: string) => a?.trim()).length > 0 && (
-            <View style={styles.achievementList}>
-              {project.achievements.filter((a: string) => a?.trim()).map((achievement: string, i: number) => (
-                <View key={i} style={styles.achievementItem}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.achievementText}>{achievement}</Text>
+            {project.description?.trim() && (
+              <Text style={styles.projectDescription}>{sanitizeText(project.description)}</Text>
+            )}
+            {project.achievements &&
+              project.achievements.filter((a: string) => a?.trim()).length > 0 && (
+                <View style={styles.achievementList}>
+                  {project.achievements
+                    .filter((a: string) => a?.trim())
+                    .map((achievement: string, i: number) => (
+                      <View key={i} style={styles.achievementItem}>
+                        <Text style={styles.bullet}>•</Text>
+                        <Text style={styles.achievementText}>{sanitizeText(achievement)}</Text>
+                      </View>
+                    ))}
                 </View>
-              ))}
-            </View>
-          )}
-          {project.techStack && project.techStack.length > 0 && (
-            <Text style={styles.techStack}>
-              {t('resume.preview.tech')}: {project.techStack.join(', ')}
-            </Text>
-          )}
-        </View>
-      ))}
+              )}
+            {project.techStack && project.techStack.length > 0 && (
+              <Text style={styles.techStack}>
+                {t('resume.preview.tech')}: {project.techStack.join(', ')}
+              </Text>
+            )}
+          </View>
+        ))}
     </View>
   );
 }
@@ -777,6 +851,7 @@ export default function ResumePdfDocument({
   resume,
   paperSize = 'A4',
   locale = 'ko',
+  profileImageBase64,
 }: ResumePdfDocumentProps) {
   // Create translator for current locale
   const t = createTranslator(locale);
@@ -784,30 +859,29 @@ export default function ResumePdfDocument({
   // Safe access to sections with fallback to empty array
   // Use `visible !== false` to include items where visible is undefined or true
   const visibleSections = (resume.sections || [])
-    .filter(s => s.visible !== false)
+    .filter((s) => s.visible !== false)
     .sort((a, b) => a.order - b.order);
 
   return (
     <Document>
-      <Page
-        size={paperSize}
-        style={styles.page}
-      >
+      <Page size={paperSize} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            {/* Profile Image */}
-            {resume.profileImage && (
-              <Image
-                src={getProxyImageUrl(resume.profileImage) || resume.profileImage}
-                style={styles.profileImage}
-              />
-            )}
+            {/* Profile Image - show placeholder if image exists but failed to load */}
+            {resume.profileImage &&
+              (profileImageBase64 ? (
+                <Image src={profileImageBase64} style={styles.profileImage} />
+              ) : (
+                <View style={styles.profileImagePlaceholder}>
+                  <Text style={styles.profileImagePlaceholderText}>No Image</Text>
+                </View>
+              ))}
 
             {/* Name and Contact Info */}
             <View style={styles.headerInfo}>
               <Text style={styles.name}>
-                {resume.name}
+                {sanitizeText(resume.name)}
                 {(resume.gender || resume.birthDate || resume.birthYear) && (
                   <Text style={styles.nameInfo}>
                     {' '}
@@ -827,16 +901,19 @@ export default function ResumePdfDocument({
 
               <View style={styles.contactRow}>
                 <Text style={styles.contactItem}>
-                  <Text style={styles.contactLabel}>{t('resume.contactInfo.email')}:</Text> {resume.email}
+                  <Text style={styles.contactLabel}>{t('resume.contactInfo.email')}:</Text>{' '}
+                  {sanitizeText(resume.email)}
                 </Text>
                 {resume.phone?.trim() && (
                   <Text style={styles.contactItem}>
-                    <Text style={styles.contactLabel}>{t('resume.contactInfo.phone')}:</Text> {resume.phone}
+                    <Text style={styles.contactLabel}>{t('resume.contactInfo.phone')}:</Text>{' '}
+                    {sanitizeText(resume.phone)}
                   </Text>
                 )}
                 {resume.address?.trim() && (
                   <Text style={styles.contactItem}>
-                    <Text style={styles.contactLabel}>{t('resume.contactInfo.address')}:</Text> {resume.address}
+                    <Text style={styles.contactLabel}>{t('resume.contactInfo.address')}:</Text>{' '}
+                    {sanitizeText(resume.address)}
                   </Text>
                 )}
               </View>
@@ -848,7 +925,7 @@ export default function ResumePdfDocument({
                   {resume.militaryService === 'EXEMPTED'
                     ? t('resume.militaryService.exempted')
                     : resume.militaryRank
-                      ? `${resume.militaryRank} ${resume.militaryDischargeType || ''}`
+                      ? `${sanitizeText(resume.militaryRank)} ${sanitizeText(resume.militaryDischargeType) || ''}`
                       : t('resume.militaryService.completed')}
                 </Text>
               )}
@@ -856,22 +933,24 @@ export default function ResumePdfDocument({
               <View style={styles.linkRow}>
                 {resume.github?.trim() && (
                   <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>GitHub:</Text> {resume.github}
+                    <Text style={styles.contactLabel}>GitHub:</Text> {sanitizeText(resume.github)}
                   </Text>
                 )}
                 {resume.blog?.trim() && (
                   <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>Blog:</Text> {resume.blog}
+                    <Text style={styles.contactLabel}>Blog:</Text> {sanitizeText(resume.blog)}
                   </Text>
                 )}
                 {resume.linkedin?.trim() && (
                   <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>LinkedIn:</Text> {resume.linkedin}
+                    <Text style={styles.contactLabel}>LinkedIn:</Text>{' '}
+                    {sanitizeText(resume.linkedin)}
                   </Text>
                 )}
                 {resume.portfolio?.trim() && (
                   <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>Portfolio:</Text> {resume.portfolio}
+                    <Text style={styles.contactLabel}>Portfolio:</Text>{' '}
+                    {sanitizeText(resume.portfolio)}
                   </Text>
                 )}
               </View>
@@ -882,46 +961,79 @@ export default function ResumePdfDocument({
         {/* Summary */}
         {resume.summary?.trim() && (
           <View style={styles.section}>
-            <Text style={styles.summary}>{resume.summary}</Text>
+            <Text style={styles.summary}>{sanitizeText(resume.summary)}</Text>
           </View>
         )}
 
         {/* Key Achievements */}
-        {resume.keyAchievements && resume.keyAchievements.filter((a: string) => a?.trim()).length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>⭐ {t('resume.preview.keyAchievements')}</Text>
-            <View style={styles.achievementList}>
-              {resume.keyAchievements.filter((a: string) => a?.trim()).map((achievement: string, index: number) => (
-                <View key={index} style={styles.achievementItem}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.achievementText}>{achievement}</Text>
-                </View>
-              ))}
+        {resume.keyAchievements &&
+          resume.keyAchievements.filter((a: string) => a?.trim()).length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('resume.preview.keyAchievements')}</Text>
+              <View style={styles.achievementList}>
+                {resume.keyAchievements
+                  .filter((a: string) => a?.trim())
+                  .map((achievement: string, index: number) => (
+                    <View key={index} style={styles.achievementItem}>
+                      <Text style={styles.bullet}>•</Text>
+                      <Text style={styles.achievementText}>{sanitizeText(achievement)}</Text>
+                    </View>
+                  ))}
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
         {/* Application Reason */}
         {resume.applicationReason?.trim() && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('resume.preview.applicationReason')}</Text>
-            <Text style={styles.summary}>{resume.applicationReason}</Text>
+            <Text style={styles.summary}>{sanitizeText(resume.applicationReason)}</Text>
           </View>
         )}
 
         {/* Dynamic Sections */}
-        {visibleSections.map(section => {
+        {visibleSections.map((section) => {
           switch (section.type) {
             case 'SKILLS':
-              return <SkillsSection key={section.id} skills={(resume.skills || []).filter(s => s.visible !== false)} t={t} />;
+              return (
+                <SkillsSection
+                  key={section.id}
+                  skills={(resume.skills || []).filter((s) => s.visible !== false)}
+                  t={t}
+                />
+              );
             case 'EXPERIENCE':
-              return <ExperienceSection key={section.id} experiences={(resume.experiences || []).filter(e => e.visible !== false)} t={t} />;
+              return (
+                <ExperienceSection
+                  key={section.id}
+                  experiences={(resume.experiences || []).filter((e) => e.visible !== false)}
+                  t={t}
+                />
+              );
             case 'PROJECT':
-              return <ProjectsSection key={section.id} projects={(resume.projects || []).filter(p => p.visible !== false)} t={t} />;
+              return (
+                <ProjectsSection
+                  key={section.id}
+                  projects={(resume.projects || []).filter((p) => p.visible !== false)}
+                  t={t}
+                />
+              );
             case 'EDUCATION':
-              return <EducationSection key={section.id} educations={(resume.educations || []).filter(e => e.visible !== false)} t={t} />;
+              return (
+                <EducationSection
+                  key={section.id}
+                  educations={(resume.educations || []).filter((e) => e.visible !== false)}
+                  t={t}
+                />
+              );
             case 'CERTIFICATE':
-              return <CertificatesSection key={section.id} certificates={(resume.certificates || []).filter(c => c.visible !== false)} t={t} />;
+              return (
+                <CertificatesSection
+                  key={section.id}
+                  certificates={(resume.certificates || []).filter((c) => c.visible !== false)}
+                  t={t}
+                />
+              );
             default:
               return null;
           }
@@ -931,7 +1043,7 @@ export default function ResumePdfDocument({
         {resume.coverLetter?.trim() && (
           <View style={styles.section} break>
             <Text style={styles.sectionTitle}>{t('resume.preview.coverLetter')}</Text>
-            <Text style={styles.coverLetter}>{resume.coverLetter}</Text>
+            <Text style={styles.coverLetter}>{sanitizeText(resume.coverLetter)}</Text>
           </View>
         )}
       </Page>
