@@ -71,7 +71,33 @@ Education
 
 **Drag-and-drop**: EducationSection.tsx uses @dnd-kit for reordering
 
-### 4. Skills Structure (with Hierarchical Descriptions)
+### 4. Section Order Manager (2025-12)
+
+```
+FormSectionType (Frontend-only, 8 sections)
+├── EXPERIENCE    💼 경력
+├── EDUCATION     🎓 학력
+├── SKILLS        ⚡ 기술
+├── CERTIFICATE   🏆 자격증
+├── KEY_ACHIEVEMENTS 🏅 핵심성과
+├── APPLICATION_REASON 💡 지원동기
+├── ATTACHMENTS   📎 첨부파일
+└── COVER_LETTER  📝 자기소개서
+```
+
+**Note**: BASIC_INFO is always first (not reorderable). PROJECT/MILITARY cards don't exist in frontend yet.
+
+**Priority Order**: Korean resume standard (경력 first, 자기소개서 last)
+
+**Components**:
+
+- `SectionOrderManager.tsx` - Drag-and-drop section reorder with visibility toggles
+- Uses `@dnd-kit/core` and `@dnd-kit/sortable`
+- Module-scope constants: `SECTION_ICONS`, `SECTION_LABEL_KEYS`
+
+**initializeSections()**: Merges backend sections with frontend-only sections, filters invalid types.
+
+### 5. Skills Structure (with Hierarchical Descriptions)
 
 ```
 Skill Category (e.g., "Frontend")
@@ -576,6 +602,18 @@ const handleSubmit = async (data) => {
 4. **Policy Compliance**: `.ai/resume.md` line 281-282 states "Profile Photos: Show in color by default, optional grayscale toggle"
 
 ## Recent Updates
+
+**2025-12-24**: Section Order Manager restructuring and PDF image export fix (#322)
+
+- Restructured `FormSectionType` enum to only include 8 existing sections (removed BASIC_INFO, PROJECT, MILITARY)
+- Updated `DEFAULT_SECTIONS` with Korean resume priority order:
+  - 경력 → 학력 → 기술 → 자격증 → 핵심성과 → 지원동기 → 첨부파일 → 자기소개서
+- Fixed "제목없는 #3" bug by filtering invalid backend section types in `initializeSections()`
+- Fixed PDF image download using `imageToBase64()` from `imageProxy.ts` (canvas-based approach)
+- Removed visibility toggles from individual section cards (managed only in SectionOrderManager)
+- Extracted `SECTION_ICONS` and `SECTION_LABEL_KEYS` to module scope for performance
+- Fixed 8pt Grid violations: `p-3` → `p-2`, `gap-3` → `gap-4`
+- Files changed: `ResumeForm.tsx`, `SectionOrderManager.tsx`, `pdf.ts`
 
 **2025-12-23**: PDF rendering crash fix and stability improvements (#321)
 

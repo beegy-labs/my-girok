@@ -20,6 +20,30 @@ import { CSS } from '@dnd-kit/utilities';
 import { CollapsibleSection } from '@my-girok/ui-components';
 import { FormSectionType, FormSection } from './ResumeForm';
 
+// Module-scope constants (2025 best practice - avoids recreation on every render)
+const SECTION_ICONS: Record<FormSectionType, string> = {
+  EXPERIENCE: '💼',
+  EDUCATION: '🎓',
+  SKILLS: '⚡',
+  CERTIFICATE: '🏆',
+  KEY_ACHIEVEMENTS: '🏅',
+  APPLICATION_REASON: '💡',
+  ATTACHMENTS: '📎',
+  COVER_LETTER: '📝',
+};
+
+// i18n keys for section labels
+const SECTION_LABEL_KEYS: Record<FormSectionType, string> = {
+  EXPERIENCE: 'resume.sections.experience',
+  EDUCATION: 'resume.sections.education',
+  SKILLS: 'resume.sections.skills',
+  CERTIFICATE: 'resume.sections.certifications',
+  KEY_ACHIEVEMENTS: 'resume.form.keyAchievements',
+  APPLICATION_REASON: 'resume.form.applicationReason',
+  ATTACHMENTS: 'resume.form.attachments',
+  COVER_LETTER: 'resume.form.coverLetter',
+};
+
 interface SectionOrderManagerProps {
   sections: FormSection[];
   onReorder: (sections: FormSection[]) => void;
@@ -60,34 +84,6 @@ const SortableSection = memo(function SortableSection({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const getSectionIcon = (type: FormSectionType): string => {
-    const iconMap: Record<FormSectionType, string> = {
-      EXPERIENCE: '💼',
-      EDUCATION: '🎓',
-      SKILLS: '⚡',
-      CERTIFICATE: '🏆',
-      KEY_ACHIEVEMENTS: '🏅',
-      APPLICATION_REASON: '💡',
-      ATTACHMENTS: '📎',
-      COVER_LETTER: '📝',
-    };
-    return iconMap[type];
-  };
-
-  const getSectionLabel = (type: FormSectionType): string => {
-    const labelMap: Record<FormSectionType, string> = {
-      EXPERIENCE: t('resume.sections.experience'),
-      EDUCATION: t('resume.sections.education'),
-      SKILLS: t('resume.sections.skills'),
-      CERTIFICATE: t('resume.sections.certifications'),
-      KEY_ACHIEVEMENTS: t('resume.form.keyAchievements'),
-      APPLICATION_REASON: t('resume.form.applicationReason'),
-      ATTACHMENTS: t('resume.form.attachments'),
-      COVER_LETTER: t('resume.form.coverLetter'),
-    };
-    return labelMap[type];
-  };
-
   const handleToggle = useCallback(() => {
     onToggleVisibility(section.id);
   }, [onToggleVisibility, section.id]);
@@ -96,13 +92,13 @@ const SortableSection = memo(function SortableSection({
     <div
       ref={setNodeRef}
       style={style}
-      className={`border rounded-soft p-3 sm:p-4 flex items-center justify-between transition-all duration-200 ${
+      className={`border rounded-soft p-2 sm:p-4 flex items-center justify-between transition-all duration-200 ${
         section.visible
           ? 'bg-theme-bg-elevated border-theme-border-subtle hover:border-theme-primary'
           : 'bg-theme-bg-hover border-theme-border-default opacity-60'
       }`}
     >
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
         {/* Drag handle - uses activator node ref for proper isolation */}
         <button
           ref={setActivatorNodeRef}
@@ -129,18 +125,18 @@ const SortableSection = memo(function SortableSection({
         </button>
 
         {/* Section icon and label */}
-        <span className="text-base sm:text-lg flex-shrink-0">{getSectionIcon(section.type)}</span>
+        <span className="text-base sm:text-lg flex-shrink-0">{SECTION_ICONS[section.type]}</span>
         <span
           className={`font-medium text-sm sm:text-base truncate ${
             section.visible ? 'text-theme-text-primary' : 'text-theme-text-tertiary line-through'
           }`}
         >
-          {getSectionLabel(section.type)}
+          {t(SECTION_LABEL_KEYS[section.type])}
         </span>
       </div>
 
       {/* Visibility toggle */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
         <span className="text-xs text-theme-text-tertiary hidden sm:inline">
           #{section.order + 1}
         </span>
@@ -259,7 +255,7 @@ export default function SectionOrderManager({
         </SortableContext>
       </DndContext>
 
-      <div className="mt-4 p-3 sm:p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-soft">
+      <div className="mt-4 p-2 sm:p-4 bg-theme-status-info-bg border border-theme-status-info-border rounded-soft">
         <p className="text-xs sm:text-sm text-theme-status-info-text">
           💡 <strong>{t('resume.sectionOrder.tipTitle')}</strong>{' '}
           {t('resume.sectionOrder.tipDescription')}
