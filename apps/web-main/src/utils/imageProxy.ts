@@ -3,6 +3,19 @@
  * Converts MinIO image URLs to use backend proxy for CORS support
  */
 
+// Dev-only logging helper (tree-shaken in production builds)
+const devLog = (message: string, ...args: unknown[]) => {
+  if (import.meta.env.DEV) {
+    console.log(`[imageProxy] ${message}`, ...args);
+  }
+};
+
+const devWarn = (message: string, ...args: unknown[]) => {
+  if (import.meta.env.DEV) {
+    console.warn(`[imageProxy] ${message}`, ...args);
+  }
+};
+
 /**
  * Check if running in local development environment
  */
@@ -53,23 +66,23 @@ export async function imageToBase64(imageUrl: string | null | undefined): Promis
 
         ctx.drawImage(img, 0, 0);
         const base64 = canvas.toDataURL('image/jpeg', 0.9);
-        console.log('Image converted to base64 successfully via canvas');
+        devLog('Image converted to base64 successfully via canvas');
         resolve(base64);
       } catch (error) {
-        console.warn('Canvas toDataURL failed (CORS):', error);
+        devWarn('Canvas toDataURL failed (CORS):', error);
         resolve(null);
       }
     };
 
     img.onerror = () => {
-      console.warn('Image load failed:', fixedUrl);
+      devWarn('Image load failed:', fixedUrl);
       resolve(null);
     };
 
     // Set timeout for slow loading images
     setTimeout(() => {
       if (!img.complete) {
-        console.warn('Image load timeout:', fixedUrl);
+        devWarn('Image load timeout:', fixedUrl);
         resolve(null);
       }
     }, 10000);
@@ -118,7 +131,7 @@ export function getProxyImageUrl(imageUrl: string | null | undefined): string | 
     // Backend service endpoint is /v1/resume/image-proxy
     return `${apiUrl}/personal/v1/resume/image-proxy?key=${encodeURIComponent(fileKey)}`;
   } catch (error) {
-    console.warn('Failed to parse image URL for proxy:', imageUrl, error);
+    devWarn('Failed to parse image URL for proxy:', imageUrl, error);
     // Return original URL as fallback
     return imageUrl;
   }

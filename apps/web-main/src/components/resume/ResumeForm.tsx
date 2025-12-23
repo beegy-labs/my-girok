@@ -231,21 +231,23 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     };
   }, [formData, resume?.id]);
 
+  // Stable ref for onChange to avoid dependency issues (2025 best practice)
+  // This pattern is preferred over eslint-disable per project policy
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   // Trigger onChange when formData or sections change (debounced 800ms)
   // Debounce prevents excessive PDF re-generation during typing (Over-Engineering Policy: <16ms render target)
-  // Note: onChange is excluded from dependencies to prevent infinite loop
-  // Parent component should memoize onChange with useCallback
   useEffect(() => {
-    if (!onChange) return;
+    if (!onChangeRef.current) return;
 
     const debounceTimeout = setTimeout(() => {
-      onChange(formData);
+      onChangeRef.current?.(formData);
     }, 800);
 
     return () => {
       clearTimeout(debounceTimeout);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, sections]);
 
   // Memoize loadAttachments to use in useEffect
