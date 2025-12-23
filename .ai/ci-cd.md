@@ -9,27 +9,30 @@
 ## GitHub Actions Workflows
 
 ### Auth Service CI
+
 - **File**: `.github/workflows/ci-auth-service.yml`
-- **Triggers**: Push to develop, release/*, main (when auth-service changes)
+- **Triggers**: Push to develop, release/\*, main (when auth-service changes)
 - **Steps**: Test → Build → Push to Harbor
 
 ### Web Test CI
+
 - **File**: `.github/workflows/ci-web-main.yml`
-- **Triggers**: Push to develop, release/*, main (when web-main changes)
+- **Triggers**: Push to develop, release/\*, main (when web-main changes)
 - **Steps**: Parallel (Lint + Type-check + Test) → Build (with API URL) → Push to Harbor
 - **Optimization**: 3 parallel jobs with node_modules caching (~3-5min total)
 
 ## Image Tagging Strategy
 
-| Branch | Tag Format | Example |
-|--------|------------|---------|
-| develop | `develop:<hash>` + `develop:latest` | `develop:a1b2c3d`, `develop:latest` |
-| release/* | `release:<hash>` + `release:latest` | `release:a1b2c3d`, `release:latest` |
-| main | `latest` | `latest` |
+| Branch     | Tag Format                          | Example                             |
+| ---------- | ----------------------------------- | ----------------------------------- |
+| develop    | `develop:<hash>` + `develop:latest` | `develop:a1b2c3d`, `develop:latest` |
+| release/\* | `release:<hash>` + `release:latest` | `release:a1b2c3d`, `release:latest` |
+| main       | `latest`                            | `latest`                            |
 
 ## Harbor Images
 
 **Auth Service:**
+
 ```
 harbor.girok.dev/my-girok/auth-service:develop:a1b2c3d
 harbor.girok.dev/my-girok/auth-service:develop:latest
@@ -39,6 +42,7 @@ harbor.girok.dev/my-girok/auth-service:latest
 ```
 
 **Web Test:**
+
 ```
 harbor.girok.dev/my-girok/web-main:develop:a1b2c3d
 harbor.girok.dev/my-girok/web-main:develop:latest
@@ -60,7 +64,7 @@ HARBOR_PASSWORD=<robot-account-token>
 Build-time environment variable injection:
 
 - **develop**: `https://auth-api-dev.girok.dev/api/v1`
-- **release/***: `https://auth-api-staging.girok.dev/api/v1`
+- **release/\***: `https://auth-api-staging.girok.dev/api/v1`
 - **main**: `https://auth-api.girok.dev/api/v1`
 
 **Update in**: `.github/workflows/ci-web-main.yml`
@@ -68,11 +72,13 @@ Build-time environment variable injection:
 ## Workflow Trigger Paths
 
 **Auth Service** triggers on changes to:
+
 - `services/auth-service/**`
 - `packages/types/**`
 - `.github/workflows/ci-auth-service.yml`
 
 **Web Test** triggers on changes to:
+
 - `apps/web-main/**`
 - `packages/types/**`
 - `.github/workflows/ci-web-main.yml`
@@ -83,20 +89,43 @@ ArgoCD watches Harbor registry for new images and deploys:
 
 1. CI pushes image with tag: `develop-a1b2c3d`
 2. ArgoCD detects new image
-3. ArgoCD updates Helm release in target namespace
-4. Kubernetes rolls out new pods
+3. **PreSync Job runs `goose up`** (if migration.enabled)
+4. ArgoCD updates Helm release in target namespace
+5. Kubernetes rolls out new pods
+
+### Database Migrations
+
+**Manual Sync required for DB changes** - no auto-sync for safety.
+
+Dockerfile includes goose binary and migrations:
+
+```dockerfile
+# Install goose
+RUN wget -qO- https://github.com/pressly/goose/releases/download/v3.24.1/goose_linux_x86_64 \
+    -O /usr/local/bin/goose && chmod +x /usr/local/bin/goose
+
+# Copy migrations
+COPY --from=builder /app/services/<service>/migrations ./services/<service>/migrations
+```
+
+ArgoCD PreSync Job executes:
+
+```bash
+goose -dir /app/services/<service>/migrations postgres "$DATABASE_URL" up
+```
 
 ## Git Flow → Environment Mapping
 
-| Git Branch | CI Tag | ArgoCD App | K8s Namespace | Environment |
-|------------|--------|------------|---------------|-------------|
-| develop | develop:*, develop:latest | my-girok-dev | my-girok-dev | Development |
-| release/* | release:*, release:latest | my-girok-staging | my-girok-staging | Staging |
-| main | latest | my-girok-prod | my-girok-prod | Production |
+| Git Branch | CI Tag                     | ArgoCD App       | K8s Namespace    | Environment |
+| ---------- | -------------------------- | ---------------- | ---------------- | ----------- |
+| develop    | develop:\*, develop:latest | my-girok-dev     | my-girok-dev     | Development |
+| release/\* | release:\*, release:latest | my-girok-staging | my-girok-staging | Staging     |
+| main       | latest                     | my-girok-prod    | my-girok-prod    | Production  |
 
 ## Testing Before CI
 
 **Local build test:**
+
 ```bash
 # Auth Service
 docker build \
@@ -120,6 +149,7 @@ docker build \
 **After**: ~3-5 minutes (parallel jobs with caching)
 
 **Strategy**:
+
 1. **Parallel Job Execution**: Split single test job into 3 parallel jobs:
    - `lint`: ESLint checks
    - `type-check`: TypeScript compilation
@@ -127,6 +157,7 @@ docker build \
    - `build`: Depends on all 3 jobs, runs only if all pass
 
 2. **Node Modules Caching**: Cache `node_modules` across jobs
+
    ```yaml
    - name: Setup node_modules cache
      uses: actions/cache@v4
@@ -144,6 +175,7 @@ docker build \
    ```
 
 **Results**:
+
 - **2-3x faster** CI pipeline
 - Better failure detection (fail fast on specific check)
 - Efficient resource usage (parallel execution)
@@ -158,16 +190,19 @@ docker build \
 ## Troubleshooting
 
 **CI build fails:**
+
 - Check test results in GitHub Actions logs
 - Verify Harbor credentials in GitHub Secrets
 - Check Dockerfile syntax
 
 **Image not pushed:**
+
 - Verify Harbor robot account has push permissions
 - Check network connectivity to Harbor
 - Verify project name matches: `my-girok`
 
 **ArgoCD not deploying:**
+
 - Check ArgoCD application configuration
 - Verify image pull secrets in Kubernetes
 - Check ArgoCD sync policy

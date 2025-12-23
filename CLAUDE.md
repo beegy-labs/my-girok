@@ -37,6 +37,15 @@ Read: `.ai/apps/storybook.md`
 **Working on i18n/localization?**
 Read: `.ai/i18n-locale.md` + `.ai/apps/web-main.md`
 
+### Database & Deployment
+
+**Working on database migrations?**
+Read: `.ai/database.md` + `.ai/rules.md` (Database Migrations section)
+Full guide: `docs/DATABASE.md`
+
+**Working on Helm/Kubernetes deployment?**
+Read: `.ai/helm-deployment.md` + `.ai/ci-cd.md`
+
 ### Other Tasks
 
 **Creating a PR?**
@@ -60,6 +69,7 @@ my-girok/
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
 │   ├── architecture.md       # Architecture patterns (2025)
+│   ├── database.md           # goose + ArgoCD migration strategy
 │   ├── ssot.md               # Single Source of Truth strategy (2025)
 │   ├── i18n-locale.md        # Internationalization & Locale
 │   ├── design-system-principles.md # Design system guidelines
