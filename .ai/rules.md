@@ -20,8 +20,7 @@
 | Code     | Prisma in Controllers → Use Services            |
 | Code     | Hardcode secrets → Use ConfigService            |
 | Code     | Skip error handling                             |
-| React    | Inline functions in map() → Use useCallback     |
-| React    | Objects/arrays in render → Use useMemo          |
+| React    | Recreate expensive objects every render         |
 | React    | State for navigation → Call navigate() directly |
 | HTML     | Nested `<main>` tags → One per page             |
 | HTML     | Footer inside `<main>` → Footer sibling of main |
@@ -39,9 +38,8 @@
 | Code     | Use `@Transactional()` for multi-step DB |
 | Code     | Use Guards for protected endpoints       |
 | Code     | Prevent N+1 queries                      |
-| React    | Memoize handlers with useCallback        |
-| React    | Memoize constants with useMemo           |
-| React    | Use React.memo for list items            |
+| React    | Use React.memo for list item components  |
+| React    | Use useMemo for expensive calculations   |
 | Testing  | 80% coverage minimum                     |
 
 ## Key Patterns
@@ -68,18 +66,29 @@ for (const post of posts) {
 const posts = await prisma.post.findMany({ include: { author: true } });
 ```
 
-### React Memoization
+### React 19 Optimization
 
 ```typescript
-// ✅ Memoize handlers
-const handleClick = useCallback((id) => handle(id), []);
+// ✅ React.memo for list item components (prevents parent re-render cascade)
+export const ListItem = memo(function ListItem({ item, onUpdate }) {
+  return <div onClick={() => onUpdate(item.id)}>{item.name}</div>;
+});
 
-// ✅ Memoize list components
-export const ListItem = memo(function ListItem(props) { ... });
+// ✅ useMemo for expensive calculations only
+const sortedItems = useMemo(
+  () => items.toSorted((a, b) => complexSort(a, b)),
+  [items]
+);
+
+// ✅ Direct handlers (React 19 Compiler auto-optimizes)
+const handleClick = (id: string) => updateItem(id);
 
 // ✅ Direct navigation
 navigate('/path');  // Not useState + useEffect
 ```
+
+> **Note**: React 19 Compiler automatically memoizes most cases.
+> Manual useCallback/useMemo only needed for expensive operations.
 
 ## Database Migrations
 
