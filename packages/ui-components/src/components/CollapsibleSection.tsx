@@ -13,6 +13,8 @@ export interface CollapsibleSectionProps {
   onToggle?: () => void;
   /** Whether the section can be collapsed (false = always expanded) */
   collapsible?: boolean;
+  /** Whether collapsible behavior applies on desktop too (default: false = always expanded on desktop) */
+  collapsibleOnDesktop?: boolean;
   /** Section content */
   children: React.ReactNode;
   /** Additional action button in header */
@@ -58,6 +60,7 @@ export function CollapsibleSection({
   isExpanded: controlledExpanded,
   onToggle,
   collapsible = true,
+  collapsibleOnDesktop = false,
   children,
   headerAction,
   variant = 'primary',
@@ -111,12 +114,12 @@ export function CollapsibleSection({
         ${className}
       `}
     >
-      {/* Header - Clickable on mobile */}
+      {/* Header - Clickable on mobile, or always if collapsibleOnDesktop */}
       <div
         className={`
           flex items-center justify-between gap-2
           p-3 sm:p-4 lg:p-6
-          ${collapsible ? 'cursor-pointer sm:cursor-default' : ''}
+          ${collapsible ? (collapsibleOnDesktop ? 'cursor-pointer' : 'cursor-pointer sm:cursor-default') : ''}
         `}
         onClick={collapsible ? handleToggle : undefined}
         onKeyDown={collapsible ? handleKeyDown : undefined}
@@ -137,14 +140,16 @@ export function CollapsibleSection({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {headerAction && <div className="hidden sm:block">{headerAction}</div>}
+          {headerAction && (
+            <div className={collapsibleOnDesktop ? '' : 'hidden sm:block'}>{headerAction}</div>
+          )}
 
-          {/* Chevron indicator - Mobile only, only if collapsible */}
+          {/* Chevron indicator - Mobile only by default, or always if collapsibleOnDesktop */}
           {collapsible && (
             <svg
-              className={`w-5 h-5 text-theme-text-muted transition-transform sm:hidden ${
-                isExpanded ? 'rotate-180' : ''
-              }`}
+              className={`w-5 h-5 text-theme-text-muted transition-transform ${
+                collapsibleOnDesktop ? '' : 'sm:hidden'
+              } ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -173,12 +178,12 @@ export function CollapsibleSection({
         </div>
       )}
 
-      {/* Content - Collapsible on mobile, always visible on desktop */}
+      {/* Content - Collapsible on mobile, or always if collapsibleOnDesktop */}
       <div
         className={`
           ${isExpanded ? 'block' : 'hidden'}
-          sm:block
-          px-3 pb-3 sm:px-4 sm:pb-4 lg:px-6 lg:pb-6
+          ${collapsibleOnDesktop ? '' : 'sm:block'}
+          px-3 pb-4 sm:px-4 sm:pb-5 lg:px-6 lg:pb-8
           pt-0
         `}
       >

@@ -57,7 +57,7 @@ export default function PublicResumePage() {
     const isNotFound = error === ResumeViewerError.NOT_FOUND || error === ResumeViewerError.NO_ID;
 
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 pt-nav bg-theme-bg-page">
+      <main className="min-h-screen flex items-center justify-center px-4 bg-theme-bg-page">
         <StatusMessage
           type={isNotFound ? 'not-found' : 'error'}
           title={isNotFound ? t('resume.preview.notFoundTitle') : undefined}
@@ -77,7 +77,7 @@ export default function PublicResumePage() {
   }
 
   return (
-    <main className="w-full min-h-screen bg-theme-bg-page pt-nav">
+    <main className="w-full min-h-screen bg-theme-bg-page">
       {/* Action Bar - V0.0.1 Style with public mode */}
       <ResumeActionBar
         resume={resume}

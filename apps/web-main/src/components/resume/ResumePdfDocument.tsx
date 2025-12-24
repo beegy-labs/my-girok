@@ -141,6 +141,12 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
+  // Zero-width flex placeholder for no-image case
+  // Maintains flex row structure without taking visual space
+  zeroWidthPlaceholder: {
+    width: 0,
+    height: 0,
+  },
   name: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -583,7 +589,7 @@ function HierarchicalDescription({ items, depth = 0 }: { items: any[]; depth?: n
   if (validItems.length === 0) return null;
 
   return (
-    <>
+    <View>
       {validItems.map((item: any, idx: number) => (
         <View key={idx}>
           <View style={[styles.hierarchicalItem, { paddingLeft: depth * 12 }]}>
@@ -595,12 +601,96 @@ function HierarchicalDescription({ items, depth = 0 }: { items: any[]; depth?: n
           )}
         </View>
       ))}
-    </>
+    </View>
   );
 }
 
-// Type for translation function
+// Type for translation function (moved up for SSOT components)
 type TranslateFn = (key: string, params?: Record<string, any>) => string;
+
+// SSOT: Header Info Content - extracted to avoid duplication
+interface HeaderInfoContentProps {
+  resume: Resume;
+  t: TranslateFn;
+}
+
+function HeaderInfoContent({ resume, t }: HeaderInfoContentProps) {
+  return (
+    <View>
+      <Text style={styles.name}>
+        {sanitizeText(resume.name)}
+        {(resume.gender || resume.birthDate || resume.birthYear) && (
+          <Text style={styles.nameInfo}>
+            {' '}
+            {resume.gender && t(getGenderLabelKey(resume.gender))}
+            {resume.gender && (resume.birthDate || resume.birthYear) && ', '}
+            {(() => {
+              const age = getAge(resume);
+              if (!age) return '';
+              const birthYear = resume.birthDate
+                ? new Date(resume.birthDate).getFullYear()
+                : resume.birthYear;
+              return `${birthYear} (${t('resume.age', { age })})`;
+            })()}
+          </Text>
+        )}
+      </Text>
+
+      <View style={styles.contactRow}>
+        <Text style={styles.contactItem}>
+          <Text style={styles.contactLabel}>{t('resume.contactInfo.email')}:</Text>{' '}
+          {sanitizeText(resume.email)}
+        </Text>
+        {resume.phone?.trim() && (
+          <Text style={styles.contactItem}>
+            <Text style={styles.contactLabel}>{t('resume.contactInfo.phone')}:</Text>{' '}
+            {sanitizeText(resume.phone)}
+          </Text>
+        )}
+        {resume.address?.trim() && (
+          <Text style={styles.contactItem}>
+            <Text style={styles.contactLabel}>{t('resume.contactInfo.address')}:</Text>{' '}
+            {sanitizeText(resume.address)}
+          </Text>
+        )}
+      </View>
+
+      {resume.militaryService && resume.militaryService !== 'NOT_APPLICABLE' && (
+        <Text style={styles.contactItem}>
+          <Text style={styles.contactLabel}>{t('resume.militaryService.title')}:</Text>{' '}
+          {resume.militaryService === 'EXEMPTED'
+            ? t('resume.militaryService.exempted')
+            : resume.militaryRank
+              ? `${sanitizeText(resume.militaryRank)} ${sanitizeText(resume.militaryDischargeType) || ''}`
+              : t('resume.militaryService.completed')}
+        </Text>
+      )}
+
+      <View style={styles.linkRow}>
+        {resume.github?.trim() && (
+          <Text style={styles.linkItem}>
+            <Text style={styles.contactLabel}>GitHub:</Text> {sanitizeText(resume.github)}
+          </Text>
+        )}
+        {resume.blog?.trim() && (
+          <Text style={styles.linkItem}>
+            <Text style={styles.contactLabel}>Blog:</Text> {sanitizeText(resume.blog)}
+          </Text>
+        )}
+        {resume.linkedin?.trim() && (
+          <Text style={styles.linkItem}>
+            <Text style={styles.contactLabel}>LinkedIn:</Text> {sanitizeText(resume.linkedin)}
+          </Text>
+        )}
+        {resume.portfolio?.trim() && (
+          <Text style={styles.linkItem}>
+            <Text style={styles.contactLabel}>Portfolio:</Text> {sanitizeText(resume.portfolio)}
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+}
 
 // Skills Section
 function SkillsSection({ skills, t }: { skills: any[]; t: TranslateFn }) {
@@ -868,95 +958,26 @@ export default function ResumePdfDocument({
   return (
     <Document>
       <Page size={paperSize} style={styles.page}>
-        {/* Header */}
+        {/* Header - SSOT: uses HeaderInfoContent component */}
+        {/* CRITICAL: Always use identical flexDirection:row + flex:1 structure */}
+        {/* @react-pdf/renderer's Yoga layout engine behaves differently when the first */}
+        {/* flex row element appears. Using consistent structure ensures predictable pagination. */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            {/* Profile Image - show placeholder if image exists but failed to load */}
-            {resume.profileImage &&
-              (profileImageBase64 ? (
+            {resume.profileImage ? (
+              profileImageBase64 ? (
                 <Image src={profileImageBase64} style={styles.profileImage} />
               ) : (
                 <View style={styles.profileImagePlaceholder}>
-                  <Text style={styles.profileImagePlaceholderText}>No Image</Text>
+                  <Text style={styles.profileImagePlaceholderText}>Loading...</Text>
                 </View>
-              ))}
-
-            {/* Name and Contact Info */}
+              )
+            ) : (
+              /* Zero-width placeholder maintains flex structure without visual space */
+              <View style={styles.zeroWidthPlaceholder} />
+            )}
             <View style={styles.headerInfo}>
-              <Text style={styles.name}>
-                {sanitizeText(resume.name)}
-                {(resume.gender || resume.birthDate || resume.birthYear) && (
-                  <Text style={styles.nameInfo}>
-                    {' '}
-                    {resume.gender && t(getGenderLabelKey(resume.gender))}
-                    {resume.gender && (resume.birthDate || resume.birthYear) && ', '}
-                    {(() => {
-                      const age = getAge(resume);
-                      if (!age) return '';
-                      const birthYear = resume.birthDate
-                        ? new Date(resume.birthDate).getFullYear()
-                        : resume.birthYear;
-                      return `${birthYear} (${t('resume.age', { age })})`;
-                    })()}
-                  </Text>
-                )}
-              </Text>
-
-              <View style={styles.contactRow}>
-                <Text style={styles.contactItem}>
-                  <Text style={styles.contactLabel}>{t('resume.contactInfo.email')}:</Text>{' '}
-                  {sanitizeText(resume.email)}
-                </Text>
-                {resume.phone?.trim() && (
-                  <Text style={styles.contactItem}>
-                    <Text style={styles.contactLabel}>{t('resume.contactInfo.phone')}:</Text>{' '}
-                    {sanitizeText(resume.phone)}
-                  </Text>
-                )}
-                {resume.address?.trim() && (
-                  <Text style={styles.contactItem}>
-                    <Text style={styles.contactLabel}>{t('resume.contactInfo.address')}:</Text>{' '}
-                    {sanitizeText(resume.address)}
-                  </Text>
-                )}
-              </View>
-
-              {/* Military Service */}
-              {resume.militaryService && resume.militaryService !== 'NOT_APPLICABLE' && (
-                <Text style={styles.contactItem}>
-                  <Text style={styles.contactLabel}>{t('resume.militaryService.title')}:</Text>{' '}
-                  {resume.militaryService === 'EXEMPTED'
-                    ? t('resume.militaryService.exempted')
-                    : resume.militaryRank
-                      ? `${sanitizeText(resume.militaryRank)} ${sanitizeText(resume.militaryDischargeType) || ''}`
-                      : t('resume.militaryService.completed')}
-                </Text>
-              )}
-
-              <View style={styles.linkRow}>
-                {resume.github?.trim() && (
-                  <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>GitHub:</Text> {sanitizeText(resume.github)}
-                  </Text>
-                )}
-                {resume.blog?.trim() && (
-                  <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>Blog:</Text> {sanitizeText(resume.blog)}
-                  </Text>
-                )}
-                {resume.linkedin?.trim() && (
-                  <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>LinkedIn:</Text>{' '}
-                    {sanitizeText(resume.linkedin)}
-                  </Text>
-                )}
-                {resume.portfolio?.trim() && (
-                  <Text style={styles.linkItem}>
-                    <Text style={styles.contactLabel}>Portfolio:</Text>{' '}
-                    {sanitizeText(resume.portfolio)}
-                  </Text>
-                )}
-              </View>
+              <HeaderInfoContent resume={resume} t={t} />
             </View>
           </View>
         </View>

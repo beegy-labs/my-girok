@@ -52,7 +52,7 @@ export default function ResumePreviewPage() {
 
   if (error === ResumeViewerError.NO_ID || error === ResumeViewerError.NOT_FOUND) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 pt-nav bg-theme-bg-page">
+      <main className="min-h-screen flex items-center justify-center px-4 bg-theme-bg-page">
         <StatusMessage
           type="not-found"
           title={t('resume.preview.notFoundTitle')}
@@ -69,7 +69,7 @@ export default function ResumePreviewPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 pt-nav bg-theme-bg-page">
+      <main className="min-h-screen flex items-center justify-center px-4 bg-theme-bg-page">
         <StatusMessage
           type="error"
           title={t('resume.preview.errorTitle')}
@@ -89,7 +89,7 @@ export default function ResumePreviewPage() {
   }
 
   return (
-    <main className="w-full min-h-screen bg-theme-bg-page pt-nav">
+    <main className="w-full min-h-screen bg-theme-bg-page">
       {/* Action Bar - V0.0.1 Style with owner mode (all actions enabled) */}
       <ResumeActionBar resume={resume} mode="owner" />
 

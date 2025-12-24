@@ -1,5 +1,7 @@
 {
   "common": {
+    "back": "戻る",
+    "goBack": "戻る",
     "save": "保存",
     "cancel": "キャンセル",
     "delete": "削除",
@@ -20,7 +22,8 @@
     "endDate": "終了",
     "present": "現在",
     "currentlyWorking": "在職中",
-    "showInPreview": "プレビューに表示"
+    "showInPreview": "プレビューに表示",
+    "dragToReorder": "ドラッグして並べ替え"
   },
   "loading": {
     "darkMode": "静かな夜に記録を探しています...",
@@ -279,7 +282,27 @@
       "education": "学歴",
       "certifications": "資格"
     },
+    "sectionOrder": {
+      "title": "セクション順序と表示",
+      "description": "ドラッグで順序を変更し、トグルで表示を設定",
+      "show": "表示",
+      "hide": "非表示",
+      "tipTitle": "ヒント:",
+      "tipDescription": "履歴書プレビューとPDFにこの順序で表示されます"
+    },
+    "coverLetter": {
+      "sectionTitle": "タイトル",
+      "sectionTitlePlaceholder": "例：成長過程、志望動機、入社後の抱負",
+      "sectionContent": "内容",
+      "sectionContentPlaceholder": "この項目の内容を記入してください...",
+      "empty": "カバーレターの項目がありません",
+      "addSection": "項目を追加",
+      "tipTitle": "ヒント:",
+      "tipDescription": "成長過程、志望動機、入社後の抱負などの項目を追加して、体系的なカバーレターを作成しましょう"
+    },
     "descriptions": {
+      "settings": "履歴書のタイトル、用紙サイズ、セクション順序を設定してください",
+      "basicInfo": "履歴書に表示される基本的な個人情報を入力してください",
       "experience": "職務経験と実績を追加してください",
       "projects": "個人またはチームプロジェクトを追加してください",
       "skills": "技術スキルをカテゴリ別に整理してください",
@@ -473,6 +496,7 @@
       "coverLetter": "カバーレター",
       "coverLetterPlaceholder": "あなたの背景、強み、なぜこのポジションに適しているかを書いてください...",
       "coverLetterHint": "あなたの背景、経験、ユニークな点を説明してください",
+      "coverLetterDescription": "タイトルと内容を入力して、体系的なカバーレターセクションを作成しましょう",
       "applicationReason": "志望動機",
       "applicationReasonPlaceholder": "なぜこの会社に入りたいのか書いてください...",
       "applicationReasonHint": "会社のビジョン、仕事の魅力、あなたの強みとの関連性を書いてください",
@@ -492,7 +516,8 @@
       "credentialId": "認証ID",
       "credentialUrl": "認証URL",
       "remove": "削除",
-      "noCertificates": "まだ資格が追加されていません。「資格追加」をクリックして始めましょう。",
+      "noCertificates": "まだ資格が追加されていません。「+ 追加」をクリックして始めましょう。",
+      "noKeyAchievements": "まだ主要な成果が追加されていません。「+ 追加」をクリックして始めましょう。",
       "attachments": "添付ファイル",
       "attachmentsDesc": "プロフィール写真（グレースケール）、ポートフォリオ、資格証明書をアップロード。最大サイズ：ファイルあたり10MB。",
       "saveFirst": "ファイルアップロードを有効にするには、まず履歴書を保存してください。",
@@ -542,7 +567,7 @@
       "keyAchievements": "⭐ 主な成果",
       "keyAchievementsHint": "キャリアの主要な成果3〜5つを強調",
       "achievementPlaceholder": "成果 #{{index}} - 例：「RDBからRedisにリファクタリングし、レイテンシを48%改善」",
-      "addCategory": "+ カテゴリー追加",
+      "addCategory": "カテゴリー追加",
       "categoryNumber": "📚 カテゴリー #{{index}}",
       "skillNumber": "スキル #{{index}}",
       "skillStack": "技術スタック",
@@ -573,9 +598,15 @@
       "linkedinPlaceholder": "https://linkedin.com/in/username",
       "addressPlaceholder": "東京都渋谷区",
       "required": "必須",
-      "addSkillButton": "+ スキル追加",
+      "addSkillButton": "スキル追加",
+      "skillsCount": "スキル",
       "moveUpButton": "上に移動",
-      "moveDownButton": "下に移動"
+      "moveDownButton": "下に移動",
+      "addEducation": "学歴を追加"
+    },
+    "education": {
+      "universityPlaceholder": "例: 東京大学",
+      "majorPlaceholder": "例: コンピュータ科学"
     },
     "experienceForm": {
       "company": "会社",
@@ -588,7 +619,7 @@
       "removeCompany": "会社を削除",
       "experiencePeriod": "勤務期間：",
       "projects": "📁 この会社でのプロジェクト",
-      "addProject": "+ プロジェクト追加",
+      "addProject": "プロジェクト追加",
       "noProjects": "まだプロジェクトが追加されていません。「プロジェクト追加」をクリックして始めましょう。",
       "projectName": "プロジェクト名",
       "yourRole": "あなたの役割",

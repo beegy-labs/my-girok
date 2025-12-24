@@ -78,7 +78,7 @@ export default function SharedResumePage() {
       error === ResumeViewerError.EXPIRED || error === ResumeViewerError.INACTIVE;
 
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 pt-nav bg-theme-bg-page">
+      <main className="min-h-screen flex items-center justify-center px-4 bg-theme-bg-page">
         <StatusMessage
           type={statusType}
           message={errorMessage}
@@ -97,7 +97,7 @@ export default function SharedResumePage() {
   }
 
   return (
-    <main className="w-full min-h-screen bg-theme-bg-page pt-nav">
+    <main className="w-full min-h-screen bg-theme-bg-page">
       {/* Action Bar - V0.0.1 Style with shared mode (PDF + print only) */}
       <ResumeActionBar resume={resume} mode="shared" />
 

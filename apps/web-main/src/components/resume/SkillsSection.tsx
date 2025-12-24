@@ -11,15 +11,32 @@ interface SkillsSectionProps {
   skills: SkillWithoutId[];
   onChange: (skills: SkillWithoutId[]) => void;
   t: TFunction;
+  /** External control for category-level collapse (SSOT pattern) */
+  isExpanded?: boolean;
+  /** External toggle handler (SSOT pattern) */
+  onToggle?: () => void;
+  /** Additional header action (e.g., visibility toggle) */
+  headerAction?: React.ReactNode;
 }
 
-export default function SkillsSection({ skills, onChange, t }: SkillsSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  // Memoized toggle handler (2025 best practice)
+export default function SkillsSection({
+  skills,
+  onChange,
+  t,
+  isExpanded: externalExpanded,
+  onToggle: externalToggle,
+  headerAction: externalHeaderAction,
+}: SkillsSectionProps) {
+  // Use external state if provided (SSOT), otherwise fallback to internal state
+  const [internalExpanded, setInternalExpanded] = useState(true);
+  const isExpanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
   const handleToggleExpanded = useCallback(() => {
-    setIsExpanded((prev) => !prev);
-  }, []);
+    if (externalToggle) {
+      externalToggle();
+    } else {
+      setInternalExpanded((prev) => !prev);
+    }
+  }, [externalToggle]);
 
   const handleAddCategory = useCallback(() => {
     onChange([
@@ -125,23 +142,27 @@ export default function SkillsSection({ skills, onChange, t }: SkillsSectionProp
       onToggle={handleToggleExpanded}
       count={skills.length}
       variant="secondary"
+      collapsibleOnDesktop
       headerAction={
-        <Button
-          variant="primary"
-          onClick={handleAddCategory}
-          size="sm"
-          className="py-2 touch-manipulation"
-        >
-          + {t('resume.form.addCategory')}
-        </Button>
+        <div className="flex items-center gap-2">
+          {externalHeaderAction}
+          <Button
+            variant="primary"
+            onClick={handleAddCategory}
+            size="sm"
+            className="py-2 touch-manipulation"
+          >
+            + {t('common.add')}
+          </Button>
+        </div>
       }
     >
-      <p className="text-xs sm:text-sm text-theme-text-secondary mb-3 sm:mb-4">
+      <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
         {t('resume.descriptions.skills')}
       </p>
 
       {skills.length > 0 ? (
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           {skills.map((skill, skillIndex) => (
             <SkillCategory
               key={skillIndex}
@@ -197,6 +218,13 @@ const SkillCategory = memo(function SkillCategory({
   onSkillItemDescriptionsChange,
   onMoveSkillItem,
 }: SkillCategoryProps) {
+  // Default collapsed state
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleExpand = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
+
   // Memoized handlers (2025 best practice)
   const handleDeleteCategory = useCallback(() => {
     onDeleteCategory(skillIndex);
@@ -214,69 +242,101 @@ const SkillCategory = memo(function SkillCategory({
   }, [onAddSkillItem, skillIndex]);
 
   return (
-    <div className="border border-theme-border-default rounded-soft p-3 sm:p-5 bg-theme-bg-hover transition-colors duration-200">
-      <div className="flex justify-between items-center mb-3 sm:mb-4">
-        <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">
-          {t('resume.form.categoryNumber', { index: skillIndex + 1 })}
-        </h3>
-        <button
-          type="button"
-          onClick={handleDeleteCategory}
-          className="text-theme-status-error-text hover:opacity-80 text-xs sm:text-sm font-semibold px-2 py-1 hover:bg-theme-status-error-bg rounded touch-manipulation"
-        >
-          {t('common.delete')}
-        </button>
-      </div>
-
-      {/* Category Name */}
-      <div className="mb-4">
-        <TextInput
-          label={t('resume.form.categoryName')}
-          value={skill.category}
-          onChange={handleCategoryChange}
-          placeholder={t('resume.form.categoryPlaceholder')}
-          required
-        />
-      </div>
-
-      {/* Skill Items */}
-      <div className="space-y-2 sm:space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <label className="text-xs sm:text-sm font-semibold text-theme-text-secondary">
-            {t('resume.form.skillStack')}
-          </label>
-          <Button
-            variant="secondary"
-            onClick={handleAddSkillItem}
-            size="sm"
-            className="py-1.5 px-2 text-xs sm:text-sm touch-manipulation"
+    <div className="border border-theme-border-default rounded-soft bg-theme-bg-hover transition-colors duration-200 overflow-hidden">
+      {/* Header - clickable to expand/collapse */}
+      <div className="p-4 sm:p-6 bg-gradient-to-r from-theme-bg-hover to-theme-bg-card">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleExpand}
+            className="flex-1 flex items-center gap-2 text-left cursor-pointer"
           >
-            + {t('resume.form.addSkillButton')}
-          </Button>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm sm:text-lg font-semibold text-theme-text-primary">
+                ⚡ {skill.category || t('resume.form.categoryNumber', { index: skillIndex + 1 })}
+              </h3>
+              {!isExpanded && Array.isArray(skill.items) && skill.items.length > 0 && (
+                <p className="text-xs text-theme-text-tertiary truncate">
+                  {skill.items.length} {t('resume.form.skillsCount')}
+                </p>
+              )}
+            </div>
+            <svg
+              className={`w-5 h-5 text-theme-text-tertiary transition-transform duration-200 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteCategory}
+            className="text-theme-status-error-text hover:opacity-80 text-xs sm:text-sm font-semibold px-2 py-1 hover:bg-theme-status-error-bg rounded touch-manipulation flex-shrink-0"
+          >
+            {t('common.delete')}
+          </button>
+        </div>
+      </div>
+
+      {/* Collapsible Content */}
+      <div className={`${isExpanded ? 'block' : 'hidden'} p-4 sm:p-6 pt-0`}>
+        {/* Category Name */}
+        <div className="mb-4">
+          <TextInput
+            label={t('resume.form.categoryName')}
+            value={skill.category}
+            onChange={handleCategoryChange}
+            placeholder={t('resume.form.categoryPlaceholder')}
+            required
+          />
         </div>
 
-        {Array.isArray(skill.items) && skill.items.length > 0 ? (
-          <div className="space-y-2 sm:space-y-3">
-            {skill.items.map((item, itemIndex) => (
-              <SkillItemCard
-                key={itemIndex}
-                item={item}
-                skillIndex={skillIndex}
-                itemIndex={itemIndex}
-                itemCount={skill.items.length}
-                t={t}
-                onDeleteSkillItem={onDeleteSkillItem}
-                onSkillItemNameChange={onSkillItemNameChange}
-                onSkillItemDescriptionsChange={onSkillItemDescriptionsChange}
-                onMoveSkillItem={onMoveSkillItem}
-              />
-            ))}
+        {/* Skill Items */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-xs sm:text-sm font-semibold text-theme-text-secondary">
+              {t('resume.form.skillStack')}
+            </label>
+            <Button
+              variant="secondary"
+              onClick={handleAddSkillItem}
+              size="sm"
+              className="py-1.5 px-2 text-xs sm:text-sm touch-manipulation"
+            >
+              + {t('common.add')}
+            </Button>
           </div>
-        ) : (
-          <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-input rounded-soft border border-dashed border-theme-border-default transition-colors duration-200">
-            <p>{t('resume.form.clickToAddSkills')}</p>
-          </div>
-        )}
+
+          {Array.isArray(skill.items) && skill.items.length > 0 ? (
+            <div className="space-y-4">
+              {skill.items.map((item, itemIndex) => (
+                <SkillItemCard
+                  key={itemIndex}
+                  item={item}
+                  skillIndex={skillIndex}
+                  itemIndex={itemIndex}
+                  itemCount={skill.items.length}
+                  t={t}
+                  onDeleteSkillItem={onDeleteSkillItem}
+                  onSkillItemNameChange={onSkillItemNameChange}
+                  onSkillItemDescriptionsChange={onSkillItemDescriptionsChange}
+                  onMoveSkillItem={onMoveSkillItem}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-theme-text-tertiary text-sm bg-theme-bg-input rounded-soft border border-dashed border-theme-border-default transition-colors duration-200">
+              <p>{t('resume.form.clickToAddSkills')}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -340,8 +400,8 @@ const SkillItemCard = memo(function SkillItemCard({
   );
 
   return (
-    <div className="border border-theme-border-subtle rounded-soft p-2 sm:p-4 bg-theme-bg-card transition-colors duration-200">
-      <div className="flex justify-between items-center mb-2 sm:mb-3">
+    <div className="border border-theme-border-subtle rounded-soft p-4 bg-theme-bg-card transition-colors duration-200">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Move buttons - stacked vertically */}
           <div className="flex flex-col gap-0.5">
@@ -381,7 +441,7 @@ const SkillItemCard = memo(function SkillItemCard({
         </Button>
       </div>
 
-      <div className="mb-3">
+      <div className="mb-4">
         {/* Skill Name */}
         <TextInput
           label={t('resume.form.skillName')}
