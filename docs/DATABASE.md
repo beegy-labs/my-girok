@@ -14,6 +14,7 @@ Complete guide for database setup, migrations, and management across environment
 - [Backup & Restore](#backup--restore)
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
+- [Naming Conventions](#naming-conventions)
 
 ## Overview
 
@@ -635,6 +636,49 @@ kubectl run psql-test --rm -it --restart=Never \
   --image=postgres:16 \
   -- psql "$DATABASE_URL" -c "SELECT 1"
 ```
+
+## Naming Conventions
+
+### Overview
+
+- **Database Layer**: All objects use **snake_case** (PostgreSQL best practice)
+- **Application Layer**: All TypeScript uses **camelCase** (JavaScript convention)
+- **Mapping**: Prisma `@map()` bridges the two automatically
+
+### Tables
+
+- **Format**: `snake_case`, plural nouns
+- Examples: `users`, `resume_sections`, `share_links`
+
+### Columns
+
+- **Format**: `snake_case`
+- **Boolean**: Prefix with `is_` or `has_`
+- **Timestamps**: Use `created_at`, `updated_at`, `deleted_at`
+- **Foreign keys**: Use `{referenced_table_singular}_id`
+
+### Indexes & Constraints
+
+| Type        | Format                 | Example                      |
+| ----------- | ---------------------- | ---------------------------- |
+| Index       | `{table}_{column}_idx` | `users_email_idx`            |
+| Unique      | `{table}_{column}_key` | `sessions_refresh_token_key` |
+| Primary Key | `{table}_pkey`         | `users_pkey`                 |
+| Foreign Key | `{table}_{ref}_fkey`   | `sessions_user_id_fkey`      |
+
+### Prisma Schema Mapping
+
+```prisma
+model User {
+  id            String   @id @default(uuid())
+  emailVerified Boolean  @default(false) @map("email_verified")  // camelCase → snake_case
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+```
+
+---
 
 ## Resources
 

@@ -65,22 +65,48 @@ Kubernetes deployment guide:
 ### Getting Started
 
 - [Main README](../README.md) - Project overview
-- [Architecture](.ai/architecture.md) - System architecture patterns
+- [Architecture Roadmap](ARCHITECTURE_ROADMAP.md) - System architecture overview
+
+### Services
+
+- [Auth Service](services/AUTH_SERVICE.md) - Authentication, sessions, legal consent
+- [Personal Service](services/PERSONAL_SERVICE.md) - Resume management, file storage
+
+### Apps
+
+- [Web Main](apps/WEB_MAIN.md) - Public React web application
+
+### Packages
+
+- [Types Package](packages/TYPES.md) - Shared TypeScript types
+- [Nest Common](packages/nest-common.md) - NestJS shared utilities
 
 ### Features
 
 - [Resume Guide](guides/RESUME.md) - Resume feature documentation
+- [SEO Guide](guides/SEO_GUIDE.md) - Search engine optimization
+- [AdSense Guide](guides/ADSENSE_GUIDE.md) - Google AdSense integration
 
 ### Development
 
 - [Core Rules](../.ai/rules.md) - Essential development rules
-- [Security Policies](policies/SECURITY.md) - Security best practices
-- [Testing Standards](policies/TESTING.md) - How to test your code
+- [Database Guide](DATABASE.md) - Database management & migrations
+- [Design System](DESIGN_SYSTEM.md) - WCAG 2.1 AAA design system
+- [Internationalization](I18N.md) - i18n setup and usage
+- [CI/CD](CI_CD.md) - Continuous integration & deployment
 
 ### Deployment
 
-- [Deployment Guide](policies/DEPLOYMENT.md) - Kubernetes deployment
+- [Kubernetes Deployment](policies/DEPLOYMENT.md) - K8s with ArgoCD
+- [Docker Deployment](DOCKER_DEPLOYMENT.md) - Docker Compose setup
 - [Performance Guide](policies/PERFORMANCE.md) - Optimization tips
+
+### Policies
+
+- [Security](policies/SECURITY.md) - Security best practices
+- [Testing](policies/TESTING.md) - Testing standards
+- [Legal & Consent](policies/LEGAL_CONSENT.md) - GDPR, PIPA compliance
+- [LLM Guidelines](policies/LLM_GUIDELINES.md) - AI assistant guidelines
 
 ## For AI Assistants
 
