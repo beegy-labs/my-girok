@@ -1,0 +1,140 @@
+name: CI - Web Admin
+
+on:
+  push:
+    branches: [develop, 'release/**', main]
+    paths:
+      - 'apps/web-admin/**'
+      - 'packages/types/**'
+      - 'packages/ui-components/**'
+      - 'packages/design-tokens/**'
+      - '.github/workflows/ci-web-admin.yml'
+  pull_request:
+    branches: [develop, 'release/**', main]
+    paths:
+      - 'apps/web-admin/**'
+      - 'packages/types/**'
+      - 'packages/ui-components/**'
+      - 'packages/design-tokens/**'
+  workflow_dispatch:
+
+env:
+  REGISTRY: gitea.girok.dev
+  IMAGE_NAME: beegy-labs/web-admin
+
+jobs:
+  # Fast check for PR and Push (~1min with cache)
+  check:
+    name: Check
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Build dependencies
+        run: |
+          pnpm --filter @my-girok/types build
+          pnpm --filter @my-girok/design-tokens build
+          pnpm --filter @my-girok/ui-components build
+      - name: Lint and type-check
+        working-directory: apps/web-admin
+        run: pnpm lint & pnpm type-check & wait
+      - name: Build for bundle analysis
+        if: github.event_name == 'pull_request'
+        working-directory: apps/web-admin
+        run: pnpm build
+      - name: Bundle size report
+        if: github.event_name == 'pull_request'
+        working-directory: apps/web-admin
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          find dist/assets -name "*.js" -exec ls -lh {} \; | awk '{print "| " $NF " | " $5 " |"}' >> $GITHUB_STEP_SUMMARY
+          TOTAL=$(du -sh dist | cut -f1)
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total: ${TOTAL}**" >> $GITHUB_STEP_SUMMARY
+
+  build:
+    name: Build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 10
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.GITEA_USERNAME }}
+          password: ${{ secrets.GITEA_TOKEN }}
+      - name: Meta
+        id: meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          case "${{ github.ref }}" in
+            refs/heads/main) TAG="latest"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" ;;
+            refs/heads/develop) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop-latest" ;;
+            refs/heads/release/*) TAG="release-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release" ;;
+            *) TAG="$(echo ${{ github.ref }} | sed 's|refs/heads/||;s|/|-|g')-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}" ;;
+          esac
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          # API URLs for admin console
+          [[ "${{ github.ref }}" == "refs/heads/main" ]] && API="https://my-api.girok.dev" || API="https://my-api-dev.girok.dev"
+          echo "admin_api_url=${API}/auth" >> $GITHUB_OUTPUT
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/web-admin/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          build-args: |
+            VITE_ADMIN_API_URL=${{ steps.meta.outputs.admin_api_url }}
+
+  deploy:
+    name: Deploy
+    needs: [check, build]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: beegy-labs/platform-gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          path: gitops
+      - name: Update & Push
+        run: |
+          cd gitops && git pull --rebase
+          case "${{ github.ref }}" in
+            refs/heads/main) FILE="clusters/home/values/my-girok-web-admin-prod.yaml"; ENV="production" ;;
+            refs/heads/develop) FILE="clusters/home/values/my-girok-web-admin-dev.yaml"; ENV="development" ;;
+            *) FILE="clusters/home/values/my-girok-web-admin-staging.yaml"; ENV="staging" ;;
+          esac
+          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${FILE}
+          git diff --staged --quiet || git commit -m "chore(${ENV}): update web-admin to ${{ needs.build.outputs.tag }}"
+          for i in 1 2 3; do git push && break || { sleep 3; git pull --rebase; }; done
+      - name: Cleanup
+        env: { GITEA_TOKEN: "${{ secrets.GITEA_TOKEN }}" }
+        run: |
+          [[ "${{ github.ref }}" == "refs/heads/main" ]] && P="" || P="${{ github.ref == 'refs/heads/develop' && 'develop-' || 'release-' }}"
+          curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/web-admin" | \
+            jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \
+            while IFS='|' read -r _ v; do curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/web-admin/${v}"; done
