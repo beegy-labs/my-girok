@@ -528,12 +528,37 @@ console.log(requirements.requirements); // ConsentRequirementWithDocument[]
 | `updateConsent`          | `authApi`   | Update a specific consent (agree/withdraw) |
 | `checkRequiredConsents`  | `authApi`   | Check if user has all required consents    |
 
-**ConsentPage Flow**:
+**ConsentPage Flow** (Updated 2025-12):
 
-1. On mount: `getConsentRequirements(i18n.language)` fetches region-specific consents
-2. User agrees to required consents
-3. On continue: consents saved to `sessionStorage` for registration step
-4. RegisterPage reads consents from `sessionStorage` and sends to API
+1. On mount: Detect user country via `getUserLocale()`
+2. Map country to locale via `COUNTRY_TO_LOCALE` mapping
+3. Fetch requirements: `getConsentRequirements(locale)` for region-specific consents
+4. User agrees to required consents
+5. Validation: All required consents must be agreed before continue
+6. On continue: consents saved to `sessionStorage` for registration step
+7. RegisterPage reads consents from `sessionStorage` and sends to API
+
+**Country-to-Locale Mapping**:
+
+```typescript
+// ConsentPage.tsx
+const COUNTRY_TO_LOCALE: Record<string, string> = {
+  KR: 'ko',
+  JP: 'ja',
+  US: 'en',
+  GB: 'en',
+  DE: 'de',
+  FR: 'fr',
+  IN: 'hi',
+};
+
+// Initial fetch uses detected country (NOT i18n.language)
+const detected = getUserLocale(null, true);
+const locale = COUNTRY_TO_LOCALE[detected.country] || 'en';
+fetchConsentRequirements(locale);
+```
+
+**Note**: Country determines legal jurisdiction (PIPA, GDPR, CCPA), while language is only for UI display.
 
 ## User Preferences API
 

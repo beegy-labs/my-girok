@@ -39,7 +39,7 @@ FROM node:22-alpine AS production
 # Install security updates and goose for migrations
 RUN apk upgrade --no-cache && \
     apk add --no-cache ca-certificates && \
-    wget -qO- https://github.com/pressly/goose/releases/download/v3.24.1/goose_linux_x86_64 -O /usr/local/bin/goose && \
+    wget -q https://github.com/pressly/goose/releases/download/v3.24.1/goose_linux_x86_64 -O /usr/local/bin/goose && \
     chmod +x /usr/local/bin/goose
 
 WORKDIR /app

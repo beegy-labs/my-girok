@@ -1,8 +1,7 @@
-// Prisma schema for auth-service
 generator client {
   provider        = "prisma-client-js"
   output          = "../node_modules/.prisma/auth-client"
-  previewFeatures = ["typedSql", "relationJoins"]
+  previewFeatures = ["relationJoins", "typedSql"]
 }
 
 datasource db {
@@ -10,28 +9,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model
 model User {
-  id            String         @id @default(uuid())
-  externalId    String         @unique @map("external_id") // 10-char time-based ID for external partners (e.g., advertisers)
-  email         String         @unique
-  username      String         @unique  // Unique username for public profile URLs (/:username)
-  password      String?        // null for OAuth users
-  name          String?
-  avatar        String?
-  role          Role           @default(USER)
-  provider      AuthProvider   @default(LOCAL)
-  providerId    String?        @map("provider_id") // OAuth provider user ID
-  emailVerified Boolean        @default(false) @map("email_verified")
-  region        String?        // Registration region (KR, JP, EU, US, etc.) for consent policy
-  locale        String?        // User's preferred locale (ko, en, ja, etc.)
-  timezone      String?        // User's timezone (Asia/Seoul, Europe/London, etc.)
-  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  sessions      Session[]
-  domainAccess  DomainAccessToken[]
-  consents      UserConsent[]
+  id               String              @id @default(uuid())
+  email            String              @unique
+  password         String?
+  name             String?
+  avatar           String?
+  role             Role                @default(USER)
+  provider         AuthProvider        @default(LOCAL)
+  username         String              @unique
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  emailVerified    Boolean             @default(false) @map("email_verified")
+  providerId       String?             @map("provider_id")
+  externalId       String?             @unique @map("external_id") @db.VarChar(10)
+  region           String?             @db.VarChar(50)
+  locale           String?             @db.VarChar(10)
+  timezone         String?             @db.VarChar(50)
+  admin_user_links admin_user_links[]
+  domainAccess     DomainAccessToken[]
+  sessions         Session[]
+  consents         UserConsent[]
 
   @@index([externalId])
   @@index([email])
@@ -40,29 +38,27 @@ model User {
   @@map("users")
 }
 
-// Session model for refresh token management
 model Session {
   id           String   @id @default(uuid())
   userId       String   @map("user_id")
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshToken String   @unique @map("refresh_token")
   expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([refreshToken])
   @@map("sessions")
 }
 
-// Domain access token for time-limited sharing
 model DomainAccessToken {
   id        String   @id @default(uuid())
+  domain    String
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  domain    String   // e.g., 'resume', 'portfolio'
-  token     String   @unique
-  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([userId])
   @@index([domain])
@@ -70,67 +66,214 @@ model DomainAccessToken {
   @@map("domain_access_tokens")
 }
 
-// OAuth provider configuration (enable/disable providers)
 model OAuthProviderConfig {
   id           String       @id @default(uuid())
   provider     AuthProvider @unique
   enabled      Boolean      @default(true)
-  displayName  String       @map("display_name") // Korean/English name
-  description  String?      // Additional info
-  clientId     String?      @map("client_id") // OAuth client ID
-  clientSecret String?      @map("client_secret") // OAuth client secret (encrypted)
-  callbackUrl  String?      @map("callback_url") // OAuth callback URL
+  description  String?
+  callbackUrl  String?      @map("callback_url")
+  clientId     String?      @map("client_id")
+  clientSecret String?      @map("client_secret")
+  displayName  String       @map("display_name")
   updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
-  updatedBy    String?      @map("updated_by") // User ID who made the change
+  updatedBy    String?      @map("updated_by")
 
   @@map("oauth_provider_configs")
 }
 
-// Legal document versions (Privacy Policy, Terms of Service, etc.)
 model LegalDocument {
-  id            String           @id @default(uuid())
-  type          LegalDocumentType
-  version       String           // Semantic version: "1.0.0", "1.1.0"
-  locale        String           @default("ko") // ko, en, ja
-  title         String           // Document title
-  content       String           @db.Text // Full document content (markdown)
-  summary       String?          @db.Text // Brief summary for consent UI
-  effectiveDate DateTime         @map("effective_date") @db.Timestamptz(6)
-  isActive      Boolean          @default(true) @map("is_active")
-  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  consents      UserConsent[]
+  id                                        String              @id @default(dbgenerated("(gen_random_uuid())::text"))
+  type                                      LegalDocumentType
+  version                                   String              @db.VarChar(50)
+  locale                                    String              @default("ko") @db.VarChar(10)
+  title                                     String              @db.VarChar(255)
+  content                                   String
+  summary                                   String?
+  effectiveDate                             DateTime            @map("effective_date") @db.Timestamptz(6)
+  isActive                                  Boolean             @default(true) @map("is_active")
+  createdAt                                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                                 DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  created_by                                String?
+  updated_by                                String?
+  admins_legal_documents_created_byToadmins admins?             @relation("legal_documents_created_byToadmins", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  admins_legal_documents_updated_byToadmins admins?             @relation("legal_documents_updated_byToadmins", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  consents                                  UserConsent[]
 
   @@unique([type, version, locale])
-  @@index([type, locale, isActive])
+  @@index([type, locale, isActive], map: "idx_legal_documents_type_locale_active")
   @@map("legal_documents")
 }
 
-// User consent records (GDPR/PIPA compliant audit trail)
 model UserConsent {
-  id              String           @id @default(uuid())
-  userId          String           @map("user_id")
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  consentType     ConsentType      @map("consent_type")
-  documentId      String?          @map("document_id")
-  document        LegalDocument?   @relation(fields: [documentId], references: [id])
-  documentVersion String?          @map("document_version") // Snapshot of version at consent time
-  agreed          Boolean          @default(true)
-  agreedAt        DateTime         @map("agreed_at") @db.Timestamptz(6)
-  withdrawnAt     DateTime?        @map("withdrawn_at") @db.Timestamptz(6)
-  ipAddress       String?          @map("ip_address") // For audit
-  userAgent       String?          @map("user_agent") // For audit
-  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  id              String         @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId          String         @map("user_id")
+  consentType     ConsentType    @map("consent_type")
+  documentId      String?        @map("document_id")
+  documentVersion String?        @map("document_version") @db.VarChar(50)
+  agreed          Boolean        @default(true)
+  agreedAt        DateTime       @map("agreed_at") @db.Timestamptz(6)
+  withdrawnAt     DateTime?      @map("withdrawn_at") @db.Timestamptz(6)
+  ipAddress       String?        @map("ip_address") @db.VarChar(45)
+  userAgent       String?        @map("user_agent")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  document        LegalDocument? @relation(fields: [documentId], references: [id], onUpdate: NoAction)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([userId, consentType, documentVersion])
-  @@index([userId])
-  @@index([consentType])
-  @@index([agreedAt])
+  @@index([agreedAt], map: "idx_user_consents_agreed_at")
+  @@index([consentType], map: "idx_user_consents_consent_type")
+  @@index([userId], map: "idx_user_consents_user_id")
   @@map("user_consents")
 }
 
-// Enums
+model admin_sessions {
+  id            String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  admin_id      String
+  refresh_token String   @unique
+  expires_at    DateTime @db.Timestamptz(6)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  admins        admins   @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([admin_id], map: "idx_admin_sessions_admin_id")
+  @@index([refresh_token], map: "idx_admin_sessions_refresh_token")
+}
+
+model admin_user_links {
+  id         String          @id @default(dbgenerated("(gen_random_uuid())::text"))
+  admin_id   String
+  user_id    String
+  link_type  admin_link_type @default(OPERATOR)
+  created_at DateTime        @default(now()) @db.Timestamptz(6)
+  admins     admins          @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([admin_id, user_id])
+  @@index([admin_id], map: "idx_admin_user_links_admin_id")
+  @@index([user_id], map: "idx_admin_user_links_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admins {
+  id                                                 String             @id @default(dbgenerated("(gen_random_uuid())::text"))
+  email                                              String             @unique
+  password                                           String
+  name                                               String
+  scope                                              admin_scope        @default(TENANT)
+  tenant_id                                          String?
+  parent_id                                          String?
+  role_id                                            String
+  is_active                                          Boolean            @default(true)
+  last_login_at                                      DateTime?          @db.Timestamptz(6)
+  created_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  admin_sessions                                     admin_sessions[]
+  admin_user_links                                   admin_user_links[]
+  admins                                             admins?            @relation("adminsToadmins", fields: [parent_id], references: [id], onUpdate: NoAction)
+  other_admins                                       admins[]           @relation("adminsToadmins")
+  roles                                              roles              @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                                            tenants?           @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  audit_logs                                         audit_logs[]
+  legal_documents_legal_documents_created_byToadmins LegalDocument[]    @relation("legal_documents_created_byToadmins")
+  legal_documents_legal_documents_updated_byToadmins LegalDocument[]    @relation("legal_documents_updated_byToadmins")
+
+  @@index([email], map: "idx_admins_email")
+  @@index([parent_id], map: "idx_admins_parent_id")
+  @@index([role_id], map: "idx_admins_role_id")
+  @@index([scope, tenant_id], map: "idx_admins_scope_tenant_id")
+}
+
+model audit_logs {
+  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  admin_id     String
+  action       String
+  resource     String
+  resource_id  String?
+  before_state Json?
+  after_state  Json?
+  ip_address   String?
+  user_agent   String?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  admins       admins   @relation(fields: [admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([action], map: "idx_audit_logs_action")
+  @@index([admin_id, created_at], map: "idx_audit_logs_admin_id_created_at")
+  @@index([created_at], map: "idx_audit_logs_created_at")
+  @@index([resource, resource_id], map: "idx_audit_logs_resource_resource_id")
+}
+
+model goose_db_version {
+  id         Int      @id @default(autoincrement())
+  version_id BigInt
+  is_applied Boolean
+  tstamp     DateTime @default(now()) @db.Timestamp(6)
+}
+
+model permissions {
+  id               String             @id @default(dbgenerated("(gen_random_uuid())::text"))
+  resource         String
+  action           String
+  scope            admin_scope?
+  display_name     String
+  description      String?
+  category         String
+  tenant_type      tenant_type?
+  role_permissions role_permissions[]
+
+  @@unique([resource, action])
+  @@index([resource], map: "idx_permissions_resource")
+  @@index([scope, category], map: "idx_permissions_scope_category")
+}
+
+model role_permissions {
+  role_id       String
+  permission_id String
+  conditions    Json?
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([role_id, permission_id])
+  @@index([permission_id], map: "idx_role_permissions_permission_id")
+}
+
+model roles {
+  id               String             @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name             String
+  display_name     String
+  description      String?
+  scope            admin_scope
+  tenant_type      tenant_type?
+  level            Int                @default(0)
+  parent_id        String?
+  is_system        Boolean            @default(false)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  admins           admins[]
+  role_permissions role_permissions[]
+  roles            roles?             @relation("rolesToroles", fields: [parent_id], references: [id], onUpdate: NoAction)
+  other_roles      roles[]            @relation("rolesToroles")
+
+  @@unique([name, scope])
+  @@index([parent_id], map: "idx_roles_parent_id")
+  @@index([scope, tenant_type], map: "idx_roles_scope_tenant_type")
+}
+
+model tenants {
+  id          String        @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name        String
+  type        tenant_type   @default(INTERNAL)
+  slug        String        @unique
+  status      tenant_status @default(PENDING)
+  settings    Json?
+  approved_at DateTime?     @db.Timestamptz(6)
+  approved_by String?
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime      @default(now()) @db.Timestamptz(6)
+  admins      admins[]
+
+  @@index([slug], map: "idx_tenants_slug")
+  @@index([type, status], map: "idx_tenants_type_status")
+}
+
 enum Role {
   GUEST
   USER
@@ -146,22 +289,47 @@ enum AuthProvider {
   APPLE
 }
 
-// Legal document types
-enum LegalDocumentType {
-  TERMS_OF_SERVICE      // 이용약관
-  PRIVACY_POLICY        // 개인정보처리방침
-  MARKETING_POLICY      // 마케팅 정보 수신 동의
-  PERSONALIZED_ADS      // 맞춤형 광고 동의
+enum admin_link_type {
+  OPERATOR
+  MODERATOR
+  SUPPORT
+  IMPERSONATE
 }
 
-// Consent types (what users can agree to)
+enum admin_scope {
+  SYSTEM
+  TENANT
+}
+
 enum ConsentType {
-  TERMS_OF_SERVICE      // [Required] 이용약관 동의
-  PRIVACY_POLICY        // [Required] 개인정보 수집·이용 동의
-  MARKETING_EMAIL       // [Optional] 마케팅 이메일 수신 동의
-  MARKETING_PUSH        // [Optional] 마케팅 푸시 알림 동의
-  MARKETING_PUSH_NIGHT  // [Optional] 야간 푸시 알림 동의 (21:00-08:00)
-  MARKETING_SMS         // [Optional] 마케팅 SMS 수신 동의
-  PERSONALIZED_ADS      // [Optional] 맞춤형 광고 동의
-  THIRD_PARTY_SHARING   // [Optional] 제3자 정보 제공 동의
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_EMAIL
+  MARKETING_PUSH
+  MARKETING_PUSH_NIGHT
+  MARKETING_SMS
+  PERSONALIZED_ADS
+  THIRD_PARTY_SHARING
+
+  @@map("consent_type")
+}
+
+enum LegalDocumentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_POLICY
+  PERSONALIZED_ADS
+
+  @@map("legal_document_type")
+}
+
+enum tenant_status {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum tenant_type {
+  INTERNAL
 }

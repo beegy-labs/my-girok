@@ -42,6 +42,55 @@ POST /v1/legal/consents               # Create (auth)
 PUT  /v1/legal/consents/:type         # Update (auth)
 ```
 
+### Admin Auth (H-RBAC)
+
+```
+POST /v1/admin/auth/login     # { email, password }
+POST /v1/admin/auth/refresh   # { refreshToken }
+GET  /v1/admin/auth/me        # Admin profile
+POST /v1/admin/auth/logout    # { refreshToken }
+```
+
+### Admin Tenant Management
+
+```
+GET    /v1/admin/tenants           # List (tenant:read)
+GET    /v1/admin/tenants/:id       # Detail (tenant:read)
+POST   /v1/admin/tenants           # Create (tenant:create)
+PUT    /v1/admin/tenants/:id       # Update (tenant:update)
+PATCH  /v1/admin/tenants/:id/status # Approve/Suspend (tenant:approve)
+GET    /v1/admin/tenants/me        # Own tenant (Tenant Admin)
+PUT    /v1/admin/tenants/me        # Update own (Tenant Admin)
+```
+
+### Admin Legal Management
+
+```
+GET    /v1/admin/legal/documents        # List (legal:read)
+GET    /v1/admin/legal/documents/:id    # Detail (legal:read)
+POST   /v1/admin/legal/documents        # Create (legal:create)
+PUT    /v1/admin/legal/documents/:id    # Update (legal:update)
+DELETE /v1/admin/legal/documents/:id    # Soft delete (legal:delete)
+GET    /v1/admin/legal/consents         # User consents (legal:read)
+GET    /v1/admin/legal/consents/stats   # Statistics (legal:read)
+```
+
+### Admin Audit Logs
+
+```
+GET /v1/admin/audit/logs         # List with filters (audit:read)
+GET /v1/admin/audit/filters      # Filter options (audit:read)
+GET /v1/admin/audit/logs/export  # CSV export (audit:read)
+```
+
+**Query Parameters:**
+
+- `action` - Filter by action (create, update, delete, login)
+- `resource` - Filter by resource type
+- `adminId` - Filter by admin
+- `dateFrom`, `dateTo` - Date range
+- `page`, `limit` - Pagination
+
 ## Key Flows
 
 ### Registration
@@ -88,6 +137,59 @@ model User {
 | Role         | GUEST, USER, MANAGER, MASTER                   |
 | AuthProvider | LOCAL, GOOGLE, KAKAO, NAVER, APPLE             |
 | ConsentType  | TERMS*OF_SERVICE, PRIVACY_POLICY, MARKETING*\* |
+| AdminScope   | SYSTEM, TENANT                                 |
+| TenantType   | INTERNAL (v1), COMMERCE, ADBID, etc. (future)  |
+| TenantStatus | PENDING, ACTIVE, SUSPENDED, TERMINATED         |
+
+## H-RBAC (Admin System)
+
+### Architecture
+
+```
+SYSTEM LEVEL (Platform Admin)
+├── system_super   (level 100) - Full access (*)
+├── system_admin   (level 80)  - Partner/User/Legal management
+└── system_moderator (level 50) - Content moderation
+
+TENANT LEVEL (Partner Admin)
+├── partner_super  (level 100) - Full tenant access
+├── partner_admin  (level 80)  - Admin management
+└── partner_editor (level 50)  - View only
+```
+
+### Permission Pattern
+
+```typescript
+// Format: resource:action
+@Permissions('legal:read')
+@Permissions('tenant:approve')
+@Permissions('user:suspend')
+@Permissions('audit:read')
+
+// Wildcard support
+'*'          // All permissions
+'legal:*'    // All legal actions
+```
+
+### Available Permissions
+
+| Category  | Permissions                                                                         |
+| --------- | ----------------------------------------------------------------------------------- |
+| Legal     | `legal:read`, `legal:create`, `legal:update`, `legal:delete`                        |
+| Tenant    | `tenant:read`, `tenant:create`, `tenant:update`, `tenant:approve`, `tenant:suspend` |
+| User      | `user:read`, `user:update`, `user:suspend`, `user:delete`, `user:link`              |
+| Content   | `content:read`, `content:delete`, `content:hide`                                    |
+| Audit     | `audit:read`                                                                        |
+| Analytics | `analytics:read`                                                                    |
+
+### Admin Guards
+
+```typescript
+@UseGuards(AdminAuthGuard, PermissionGuard)
+@Permissions('legal:create')
+@Post('documents')
+createDocument(@CurrentAdmin() admin: AdminPayload) { ... }
+```
 
 ## Guards
 
