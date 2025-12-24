@@ -1,0 +1,39 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "invalidCredentials": "Invalid email or password"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back"
+  },
+  "legal": {
+    "documents": "Legal Documents",
+    "consents": "User Consents",
+    "createDocument": "Create Document",
+    "editDocument": "Edit Document"
+  },
+  "tenants": {
+    "title": "Tenants",
+    "createTenant": "Create Tenant",
+    "editTenant": "Edit Tenant"
+  }
+}
