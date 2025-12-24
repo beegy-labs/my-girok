@@ -301,6 +301,8 @@
       "tipDescription": "Add sections like Background, Motivation, and Career Goals to create a well-organized cover letter"
     },
     "descriptions": {
+      "settings": "Configure resume title, paper size, and section order",
+      "basicInfo": "Enter your basic personal information for the resume",
       "experience": "Add your work history and achievements",
       "projects": "Add your personal and professional projects",
       "skills": "Organize your technical skills by category",

@@ -34,7 +34,7 @@ import {
   Education,
 } from '../../api/resume';
 import SectionOrderManager from './SectionOrderManager';
-import ExperienceSection from './ExperienceSection';
+import { ExperienceSection } from './experience';
 import EducationSection from './EducationSection';
 import SkillsSection from './SkillsSection';
 import {
@@ -201,7 +201,7 @@ function SortableFormSection({ id, children, dragHandleLabel }: SortableFormSect
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="group">
+    <div ref={setNodeRef} style={style} className="group mb-4">
       {/* Drag handle - uses activator node ref for proper isolation */}
       <div
         ref={setActivatorNodeRef}
@@ -903,7 +903,7 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
   return (
     <form id="resume-form" onSubmit={handleSubmit} className="space-y-4">
       {/* Fieldset to disable form during submission (2025 best practice) */}
-      <fieldset disabled={submitting} className="contents">
+      <fieldset disabled={submitting} className="space-y-4">
         {/* Resume Settings - Always expanded, not collapsible */}
         <CollapsibleSection
           title={t('resume.sections.settings')}
@@ -913,6 +913,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           variant="secondary"
           collapsibleOnDesktop={false}
         >
+          <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+            {t('resume.descriptions.settings')}
+          </p>
+
           <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 gap-4 lg:gap-6">
             <TextInput
               label={t('resume.form.resumeTitle')}
@@ -953,6 +957,10 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
           variant="primary"
           collapsibleOnDesktop
         >
+          <p className="text-xs sm:text-sm text-theme-text-secondary mb-4">
+            {t('resume.descriptions.basicInfo')}
+          </p>
+
           {/* Short fields: 3 columns */}
           <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
             <TextInput
