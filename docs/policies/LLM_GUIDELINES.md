@@ -6,6 +6,28 @@
 
 **ALL documentation MUST be in English**: README, API docs, code comments, commits.
 
+### Documentation Structure
+
+| Directory | Purpose                      | Audience      | Content                     |
+| --------- | ---------------------------- | ------------- | --------------------------- |
+| `.ai/`    | Token-optimized LLM docs     | AI assistants | Patterns, APIs, examples    |
+| `docs/`   | Detailed human-readable docs | Human + LLM   | Policies, guides, tutorials |
+
+### Automatic Documentation Updates
+
+**Code changes MUST include documentation updates.** No confirmation needed.
+
+| Change Type            | `.ai/` Update                 | `docs/` Update          |
+| ---------------------- | ----------------------------- | ----------------------- |
+| New component/hook     | Add to `apps/` or `packages/` | -                       |
+| New API endpoint       | Add to `services/`            | -                       |
+| New pattern/convention | Add to `rules.md`             | -                       |
+| New feature (major)    | Add section to relevant file  | Add to `guides/`        |
+| New policy             | Summary in `rules.md`         | Full doc in `policies/` |
+| Breaking change        | Update affected files         | Update affected files   |
+
+**Principle**: `.ai/` = concise (what, how), `docs/` = detailed (why, deep dive).
+
 ## Stack
 
 | Category  | Technology                                             |
