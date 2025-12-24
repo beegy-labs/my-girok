@@ -14,7 +14,6 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
-  retryCount: number;
 }
 
 /**
@@ -28,22 +27,17 @@ interface State {
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    const storedCount = sessionStorage.getItem(ERROR_COUNT_KEY);
-    this.state = {
-      hasError: false,
-      retryCount: storedCount ? parseInt(storedCount, 10) : 0,
-    };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    const newCount = this.state.retryCount + 1;
-    sessionStorage.setItem(ERROR_COUNT_KEY, newCount.toString());
-    this.setState({ retryCount: newCount });
+    const storedCount = parseInt(sessionStorage.getItem(ERROR_COUNT_KEY) || '0', 10);
+    sessionStorage.setItem(ERROR_COUNT_KEY, (storedCount + 1).toString());
   }
 
   handleRefresh = () => {
@@ -52,7 +46,6 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   handleGoHome = () => {
     sessionStorage.removeItem(ERROR_COUNT_KEY);
-    this.setState({ hasError: false, error: undefined, retryCount: 0 });
     window.location.href = '/';
   };
 
@@ -62,7 +55,9 @@ export default class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      const showRefreshButton = this.state.retryCount < MAX_RETRY_COUNT;
+      const storedCount = parseInt(sessionStorage.getItem(ERROR_COUNT_KEY) || '0', 10);
+      const currentRetryCount = storedCount + 1;
+      const showRefreshButton = currentRetryCount < MAX_RETRY_COUNT;
 
       return (
         <div className="min-h-screen flex items-center justify-center bg-theme-bg-page">
