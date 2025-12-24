@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { usePDF } from '@react-pdf/renderer';
+import { pdf } from '@react-pdf/renderer';
 import { Resume } from '../../api/resume';
 import { PAPER_SIZES, PaperSizeKey } from '../../constants/paper';
 import ResumePdfDocument from './ResumePdfDocument';
@@ -39,8 +39,9 @@ interface ResumePreviewProps {
 /**
  * Resume Preview Component
  *
- * Uses @react-pdf/renderer to generate PDF and react-pdf to display it.
- * This approach ensures pixel-perfect PDF preview without CSS transform issues.
+ * Uses @react-pdf/renderer pdf() function (NOT usePDF hook) to generate PDF.
+ * This bypasses React reconciler to avoid "Eo is not a function" errors with React 19.
+ * GitHub Issues: #3164, #3187, #2756
  */
 export default function ResumePreview({
   resume,
@@ -57,21 +58,36 @@ export default function ResumePreview({
   const [internalPaperSize, setInternalPaperSize] = useState<PaperSizeKey>(
     (externalPaperSize || resume.paperSize || 'A4') as PaperSizeKey,
   );
+
+  // PDF generation state (replaces usePDF hook)
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [isTimedOut, setIsTimedOut] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+
   const [profileImageBase64, setProfileImageBase64] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Use external paper size if provided, otherwise use internal state
   const paperSize = externalPaperSize || internalPaperSize;
   const paper = PAPER_SIZES[paperSize];
 
+  // Check if resume has a valid profile image URL
+  const hasProfileImage = Boolean(
+    resume.profileImage?.trim() && !resume.profileImage.startsWith('blob:'),
+  );
+
   // Load profile image as base64 (Best Practice 2025: avoids CORS issues in PDF generation)
   useEffect(() => {
     let isMounted = true;
+    const imageUrl = resume.profileImage?.trim();
 
-    if (resume.profileImage) {
-      imageToBase64(resume.profileImage)
+    if (imageUrl && !imageUrl.startsWith('blob:')) {
+      setIsImageLoading(true);
+      imageToBase64(imageUrl)
         .then((base64) => {
           if (isMounted) {
             setProfileImageBase64(base64);
@@ -82,9 +98,15 @@ export default function ResumePreview({
           if (isMounted) {
             setProfileImageBase64(null);
           }
+        })
+        .finally(() => {
+          if (isMounted) {
+            setIsImageLoading(false);
+          }
         });
     } else {
       setProfileImageBase64(null);
+      setIsImageLoading(false);
     }
 
     return () => {
@@ -102,7 +124,6 @@ export default function ResumePreview({
   );
 
   // Create safe resume object to prevent PDF rendering crashes on empty strings
-  // @react-pdf/renderer reconciler bug: crashes when dynamic content is deleted
   const safeResume = useMemo(
     () => ({
       ...resume,
@@ -117,6 +138,10 @@ export default function ResumePreview({
       summary: resume.summary || '',
       applicationReason: resume.applicationReason || '',
       coverLetter: resume.coverLetter || '',
+      profileImage:
+        resume.profileImage?.trim() && !resume.profileImage.startsWith('blob:')
+          ? resume.profileImage
+          : undefined,
       keyAchievements: resume.keyAchievements || [],
       skills: resume.skills || [],
       experiences: resume.experiences || [],
@@ -128,51 +153,89 @@ export default function ResumePreview({
     [resume],
   );
 
-  // Generate PDF document (uses base64 image to avoid CORS issues)
-  const pdfDocument = useMemo(
-    () => (
-      <ResumePdfDocument
-        resume={safeResume}
-        paperSize={paperSize}
-        isGrayscaleMode={isGrayscaleMode}
-        profileImageBase64={profileImageBase64}
-      />
-    ),
-    [safeResume, paperSize, isGrayscaleMode, profileImageBase64],
-  );
+  // Determine if we should wait for image loading
+  const shouldWaitForImage = hasProfileImage && !profileImageBase64 && isImageLoading;
 
-  // Use PDF hook to generate blob
-  const [instance, updateInstance] = usePDF({ document: pdfDocument });
-
-  // Re-generate PDF when resume or settings change
+  // Generate PDF using pdf() function (bypasses React reconciler)
+  // This is the key fix for React 19 compatibility
   useEffect(() => {
-    updateInstance(pdfDocument);
-  }, [pdfDocument, updateInstance]);
-
-  // Timeout handling for PDF generation
-  useEffect(() => {
-    if (instance.loading) {
-      setIsTimedOut(false);
-      timeoutRef.current = setTimeout(() => {
-        if (instance.loading) {
-          setIsTimedOut(true);
-        }
-      }, PDF_GENERATION_TIMEOUT);
+    // Don't generate if waiting for image
+    if (shouldWaitForImage) {
+      return;
     }
+
+    // Cancel previous generation
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    const generatePdf = async () => {
+      setPdfLoading(true);
+      setPdfError(null);
+      setIsTimedOut(false);
+
+      // Set timeout
+      timeoutRef.current = setTimeout(() => {
+        setIsTimedOut(true);
+        setPdfLoading(false);
+      }, PDF_GENERATION_TIMEOUT);
+
+      try {
+        // Create document element (not rendered to React tree)
+        const doc = (
+          <ResumePdfDocument
+            resume={safeResume}
+            paperSize={paperSize}
+            isGrayscaleMode={isGrayscaleMode}
+            profileImageBase64={profileImageBase64}
+          />
+        );
+
+        // Generate PDF blob using pdf() function
+        // This does NOT use React reconciler, avoiding the "Eo is not a function" error
+        const blob = await pdf(doc).toBlob();
+
+        // Check if aborted
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
+
+        setPdfBlob(blob);
+        setPdfError(null);
+      } catch (error) {
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
+        console.error('PDF generation error:', error);
+        setPdfError(error instanceof Error ? error.message : 'Unknown error');
+      } finally {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        setPdfLoading(false);
+      }
+    };
+
+    generatePdf();
 
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
-  }, [instance.loading, retryCount]);
+  }, [safeResume, paperSize, isGrayscaleMode, profileImageBase64, shouldWaitForImage]);
 
   // Retry handler
   const handleRetry = useCallback(() => {
     setIsTimedOut(false);
-    setRetryCount((prev) => prev + 1);
-    updateInstance(pdfDocument);
-  }, [pdfDocument, updateInstance]);
+    setPdfBlob(null);
+    // Trigger re-generation by updating a dummy state
+    setPdfError(null);
+  }, []);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -202,8 +265,8 @@ export default function ResumePreview({
       {/* Toolbar (hidden in print) */}
       {showToolbar && (
         <div className="print:hidden mb-6 relative z-0">
-          <div className="w-full lg:max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-sm shadow-theme-sm px-4 py-3 transition-colors duration-200">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="w-full lg:max-w-5xl mx-auto bg-theme-bg-card border border-theme-border-subtle rounded-soft shadow-sm shadow-theme-sm px-4 py-4 transition-colors duration-200">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 {/* Paper Size Selector */}
                 <div className="flex items-center gap-1 bg-theme-bg-elevated rounded-soft p-1">
@@ -293,11 +356,14 @@ export default function ResumePreview({
 
       {/* PDF Viewer */}
       <div className="flex flex-col items-center">
-        {instance.loading && !isTimedOut ? (
+        {/* Show loading state for both image loading and PDF generation */}
+        {(shouldWaitForImage || pdfLoading) && !isTimedOut ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary"></div>
             <span className="ml-3 text-theme-text-secondary">
-              {t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}
+              {shouldWaitForImage
+                ? t('resume.preview.loadingImage', { defaultValue: 'Loading image...' })
+                : t('resume.preview.generating', { defaultValue: 'Generating PDF...' })}
             </span>
           </div>
         ) : isTimedOut ? (
@@ -318,14 +384,13 @@ export default function ResumePreview({
               {t('resume.preview.retry', { defaultValue: 'Retry' })}
             </button>
           </div>
-        ) : instance.error ? (
+        ) : pdfError ? (
           <div className="flex items-center justify-center py-20 text-theme-status-error-text">
             <span>
-              {t('resume.preview.error', { defaultValue: 'Error generating PDF' })}:{' '}
-              {instance.error}
+              {t('resume.preview.error', { defaultValue: 'Error generating PDF' })}: {pdfError}
             </span>
           </div>
-        ) : instance.blob ? (
+        ) : pdfBlob ? (
           <>
             {/* Page Navigation (for paginated mode) */}
             {viewMode === 'paginated' && numPages > 1 && (
@@ -352,7 +417,7 @@ export default function ResumePreview({
 
             {/* PDF Document */}
             <Document
-              file={instance.blob}
+              file={pdfBlob}
               onLoadSuccess={onDocumentLoadSuccess}
               loading={
                 <div className="flex items-center justify-center py-20">

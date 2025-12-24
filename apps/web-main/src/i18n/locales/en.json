@@ -1,5 +1,7 @@
 {
   "common": {
+    "back": "Back",
+    "goBack": "Go Back",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -20,7 +22,8 @@
     "endDate": "End",
     "present": "Present",
     "currentlyWorking": "Currently working",
-    "showInPreview": "Show in preview"
+    "showInPreview": "Show in preview",
+    "dragToReorder": "Drag to reorder"
   },
   "loading": {
     "darkMode": "Searching through the quiet night...",
@@ -279,7 +282,27 @@
       "education": "Education",
       "certifications": "Certifications"
     },
+    "sectionOrder": {
+      "title": "Section Order & Display",
+      "description": "Drag to reorder sections and toggle visibility",
+      "show": "Show",
+      "hide": "Hide",
+      "tipTitle": "Tip:",
+      "tipDescription": "Sections will appear in this order in your resume preview and PDF"
+    },
+    "coverLetter": {
+      "sectionTitle": "Title",
+      "sectionTitlePlaceholder": "e.g., Background, Motivation, Goals",
+      "sectionContent": "Content",
+      "sectionContentPlaceholder": "Write the content for this section...",
+      "empty": "No cover letter sections yet",
+      "addSection": "Add Section",
+      "tipTitle": "Tip:",
+      "tipDescription": "Add sections like Background, Motivation, and Career Goals to create a well-organized cover letter"
+    },
     "descriptions": {
+      "settings": "Configure resume title, paper size, and section order",
+      "basicInfo": "Enter your basic personal information for the resume",
       "experience": "Add your work history and achievements",
       "projects": "Add your personal and professional projects",
       "skills": "Organize your technical skills by category",
@@ -473,6 +496,7 @@
       "coverLetter": "Cover Letter",
       "coverLetterPlaceholder": "Write about your background, strengths, and why you're a good fit for this position...",
       "coverLetterHint": "Describe your background, experiences, and what makes you unique",
+      "coverLetterDescription": "Create structured cover letter sections with titles and content for each",
       "applicationReason": "Application Reason",
       "applicationReasonPlaceholder": "Write why you want to join this company...",
       "applicationReasonHint": "Write about company vision, job appeal, and connection to your strengths",
@@ -492,7 +516,8 @@
       "credentialId": "Credential ID",
       "credentialUrl": "Credential URL",
       "remove": "Remove",
-      "noCertificates": "No certifications added yet. Click \"Add Certificate\" to get started.",
+      "noCertificates": "No certifications added yet. Click \"+ Add\" to get started.",
+      "noKeyAchievements": "No key achievements added yet. Click \"+ Add\" to get started.",
       "attachments": "Attachments",
       "attachmentsDesc": "Upload profile photo (grayscale), portfolios, and certificates. Max size: 10MB per file.",
       "saveFirst": "Please save your resume first to enable file uploads.",
@@ -542,7 +567,7 @@
       "keyAchievements": "⭐ Key Achievements",
       "keyAchievementsHint": "Highlight 3-5 major accomplishments from your career",
       "achievementPlaceholder": "Achievement #{{index}} - Example: \"Refactored RDB to Redis, improved latency by 48%\"",
-      "addCategory": "+ Add Category",
+      "addCategory": "Add Category",
       "categoryNumber": "📚 Category #{{index}}",
       "skillNumber": "Skill #{{index}}",
       "skillStack": "Tech Stack",
@@ -573,9 +598,15 @@
       "linkedinPlaceholder": "https://linkedin.com/in/username",
       "addressPlaceholder": "Seoul, Gangnam-gu",
       "required": "required",
-      "addSkillButton": "+ Add Skill",
+      "addSkillButton": "Add Skill",
+      "skillsCount": "skills",
       "moveUpButton": "Move Up",
-      "moveDownButton": "Move Down"
+      "moveDownButton": "Move Down",
+      "addEducation": "Add Education"
+    },
+    "education": {
+      "universityPlaceholder": "e.g., Seoul National University",
+      "majorPlaceholder": "e.g., Computer Science"
     },
     "experienceForm": {
       "company": "Company",
@@ -588,7 +619,7 @@
       "removeCompany": "Remove Company",
       "experiencePeriod": "Experience Period:",
       "projects": "📁 Projects at this company",
-      "addProject": "+ Add Project",
+      "addProject": "Add Project",
       "noProjects": "No projects added yet. Click \"Add Project\" to add projects at this company.",
       "projectName": "Project Name",
       "yourRole": "Your Role",
@@ -597,13 +628,13 @@
       "githubUrl": "GitHub URL",
       "keyAchievements": "Key Achievements",
       "depthLevels": "(4 depth levels)",
-      "addAchievement": "+ Add Achievement",
+      "addAchievement": "Add Achievement",
       "noAchievements": "No achievements yet. Click \"Add Achievement\" to add.",
       "achievementPlaceholder": "Achievement description...",
       "addSubItem": "+ Sub-item",
       "collapse": "Collapse",
       "expand": "Expand",
-      "addExperience": "+ Add Experience",
+      "addExperience": "Add Experience",
       "noExperience": "No work experience added yet. Click \"Add Experience\" to get started.",
       "dragToReorder": "Drag to reorder",
       "ongoingProject": "Leave empty if ongoing",

@@ -3,6 +3,7 @@ import { createElement, ReactElement } from 'react';
 import { PaperSizeKey } from '../constants/paper';
 import ResumePdfDocument from '../components/resume/ResumePdfDocument';
 import { Resume } from '../api/resume';
+import { imageToBase64 } from './imageProxy';
 
 interface PDFExportOptions {
   paperSize: PaperSizeKey;
@@ -17,22 +18,19 @@ interface PDFExportOptions {
  * Unlike the previous html2canvas approach, this creates a true vector PDF
  * with proper fonts and styling.
  */
-export async function exportResumeToPDF(
-  resume: Resume,
-  options: PDFExportOptions
-): Promise<void> {
-  const {
-    paperSize,
-    fileName = 'resume.pdf',
-    isGrayscaleMode = false,
-  } = options;
+export async function exportResumeToPDF(resume: Resume, options: PDFExportOptions): Promise<void> {
+  const { paperSize, fileName = 'resume.pdf', isGrayscaleMode = false } = options;
 
   try {
+    // Fetch profile image and convert to base64 if exists
+    const profileImageBase64 = await imageToBase64(resume.profileImage);
+
     // Create PDF document element
     const documentElement = createElement(ResumePdfDocument, {
       resume,
       paperSize,
       isGrayscaleMode,
+      profileImageBase64,
     }) as unknown as ReactElement<DocumentProps>;
 
     // Generate PDF blob
@@ -63,14 +61,18 @@ export async function exportResumeToPDF(
  */
 export async function generateResumePDFBlob(
   resume: Resume,
-  options: Omit<PDFExportOptions, 'fileName'>
+  options: Omit<PDFExportOptions, 'fileName'>,
 ): Promise<Blob> {
   const { paperSize, isGrayscaleMode = false } = options;
+
+  // Fetch profile image and convert to base64 if exists
+  const profileImageBase64 = await imageToBase64(resume.profileImage);
 
   const documentElement = createElement(ResumePdfDocument, {
     resume,
     paperSize,
     isGrayscaleMode,
+    profileImageBase64,
   }) as unknown as ReactElement<DocumentProps>;
 
   return await pdf(documentElement).toBlob();
@@ -83,7 +85,7 @@ export async function generateResumePDFBlob(
  */
 export async function generateResumePDFBase64(
   resume: Resume,
-  options: Omit<PDFExportOptions, 'fileName'>
+  options: Omit<PDFExportOptions, 'fileName'>,
 ): Promise<string> {
   const blob = await generateResumePDFBlob(resume, options);
 
@@ -107,15 +109,19 @@ export async function generateResumePDFBase64(
  */
 export async function printResumePDF(
   resume: Resume,
-  options: Omit<PDFExportOptions, 'fileName'>
+  options: Omit<PDFExportOptions, 'fileName'>,
 ): Promise<void> {
   const { paperSize, isGrayscaleMode = false } = options;
 
   try {
+    // Fetch profile image and convert to base64 if exists
+    const profileImageBase64 = await imageToBase64(resume.profileImage);
+
     const documentElement = createElement(ResumePdfDocument, {
       resume,
       paperSize,
       isGrayscaleMode,
+      profileImageBase64,
     }) as unknown as ReactElement<DocumentProps>;
 
     const blob = await pdf(documentElement).toBlob();
