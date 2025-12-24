@@ -46,6 +46,7 @@ const COUNTRY_TO_LOCALE: Record<string, string> = {
   GB: 'en',
   DE: 'de',
   FR: 'fr',
+  IN: 'hi',
 } as const;
 
 /**
@@ -161,9 +162,10 @@ export default function ConsentPage() {
     const detected = getUserLocale(null, true);
     setLocaleInfo(detected);
 
-    // Fetch consent requirements for detected locale
-    fetchConsentRequirements(i18n.language);
-  }, [fetchConsentRequirements, i18n.language]);
+    // Fetch consent requirements for detected country (not language)
+    const locale = COUNTRY_TO_LOCALE[detected.country] || 'en';
+    fetchConsentRequirements(locale);
+  }, [fetchConsentRequirements]);
 
   // Handle country change
   const handleCountryChange = useCallback(
@@ -181,8 +183,11 @@ export default function ConsentPage() {
 
   // Memoized retry handler for error state
   const handleRetry = useCallback(() => {
-    fetchConsentRequirements(i18n.language);
-  }, [fetchConsentRequirements, i18n.language]);
+    if (localeInfo) {
+      const locale = COUNTRY_TO_LOCALE[localeInfo.country] || 'en';
+      fetchConsentRequirements(locale);
+    }
+  }, [fetchConsentRequirements, localeInfo]);
 
   // Toggle country selector (memoized)
   const toggleCountrySelector = useCallback(() => {
@@ -261,6 +266,15 @@ export default function ConsentPage() {
 
   // Navigate to register page with consent data
   const handleContinue = useCallback(() => {
+    // Validate all required consents are agreed
+    const missingRequired = requiredItems.filter((item) => !consents[item.type]);
+    if (missingRequired.length > 0) {
+      setError(
+        t('consent.missingRequired', { defaultValue: 'Please agree to all required consents' }),
+      );
+      return;
+    }
+
     // Store consents and locale in sessionStorage for the registration step
     sessionStorage.setItem('registration_consents', JSON.stringify(consents));
     if (localeInfo) {
@@ -270,7 +284,7 @@ export default function ConsentPage() {
       sessionStorage.setItem('registration_region', consentPolicy.region);
     }
     navigate('/register');
-  }, [consents, localeInfo, consentPolicy, navigate]);
+  }, [consents, localeInfo, consentPolicy, navigate, requiredItems, t]);
 
   // Current language for country name display
   const currentLocale = i18n.language;

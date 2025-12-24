@@ -44,6 +44,53 @@
 | POST   | `/v1/legal/consents`             | Yes  | Create consents   |
 | PUT    | `/v1/legal/consents/:type`       | Yes  | Update consent    |
 
+### Admin Authentication
+
+| Method | Endpoint                 | Permission | Description   |
+| ------ | ------------------------ | ---------- | ------------- |
+| POST   | `/v1/admin/auth/login`   | -          | Admin login   |
+| POST   | `/v1/admin/auth/refresh` | -          | Refresh token |
+| GET    | `/v1/admin/auth/me`      | -          | Admin profile |
+| POST   | `/v1/admin/auth/logout`  | -          | Logout        |
+
+### Admin Tenant Management
+
+| Method | Endpoint                       | Permission       | Description   |
+| ------ | ------------------------------ | ---------------- | ------------- |
+| GET    | `/v1/admin/tenants`            | `tenant:read`    | List tenants  |
+| GET    | `/v1/admin/tenants/:id`        | `tenant:read`    | Get tenant    |
+| POST   | `/v1/admin/tenants`            | `tenant:create`  | Create tenant |
+| PUT    | `/v1/admin/tenants/:id`        | `tenant:update`  | Update tenant |
+| PATCH  | `/v1/admin/tenants/:id/status` | `tenant:approve` | Change status |
+
+### Admin Legal Management
+
+| Method | Endpoint                         | Permission     | Description        |
+| ------ | -------------------------------- | -------------- | ------------------ |
+| GET    | `/v1/admin/legal/documents`      | `legal:read`   | List documents     |
+| GET    | `/v1/admin/legal/documents/:id`  | `legal:read`   | Get document       |
+| POST   | `/v1/admin/legal/documents`      | `legal:create` | Create document    |
+| PUT    | `/v1/admin/legal/documents/:id`  | `legal:update` | Update document    |
+| DELETE | `/v1/admin/legal/documents/:id`  | `legal:delete` | Soft delete        |
+| GET    | `/v1/admin/legal/consents`       | `legal:read`   | List consents      |
+| GET    | `/v1/admin/legal/consents/stats` | `legal:read`   | Consent statistics |
+
+### Admin Audit Logs
+
+| Method | Endpoint                      | Permission   | Description     |
+| ------ | ----------------------------- | ------------ | --------------- |
+| GET    | `/v1/admin/audit/logs`        | `audit:read` | List audit logs |
+| GET    | `/v1/admin/audit/filters`     | `audit:read` | Filter options  |
+| GET    | `/v1/admin/audit/logs/export` | `audit:read` | Export as CSV   |
+
+**Audit Log Query Parameters:**
+
+- `action` - Filter by action type
+- `resource` - Filter by resource
+- `adminId` - Filter by admin ID
+- `dateFrom`, `dateTo` - Date range filter
+- `page`, `limit` - Pagination
+
 ## JWT Configuration
 
 | Token   | Expiration | Storage         |

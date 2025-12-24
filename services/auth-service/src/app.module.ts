@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OAuthConfigModule } from './oauth-config/oauth-config.module';
 import { LegalModule } from './legal/legal.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { LegalModule } from './legal/legal.module';
     UsersModule,
     OAuthConfigModule,
     LegalModule,
+    AdminModule,
     HealthModule,
   ],
   providers: [

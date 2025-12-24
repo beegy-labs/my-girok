@@ -58,6 +58,37 @@ Users **MAY** opt-in to these:
 
 ## Implementation Guidelines
 
+### Country-to-Locale Mapping
+
+The consent flow uses **country** (not language) to determine regional requirements:
+
+| Country | Locale | Law  |
+| ------- | ------ | ---- |
+| KR      | ko     | PIPA |
+| JP      | ja     | APPI |
+| US      | en     | CCPA |
+| GB      | en     | GDPR |
+| DE      | de     | GDPR |
+| FR      | fr     | GDPR |
+| IN      | hi     | DPDP |
+
+```typescript
+// Country to locale mapping (ConsentPage.tsx)
+const COUNTRY_TO_LOCALE: Record<string, string> = {
+  KR: 'ko',
+  JP: 'ja',
+  US: 'en',
+  GB: 'en',
+  DE: 'de',
+  FR: 'fr',
+  IN: 'hi',
+};
+
+// API call uses country-mapped locale
+const locale = COUNTRY_TO_LOCALE[detectedCountry] || 'en';
+const requirements = await getConsentRequirements(locale);
+```
+
 ### Consent Collection
 
 ```typescript
