@@ -1,14 +1,5 @@
 import { useState, useMemo, memo } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
@@ -19,7 +10,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Experience, ExperienceProject, calculateExperienceDuration } from '../../../api/resume';
 import { TextInput, Button, focusClasses } from '@my-girok/ui-components';
 import { ProjectCard } from './ProjectCard';
-import { SENSOR_OPTIONS } from './constants';
+import { useDndSensors } from './hooks';
 
 interface ExperienceCardProps {
   experience: Experience;
@@ -56,11 +47,7 @@ export const ExperienceCard = memo(function ExperienceCard({
     [transform, transition, isDragging],
   );
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
-    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
-    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
-  );
+  const sensors = useDndSensors();
 
   const projects = Array.isArray(experience.projects) ? experience.projects : [];
   const projectIds = projects.map((p, i) => p.id || `proj-${i}`);

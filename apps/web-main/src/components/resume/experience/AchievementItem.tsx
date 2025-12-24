@@ -157,14 +157,14 @@ export const AchievementItem = memo(function AchievementItem({
       {/* Render children recursively */}
       {isExpanded && hasChildren && (
         <div className="space-y-2">
-          {achievement.children!.map((child, index) => (
+          {achievement.children!.map((child, childIndex) => (
             <AchievementItem
-              key={index}
+              key={child.id || `child-${depth}-${childIndex}`}
               achievement={child}
               depth={depth + 1}
-              onUpdate={(c) => updateChild(index, c)}
-              onRemove={() => removeChild(index)}
-              onAddChild={() => addChildToChild(index)}
+              onUpdate={(c) => updateChild(childIndex, c)}
+              onRemove={() => removeChild(childIndex)}
+              onAddChild={() => addChildToChild(childIndex)}
               t={t}
             />
           ))}

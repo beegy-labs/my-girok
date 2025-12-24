@@ -1,19 +1,10 @@
 import { useMemo, memo } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Experience } from '../../../api/resume';
 import { Button, CollapsibleSection } from '@my-girok/ui-components';
 import { ExperienceCard } from './ExperienceCard';
-import { SENSOR_OPTIONS } from './constants';
+import { useDndSensors } from './hooks';
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -36,11 +27,7 @@ const ExperienceSection = memo(function ExperienceSection({
   onToggle,
   headerAction,
 }: ExperienceSectionProps) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, SENSOR_OPTIONS.pointer),
-    useSensor(TouchSensor, SENSOR_OPTIONS.touch),
-    useSensor(KeyboardSensor, SENSOR_OPTIONS.keyboard),
-  );
+  const sensors = useDndSensors();
 
   const experienceIds = useMemo(
     () => experiences.map((exp, i) => exp.id || `exp-${i}`),
