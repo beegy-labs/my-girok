@@ -841,6 +841,53 @@ const [error, setError] = useState<string | null>(null);
 )}
 ```
 
+### ErrorBoundary Component
+
+**Location**: `src/components/ErrorBoundary.tsx`
+
+Global React error boundary with retry functionality and user-friendly recovery options.
+
+**Features**:
+
+- Catches React rendering errors
+- Displays WCAG-compliant error message via `StatusMessage`
+- **Refresh button**: Allows user to retry by reloading the page
+- **Back to Home button**: Navigates to home and resets error state
+- **Auto-hide refresh after 3 failures**: Prevents infinite refresh loops
+
+**Retry Tracking**:
+
+Uses `sessionStorage` to track consecutive failure count:
+
+```typescript
+// sessionStorage key
+const ERROR_COUNT_KEY = 'errorBoundary_retryCount';
+const MAX_RETRY_COUNT = 3;
+
+// Logic: currentRetryCount = storedCount + 1
+// - < 3 failures: Show both "Back to Home" + "Refresh" buttons
+// - >= 3 failures: Show only "Back to Home" button
+```
+
+**Usage**:
+
+```tsx
+// App-level wrapping (App.tsx)
+<ErrorBoundary>
+  <RouterProvider router={router} />
+</ErrorBoundary>
+
+// Custom fallback (optional)
+<ErrorBoundary fallback={<CustomErrorUI />}>
+  <RiskyComponent />
+</ErrorBoundary>
+```
+
+**i18n Keys**:
+
+- `common.backToHome`: "Back to Home" button text
+- `common.refresh`: "Refresh" button text
+
 ### Navigation
 
 ```typescript
