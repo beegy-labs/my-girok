@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Experience, ExperienceProject, calculateExperienceDuration } from '../../../api/resume';
-import { TextInput, Button } from '@my-girok/ui-components';
+import { TextInput, Button, focusClasses } from '@my-girok/ui-components';
 import { ProjectCard } from './ProjectCard';
 import { SENSOR_OPTIONS } from './constants';
 
@@ -141,7 +141,7 @@ export const ExperienceCard = memo(function ExperienceCard({
             type="button"
             {...attributes}
             {...listeners}
-            className="p-2 -m-1 cursor-move text-theme-primary hover:text-theme-primary-light flex-shrink-0 touch-manipulation"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center cursor-move text-theme-primary hover:text-theme-primary-light flex-shrink-0 touch-manipulation"
             title={t('resume.experienceForm.dragToReorder')}
           >
             <svg
@@ -211,7 +211,7 @@ export const ExperienceCard = memo(function ExperienceCard({
               variant="danger"
               onClick={onRemove}
               size="sm"
-              className="text-xs py-1.5 px-3 touch-manipulation"
+              className="text-xs py-2 px-4 touch-manipulation min-h-[44px]"
             >
               ✕ {t('common.delete')}
             </Button>
@@ -236,7 +236,7 @@ export const ExperienceCard = memo(function ExperienceCard({
                   type="month"
                   value={experience.startDate}
                   onChange={(e) => updateField('startDate', e.target.value)}
-                  className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary"
+                  className={`w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft text-theme-text-primary min-h-[44px] ${focusClasses}`}
                 />
               </div>
               <div>
@@ -251,14 +251,14 @@ export const ExperienceCard = memo(function ExperienceCard({
                     updateField('isCurrentlyWorking', false);
                   }}
                   disabled={experience.isCurrentlyWorking}
-                  className="w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary disabled:bg-theme-bg-secondary disabled:cursor-not-allowed"
+                  className={`w-full px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft text-theme-text-primary min-h-[44px] disabled:bg-theme-bg-secondary disabled:cursor-not-allowed ${focusClasses}`}
                 />
               </div>
             </div>
           </div>
 
           {/* Currently working checkbox */}
-          <label className="flex items-center p-2 -mx-2 mb-4 rounded-soft hover:bg-theme-primary/10 cursor-pointer touch-manipulation">
+          <label className="flex items-center p-2 -mx-2 mb-4 rounded-soft hover:bg-theme-primary/10 cursor-pointer touch-manipulation min-h-[44px]">
             <input
               type="checkbox"
               checked={experience.isCurrentlyWorking || false}
@@ -266,7 +266,7 @@ export const ExperienceCard = memo(function ExperienceCard({
                 updateField('isCurrentlyWorking', e.target.checked);
                 if (e.target.checked) updateField('endDate', '');
               }}
-              className="w-5 h-5 text-theme-primary border-theme-border-default rounded focus:ring-theme-primary"
+              className={`w-5 h-5 text-theme-primary border-theme-border-default rounded ${focusClasses}`}
             />
             <span className="ml-3 text-xs sm:text-sm text-theme-text-secondary">
               {t('resume.experience.currentlyWorking')}
@@ -312,14 +312,14 @@ export const ExperienceCard = memo(function ExperienceCard({
                 onChange={(e) =>
                   updateField('salary', e.target.value ? parseInt(e.target.value) : undefined)
                 }
-                className="flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary"
+                className={`flex-1 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft text-theme-text-primary min-h-[44px] ${focusClasses}`}
                 placeholder={t('resume.experienceForm.salaryPlaceholder')}
                 min="0"
               />
               <select
                 value={experience.salaryUnit || 'KRW'}
                 onChange={(e) => updateField('salaryUnit', e.target.value)}
-                className="w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-theme-text-primary"
+                className={`w-24 sm:w-32 px-2 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-theme-bg-card border border-theme-border-default rounded-soft text-theme-text-primary min-h-[44px] ${focusClasses}`}
               >
                 <option value="KRW">{t('resume.experienceForm.salaryUnits.manwon')}</option>
                 <option value="USD">USD</option>
@@ -327,12 +327,12 @@ export const ExperienceCard = memo(function ExperienceCard({
                 <option value="JPY">JPY</option>
               </select>
             </div>
-            <label className="flex items-center p-2 -mx-2 mt-1 rounded-soft hover:bg-theme-primary/10 cursor-pointer touch-manipulation">
+            <label className="flex items-center p-2 -mx-2 mt-1 rounded-soft hover:bg-theme-primary/10 cursor-pointer touch-manipulation min-h-[44px]">
               <input
                 type="checkbox"
                 checked={experience.showSalary ?? false}
                 onChange={(e) => updateField('showSalary', e.target.checked)}
-                className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded focus:ring-theme-primary focus:ring-[4px]"
+                className={`w-5 h-5 text-theme-primary bg-theme-bg-card border-theme-border-default rounded ${focusClasses}`}
               />
               <span className="ml-2 text-xs sm:text-sm text-theme-text-secondary">
                 {t('resume.experienceForm.showSalaryInPreview')}
@@ -350,7 +350,7 @@ export const ExperienceCard = memo(function ExperienceCard({
                 variant="secondary"
                 onClick={addProject}
                 size="sm"
-                className="text-xs sm:text-sm py-1.5 px-2"
+                className="text-xs sm:text-sm py-2 px-2 min-h-[44px]"
               >
                 + {t('common.add')}
               </Button>

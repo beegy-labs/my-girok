@@ -65,7 +65,7 @@ export const AchievementItem = memo(function AchievementItem({
   return (
     <div className="space-y-1 sm:space-y-2">
       <div
-        className={`${depthColor.bg} rounded-soft p-1.5 sm:p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
+        className={`${depthColor.bg} rounded-soft p-2 border-l-4 ${depthColor.border} transition-colors duration-200`}
         style={{ marginLeft: `${mobileMargin}rem`, maxWidth: `calc(100% - ${mobileMargin}rem)` }}
       >
         {/* Desktop layout */}
@@ -113,23 +113,23 @@ export const AchievementItem = memo(function AchievementItem({
         </div>
 
         {/* Mobile layout */}
-        <div className="sm:hidden flex items-center gap-1.5">
-          <span className={`${depthColor.text} font-bold text-[11px] select-none flex-shrink-0`}>
+        <div className="sm:hidden flex items-center gap-2">
+          <span className={`${depthColor.text} font-bold text-brand-xs select-none flex-shrink-0`}>
             {getBulletSymbol(depth)}
           </span>
           <input
             type="text"
             value={achievement.content}
             onChange={handleContentChange}
-            className={`flex-1 px-1 py-0.5 border-0 bg-transparent focus:outline-none text-xs ${depthColor.text} min-w-0`}
+            className={`flex-1 px-1 py-1 border-0 bg-transparent focus:outline-none text-xs ${depthColor.text} min-w-0`}
             placeholder={t('resume.experienceForm.achievementPlaceholder')}
           />
-          <div className="flex items-center gap-0.5 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0">
             {depth < 4 && (
               <button
                 type="button"
                 onClick={onAddChild}
-                className="w-6 h-6 flex items-center justify-center bg-theme-status-success-bg text-theme-status-success-text text-[10px] rounded touch-manipulation"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center bg-theme-status-success-bg text-theme-status-success-text text-xs rounded touch-manipulation"
               >
                 +
               </button>
@@ -138,7 +138,7 @@ export const AchievementItem = memo(function AchievementItem({
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-6 h-6 flex items-center justify-center text-[10px] text-theme-text-secondary touch-manipulation"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-xs text-theme-text-secondary touch-manipulation"
               >
                 {isExpanded ? '▼' : '▶'}
               </button>
@@ -146,7 +146,7 @@ export const AchievementItem = memo(function AchievementItem({
             <button
               type="button"
               onClick={onRemove}
-              className="w-6 h-6 flex items-center justify-center text-theme-status-error-text text-[10px] font-semibold touch-manipulation"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-theme-status-error-text text-xs font-semibold touch-manipulation"
             >
               ✕
             </button>
@@ -214,7 +214,7 @@ export const SortableAchievement = memo(function SortableAchievement({
           type="button"
           {...attributes}
           {...listeners}
-          className="mt-1 cursor-move text-theme-text-tertiary hover:text-theme-primary flex-shrink-0"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center cursor-move text-theme-text-tertiary hover:text-theme-primary flex-shrink-0"
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

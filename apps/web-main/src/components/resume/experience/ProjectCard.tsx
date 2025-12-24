@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ExperienceProject, ProjectAchievement } from '../../../api/resume';
-import { TextInput, TextArea, Button } from '@my-girok/ui-components';
+import { TextInput, TextArea, Button, focusClasses } from '@my-girok/ui-components';
 import { SortableAchievement } from './AchievementItem';
 import { SENSOR_OPTIONS } from './constants';
 
@@ -156,7 +156,7 @@ export const ProjectCard = memo(function ProjectCard({
           type="button"
           {...attributes}
           {...listeners}
-          className="p-1 cursor-move text-theme-text-tertiary hover:text-theme-primary flex-shrink-0 touch-manipulation"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center cursor-move text-theme-text-tertiary hover:text-theme-primary flex-shrink-0 touch-manipulation"
           title={t('resume.experienceForm.dragToReorder')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +228,7 @@ export const ProjectCard = memo(function ProjectCard({
                 type="month"
                 value={project.startDate}
                 onChange={(e) => updateField('startDate', e.target.value)}
-                className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary"
+                className={`w-full px-4 py-2 bg-theme-bg-card border border-theme-border-default rounded-soft text-sm text-theme-text-primary min-h-[44px] ${focusClasses}`}
               />
             </div>
             <div>
@@ -239,7 +239,7 @@ export const ProjectCard = memo(function ProjectCard({
                 type="month"
                 value={project.endDate || ''}
                 onChange={(e) => updateField('endDate', e.target.value)}
-                className="w-full px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-soft focus:outline-none focus:ring-[4px] focus:ring-theme-primary text-sm text-theme-text-primary"
+                className={`w-full px-4 py-2 bg-theme-bg-card border border-theme-border-default rounded-soft text-sm text-theme-text-primary min-h-[44px] ${focusClasses}`}
                 placeholder={t('resume.experienceForm.ongoingProject')}
               />
             </div>
@@ -299,7 +299,7 @@ export const ProjectCard = memo(function ProjectCard({
                 variant="secondary"
                 onClick={addAchievement}
                 size="sm"
-                className="py-1.5 px-2 text-xs sm:text-sm"
+                className="py-2 px-2 text-xs sm:text-sm min-h-[44px]"
               >
                 + {t('common.add')}
               </Button>
