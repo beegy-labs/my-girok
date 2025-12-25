@@ -26,15 +26,20 @@ model User {
   region           String?             @db.VarChar(50)
   locale           String?             @db.VarChar(10)
   timezone         String?             @db.VarChar(50)
+  accountMode      AccountMode         @default(SERVICE) @map("account_mode")
+  countryCode      String?             @map("country_code") @db.VarChar(2)
   admin_user_links admin_user_links[]
   domainAccess     DomainAccessToken[]
   sessions         Session[]
   consents         UserConsent[]
+  userServices     UserService[]
 
   @@index([externalId])
   @@index([email])
   @@index([username])
   @@index([provider, providerId])
+  @@index([accountMode])
+  @@index([countryCode])
   @@map("users")
 }
 
@@ -274,11 +279,80 @@ model tenants {
   @@index([type, status], map: "idx_tenants_type_status")
 }
 
+model Service {
+  id               String        @id @default(dbgenerated("(gen_random_uuid())::text"))
+  slug             String        @unique @db.VarChar(50)
+  name             String        @db.VarChar(100)
+  description      String?
+  isActive         Boolean       @default(true) @map("is_active")
+  settings         Json?
+  requiredConsents Json?         @map("required_consents")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  userServices     UserService[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("services")
+}
+
+model LawRegistry {
+  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  code        String   @unique @db.VarChar(20)
+  countryCode String   @map("country_code") @db.VarChar(2)
+  name        String   @db.VarChar(100)
+  requirements Json
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([countryCode])
+  @@index([code])
+  @@map("law_registry")
+}
+
+model UserService {
+  id          String            @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId      String            @map("user_id")
+  serviceId   String            @map("service_id")
+  status      UserServiceStatus @default(ACTIVE)
+  tierId      String?           @map("tier_id")
+  countryCode String            @map("country_code") @db.VarChar(2)
+  joinedAt    DateTime          @default(now()) @map("joined_at") @db.Timestamptz(6)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceId, countryCode])
+  @@index([userId])
+  @@index([serviceId])
+  @@index([status])
+  @@index([countryCode])
+  @@map("user_services")
+}
+
 enum Role {
   GUEST
   USER
   MANAGER
   MASTER
+}
+
+enum AccountMode {
+  SERVICE // Per-service independent account (default)
+  UNIFIED // Integrated account
+
+  @@map("account_mode")
+}
+
+enum UserServiceStatus {
+  ACTIVE
+  SUSPENDED
+  WITHDRAWN
+
+  @@map("user_service_status")
 }
 
 enum AuthProvider {
