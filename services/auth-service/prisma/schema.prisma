@@ -28,12 +28,15 @@ model User {
   timezone         String?             @db.VarChar(50)
   accountMode      AccountMode         @default(SERVICE) @map("account_mode")
   countryCode      String?             @map("country_code") @db.VarChar(2)
-  admin_user_links admin_user_links[]
-  domainAccess     DomainAccessToken[]
-  sessions         Session[]
-  consents         UserConsent[]
-  userServices     UserService[]
-  personalInfo     PersonalInfo?
+  admin_user_links     admin_user_links[]
+  domainAccess         DomainAccessToken[]
+  sessions             Session[]
+  consents             UserConsent[]
+  userServices         UserService[]
+  personalInfo         PersonalInfo?
+  primaryAccountLinks  AccountLink[]     @relation("PrimaryUser")
+  linkedAccountLinks   AccountLink[]     @relation("LinkedUser")
+  platformConsents     PlatformConsent[]
 
   @@index([externalId])
   @@index([email])
@@ -108,6 +111,7 @@ model LegalDocument {
   admins_legal_documents_updated_byToadmins admins?             @relation("legal_documents_updated_byToadmins", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service                                   Service?            @relation(fields: [serviceId], references: [id])
   consents                                  UserConsent[]
+  platformConsents                          PlatformConsent[]
 
   @@unique([type, version, locale, serviceId, countryCode])
   @@index([type, locale, isActive], map: "idx_legal_documents_type_locale_active")
@@ -334,6 +338,7 @@ model Service {
   roles                  roles[]
   permissions            permissions[]
   adminServices          AdminService[]
+  accountLinks           AccountLink[]
 
   @@index([slug])
   @@index([isActive])
@@ -549,6 +554,50 @@ model AdminService {
   @@map("admin_services")
 }
 
+model AccountLink {
+  id              String            @id @default(dbgenerated("(gen_random_uuid())::text"))
+  primaryUserId   String            @map("primary_user_id")
+  linkedUserId    String            @map("linked_user_id")
+  linkedServiceId String            @map("linked_service_id")
+  status          AccountLinkStatus @default(PENDING)
+  linkedAt        DateTime?         @map("linked_at") @db.Timestamptz(6)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  primaryUser   User    @relation("PrimaryUser", fields: [primaryUserId], references: [id], onDelete: Cascade)
+  linkedUser    User    @relation("LinkedUser", fields: [linkedUserId], references: [id], onDelete: Cascade)
+  linkedService Service @relation(fields: [linkedServiceId], references: [id], onDelete: Cascade)
+
+  @@unique([primaryUserId, linkedUserId])
+  @@index([primaryUserId])
+  @@index([linkedUserId])
+  @@index([linkedServiceId])
+  @@index([status])
+  @@map("account_links")
+}
+
+model PlatformConsent {
+  id          String         @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId      String         @map("user_id")
+  consentType ConsentType    @map("consent_type")
+  countryCode String         @map("country_code") @db.VarChar(2)
+  documentId  String?        @map("document_id")
+  agreed      Boolean        @default(true)
+  agreedAt    DateTime       @map("agreed_at") @db.Timestamptz(6)
+  withdrawnAt DateTime?      @map("withdrawn_at") @db.Timestamptz(6)
+  ipAddress   String?        @map("ip_address") @db.VarChar(45)
+  userAgent   String?        @map("user_agent")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document LegalDocument? @relation(fields: [documentId], references: [id])
+
+  @@unique([userId, consentType, countryCode])
+  @@index([userId])
+  @@index([consentType])
+  @@index([countryCode])
+  @@map("platform_consents")
+}
+
 enum Role {
   GUEST
   USER
@@ -611,6 +660,14 @@ enum InvitationStatus {
   CANCELLED
 
   @@map("invitation_status")
+}
+
+enum AccountLinkStatus {
+  PENDING
+  ACTIVE
+  UNLINKED
+
+  @@map("account_link_status")
 }
 
 enum AuthProvider {
