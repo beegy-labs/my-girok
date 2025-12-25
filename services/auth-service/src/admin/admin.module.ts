@@ -11,10 +11,17 @@ import {
   TenantController,
   AdminLegalController,
   AdminAuditController,
+  OperatorController,
 } from './controllers';
 
 // Services
-import { AdminAuthService, TenantService, AdminLegalService, AdminAuditService } from './services';
+import {
+  AdminAuthService,
+  TenantService,
+  AdminLegalService,
+  AdminAuditService,
+  OperatorService,
+} from './services';
 
 // Guards
 import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
@@ -36,18 +43,25 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
       },
     }),
   ],
-  controllers: [AdminAuthController, TenantController, AdminLegalController, AdminAuditController],
+  controllers: [
+    AdminAuthController,
+    TenantController,
+    AdminLegalController,
+    AdminAuditController,
+    OperatorController,
+  ],
   providers: [
     // Services
     AdminAuthService,
     TenantService,
     AdminLegalService,
     AdminAuditService,
+    OperatorService,
     // Guards
     AdminAuthGuard,
     PermissionGuard,
     TenantGuard,
   ],
-  exports: [AdminAuthService, TenantService, AdminLegalService, AdminAuditService],
+  exports: [AdminAuthService, TenantService, AdminLegalService, AdminAuditService, OperatorService],
 })
 export class AdminModule {}

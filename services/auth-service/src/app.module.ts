@@ -2,13 +2,16 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { JwtAuthGuard, HttpExceptionFilter, HealthModule } from '@my-girok/nest-common';
+import { HttpExceptionFilter, HealthModule } from '@my-girok/nest-common';
+import { UnifiedAuthGuard } from './auth/guards';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OAuthConfigModule } from './oauth-config/oauth-config.module';
 import { LegalModule } from './legal/legal.module';
 import { AdminModule } from './admin/admin.module';
+import { ServicesModule } from './services/services.module';
+import { OperatorModule } from './operator/operator.module';
 
 @Module({
   imports: [
@@ -29,12 +32,14 @@ import { AdminModule } from './admin/admin.module';
     OAuthConfigModule,
     LegalModule,
     AdminModule,
+    ServicesModule,
+    OperatorModule,
     HealthModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: UnifiedAuthGuard,
     },
     {
       provide: APP_GUARD,
