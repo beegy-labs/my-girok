@@ -5,6 +5,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 // Database
 import { DatabaseModule } from '../database/database.module';
 
+// Users module for PersonalInfoService
+import { UsersModule } from '../users/users.module';
+
 // Controllers
 import {
   AdminAuthController,
@@ -13,6 +16,7 @@ import {
   AdminAuditController,
   OperatorController,
 } from './controllers';
+import { UserPersonalInfoController } from './controllers/user-personal-info.controller';
 
 // Services
 import {
@@ -29,6 +33,7 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
 @Module({
   imports: [
     DatabaseModule,
+    UsersModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -49,6 +54,7 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
     AdminLegalController,
     AdminAuditController,
     OperatorController,
+    UserPersonalInfoController,
   ],
   providers: [
     // Services
