@@ -36,7 +36,7 @@ export default function ConsentsPage() {
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 p-4 bg-theme-error/10 text-theme-error rounded-lg">
+      <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
         <AlertCircle size={20} />
         <span>{error}</span>
       </div>
@@ -55,7 +55,7 @@ export default function ConsentsPage() {
             Overview of user consent agreements and statistics
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary transition-colors">
+        <button className="flex items-center gap-2 px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors">
           <Download size={18} />
           <span>Export CSV</span>
         </button>
@@ -63,19 +63,19 @@ export default function ConsentsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <p className="text-sm text-theme-text-secondary">Total Consents</p>
           <p className="text-3xl font-bold text-theme-text-primary mt-2">
             {stats.summary.totalConsents.toLocaleString()}
           </p>
         </div>
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <p className="text-sm text-theme-text-secondary">Unique Users</p>
           <p className="text-3xl font-bold text-theme-text-primary mt-2">
             {stats.summary.totalUsers.toLocaleString()}
           </p>
         </div>
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <p className="text-sm text-theme-text-secondary">Overall Agreement Rate</p>
           <p className="text-3xl font-bold text-green-600 mt-2">
             {(stats.summary.overallAgreementRate * 100).toFixed(1)}%
@@ -84,7 +84,7 @@ export default function ConsentsPage() {
       </div>
 
       {/* Consent by type */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
         <h2 className="text-lg font-semibold text-theme-text-primary mb-4">Consents by Type</h2>
         <div className="overflow-x-auto">
           <table className="admin-table">
@@ -134,7 +134,7 @@ export default function ConsentsPage() {
       </div>
 
       {/* Consent by region */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
         <h2 className="text-lg font-semibold text-theme-text-primary mb-4">Consents by Region</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.byRegion.map((item) => (
@@ -149,7 +149,7 @@ export default function ConsentsPage() {
       </div>
 
       {/* Recent activity */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
         <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
           Recent Activity (Last 30 Days)
         </h2>

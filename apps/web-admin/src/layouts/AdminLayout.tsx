@@ -59,12 +59,12 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-theme-bg-card border-r border-theme-border flex flex-col transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-theme-bg-card border-r border-theme-border-default flex flex-col transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-theme-border">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-theme-border-default">
           <span className="text-xl font-bold text-theme-text-primary">Girok Admin</span>
           <button
             className="lg:hidden p-1 rounded hover:bg-theme-bg-secondary"
@@ -81,7 +81,7 @@ export default function AdminLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-theme-bg-card border-b border-theme-border flex items-center justify-between px-6">
+        <header className="h-16 bg-theme-bg-card border-b border-theme-border-default flex items-center justify-between px-6">
           {/* Mobile menu button */}
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-theme-bg-secondary transition-colors"
@@ -104,7 +104,7 @@ export default function AdminLayout() {
               </button>
 
               {showLangMenu && (
-                <div className="absolute right-0 mt-2 w-40 bg-theme-bg-card border border-theme-border rounded-lg shadow-lg py-1 z-50">
+                <div className="absolute right-0 mt-2 w-40 bg-theme-bg-card border border-theme-border-default rounded-lg shadow-lg py-1 z-50">
                   {LANGUAGES.map((lang) => (
                     <button
                       key={lang.code}
@@ -151,8 +151,8 @@ export default function AdminLayout() {
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-theme-bg-card border border-theme-border rounded-lg shadow-lg py-1 z-50">
-                  <div className="px-4 py-2 border-b border-theme-border">
+                <div className="absolute right-0 mt-2 w-48 bg-theme-bg-card border border-theme-border-default rounded-lg shadow-lg py-1 z-50">
+                  <div className="px-4 py-2 border-b border-theme-border-default">
                     <div className="text-sm text-theme-text-secondary">{admin?.email}</div>
                     <div className="text-xs text-theme-text-tertiary">
                       {admin?.scope === 'SYSTEM' ? 'System Admin' : admin?.tenantSlug}
@@ -160,7 +160,7 @@ export default function AdminLayout() {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-theme-error hover:bg-theme-bg-secondary transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-theme-status-error-text hover:bg-theme-bg-secondary transition-colors"
                   >
                     <LogOut size={16} />
                     <span>{t('auth.logout')}</span>

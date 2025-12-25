@@ -129,7 +129,7 @@ export default function ConsentExamplesPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
               selectedRegion === region.code
                 ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
-                : 'border-theme-border text-theme-text-secondary hover:border-theme-primary/50 hover:bg-theme-bg-secondary'
+                : 'border-theme-border-default text-theme-text-secondary hover:border-theme-primary/50 hover:bg-theme-bg-secondary'
             }`}
           >
             <span className="text-lg">{region.flag}</span>
@@ -139,9 +139,9 @@ export default function ConsentExamplesPage() {
       </div>
 
       {/* Region Details Card */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl overflow-hidden">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-theme-border">
+        <div className="p-6 border-b border-theme-border-default">
           <div className="flex items-start gap-4">
             <div className="text-4xl">{regionInfo.flag}</div>
             <div className="flex-1">
@@ -160,11 +160,11 @@ export default function ConsentExamplesPage() {
         </div>
 
         {/* Features */}
-        <div className="p-6 border-b border-theme-border bg-theme-bg-secondary/50">
+        <div className="p-6 border-b border-theme-border-default bg-theme-bg-secondary/50">
           <div className="flex flex-wrap gap-4">
             {regionInfo.nightTimeRestriction && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-theme-bg-card border border-theme-border rounded-lg">
-                <Moon size={16} className="text-theme-warning" />
+              <div className="flex items-center gap-2 px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg">
+                <Moon size={16} className="text-theme-status-warning-text" />
                 <span className="text-sm text-theme-text-secondary">
                   Night restriction: {regionInfo.nightTimeRestriction.start}:00 -{' '}
                   {regionInfo.nightTimeRestriction.end}:00
@@ -172,16 +172,16 @@ export default function ConsentExamplesPage() {
               </div>
             )}
             {regionInfo.dataLocalization && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-theme-bg-card border border-theme-border rounded-lg">
-                <Globe size={16} className="text-theme-info" />
+              <div className="flex items-center gap-2 px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg">
+                <Globe size={16} className="text-theme-status-info-text" />
                 <span className="text-sm text-theme-text-secondary">
                   Data Localization Required
                 </span>
               </div>
             )}
             {regionInfo.rightToForget && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-theme-bg-card border border-theme-border rounded-lg">
-                <Shield size={16} className="text-theme-success" />
+              <div className="flex items-center gap-2 px-3 py-2 bg-theme-bg-card border border-theme-border-default rounded-lg">
+                <Shield size={16} className="text-theme-status-success-text" />
                 <span className="text-sm text-theme-text-secondary">Right to be Forgotten</span>
               </div>
             )}
@@ -193,7 +193,7 @@ export default function ConsentExamplesPage() {
           {/* Required Consents */}
           <div className="p-6">
             <h3 className="text-sm font-semibold text-theme-text-primary flex items-center gap-2 mb-4">
-              <Shield size={16} className="text-theme-error" />
+              <Shield size={16} className="text-theme-status-error-text" />
               Required Consents
               <span className="text-xs font-normal text-theme-text-tertiary">
                 (Must agree to use service)
@@ -205,7 +205,7 @@ export default function ConsentExamplesPage() {
                   key={consent}
                   className="flex items-center gap-3 text-sm text-theme-text-secondary"
                 >
-                  <CheckCircle2 size={16} className="text-theme-error shrink-0" />
+                  <CheckCircle2 size={16} className="text-theme-status-error-text shrink-0" />
                   {consent}
                 </li>
               ))}
@@ -215,7 +215,7 @@ export default function ConsentExamplesPage() {
           {/* Optional Consents */}
           <div className="p-6">
             <h3 className="text-sm font-semibold text-theme-text-primary flex items-center gap-2 mb-4">
-              <Info size={16} className="text-theme-info" />
+              <Info size={16} className="text-theme-status-info-text" />
               Optional Consents
               <span className="text-xs font-normal text-theme-text-tertiary">
                 (User can choose)
@@ -227,7 +227,7 @@ export default function ConsentExamplesPage() {
                   key={consent}
                   className="flex items-center gap-3 text-sm text-theme-text-secondary"
                 >
-                  <Circle size={16} className="text-theme-info shrink-0" />
+                  <Circle size={16} className="text-theme-status-info-text shrink-0" />
                   {consent}
                 </li>
               ))}
@@ -237,8 +237,8 @@ export default function ConsentExamplesPage() {
       </div>
 
       {/* Comparison Table */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-theme-border">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-theme-border-default">
           <h3 className="font-semibold text-theme-text-primary">Region Comparison</h3>
         </div>
         <div className="overflow-x-auto">
@@ -277,7 +277,7 @@ export default function ConsentExamplesPage() {
                   <td className="px-4 py-3 text-theme-text-secondary">{region.law}</td>
                   <td className="px-4 py-3 text-center">
                     {region.nightTimeRestriction ? (
-                      <span className="text-theme-warning">
+                      <span className="text-theme-status-warning-text">
                         {region.nightTimeRestriction.start}:00-{region.nightTimeRestriction.end}:00
                       </span>
                     ) : (
@@ -286,14 +286,14 @@ export default function ConsentExamplesPage() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     {region.optionalConsents.includes('Third-party Sharing') ? (
-                      <CheckCircle2 size={16} className="inline text-theme-success" />
+                      <CheckCircle2 size={16} className="inline text-theme-status-success-text" />
                     ) : (
                       <span className="text-theme-text-tertiary">-</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {region.dataLocalization ? (
-                      <CheckCircle2 size={16} className="inline text-theme-success" />
+                      <CheckCircle2 size={16} className="inline text-theme-status-success-text" />
                     ) : (
                       <span className="text-theme-text-tertiary">-</span>
                     )}

@@ -47,8 +47,8 @@ export const MenuItem = memo(function MenuItem({ item, depth = 0 }: MenuItemProp
               <span
                 className={`px-1.5 py-0.5 text-xs rounded ${
                   item.badge === 'new'
-                    ? 'bg-theme-success/20 text-theme-success'
-                    : 'bg-theme-warning/20 text-theme-warning'
+                    ? 'bg-theme-status-success-bg text-theme-status-success-text'
+                    : 'bg-theme-status-warning-bg text-theme-status-warning-text'
                 }`}
               >
                 {item.badge}
@@ -98,8 +98,8 @@ export const MenuItem = memo(function MenuItem({ item, depth = 0 }: MenuItemProp
         <span
           className={`px-1.5 py-0.5 text-xs rounded ${
             item.badge === 'new'
-              ? 'bg-theme-success/20 text-theme-success'
-              : 'bg-theme-warning/20 text-theme-warning'
+              ? 'bg-theme-status-success-bg text-theme-status-success-text'
+              : 'bg-theme-status-warning-bg text-theme-status-warning-text'
           }`}
         >
           {item.badge}

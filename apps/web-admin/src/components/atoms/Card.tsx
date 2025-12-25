@@ -13,7 +13,7 @@ export const Card = memo(
     ({ children, padding = 'md', className = '', ...props }, ref) => (
       <div
         ref={ref}
-        className={`bg-theme-bg-card border border-theme-border rounded-xl ${paddingStyles[padding]} ${className}`}
+        className={`bg-theme-bg-card border border-theme-border-default rounded-xl ${paddingStyles[padding]} ${className}`}
         {...props}
       >
         {children}

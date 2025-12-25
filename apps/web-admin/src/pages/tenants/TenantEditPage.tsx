@@ -198,7 +198,7 @@ export default function TenantEditPage() {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-error/10 text-theme-error rounded-lg">
+        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
           <span>{error}</span>
         </div>
@@ -206,7 +206,7 @@ export default function TenantEditPage() {
 
       {/* Status actions (for existing tenants) */}
       {!isNew && (
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6 space-y-4">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 space-y-4">
           <h2 className="text-lg font-semibold text-theme-text-primary">{t('common.status')}</h2>
 
           <div className="flex items-center gap-4">
@@ -297,7 +297,7 @@ export default function TenantEditPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6 space-y-4">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 space-y-4">
           <h2 className="text-lg font-semibold text-theme-text-primary">Tenant Information</h2>
 
           <div>
@@ -310,7 +310,7 @@ export default function TenantEditPage() {
               onChange={(e) => setName(e.target.value)}
               required
               placeholder="Company Name"
-              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary"
+              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary"
             />
           </div>
 
@@ -325,7 +325,7 @@ export default function TenantEditPage() {
               disabled={!isNew}
               required
               placeholder="company-slug"
-              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary font-mono disabled:opacity-50"
+              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary font-mono disabled:opacity-50"
             />
             <p className="mt-1 text-sm text-theme-text-tertiary">
               URL-safe identifier. Only lowercase letters, numbers, and hyphens.
@@ -340,7 +340,7 @@ export default function TenantEditPage() {
               value={type}
               onChange={(e) => setType(e.target.value as Tenant['type'])}
               disabled={!isNew}
-              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary disabled:opacity-50"
+              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary disabled:opacity-50"
             >
               {tenantTypeOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -359,12 +359,12 @@ export default function TenantEditPage() {
               onChange={(e) => setSettings(e.target.value)}
               rows={4}
               placeholder="{}"
-              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary font-mono text-sm resize-none"
+              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary font-mono text-sm resize-none"
             />
           </div>
 
           {!isNew && (
-            <div className="pt-4 border-t border-theme-border">
+            <div className="pt-4 border-t border-theme-border-default">
               <p className="text-sm text-theme-text-tertiary">
                 <span className="font-medium">Admins:</span> {adminCount}
               </p>
@@ -376,7 +376,7 @@ export default function TenantEditPage() {
         <div className="flex items-center justify-end gap-4">
           <Link
             to="/tenants"
-            className="px-6 py-3 border border-theme-border rounded-lg hover:bg-theme-bg-secondary transition-colors"
+            className="px-6 py-3 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
           >
             {t('common.cancel')}
           </Link>
@@ -384,7 +384,7 @@ export default function TenantEditPage() {
             <button
               type="submit"
               disabled={saving || !name || !slug}
-              className="flex items-center gap-2 px-6 py-3 bg-theme-primary text-btn-primary-text-color rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving && <Loader2 size={18} className="animate-spin" />}
               <Save size={18} />
