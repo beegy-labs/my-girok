@@ -42,12 +42,51 @@ interface AuthPayload {
   refreshToken: string;
 }
 
+// Legacy JWT (backward compatible)
 interface JwtPayload {
-  sub: string; // User ID
+  sub: string;
   email: string;
   role: Role;
   type: 'ACCESS' | 'REFRESH' | 'DOMAIN_ACCESS';
 }
+
+// New Global Account JWT Types
+interface UserJwtPayload {
+  sub: string;
+  email: string;
+  type: 'USER_ACCESS' | 'USER_REFRESH';
+  accountMode: 'SERVICE' | 'UNIFIED';
+  countryCode: string;
+  services: { [slug: string]: { status: string; countries: string[] } };
+}
+
+interface AdminJwtPayload {
+  sub: string;
+  email: string;
+  name: string;
+  type: 'ADMIN_ACCESS' | 'ADMIN_REFRESH';
+  scope: 'SYSTEM' | 'TENANT';
+  tenantId?: string;
+  roleId: string;
+  roleName: string;
+  level: number;
+  permissions: string[];
+  services?: { [slug: string]: { roleId: string; countries: string[] } };
+}
+
+interface OperatorJwtPayload {
+  sub: string;
+  email: string;
+  name: string;
+  type: 'OPERATOR_ACCESS' | 'OPERATOR_REFRESH';
+  adminId: string;
+  serviceId: string;
+  serviceSlug: string;
+  countryCode: string;
+  permissions: string[];
+}
+
+type JwtPayloadUnion = UserJwtPayload | AdminJwtPayload | OperatorJwtPayload;
 ```
 
 ## User
@@ -115,6 +154,27 @@ interface Skill {
 }
 ```
 
+## Account & Service
+
+```typescript
+enum AccountMode {
+  SERVICE, // Per-service independent
+  UNIFIED, // Integrated across services
+}
+
+enum UserServiceStatus {
+  ACTIVE,
+  SUSPENDED,
+  WITHDRAWN,
+}
+
+enum AccountLinkStatus {
+  PENDING,
+  ACTIVE,
+  UNLINKED,
+}
+```
+
 ## Legal
 
 ```typescript
@@ -123,11 +183,17 @@ enum ConsentType {
   PRIVACY_POLICY, // Required
   MARKETING_EMAIL, // Optional
   MARKETING_PUSH, // Optional
-  MARKETING_PUSH_NIGHT, // Korea only
+  MARKETING_PUSH_NIGHT, // Korea PIPA
+  MARKETING_SMS, // Optional
+  PERSONALIZED_ADS, // Optional
+  THIRD_PARTY_SHARING, // Optional
+  CROSS_BORDER_TRANSFER, // Japan APPI
+  CROSS_SERVICE_SHARING, // UNIFIED mode
 }
 
 interface UserConsentPayload {
   consentType: ConsentType;
+  countryCode: string;
   agreed: boolean;
   agreedAt: Date;
 }

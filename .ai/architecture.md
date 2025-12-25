@@ -112,4 +112,70 @@ import { AuthService } from '../auth-service'; // NEVER
 
 ---
 
+## Central Auth Architecture
+
+### Multi-Service Account System
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                    Auth Service                           │
+├──────────────────────────────────────────────────────────┤
+│  Users          Services        Law Registry             │
+│  ├─UserServices ├─ConsentReqs   ├─PIPA (KR)             │
+│  ├─Consents     └─Operators     ├─GDPR (EU)             │
+│  └─PersonalInfo                 ├─APPI (JP)             │
+│                                 └─CCPA (US)             │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Account Flow
+
+```
+User Registration
+       │
+       ▼
+┌─────────────────┐
+│ SERVICE Mode    │ (Default)
+│ - Per-service   │
+│ - Per-country   │
+└────────┬────────┘
+         │ Link Request + Accept
+         ▼
+┌─────────────────┐
+│ UNIFIED Mode    │
+│ - Cross-service │
+│ - Single token  │
+│ - Shared info   │
+└─────────────────┘
+```
+
+### Guard Flow
+
+```
+Request
+   │
+   ▼
+UnifiedAuthGuard (routes by token type)
+   │
+   ├─ USER_ACCESS ──▶ validateUser()
+   ├─ ADMIN_ACCESS ──▶ validateAdmin()
+   └─ OPERATOR_ACCESS ──▶ validateOperator()
+   │
+   ▼
+ServiceAccessGuard (optional)
+   │
+   ▼
+CountryConsentGuard (optional)
+```
+
+### Token Types
+
+| Type            | Payload                            | Use Case     |
+| --------------- | ---------------------------------- | ------------ |
+| USER_ACCESS     | services, countryCode, accountMode | User API     |
+| ADMIN_ACCESS    | scope, permissions, level          | Admin API    |
+| OPERATOR_ACCESS | serviceSlug, countryCode           | Operator API |
+
+---
+
 **Full roadmap**: `docs/ARCHITECTURE_ROADMAP.md`

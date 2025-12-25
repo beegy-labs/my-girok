@@ -120,4 +120,104 @@ createDocument(@CurrentAdmin() admin: AdminPayload) { }
 
 ---
 
-**Detailed docs**: `docs/services/AUTH_SERVICE.md`
+## Global Account System
+
+### Account Mode
+
+| Mode    | Description                               |
+| ------- | ----------------------------------------- |
+| SERVICE | Per-service independent account (default) |
+| UNIFIED | Integrated account across services        |
+
+### Service API
+
+```
+GET  /v1/services/:slug/consent-requirements  # Get required consents
+POST /v1/services/:slug/join                  # Join service { countryCode, consents[] }
+POST /v1/services/:slug/consent/:countryCode  # Add country consent
+PUT  /v1/services/:slug/consent               # Update consent
+DELETE /v1/services/:slug/withdraw            # Withdraw from service
+```
+
+### Account Linking
+
+```
+GET    /v1/users/me/linkable-accounts      # Find linkable accounts
+POST   /v1/users/me/link-account           # Request link
+POST   /v1/users/me/accept-link            # Accept with password
+GET    /v1/users/me/linked-accounts        # List linked
+DELETE /v1/users/me/linked-accounts/:id    # Unlink
+```
+
+### Operator API
+
+```
+# Admin manages operators
+POST   /v1/admin/operators              # Create operator
+POST   /v1/admin/operators/invite       # Invite (EMAIL/DIRECT)
+GET    /v1/admin/operators              # List
+PATCH  /v1/admin/operators/:id          # Update
+DELETE /v1/admin/operators/:id          # Delete
+POST   /v1/admin/operators/:id/permissions  # Grant permission
+
+# Operator auth
+POST   /v1/operator/auth/login          # { email, password, serviceSlug }
+POST   /v1/operator/auth/refresh        # Refresh token
+```
+
+### Law Registry
+
+```
+GET    /v1/admin/laws                   # List laws (PIPA, GDPR, etc.)
+GET    /v1/admin/laws/:code             # Get by code
+POST   /v1/admin/laws                   # Create law
+PATCH  /v1/admin/laws/:code             # Update
+DELETE /v1/admin/laws/:code             # Delete (with ref check)
+GET    /v1/admin/laws/:code/consent-requirements
+POST   /v1/admin/laws/seed              # Seed defaults
+```
+
+### Personal Info API
+
+```
+# User
+GET    /v1/users/me/personal-info       # Get my info
+PATCH  /v1/users/me/personal-info       # Update
+DELETE /v1/users/me/personal-info       # Delete
+
+# Admin
+GET    /v1/admin/users/:id/personal-info  # Get user's info
+```
+
+### Unified Guards
+
+```typescript
+// Token type routing
+@UseGuards(UnifiedAuthGuard)
+
+// Require specific account type
+@UseGuards(UnifiedAuthGuard, AccountTypeGuard)
+@RequireAccountType('USER')  // or 'ADMIN', 'OPERATOR'
+
+// Service membership check
+@UseGuards(UnifiedAuthGuard, ServiceAccessGuard)
+@RequireService('resume')
+
+// Country consent check
+@UseGuards(UnifiedAuthGuard, CountryConsentGuard)
+@RequireCountryConsent('KR')
+```
+
+### Decorators
+
+| Decorator                       | Description                           |
+| ------------------------------- | ------------------------------------- |
+| `@CurrentUser()`                | Get authenticated user/admin/operator |
+| `@RequireAccountType(type)`     | Require USER/ADMIN/OPERATOR           |
+| `@RequireService(slug?)`        | Require service membership            |
+| `@RequireCountryConsent(code?)` | Require country consent               |
+| `@Permissions(perm)`            | Admin permission check                |
+
+---
+
+**Detailed docs**: `docs/policies/GLOBAL_ACCOUNT.md`
