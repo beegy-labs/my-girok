@@ -1,5 +1,6 @@
 import { Controller, Get, Query, UseGuards, Res, Header } from '@nestjs/common';
 import { Response } from 'express';
+import { Public } from '@my-girok/nest-common';
 import { AdminAuditService } from '../services/admin-audit.service';
 import {
   AuditLogListQuery,
@@ -11,6 +12,7 @@ import { PermissionGuard } from '../guards/permission.guard';
 import { Permissions } from '../decorators/permissions.decorator';
 
 @Controller('admin/audit')
+@Public() // Bypass global JwtAuthGuard - AdminAuthGuard handles auth
 @UseGuards(AdminAuthGuard, PermissionGuard)
 export class AdminAuditController {
   constructor(private readonly adminAuditService: AdminAuditService) {}
