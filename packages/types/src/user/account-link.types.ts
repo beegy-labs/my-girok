@@ -3,7 +3,7 @@
  * SERVICE → UNIFIED account linking types
  */
 
-import { ConsentType } from '../auth/consent.types.js';
+import { ConsentType } from '../legal/enums.js';
 
 export enum AccountLinkStatus {
   PENDING = 'PENDING',

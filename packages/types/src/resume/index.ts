@@ -1,4 +1,5 @@
 // Resume types for My-Girok
+import { Gender } from '../user/personal-info.types.js';
 
 // ========== Enums ==========
 
@@ -20,9 +21,9 @@ export enum DegreeType {
 }
 
 export enum GpaFormat {
-  SCALE_4_0 = 'SCALE_4_0',   // 4.0 scale (US: 3.8/4.0)
-  SCALE_4_5 = 'SCALE_4_5',   // 4.5 scale (KR: 4.2/4.5)
-  SCALE_100 = 'SCALE_100',   // 100-point scale (JP: 85/100)
+  SCALE_4_0 = 'SCALE_4_0', // 4.0 scale (US: 3.8/4.0)
+  SCALE_4_5 = 'SCALE_4_5', // 4.5 scale (KR: 4.2/4.5)
+  SCALE_100 = 'SCALE_100', // 100-point scale (JP: 85/100)
 }
 
 export enum AttachmentType {
@@ -32,11 +33,8 @@ export enum AttachmentType {
   OTHER = 'OTHER',
 }
 
-export enum Gender {
-  MALE = 'MALE',     // 남성
-  FEMALE = 'FEMALE', // 여성
-  OTHER = 'OTHER',   // 기타
-}
+// Note: Gender enum is now in user/personal-info.types.ts
+// Import from '@my-girok/types' or '@my-girok/types/user' instead
 
 export type PaperSize = 'A4' | 'LETTER';
 

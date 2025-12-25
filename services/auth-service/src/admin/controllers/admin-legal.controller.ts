@@ -11,7 +11,6 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { Public } from '@my-girok/nest-common';
 import { AdminLegalService } from '../services/admin-legal.service';
 import {
   CreateLegalDocumentDto,
@@ -23,15 +22,13 @@ import {
   ConsentListResponse,
   ConsentStatsResponse,
 } from '../dto/admin-legal.dto';
-import { AdminAuthGuard } from '../guards/admin-auth.guard';
 import { PermissionGuard } from '../guards/permission.guard';
 import { Permissions } from '../decorators/permissions.decorator';
 import { CurrentAdmin } from '../decorators/current-admin.decorator';
 import { AdminPayload } from '../types/admin.types';
 
 @Controller('admin/legal')
-@Public() // Bypass global JwtAuthGuard - AdminAuthGuard handles auth
-@UseGuards(AdminAuthGuard, PermissionGuard)
+@UseGuards(PermissionGuard) // UnifiedAuthGuard handles auth globally
 export class AdminLegalController {
   constructor(private readonly adminLegalService: AdminLegalService) {}
 

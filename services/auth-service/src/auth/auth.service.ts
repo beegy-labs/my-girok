@@ -11,6 +11,9 @@ import {
   JwtPayload,
   Role,
   AuthProvider,
+  UserJwtPayload,
+  UserServicePayload,
+  LegacyUserJwtPayload,
 } from '@my-girok/types';
 import { generateUniqueExternalId } from '../common/utils/id-generator';
 
@@ -197,14 +200,49 @@ export class AuthService {
   }
 
   async generateTokens(userId: string, email: string, role: string): Promise<TokenResponse> {
-    const accessPayload: JwtPayload = {
+    // Fetch user's services for new JWT structure
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        accountMode: true,
+        countryCode: true,
+      },
+    });
+
+    // Fetch user services using raw query (Prisma schema may not be updated yet)
+    let userServices: Array<{
+      status: string;
+      countryCode: string;
+      serviceSlug: string;
+    }> = [];
+
+    try {
+      userServices = await this.prisma.$queryRaw<
+        Array<{ status: string; countryCode: string; serviceSlug: string }>
+      >`
+        SELECT us.status, us.country_code as "countryCode", s.slug as "serviceSlug"
+        FROM user_services us
+        JOIN services s ON us.service_id = s.id
+        WHERE us.user_id = ${userId} AND us.status = 'ACTIVE'
+      `;
+    } catch {
+      // Table might not exist yet in dev, continue with empty services
+    }
+
+    const services = this.buildUserServicesPayload(userServices);
+
+    const accessPayload: UserJwtPayload = {
       sub: userId,
       email,
-      role: role as Role,
-      type: 'ACCESS',
+      type: 'USER_ACCESS',
+      accountMode: (user?.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
+      countryCode: user?.countryCode || 'KR',
+      services,
     };
 
-    const refreshPayload: JwtPayload = {
+    const refreshPayload: LegacyUserJwtPayload = {
       sub: userId,
       email,
       role: role as Role,
@@ -221,6 +259,64 @@ export class AuthService {
     ]);
 
     return { accessToken, refreshToken };
+  }
+
+  async generateTokensWithServices(
+    userId: string,
+    email: string,
+    accountMode: 'SERVICE' | 'UNIFIED',
+    countryCode: string,
+    userServices: Array<{ status: string; countryCode: string; serviceSlug: string }>,
+  ): Promise<TokenResponse> {
+    const services = this.buildUserServicesPayload(userServices);
+
+    const accessPayload: UserJwtPayload = {
+      sub: userId,
+      email,
+      type: 'USER_ACCESS',
+      accountMode,
+      countryCode,
+      services,
+    };
+
+    const refreshPayload: LegacyUserJwtPayload = {
+      sub: userId,
+      email,
+      role: Role.USER,
+      type: 'REFRESH',
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(accessPayload, {
+        expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '1h'),
+      }),
+      this.jwtService.signAsync(refreshPayload, {
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '14d'),
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  private buildUserServicesPayload(
+    userServices: Array<{ status: string; countryCode: string; serviceSlug: string }>,
+  ): Record<string, UserServicePayload> {
+    const services: Record<string, UserServicePayload> = {};
+
+    for (const us of userServices) {
+      const slug = us.serviceSlug;
+      if (!services[slug]) {
+        services[slug] = {
+          status: us.status as 'ACTIVE' | 'SUSPENDED' | 'WITHDRAWN',
+          countries: [],
+        };
+      }
+      if (!services[slug].countries.includes(us.countryCode)) {
+        services[slug].countries.push(us.countryCode);
+      }
+    }
+
+    return services;
   }
 
   async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {

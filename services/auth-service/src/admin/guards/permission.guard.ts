@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
-import { AdminPayload } from '../types/admin.types';
+import { AuthenticatedAdmin, isAuthenticatedAdmin } from '@my-girok/types';
 import { matchesPermission } from '../config/permissions.config';
 
 @Injectable()
@@ -20,11 +20,19 @@ export class PermissionGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const admin = request.admin as AdminPayload;
+    // Support both legacy request.admin and new request.user from UnifiedAuthGuard
+    const user = request.user || request.admin;
 
-    if (!admin) {
+    if (!user) {
       throw new ForbiddenException('Admin context not found');
     }
+
+    // Check if user is an admin (from UnifiedAuthGuard)
+    if (!isAuthenticatedAdmin(user)) {
+      throw new ForbiddenException('Admin authentication required');
+    }
+
+    const admin = user as AuthenticatedAdmin;
 
     // System Super Admin (role with '*' permission) bypasses all checks
     if (admin.permissions.includes('*')) {
