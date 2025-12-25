@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Filter, AlertCircle, Loader2 } from 'lucide-react';
 import { legalApi, LegalDocument, DocumentListResponse } from '../../api/legal';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
+import { logger } from '../../utils/logger';
 
 const DOCUMENT_TYPES = [
   { value: '', label: 'All Types' },
@@ -21,6 +24,7 @@ const LOCALES = [
 ];
 
 export default function DocumentsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { hasPermission } = useAdminAuthStore();
 
@@ -28,6 +32,12 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Delete confirmation dialog state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    documentId: string | null;
+  }>({ isOpen: false, documentId: null });
 
   // Filters
   const [type, setType] = useState('');
@@ -39,7 +49,7 @@ export default function DocumentsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -56,31 +66,40 @@ export default function DocumentsPage() {
       setTotalPages(response.totalPages);
       setTotal(response.total);
     } catch (err) {
-      setError('Failed to load documents');
-      console.error(err);
+      setError(t('legal.loadFailed'));
+      logger.error('Failed to load documents', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, type, locale, isActive, t]);
 
   useEffect(() => {
     fetchDocuments();
-  }, [page, type, locale, isActive]);
+  }, [fetchDocuments]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this document?')) return;
+  const handleDeleteClick = useCallback((id: string) => {
+    setDeleteDialog({ isOpen: true, documentId: id });
+  }, []);
 
-    setDeleting(id);
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteDialog.documentId) return;
+
+    setDeleting(deleteDialog.documentId);
     try {
-      await legalApi.deleteDocument(id);
+      await legalApi.deleteDocument(deleteDialog.documentId);
       fetchDocuments();
     } catch (err) {
-      setError('Failed to delete document');
-      console.error(err);
+      setError(t('legal.deleteFailed'));
+      logger.error('Failed to delete document', err);
     } finally {
       setDeleting(null);
+      setDeleteDialog({ isOpen: false, documentId: null });
     }
-  };
+  }, [deleteDialog.documentId, fetchDocuments, t]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteDialog({ isOpen: false, documentId: null });
+  }, []);
 
   const canCreate = hasPermission('legal:create');
   const canEdit = hasPermission('legal:update');
@@ -91,10 +110,8 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-theme-text-primary">Legal Documents</h1>
-          <p className="text-theme-text-secondary mt-1">
-            Manage terms of service, privacy policies, and consent documents
-          </p>
+          <h1 className="text-2xl font-bold text-theme-text-primary">{t('legal.documents')}</h1>
+          <p className="text-theme-text-secondary mt-1">{t('legal.documentsDescription')}</p>
         </div>
         {canCreate && (
           <Link
@@ -102,7 +119,7 @@ export default function DocumentsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text-color rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus size={18} />
-            <span>New Document</span>
+            <span>{t('legal.newDocument')}</span>
           </Link>
         )}
       </div>
@@ -149,13 +166,13 @@ export default function DocumentsPage() {
           }}
           className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
         >
-          <option value="">All Status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
+          <option value="">{t('common.allStatus')}</option>
+          <option value="true">{t('common.active')}</option>
+          <option value="false">{t('common.inactive')}</option>
         </select>
 
         <div className="ml-auto text-sm text-theme-text-tertiary">
-          {total} document{total !== 1 ? 's' : ''}
+          {t('legal.documentCount', { count: total })}
         </div>
       </div>
 
@@ -172,13 +189,13 @@ export default function DocumentsPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Type</th>
-              <th>Title</th>
-              <th>Version</th>
-              <th>Locale</th>
-              <th>Status</th>
-              <th>Effective Date</th>
-              <th>Actions</th>
+              <th>{t('legal.type')}</th>
+              <th>{t('legal.title')}</th>
+              <th>{t('legal.version')}</th>
+              <th>{t('legal.locale')}</th>
+              <th>{t('common.status')}</th>
+              <th>{t('legal.effectiveDate')}</th>
+              <th>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -191,7 +208,7 @@ export default function DocumentsPage() {
             ) : documents.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-8 text-theme-text-tertiary">
-                  No documents found
+                  {t('legal.noDocuments')}
                 </td>
               </tr>
             ) : (
@@ -208,10 +225,12 @@ export default function DocumentsPage() {
                   <td>
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${
-                        doc.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        doc.isActive
+                          ? 'bg-theme-status-success-bg text-theme-status-success-text'
+                          : 'bg-theme-bg-secondary text-theme-text-secondary'
                       }`}
                     >
-                      {doc.isActive ? 'Active' : 'Inactive'}
+                      {doc.isActive ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
                   <td className="text-theme-text-secondary">
@@ -223,17 +242,17 @@ export default function DocumentsPage() {
                         <button
                           onClick={() => navigate(`/legal/documents/${doc.id}`)}
                           className="p-2 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded-lg transition-colors"
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <Pencil size={16} />
                         </button>
                       )}
                       {canDelete && (
                         <button
-                          onClick={() => handleDelete(doc.id)}
+                          onClick={() => handleDeleteClick(doc.id)}
                           disabled={deleting === doc.id}
                           className="p-2 text-theme-text-secondary hover:text-theme-error hover:bg-theme-error/10 rounded-lg transition-colors disabled:opacity-50"
-                          title="Delete"
+                          title={t('common.delete')}
                         >
                           {deleting === doc.id ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -259,20 +278,32 @@ export default function DocumentsPage() {
             disabled={page === 1}
             className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Previous
+            {t('common.previous')}
           </button>
           <span className="px-4 py-2 text-theme-text-secondary">
-            Page {page} of {totalPages}
+            {t('common.page', { current: page, total: totalPages })}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
+            {t('common.next')}
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        title={t('legal.deleteConfirm')}
+        message={t('legal.deleteMessage')}
+        confirmLabel={t('common.delete')}
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        loading={deleting === deleteDialog.documentId}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, useCallback, FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Loader2, AlertCircle, CheckCircle, Ban, XCircle } from 'lucide-react';
 import {
   tenantApi,
@@ -9,6 +10,11 @@ import {
   UpdateStatusRequest,
 } from '../../api/tenant';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
+import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
+import { Modal } from '../../components/molecules/Modal';
+import { Button } from '../../components/atoms/Button';
+import { Input } from '../../components/atoms/Input';
+import { logger } from '../../utils/logger';
 
 const TENANT_TYPES = [
   { value: 'INTERNAL', label: 'Internal' },
@@ -19,6 +25,7 @@ const TENANT_TYPES = [
 ] as const;
 
 export default function TenantEditPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { hasPermission } = useAdminAuthStore();
@@ -38,13 +45,18 @@ export default function TenantEditPage() {
   const [adminCount, setAdminCount] = useState(0);
   const [approvedAt, setApprovedAt] = useState<string | null>(null);
 
+  // Dialog states
+  const [terminateDialog, setTerminateDialog] = useState(false);
+  const [suspendModal, setSuspendModal] = useState(false);
+  const [suspendReason, setSuspendReason] = useState('');
+
   useEffect(() => {
     if (id) {
       fetchTenant();
     }
   }, [id]);
 
-  const fetchTenant = async () => {
+  const fetchTenant = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -58,12 +70,12 @@ export default function TenantEditPage() {
       setAdminCount(tenant.adminCount);
       setApprovedAt(tenant.approvedAt);
     } catch (err) {
-      setError('Failed to load tenant');
-      console.error(err);
+      setError(t('tenants.loadFailed'));
+      logger.error('Failed to load tenant', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -99,30 +111,65 @@ export default function TenantEditPage() {
       navigate('/tenants');
     } catch (err) {
       setError(isNew ? 'Failed to create tenant' : 'Failed to update tenant');
-      console.error(err);
+      logger.error('Failed to save tenant', err);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleStatusUpdate = async (newStatus: Tenant['status'], reason?: string) => {
-    if (!id) return;
+  const handleStatusUpdate = useCallback(
+    async (newStatus: Tenant['status'], reason?: string) => {
+      if (!id) return;
 
-    setStatusUpdating(true);
-    setError(null);
+      setStatusUpdating(true);
+      setError(null);
 
-    try {
-      const data: UpdateStatusRequest = { status: newStatus, reason };
-      const updated = await tenantApi.updateStatus(id, data);
-      setStatus(updated.status);
-      setApprovedAt(updated.approvedAt);
-    } catch (err) {
-      setError('Failed to update status');
-      console.error(err);
-    } finally {
-      setStatusUpdating(false);
+      try {
+        const data: UpdateStatusRequest = { status: newStatus, reason };
+        const updated = await tenantApi.updateStatus(id, data);
+        setStatus(updated.status);
+        setApprovedAt(updated.approvedAt);
+      } catch (err) {
+        setError('Failed to update status');
+        logger.error('Failed to update tenant status', err);
+      } finally {
+        setStatusUpdating(false);
+      }
+    },
+    [id],
+  );
+
+  const handleSuspendClick = useCallback(() => {
+    setSuspendModal(true);
+  }, []);
+
+  const handleSuspendConfirm = useCallback(async () => {
+    if (!suspendReason.trim()) {
+      setError(t('tenants.reasonRequired'));
+      return;
     }
-  };
+    await handleStatusUpdate('SUSPENDED', suspendReason);
+    setSuspendModal(false);
+    setSuspendReason('');
+  }, [suspendReason, handleStatusUpdate, t]);
+
+  const handleSuspendCancel = useCallback(() => {
+    setSuspendModal(false);
+    setSuspendReason('');
+  }, []);
+
+  const handleTerminateClick = useCallback(() => {
+    setTerminateDialog(true);
+  }, []);
+
+  const handleTerminateConfirm = useCallback(async () => {
+    await handleStatusUpdate('TERMINATED');
+    setTerminateDialog(false);
+  }, [handleStatusUpdate]);
+
+  const handleTerminateCancel = useCallback(() => {
+    setTerminateDialog(false);
+  }, []);
 
   const canCreate = hasPermission('tenant:create');
   const canApprove = hasPermission('tenant:approve');
@@ -148,7 +195,7 @@ export default function TenantEditPage() {
         </Link>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-theme-text-primary">
-            {isNew ? 'Create Tenant' : 'Edit Tenant'}
+            {isNew ? t('tenants.createTenant') : t('tenants.editTenant')}
           </h1>
         </div>
       </div>
@@ -164,21 +211,21 @@ export default function TenantEditPage() {
       {/* Status actions (for existing tenants) */}
       {!isNew && (
         <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-theme-text-primary">Status</h2>
+          <h2 className="text-lg font-semibold text-theme-text-primary">{t('common.status')}</h2>
 
           <div className="flex items-center gap-4">
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium ${
                 status === 'ACTIVE'
-                  ? 'bg-green-100 text-green-800'
+                  ? 'bg-theme-status-success-bg text-theme-status-success-text'
                   : status === 'PENDING'
-                    ? 'bg-yellow-100 text-yellow-800'
+                    ? 'bg-theme-status-warning-bg text-theme-status-warning-text'
                     : status === 'SUSPENDED'
-                      ? 'bg-orange-100 text-orange-800'
-                      : 'bg-red-100 text-red-800'
+                      ? 'bg-theme-status-warning-bg text-theme-status-warning-text'
+                      : 'bg-theme-status-error-bg text-theme-status-error-text'
               }`}
             >
-              {status}
+              {t(`tenants.status${status.charAt(0)}${status.slice(1).toLowerCase()}`)}
             </span>
 
             {approvedAt && (
@@ -193,34 +240,29 @@ export default function TenantEditPage() {
               <button
                 onClick={() => handleStatusUpdate('ACTIVE')}
                 disabled={statusUpdating}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-status-success-text text-white rounded-lg hover:opacity-90 disabled:opacity-50"
               >
                 {statusUpdating ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <CheckCircle size={16} />
                 )}
-                <span>Approve</span>
+                <span>{t('tenants.approve')}</span>
               </button>
             )}
 
             {status === 'ACTIVE' && canSuspend && (
               <button
-                onClick={() => {
-                  const reason = prompt('Reason for suspension:');
-                  if (reason !== null) {
-                    handleStatusUpdate('SUSPENDED', reason);
-                  }
-                }}
+                onClick={handleSuspendClick}
                 disabled={statusUpdating}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-status-warning-text text-white rounded-lg hover:opacity-90 disabled:opacity-50"
               >
                 {statusUpdating ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <Ban size={16} />
                 )}
-                <span>Suspend</span>
+                <span>{t('tenants.suspend')}</span>
               </button>
             )}
 
@@ -228,37 +270,29 @@ export default function TenantEditPage() {
               <button
                 onClick={() => handleStatusUpdate('ACTIVE')}
                 disabled={statusUpdating}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-status-success-text text-white rounded-lg hover:opacity-90 disabled:opacity-50"
               >
                 {statusUpdating ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <CheckCircle size={16} />
                 )}
-                <span>Reactivate</span>
+                <span>{t('tenants.activate')}</span>
               </button>
             )}
 
             {status !== 'TERMINATED' && canSuspend && (
               <button
-                onClick={() => {
-                  if (
-                    confirm(
-                      'Are you sure you want to terminate this tenant? This action cannot be undone.',
-                    )
-                  ) {
-                    handleStatusUpdate('TERMINATED');
-                  }
-                }}
+                onClick={handleTerminateClick}
                 disabled={statusUpdating}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-status-error-text text-white rounded-lg hover:opacity-90 disabled:opacity-50"
               >
                 {statusUpdating ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <XCircle size={16} />
                 )}
-                <span>Terminate</span>
+                <span>{t('tenants.terminate')}</span>
               </button>
             )}
           </div>
@@ -271,7 +305,9 @@ export default function TenantEditPage() {
           <h2 className="text-lg font-semibold text-theme-text-primary">Tenant Information</h2>
 
           <div>
-            <label className="block text-sm font-medium text-theme-text-primary mb-2">Name</label>
+            <label className="block text-sm font-medium text-theme-text-primary mb-2">
+              {t('tenants.name')}
+            </label>
             <input
               type="text"
               value={name}
@@ -283,7 +319,9 @@ export default function TenantEditPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-theme-text-primary mb-2">Slug</label>
+            <label className="block text-sm font-medium text-theme-text-primary mb-2">
+              {t('tenants.slug')}
+            </label>
             <input
               type="text"
               value={slug}
@@ -299,7 +337,9 @@ export default function TenantEditPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-theme-text-primary mb-2">Type</label>
+            <label className="block text-sm font-medium text-theme-text-primary mb-2">
+              {t('tenants.tenantType')}
+            </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as Tenant['type'])}
@@ -342,7 +382,7 @@ export default function TenantEditPage() {
             to="/tenants"
             className="px-6 py-3 border border-theme-border rounded-lg hover:bg-theme-bg-secondary transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </Link>
           {(isNew ? canCreate : true) && (
             <button
@@ -352,11 +392,46 @@ export default function TenantEditPage() {
             >
               {saving && <Loader2 size={18} className="animate-spin" />}
               <Save size={18} />
-              <span>{saving ? 'Saving...' : 'Save'}</span>
+              <span>{saving ? 'Saving...' : t('common.save')}</span>
             </button>
           )}
         </div>
       </form>
+
+      {/* Terminate Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={terminateDialog}
+        title={t('tenants.terminateConfirm')}
+        message={t('tenants.terminateMessage')}
+        confirmLabel={t('tenants.terminate')}
+        variant="danger"
+        onConfirm={handleTerminateConfirm}
+        onCancel={handleTerminateCancel}
+        loading={statusUpdating}
+      />
+
+      {/* Suspend Modal with Reason Input */}
+      <Modal
+        isOpen={suspendModal}
+        onClose={handleSuspendCancel}
+        title={t('tenants.suspendConfirm')}
+      >
+        <p className="text-sm text-theme-text-secondary mb-4">{t('tenants.suspendMessage')}</p>
+        <Input
+          label={t('tenants.suspendReason')}
+          value={suspendReason}
+          onChange={(e) => setSuspendReason(e.target.value)}
+          placeholder={t('tenants.suspendReasonPlaceholder')}
+        />
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={handleSuspendCancel} disabled={statusUpdating}>
+            {t('common.cancel')}
+          </Button>
+          <Button variant="danger" onClick={handleSuspendConfirm} loading={statusUpdating}>
+            {t('tenants.suspend')}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

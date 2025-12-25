@@ -369,6 +369,20 @@
   --level-3-text-dark: #ce93d8; /* 7.0:1 AAA on dark bg */
   --level-4-bg-dark: rgba(245, 124, 0, 0.15);
   --level-4-text-dark: #ffcc80; /* 8.5:1 AAA on dark bg */
+
+  /* Level 5 - Pink (for charts/data viz) */
+  --level-5-bg: #fce4ec;
+  --level-5-border: #e91e63;
+  --level-5-text: #880e4f; /* 8.12:1 AAA on #fce4ec */
+  --level-5-bg-dark: rgba(233, 30, 99, 0.15);
+  --level-5-text-dark: #f48fb1; /* 7.3:1 AAA on dark bg */
+
+  /* Level 6 - Cyan (for charts/data viz) */
+  --level-6-bg: #e0f7fa;
+  --level-6-border: #00bcd4;
+  --level-6-text: #006064; /* 7.88:1 AAA on #e0f7fa */
+  --level-6-bg-dark: rgba(0, 188, 212, 0.15);
+  --level-6-text-dark: #80deea; /* 7.1:1 AAA on dark bg */
 }
 
 /* ============================================
@@ -456,9 +470,31 @@
   --theme-level-4-bg: var(--level-4-bg);
   --theme-level-4-border: var(--level-4-border);
   --theme-level-4-text: var(--level-4-text);
+  --theme-level-5-bg: var(--level-5-bg);
+  --theme-level-5-border: var(--level-5-border);
+  --theme-level-5-text: var(--level-5-text);
+  --theme-level-6-bg: var(--level-6-bg);
+  --theme-level-6-border: var(--level-6-border);
+  --theme-level-6-text: var(--level-6-text);
 
   /* Focus ring */
   --theme-focus-ring: var(--theme-primary);
+
+  /* Chart/Data Viz Shorthand Aliases */
+  --color-primary: var(--theme-primary);
+  --color-border: var(--theme-border-default);
+  --color-bg-card: var(--theme-bg-card);
+  --color-text-tertiary: var(--theme-text-tertiary);
+  --color-status-success: var(--theme-status-success-text);
+  --color-status-warning: var(--theme-status-warning-text);
+  --color-status-error: var(--theme-status-error-text);
+  --color-status-info: var(--theme-status-info-text);
+  --color-level-1: var(--level-1-border);
+  --color-level-2: var(--level-2-border);
+  --color-level-3: var(--level-3-border);
+  --color-level-4: var(--level-4-border);
+  --color-level-5: var(--level-5-border);
+  --color-level-6: var(--level-6-border);
 }
 
 /* Dark Theme Override ("Midnight Gentle Study") */
@@ -537,9 +573,23 @@
   --theme-level-3-text: var(--level-3-text-dark);
   --theme-level-4-bg: var(--level-4-bg-dark);
   --theme-level-4-text: var(--level-4-text-dark);
+  --theme-level-5-bg: var(--level-5-bg-dark);
+  --theme-level-5-text: var(--level-5-text-dark);
+  --theme-level-6-bg: var(--level-6-bg-dark);
+  --theme-level-6-text: var(--level-6-text-dark);
 
   /* Focus ring */
   --theme-focus-ring: var(--theme-primary-light);
+
+  /* Chart/Data Viz Shorthand Aliases - Dark Override */
+  --color-primary: var(--theme-primary);
+  --color-border: var(--theme-border-default);
+  --color-bg-card: var(--theme-bg-card);
+  --color-text-tertiary: var(--theme-text-tertiary);
+  --color-status-success: var(--theme-status-success-text);
+  --color-status-warning: var(--theme-status-warning-text);
+  --color-status-error: var(--theme-status-error-text);
+  --color-status-info: var(--theme-status-info-text);
 }
 
 /* ============================================
@@ -624,6 +674,12 @@
   --color-theme-level-4-bg: var(--theme-level-4-bg);
   --color-theme-level-4-border: var(--theme-level-4-border);
   --color-theme-level-4-text: var(--theme-level-4-text);
+  --color-theme-level-5-bg: var(--theme-level-5-bg);
+  --color-theme-level-5-border: var(--theme-level-5-border);
+  --color-theme-level-5-text: var(--theme-level-5-text);
+  --color-theme-level-6-bg: var(--theme-level-6-bg);
+  --color-theme-level-6-border: var(--theme-level-6-border);
+  --color-theme-level-6-text: var(--theme-level-6-text);
 
   /* Editorial Typography - SSOT: generates font-* utilities */
   --font-family-serif-title: 'Playfair Display', Georgia, 'Times New Roman', serif;
