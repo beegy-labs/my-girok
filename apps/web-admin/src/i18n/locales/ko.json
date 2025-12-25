@@ -30,7 +30,17 @@
     "view": "보기",
     "close": "닫기",
     "apply": "적용",
-    "reset": "초기화"
+    "reset": "초기화",
+    "allTypes": "모든 유형",
+    "allLocales": "모든 언어",
+    "allStatus": "모든 상태",
+    "korean": "한국어",
+    "english": "영어",
+    "japanese": "일본어",
+    "hindi": "힌디어",
+    "tryAgain": "다시 시도",
+    "somethingWentWrong": "문제가 발생했습니다",
+    "unexpectedError": "예기치 않은 오류가 발생했습니다"
   },
   "menu": {
     "dashboard": "대시보드",
@@ -50,7 +60,7 @@
     "loginLoading": "로그인 중...",
     "logout": "로그아웃",
     "email": "이메일",
-    "emailPlaceholder": "admin@girok.dev",
+    "emailPlaceholder": "admin@example.com",
     "password": "비밀번호",
     "passwordPlaceholder": "비밀번호를 입력하세요",
     "invalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다",
@@ -103,7 +113,8 @@
     "documentCount": "{{count}}개 문서",
     "documentCount_plural": "{{count}}개 문서",
     "noDocuments": "문서가 없습니다",
-    "deleteConfirm": "이 문서를 삭제하시겠습니까?",
+    "deleteConfirm": "문서 삭제",
+    "deleteMessage": "이 작업은 되돌릴 수 없습니다. 문서가 영구적으로 삭제됩니다.",
     "deleteSuccess": "문서가 삭제되었습니다",
     "deleteFailed": "문서 삭제에 실패했습니다",
     "saveFailed": "문서 저장에 실패했습니다",
@@ -146,15 +157,25 @@
     "typeInternal": "내부",
     "typeCommerce": "커머스",
     "typeAdbid": "광고입찰",
+    "typePostback": "포스트백",
+    "typeAgency": "대행사",
     "approve": "승인",
     "suspend": "정지",
     "activate": "활성화",
     "terminate": "해지",
     "suspendReason": "정지 사유",
     "approveConfirm": "이 파트너를 승인하시겠습니까?",
-    "suspendConfirm": "이 파트너를 정지하시겠습니까?",
+    "suspendConfirm": "파트너 정지",
+    "suspendMessage": "정지 사유를 입력해 주세요.",
+    "terminateConfirm": "파트너 해지",
+    "terminateMessage": "이 작업은 되돌릴 수 없습니다. 파트너가 영구적으로 해지됩니다.",
+    "reasonRequired": "사유를 입력해 주세요",
+    "suspendReasonPlaceholder": "정지 사유를 입력하세요...",
     "noTenants": "파트너가 없습니다",
-    "loadFailed": "파트너를 불러오는데 실패했습니다"
+    "loadFailed": "파트너를 불러오는데 실패했습니다",
+    "searchPlaceholder": "이름 또는 슬러그로 검색",
+    "tenantCount": "{{count}}개 파트너",
+    "tenantCount_plural": "{{count}}개 파트너"
   },
   "audit": {
     "title": "감사 로그",
@@ -210,6 +231,16 @@
     "APPI": "개인정보보호법 (일본)",
     "CCPA": "캘리포니아 소비자 프라이버시법",
     "GDPR": "일반 데이터 보호 규정",
-    "DPDP": "디지털 개인정보 보호법"
+    "DPDP": "디지털 개인정보 보호법",
+    "UKGDPR": "영국 일반 데이터 보호 규정"
+  },
+  "consent": {
+    "typeTerms": "이용약관",
+    "typePrivacy": "개인정보처리방침",
+    "typeMarketingEmail": "마케팅 이메일",
+    "typeMarketingPush": "푸시 알림",
+    "typeMarketingNight": "야간 푸시",
+    "typePersonalizedAds": "맞춤형 광고",
+    "typeThirdParty": "제3자 제공"
   }
 }

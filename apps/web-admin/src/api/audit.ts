@@ -1,49 +1,9 @@
 import apiClient from './client';
-
-export interface AuditLogAdmin {
-  id: string;
-  username: string;
-  email: string;
-  displayName: string | null;
-}
-
-export interface AuditLog {
-  id: string;
-  adminId: string;
-  admin: AuditLogAdmin;
-  action: string;
-  resource: string;
-  resourceId: string | null;
-  beforeState: Record<string, unknown> | null;
-  afterState: Record<string, unknown> | null;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: string;
-}
-
-export interface AuditLogListQuery {
-  action?: string;
-  resource?: string;
-  adminId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface AuditLogListResponse {
-  items: AuditLog[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface AuditLogFilterOptions {
-  actions: string[];
-  resources: string[];
-  admins: AuditLogAdmin[];
-}
+import type {
+  AuditLogListQuery,
+  AuditLogListResponse,
+  AuditLogFilterOptions,
+} from '@my-girok/types';
 
 export const auditApi = {
   /**
@@ -88,3 +48,12 @@ export const auditApi = {
     return response.data;
   },
 };
+
+// Re-export types for convenience
+export type {
+  AuditLog,
+  AuditLogAdmin,
+  AuditLogListQuery,
+  AuditLogListResponse,
+  AuditLogFilterOptions,
+} from '@my-girok/types';

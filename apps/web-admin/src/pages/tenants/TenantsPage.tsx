@@ -1,45 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
-import {
-  Plus,
-  Pencil,
-  Search,
-  Filter,
-  AlertCircle,
-  Loader2,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Ban,
-} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Plus, Pencil, Search, Filter, AlertCircle, Loader2 } from 'lucide-react';
 import { tenantApi, Tenant, TenantListResponse } from '../../api/tenant';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
-
-const STATUS_OPTIONS = [
-  { value: '', label: 'All Status' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'SUSPENDED', label: 'Suspended' },
-  { value: 'TERMINATED', label: 'Terminated' },
-];
-
-const STATUS_ICONS = {
-  PENDING: Clock,
-  ACTIVE: CheckCircle,
-  SUSPENDED: Ban,
-  TERMINATED: XCircle,
-};
-
-const STATUS_COLORS = {
-  PENDING: 'text-yellow-600 bg-yellow-100',
-  ACTIVE: 'text-green-600 bg-green-100',
-  SUSPENDED: 'text-orange-600 bg-orange-100',
-  TERMINATED: 'text-red-600 bg-red-100',
-};
+import { getStatusOptions, getStatusConfig, type TenantStatus } from '../../config/tenant.config';
+import { logger } from '../../utils/logger';
 
 export default function TenantsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { hasPermission } = useAdminAuthStore();
+  const statusOptions = getStatusOptions(t);
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +26,7 @@ export default function TenantsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const fetchTenants = async () => {
+  const fetchTenants = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -70,16 +42,16 @@ export default function TenantsPage() {
       setTotalPages(response.totalPages);
       setTotal(response.total);
     } catch (err) {
-      setError('Failed to load tenants');
-      console.error(err);
+      setError(t('tenants.loadFailed'));
+      logger.error('Failed to load tenants', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, status, search, t]);
 
   useEffect(() => {
     fetchTenants();
-  }, [page, status]);
+  }, [fetchTenants]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,10 +67,8 @@ export default function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-theme-text-primary">Tenants</h1>
-          <p className="text-theme-text-secondary mt-1">
-            Manage partner organizations and their access
-          </p>
+          <h1 className="text-2xl font-bold text-theme-text-primary">{t('tenants.title')}</h1>
+          <p className="text-theme-text-secondary mt-1">{t('tenants.description')}</p>
         </div>
         {canCreate && (
           <Link
@@ -106,7 +76,7 @@ export default function TenantsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text-color rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus size={18} />
-            <span>New Tenant</span>
+            <span>{t('tenants.newTenant')}</span>
           </Link>
         )}
       </div>
@@ -125,7 +95,7 @@ export default function TenantsPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or slug"
+              placeholder={t('tenants.searchPlaceholder')}
               className="pl-10 pr-4 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm w-64"
             />
           </div>
@@ -133,7 +103,7 @@ export default function TenantsPage() {
             type="submit"
             className="px-4 py-2 bg-theme-primary text-btn-primary-text-color rounded-lg text-sm hover:opacity-90"
           >
-            Search
+            {t('common.search')}
           </button>
         </form>
 
@@ -145,7 +115,7 @@ export default function TenantsPage() {
           }}
           className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
         >
-          {STATUS_OPTIONS.map((s) => (
+          {statusOptions.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
             </option>
@@ -153,7 +123,7 @@ export default function TenantsPage() {
         </select>
 
         <div className="ml-auto text-sm text-theme-text-tertiary">
-          {total} tenant{total !== 1 ? 's' : ''}
+          {t('tenants.tenantCount', { count: total })}
         </div>
       </div>
 
@@ -170,13 +140,13 @@ export default function TenantsPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Slug</th>
-              <th>Type</th>
-              <th>Status</th>
+              <th>{t('tenants.name')}</th>
+              <th>{t('tenants.slug')}</th>
+              <th>{t('tenants.tenantType')}</th>
+              <th>{t('tenants.status')}</th>
               <th>Admins</th>
-              <th>Created</th>
-              <th>Actions</th>
+              <th>{t('tenants.createdAt')}</th>
+              <th>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -189,12 +159,19 @@ export default function TenantsPage() {
             ) : tenants.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-8 text-theme-text-tertiary">
-                  No tenants found
+                  {t('tenants.noTenants')}
                 </td>
               </tr>
             ) : (
               tenants.map((tenant) => {
-                const StatusIcon = STATUS_ICONS[tenant.status];
+                const statusConfig = getStatusConfig(tenant.status as TenantStatus);
+                const StatusIcon = statusConfig.icon;
+                const variantStyles: Record<string, string> = {
+                  success: 'bg-theme-status-success-bg text-theme-status-success-text',
+                  warning: 'bg-theme-status-warning-bg text-theme-status-warning-text',
+                  error: 'bg-theme-status-error-bg text-theme-status-error-text',
+                  default: 'bg-theme-bg-secondary text-theme-text-primary',
+                };
                 return (
                   <tr key={tenant.id}>
                     <td className="font-medium text-theme-text-primary">{tenant.name}</td>
@@ -206,10 +183,10 @@ export default function TenantsPage() {
                     </td>
                     <td>
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${STATUS_COLORS[tenant.status]}`}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${variantStyles[statusConfig.variant]}`}
                       >
                         <StatusIcon size={12} />
-                        {tenant.status}
+                        {t(statusConfig.labelKey)}
                       </span>
                     </td>
                     <td className="text-theme-text-secondary">{tenant.adminCount}</td>
@@ -221,7 +198,7 @@ export default function TenantsPage() {
                         <button
                           onClick={() => navigate(`/tenants/${tenant.id}`)}
                           className="p-2 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded-lg transition-colors"
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <Pencil size={16} />
                         </button>
@@ -243,17 +220,17 @@ export default function TenantsPage() {
             disabled={page === 1}
             className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Previous
+            {t('common.previous')}
           </button>
           <span className="px-4 py-2 text-theme-text-secondary">
-            Page {page} of {totalPages}
+            {t('common.page', { current: page, total: totalPages })}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
+            {t('common.next')}
           </button>
         </div>
       )}
