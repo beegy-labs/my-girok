@@ -360,6 +360,57 @@ Examples:
 - Check browser console in development mode
 - Review logger output for details
 
+## Admin UI Design Principles
+
+### Priority Order
+
+The web-admin console follows these priorities (in order):
+
+1. **Information Density** - Maximize data visible per screen
+2. **Readability** - Clear hierarchy and visual structure
+3. **WCAG AAA Compliance** - **Intentionally ignored** for this admin tool
+
+### Why WCAG AAA is Not Required
+
+| Reason            | Explanation                                                                |
+| ----------------- | -------------------------------------------------------------------------- |
+| Internal Tool     | Only authenticated admins access this console                              |
+| Training Focus    | Designed for learning/training purposes where dense data is preferred      |
+| Data Visibility   | Prioritizes showing more information over accessibility edge cases         |
+| Dark Mode Support | Still uses theme tokens (not hardcoded colors) for Dark Mode compatibility |
+
+### Design Guidelines
+
+- **Dense Tables**: Compact rows with minimal padding, truncated UUIDs
+- **Inline Actions**: Icon buttons in table cells, no separate action pages
+- **Collapsible Filters**: Show/hide filter panels with active filter count badges
+- **Monospace for IDs**: Use `font-mono text-xs` for UUIDs, slugs, resource IDs
+- **Status Badges**: Always use the `Badge` component with semantic variants
+- **Simple Pagination**: Previous/Next buttons with current range display
+
+### Table Cell Patterns
+
+```tsx
+// ID column - truncated, monospace
+<td className="font-mono text-xs truncate max-w-[150px]">{id}</td>
+
+// Status column - compact badge
+<td><Badge variant={statusConfig.variant}>{t(statusConfig.labelKey)}</Badge></td>
+
+// Date column - localized, no year if current year
+<td className="text-theme-text-secondary whitespace-nowrap">
+  {formatDate(date)}
+</td>
+
+// Actions column - icon buttons only
+<td>
+  <div className="flex items-center gap-1">
+    <button className="p-1.5"><Pencil size={14} /></button>
+    <button className="p-1.5"><Trash2 size={14} /></button>
+  </div>
+</td>
+```
+
 ## Related Documentation
 
 - [.ai/apps/web-admin.md](../../.ai/apps/web-admin.md) - LLM-optimized quick reference

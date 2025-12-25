@@ -180,6 +180,53 @@ pnpm --filter @my-girok/web-admin build
 pnpm --filter @my-girok/web-admin type-check
 ```
 
+## Admin UI Design Principles
+
+### Priority Order
+
+1. **Information Density** - Maximize data per screen (tables, filters, stats)
+2. **Readability** - Clear hierarchy, monospace for IDs, semantic colors
+3. **WCAG AAA Compliance** - **IGNORED** for admin (internal tool, training focus)
+
+### Why WCAG AAA is Ignored
+
+- Admin is **internal-only** (authenticated users)
+- Designed for **training/learning** purposes
+- Prioritizes **data visibility** over accessibility edge cases
+- Uses **theme tokens** for Dark Mode support (not raw Tailwind colors)
+
+### Design Guidelines
+
+| Principle           | Implementation                                       |
+| ------------------- | ---------------------------------------------------- |
+| Dense Tables        | Compact rows, minimal padding, truncated IDs         |
+| Inline Actions      | Icon buttons in table cells, no separate action page |
+| Collapsible Filters | Show/hide filter panel, badge for active count       |
+| Monospace IDs       | `font-mono text-xs` for UUIDs, slugs, resource IDs   |
+| Status Badges       | Use `Badge` component with semantic variants         |
+| No Pagination Jumps | Simple prev/next, show current range                 |
+
+### Table Cell Patterns
+
+```tsx
+// ID column - truncated, monospace
+<td className="font-mono text-xs truncate max-w-[150px]">{id}</td>
+
+// Status column - compact badge
+<td><Badge variant={statusConfig.variant}>{t(statusConfig.labelKey)}</Badge></td>
+
+// Date column - localized, no year if current year
+<td className="text-theme-text-secondary whitespace-nowrap">{formatDate(date)}</td>
+
+// Actions column - icon buttons only
+<td>
+  <div className="flex items-center gap-1">
+    <button className="p-1.5"><Pencil size={14} /></button>
+    <button className="p-1.5"><Trash2 size={14} /></button>
+  </div>
+</td>
+```
+
 ## Admin Roles
 
 | Role             | Scope  | Permissions                                      |
