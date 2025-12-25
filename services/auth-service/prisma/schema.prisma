@@ -33,6 +33,7 @@ model User {
   sessions         Session[]
   consents         UserConsent[]
   userServices     UserService[]
+  personalInfo     PersonalInfo?
 
   @@index([externalId])
   @@index([email])
@@ -302,10 +303,11 @@ model Service {
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  userServices        UserService[]
-  consents            UserConsent[]
-  legalDocuments      LegalDocument[]
-  consentRequirements ServiceConsentRequirement[]
+  userServices           UserService[]
+  consents               UserConsent[]
+  legalDocuments         LegalDocument[]
+  consentRequirements    ServiceConsentRequirement[]
+  personalInfoAccessLogs PersonalInfoAccessLog[]
 
   @@index([slug])
   @@index([isActive])
@@ -369,6 +371,51 @@ model UserService {
   @@map("user_services")
 }
 
+model PersonalInfo {
+  id               String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId           String    @unique @map("user_id")
+  name             String?   @db.VarChar(100)
+  birthDate        DateTime? @map("birth_date") @db.Date
+  gender           Gender?
+  phoneCountryCode String?   @map("phone_country_code") @db.VarChar(5)
+  phoneNumber      String?   @map("phone_number") @db.VarChar(20)
+  countryCode      String?   @map("country_code") @db.VarChar(2)
+  region           String?   @db.VarChar(100)
+  city             String?   @db.VarChar(100)
+  address          String?   @db.VarChar(500)
+  postalCode       String?   @map("postal_code") @db.VarChar(20)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessLogs PersonalInfoAccessLog[]
+
+  @@index([userId])
+  @@map("personal_info")
+}
+
+model PersonalInfoAccessLog {
+  id             String       @id @default(dbgenerated("(gen_random_uuid())::text"))
+  personalInfoId String       @map("personal_info_id")
+  serviceId      String?      @map("service_id")
+  accessorType   AccessorType @map("accessor_type")
+  accessorId     String       @map("accessor_id")
+  action         AccessAction
+  fields         String[]
+  ipAddress      String?      @map("ip_address") @db.VarChar(45)
+  userAgent      String?      @map("user_agent")
+  accessedAt     DateTime     @default(now()) @map("accessed_at") @db.Timestamptz(6)
+
+  personalInfo PersonalInfo @relation(fields: [personalInfoId], references: [id], onDelete: Cascade)
+  service      Service?     @relation(fields: [serviceId], references: [id])
+
+  @@index([personalInfoId])
+  @@index([serviceId])
+  @@index([accessorType, accessorId])
+  @@index([accessedAt])
+  @@map("personal_info_access_logs")
+}
+
 enum Role {
   GUEST
   USER
@@ -389,6 +436,32 @@ enum UserServiceStatus {
   WITHDRAWN
 
   @@map("user_service_status")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+
+  @@map("gender")
+}
+
+enum AccessorType {
+  USER
+  ADMIN
+  OPERATOR
+  SYSTEM
+
+  @@map("accessor_type")
+}
+
+enum AccessAction {
+  READ
+  UPDATE
+  DELETE
+
+  @@map("access_action")
 }
 
 enum AuthProvider {
