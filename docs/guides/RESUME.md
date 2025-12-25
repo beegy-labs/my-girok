@@ -212,6 +212,89 @@ Mobile (~375px): Auto-scaled to ~43%
 | Location | MinIO: `resumes/{userId}/{resumeId}/{uuid}.{ext}` |
 | Temp     | `tmp/{userId}/{uuid}.{ext}` (24-hour cleanup)     |
 
+## Profile Photo Handling
+
+### Display in Form
+
+```tsx
+{
+  formData.profileImage && (
+    <div className="mb-3 flex items-center gap-3">
+      <img
+        src={formData.profileImage}
+        alt="Profile"
+        className="w-24 h-24 object-cover rounded-full border-2 border-theme-border-default"
+        onError={(e) => {
+          // Fallback to placeholder SVG on error
+          (e.target as HTMLImageElement).src = 'data:image/svg+xml,...';
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => setFormData({ ...formData, profileImage: '' })}
+        className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+      >
+        Remove Photo
+      </button>
+    </div>
+  );
+}
+```
+
+**Key Points:**
+
+- Preview: 96x96px (`w-24 h-24`) circular with theme border
+- Error handling: Fallback to SVG placeholder if URL fails
+- Remove button: Clears profileImage field (red for destructive action)
+- Grayscale toggle: CSS `filter: grayscale(100%)` via UI button
+
+## Share Links
+
+### URL Patterns
+
+| Type           | Frontend Route   | Backend API                       |
+| -------------- | ---------------- | --------------------------------- |
+| Public profile | `/:username`     | `GET /v1/resume/public/:username` |
+| Share link     | `/shared/:token` | `GET /v1/share/public/:token`     |
+
+### Share Link Management
+
+```typescript
+// Create share link
+POST /v1/share/resume/:resumeId
+// Response: { id, token, resumeId, expiresAt, ... }
+
+// Generated URL format
+const shareUrl = `https://domain/shared/${token}`;
+```
+
+## Education Structure
+
+### DegreeType Enum
+
+| Value       | Korean   | English          |
+| ----------- | -------- | ---------------- |
+| HIGH_SCHOOL | 고등학교 | High School      |
+| ASSOCIATE_2 | 2년제    | 2-Year Associate |
+| ASSOCIATE_3 | 3년제    | 3-Year Associate |
+| BACHELOR    | 학사     | Bachelor's       |
+| MASTER      | 석사     | Master's         |
+| DOCTORATE   | 박사     | Doctorate        |
+
+### Education Model
+
+```typescript
+interface Education {
+  school: string; // required
+  major: string; // required
+  degree?: DegreeType; // optional enum
+  startDate: string; // YYYY-MM
+  endDate?: string; // nullable = currently enrolled
+  gpa?: string;
+  order: number; // drag-and-drop order
+}
+```
+
 ## Design Compliance
 
 ```tsx
