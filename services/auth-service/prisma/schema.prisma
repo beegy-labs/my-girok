@@ -172,35 +172,41 @@ model admin_user_links {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model admins {
-  id                                                 String             @id @default(dbgenerated("(gen_random_uuid())::text"))
-  email                                              String             @unique
+  id                                                 String               @id @default(dbgenerated("(gen_random_uuid())::text"))
+  email                                              String               @unique
   password                                           String
   name                                               String
-  scope                                              admin_scope        @default(TENANT)
+  scope                                              admin_scope          @default(TENANT)
   tenant_id                                          String?
   parent_id                                          String?
   role_id                                            String
-  is_active                                          Boolean            @default(true)
-  last_login_at                                      DateTime?          @db.Timestamptz(6)
-  created_at                                         DateTime           @default(now()) @db.Timestamptz(6)
-  updated_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  is_active                                          Boolean              @default(true)
+  last_login_at                                      DateTime?            @db.Timestamptz(6)
+  created_at                                         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime             @default(now()) @db.Timestamptz(6)
+  account_mode                                       AccountMode          @default(SERVICE) @map("account_mode")
+  country_code                                       String?              @map("country_code") @db.VarChar(2)
+
   admin_sessions                                     admin_sessions[]
   admin_user_links                                   admin_user_links[]
-  admins                                             admins?            @relation("adminsToadmins", fields: [parent_id], references: [id], onUpdate: NoAction)
-  other_admins                                       admins[]           @relation("adminsToadmins")
-  roles                                              roles              @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                                            tenants?           @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  admins                                             admins?              @relation("adminsToadmins", fields: [parent_id], references: [id], onUpdate: NoAction)
+  other_admins                                       admins[]             @relation("adminsToadmins")
+  roles                                              roles                @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                                            tenants?             @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   audit_logs                                         audit_logs[]
-  legal_documents_legal_documents_created_byToadmins LegalDocument[]    @relation("legal_documents_created_byToadmins")
-  legal_documents_legal_documents_updated_byToadmins LegalDocument[]    @relation("legal_documents_updated_byToadmins")
+  legal_documents_legal_documents_created_byToadmins LegalDocument[]      @relation("legal_documents_created_byToadmins")
+  legal_documents_legal_documents_updated_byToadmins LegalDocument[]      @relation("legal_documents_updated_byToadmins")
   operators                                          Operator[]
   operatorInvitations                                OperatorInvitation[]
   operatorPermissions                                OperatorPermission[]
+  adminServices                                      AdminService[]
 
   @@index([email], map: "idx_admins_email")
   @@index([parent_id], map: "idx_admins_parent_id")
   @@index([role_id], map: "idx_admins_role_id")
   @@index([scope, tenant_id], map: "idx_admins_scope_tenant_id")
+  @@index([account_mode])
+  @@index([country_code])
 }
 
 model audit_logs {
@@ -238,12 +244,16 @@ model permissions {
   description         String?
   category            String
   tenant_type         tenant_type?
+  service_id          String?              @map("service_id")
+
   role_permissions    role_permissions[]
   operatorPermissions OperatorPermission[]
+  service             Service?             @relation(fields: [service_id], references: [id])
 
-  @@unique([resource, action])
+  @@unique([resource, action, service_id])
   @@index([resource], map: "idx_permissions_resource")
   @@index([scope, category], map: "idx_permissions_scope_category")
+  @@index([service_id])
 }
 
 model role_permissions {
@@ -269,14 +279,21 @@ model roles {
   is_system        Boolean            @default(false)
   created_at       DateTime           @default(now()) @db.Timestamptz(6)
   updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  service_id       String?            @map("service_id")
+  country_code     String?            @map("country_code") @db.VarChar(2)
+
   admins           admins[]
   role_permissions role_permissions[]
   roles            roles?             @relation("rolesToroles", fields: [parent_id], references: [id], onUpdate: NoAction)
   other_roles      roles[]            @relation("rolesToroles")
+  service          Service?           @relation(fields: [service_id], references: [id])
+  adminServices    AdminService[]
 
-  @@unique([name, scope])
+  @@unique([name, scope, service_id, country_code])
   @@index([parent_id], map: "idx_roles_parent_id")
   @@index([scope, tenant_type], map: "idx_roles_scope_tenant_type")
+  @@index([service_id])
+  @@index([country_code])
 }
 
 model tenants {
@@ -314,6 +331,9 @@ model Service {
   personalInfoAccessLogs PersonalInfoAccessLog[]
   operators              Operator[]
   operatorInvitations    OperatorInvitation[]
+  roles                  roles[]
+  permissions            permissions[]
+  adminServices          AdminService[]
 
   @@index([slug])
   @@index([isActive])
@@ -507,6 +527,26 @@ model OperatorSession {
   @@index([operatorId])
   @@index([refreshToken])
   @@map("operator_sessions")
+}
+
+model AdminService {
+  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  adminId     String   @map("admin_id")
+  serviceId   String   @map("service_id")
+  countryCode String?  @map("country_code") @db.VarChar(2)
+  roleId      String   @map("role_id")
+  isPrimary   Boolean  @default(false) @map("is_primary")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  admin   admins  @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  role    roles   @relation(fields: [roleId], references: [id])
+
+  @@unique([adminId, serviceId, countryCode])
+  @@index([adminId])
+  @@index([serviceId])
+  @@index([roleId])
+  @@map("admin_services")
 }
 
 enum Role {
