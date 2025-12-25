@@ -3,18 +3,14 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
 import * as bcrypt from 'bcrypt';
-import {
-  RegisterDto,
-  LoginDto,
-  GrantDomainAccessDto
-} from './dto';
+import { RegisterDto, LoginDto, GrantDomainAccessDto } from './dto';
 import {
   AuthPayload,
   TokenResponse,
   DomainAccessPayload,
   JwtPayload,
   Role,
-  AuthProvider
+  AuthProvider,
 } from '@my-girok/types';
 import { generateUniqueExternalId } from '../common/utils/id-generator';
 
@@ -166,10 +162,7 @@ export class AuthService {
     });
   }
 
-  async grantDomainAccess(
-    userId: string,
-    dto: GrantDomainAccessDto,
-  ): Promise<DomainAccessPayload> {
+  async grantDomainAccess(userId: string, dto: GrantDomainAccessDto): Promise<DomainAccessPayload> {
     const expiresAt = new Date(Date.now() + dto.expiresInHours * 60 * 60 * 1000);
 
     const payload: JwtPayload = {
@@ -203,11 +196,7 @@ export class AuthService {
     };
   }
 
-  async generateTokens(
-    userId: string,
-    email: string,
-    role: string,
-  ): Promise<TokenResponse> {
+  async generateTokens(userId: string, email: string, role: string): Promise<TokenResponse> {
     const accessPayload: JwtPayload = {
       sub: userId,
       email,
@@ -224,7 +213,7 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(accessPayload, {
-        expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '15m'),
+        expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '1h'),
       }),
       this.jwtService.signAsync(refreshPayload, {
         expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '14d'),
@@ -268,7 +257,10 @@ export class AuthService {
 
     if (!user) {
       // Generate unique username from email prefix + random suffix
-      const emailPrefix = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      const emailPrefix = email
+        .split('@')[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
       const randomSuffix = Math.random().toString(36).substring(2, 8);
       const username = `${emailPrefix}${randomSuffix}`;
 

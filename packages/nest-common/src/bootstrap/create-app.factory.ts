@@ -87,10 +87,7 @@ export interface AppConfig {
  * }
  * ```
  */
-export async function configureApp(
-  app: INestApplication,
-  config: AppConfig,
-): Promise<void> {
+export async function configureApp(app: INestApplication, config: AppConfig): Promise<void> {
   const configService = app.get(ConfigService);
   const nodeEnv = configService.get('NODE_ENV', 'development');
 
@@ -146,7 +143,9 @@ export async function configureApp(
       origins = config.corsOrigins?.development || [
         'http://localhost:3000',
         'http://localhost:3001',
+        'http://localhost:3002',
         'https://my-dev.girok.dev',
+        'https://admin-dev.girok.dev',
       ];
     }
 
@@ -215,7 +214,9 @@ export async function configureApp(
   if (config.enableSwagger !== false) {
     logger.log(`Swagger docs: http://localhost:${port}/docs`);
   }
-  logger.log(`Graceful shutdown: ${config.enableGracefulShutdown !== false ? 'enabled' : 'disabled'}`);
+  logger.log(
+    `Graceful shutdown: ${config.enableGracefulShutdown !== false ? 'enabled' : 'disabled'}`,
+  );
 }
 
 /**

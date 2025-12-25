@@ -19,7 +19,7 @@ export const FormCard = memo<FormCardProps>(
         </div>
         <div className="space-y-4">{children}</div>
         {actions && (
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-theme-border">
+          <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-theme-border-default">
             {actions}
           </div>
         )}

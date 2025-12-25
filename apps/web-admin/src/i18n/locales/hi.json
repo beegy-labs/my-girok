@@ -38,6 +38,9 @@
     "english": "अंग्रेज़ी",
     "japanese": "जापानी",
     "hindi": "हिंदी",
+    "selectLanguage": "भाषा",
+    "lightMode": "दिन",
+    "darkMode": "रात",
     "tryAgain": "पुनः प्रयास करें",
     "somethingWentWrong": "कुछ गलत हो गया",
     "unexpectedError": "एक अप्रत्याशित त्रुटि हुई"
@@ -60,7 +63,7 @@
     "loginLoading": "साइन इन हो रहा है...",
     "logout": "साइन आउट",
     "email": "ईमेल",
-    "emailPlaceholder": "admin@example.com",
+    "emailPlaceholder": "अपना ईमेल दर्ज करें",
     "password": "पासवर्ड",
     "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
     "invalidCredentials": "अमान्य ईमेल या पासवर्ड",

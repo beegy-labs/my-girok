@@ -121,7 +121,7 @@ export default function AuditLogsPage() {
   if (error && logs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-theme-error">{error}</p>
+        <p className="text-theme-status-error-text">{error}</p>
         <button
           onClick={fetchLogs}
           className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors"
@@ -148,7 +148,7 @@ export default function AuditLogsPage() {
             className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
               showFilters || activeFilterCount > 0
                 ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
-                : 'border-theme-border text-theme-text-secondary hover:bg-theme-bg-secondary'
+                : 'border-theme-border-default text-theme-text-secondary hover:bg-theme-bg-secondary'
             }`}
           >
             <Filter size={18} />
@@ -163,7 +163,7 @@ export default function AuditLogsPage() {
           {/* Export button */}
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
           >
             <Download size={18} />
             <span className="hidden sm:inline">{t('common.export')}</span>
@@ -173,7 +173,7 @@ export default function AuditLogsPage() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-4">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Action Filter */}
             <div>
@@ -183,7 +183,7 @@ export default function AuditLogsPage() {
               <select
                 value={filters.action || ''}
                 onChange={(e) => handleFilterChange('action', e.target.value)}
-                className="w-full px-3 py-2 border border-theme-border rounded-lg bg-theme-bg-input text-theme-text-primary"
+                className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
               >
                 <option value="">{t('common.all')}</option>
                 {filterOptions?.actions.map((action) => (
@@ -202,7 +202,7 @@ export default function AuditLogsPage() {
               <select
                 value={filters.resource || ''}
                 onChange={(e) => handleFilterChange('resource', e.target.value)}
-                className="w-full px-3 py-2 border border-theme-border rounded-lg bg-theme-bg-input text-theme-text-primary"
+                className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
               >
                 <option value="">{t('common.all')}</option>
                 {filterOptions?.resources.map((resource) => (
@@ -221,7 +221,7 @@ export default function AuditLogsPage() {
               <select
                 value={filters.adminId || ''}
                 onChange={(e) => handleFilterChange('adminId', e.target.value)}
-                className="w-full px-3 py-2 border border-theme-border rounded-lg bg-theme-bg-input text-theme-text-primary"
+                className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
               >
                 <option value="">{t('common.all')}</option>
                 {filterOptions?.admins.map((admin) => (
@@ -242,7 +242,7 @@ export default function AuditLogsPage() {
                   type="date"
                   value={filters.dateFrom || ''}
                   onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                  className="w-full px-3 py-2 border border-theme-border rounded-lg bg-theme-bg-input text-theme-text-primary"
+                  className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
                 />
               </div>
               <div className="flex-1">
@@ -253,7 +253,7 @@ export default function AuditLogsPage() {
                   type="date"
                   value={filters.dateTo || ''}
                   onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                  className="w-full px-3 py-2 border border-theme-border rounded-lg bg-theme-bg-input text-theme-text-primary"
+                  className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
                 />
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function AuditLogsPage() {
       )}
 
       {/* Table */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl overflow-hidden">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-theme-bg-secondary">
@@ -345,7 +345,7 @@ export default function AuditLogsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-theme-border-default">
             <p className="text-sm text-theme-text-secondary">
               {t('common.showing', {
                 from: (page - 1) * limit + 1,
@@ -357,7 +357,7 @@ export default function AuditLogsPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -367,7 +367,7 @@ export default function AuditLogsPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
               </button>
@@ -379,8 +379,8 @@ export default function AuditLogsPage() {
       {/* Detail Modal */}
       {selectedLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-theme-bg-card border border-theme-border rounded-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-theme-border">
+          <div className="bg-theme-bg-card border border-theme-border-default rounded-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-theme-border-default">
               <h3 className="text-lg font-semibold text-theme-text-primary">
                 {t('audit.stateChanges')}
               </h3>

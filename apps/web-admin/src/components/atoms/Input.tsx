@@ -35,17 +35,17 @@ export const Input = memo(
               id={inputId}
               className={`
               w-full px-4 py-2
-              bg-theme-bg-secondary border border-theme-border rounded-lg
+              bg-theme-bg-secondary border border-theme-border-default rounded-lg
               text-theme-text-primary placeholder:text-theme-text-tertiary
               focus:outline-none focus:ring-2 focus:ring-theme-primary
               ${Icon ? 'pl-10' : ''}
-              ${error ? 'border-theme-error focus:ring-theme-error' : ''}
+              ${error ? 'border-theme-status-error-border focus:ring-theme-status-error-text' : ''}
               ${className}
             `}
               {...props}
             />
           </div>
-          {error && <p className="mt-1 text-sm text-theme-error">{error}</p>}
+          {error && <p className="mt-1 text-sm text-theme-status-error-text">{error}</p>}
         </div>
       );
     },

@@ -93,7 +93,7 @@ export const ConfirmDialog = memo<ConfirmDialogProps>(
           <div className="flex items-start gap-4">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
-              ${variant === 'danger' ? 'bg-theme-error/10 text-theme-error' : ''}
+              ${variant === 'danger' ? 'bg-theme-status-error-bg text-theme-status-error-text' : ''}
               ${variant === 'warning' ? 'bg-theme-status-warning-bg text-theme-status-warning-text' : ''}
               ${variant === 'info' ? 'bg-theme-primary/10 text-theme-primary' : ''}`}
             >

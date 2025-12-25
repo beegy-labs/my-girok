@@ -107,7 +107,7 @@ export default function DocumentsPage() {
         {canCreate && (
           <Link
             to="/legal/documents/new"
-            className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text-color rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus size={18} />
             <span>{t('legal.newDocument')}</span>
@@ -149,14 +149,14 @@ export default function DocumentsPage() {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-error/10 text-theme-error rounded-lg">
+        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
           <span>{error}</span>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl overflow-hidden">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
         <table className="admin-table">
           <thead>
             <tr>
@@ -222,7 +222,7 @@ export default function DocumentsPage() {
                         <button
                           onClick={() => handleDeleteClick(doc.id)}
                           disabled={deleting === doc.id}
-                          className="p-2 text-theme-text-secondary hover:text-theme-error hover:bg-theme-error/10 rounded-lg transition-colors disabled:opacity-50"
+                          className="p-2 text-theme-text-secondary hover:text-theme-status-error-text hover:bg-theme-status-error-bg rounded-lg transition-colors disabled:opacity-50"
                           title={t('common.delete')}
                         >
                           {deleting === doc.id ? (
@@ -247,7 +247,7 @@ export default function DocumentsPage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('common.previous')}
           </button>
@@ -257,7 +257,7 @@ export default function DocumentsPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('common.next')}
           </button>

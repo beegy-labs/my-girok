@@ -73,7 +73,7 @@ export default function TenantsPage() {
         {canCreate && (
           <Link
             to="/tenants/new"
-            className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text-color rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus size={18} />
             <span>{t('tenants.newTenant')}</span>
@@ -82,7 +82,7 @@ export default function TenantsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 bg-theme-bg-card border border-theme-border rounded-xl p-4">
+      <div className="flex flex-wrap items-center gap-4 bg-theme-bg-card border border-theme-border-default rounded-xl p-4">
         <Filter size={18} className="text-theme-text-tertiary" />
 
         <form onSubmit={handleSearch} className="flex items-center gap-2">
@@ -96,12 +96,12 @@ export default function TenantsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('tenants.searchPlaceholder')}
-              className="pl-10 pr-4 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm w-64"
+              className="pl-10 pr-4 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm w-64"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-theme-primary text-btn-primary-text-color rounded-lg text-sm hover:opacity-90"
+            className="px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg text-sm hover:opacity-90"
           >
             {t('common.search')}
           </button>
@@ -113,7 +113,7 @@ export default function TenantsPage() {
             setStatus(e.target.value);
             setPage(1);
           }}
-          className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
+          className="px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
         >
           {statusOptions.map((s) => (
             <option key={s.value} value={s.value}>
@@ -129,14 +129,14 @@ export default function TenantsPage() {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-error/10 text-theme-error rounded-lg">
+        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
           <span>{error}</span>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-xl overflow-hidden">
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
         <table className="admin-table">
           <thead>
             <tr>
@@ -218,7 +218,7 @@ export default function TenantsPage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('common.previous')}
           </button>
@@ -228,7 +228,7 @@ export default function TenantsPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('common.next')}
           </button>

@@ -165,6 +165,41 @@ export default function SomePage() {
 | laws.\*      | Law names (PIPA, GDPR, etc.)    |
 | consent.\*   | Consent type labels             |
 
+## API Client Authentication
+
+### Token Refresh Pattern
+
+```typescript
+// src/api/client.ts
+// Single refresh promise prevents race conditions
+let refreshPromise: Promise<string> | null = null;
+
+// Multiple 401 responses wait for same refresh
+if (isRefreshing && refreshPromise) {
+  const token = await refreshPromise;
+  return retryRequest(token);
+}
+```
+
+### Key Points
+
+| Scenario          | Behavior                                |
+| ----------------- | --------------------------------------- |
+| 401 + valid token | Refresh once, retry all queued requests |
+| 401 + no token    | Redirect to /login immediately          |
+| Refresh fails     | Clear auth, redirect to /login          |
+| During redirect   | Block all new requests (axios.Cancel)   |
+
+### Environment
+
+```bash
+# .env (gitignored)
+VITE_API_URL=https://my-api-dev.girok.dev/auth
+
+# Default fallback in code
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://my-api-dev.girok.dev/auth';
+```
+
 ## Styling
 
 - Use `theme-*` Tailwind classes, NO hardcoded colors

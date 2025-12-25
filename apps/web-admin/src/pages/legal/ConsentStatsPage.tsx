@@ -143,7 +143,7 @@ export default function ConsentStatsPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-theme-error">{error}</p>
+        <p className="text-theme-status-error-text">{error}</p>
         <button
           onClick={fetchStats}
           className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors"
@@ -167,7 +167,7 @@ export default function ConsentStatsPage() {
 
         <div className="flex items-center gap-3">
           {/* Date range selector */}
-          <div className="flex items-center gap-2 bg-theme-bg-card border border-theme-border rounded-lg p-1">
+          <div className="flex items-center gap-2 bg-theme-bg-card border border-theme-border-default rounded-lg p-1">
             {(['7d', '30d', '90d'] as DateRange[]).map((range) => (
               <button
                 key={range}
@@ -186,7 +186,7 @@ export default function ConsentStatsPage() {
           {/* Export button */}
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 border border-theme-border rounded-lg hover:bg-theme-bg-secondary transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
           >
             <Download size={18} />
             <span className="hidden sm:inline">{t('common.export')}</span>
@@ -197,7 +197,7 @@ export default function ConsentStatsPage() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Consent Rate by Type */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
             Consent Rate by Type
           </h2>
@@ -222,7 +222,7 @@ export default function ConsentStatsPage() {
         </div>
 
         {/* Regional Distribution */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
             Regional Distribution
           </h2>
@@ -258,7 +258,7 @@ export default function ConsentStatsPage() {
         </div>
 
         {/* Trend Chart */}
-        <div className="lg:col-span-2 bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="lg:col-span-2 bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
             Consent Activity Trend
           </h2>
@@ -311,7 +311,7 @@ export default function ConsentStatsPage() {
         {stats?.byType.slice(0, 4).map((item) => (
           <div
             key={item.type}
-            className="bg-theme-bg-card border border-theme-border rounded-xl p-4"
+            className="bg-theme-bg-card border border-theme-border-default rounded-xl p-4"
           >
             <p className="text-sm text-theme-text-secondary">
               {CONSENT_TYPE_LABELS[item.type] || item.type}

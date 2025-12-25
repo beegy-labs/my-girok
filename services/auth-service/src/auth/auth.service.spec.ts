@@ -33,7 +33,7 @@ describe('AuthService', () => {
       const config: Record<string, string> = {
         JWT_SECRET: 'test-secret',
         JWT_REFRESH_SECRET: 'test-refresh-secret',
-        JWT_ACCESS_EXPIRATION: '15m',
+        JWT_ACCESS_EXPIRATION: '1h',
         JWT_REFRESH_EXPIRATION: '7d',
       };
       return config[key];
@@ -126,9 +126,7 @@ describe('AuthService', () => {
       });
 
       // Act & Assert
-      await expect(service.register(registerDto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
       expect(mockPrismaService.user.create).not.toHaveBeenCalled();
     });
 
@@ -237,9 +235,7 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(
-        'Invalid credentials',
-      );
+      await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
       expect(mockPrismaService.session.create).not.toHaveBeenCalled();
     });
 
@@ -253,9 +249,7 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(
-        'Invalid credentials',
-      );
+      await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
       expect(mockPrismaService.session.create).not.toHaveBeenCalled();
     });
 
@@ -279,9 +273,7 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockOAuthUser);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(
-        'Invalid credentials',
-      );
+      await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
     });
   });
 
@@ -384,5 +376,4 @@ describe('AuthService', () => {
       await expect(service.refreshToken(invalidToken)).rejects.toThrow();
     });
   });
-
 });
