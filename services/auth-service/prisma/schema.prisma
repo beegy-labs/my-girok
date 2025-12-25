@@ -193,6 +193,9 @@ model admins {
   audit_logs                                         audit_logs[]
   legal_documents_legal_documents_created_byToadmins LegalDocument[]    @relation("legal_documents_created_byToadmins")
   legal_documents_legal_documents_updated_byToadmins LegalDocument[]    @relation("legal_documents_updated_byToadmins")
+  operators                                          Operator[]
+  operatorInvitations                                OperatorInvitation[]
+  operatorPermissions                                OperatorPermission[]
 
   @@index([email], map: "idx_admins_email")
   @@index([parent_id], map: "idx_admins_parent_id")
@@ -227,15 +230,16 @@ model goose_db_version {
 }
 
 model permissions {
-  id               String             @id @default(dbgenerated("(gen_random_uuid())::text"))
-  resource         String
-  action           String
-  scope            admin_scope?
-  display_name     String
-  description      String?
-  category         String
-  tenant_type      tenant_type?
-  role_permissions role_permissions[]
+  id                  String               @id @default(dbgenerated("(gen_random_uuid())::text"))
+  resource            String
+  action              String
+  scope               admin_scope?
+  display_name        String
+  description         String?
+  category            String
+  tenant_type         tenant_type?
+  role_permissions    role_permissions[]
+  operatorPermissions OperatorPermission[]
 
   @@unique([resource, action])
   @@index([resource], map: "idx_permissions_resource")
@@ -308,6 +312,8 @@ model Service {
   legalDocuments         LegalDocument[]
   consentRequirements    ServiceConsentRequirement[]
   personalInfoAccessLogs PersonalInfoAccessLog[]
+  operators              Operator[]
+  operatorInvitations    OperatorInvitation[]
 
   @@index([slug])
   @@index([isActive])
@@ -416,6 +422,93 @@ model PersonalInfoAccessLog {
   @@map("personal_info_access_logs")
 }
 
+model OperatorInvitation {
+  id           String           @id @default(dbgenerated("(gen_random_uuid())::text"))
+  adminId      String           @map("admin_id")
+  serviceId    String           @map("service_id")
+  countryCode  String           @map("country_code") @db.VarChar(2)
+  email        String           @db.VarChar(255)
+  name         String           @db.VarChar(100)
+  type         InvitationType
+  status       InvitationStatus @default(PENDING)
+  token        String?          @unique
+  tempPassword String?          @map("temp_password")
+  permissions  Json
+  expiresAt    DateTime         @map("expires_at") @db.Timestamptz(6)
+  acceptedAt   DateTime?        @map("accepted_at") @db.Timestamptz(6)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  admin     admins     @relation(fields: [adminId], references: [id])
+  service   Service    @relation(fields: [serviceId], references: [id])
+  operators Operator[]
+
+  @@index([adminId])
+  @@index([serviceId])
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@map("operator_invitations")
+}
+
+model Operator {
+  id           String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  email        String    @db.VarChar(255)
+  password     String
+  name         String    @db.VarChar(100)
+  adminId      String    @map("admin_id")
+  serviceId    String    @map("service_id")
+  countryCode  String    @map("country_code") @db.VarChar(2)
+  isActive     Boolean   @default(true) @map("is_active")
+  invitationId String?   @map("invitation_id")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  admin       admins              @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  service     Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  invitation  OperatorInvitation? @relation(fields: [invitationId], references: [id])
+  permissions OperatorPermission[]
+  sessions    OperatorSession[]
+
+  @@unique([email, serviceId])
+  @@index([adminId])
+  @@index([serviceId])
+  @@index([countryCode])
+  @@index([isActive])
+  @@map("operators")
+}
+
+model OperatorPermission {
+  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  operatorId   String   @map("operator_id")
+  permissionId String   @map("permission_id")
+  grantedBy    String   @map("granted_by")
+  grantedAt    DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
+
+  operator   Operator    @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  permission permissions @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  admin      admins      @relation(fields: [grantedBy], references: [id])
+
+  @@unique([operatorId, permissionId])
+  @@index([operatorId])
+  @@index([permissionId])
+  @@map("operator_permissions")
+}
+
+model OperatorSession {
+  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  operatorId   String   @map("operator_id")
+  refreshToken String   @unique @map("refresh_token")
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+
+  @@index([operatorId])
+  @@index([refreshToken])
+  @@map("operator_sessions")
+}
+
 enum Role {
   GUEST
   USER
@@ -462,6 +555,22 @@ enum AccessAction {
   DELETE
 
   @@map("access_action")
+}
+
+enum InvitationType {
+  EMAIL
+  DIRECT
+
+  @@map("invitation_type")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+
+  @@map("invitation_status")
 }
 
 enum AuthProvider {
