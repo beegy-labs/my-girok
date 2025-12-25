@@ -86,6 +86,24 @@ All combinations meet WCAG 2.1 AAA (7:1+).
 | lg    | 56px   | `font-black uppercase tracking-widest text-[11px]`  |
 | xl    | 64px   | `font-black uppercase tracking-[0.3em] text-[14px]` |
 
+## HTML5 Semantics
+
+```tsx
+// Correct page structure
+<>
+  <main className="min-h-screen pt-nav">{/* Content */}</main>
+  <Footer />
+</>
+
+// Wrong: nested main or footer inside main
+```
+
+**Rules:**
+
+- One `<main>` per page, never nested
+- `<Footer>` outside of `<main>`
+- Use semantic elements: `<nav>`, `<article>`, `<section>`, `<aside>`
+
 ## Component Examples
 
 ```tsx
@@ -112,4 +130,4 @@ packages/ui-components/src/            # Button, Card, TextInput
 
 ---
 
-**Quick reference**: `.ai/design-system-principles.md`, `.ai/packages/design-tokens.md`
+**Quick reference**: `.ai/ssot.md`, `.ai/packages/design-tokens.md`
