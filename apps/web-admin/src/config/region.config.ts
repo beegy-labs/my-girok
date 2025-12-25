@@ -50,7 +50,7 @@ export const REGIONS: RegionConfig[] = [
     nameKey: 'regions.EU',
     lawKey: 'laws.GDPR',
     flag: '🇪🇺',
-    nightRestriction: { start: '22:00', end: '07:00' },
+    nightRestriction: null, // GDPR does not mandate night-time push restrictions
     requiredConsents: ['TERMS_OF_SERVICE', 'PRIVACY_POLICY'],
     optionalConsents: [
       'MARKETING_EMAIL',
@@ -64,6 +64,7 @@ export const REGIONS: RegionConfig[] = [
     nameKey: 'regions.US',
     lawKey: 'laws.CCPA',
     flag: '🇺🇸',
+    // TCPA federal baseline (9PM-8AM); state-specific rules may vary (e.g., Florida 8PM-8AM)
     nightRestriction: { start: '21:00', end: '08:00' },
     requiredConsents: ['TERMS_OF_SERVICE', 'PRIVACY_POLICY'],
     optionalConsents: ['MARKETING_EMAIL', 'MARKETING_PUSH', 'PERSONALIZED_ADS'],

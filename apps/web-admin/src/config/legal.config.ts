@@ -1,14 +1,10 @@
 // apps/web-admin/src/config/legal.config.ts
 import { FileText, Shield, Megaphone, Users, MapPin, type LucideIcon } from 'lucide-react';
+import type { AdminDocumentType, AdminSupportedLocale } from '@my-girok/types';
 
-export type DocumentType =
-  | 'TERMS_OF_SERVICE'
-  | 'PRIVACY_POLICY'
-  | 'MARKETING'
-  | 'THIRD_PARTY'
-  | 'LOCATION';
-
-export type SupportedLocale = 'ko' | 'en' | 'ja' | 'hi';
+// Re-export types from SSOT package
+export type DocumentType = AdminDocumentType;
+export type SupportedLocale = AdminSupportedLocale;
 
 interface DocumentTypeConfig {
   value: DocumentType;

@@ -37,7 +37,10 @@
     "korean": "韓国語",
     "english": "英語",
     "japanese": "日本語",
-    "hindi": "ヒンディー語"
+    "hindi": "ヒンディー語",
+    "tryAgain": "再試行",
+    "somethingWentWrong": "問題が発生しました",
+    "unexpectedError": "予期しないエラーが発生しました"
   },
   "menu": {
     "dashboard": "ダッシュボード",

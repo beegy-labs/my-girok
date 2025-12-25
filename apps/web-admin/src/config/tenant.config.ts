@@ -12,9 +12,14 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { BadgeVariant } from '../components/atoms/Badge';
+import type {
+  TenantStatus as TenantStatusType,
+  TenantType as TenantTypeEnum,
+} from '@my-girok/types';
 
-export type TenantStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'TERMINATED';
-export type TenantType = 'INTERNAL' | 'COMMERCE' | 'ADBID' | 'POSTBACK' | 'AGENCY';
+// Re-export types from SSOT package
+export type TenantStatus = TenantStatusType;
+export type TenantType = TenantTypeEnum;
 
 interface StatusConfig {
   value: TenantStatus;

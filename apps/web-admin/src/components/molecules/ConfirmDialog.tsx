@@ -1,5 +1,6 @@
 // apps/web-admin/src/components/molecules/ConfirmDialog.tsx
 import { memo, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '../atoms/Button';
@@ -31,22 +32,54 @@ export const ConfirmDialog = memo<ConfirmDialogProps>(
   }) => {
     const { t } = useTranslation();
     const dialogRef = useRef<HTMLDivElement>(null);
+    const previousActiveElement = useRef<HTMLElement | null>(null);
 
+    // Store previously focused element and restore on close
     useEffect(() => {
-      if (isOpen) dialogRef.current?.focus();
+      if (isOpen) {
+        previousActiveElement.current = document.activeElement as HTMLElement;
+        dialogRef.current?.focus();
+      } else if (previousActiveElement.current) {
+        previousActiveElement.current.focus();
+      }
     }, [isOpen]);
 
+    // Trap focus within dialog
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') onCancel();
+        if (e.key === 'Escape') {
+          onCancel();
+          return;
+        }
+
+        // Focus trap
+        if (e.key === 'Tab' && dialogRef.current) {
+          const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          );
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+
+          if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement?.focus();
+          } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement?.focus();
+          }
+        }
       },
       [onCancel],
     );
 
     if (!isOpen) return null;
 
-    return (
+    const dialogContent = (
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
         onClick={onCancel}
       >
@@ -64,17 +97,26 @@ export const ConfirmDialog = memo<ConfirmDialogProps>(
               ${variant === 'warning' ? 'bg-theme-status-warning-bg text-theme-status-warning-text' : ''}
               ${variant === 'info' ? 'bg-theme-primary/10 text-theme-primary' : ''}`}
             >
-              <AlertTriangle size={20} />
+              <AlertTriangle size={20} aria-hidden="true" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-theme-text-primary">{title}</h3>
-              <p className="mt-2 text-sm text-theme-text-secondary">{message}</p>
+              <h3
+                id="confirm-dialog-title"
+                className="text-lg font-semibold text-theme-text-primary"
+              >
+                {title}
+              </h3>
+              <p id="confirm-dialog-message" className="mt-2 text-sm text-theme-text-secondary">
+                {message}
+              </p>
             </div>
             <button
+              type="button"
               onClick={onCancel}
+              aria-label={t('common.close')}
               className="text-theme-text-tertiary hover:text-theme-text-primary"
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
           <div className="flex justify-end gap-3 mt-6">
@@ -92,6 +134,8 @@ export const ConfirmDialog = memo<ConfirmDialogProps>(
         </Card>
       </div>
     );
+
+    return createPortal(dialogContent, document.body);
   },
 );
 

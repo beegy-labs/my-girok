@@ -19,7 +19,7 @@
 
 ```
 src/components/
-├── atoms/        # Button, Input, Select, Badge, Spinner, Card
+├── atoms/        # Button, Input, Select, Badge, Spinner, Card, TruncatedId
 ├── molecules/    # Pagination, SearchInput, StatusBadge, ConfirmDialog, Modal, FilterBar
 ├── organisms/    # PageHeader, DataTable
 └── templates/    # ListPageTemplate
@@ -76,9 +76,24 @@ All types from `@my-girok/types`:
 ### Input Sanitization
 
 ```typescript
-import { sanitizeSearchInput } from '@/utils/sanitize';
+import { sanitizeSearchInput, sanitizeUrl } from '@/utils/sanitize';
 
 const sanitized = sanitizeSearchInput(userInput);
+const url = sanitizeUrl(input); // Returns null if invalid/dangerous
+```
+
+### ID Display (Admin Density)
+
+```typescript
+import { TruncatedId } from '@/components/atoms';
+import { truncateUuid, formatAdminDate } from '@/utils/sanitize';
+
+// Component (with copy button)
+<TruncatedId id={uuid} length={8} showCopy />
+
+// Utility functions
+truncateUuid('abc12345-...', 8);  // "abc12345..."
+formatAdminDate(date);            // "Dec 25" or "Dec 25, 2024"
 ```
 
 ### Production-Safe Logging
@@ -209,14 +224,14 @@ pnpm --filter @my-girok/web-admin type-check
 ### Table Cell Patterns
 
 ```tsx
-// ID column - truncated, monospace
-<td className="font-mono text-xs truncate max-w-[150px]">{id}</td>
+// ID column - use TruncatedId component (copy on click)
+<td><TruncatedId id={item.id} /></td>
 
 // Status column - compact badge
 <td><Badge variant={statusConfig.variant}>{t(statusConfig.labelKey)}</Badge></td>
 
 // Date column - localized, no year if current year
-<td className="text-theme-text-secondary whitespace-nowrap">{formatDate(date)}</td>
+<td className="text-theme-text-secondary whitespace-nowrap">{formatAdminDate(date)}</td>
 
 // Actions column - icon buttons only
 <td>

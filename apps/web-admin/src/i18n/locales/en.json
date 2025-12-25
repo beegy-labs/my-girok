@@ -37,7 +37,10 @@
     "korean": "Korean",
     "english": "English",
     "japanese": "Japanese",
-    "hindi": "Hindi"
+    "hindi": "Hindi",
+    "tryAgain": "Try Again",
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred"
   },
   "menu": {
     "dashboard": "Dashboard",

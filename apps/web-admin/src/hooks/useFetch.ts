@@ -12,6 +12,17 @@ interface UseFetchOptions {
   immediate?: boolean;
 }
 
+/**
+ * Custom hook for data fetching with loading/error states.
+ *
+ * @param fetcher - Function that returns a Promise. Should be wrapped in useCallback
+ *                  or be a stable reference to prevent unnecessary refetches.
+ * @param options - { immediate: boolean } - Whether to fetch immediately on mount
+ *
+ * @example
+ * const fetchUsers = useCallback(() => api.getUsers(), []);
+ * const { data, loading, error, refetch } = useFetch(fetchUsers);
+ */
 export function useFetch<T>(
   fetcher: () => Promise<T>,
   options: UseFetchOptions = {},
@@ -22,11 +33,15 @@ export function useFetch<T>(
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
+  // Store fetcher in ref to avoid infinite loops when caller doesn't memoize
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetcher();
+      const result = await fetcherRef.current();
       if (mountedRef.current) {
         setData(result);
       }
@@ -39,7 +54,7 @@ export function useFetch<T>(
         setLoading(false);
       }
     }
-  }, [fetcher]);
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;

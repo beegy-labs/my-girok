@@ -94,7 +94,9 @@ apps/web-admin/src/
 ├── layouts/       # Page layouts (AdminLayout)
 ├── pages/         # Route components
 ├── stores/        # Zustand stores (auth, menu)
-├── utils/         # Utilities (logger, sanitize)
+├── utils/         # Utilities
+│   ├── logger.ts  # Production-safe logging (no stack traces in prod)
+│   └── sanitize.ts # XSS prevention, URL whitelist, ID truncation
 └── i18n/          # Translation files
 ```
 
@@ -138,12 +140,18 @@ const reason = prompt('Reason:');
 Use utility functions for user input:
 
 ```typescript
-import { sanitizeSearchInput } from '@/utils/sanitize';
+import { sanitizeSearchInput, sanitizeUrl } from '@/utils/sanitize';
 
 const handleSearch = (input: string) => {
   const sanitized = sanitizeSearchInput(input);
   fetchData(sanitized);
 };
+
+// URL sanitization uses whitelist approach (more secure)
+const safeUrl = sanitizeUrl(userUrl);
+if (safeUrl === null) {
+  // Invalid URL - block navigation
+}
 ```
 
 ### Production-Safe Logging
@@ -391,15 +399,18 @@ The web-admin console follows these priorities (in order):
 ### Table Cell Patterns
 
 ```tsx
-// ID column - truncated, monospace
-<td className="font-mono text-xs truncate max-w-[150px]">{id}</td>
+import { TruncatedId, Badge } from '@/components/atoms';
+import { formatAdminDate } from '@/utils/sanitize';
+
+// ID column - use TruncatedId component (includes copy button)
+<td><TruncatedId id={item.id} length={8} showCopy /></td>
 
 // Status column - compact badge
 <td><Badge variant={statusConfig.variant}>{t(statusConfig.labelKey)}</Badge></td>
 
 // Date column - localized, no year if current year
 <td className="text-theme-text-secondary whitespace-nowrap">
-  {formatDate(date)}
+  {formatAdminDate(date)}
 </td>
 
 // Actions column - icon buttons only
@@ -409,6 +420,23 @@ The web-admin console follows these priorities (in order):
     <button className="p-1.5"><Trash2 size={14} /></button>
   </div>
 </td>
+```
+
+### ID Display Utilities
+
+For displaying UUIDs and other IDs in admin tables:
+
+```typescript
+import { TruncatedId } from '@/components/atoms';
+import { truncateUuid, formatAdminDate } from '@/utils/sanitize';
+
+// TruncatedId component - shows truncated ID with copy button
+<TruncatedId id="abc12345-1234-5678-9abc-def012345678" />
+// Displays: "abc12345..." with copy icon
+
+// Utility functions for manual formatting
+truncateUuid(uuid, 8);       // "abc12345..."
+formatAdminDate(new Date()); // "Dec 25" or "Dec 25, 2024" (shows year if not current)
 ```
 
 ## Related Documentation
