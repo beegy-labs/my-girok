@@ -69,13 +69,38 @@ my-girok/
 
 ## Polyglot Persistence
 
-| Service          | Database   | Reason                |
-| ---------------- | ---------- | --------------------- |
-| auth-service     | PostgreSQL | ACID, relations       |
-| personal-service | PostgreSQL | Complex queries       |
-| feed-service     | MongoDB    | Flexible schema       |
-| chat-service     | MongoDB    | High write throughput |
-| matching-service | Valkey     | In-memory, real-time  |
+| Service           | Database   | Reason                     |
+| ----------------- | ---------- | -------------------------- |
+| auth-service      | PostgreSQL | ACID, relations            |
+| personal-service  | PostgreSQL | Complex queries            |
+| feed-service      | MongoDB    | Flexible schema            |
+| chat-service      | MongoDB    | High write throughput      |
+| matching-service  | Valkey     | In-memory, real-time       |
+| audit-service     | ClickHouse | Time-series, 5yr retention |
+| analytics-service | ClickHouse | High-volume analytics      |
+
+## Observability Platform
+
+```
+Services ──OTEL──▶ OTEL Collector ──▶ ClickHouse
+                                          │
+                   ┌──────────────────────┴──────────────────────┐
+                   ▼                                              ▼
+            ┌─────────────┐                              ┌─────────────┐
+            │  audit_db   │                              │analytics_db │
+            │ (Compliance)│                              │ (Business)  │
+            │ 5yr retain  │                              │ 90d-1yr     │
+            └──────┬──────┘                              └──────┬──────┘
+                   ▼                                            ▼
+            audit-service                               analytics-service
+```
+
+| Database       | Tables                                      | Retention |
+| -------------- | ------------------------------------------- | --------- |
+| `audit_db`     | access_logs, consent_history, admin_actions | 5 years   |
+| `analytics_db` | sessions, events, page_views, funnel_events | 90d-1yr   |
+
+ID Strategy: **ULID** (time-sortable, ClickHouse-friendly)
 
 ## NATS Events
 

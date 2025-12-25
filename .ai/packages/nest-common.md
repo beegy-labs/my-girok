@@ -14,6 +14,14 @@ import {
   HttpExceptionFilter,
   HealthModule,
   GracefulShutdownService,
+  // ID (ULID)
+  ID,
+  GenerateId,
+  ulidExtension,
+  ParseUlidPipe,
+  generateIds,
+  sortByUlid,
+  filterByTimeRange,
 } from '@my-girok/nest-common';
 ```
 
@@ -98,6 +106,44 @@ SIGTERM → /health/ready 503 → drain 5s → close → exit 0
 | `JWT_SECRET`   | Yes      | JWT signing secret      |
 | `PORT`         | No       | Server port             |
 | `CORS_ORIGINS` | No       | Comma-separated origins |
+
+## ID (ULID)
+
+ULID-based ID generation for consistent IDs across services.
+
+```typescript
+// Generate ID
+const id = ID.generate(); // "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+
+// Validate
+ID.isValid(id); // true
+
+// Extract timestamp
+ID.getTimestamp(id); // Date object
+
+// Prisma extension (auto-generate id)
+const prisma = new PrismaClient().$extends(ulidExtension);
+
+// Validation pipe
+@Get(':id')
+async get(@Param('id', ParseUlidPipe) id: string) {}
+
+// Decorator (auto-generate on class property)
+class CreateDto {
+  @GenerateId()
+  id: string;
+}
+```
+
+| Export              | Purpose                          |
+| ------------------- | -------------------------------- |
+| `ID`                | ULID generator utilities         |
+| `GenerateId`        | Property decorator for auto-gen  |
+| `ulidExtension`     | Prisma extension for auto-id     |
+| `ParseUlidPipe`     | NestJS validation pipe           |
+| `generateIds`       | Generate multiple ULIDs          |
+| `sortByUlid`        | Sort objects by ULID field       |
+| `filterByTimeRange` | Filter objects by ULID timestamp |
 
 ---
 

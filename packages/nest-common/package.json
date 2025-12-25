@@ -45,6 +45,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "helmet": "catalog:"
+    "helmet": "catalog:",
+    "ulid": "^3.0.2"
   }
 }
