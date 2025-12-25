@@ -72,8 +72,11 @@ export class AuditQueryService {
    * Query audit logs with filters and pagination
    */
   async query(query: AuditLogQueryDto, admin: AdminPayload): Promise<PaginatedAuditLogResponse> {
-    // For now, query PostgreSQL
-    // TODO: When ClickHouse is ready, route queries there
+    // Route to ClickHouse for historical data when enabled
+    if (this.useClickHouse && query.startDate) {
+      // TODO: Implement ClickHouse query
+      // return this.queryClickHouse(query, admin);
+    }
     return this.queryPostgres(query, admin);
   }
 

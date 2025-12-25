@@ -45,9 +45,8 @@ export class AdminAuditService {
           admins: {
             select: {
               id: true,
-              username: true,
+              name: true,
               email: true,
-              display_name: true,
             },
           },
         },
@@ -90,11 +89,10 @@ export class AdminAuditService {
         },
         select: {
           id: true,
-          username: true,
+          name: true,
           email: true,
-          display_name: true,
         },
-        orderBy: { username: 'asc' },
+        orderBy: { name: 'asc' },
       }),
     ]);
 
@@ -103,9 +101,8 @@ export class AdminAuditService {
       resources: resources.map((r) => r.resource),
       admins: admins.map((a) => ({
         id: a.id,
-        username: a.username,
+        name: a.name,
         email: a.email,
-        displayName: a.display_name,
       })),
     };
   }
@@ -144,9 +141,8 @@ export class AdminAuditService {
         admins: {
           select: {
             id: true,
-            username: true,
+            name: true,
             email: true,
-            display_name: true,
           },
         },
       },
@@ -169,7 +165,7 @@ export class AdminAuditService {
     const rows = items.map((item) => [
       item.id,
       item.created_at.toISOString(),
-      item.admins.username,
+      item.admins.name,
       item.action,
       item.resource,
       item.resource_id || '',
@@ -200,9 +196,8 @@ export class AdminAuditService {
     created_at: Date;
     admins: {
       id: string;
-      username: string;
+      name: string;
       email: string;
-      display_name: string | null;
     };
   }): AuditLogResponse {
     return {
@@ -210,9 +205,8 @@ export class AdminAuditService {
       adminId: item.admin_id,
       admin: {
         id: item.admins.id,
-        username: item.admins.username,
+        name: item.admins.name,
         email: item.admins.email,
-        displayName: item.admins.display_name,
       },
       action: item.action,
       resource: item.resource,

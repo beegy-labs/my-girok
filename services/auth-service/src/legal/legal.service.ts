@@ -294,6 +294,7 @@ export class LegalService {
     consents: CreateConsentDto[],
     ipAddress?: string,
     userAgent?: string,
+    countryCode: string = 'KR',
   ): Promise<UserConsentResult[]> {
     const now = new Date();
 
@@ -327,6 +328,7 @@ export class LegalService {
             agreedAt: now,
             ipAddress,
             userAgent,
+            countryCode,
           },
         }),
       ),
@@ -434,10 +436,13 @@ export class LegalService {
           })
         : null;
 
+      // Derive countryCode from locale
+      const countryCode = locale === 'ko' ? 'KR' : locale.toUpperCase().slice(0, 2);
       return this.prisma.userConsent.create({
         data: {
           userId,
           consentType,
+          countryCode,
           documentId: document?.id,
           documentVersion: document?.version,
           agreed: true,

@@ -4,3 +4,4 @@ export * from './admin-legal.service';
 export * from './admin-audit.service';
 export * from './operator.service';
 export * from './audit-query.service';
+export * from './law-registry.service';
