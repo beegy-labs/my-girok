@@ -70,9 +70,8 @@ my-girok/
 │   ├── rules.md              # Core rules (READ FIRST)
 │   ├── architecture.md       # Architecture patterns (2025)
 │   ├── database.md           # goose + ArgoCD migration strategy
-│   ├── ssot.md               # Single Source of Truth strategy (2025)
+│   ├── ssot.md               # Single Source of Truth strategy
 │   ├── i18n-locale.md        # Internationalization & Locale
-│   ├── design-system-principles.md # Design system guidelines
 │   ├── resume.md             # Resume feature documentation
 │   ├── user-preferences.md   # User preferences system
 │   ├── pull-requests.md      # PR guidelines
