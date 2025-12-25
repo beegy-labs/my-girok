@@ -14,16 +14,7 @@ const apiClient = axios.create({
 // Prevent multiple refresh attempts and redirects
 let isRefreshing = false;
 let isRedirecting = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
-
-const subscribeTokenRefresh = (callback: (token: string) => void) => {
-  refreshSubscribers.push(callback);
-};
-
-const onRefreshed = (token: string) => {
-  refreshSubscribers.forEach((callback) => callback(token));
-  refreshSubscribers = [];
-};
+let refreshPromise: Promise<string> | null = null;
 
 const redirectToLogin = () => {
   if (isRedirecting) return;
@@ -69,37 +60,36 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // If already refreshing, wait for the new token
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(apiClient(originalRequest));
-          });
-        });
+      // If already refreshing, wait for the same promise
+      if (isRefreshing && refreshPromise) {
+        try {
+          const token = await refreshPromise;
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return apiClient(originalRequest);
+        } catch {
+          return Promise.reject(error);
+        }
       }
 
       isRefreshing = true;
-
-      try {
-        const response = await axios.post(`${API_BASE_URL}/v1/admin/auth/refresh`, {
-          refreshToken,
+      refreshPromise = axios
+        .post(`${API_BASE_URL}/v1/admin/auth/refresh`, { refreshToken })
+        .then((response) => {
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+          useAdminAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
+          return newAccessToken;
         });
 
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
-
-        useAdminAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
+      try {
+        const newAccessToken = await refreshPromise;
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        isRefreshing = false;
-        onRefreshed(newAccessToken);
-
         return apiClient(originalRequest);
       } catch {
-        isRefreshing = false;
-        refreshSubscribers = [];
         redirectToLogin();
         return Promise.reject(error);
+      } finally {
+        isRefreshing = false;
+        refreshPromise = null;
       }
     }
 
