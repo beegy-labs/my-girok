@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Filter, AlertCircle, Loader2 } from 'lucide-react';
@@ -6,27 +6,16 @@ import { legalApi, LegalDocument, DocumentListResponse } from '../../api/legal';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { logger } from '../../utils/logger';
-
-const DOCUMENT_TYPES = [
-  { value: '', label: 'All Types' },
-  { value: 'TERMS_OF_SERVICE', label: 'Terms of Service' },
-  { value: 'PRIVACY_POLICY', label: 'Privacy Policy' },
-  { value: 'MARKETING', label: 'Marketing' },
-  { value: 'THIRD_PARTY', label: 'Third Party' },
-  { value: 'LOCATION', label: 'Location' },
-];
-
-const LOCALES = [
-  { value: '', label: 'All Locales' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'en', label: 'English' },
-  { value: 'ja', label: 'Japanese' },
-];
+import { getDocumentTypeOptions, getLocaleOptions } from '../../config/legal.config';
 
 export default function DocumentsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { hasPermission } = useAdminAuthStore();
+
+  // SSOT: Use config-based options
+  const documentTypeOptions = useMemo(() => getDocumentTypeOptions(t), [t]);
+  const localeOptions = useMemo(() => getLocaleOptions(t), [t]);
 
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,9 +125,9 @@ export default function DocumentsPage() {
           }}
           className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
         >
-          {DOCUMENT_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
+          {documentTypeOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
@@ -151,9 +140,9 @@ export default function DocumentsPage() {
           }}
           className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
         >
-          {LOCALES.map((l) => (
-            <option key={l.value} value={l.value}>
-              {l.label}
+          {localeOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>

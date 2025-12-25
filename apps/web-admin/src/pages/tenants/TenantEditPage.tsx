@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, FormEvent } from 'react';
+import { useEffect, useState, useCallback, FormEvent, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Loader2, AlertCircle, CheckCircle, Ban, XCircle } from 'lucide-react';
@@ -15,14 +15,7 @@ import { Modal } from '../../components/molecules/Modal';
 import { Button } from '../../components/atoms/Button';
 import { Input } from '../../components/atoms/Input';
 import { logger } from '../../utils/logger';
-
-const TENANT_TYPES = [
-  { value: 'INTERNAL', label: 'Internal' },
-  { value: 'COMMERCE', label: 'Commerce' },
-  { value: 'ADBID', label: 'AdBid' },
-  { value: 'POSTBACK', label: 'Postback' },
-  { value: 'AGENCY', label: 'Agency' },
-] as const;
+import { getTenantTypeOptions } from '../../config/tenant.config';
 
 export default function TenantEditPage() {
   const { t } = useTranslation();
@@ -30,6 +23,9 @@ export default function TenantEditPage() {
   const navigate = useNavigate();
   const { hasPermission } = useAdminAuthStore();
   const isNew = !id;
+
+  // SSOT: Use config-based options
+  const tenantTypeOptions = useMemo(() => getTenantTypeOptions(t, false), [t]);
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -346,9 +342,9 @@ export default function TenantEditPage() {
               disabled={!isNew}
               className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary disabled:opacity-50"
             >
-              {TENANT_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+              {tenantTypeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
