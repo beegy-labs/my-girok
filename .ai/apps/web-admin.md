@@ -1,236 +1,186 @@
-# web-admin - Admin Console Application
+# web-admin
 
-> Girok Admin Console for managing legal documents, tenants, audit logs, and user consents
+> Admin console for Girok H-RBAC multi-tenant system
 
-## Overview
+## Quick Reference
 
-- **Framework**: React 19 + TypeScript + Vite 7
-- **Styling**: Tailwind CSS 4 + Design Tokens
-- **State**: Zustand
-- **Editor**: TipTap (WYSIWYG Markdown)
-- **Charts**: Recharts
-- **Port**: 3002 (dev server)
+| Item      | Value                          |
+| --------- | ------------------------------ |
+| Port      | 3002                           |
+| Framework | React 19, Vite 7, TypeScript 5 |
+| State     | Zustand                        |
+| i18n      | react-i18next (en, ko, ja, hi) |
+| Styling   | Tailwind 4 + design-tokens     |
+| Charts    | Recharts                       |
 
-## Directory Structure
+## Architecture
+
+### Atomic Design Pattern
 
 ```
-apps/web-admin/
-├── src/
-│   ├── main.tsx                 # Entry point
-│   ├── router.tsx               # React Router config
-│   ├── index.css                # Global styles
-│   ├── api/                     # API clients
-│   │   ├── client.ts            # Axios instance with interceptors
-│   │   ├── auth.ts              # Admin auth API
-│   │   ├── audit.ts             # Audit log API
-│   │   ├── legal.ts             # Legal document API
-│   │   └── tenant.ts            # Tenant API
-│   ├── config/
-│   │   └── menu.config.ts       # SSOT menu configuration
-│   ├── components/
-│   │   ├── PrivateRoute.tsx     # Auth guard
-│   │   ├── MarkdownEditor.tsx   # TipTap editor
-│   │   └── Sidebar/
-│   │       ├── Sidebar.tsx      # Main sidebar wrapper
-│   │       └── MenuItem.tsx     # Recursive menu item
-│   ├── contexts/
-│   │   └── ThemeContext.tsx     # Light/dark theme
-│   ├── hooks/
-│   │   └── useFilteredMenu.ts   # Permission-based menu filtering
-│   ├── layouts/
-│   │   └── AdminLayout.tsx      # Sidebar + header layout
-│   ├── pages/
-│   │   ├── LoginPage.tsx        # Admin login
-│   │   ├── DashboardPage.tsx    # Stats overview
-│   │   ├── AuditLogsPage.tsx    # Audit log viewer
-│   │   ├── legal/
-│   │   │   ├── DocumentsPage.tsx       # Document list
-│   │   │   ├── DocumentEditPage.tsx    # Create/edit document
-│   │   │   ├── ConsentsPage.tsx        # User consents list
-│   │   │   ├── ConsentStatsPage.tsx    # Consent statistics charts
-│   │   │   └── ConsentExamplesPage.tsx # Country-based examples
-│   │   └── tenants/
-│   │       ├── TenantsPage.tsx         # Tenant list
-│   │       └── TenantEditPage.tsx      # Create/edit tenant
-│   ├── stores/
-│   │   ├── adminAuthStore.ts    # Admin auth state
-│   │   └── menuStore.ts         # Menu expanded state
-│   └── i18n/                    # Internationalization (en, ko, ja, hi)
-├── vite.config.ts
-├── tsconfig.json
-└── package.json
+src/components/
+├── atoms/        # Button, Input, Select, Badge, Spinner, Card, TruncatedId
+├── molecules/    # Pagination, SearchInput, StatusBadge, ConfirmDialog, Modal, FilterBar
+├── organisms/    # PageHeader, DataTable
+└── templates/    # ListPageTemplate
 ```
 
-## Hierarchical Menu System
+### SSOT Config
 
-### Menu Configuration (SSOT)
-
-```typescript
-// src/config/menu.config.ts
-export interface MenuItem {
-  id: string;
-  path?: string; // Optional for group headers
-  icon?: LucideIcon;
-  labelKey: string; // i18n key
-  permission?: string; // Permission check
-  children?: MenuItem[]; // Nested items (max 5 depth)
-  badge?: 'new' | 'beta';
-}
-
-export const MENU_CONFIG: MenuItem[] = [
-  { id: 'dashboard', path: '/', icon: LayoutDashboard, labelKey: 'menu.dashboard' },
-  {
-    id: 'legal',
-    icon: Scale,
-    labelKey: 'menu.legal',
-    permission: 'legal:read',
-    children: [
-      { id: 'documents', path: '/legal/documents', labelKey: 'menu.legalDocuments' },
-      { id: 'consents', path: '/legal/consents', labelKey: 'menu.consents' },
-      { id: 'stats', path: '/legal/consent-stats', labelKey: 'menu.consentStats', badge: 'new' },
-      { id: 'examples', path: '/legal/examples', labelKey: 'menu.countryExamples' },
-    ],
-  },
-  {
-    id: 'tenants',
-    path: '/tenants',
-    icon: Building2,
-    labelKey: 'menu.tenants',
-    permission: 'tenant:read',
-  },
-  {
-    id: 'audit',
-    path: '/audit-logs',
-    icon: ClipboardList,
-    labelKey: 'menu.auditLogs',
-    permission: 'audit:read',
-  },
-  { id: 'settings', path: '/settings', icon: Settings, labelKey: 'menu.settings' },
-];
-
-export const MAX_MENU_DEPTH = 5;
+```
+src/config/
+├── legal.config.ts     # Document types, locales
+├── tenant.config.ts    # Status, tenant types with BadgeVariant
+├── region.config.ts    # Regions, laws, consent requirements
+├── chart.config.ts     # Chart colors (theme tokens)
+├── status.config.ts    # Status badge variants
+├── menu.config.ts      # Sidebar menu structure
+└── index.ts            # Central export
 ```
 
-### Permission-Based Filtering
+### React 2025 Best Practices
 
-```typescript
-// src/hooks/useFilteredMenu.ts
-function filterItems(items: MenuItem[]): MenuItem[] {
-  return items
-    .map((item) => {
-      if (item.children && item.children.length > 0) {
-        const filteredChildren = filterItems(item.children);
-        // Parent visible if ANY child visible
-        if (filteredChildren.length > 0) {
-          return { ...item, children: filteredChildren };
-        }
-      }
-      // Leaf node: check permission
-      if (item.permission && !hasPermission(item.permission)) {
-        return null;
-      }
-      return item;
-    })
-    .filter(Boolean);
-}
-```
-
-### Menu State Store
-
-```typescript
-// src/stores/menuStore.ts
-interface MenuState {
-  expandedItems: string[];
-  isMobileOpen: boolean;
-  toggleItem: (id: string) => void;
-  setMobileOpen: (open: boolean) => void;
-}
-
-// Persisted to localStorage
-```
+- **Lazy Loading**: All pages lazy-loaded with `React.lazy()`
+- **Error Boundaries**: `ErrorBoundary` + `PageErrorBoundary` for page-level error isolation
+- **Suspense**: Loading states via Suspense with Spinner fallback
+- **useCallback/useMemo**: Memoized handlers and computed values
+- **Custom Hooks**: `useFetch` for data fetching pattern
 
 ## Routes
 
-| Path                   | Permission    | Component           |
-| ---------------------- | ------------- | ------------------- |
-| `/`                    | -             | DashboardPage       |
-| `/login`               | -             | LoginPage           |
-| `/legal/documents`     | legal:read    | DocumentsPage       |
-| `/legal/documents/new` | legal:create  | DocumentEditPage    |
-| `/legal/documents/:id` | legal:read    | DocumentEditPage    |
-| `/legal/consents`      | legal:read    | ConsentsPage        |
-| `/legal/consent-stats` | legal:read    | ConsentStatsPage    |
-| `/legal/examples`      | legal:read    | ConsentExamplesPage |
-| `/tenants`             | tenant:read   | TenantsPage         |
-| `/tenants/new`         | tenant:create | TenantEditPage      |
-| `/tenants/:id`         | tenant:read   | TenantEditPage      |
-| `/audit-logs`          | audit:read    | AuditLogsPage       |
+| Path                   | Component           | Permission    |
+| ---------------------- | ------------------- | ------------- |
+| `/`                    | DashboardPage       | -             |
+| `/legal/documents`     | DocumentsPage       | legal:read    |
+| `/legal/documents/new` | DocumentEditPage    | legal:create  |
+| `/legal/documents/:id` | DocumentEditPage    | legal:update  |
+| `/legal/consents`      | ConsentsPage        | legal:read    |
+| `/legal/consent-stats` | ConsentStatsPage    | legal:read    |
+| `/legal/examples`      | ConsentExamplesPage | legal:read    |
+| `/tenants`             | TenantsPage         | tenant:read   |
+| `/tenants/new`         | TenantEditPage      | tenant:create |
+| `/tenants/:id`         | TenantEditPage      | tenant:\*     |
+| `/audit-logs`          | AuditLogsPage       | audit:read    |
 
-## Key Features
+## Types
 
-### Authentication
+All types from `@my-girok/types`:
+
+- `LegalDocument`, `LegalDocumentType`, `SupportedLocale`
+- `Tenant`, `TenantStatus`, `TenantType`
+- `AuditLog`, `AuditAction`, `AuditResource`
+- `ConsentStats`, `DateRange`
+
+## Security Patterns
+
+### Input Sanitization
 
 ```typescript
-// Admin JWT stored in Zustand with persistence
-const { admin, hasPermission } = useAdminAuthStore();
+import { sanitizeSearchInput, sanitizeUrl } from '@/utils/sanitize';
 
-// Permission check
-if (hasPermission('legal:create')) {
-  // Can create legal documents
-}
-
-// Wildcard support
-hasPermission('legal:*'); // All legal permissions
-hasPermission('*'); // Super admin (all permissions)
+const sanitized = sanitizeSearchInput(userInput);
+const url = sanitizeUrl(input); // Returns null if invalid/dangerous
 ```
 
-### Protected Routes
+### ID Display (Admin Density)
+
+```typescript
+import { TruncatedId } from '@/components/atoms';
+import { truncateUuid, formatAdminDate } from '@/utils/sanitize';
+
+// Component (with copy button)
+<TruncatedId id={uuid} length={8} showCopy />
+
+// Utility functions
+truncateUuid('abc12345-...', 8);  // "abc12345..."
+formatAdminDate(date);            // "Dec 25" or "Dec 25, 2024"
+```
+
+### Production-Safe Logging
+
+```typescript
+import { logger } from '@/utils/logger';
+
+try {
+  await api.doSomething();
+} catch (err) {
+  setError(t('some.errorMessage'));
+  logger.error('Operation failed', err); // No stack trace in prod
+}
+```
+
+### Confirmation Dialogs
+
+```typescript
+// No native confirm() - use ConfirmDialog
+<ConfirmDialog
+  isOpen={deleteDialog.isOpen}
+  title={t('legal.deleteConfirm')}
+  message={t('legal.deleteMessage')}
+  variant="danger"
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
+```
+
+## Page Component Pattern
+
+```typescript
+import { useTranslation } from 'react-i18next';
+import { ListPageTemplate } from '@/components/templates';
+import { DataTable } from '@/components/organisms';
+import { Select } from '@/components/atoms';
+import { getDocumentTypeOptions } from '@/config';
+import { logger } from '@/utils/logger';
+
+export default function SomePage() {
+  const { t } = useTranslation();
+  const options = getDocumentTypeOptions(t);
+
+  // ... fetch data with error handling
+
+  return (
+    <ListPageTemplate
+      title={t('some.title')}
+      filters={<Select options={options} />}
+    >
+      <DataTable columns={...} data={...} />
+    </ListPageTemplate>
+  );
+}
+```
+
+## i18n Namespaces
+
+| Namespace    | Purpose                         |
+| ------------ | ------------------------------- |
+| common.\*    | Shared UI (save, cancel, etc.)  |
+| menu.\*      | Sidebar navigation              |
+| auth.\*      | Login page                      |
+| dashboard.\* | Dashboard stats                 |
+| legal.\*     | Documents, consents, stats      |
+| tenants.\*   | Tenant management               |
+| audit.\*     | Audit logs                      |
+| regions.\*   | Region names (KR, JP, US, etc.) |
+| laws.\*      | Law names (PIPA, GDPR, etc.)    |
+| consent.\*   | Consent type labels             |
+
+## Styling
+
+- Use `theme-*` Tailwind classes, NO hardcoded colors
+- Status: `theme-status-{success,warning,error,info}-{bg,text}`
+- Levels: `theme-level-{1-6}` for charts
+- Charts: Use `REGION_CHART_COLORS`, `LINE_COLORS` from config
 
 ```tsx
-// router.tsx
-<PrivateRoute permission="legal:read">
-  <DocumentsPage />
-</PrivateRoute>
+// Correct
+<div className="bg-theme-bg-card text-theme-text-primary">
+<Badge variant="success">Active</Badge>
+
+// Wrong - hardcoded colors
+<div className="bg-white text-gray-900">
+<span className="text-green-600">Active</span>
 ```
-
-## API Integration
-
-```typescript
-// Base URL: /api/v1/admin
-const apiClient = axios.create({
-  baseURL: '/api/v1/admin',
-});
-
-// Automatic token injection & refresh on 401
-```
-
-## i18n Keys
-
-```json
-{
-  "menu": {
-    "dashboard": "Dashboard",
-    "legal": "Legal",
-    "legalDocuments": "Documents",
-    "consents": "Consents",
-    "consentStats": "Statistics",
-    "countryExamples": "Country Examples",
-    "tenants": "Partners",
-    "auditLogs": "Audit Logs",
-    "settings": "Settings"
-  },
-  "audit": {
-    "title": "Audit Logs",
-    "action": "Action",
-    "resource": "Resource",
-    "admin": "Admin",
-    "date": "Date",
-    "stateChanges": "State Changes"
-  }
-}
-```
-
-Supported locales: `en`, `ko`, `ja`, `hi`
 
 ## Development
 
@@ -245,6 +195,53 @@ pnpm --filter @my-girok/web-admin build
 pnpm --filter @my-girok/web-admin type-check
 ```
 
+## Admin UI Design Principles
+
+### Priority Order
+
+1. **Information Density** - Maximize data per screen (tables, filters, stats)
+2. **Readability** - Clear hierarchy, monospace for IDs, semantic colors
+3. **WCAG AAA Compliance** - **IGNORED** for admin (internal tool, training focus)
+
+### Why WCAG AAA is Ignored
+
+- Admin is **internal-only** (authenticated users)
+- Designed for **training/learning** purposes
+- Prioritizes **data visibility** over accessibility edge cases
+- Uses **theme tokens** for Dark Mode support (not raw Tailwind colors)
+
+### Design Guidelines
+
+| Principle           | Implementation                                       |
+| ------------------- | ---------------------------------------------------- |
+| Dense Tables        | Compact rows, minimal padding, truncated IDs         |
+| Inline Actions      | Icon buttons in table cells, no separate action page |
+| Collapsible Filters | Show/hide filter panel, badge for active count       |
+| Monospace IDs       | `font-mono text-xs` for UUIDs, slugs, resource IDs   |
+| Status Badges       | Use `Badge` component with semantic variants         |
+| No Pagination Jumps | Simple prev/next, show current range                 |
+
+### Table Cell Patterns
+
+```tsx
+// ID column - use TruncatedId component (copy on click)
+<td><TruncatedId id={item.id} /></td>
+
+// Status column - compact badge
+<td><Badge variant={statusConfig.variant}>{t(statusConfig.labelKey)}</Badge></td>
+
+// Date column - localized, no year if current year
+<td className="text-theme-text-secondary whitespace-nowrap">{formatAdminDate(date)}</td>
+
+// Actions column - icon buttons only
+<td>
+  <div className="flex items-center gap-1">
+    <button className="p-1.5"><Pencil size={14} /></button>
+    <button className="p-1.5"><Trash2 size={14} /></button>
+  </div>
+</td>
+```
+
 ## Admin Roles
 
 | Role             | Scope  | Permissions                                      |
@@ -254,44 +251,3 @@ pnpm --filter @my-girok/web-admin type-check
 | system_moderator | SYSTEM | content:\*, user:read, audit:read                |
 | partner_super    | TENANT | partner_admin:\*, legal:read                     |
 | partner_admin    | TENANT | partner_admin:read, legal:read                   |
-
-## Pages Overview
-
-### Dashboard
-
-- Summary statistics cards
-- Consent by type chart
-- Recent activity timeline
-
-### Legal Documents
-
-- Filterable document list (type, locale, status)
-- Create/edit with Markdown editor
-- Soft delete (set isActive=false)
-
-### Consent Statistics
-
-- Bar chart: Consent rates by type
-- Pie chart: Regional distribution (KR, JP, US, GB, IN)
-- Line chart: Time-based trends (7d, 30d, 90d)
-- CSV export
-
-### Country Examples
-
-- Region selector (KR, JP, EU, US, IN)
-- Law name display (PIPA, APPI, GDPR, CCPA, DPDP)
-- Required vs optional consents
-- Night-time push restrictions
-
-### Audit Logs
-
-- Filterable log list (action, resource, admin, date range)
-- Before/after state diff viewer (JSON)
-- CSV export
-- Pagination
-
-### Tenants
-
-- Partner organization list
-- Status management (PENDING → ACTIVE → SUSPENDED → TERMINATED)
-- Admin count display

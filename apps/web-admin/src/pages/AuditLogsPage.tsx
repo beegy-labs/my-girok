@@ -7,6 +7,7 @@ import {
   type AuditLogListQuery,
   type AuditLogFilterOptions,
 } from '../api/audit';
+import { logger } from '../utils/logger';
 
 export default function AuditLogsPage() {
   const { t } = useTranslation();
@@ -36,7 +37,7 @@ export default function AuditLogsPage() {
       setTotal(response.total);
     } catch (err) {
       setError(t('common.error'));
-      console.error('Failed to fetch audit logs:', err);
+      logger.error('Failed to fetch audit logs', err);
     } finally {
       setLoading(false);
     }
@@ -47,7 +48,7 @@ export default function AuditLogsPage() {
       const options = await auditApi.getFilterOptions();
       setFilterOptions(options);
     } catch (err) {
-      console.error('Failed to fetch filter options:', err);
+      logger.error('Failed to fetch filter options', err);
     }
   }, []);
 
@@ -69,7 +70,7 @@ export default function AuditLogsPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Failed to export:', err);
+      logger.error('Failed to export audit logs', err);
     }
   }, [filters]);
 
@@ -101,11 +102,12 @@ export default function AuditLogsPage() {
   }, []);
 
   const getActionColor = useCallback((action: string) => {
-    if (action.includes('create')) return 'text-green-600 bg-green-50';
-    if (action.includes('update')) return 'text-blue-600 bg-blue-50';
-    if (action.includes('delete')) return 'text-red-600 bg-red-50';
-    if (action.includes('login')) return 'text-purple-600 bg-purple-50';
-    return 'text-gray-600 bg-gray-50';
+    if (action.includes('create'))
+      return 'bg-theme-status-success-bg text-theme-status-success-text';
+    if (action.includes('update')) return 'bg-theme-status-info-bg text-theme-status-info-text';
+    if (action.includes('delete')) return 'bg-theme-status-error-bg text-theme-status-error-text';
+    if (action.includes('login')) return 'bg-theme-level-3-bg text-theme-level-3-text';
+    return 'bg-theme-bg-secondary text-theme-text-secondary';
   }, []);
 
   if (loading && logs.length === 0) {
@@ -396,7 +398,7 @@ export default function AuditLogsPage() {
                   <h4 className="text-sm font-medium text-theme-text-secondary mb-2">
                     {t('audit.beforeState')}
                   </h4>
-                  <pre className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs overflow-x-auto">
+                  <pre className="p-3 bg-theme-status-error-bg border border-theme-status-error-border rounded-lg text-xs overflow-x-auto text-theme-text-primary">
                     {selectedLog.beforeState
                       ? JSON.stringify(selectedLog.beforeState, null, 2)
                       : '(empty)'}
@@ -408,7 +410,7 @@ export default function AuditLogsPage() {
                   <h4 className="text-sm font-medium text-theme-text-secondary mb-2">
                     {t('audit.afterState')}
                   </h4>
-                  <pre className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs overflow-x-auto">
+                  <pre className="p-3 bg-theme-status-success-bg border border-theme-status-success-border rounded-lg text-xs overflow-x-auto text-theme-text-primary">
                     {selectedLog.afterState
                       ? JSON.stringify(selectedLog.afterState, null, 2)
                       : '(empty)'}

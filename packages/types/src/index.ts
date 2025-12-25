@@ -12,3 +12,6 @@ export * from './resume/index.js';
 
 // Legal/Consent types
 export * from './legal/index.js';
+
+// Admin types
+export * from './admin/index.js';

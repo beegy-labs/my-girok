@@ -30,7 +30,17 @@
     "view": "表示",
     "close": "閉じる",
     "apply": "適用",
-    "reset": "リセット"
+    "reset": "リセット",
+    "allTypes": "すべてのタイプ",
+    "allLocales": "すべての言語",
+    "allStatus": "すべてのステータス",
+    "korean": "韓国語",
+    "english": "英語",
+    "japanese": "日本語",
+    "hindi": "ヒンディー語",
+    "tryAgain": "再試行",
+    "somethingWentWrong": "問題が発生しました",
+    "unexpectedError": "予期しないエラーが発生しました"
   },
   "menu": {
     "dashboard": "ダッシュボード",
@@ -50,7 +60,7 @@
     "loginLoading": "サインイン中...",
     "logout": "サインアウト",
     "email": "メール",
-    "emailPlaceholder": "admin@girok.dev",
+    "emailPlaceholder": "admin@example.com",
     "password": "パスワード",
     "passwordPlaceholder": "パスワードを入力",
     "invalidCredentials": "メールまたはパスワードが無効です",
@@ -103,7 +113,8 @@
     "documentCount": "{{count}}件の文書",
     "documentCount_plural": "{{count}}件の文書",
     "noDocuments": "文書がありません",
-    "deleteConfirm": "この文書を削除しますか？",
+    "deleteConfirm": "文書を削除",
+    "deleteMessage": "この操作は取り消せません。文書は完全に削除されます。",
     "deleteSuccess": "文書が削除されました",
     "deleteFailed": "文書の削除に失敗しました",
     "saveFailed": "文書の保存に失敗しました",
@@ -146,15 +157,25 @@
     "typeInternal": "内部",
     "typeCommerce": "コマース",
     "typeAdbid": "広告入札",
+    "typePostback": "ポストバック",
+    "typeAgency": "代理店",
     "approve": "承認",
     "suspend": "停止",
     "activate": "有効化",
     "terminate": "終了",
     "suspendReason": "停止理由",
     "approveConfirm": "このパートナーを承認しますか？",
-    "suspendConfirm": "このパートナーを停止しますか？",
+    "suspendConfirm": "パートナーを停止",
+    "suspendMessage": "停止理由を入力してください。",
+    "terminateConfirm": "パートナーを終了",
+    "terminateMessage": "この操作は取り消せません。パートナーは完全に終了されます。",
+    "reasonRequired": "理由を入力してください",
+    "suspendReasonPlaceholder": "停止理由を入力してください...",
     "noTenants": "パートナーがありません",
-    "loadFailed": "パートナーの読み込みに失敗しました"
+    "loadFailed": "パートナーの読み込みに失敗しました",
+    "searchPlaceholder": "名前またはスラッグで検索",
+    "tenantCount": "{{count}}件のパートナー",
+    "tenantCount_plural": "{{count}}件のパートナー"
   },
   "audit": {
     "title": "監査ログ",
@@ -210,6 +231,16 @@
     "APPI": "個人情報の保護に関する法律",
     "CCPA": "カリフォルニア州消費者プライバシー法",
     "GDPR": "一般データ保護規則",
-    "DPDP": "デジタル個人データ保護法"
+    "DPDP": "デジタル個人データ保護法",
+    "UKGDPR": "英国一般データ保護規則"
+  },
+  "consent": {
+    "typeTerms": "利用規約",
+    "typePrivacy": "プライバシーポリシー",
+    "typeMarketingEmail": "マーケティングメール",
+    "typeMarketingPush": "プッシュ通知",
+    "typeMarketingNight": "夜間プッシュ",
+    "typePersonalizedAds": "パーソナライズ広告",
+    "typeThirdParty": "第三者提供"
   }
 }

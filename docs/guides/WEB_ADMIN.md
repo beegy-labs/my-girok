@@ -44,18 +44,59 @@ For local development, use these seeded admin accounts:
 
 ## Architecture
 
+### Atomic Design Pattern
+
+We use Atomic Design for component organization:
+
+```
+apps/web-admin/src/components/
+├── atoms/        # Button, Input, Select, Badge, Spinner, Card
+├── molecules/    # Pagination, SearchInput, ConfirmDialog, Modal, FilterBar
+├── organisms/    # PageHeader, DataTable
+└── templates/    # ListPageTemplate
+```
+
+### SSOT Configuration
+
+Centralized configuration in `src/config/`:
+
+| File               | Purpose                                    |
+| ------------------ | ------------------------------------------ |
+| `legal.config.ts`  | Document types, locales, helper functions  |
+| `tenant.config.ts` | Tenant statuses, types with badge variants |
+| `region.config.ts` | Regions, laws, consent requirements        |
+| `chart.config.ts`  | Chart colors using theme tokens            |
+| `status.config.ts` | Status badge mappings                      |
+| `menu.config.ts`   | Sidebar menu structure                     |
+
+### React 2025 Best Practices
+
+- **Lazy Loading**: All page components lazy-loaded with `React.lazy()`
+- **Error Boundaries**: `ErrorBoundary` + `PageErrorBoundary` for error isolation
+- **Suspense**: Loading states with Spinner fallback
+- **useCallback/useMemo**: Memoized handlers and computed values
+- **Custom Hooks**: `useFetch` for data fetching pattern
+
 ### Directory Structure
 
 ```
 apps/web-admin/src/
 ├── api/           # API clients (auth, legal, audit, tenant)
-├── config/        # Menu configuration (SSOT)
-├── components/    # Shared UI components
-│   └── Sidebar/   # Hierarchical menu components
-├── hooks/         # Custom hooks (useFilteredMenu)
+├── config/        # SSOT configuration files
+├── components/    # Atomic design components
+│   ├── atoms/
+│   ├── molecules/
+│   ├── organisms/
+│   ├── templates/
+│   ├── ErrorBoundary.tsx
+│   └── PageErrorBoundary.tsx
+├── hooks/         # Custom hooks (useFetch, useFilteredMenu)
 ├── layouts/       # Page layouts (AdminLayout)
 ├── pages/         # Route components
 ├── stores/        # Zustand stores (auth, menu)
+├── utils/         # Utilities
+│   ├── logger.ts  # Production-safe logging (no stack traces in prod)
+│   └── sanitize.ts # XSS prevention, URL whitelist, ID truncation
 └── i18n/          # Translation files
 ```
 
@@ -72,66 +113,59 @@ apps/web-admin/src/
 | Recharts       | Data visualization   |
 | react-i18next  | Internationalization |
 
-## Hierarchical Menu System
+## Security Guidelines
 
-The sidebar uses a hierarchical menu with up to 5 levels of nesting.
+### No Native Dialogs
 
-### Adding a New Menu Item
-
-1. Edit `src/config/menu.config.ts`:
+Never use native `confirm()` or `prompt()`:
 
 ```typescript
-export const MENU_CONFIG: MenuItem[] = [
-  // ... existing items
-  {
-    id: 'reports',
-    icon: BarChart,
-    labelKey: 'menu.reports',
-    permission: 'analytics:read',
-    children: [
-      { id: 'sales', path: '/reports/sales', labelKey: 'menu.salesReport' },
-      { id: 'users', path: '/reports/users', labelKey: 'menu.userReport' },
-    ],
-  },
-];
+// Wrong
+if (confirm('Delete?')) { ... }
+const reason = prompt('Reason:');
+
+// Correct - use ConfirmDialog or Modal components
+<ConfirmDialog
+  isOpen={deleteDialog.isOpen}
+  title={t('legal.deleteConfirm')}
+  message={t('legal.deleteMessage')}
+  variant="danger"
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
 ```
 
-2. Add i18n keys to all locale files (`src/i18n/locales/*.json`):
+### Input Sanitization
 
-```json
-{
-  "menu": {
-    "reports": "Reports",
-    "salesReport": "Sales Report",
-    "userReport": "User Report"
-  }
+Use utility functions for user input:
+
+```typescript
+import { sanitizeSearchInput, sanitizeUrl } from '@/utils/sanitize';
+
+const handleSearch = (input: string) => {
+  const sanitized = sanitizeSearchInput(input);
+  fetchData(sanitized);
+};
+
+// URL sanitization uses whitelist approach (more secure)
+const safeUrl = sanitizeUrl(userUrl);
+if (safeUrl === null) {
+  // Invalid URL - block navigation
 }
 ```
 
-3. Add route in `src/router.tsx`:
+### Production-Safe Logging
 
-```tsx
-{
-  path: 'reports/sales',
-  element: (
-    <PrivateRoute permission="analytics:read">
-      <SalesReportPage />
-    </PrivateRoute>
-  ),
-}
-```
-
-### Menu Item Interface
+Use the logger utility instead of console.error:
 
 ```typescript
-interface MenuItem {
-  id: string; // Unique identifier
-  path?: string; // Route path (optional for groups)
-  icon?: LucideIcon; // Lucide icon component
-  labelKey: string; // i18n translation key
-  permission?: string; // Required permission
-  children?: MenuItem[]; // Nested items
-  badge?: 'new' | 'beta'; // Optional badge
+import { logger } from '@/utils/logger';
+
+try {
+  await api.doSomething();
+} catch (err) {
+  setError(t('some.errorMessage'));
+  logger.error('Operation failed', err); // No stack trace in production
 }
 ```
 
@@ -157,8 +191,6 @@ interface MenuItem {
 | `tenant:update`  | Update partner details              |
 | `tenant:approve` | Approve/reject partner applications |
 | `audit:read`     | View audit logs                     |
-| `user:read`      | View service users                  |
-| `user:update`    | Update service users                |
 
 ### Checking Permissions in Code
 
@@ -194,13 +226,13 @@ export default function SalesReportPage() {
 }
 ```
 
-### 2. Add Route
+### 2. Add Route with Lazy Loading
 
 ```tsx
 // src/router.tsx
-import SalesReportPage from './pages/reports/SalesReportPage';
+const SalesReportPage = lazy(() => import('./pages/reports/SalesReportPage'));
 
-// Inside router config
+// Inside routes config (within PageWrapper children)
 {
   path: 'reports/sales',
   element: (
@@ -232,93 +264,64 @@ import SalesReportPage from './pages/reports/SalesReportPage';
 }
 ```
 
-## API Integration
-
-### API Client Structure
-
-```typescript
-// src/api/client.ts
-const apiClient = axios.create({
-  baseURL: '/api/v1/admin',
-});
-
-// Automatic token injection
-apiClient.interceptors.request.use((config) => {
-  const { accessToken } = useAdminAuthStore.getState();
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-  return config;
-});
-```
-
-### Creating API Functions
-
-```typescript
-// src/api/reports.ts
-import apiClient from './client';
-
-export interface SalesData {
-  date: string;
-  amount: number;
-}
-
-export const reportsApi = {
-  getSalesData: async (range: string): Promise<SalesData[]> => {
-    const response = await apiClient.get(`/reports/sales?range=${range}`);
-    return response.data;
-  },
-};
-```
+Remember to add to all 4 locale files: en.json, ko.json, ja.json, hi.json
 
 ## Styling Guidelines
 
 ### Theme Variables
 
-Use semantic color variables for consistency:
+Always use semantic color variables, never raw colors:
 
 ```css
-/* Text */
+/* Correct */
 text-theme-text-primary
-text-theme-text-secondary
-text-theme-text-tertiary
-
-/* Backgrounds */
-bg-theme-bg-page
 bg-theme-bg-card
-bg-theme-bg-secondary
-
-/* Borders */
 border-theme-border
+bg-theme-status-success-bg
+text-theme-status-success-text
 
-/* Interactive */
-bg-theme-primary
-text-theme-primary
-hover:bg-theme-primary/90
+/* Wrong */
+text-gray-900
+bg-white
+border-gray-200
+bg-green-100
+text-green-600
 ```
 
-### Common Patterns
+### Status Badge Variants
+
+| Variant   | Use For           |
+| --------- | ----------------- |
+| `success` | Active, approved  |
+| `warning` | Pending           |
+| `error`   | Suspended, failed |
+| `info`    | Information       |
+| `default` | Neutral           |
 
 ```tsx
-// Card container
-<div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+<Badge variant="success">Active</Badge>
+<Badge variant="warning">Pending</Badge>
+```
 
-// Page header
-<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+### Chart Colors
 
-// Table
-<div className="overflow-x-auto">
-  <table className="w-full text-sm">
-    <thead className="bg-theme-bg-secondary">
+Use theme tokens for charts:
+
+```typescript
+import { REGION_CHART_COLORS, LINE_COLORS } from '@/config';
+
+<Cell fill={REGION_CHART_COLORS[region]} />
+<Line stroke={LINE_COLORS.agreed} />
 ```
 
 ## Internationalization
 
-### Adding New Language
+### Supported Locales
 
-1. Create locale file: `src/i18n/locales/{lang}.json`
-2. Copy structure from `en.json`
-3. Register in `src/i18n/index.ts`
+- `en` - English
+- `ko` - Korean
+- `ja` - Japanese
+- `hi` - Hindi
 
 ### Translation Keys Convention
 
@@ -327,38 +330,16 @@ hover:bg-theme-primary/90
 
 Examples:
 - menu.dashboard
-- legal.createDocument
+- legal.deleteConfirm
 - common.save
-- audit.beforeState
+- tenants.suspendMessage
 ```
 
-## Testing
+### Adding New Keys
 
-### Manual Testing Checklist
-
-1. **Authentication**
-   - [ ] Login with valid credentials
-   - [ ] Error message for invalid credentials
-   - [ ] Redirect to login for protected routes
-   - [ ] Token refresh on expiration
-
-2. **Menu Navigation**
-   - [ ] All permitted items visible
-   - [ ] Hidden items for unpermitted users
-   - [ ] Expand/collapse animation
-   - [ ] Mobile drawer works
-
-3. **Legal Documents**
-   - [ ] List, filter, paginate
-   - [ ] Create new document
-   - [ ] Edit existing document
-   - [ ] Delete (soft delete)
-
-4. **Audit Logs**
-   - [ ] Filter by action/resource/admin/date
-   - [ ] View state diff modal
-   - [ ] CSV export works
-   - [ ] Pagination
+1. Add to `src/i18n/locales/en.json` first
+2. Copy to ko.json, ja.json, hi.json
+3. Use `t('namespace.key')` in components
 
 ## Troubleshooting
 
@@ -381,8 +362,85 @@ Examples:
 - Check for typos in translation key
 - Restart dev server after adding new keys
 
+**Page crashes**
+
+- Error boundary will catch and display error UI
+- Check browser console in development mode
+- Review logger output for details
+
+## Admin UI Design Principles
+
+### Priority Order
+
+The web-admin console follows these priorities (in order):
+
+1. **Information Density** - Maximize data visible per screen
+2. **Readability** - Clear hierarchy and visual structure
+3. **WCAG AAA Compliance** - **Intentionally ignored** for this admin tool
+
+### Why WCAG AAA is Not Required
+
+| Reason            | Explanation                                                                |
+| ----------------- | -------------------------------------------------------------------------- |
+| Internal Tool     | Only authenticated admins access this console                              |
+| Training Focus    | Designed for learning/training purposes where dense data is preferred      |
+| Data Visibility   | Prioritizes showing more information over accessibility edge cases         |
+| Dark Mode Support | Still uses theme tokens (not hardcoded colors) for Dark Mode compatibility |
+
+### Design Guidelines
+
+- **Dense Tables**: Compact rows with minimal padding, truncated UUIDs
+- **Inline Actions**: Icon buttons in table cells, no separate action pages
+- **Collapsible Filters**: Show/hide filter panels with active filter count badges
+- **Monospace for IDs**: Use `font-mono text-xs` for UUIDs, slugs, resource IDs
+- **Status Badges**: Always use the `Badge` component with semantic variants
+- **Simple Pagination**: Previous/Next buttons with current range display
+
+### Table Cell Patterns
+
+```tsx
+import { TruncatedId, Badge } from '@/components/atoms';
+import { formatAdminDate } from '@/utils/sanitize';
+
+// ID column - use TruncatedId component (includes copy button)
+<td><TruncatedId id={item.id} length={8} showCopy /></td>
+
+// Status column - compact badge
+<td><Badge variant={statusConfig.variant}>{t(statusConfig.labelKey)}</Badge></td>
+
+// Date column - localized, no year if current year
+<td className="text-theme-text-secondary whitespace-nowrap">
+  {formatAdminDate(date)}
+</td>
+
+// Actions column - icon buttons only
+<td>
+  <div className="flex items-center gap-1">
+    <button className="p-1.5"><Pencil size={14} /></button>
+    <button className="p-1.5"><Trash2 size={14} /></button>
+  </div>
+</td>
+```
+
+### ID Display Utilities
+
+For displaying UUIDs and other IDs in admin tables:
+
+```typescript
+import { TruncatedId } from '@/components/atoms';
+import { truncateUuid, formatAdminDate } from '@/utils/sanitize';
+
+// TruncatedId component - shows truncated ID with copy button
+<TruncatedId id="abc12345-1234-5678-9abc-def012345678" />
+// Displays: "abc12345..." with copy icon
+
+// Utility functions for manual formatting
+truncateUuid(uuid, 8);       // "abc12345..."
+formatAdminDate(new Date()); // "Dec 25" or "Dec 25, 2024" (shows year if not current)
+```
+
 ## Related Documentation
 
-- [Auth Service API](./.ai/services/auth-service.md) - Backend API documentation
-- [Permission Config](../services/auth-service/src/admin/config/permissions.config.ts) - Permission definitions
-- [Design Tokens](./.ai/packages/design-tokens.md) - Styling variables
+- [.ai/apps/web-admin.md](../../.ai/apps/web-admin.md) - LLM-optimized quick reference
+- [.ai/packages/design-tokens.md](../../.ai/packages/design-tokens.md) - Design tokens documentation
+- [.ai/services/auth-service.md](../../.ai/services/auth-service.md) - Auth service API
