@@ -26,7 +26,7 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const expiresIn = configService.get<string>('JWT_ACCESS_EXPIRATION', '15m');
+        const expiresIn = configService.get<string>('JWT_ACCESS_EXPIRATION', '1h');
         return {
           secret: configService.get<string>('JWT_SECRET'),
           signOptions: {

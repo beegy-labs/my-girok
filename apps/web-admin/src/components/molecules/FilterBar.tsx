@@ -14,7 +14,7 @@ interface FilterBarProps {
 export const FilterBar = memo<FilterBarProps>(
   ({ children, summary, showIcon = true, className = '' }) => (
     <div
-      className={`flex flex-wrap items-center gap-4 bg-theme-bg-card border border-theme-border rounded-xl p-4 ${className}`}
+      className={`flex flex-wrap items-center gap-4 bg-theme-bg-card border border-theme-border-default rounded-xl p-4 ${className}`}
     >
       {showIcon && <Filter size={18} className="text-theme-text-tertiary" aria-hidden="true" />}
       {children}

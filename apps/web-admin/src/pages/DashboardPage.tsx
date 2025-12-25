@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
       {/* Error state */}
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-error/10 text-theme-error rounded-lg">
+        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
           <span>{error}</span>
         </div>
@@ -93,7 +93,7 @@ export default function DashboardPage() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-theme-bg-card border border-theme-border rounded-xl p-6 animate-pulse"
+              className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 animate-pulse"
             >
               <div className="h-10 w-10 bg-theme-bg-secondary rounded-lg mb-4" />
               <div className="h-4 bg-theme-bg-secondary rounded w-1/2 mb-2" />
@@ -106,7 +106,7 @@ export default function DashboardPage() {
           {statCards.map((card) => (
             <div
               key={card.titleKey}
-              className="bg-theme-bg-card border border-theme-border rounded-xl p-6"
+              className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6"
             >
               <div
                 className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${card.color} bg-current/10`}
@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
       {/* Consent by type */}
       {stats && stats.byType.length > 0 && (
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
             {t('dashboard.consentsByType')}
           </h2>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
 
       {/* Recent activity */}
       {stats && stats.recentActivity.length > 0 && (
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
           <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
             {t('dashboard.recentActivity')}
           </h2>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
 
       {/* Quick actions */}
       {!hasPermission('legal:read') && (
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6 text-center">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 text-center">
           <p className="text-theme-text-secondary">
             {t('dashboard.noPermission')}
             <br />

@@ -62,8 +62,8 @@ export default function MarkdownEditor({
 
   if (showPreview) {
     return (
-      <div className="bg-theme-bg-secondary border border-theme-border rounded-lg">
-        <div className="p-4 border-b border-theme-border text-sm text-theme-text-tertiary">
+      <div className="bg-theme-bg-secondary border border-theme-border-default rounded-lg">
+        <div className="p-4 border-b border-theme-border-default text-sm text-theme-text-tertiary">
           Preview
         </div>
         <div
@@ -98,9 +98,9 @@ export default function MarkdownEditor({
   );
 
   return (
-    <div className="border border-theme-border rounded-lg overflow-hidden bg-theme-bg-card">
+    <div className="border border-theme-border-default rounded-lg overflow-hidden bg-theme-bg-card">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b border-theme-border bg-theme-bg-secondary">
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b border-theme-border-default bg-theme-bg-secondary">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}

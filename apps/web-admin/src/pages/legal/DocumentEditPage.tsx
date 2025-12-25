@@ -132,10 +132,8 @@ export default function DocumentEditPage() {
         </div>
         <button
           onClick={() => setShowPreview(!showPreview)}
-          className={`flex items-center gap-2 px-4 py-2 border border-theme-border rounded-lg transition-colors ${
-            showPreview
-              ? 'bg-theme-primary text-btn-primary-text-color'
-              : 'hover:bg-theme-bg-secondary'
+          className={`flex items-center gap-2 px-4 py-2 border border-theme-border-default rounded-lg transition-colors ${
+            showPreview ? 'bg-theme-primary text-btn-primary-text' : 'hover:bg-theme-bg-secondary'
           }`}
         >
           {showPreview ? <Code size={18} /> : <Eye size={18} />}
@@ -145,7 +143,7 @@ export default function DocumentEditPage() {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-error/10 text-theme-error rounded-lg">
+        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
           <span>{error}</span>
         </div>
@@ -154,7 +152,7 @@ export default function DocumentEditPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Metadata */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6 space-y-4">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 space-y-4">
           <h2 className="text-lg font-semibold text-theme-text-primary">Document Metadata</h2>
 
           <div className="grid grid-cols-2 gap-4">
@@ -164,7 +162,7 @@ export default function DocumentEditPage() {
                 value={type}
                 onChange={(e) => setType(e.target.value as CreateDocumentRequest['type'])}
                 disabled={!isNew}
-                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary disabled:opacity-50"
+                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary disabled:opacity-50"
               >
                 {DOCUMENT_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -184,7 +182,7 @@ export default function DocumentEditPage() {
                 onChange={(e) => setVersion(e.target.value)}
                 disabled={!isNew}
                 placeholder="1.0.0"
-                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary disabled:opacity-50"
+                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary disabled:opacity-50"
               />
             </div>
 
@@ -196,7 +194,7 @@ export default function DocumentEditPage() {
                 value={locale}
                 onChange={(e) => setLocale(e.target.value)}
                 disabled={!isNew}
-                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary disabled:opacity-50"
+                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary disabled:opacity-50"
               >
                 {LOCALES.map((l) => (
                   <option key={l.value} value={l.value}>
@@ -214,7 +212,7 @@ export default function DocumentEditPage() {
                 type="date"
                 value={effectiveDate}
                 onChange={(e) => setEffectiveDate(e.target.value)}
-                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary"
+                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary"
               />
             </div>
           </div>
@@ -226,7 +224,7 @@ export default function DocumentEditPage() {
                 id="isActive"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 rounded border-theme-border text-theme-primary"
+                className="w-4 h-4 rounded border-theme-border-default text-theme-primary"
               />
               <label htmlFor="isActive" className="text-sm text-theme-text-primary">
                 Active (visible to users)
@@ -236,7 +234,7 @@ export default function DocumentEditPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-xl p-6 space-y-4">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6 space-y-4">
           <h2 className="text-lg font-semibold text-theme-text-primary">Content</h2>
 
           <div>
@@ -247,7 +245,7 @@ export default function DocumentEditPage() {
               onChange={(e) => setTitle(e.target.value)}
               required
               placeholder="Enter document title"
-              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary"
+              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary"
             />
           </div>
 
@@ -260,7 +258,7 @@ export default function DocumentEditPage() {
               onChange={(e) => setSummary(e.target.value)}
               rows={2}
               placeholder="Brief summary of the document"
-              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary resize-none"
+              className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary resize-none"
             />
           </div>
 
@@ -281,7 +279,7 @@ export default function DocumentEditPage() {
         <div className="flex items-center justify-end gap-4">
           <Link
             to="/legal/documents"
-            className="px-6 py-3 border border-theme-border rounded-lg hover:bg-theme-bg-secondary transition-colors"
+            className="px-6 py-3 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
           >
             Cancel
           </Link>
@@ -289,7 +287,7 @@ export default function DocumentEditPage() {
             <button
               type="submit"
               disabled={saving || !title || !content}
-              className="flex items-center gap-2 px-6 py-3 bg-theme-primary text-btn-primary-text-color rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving && <Loader2 size={18} className="animate-spin" />}
               <Save size={18} />
