@@ -112,4 +112,4 @@ VALKEY_PORT=6379
 
 ---
 
-**Full schema**: `services/personal-service/prisma/schema.prisma`
+**Detailed docs**: `docs/services/PERSONAL_SERVICE.md`

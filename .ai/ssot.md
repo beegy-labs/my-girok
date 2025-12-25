@@ -37,3 +37,4 @@ tokens.css (@theme) → Tailwind Utility Classes → Components
 ---
 
 **Tokens**: `packages/design-tokens/src/tokens.css`
+**Detailed docs**: `docs/DESIGN_SYSTEM.md`
