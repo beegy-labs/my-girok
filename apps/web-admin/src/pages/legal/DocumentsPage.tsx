@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Filter, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, AlertCircle, Loader2 } from 'lucide-react';
 import { legalApi, LegalDocument, DocumentListResponse } from '../../api/legal';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
+import { FilterBar } from '../../components/molecules/FilterBar';
+import { Select } from '../../components/atoms/Select';
 import { logger } from '../../utils/logger';
 import { getDocumentTypeOptions, getLocaleOptions } from '../../config/legal.config';
 
@@ -114,56 +116,36 @@ export default function DocumentsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 bg-theme-bg-card border border-theme-border rounded-xl p-4">
-        <Filter size={18} className="text-theme-text-tertiary" />
-
-        <select
+      <FilterBar summary={t('legal.documentCount', { count: total })}>
+        <Select
           value={type}
           onChange={(e) => {
             setType(e.target.value);
             setPage(1);
           }}
-          className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
-        >
-          {documentTypeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        <select
+          options={documentTypeOptions}
+        />
+        <Select
           value={locale}
           onChange={(e) => {
             setLocale(e.target.value);
             setPage(1);
           }}
-          className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
-        >
-          {localeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        <select
+          options={localeOptions}
+        />
+        <Select
           value={isActive === undefined ? '' : isActive.toString()}
           onChange={(e) => {
             setIsActive(e.target.value === '' ? undefined : e.target.value === 'true');
             setPage(1);
           }}
-          className="px-3 py-2 bg-theme-bg-secondary border border-theme-border rounded-lg text-theme-text-primary text-sm"
-        >
-          <option value="">{t('common.allStatus')}</option>
-          <option value="true">{t('common.active')}</option>
-          <option value="false">{t('common.inactive')}</option>
-        </select>
-
-        <div className="ml-auto text-sm text-theme-text-tertiary">
-          {t('legal.documentCount', { count: total })}
-        </div>
-      </div>
+          options={[
+            { value: '', label: t('common.allStatus') },
+            { value: 'true', label: t('common.active') },
+            { value: 'false', label: t('common.inactive') },
+          ]}
+        />
+      </FilterBar>
 
       {/* Error */}
       {error && (

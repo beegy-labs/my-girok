@@ -19,11 +19,13 @@ interface State {
 class ErrorBoundaryComponent extends Component<Props, State> {
   state: State = { hasError: false };
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: unknown): State {
+    // Type guard for Error instances
+    const errorInstance = error instanceof Error ? error : new Error(String(error));
+    return { hasError: true, error: errorInstance };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
     // Only log in development
     if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught:', error, errorInfo);

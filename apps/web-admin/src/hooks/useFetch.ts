@@ -37,6 +37,9 @@ export function useFetch<T>(
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
+  // Store immediate in ref - it's a mount-time option that shouldn't trigger re-fetches
+  const immediateRef = useRef(immediate);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -58,13 +61,13 @@ export function useFetch<T>(
 
   useEffect(() => {
     mountedRef.current = true;
-    if (immediate) {
+    if (immediateRef.current) {
       fetchData();
     }
     return () => {
       mountedRef.current = false;
     };
-  }, [fetchData, immediate]);
+  }, [fetchData]);
 
   return { data, loading, error, refetch: fetchData };
 }
