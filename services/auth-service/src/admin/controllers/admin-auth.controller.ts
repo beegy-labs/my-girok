@@ -44,6 +44,7 @@ export class AdminAuthController {
    * GET /v1/admin/auth/me
    */
   @Get('me')
+  @Public() // Bypass global JwtAuthGuard - AdminAuthGuard handles auth
   @UseGuards(AdminAuthGuard)
   async getProfile(@CurrentAdmin() admin: AdminPayload): Promise<AdminProfileResponse> {
     return this.adminAuthService.getProfile(admin.sub);
@@ -54,6 +55,7 @@ export class AdminAuthController {
    * POST /v1/admin/auth/logout
    */
   @Post('logout')
+  @Public() // Bypass global JwtAuthGuard - AdminAuthGuard handles auth
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AdminAuthGuard)
   async logout(@CurrentAdmin() admin: AdminPayload, @Body() dto: AdminRefreshDto): Promise<void> {
