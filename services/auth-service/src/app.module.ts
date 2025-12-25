@@ -12,6 +12,7 @@ import { LegalModule } from './legal/legal.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicesModule } from './services/services.module';
 import { OperatorModule } from './operator/operator.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { OperatorModule } from './operator/operator.module';
       },
     ]),
     DatabaseModule,
+    CommonModule,
     AuthModule,
     UsersModule,
     OAuthConfigModule,
