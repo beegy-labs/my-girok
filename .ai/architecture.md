@@ -100,7 +100,7 @@ Services ──OTEL──▶ OTEL Collector ──▶ ClickHouse
 | `audit_db`     | access_logs, consent_history, admin_actions | 5 years   |
 | `analytics_db` | sessions, events, page_views, funnel_events | 90d-1yr   |
 
-ID Strategy: **ULID** (time-sortable, ClickHouse-friendly)
+ID Strategy: **UUIDv7** (RFC 9562, time-sortable, DB-native UUID)
 
 ## NATS Events
 

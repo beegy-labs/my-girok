@@ -14,14 +14,21 @@ import {
   HttpExceptionFilter,
   HealthModule,
   GracefulShutdownService,
-  // ID (ULID)
+  // ID (UUIDv7 - RFC 9562)
   ID,
+  UUIDv7,
   GenerateId,
-  ulidExtension,
-  ParseUlidPipe,
+  uuidv7Extension,
+  ParseUUIDPipe,
+  ParseUUIDv7Pipe,
   generateIds,
-  sortByUlid,
+  sortByUUID,
   filterByTimeRange,
+  isUUID,
+  isUUIDv7,
+  // ClickHouse
+  ClickHouseService,
+  ClickHouseModule,
 } from '@my-girok/nest-common';
 ```
 
@@ -107,26 +114,32 @@ SIGTERM → /health/ready 503 → drain 5s → close → exit 0
 | `PORT`         | No       | Server port             |
 | `CORS_ORIGINS` | No       | Comma-separated origins |
 
-## ID (ULID)
+## ID (UUIDv7 - RFC 9562)
 
-ULID-based ID generation for consistent IDs across services.
+UUIDv7-based ID generation for consistent, time-sortable IDs across services.
 
 ```typescript
 // Generate ID
-const id = ID.generate(); // "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+const id = ID.generate(); // "01935c6d-c2d0-7abc-8def-1234567890ab"
 
 // Validate
-ID.isValid(id); // true
+ID.isValid(id);           // true (any UUID v1-8)
+UUIDv7.isValid(id);       // true (UUIDv7 only)
 
-// Extract timestamp
-ID.getTimestamp(id); // Date object
+// Extract timestamp (built into UUIDv7)
+ID.getTimestamp(id);      // Date object
+UUIDv7.extractTimestamp(id);
+
+// Compare (lexicographic = chronological)
+ID.compare(id1, id2);     // -1, 0, 1
 
 // Prisma extension (auto-generate id)
-const prisma = new PrismaClient().$extends(ulidExtension);
+const prisma = new PrismaClient().$extends(uuidv7Extension);
 
-// Validation pipe
+// Validation pipes
 @Get(':id')
-async get(@Param('id', ParseUlidPipe) id: string) {}
+async get(@Param('id', ParseUUIDPipe) id: string) {}    // Any UUID
+async get(@Param('id', ParseUUIDv7Pipe) id: string) {}  // UUIDv7 only
 
 // Decorator (auto-generate on class property)
 class CreateDto {
@@ -135,15 +148,70 @@ class CreateDto {
 }
 ```
 
-| Export              | Purpose                          |
-| ------------------- | -------------------------------- |
-| `ID`                | ULID generator utilities         |
-| `GenerateId`        | Property decorator for auto-gen  |
-| `ulidExtension`     | Prisma extension for auto-id     |
-| `ParseUlidPipe`     | NestJS validation pipe           |
-| `generateIds`       | Generate multiple ULIDs          |
-| `sortByUlid`        | Sort objects by ULID field       |
-| `filterByTimeRange` | Filter objects by ULID timestamp |
+| Export              | Purpose                            |
+| ------------------- | ---------------------------------- |
+| `ID`                | UUIDv7 generator utilities         |
+| `UUIDv7`            | Full UUIDv7 class with all methods |
+| `GenerateId`        | Property decorator for auto-gen    |
+| `uuidv7Extension`   | Prisma extension for auto-id       |
+| `ParseUUIDPipe`     | Validates any UUID (v1-8)          |
+| `ParseUUIDv7Pipe`   | Validates UUIDv7 specifically      |
+| `generateIds`       | Generate multiple UUIDs            |
+| `sortByUUID`        | Sort objects by UUID field         |
+| `filterByTimeRange` | Filter by UUID timestamp           |
+| `isUUID`            | Check if valid UUID                |
+| `isUUIDv7`          | Check if valid UUIDv7              |
+
+### Legacy ULID Support
+
+```typescript
+// For backward compatibility only (deprecated)
+import { ULID, ulidExtension, ParseUlidPipe } from '@my-girok/nest-common';
+```
+
+## ClickHouse
+
+Shared ClickHouse client for analytics and audit services.
+
+```typescript
+// Module import
+@Module({
+  imports: [ClickHouseModule],
+})
+export class AppModule {}
+
+// Service usage
+@Injectable()
+export class MyService {
+  constructor(private clickhouse: ClickHouseService) {}
+
+  async query() {
+    const result = await this.clickhouse.query<MyType>('SELECT * FROM table WHERE id = {id:UUID}', {
+      id: someUuid,
+    });
+    return result.data;
+  }
+
+  async insert() {
+    await this.clickhouse.insert('table', [{ id, data }]);
+  }
+}
+```
+
+| Export              | Purpose                   |
+| ------------------- | ------------------------- |
+| `ClickHouseService` | Query/insert client       |
+| `ClickHouseModule`  | NestJS module with config |
+
+### Environment Variables
+
+| Variable              | Required | Description          |
+| --------------------- | -------- | -------------------- |
+| `CLICKHOUSE_HOST`     | Yes      | ClickHouse host      |
+| `CLICKHOUSE_PORT`     | No       | Port (default: 8123) |
+| `CLICKHOUSE_DATABASE` | Yes      | Database name        |
+| `CLICKHOUSE_USERNAME` | Yes      | Username             |
+| `CLICKHOUSE_PASSWORD` | Yes      | Password             |
 
 ---
 

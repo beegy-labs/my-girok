@@ -1,11 +1,7 @@
-import { Module, Global } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ClickHouseService } from './clickhouse.service';
-
-@Global()
-@Module({
-  imports: [ConfigModule],
-  providers: [ClickHouseService],
-  exports: [ClickHouseService],
-})
-export class ClickHouseModule {}
+/**
+ * Re-export ClickHouseModule from @my-girok/nest-common
+ * This file exists for backward compatibility during migration
+ *
+ * @deprecated Import directly from '@my-girok/nest-common'
+ */
+export { ClickHouseModule } from '@my-girok/nest-common';
