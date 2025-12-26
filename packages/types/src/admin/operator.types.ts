@@ -15,6 +15,34 @@ export enum InvitationStatus {
   CANCELLED = 'CANCELLED',
 }
 
+/**
+ * Operator row type (from database query)
+ * Used in operator.service.ts for raw SQL results
+ */
+export interface OperatorRow {
+  id: string;
+  email: string;
+  name: string;
+  serviceId: string;
+  serviceSlug: string;
+  serviceName: string;
+  countryCode: string;
+  isActive: boolean;
+  lastLoginAt: Date | null;
+  createdAt: Date;
+}
+
+/**
+ * Permission row type (from database query)
+ */
+export interface PermissionRow {
+  operatorId: string;
+  id: string;
+  resource: string;
+  action: string;
+  displayName: string;
+}
+
 export interface Operator {
   id: string;
   email: string;

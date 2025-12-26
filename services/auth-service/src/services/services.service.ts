@@ -467,41 +467,44 @@ export class ServicesService {
 
     const service = services[0];
 
-    if (countryCode) {
-      // Withdraw from specific country only
-      await this.prisma.$executeRaw`
-        UPDATE user_services
-        SET status = 'WITHDRAWN', updated_at = NOW()
-        WHERE user_id = ${userId}
-          AND service_id = ${service.id}
-          AND country_code = ${countryCode}
-      `;
+    // Process withdrawal in transaction (CLAUDE.md: @Transactional for multi-step DB)
+    await this.prisma.$transaction(async (tx) => {
+      if (countryCode) {
+        // Withdraw from specific country only
+        await tx.$executeRaw`
+          UPDATE user_services
+          SET status = 'WITHDRAWN', updated_at = NOW()
+          WHERE user_id = ${userId}
+            AND service_id = ${service.id}
+            AND country_code = ${countryCode}
+        `;
 
-      // Withdraw all consents for this country
-      await this.prisma.$executeRaw`
-        UPDATE user_consents
-        SET agreed = false, withdrawn_at = NOW(), updated_at = NOW()
-        WHERE user_id = ${userId}
-          AND service_id = ${service.id}
-          AND country_code = ${countryCode}
-      `;
-    } else {
-      // Withdraw from entire service
-      await this.prisma.$executeRaw`
-        UPDATE user_services
-        SET status = 'WITHDRAWN', updated_at = NOW()
-        WHERE user_id = ${userId}
-          AND service_id = ${service.id}
-      `;
+        // Withdraw all consents for this country
+        await tx.$executeRaw`
+          UPDATE user_consents
+          SET agreed = false, withdrawn_at = NOW(), updated_at = NOW()
+          WHERE user_id = ${userId}
+            AND service_id = ${service.id}
+            AND country_code = ${countryCode}
+        `;
+      } else {
+        // Withdraw from entire service
+        await tx.$executeRaw`
+          UPDATE user_services
+          SET status = 'WITHDRAWN', updated_at = NOW()
+          WHERE user_id = ${userId}
+            AND service_id = ${service.id}
+        `;
 
-      // Withdraw all consents
-      await this.prisma.$executeRaw`
-        UPDATE user_consents
-        SET agreed = false, withdrawn_at = NOW(), updated_at = NOW()
-        WHERE user_id = ${userId}
-          AND service_id = ${service.id}
-      `;
-    }
+        // Withdraw all consents
+        await tx.$executeRaw`
+          UPDATE user_consents
+          SET agreed = false, withdrawn_at = NOW(), updated_at = NOW()
+          WHERE user_id = ${userId}
+            AND service_id = ${service.id}
+        `;
+      }
+    });
   }
 
   // ============================================
@@ -545,27 +548,30 @@ export class ServicesService {
     const userServiceId = crypto.randomUUID();
     const now = new Date();
 
-    // Create user_service
-    await this.prisma.$executeRaw`
-      INSERT INTO user_services (id, user_id, service_id, country_code, status, joined_at, created_at, updated_at)
-      VALUES (${userServiceId}, ${userId}, ${serviceId}, ${countryCode}, 'ACTIVE', ${now}, ${now}, ${now})
-    `;
-
-    // Create consents
-    for (const consent of consents) {
-      const consentId = crypto.randomUUID();
-      await this.prisma.$executeRaw`
-        INSERT INTO user_consents (
-          id, user_id, service_id, consent_type, country_code,
-          document_id, agreed, agreed_at, ip_address, user_agent, created_at, updated_at
-        )
-        VALUES (
-          ${consentId}, ${userId}, ${serviceId}, ${consent.type}, ${countryCode},
-          ${consent.documentId || null}, ${consent.agreed}, ${consent.agreed ? now : null},
-          ${ip}, ${userAgent}, ${now}, ${now}
-        )
+    // Process in transaction (CLAUDE.md: @Transactional for multi-step DB)
+    await this.prisma.$transaction(async (tx) => {
+      // Create user_service
+      await tx.$executeRaw`
+        INSERT INTO user_services (id, user_id, service_id, country_code, status, joined_at, created_at, updated_at)
+        VALUES (${userServiceId}, ${userId}, ${serviceId}, ${countryCode}, 'ACTIVE', ${now}, ${now}, ${now})
       `;
-    }
+
+      // Create consents
+      for (const consent of consents) {
+        const consentId = crypto.randomUUID();
+        await tx.$executeRaw`
+          INSERT INTO user_consents (
+            id, user_id, service_id, consent_type, country_code,
+            document_id, agreed, agreed_at, ip_address, user_agent, created_at, updated_at
+          )
+          VALUES (
+            ${consentId}, ${userId}, ${serviceId}, ${consent.type}, ${countryCode},
+            ${consent.documentId || null}, ${consent.agreed}, ${consent.agreed ? now : null},
+            ${ip}, ${userAgent}, ${now}, ${now}
+          )
+        `;
+      }
+    });
 
     return userServiceId;
   }

@@ -111,33 +111,41 @@ export class OperatorService {
 
     const hashedPassword = await bcrypt.hash(dto.tempPassword, 10);
 
-    // Create operator
-    const operators = await this.prisma.$queryRaw<{ id: string }[]>`
-      INSERT INTO operators (
-        id, email, password, name, admin_id, service_id, country_code,
-        is_active, created_at, updated_at
-      )
-      VALUES (
-        gen_random_uuid()::TEXT, ${dto.email}, ${hashedPassword}, ${dto.name},
-        ${adminId}, ${service.id}, ${dto.countryCode}, true, NOW(), NOW()
-      )
-      RETURNING id
-    `;
+    // Process in transaction (CLAUDE.md: @Transactional for multi-step DB)
+    const operatorId = await this.prisma.$transaction(async (tx) => {
+      // Create operator
+      const operators = await tx.$queryRaw<{ id: string }[]>`
+        INSERT INTO operators (
+          id, email, password, name, admin_id, service_id, country_code,
+          is_active, created_at, updated_at
+        )
+        VALUES (
+          gen_random_uuid()::TEXT, ${dto.email}, ${hashedPassword}, ${dto.name},
+          ${adminId}, ${service.id}, ${dto.countryCode}, true, NOW(), NOW()
+        )
+        RETURNING id
+      `;
 
-    const operatorId = operators[0].id;
+      const opId = operators[0].id;
 
-    // Grant permissions if provided
-    if (dto.permissionIds?.length) {
-      for (const permissionId of dto.permissionIds) {
-        await this.prisma.$executeRaw`
-          INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
-          VALUES (gen_random_uuid()::TEXT, ${operatorId}, ${permissionId}, ${adminId}, NOW())
-        `;
+      // Grant permissions if provided
+      if (dto.permissionIds?.length) {
+        for (const permissionId of dto.permissionIds) {
+          await tx.$executeRaw`
+            INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
+            VALUES (gen_random_uuid()::TEXT, ${opId}, ${permissionId}, ${adminId}, NOW())
+          `;
+        }
       }
-    }
 
-    // Log audit
-    await this.logAudit(adminId, 'create', 'operator', operatorId);
+      // Log audit within transaction
+      await tx.$executeRaw`
+        INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
+        VALUES (gen_random_uuid()::TEXT, ${adminId}, 'create', 'operator', ${opId}, NOW())
+      `;
+
+      return opId;
+    });
 
     return this.findById(operatorId);
   }
@@ -323,19 +331,22 @@ export class OperatorService {
     // Validate admin access to operator's service
     await this.validateAdminServiceAccess(adminId, operator.serviceSlug);
 
-    const setClauses: string[] = ['updated_at = NOW()'];
-
-    if (dto.name !== undefined) {
-      setClauses.push(`name = '${dto.name}'`);
+    // Use parameterized queries to prevent SQL injection
+    if (dto.name !== undefined && dto.isActive !== undefined) {
+      await this.prisma.$executeRaw`
+        UPDATE operators
+        SET name = ${dto.name}, is_active = ${dto.isActive}, updated_at = NOW()
+        WHERE id = ${id}
+      `;
+    } else if (dto.name !== undefined) {
+      await this.prisma.$executeRaw`
+        UPDATE operators SET name = ${dto.name}, updated_at = NOW() WHERE id = ${id}
+      `;
+    } else if (dto.isActive !== undefined) {
+      await this.prisma.$executeRaw`
+        UPDATE operators SET is_active = ${dto.isActive}, updated_at = NOW() WHERE id = ${id}
+      `;
     }
-
-    if (dto.isActive !== undefined) {
-      setClauses.push(`is_active = ${dto.isActive}`);
-    }
-
-    await this.prisma.$executeRawUnsafe(`
-      UPDATE operators SET ${setClauses.join(', ')} WHERE id = '${id}'
-    `);
 
     // Log audit
     await this.logAudit(adminId, 'update', 'operator', id);

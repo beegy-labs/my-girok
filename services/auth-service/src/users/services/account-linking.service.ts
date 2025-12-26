@@ -55,7 +55,7 @@ export class AccountLinkingService {
   ) {}
 
   async findLinkableAccounts(userId: string): Promise<LinkableAccount[]> {
-    // Get current user
+    // Get current user's email
     const users = await this.prisma.$queryRaw<UserRow[]>`
       SELECT id, email, name, account_mode as "accountMode", created_at as "createdAt"
       FROM users
@@ -68,47 +68,61 @@ export class AccountLinkingService {
       throw new NotFoundException('User not found');
     }
 
-    // Find other accounts with same email that can be linked
-    const linkableUsers = await this.prisma.$queryRaw<UserRow[]>`
-      SELECT id, email, name, account_mode as "accountMode", created_at as "createdAt"
-      FROM users
-      WHERE id != ${userId}
-        AND email = ${user.email}
-        AND account_mode = 'SERVICE'
+    // Single query to get linkable users with their services (fixes N+1)
+    const results = await this.prisma.$queryRaw<
+      Array<{
+        userId: string;
+        email: string;
+        name: string | null;
+        accountMode: string;
+        userCreatedAt: Date;
+        serviceSlug: string | null;
+        serviceName: string | null;
+        joinedAt: Date | null;
+      }>
+    >`
+      SELECT
+        u.id as "userId",
+        u.email,
+        u.name,
+        u.account_mode as "accountMode",
+        u.created_at as "userCreatedAt",
+        s.slug as "serviceSlug",
+        s.name as "serviceName",
+        us.joined_at as "joinedAt"
+      FROM users u
+      LEFT JOIN user_services us ON u.id = us.user_id AND us.status = 'ACTIVE'
+      LEFT JOIN services s ON us.service_id = s.id
+      WHERE u.id != ${userId}
+        AND u.email = ${user.email}
+        AND u.account_mode = 'SERVICE'
+      ORDER BY u.id, us.joined_at ASC
     `;
 
-    // Get services for each linkable user
-    const linkableAccounts: LinkableAccount[] = [];
+    // Group results by user
+    const userMap = new Map<string, LinkableAccount>();
 
-    for (const linkableUser of linkableUsers) {
-      const services = await this.prisma.$queryRaw<UserServiceRow[]>`
-        SELECT
-          us.user_id as "userId",
-          us.service_id as "serviceId",
-          s.slug as "serviceSlug",
-          s.name as "serviceName",
-          us.country_code as "countryCode",
-          us.status,
-          us.joined_at as "joinedAt"
-        FROM user_services us
-        JOIN services s ON us.service_id = s.id
-        WHERE us.user_id = ${linkableUser.id}
-          AND us.status = 'ACTIVE'
-      `;
+    for (const row of results) {
+      if (!userMap.has(row.userId)) {
+        userMap.set(row.userId, {
+          id: row.userId,
+          email: this.maskEmail(row.email),
+          services: [],
+          createdAt: row.userCreatedAt,
+        });
+      }
 
-      linkableAccounts.push({
-        id: linkableUser.id,
-        email: this.maskEmail(linkableUser.email),
-        services: services.map((s) => ({
-          slug: s.serviceSlug,
-          name: s.serviceName,
-          joinedAt: s.joinedAt,
-        })),
-        createdAt: linkableUser.createdAt,
-      });
+      // Add service if exists
+      if (row.serviceSlug && row.serviceName) {
+        userMap.get(row.userId)!.services.push({
+          slug: row.serviceSlug,
+          name: row.serviceName,
+          joinedAt: row.joinedAt!,
+        });
+      }
     }
 
-    return linkableAccounts;
+    return Array.from(userMap.values());
   }
 
   async requestLink(primaryUserId: string, dto: RequestLinkDto): Promise<AccountLinkResponse> {
@@ -220,53 +234,55 @@ export class AccountLinkingService {
       throw new UnauthorizedException('Invalid password');
     }
 
-    // Collect platform consents
-    await this.collectPlatformConsent(linkedUserId, dto.platformConsents);
-
-    // Process linking in transaction
+    // Process linking in transaction (CLAUDE.md: @Transactional for multi-step DB)
     const now = new Date();
 
-    // Update link status
-    await this.prisma.$executeRaw`
-      UPDATE account_links
-      SET status = 'ACTIVE', linked_at = ${now}
-      WHERE id = ${link.id}
-    `;
+    const { allServices, primaryUser } = await this.prisma.$transaction(async (tx) => {
+      // Collect platform consents within transaction
+      await this.collectPlatformConsentTx(tx, linkedUserId, dto.platformConsents);
 
-    // Update both users to UNIFIED mode
-    await this.prisma.$executeRaw`
-      UPDATE users
-      SET account_mode = 'UNIFIED', updated_at = NOW()
-      WHERE id IN (${link.primaryUserId}, ${link.linkedUserId})
-    `;
+      // Update link status
+      await tx.$executeRaw`
+        UPDATE account_links
+        SET status = 'ACTIVE', linked_at = ${now}
+        WHERE id = ${link.id}
+      `;
 
-    // Get all services for unified token
-    const allServices = await this.prisma.$queryRaw<UserServiceRow[]>`
-      SELECT
-        us.user_id as "userId",
-        us.service_id as "serviceId",
-        s.slug as "serviceSlug",
-        s.name as "serviceName",
-        us.country_code as "countryCode",
-        us.status,
-        us.joined_at as "joinedAt"
-      FROM user_services us
-      JOIN services s ON us.service_id = s.id
-      WHERE us.user_id IN (${link.primaryUserId}, ${link.linkedUserId})
-        AND us.status = 'ACTIVE'
-    `;
+      // Update both users to UNIFIED mode
+      await tx.$executeRaw`
+        UPDATE users
+        SET account_mode = 'UNIFIED', updated_at = NOW()
+        WHERE id IN (${link.primaryUserId}, ${link.linkedUserId})
+      `;
 
-    // Get primary user for token generation
-    const primaryUsers = await this.prisma.$queryRaw<
-      Array<{ id: string; email: string; countryCode: string | null }>
-    >`
-      SELECT id, email, country_code as "countryCode"
-      FROM users WHERE id = ${link.primaryUserId} LIMIT 1
-    `;
+      // Get all services for unified token
+      const services = await tx.$queryRaw<UserServiceRow[]>`
+        SELECT
+          us.user_id as "userId",
+          us.service_id as "serviceId",
+          s.slug as "serviceSlug",
+          s.name as "serviceName",
+          us.country_code as "countryCode",
+          us.status,
+          us.joined_at as "joinedAt"
+        FROM user_services us
+        JOIN services s ON us.service_id = s.id
+        WHERE us.user_id IN (${link.primaryUserId}, ${link.linkedUserId})
+          AND us.status = 'ACTIVE'
+      `;
 
-    const primaryUser = primaryUsers[0];
+      // Get primary user for token generation
+      const users = await tx.$queryRaw<
+        Array<{ id: string; email: string; countryCode: string | null }>
+      >`
+        SELECT id, email, country_code as "countryCode"
+        FROM users WHERE id = ${link.primaryUserId} LIMIT 1
+      `;
 
-    // Generate unified token
+      return { allServices: services, primaryUser: users[0] };
+    });
+
+    // Generate unified token (outside transaction - no DB write)
     const tokens = await this.authService.generateTokensWithServices(
       primaryUser.id,
       primaryUser.email,
@@ -359,52 +375,60 @@ export class AccountLinkingService {
 
     const link = links[0];
 
-    // Update link status
-    await this.prisma.$executeRaw`
-      UPDATE account_links
-      SET status = 'UNLINKED'
-      WHERE id = ${linkId}
-    `;
-
-    // Check if primary user has other active links
-    const primaryOtherLinks = await this.prisma.$queryRaw<{ count: bigint }[]>`
-      SELECT COUNT(*) as count FROM account_links
-      WHERE primary_user_id = ${link.primaryUserId}
-        AND status = 'ACTIVE'
-        AND id != ${linkId}
-    `;
-
-    // Check if linked user has other active links
-    const linkedOtherLinks = await this.prisma.$queryRaw<{ count: bigint }[]>`
-      SELECT COUNT(*) as count FROM account_links
-      WHERE (primary_user_id = ${link.linkedUserId} OR linked_user_id = ${link.linkedUserId})
-        AND status = 'ACTIVE'
-        AND id != ${linkId}
-    `;
-
-    // Revert to SERVICE mode if no other links
-    if (Number(primaryOtherLinks[0]?.count ?? 0) === 0) {
-      await this.prisma.$executeRaw`
-        UPDATE users SET account_mode = 'SERVICE', updated_at = NOW()
-        WHERE id = ${link.primaryUserId}
+    // Process unlinking in transaction (CLAUDE.md: @Transactional for multi-step DB)
+    await this.prisma.$transaction(async (tx) => {
+      // Update link status
+      await tx.$executeRaw`
+        UPDATE account_links
+        SET status = 'UNLINKED'
+        WHERE id = ${linkId}
       `;
-    }
 
-    if (Number(linkedOtherLinks[0]?.count ?? 0) === 0) {
-      await this.prisma.$executeRaw`
-        UPDATE users SET account_mode = 'SERVICE', updated_at = NOW()
-        WHERE id = ${link.linkedUserId}
+      // Check if primary user has other active links
+      const primaryOtherLinks = await tx.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*) as count FROM account_links
+        WHERE primary_user_id = ${link.primaryUserId}
+          AND status = 'ACTIVE'
+          AND id != ${linkId}
       `;
-    }
+
+      // Check if linked user has other active links
+      const linkedOtherLinks = await tx.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*) as count FROM account_links
+        WHERE (primary_user_id = ${link.linkedUserId} OR linked_user_id = ${link.linkedUserId})
+          AND status = 'ACTIVE'
+          AND id != ${linkId}
+      `;
+
+      // Revert to SERVICE mode if no other links
+      if (Number(primaryOtherLinks[0]?.count ?? 0) === 0) {
+        await tx.$executeRaw`
+          UPDATE users SET account_mode = 'SERVICE', updated_at = NOW()
+          WHERE id = ${link.primaryUserId}
+        `;
+      }
+
+      if (Number(linkedOtherLinks[0]?.count ?? 0) === 0) {
+        await tx.$executeRaw`
+          UPDATE users SET account_mode = 'SERVICE', updated_at = NOW()
+          WHERE id = ${link.linkedUserId}
+        `;
+      }
+    });
   }
 
-  private async collectPlatformConsent(
+  /**
+   * Collect platform consents within a transaction
+   * CLAUDE.md: Use transaction for multi-step DB operations
+   */
+  private async collectPlatformConsentTx(
+    tx: Parameters<Parameters<typeof this.prisma.$transaction>[0]>[0],
     userId: string,
     consents: PlatformConsentInput[],
   ): Promise<void> {
     for (const consent of consents) {
       // Check if consent exists (PLATFORM scope)
-      const existing = await this.prisma.$queryRaw<{ id: string }[]>`
+      const existing = await tx.$queryRaw<{ id: string }[]>`
         SELECT id FROM consents
         WHERE user_id = ${userId}
           AND scope = 'PLATFORM'
@@ -415,7 +439,7 @@ export class AccountLinkingService {
 
       if (existing.length) {
         // Update existing
-        await this.prisma.$executeRaw`
+        await tx.$executeRaw`
           UPDATE consents
           SET agreed = ${consent.agreed},
               document_id = ${consent.documentId || null},
@@ -424,7 +448,7 @@ export class AccountLinkingService {
         `;
       } else {
         // Create new with PLATFORM scope
-        await this.prisma.$executeRaw`
+        await tx.$executeRaw`
           INSERT INTO consents (
             id, user_id, consent_type, scope, country_code, document_id, agreed, agreed_at, created_at
           )

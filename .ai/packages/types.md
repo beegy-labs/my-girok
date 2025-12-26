@@ -7,7 +7,9 @@
 ```
 packages/types/src/
 ├── auth/     # Role, AuthProvider, DTOs
-├── user/     # User, Session
+├── user/     # User, Session, AccountLink
+├── admin/    # Operator, Permission
+├── service/  # Service, Consent (Global Account)
 ├── resume/   # Resume, Experience, Skill
 ├── legal/    # ConsentType, Documents
 ├── common/   # ApiResponse, Pagination
@@ -201,6 +203,42 @@ interface UserConsentPayload {
   countryCode: string;
   agreed: boolean;
   agreedAt: Date;
+}
+```
+
+## Service (Global Account)
+
+```typescript
+// Row types for raw SQL queries
+interface ServiceRow {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+interface UserServiceRow {
+  userId: string;
+  serviceId: string;
+  serviceSlug: string;
+  countryCode: string;
+  status: string;
+  joinedAt: Date;
+}
+
+interface ConsentRequirementRow {
+  id: string;
+  serviceId: string;
+  consentType: string;
+  countryCode: string;
+  isRequired: boolean;
+}
+
+interface UserConsentRow {
+  id: string;
+  userId: string;
+  serviceId: string;
+  consentType: string;
+  agreed: boolean;
 }
 ```
 
