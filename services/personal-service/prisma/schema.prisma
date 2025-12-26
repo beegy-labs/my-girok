@@ -14,8 +14,8 @@ datasource db {
 // ========== Resume Models ==========
 
 model Resume {
-  id          String  @id @default(uuid())
-  userId      String  @map("user_id") // Multiple resumes per user
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String  @map("user_id") @db.Uuid // Multiple resumes per user
 
   // Resume Metadata
   title       String // "회사용", "프리랜서용", "스타트업용", etc.
@@ -43,9 +43,8 @@ model Resume {
   profileImage String? @map("profile_image")
 
   // Birth Date and Gender
-  birthYear Int?    @map("birth_year") // Birth year (e.g., 1994) - deprecated, use birthDate
   birthDate String? @map("birth_date") // Full birth date (YYYY-MM-DD format) for accurate age calculation
-  gender    Gender? // Gender (MALE, FEMALE, OTHER)
+  gender    Gender? // Gender (MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY)
 
   // Korean-specific fields
   militaryService           MilitaryService? @map("military_service") // Military service status
@@ -84,8 +83,9 @@ model Resume {
   // Share Links
   shares ShareLink[] @relation("ResumeShares")
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) // Soft delete for GDPR compliance
 
   @@index([userId])
   @@index([userId, isDefault])
@@ -94,8 +94,8 @@ model Resume {
 
 // Section visibility and ordering
 model ResumeSection {
-  id       String  @id @default(uuid())
-  resumeId String  @map("resume_id")
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resumeId String  @map("resume_id") @db.Uuid
   resume   Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   type    SectionType // SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE
@@ -113,9 +113,13 @@ model ResumeSection {
 enum SectionType {
   SKILLS
   EXPERIENCE
-  PROJECT
+  PROJECT           // @deprecated - kept for backward compatibility
   EDUCATION
   CERTIFICATE
+  KEY_ACHIEVEMENTS  // Frontend section: 핵심 성과
+  APPLICATION_REASON // Frontend section: 지원 동기
+  ATTACHMENTS       // Frontend section: 첨부파일
+  COVER_LETTER      // Frontend section: 자기소개서
 }
 
 enum PaperSize {
@@ -124,9 +128,10 @@ enum PaperSize {
 }
 
 enum Gender {
-  MALE    // Male
-  FEMALE  // Female
-  OTHER   // Other
+  MALE              // Male
+  FEMALE            // Female
+  OTHER             // Other
+  PREFER_NOT_TO_SAY // Prefer not to say
 }
 
 enum MilitaryService {
@@ -161,8 +166,8 @@ enum CopyStatus {
 
 // Resume File Attachments (profile photos, portfolios, certificates)
 model ResumeAttachment {
-  id       String @id @default(uuid())
-  resumeId String @map("resume_id")
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resumeId String @map("resume_id") @db.Uuid
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   // File metadata
@@ -201,8 +206,8 @@ enum AttachmentType {
 
 // Skills (Frontend, Backend, DevOps, etc.)
 model Skill {
-  id       String @id @default(uuid())
-  resumeId String @map("resume_id")
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resumeId String @map("resume_id") @db.Uuid
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   category String // Frontend, Backend, DevOps, Database, Tools, etc.
@@ -219,8 +224,8 @@ model Skill {
 
 // Work Experience (unified with projects)
 model Experience {
-  id       String @id @default(uuid())
-  resumeId String @map("resume_id")
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resumeId String @map("resume_id") @db.Uuid
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   company   String
@@ -252,8 +257,8 @@ model Experience {
 
 // Projects within a company experience
 model ExperienceProject {
-  id           String     @id @default(uuid())
-  experienceId String     @map("experience_id")
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  experienceId String     @map("experience_id") @db.Uuid
   experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 
   name        String       // Project name
@@ -280,8 +285,8 @@ model ExperienceProject {
 
 // Hierarchical achievements structure (supports up to 4 levels of depth)
 model ProjectAchievement {
-  id        String            @id @default(uuid())
-  projectId String            @map("project_id")
+  id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String            @map("project_id") @db.Uuid
   project   ExperienceProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   content String // Achievement content
@@ -289,7 +294,7 @@ model ProjectAchievement {
   order   Int    @default(0)
 
   // Self-referencing relation for parent-child hierarchy
-  parentId String?              @map("parent_id")
+  parentId String?              @map("parent_id") @db.Uuid
   parent   ProjectAchievement?  @relation("AchievementHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children ProjectAchievement[] @relation("AchievementHierarchy")
 
@@ -305,8 +310,8 @@ model ProjectAchievement {
 
 // Education
 model Education {
-  id       String @id @default(uuid())
-  resumeId String @map("resume_id")
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resumeId String @map("resume_id") @db.Uuid
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   school    String
@@ -329,8 +334,8 @@ model Education {
 
 // Certificates and Awards
 model Certificate {
-  id       String @id @default(uuid())
-  resumeId String @map("resume_id")
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resumeId String @map("resume_id") @db.Uuid
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   name          String
@@ -353,13 +358,13 @@ model Certificate {
 // ========== Share Link Models ==========
 
 model ShareLink {
-  id    String @id @default(uuid())
-  token String @unique @default(cuid())
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token String @unique // Generated by application using UUIDv7
 
   // Resource
   resourceType ResourceType @map("resource_type")
-  resourceId   String       @map("resource_id")
-  userId       String       @map("user_id")
+  resourceId   String       @map("resource_id") @db.Uuid
+  userId       String       @map("user_id") @db.Uuid
 
   // Share settings
   expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
@@ -390,8 +395,8 @@ enum ResourceType {
 // ========== Budget Models (Future) ==========
 
 model Transaction {
-  id     String          @id @default(uuid())
-  userId String          @map("user_id")
+  id     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String          @map("user_id") @db.Uuid
   type   TransactionType
 
   amount      Decimal  @db.Decimal(12, 2)
@@ -413,8 +418,8 @@ enum TransactionType {
 }
 
 model Budget {
-  id       String  @id @default(uuid())
-  userId   String  @map("user_id")
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId   String  @map("user_id") @db.Uuid
   category String
   amount   Decimal @db.Decimal(12, 2)
   period   Period  @default(MONTHLY)
@@ -435,8 +440,8 @@ enum Period {
 // ========== User Preferences Models ==========
 
 model UserPreferences {
-  id     String @id @default(uuid())
-  userId String @unique @map("user_id")
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
 
   // Theme settings
   theme Theme @default(LIGHT)

@@ -66,13 +66,17 @@ my-girok-resumes/
 
 ## Enums
 
-| Enum            | Values                                              |
-| --------------- | --------------------------------------------------- |
-| PaperSize       | A4, LETTER                                          |
-| Gender          | MALE, FEMALE, OTHER                                 |
-| MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                 |
-| SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE |
-| CopyStatus      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED    |
+| Enum            | Values                                                                                                               |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| PaperSize       | A4, LETTER                                                                                                           |
+| Gender          | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                                                                               |
+| MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                                                                                  |
+| SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE, KEY_ACHIEVEMENTS, APPLICATION_REASON, ATTACHMENTS, COVER_LETTER |
+| CopyStatus      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED                                                                     |
+
+## Soft Delete
+
+Resume supports soft delete with `deletedAt` timestamp. Deleted resumes are excluded from queries by default.
 
 ## Environment Variables
 

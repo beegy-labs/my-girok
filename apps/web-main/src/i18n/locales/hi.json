@@ -251,9 +251,6 @@
       "phone": "फ़ोन",
       "address": "पता"
     },
-    "birthYear": "जन्म वर्ष",
-    "birthYearPlaceholder": "उदा., 1994",
-    "birthYearHint": "केवल वर्ष (उदा., 1994)",
     "birthDate": "जन्म तिथि",
     "birthDatePlaceholder": "उदा., 1994-03-15",
     "birthDateHint": "सटीक आयु गणना के लिए पूर्ण जन्म तिथि दर्ज करें",
@@ -262,12 +259,14 @@
     "genderOptions": {
       "MALE": "पुरुष",
       "FEMALE": "महिला",
-      "OTHER": "अन्य"
+      "OTHER": "अन्य",
+      "PREFER_NOT_TO_SAY": "बताना नहीं चाहते"
     },
     "genderLabels": {
       "MALE": "पु",
       "FEMALE": "म",
-      "OTHER": "अन्य"
+      "OTHER": "अन्य",
+      "PREFER_NOT_TO_SAY": "गोपनीय"
     },
     "age": "{{age}} वर्ष",
     "sections": {

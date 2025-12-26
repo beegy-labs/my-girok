@@ -11,8 +11,12 @@ import {
   JwtPayload,
   Role,
   AuthProvider,
+  UserJwtPayload,
+  UserServicePayload,
+  LegacyUserJwtPayload,
 } from '@my-girok/types';
 import { generateUniqueExternalId } from '../common/utils/id-generator';
+import { hashToken, getSessionExpiresAt } from '../common/utils/session.utils';
 
 @Injectable()
 export class AuthService {
@@ -124,26 +128,37 @@ export class AuthService {
     try {
       this.jwtService.verify(refreshToken);
 
+      const tokenHash = hashToken(refreshToken);
       const session = await this.prisma.session.findUnique({
-        where: { refreshToken },
-        include: { user: true },
+        where: { tokenHash },
       });
 
-      if (!session || session.expiresAt < new Date()) {
+      if (!session || session.expiresAt < new Date() || session.revokedAt) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const tokens = await this.generateTokens(
-        session.user.id,
-        session.user.email,
-        session.user.role,
-      );
+      if (session.subjectType !== 'USER') {
+        throw new UnauthorizedException('Invalid session type');
+      }
 
+      // Fetch user
+      const user = await this.prisma.user.findUnique({
+        where: { id: session.subjectId },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+      // Update session with new token hash
       await this.prisma.session.update({
         where: { id: session.id },
         data: {
+          tokenHash: hashToken(tokens.refreshToken),
           refreshToken: tokens.refreshToken,
-          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+          expiresAt: getSessionExpiresAt(),
         },
       });
 
@@ -154,10 +169,16 @@ export class AuthService {
   }
 
   async logout(userId: string, refreshToken: string): Promise<void> {
-    await this.prisma.session.deleteMany({
+    const tokenHash = hashToken(refreshToken);
+    // Soft delete: mark session as revoked instead of deleting
+    await this.prisma.session.updateMany({
       where: {
-        userId,
-        refreshToken,
+        subjectId: userId,
+        subjectType: 'USER',
+        tokenHash,
+      },
+      data: {
+        revokedAt: new Date(),
       },
     });
   }
@@ -197,14 +218,49 @@ export class AuthService {
   }
 
   async generateTokens(userId: string, email: string, role: string): Promise<TokenResponse> {
-    const accessPayload: JwtPayload = {
+    // Fetch user's services for new JWT structure
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        accountMode: true,
+        countryCode: true,
+      },
+    });
+
+    // Fetch user services using raw query (Prisma schema may not be updated yet)
+    let userServices: Array<{
+      status: string;
+      countryCode: string;
+      serviceSlug: string;
+    }> = [];
+
+    try {
+      userServices = await this.prisma.$queryRaw<
+        Array<{ status: string; countryCode: string; serviceSlug: string }>
+      >`
+        SELECT us.status, us.country_code as "countryCode", s.slug as "serviceSlug"
+        FROM user_services us
+        JOIN services s ON us.service_id = s.id
+        WHERE us.user_id = ${userId} AND us.status = 'ACTIVE'
+      `;
+    } catch {
+      // Table might not exist yet in dev, continue with empty services
+    }
+
+    const services = this.buildUserServicesPayload(userServices);
+
+    const accessPayload: UserJwtPayload = {
       sub: userId,
       email,
-      role: role as Role,
-      type: 'ACCESS',
+      type: 'USER_ACCESS',
+      accountMode: (user?.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
+      countryCode: user?.countryCode || 'KR',
+      services,
     };
 
-    const refreshPayload: JwtPayload = {
+    const refreshPayload: LegacyUserJwtPayload = {
       sub: userId,
       email,
       role: role as Role,
@@ -223,14 +279,79 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+  async generateTokensWithServices(
+    userId: string,
+    email: string,
+    accountMode: 'SERVICE' | 'UNIFIED',
+    countryCode: string,
+    userServices: Array<{ status: string; countryCode: string; serviceSlug: string }>,
+  ): Promise<TokenResponse> {
+    const services = this.buildUserServicesPayload(userServices);
 
+    const accessPayload: UserJwtPayload = {
+      sub: userId,
+      email,
+      type: 'USER_ACCESS',
+      accountMode,
+      countryCode,
+      services,
+    };
+
+    const refreshPayload: LegacyUserJwtPayload = {
+      sub: userId,
+      email,
+      role: Role.USER,
+      type: 'REFRESH',
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(accessPayload, {
+        expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '1h'),
+      }),
+      this.jwtService.signAsync(refreshPayload, {
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '14d'),
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  private buildUserServicesPayload(
+    userServices: Array<{ status: string; countryCode: string; serviceSlug: string }>,
+  ): Record<string, UserServicePayload> {
+    const services: Record<string, UserServicePayload> = {};
+
+    for (const us of userServices) {
+      const slug = us.serviceSlug;
+      if (!services[slug]) {
+        services[slug] = {
+          status: us.status as 'ACTIVE' | 'SUSPENDED' | 'WITHDRAWN',
+          countries: [],
+        };
+      }
+      if (!services[slug].countries.includes(us.countryCode)) {
+        services[slug].countries.push(us.countryCode);
+      }
+    }
+
+    return services;
+  }
+
+  async saveRefreshToken(
+    userId: string,
+    refreshToken: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<void> {
     await this.prisma.session.create({
       data: {
-        userId,
-        refreshToken,
-        expiresAt,
+        subjectId: userId,
+        subjectType: 'USER',
+        tokenHash: hashToken(refreshToken),
+        refreshToken, // Keep for backward compatibility during migration
+        expiresAt: getSessionExpiresAt(),
+        ipAddress,
+        userAgent,
       },
     });
   }

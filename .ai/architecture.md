@@ -69,13 +69,38 @@ my-girok/
 
 ## Polyglot Persistence
 
-| Service          | Database   | Reason                |
-| ---------------- | ---------- | --------------------- |
-| auth-service     | PostgreSQL | ACID, relations       |
-| personal-service | PostgreSQL | Complex queries       |
-| feed-service     | MongoDB    | Flexible schema       |
-| chat-service     | MongoDB    | High write throughput |
-| matching-service | Valkey     | In-memory, real-time  |
+| Service           | Database   | Reason                     |
+| ----------------- | ---------- | -------------------------- |
+| auth-service      | PostgreSQL | ACID, relations            |
+| personal-service  | PostgreSQL | Complex queries            |
+| feed-service      | MongoDB    | Flexible schema            |
+| chat-service      | MongoDB    | High write throughput      |
+| matching-service  | Valkey     | In-memory, real-time       |
+| audit-service     | ClickHouse | Time-series, 5yr retention |
+| analytics-service | ClickHouse | High-volume analytics      |
+
+## Observability Platform
+
+```
+Services ──OTEL──▶ OTEL Collector ──▶ ClickHouse
+                                          │
+                   ┌──────────────────────┴──────────────────────┐
+                   ▼                                              ▼
+            ┌─────────────┐                              ┌─────────────┐
+            │  audit_db   │                              │analytics_db │
+            │ (Compliance)│                              │ (Business)  │
+            │ 5yr retain  │                              │ 90d-1yr     │
+            └──────┬──────┘                              └──────┬──────┘
+                   ▼                                            ▼
+            audit-service                               analytics-service
+```
+
+| Database       | Tables                                      | Retention |
+| -------------- | ------------------------------------------- | --------- |
+| `audit_db`     | access_logs, consent_history, admin_actions | 5 years   |
+| `analytics_db` | sessions, events, page_views, funnel_events | 90d-1yr   |
+
+ID Strategy: **UUIDv7** (RFC 9562, time-sortable, DB-native UUID)
 
 ## NATS Events
 
@@ -109,6 +134,72 @@ import { AuthService } from '../auth-service'; // NEVER
 | api.girok.dev/graphql | graphql-bff  | 🔲     |
 | auth.girok.dev        | auth-service | ✅     |
 | ws.girok.dev          | ws-gateway   | 🔲     |
+
+---
+
+## Central Auth Architecture
+
+### Multi-Service Account System
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                    Auth Service                           │
+├──────────────────────────────────────────────────────────┤
+│  Users          Services        Law Registry             │
+│  ├─UserServices ├─ConsentReqs   ├─PIPA (KR)             │
+│  ├─Consents     └─Operators     ├─GDPR (EU)             │
+│  └─PersonalInfo                 ├─APPI (JP)             │
+│                                 └─CCPA (US)             │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Account Flow
+
+```
+User Registration
+       │
+       ▼
+┌─────────────────┐
+│ SERVICE Mode    │ (Default)
+│ - Per-service   │
+│ - Per-country   │
+└────────┬────────┘
+         │ Link Request + Accept
+         ▼
+┌─────────────────┐
+│ UNIFIED Mode    │
+│ - Cross-service │
+│ - Single token  │
+│ - Shared info   │
+└─────────────────┘
+```
+
+### Guard Flow
+
+```
+Request
+   │
+   ▼
+UnifiedAuthGuard (routes by token type)
+   │
+   ├─ USER_ACCESS ──▶ validateUser()
+   ├─ ADMIN_ACCESS ──▶ validateAdmin()
+   └─ OPERATOR_ACCESS ──▶ validateOperator()
+   │
+   ▼
+ServiceAccessGuard (optional)
+   │
+   ▼
+CountryConsentGuard (optional)
+```
+
+### Token Types
+
+| Type            | Payload                            | Use Case     |
+| --------------- | ---------------------------------- | ------------ |
+| USER_ACCESS     | services, countryCode, accountMode | User API     |
+| ADMIN_ACCESS    | scope, permissions, level          | Admin API    |
+| OPERATOR_ACCESS | serviceSlug, countryCode           | Operator API |
 
 ---
 
