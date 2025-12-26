@@ -51,12 +51,54 @@ const defaultPolicies: RetentionPolicy[] = [
   },
 ];
 
+/**
+ * Whitelist of allowed tables for retention operations
+ * This prevents SQL injection by only allowing known table names
+ */
+const ALLOWED_TABLES = new Set([
+  'audit_db.access_logs_local',
+  'audit_db.consent_history_local',
+  'audit_db.admin_actions_local',
+  'audit_db.data_exports_local',
+]);
+
+/**
+ * Whitelist of allowed database names
+ */
+const ALLOWED_DATABASES = new Set(['audit_db']);
+
 @Injectable()
 export class RetentionService {
   private readonly logger = new Logger(RetentionService.name);
   private policies: RetentionPolicy[] = [...defaultPolicies];
 
   constructor(private readonly clickhouse: ClickHouseService) {}
+
+  /**
+   * Validate table name against whitelist to prevent SQL injection
+   * @throws Error if table name is not in whitelist
+   */
+  private validateTableName(database: string, table: string): void {
+    if (!ALLOWED_DATABASES.has(database)) {
+      throw new Error(`Invalid database name: ${database}`);
+    }
+
+    const fullTableName = `${database}.${table}_local`;
+    if (!ALLOWED_TABLES.has(fullTableName)) {
+      throw new Error(`Invalid table name: ${fullTableName}`);
+    }
+  }
+
+  /**
+   * Validate cluster name to prevent SQL injection
+   * Only alphanumeric and underscore allowed
+   */
+  private validateClusterName(cluster: string): string {
+    if (!/^[a-zA-Z0-9_]+$/.test(cluster)) {
+      throw new Error(`Invalid cluster name: ${cluster}`);
+    }
+    return cluster;
+  }
 
   async getPolicies(): Promise<RetentionPolicy[]> {
     return this.policies;
@@ -90,8 +132,17 @@ export class RetentionService {
     let partitionsDropped = 0;
 
     const activePolicies = this.policies.filter((p) => p.isActive);
+    const clusterName = this.validateClusterName('my_cluster');
 
     for (const policy of activePolicies) {
+      // Validate table name against whitelist before any operations
+      try {
+        this.validateTableName(policy.databaseName, policy.tableName);
+      } catch (error) {
+        this.logger.error(`Skipping invalid table: ${policy.databaseName}.${policy.tableName}`);
+        continue;
+      }
+
       tablesProcessed++;
 
       const cutoffDate = new Date();
@@ -99,7 +150,7 @@ export class RetentionService {
       const cutoffPartition = this.formatPartition(cutoffDate, policy.partitionUnit);
 
       try {
-        // Find expired partitions
+        // Find expired partitions using parameterized query
         const partitionsSql = `
           SELECT DISTINCT partition
           FROM system.parts
@@ -116,12 +167,21 @@ export class RetentionService {
         });
 
         for (const { partition } of result.data) {
+          // Validate partition format (YYYYMM or YYYYMMDD) - only digits allowed
+          if (!/^\d{6,8}$/.test(partition)) {
+            this.logger.warn(`Invalid partition format: ${partition}, skipping`);
+            continue;
+          }
+
           try {
-            await this.clickhouse.command(`
-              ALTER TABLE ${policy.databaseName}.${policy.tableName}_local
-              ON CLUSTER 'my_cluster'
-              DROP PARTITION '${partition}'
-            `);
+            // All values are now validated:
+            // - database/table: whitelist validated
+            // - cluster: alphanumeric validated
+            // - partition: digits-only validated
+            await this.clickhouse.command(
+              `ALTER TABLE ${policy.databaseName}.${policy.tableName}_local ` +
+                `ON CLUSTER '${clusterName}' DROP PARTITION '${partition}'`,
+            );
             partitionsDropped++;
             this.logger.log(
               `Dropped partition ${partition} from ${policy.databaseName}.${policy.tableName}`,

@@ -175,6 +175,31 @@ import { ULID, ulidExtension, ParseUlidPipe } from '@my-girok/nest-common';
 
 Shared ClickHouse client for analytics and audit services.
 
+### Query Builder
+
+Type-safe query builder to prevent SQL injection:
+
+```typescript
+import { createQueryBuilder } from '@my-girok/nest-common';
+
+const builder = createQueryBuilder()
+  .whereBetween('timestamp', startDate, endDate, 'DateTime64')
+  .whereOptional('user_id', '=', userId, 'UUID')
+  .whereIn('event_name', events, 'String');
+
+const { whereClause, params } = builder.build();
+const sql = `SELECT * FROM events ${whereClause} LIMIT 100`;
+const result = await clickhouse.query(sql, params);
+```
+
+| Method                           | Purpose                       |
+| -------------------------------- | ----------------------------- |
+| `where()`                        | Add required condition        |
+| `whereOptional()`                | Add condition if value exists |
+| `whereIn()`                      | IN clause with array          |
+| `whereBetween()`                 | Range condition               |
+| `whereNull()` / `whereNotNull()` | NULL checks                   |
+
 Features:
 
 - Connection retry with exponential backoff

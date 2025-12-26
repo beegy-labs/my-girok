@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 import {
   FunnelQueryDto,
@@ -7,11 +7,17 @@ import {
   FunnelComparison,
 } from './dto/funnel-query.dto';
 
+// Whitelist of allowed event names pattern (alphanumeric, underscore, dash)
+const EVENT_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
 @Injectable()
 export class FunnelService {
   constructor(private readonly clickhouse: ClickHouseService) {}
 
   async analyzeFunnel(query: FunnelQueryDto): Promise<FunnelResult> {
+    // Validate step names to prevent SQL injection
+    this.validateStepNames(query.steps);
+
     const { steps, startDate, endDate, conversionWindow = 86400, groupBy = 'user' } = query;
     const groupColumn = groupBy === 'user' ? 'user_id' : 'session_id';
 
@@ -26,9 +32,9 @@ export class FunnelService {
     const avgTimes = await this.getAverageTimeBetweenSteps(steps, startDate, endDate, groupColumn);
 
     const funnelSteps: FunnelStepResult[] = steps.map((step, idx) => {
-      const entered = stepResults[idx] || 0;
-      const completed = stepResults[idx + 1] || 0;
-      const prevEntered = idx === 0 ? entered : stepResults[idx - 1] || 0;
+      const entered = stepResults[idx] ?? 0;
+      const completed = stepResults[idx + 1] ?? 0;
+      const prevEntered = idx === 0 ? entered : (stepResults[idx - 1] ?? 0);
 
       return {
         step,
@@ -37,14 +43,14 @@ export class FunnelService {
         completed: idx === steps.length - 1 ? entered : completed,
         dropoffRate: prevEntered > 0 ? ((prevEntered - entered) / prevEntered) * 100 : 0,
         conversionRate: stepResults[0] > 0 ? (entered / stepResults[0]) * 100 : 0,
-        avgTimeToNext: avgTimes[idx] || null,
+        avgTimeToNext: avgTimes[idx] ?? null,
       };
     });
 
-    const totalEntered = stepResults[0] || 0;
-    const totalCompleted = stepResults[steps.length - 1] || 0;
+    const totalEntered = stepResults[0] ?? 0;
+    const totalCompleted = stepResults[steps.length - 1] ?? 0;
 
-    const totalAvgTime = avgTimes.reduce((sum: number, t) => sum + (t || 0), 0);
+    const totalAvgTime = avgTimes.reduce((sum: number, t) => sum + (t ?? 0), 0);
 
     return {
       steps: funnelSteps,
@@ -72,8 +78,8 @@ export class FunnelService {
     const stepChanges = current.steps.map((step, idx) => ({
       step: step.step,
       currentRate: step.conversionRate,
-      previousRate: previous.steps[idx]?.conversionRate || 0,
-      change: step.conversionRate - (previous.steps[idx]?.conversionRate || 0),
+      previousRate: previous.steps[idx]?.conversionRate ?? 0,
+      change: step.conversionRate - (previous.steps[idx]?.conversionRate ?? 0),
     }));
 
     return {
@@ -88,6 +94,9 @@ export class FunnelService {
     query: FunnelQueryDto,
     atStep: number,
   ): Promise<{ userId: string; lastEvent: string; lastEventTime: string }[]> {
+    // Validate step names
+    this.validateStepNames(query.steps);
+
     const { steps, startDate, endDate, groupBy = 'user' } = query;
     const groupColumn = groupBy === 'user' ? 'user_id' : 'session_id';
 
@@ -102,21 +111,21 @@ export class FunnelService {
       WITH completed AS (
         SELECT DISTINCT ${groupColumn} as id, max(timestamp) as completed_time
         FROM analytics_db.events
-        WHERE event_name = '${completedStep}'
-          AND timestamp >= '${startDate}'
-          AND timestamp <= '${endDate}'
+        WHERE event_name = {completedStep:String}
+          AND timestamp >= {startDate:DateTime64}
+          AND timestamp <= {endDate:DateTime64}
         GROUP BY ${groupColumn}
       ),
       progressed AS (
         SELECT DISTINCT ${groupColumn} as id
         FROM analytics_db.events
-        WHERE event_name = '${nextStep}'
-          AND timestamp >= '${startDate}'
-          AND timestamp <= '${endDate}'
+        WHERE event_name = {nextStep:String}
+          AND timestamp >= {startDate:DateTime64}
+          AND timestamp <= {endDate:DateTime64}
       )
       SELECT
         c.id as userId,
-        '${completedStep}' as lastEvent,
+        {completedStep:String} as lastEvent,
         toString(c.completed_time) as lastEventTime
       FROM completed c
       LEFT JOIN progressed p ON c.id = p.id
@@ -128,9 +137,24 @@ export class FunnelService {
       userId: string;
       lastEvent: string;
       lastEventTime: string;
-    }>(sql);
+    }>(sql, {
+      completedStep,
+      nextStep,
+      startDate,
+      endDate,
+    });
 
     return result.data;
+  }
+
+  private validateStepNames(steps: string[]): void {
+    for (const step of steps) {
+      if (!EVENT_NAME_PATTERN.test(step)) {
+        throw new BadRequestException(
+          `Invalid step name: "${step}". Only alphanumeric characters, underscores, and dashes are allowed.`,
+        );
+      }
+    }
   }
 
   private async getStepCounts(
@@ -140,7 +164,19 @@ export class FunnelService {
     conversionWindow: number,
     groupColumn: string,
   ): Promise<number[]> {
-    const stepConditions = steps.map((step) => `event_name = '${step}'`).join(', ');
+    // Build windowFunnel conditions dynamically but safely
+    // Steps are validated before this method is called
+    const stepConditions = steps.map((_, idx) => `event_name = {step${idx}:String}`).join(', ');
+
+    // Build params object with indexed step names
+    const params: Record<string, unknown> = {
+      startDate,
+      endDate,
+      conversionWindow,
+    };
+    steps.forEach((step, idx) => {
+      params[`step${idx}`] = step;
+    });
 
     const sql = `
       SELECT
@@ -149,11 +185,11 @@ export class FunnelService {
       FROM (
         SELECT
           ${groupColumn},
-          windowFunnel(${conversionWindow})(timestamp, ${stepConditions}) as level
+          windowFunnel({conversionWindow:UInt32})(timestamp, ${stepConditions}) as level
         FROM analytics_db.events
-        WHERE timestamp >= '${startDate}'
-          AND timestamp <= '${endDate}'
-          AND event_name IN (${steps.map((s) => `'${s}'`).join(', ')})
+        WHERE timestamp >= {startDate:DateTime64}
+          AND timestamp <= {endDate:DateTime64}
+          AND event_name IN ({steps:Array(String)})
           ${groupColumn === 'user_id' ? 'AND user_id IS NOT NULL' : ''}
         GROUP BY ${groupColumn}
       )
@@ -161,7 +197,9 @@ export class FunnelService {
       ORDER BY level
     `;
 
-    const result = await this.clickhouse.query<{ level: string; users: string }>(sql);
+    params.steps = steps;
+
+    const result = await this.clickhouse.query<{ level: string; users: string }>(sql, params);
 
     // Convert to cumulative counts
     const levelCounts = new Map<number, number>();
@@ -173,7 +211,7 @@ export class FunnelService {
     const stepCounts: number[] = [];
     let cumulative = 0;
     for (let i = steps.length; i >= 0; i--) {
-      cumulative += levelCounts.get(i) || 0;
+      cumulative += levelCounts.get(i) ?? 0;
       stepCounts[i] = cumulative;
     }
 
@@ -201,15 +239,20 @@ export class FunnelService {
           JOIN analytics_db.events e2
             ON e1.${groupColumn} = e2.${groupColumn}
             AND e2.timestamp > e1.timestamp
-          WHERE e1.event_name = '${currentStep}'
-            AND e2.event_name = '${nextStep}'
-            AND e1.timestamp >= '${startDate}'
-            AND e1.timestamp <= '${endDate}'
+          WHERE e1.event_name = {currentStep:String}
+            AND e2.event_name = {nextStep:String}
+            AND e1.timestamp >= {startDate:DateTime64}
+            AND e1.timestamp <= {endDate:DateTime64}
             ${groupColumn === 'user_id' ? 'AND e1.user_id IS NOT NULL' : ''}
         )
       `;
 
-      const result = await this.clickhouse.query<{ avg_time: string }>(sql);
+      const result = await this.clickhouse.query<{ avg_time: string }>(sql, {
+        currentStep,
+        nextStep,
+        startDate,
+        endDate,
+      });
       avgTimes.push(result.data[0]?.avg_time ? parseFloat(result.data[0].avg_time) : null);
     }
 

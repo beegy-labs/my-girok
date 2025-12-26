@@ -1,15 +1,72 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 import { ID } from '@my-girok/nest-common';
 import { TrackEventDto } from './dto/track-event.dto';
 import { PageViewDto } from './dto/page-view.dto';
 import { IdentifyDto } from './dto/identify.dto';
 
+/**
+ * UUID pattern for strict validation (RFC 4122)
+ * Only allows hex characters and hyphens in correct positions
+ */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Whitelist of allowed tables for mutation operations
+ * Prevents SQL injection in ALTER TABLE commands
+ */
+const ALLOWED_MUTATION_TABLES = new Set([
+  'analytics_db.sessions_local',
+  'analytics_db.events_local',
+  'analytics_db.page_views_local',
+  'analytics_db.user_profiles_local',
+]);
+
+/**
+ * Whitelist of allowed tables for insert operations
+ */
+const ALLOWED_INSERT_TABLES = new Set([
+  'analytics_db.events',
+  'analytics_db.page_views',
+  'analytics_db.sessions',
+  'analytics_db.user_profiles',
+]);
+
 @Injectable()
 export class IngestionService {
   private readonly logger = new Logger(IngestionService.name);
 
   constructor(private readonly clickhouse: ClickHouseService) {}
+
+  /**
+   * Validate table name against whitelist
+   * @throws BadRequestException if table is not allowed
+   */
+  private validateInsertTable(table: string): void {
+    if (!ALLOWED_INSERT_TABLES.has(table)) {
+      throw new BadRequestException(`Invalid table name: ${table}`);
+    }
+  }
+
+  /**
+   * Validate mutation table name against whitelist
+   * @throws BadRequestException if table is not allowed
+   */
+  private validateMutationTable(table: string): void {
+    if (!ALLOWED_MUTATION_TABLES.has(table)) {
+      throw new BadRequestException(`Invalid mutation table name: ${table}`);
+    }
+  }
+
+  /**
+   * Validate UUID format strictly
+   * @throws BadRequestException if UUID is invalid
+   */
+  private validateUUID(value: string, fieldName: string): void {
+    if (!UUID_PATTERN.test(value)) {
+      throw new BadRequestException(`Invalid ${fieldName} format: must be a valid UUID`);
+    }
+  }
 
   async trackEvents(events: TrackEventDto[], clientIp: string): Promise<void> {
     const anonymizedIp = this.anonymizeIp(clientIp);
@@ -55,15 +112,31 @@ export class IngestionService {
   }
 
   async identify(dto: IdentifyDto): Promise<void> {
-    // Update sessions with user_id
-    await this.clickhouse.command(`
-      ALTER TABLE analytics_db.sessions_local
-      UPDATE user_id = '${dto.userId}'
-      WHERE anonymous_id = '${dto.anonymousId}'
-        AND user_id IS NULL
-    `);
+    // Validate UUIDs strictly to prevent SQL injection
+    // UUID pattern only allows hex characters [0-9a-f] and hyphens
+    this.validateUUID(dto.userId, 'userId');
+    this.validateUUID(dto.anonymousId, 'anonymousId');
 
-    // Update user profile
+    // Validate table name against whitelist
+    const mutationTable = 'analytics_db.sessions_local';
+    this.validateMutationTable(mutationTable);
+
+    // ClickHouse ALTER TABLE UPDATE doesn't support parameterized queries.
+    // Security is ensured by:
+    // 1. UUID validation: only hex chars [0-9a-f] and hyphens allowed
+    // 2. Table whitelist: only predefined tables allowed
+    // This is a safe interpolation because UUID regex guarantees no SQL metacharacters.
+    await this.clickhouse.command(
+      `ALTER TABLE ${mutationTable} ` +
+        `UPDATE user_id = '${dto.userId}' ` +
+        `WHERE anonymous_id = '${dto.anonymousId}' AND user_id IS NULL`,
+    );
+
+    // Validate insert table
+    const profileTable = 'analytics_db.user_profiles';
+    this.validateInsertTable(profileTable);
+
+    // Update user profile using ReplacingMergeTree (insert replaces existing row)
     const profile = {
       user_id: dto.userId,
       updated_at: new Date().toISOString(),
@@ -87,7 +160,7 @@ export class IngestionService {
       properties: JSON.stringify(dto.traits || {}),
     };
 
-    await this.clickhouse.insert('analytics_db.user_profiles', [profile]);
+    await this.clickhouse.insert(profileTable, [profile]);
   }
 
   async startSession(
