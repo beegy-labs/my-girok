@@ -109,9 +109,13 @@ interface User {
 enum SectionType {
   SKILLS,
   EXPERIENCE,
-  PROJECT,
+  PROJECT, // @deprecated - kept for backward compatibility
   EDUCATION,
   CERTIFICATE,
+  KEY_ACHIEVEMENTS, // 핵심 성과
+  APPLICATION_REASON, // 지원 동기
+  ATTACHMENTS, // 첨부파일
+  COVER_LETTER, // 자기소개서
 }
 enum DegreeType {
   HIGH_SCHOOL,
@@ -125,6 +129,7 @@ enum Gender {
   MALE,
   FEMALE,
   OTHER,
+  PREFER_NOT_TO_SAY,
 }
 
 // Core

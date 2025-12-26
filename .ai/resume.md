@@ -157,6 +157,14 @@ const handleSubmit = async (data) => {
 
 ## Recent Updates
 
+**2025-12-26**: Resume DB Optimization
+
+- Removed `birthYear` field - use `birthDate` only
+- Added `PREFER_NOT_TO_SAY` to Gender enum
+- Extended SectionType: KEY_ACHIEVEMENTS, APPLICATION_REASON, ATTACHMENTS, COVER_LETTER
+- Added soft delete (deletedAt) to Resume
+- ShareLink.token now uses UUIDv7
+
 **2025-12-23**: Fixed PDF rendering crash (#321)
 
 - Added `sanitizeText()` for emoji/Unicode removal

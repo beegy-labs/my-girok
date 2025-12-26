@@ -81,14 +81,18 @@ model ExperienceProject {
 
 ### Enums
 
-| Enum            | Values                                                  |
-| --------------- | ------------------------------------------------------- |
-| PaperSize       | A4, LETTER                                              |
-| Gender          | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                  |
-| MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                     |
-| DegreeType      | HIGH_SCHOOL, ASSOCIATE_2/3, BACHELOR, MASTER, DOCTORATE |
-| SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE     |
-| CopyStatus      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED        |
+| Enum            | Values                                                                                                               |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| PaperSize       | A4, LETTER                                                                                                           |
+| Gender          | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                                                                               |
+| MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                                                                                  |
+| DegreeType      | HIGH_SCHOOL, ASSOCIATE_2/3, BACHELOR, MASTER, DOCTORATE                                                              |
+| SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE, KEY_ACHIEVEMENTS, APPLICATION_REASON, ATTACHMENTS, COVER_LETTER |
+| CopyStatus      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED                                                                     |
+
+### Soft Delete
+
+Resume supports soft delete with `deletedAt` timestamp. Use `findMany({ where: { deletedAt: null } })` for active resumes.
 
 ## File Storage (MinIO)
 
