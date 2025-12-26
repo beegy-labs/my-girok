@@ -178,3 +178,89 @@ export function isAuthenticatedOperator(
 ): entity is AuthenticatedOperator {
   return entity.type === 'OPERATOR';
 }
+
+// ============================================
+// Permission & Access Helpers
+// ============================================
+
+/**
+ * Check if authenticated entity has a specific permission
+ * @param entity - Authenticated user, admin, or operator
+ * @param permission - Permission string (e.g., 'legal:read', 'user:create')
+ * @returns boolean - true if entity has the permission
+ */
+export function hasPermission(entity: AuthenticatedEntity, permission: string): boolean {
+  if (entity.type === 'ADMIN') {
+    // Wildcard permission check
+    if (entity.permissions.includes('*')) return true;
+    // Exact match
+    if (entity.permissions.includes(permission)) return true;
+    // Resource wildcard (e.g., 'legal:*' matches 'legal:read')
+    const [resource] = permission.split(':');
+    return entity.permissions.includes(`${resource}:*`);
+  }
+
+  if (entity.type === 'OPERATOR') {
+    return entity.permissions.includes(permission);
+  }
+
+  // Users don't have permissions in the same sense
+  return false;
+}
+
+/**
+ * Check if authenticated entity has access to a specific service
+ * @param entity - Authenticated user, admin, or operator
+ * @param serviceSlug - Service slug (e.g., 'my-girok', 'personal')
+ * @returns boolean - true if entity has access to the service
+ */
+export function hasServiceAccess(entity: AuthenticatedEntity, serviceSlug: string): boolean {
+  if (entity.type === 'USER') {
+    const service = entity.services[serviceSlug];
+    return service?.status === 'ACTIVE';
+  }
+
+  if (entity.type === 'ADMIN') {
+    // System scope admins have access to all services
+    if (entity.scope === 'SYSTEM') return true;
+    return !!entity.services[serviceSlug];
+  }
+
+  if (entity.type === 'OPERATOR') {
+    return entity.serviceSlug === serviceSlug;
+  }
+
+  return false;
+}
+
+/**
+ * Check if authenticated entity has access to a specific country within a service
+ * @param entity - Authenticated user, admin, or operator
+ * @param serviceSlug - Service slug
+ * @param countryCode - ISO 3166-1 alpha-2 country code
+ * @returns boolean - true if entity has access
+ */
+export function hasCountryAccess(
+  entity: AuthenticatedEntity,
+  serviceSlug: string,
+  countryCode: string,
+): boolean {
+  if (entity.type === 'USER') {
+    const service = entity.services[serviceSlug];
+    if (!service || service.status !== 'ACTIVE') return false;
+    return service.countries.includes(countryCode);
+  }
+
+  if (entity.type === 'ADMIN') {
+    if (entity.scope === 'SYSTEM') return true;
+    const service = entity.services[serviceSlug];
+    if (!service) return false;
+    return service.countries.includes(countryCode);
+  }
+
+  if (entity.type === 'OPERATOR') {
+    return entity.serviceSlug === serviceSlug && entity.countryCode === countryCode;
+  }
+
+  return false;
+}

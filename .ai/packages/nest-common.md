@@ -24,11 +24,14 @@ import {
   generateIds,
   sortByUUID,
   filterByTimeRange,
+  getCreatedAt,
+  parseUUIDv7,
   isUUID,
   isUUIDv7,
   // ClickHouse
   ClickHouseService,
   ClickHouseModule,
+  createQueryBuilder,
 } from '@my-girok/nest-common';
 ```
 
@@ -161,8 +164,26 @@ class CreateDto {
 | `generateIds`       | Generate multiple UUIDs            |
 | `sortByUUID`        | Sort objects by UUID field         |
 | `filterByTimeRange` | Filter by UUID timestamp           |
+| `getCreatedAt`      | Extract creation time from entity  |
+| `parseUUIDv7`       | Parse UUID into components         |
 | `isUUID`            | Check if valid UUID                |
 | `isUUIDv7`          | Check if valid UUIDv7              |
+
+### Utility Functions
+
+```typescript
+// Sort by UUID (chronological for UUIDv7)
+const sorted = sortByUUID(items, 'id', 'desc');
+
+// Filter by time range using UUID timestamp
+const recent = filterByTimeRange(items, 'id', startDate, endDate);
+
+// Extract creation time from entity
+const createdAt = getCreatedAt(entity); // Date | null
+
+// Parse UUIDv7 into components
+const { timestamp, version, variant, isValid } = parseUUIDv7(uuid);
+```
 
 ### Legacy ULID Support
 
@@ -192,13 +213,19 @@ const sql = `SELECT * FROM events ${whereClause} LIMIT 100`;
 const result = await clickhouse.query(sql, params);
 ```
 
-| Method                           | Purpose                       |
-| -------------------------------- | ----------------------------- |
-| `where()`                        | Add required condition        |
-| `whereOptional()`                | Add condition if value exists |
-| `whereIn()`                      | IN clause with array          |
-| `whereBetween()`                 | Range condition               |
-| `whereNull()` / `whereNotNull()` | NULL checks                   |
+| Method                           | Purpose                                       |
+| -------------------------------- | --------------------------------------------- |
+| `where()`                        | Add required condition                        |
+| `whereOptional()`                | Add condition if value exists                 |
+| `whereIn()`                      | IN clause with array                          |
+| `whereInOptional()`              | IN clause if array not empty                  |
+| `whereBetween()`                 | Range condition                               |
+| `whereNull()` / `whereNotNull()` | NULL checks                                   |
+| `whereRaw()`                     | Raw SQL condition (use caution)               |
+| `addParam()`                     | Add parameter manually                        |
+| `getConditions()`                | Get conditions joined with AND                |
+| `reset()`                        | Reset builder for reuse                       |
+| `build()`                        | Returns `{ conditions, params, whereClause }` |
 
 Features:
 
@@ -241,12 +268,14 @@ export class MyService {
 }
 ```
 
-| Export              | Purpose                       |
-| ------------------- | ----------------------------- |
-| `ClickHouseService` | Query/insert client           |
-| `ClickHouseModule`  | NestJS module with config     |
-| `isHealthy()`       | Check connection status       |
-| `batchInsert()`     | Chunked insert for large data |
+| Export                   | Purpose                        |
+| ------------------------ | ------------------------------ |
+| `ClickHouseService`      | Query/insert client            |
+| `ClickHouseModule`       | NestJS module with config      |
+| `createQueryBuilder`     | Create type-safe query builder |
+| `ClickHouseQueryBuilder` | Query builder class            |
+| `isHealthy()`            | Check connection status        |
+| `batchInsert()`          | Chunked insert for large data  |
 
 ### Environment Variables
 

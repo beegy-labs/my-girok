@@ -89,6 +89,41 @@ interface OperatorJwtPayload {
 }
 
 type JwtPayloadUnion = UserJwtPayload | AdminJwtPayload | OperatorJwtPayload;
+
+// Type Guards
+function isUserPayload(payload: JwtPayloadUnion): payload is UserJwtPayload;
+function isAdminPayload(payload: JwtPayloadUnion): payload is AdminJwtPayload;
+function isOperatorPayload(payload: JwtPayloadUnion): payload is OperatorJwtPayload;
+function isLegacyPayload(payload: JwtPayloadUnion): payload is LegacyUserJwtPayload;
+
+// Entity Type Guards
+function isAuthenticatedUser(entity: AuthenticatedEntity): entity is AuthenticatedUser;
+function isAuthenticatedAdmin(entity: AuthenticatedEntity): entity is AuthenticatedAdmin;
+function isAuthenticatedOperator(entity: AuthenticatedEntity): entity is AuthenticatedOperator;
+
+// Permission & Access Helpers
+function hasPermission(entity: AuthenticatedEntity, permission: string): boolean;
+function hasServiceAccess(entity: AuthenticatedEntity, serviceSlug: string): boolean;
+function hasCountryAccess(
+  entity: AuthenticatedEntity,
+  serviceSlug: string,
+  countryCode: string,
+): boolean;
+```
+
+### Permission & Access Helper Usage
+
+```typescript
+import { hasPermission, hasServiceAccess, hasCountryAccess } from '@my-girok/types';
+
+// Check permission (supports wildcards: '*', 'legal:*')
+if (hasPermission(user, 'legal:read')) { ... }
+
+// Check service access
+if (hasServiceAccess(user, 'my-girok')) { ... }
+
+// Check country access within service
+if (hasCountryAccess(user, 'my-girok', 'KR')) { ... }
 ```
 
 ## User
