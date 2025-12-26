@@ -118,8 +118,10 @@ SIGTERM → /health/ready 503 → drain 5s → close → exit 0
 
 UUIDv7-based ID generation for consistent, time-sortable IDs across services.
 
+**Security**: Uses `crypto.randomBytes()` for cryptographically secure random values.
+
 ```typescript
-// Generate ID
+// Generate ID (uses crypto.randomBytes internally)
 const id = ID.generate(); // "01935c6d-c2d0-7abc-8def-1234567890ab"
 
 // Validate
@@ -173,6 +175,13 @@ import { ULID, ulidExtension, ParseUlidPipe } from '@my-girok/nest-common';
 
 Shared ClickHouse client for analytics and audit services.
 
+Features:
+
+- Connection retry with exponential backoff
+- Configurable async insert behavior
+- Batch insert for large datasets
+- Health check support
+
 ```typescript
 // Module import
 @Module({
@@ -195,23 +204,39 @@ export class MyService {
   async insert() {
     await this.clickhouse.insert('table', [{ id, data }]);
   }
+
+  async batchInsert() {
+    // For large datasets (auto-chunks by 10000)
+    await this.clickhouse.batchInsert('table', largeDataset, 5000);
+  }
+
+  isHealthy() {
+    return this.clickhouse.isHealthy();
+  }
 }
 ```
 
-| Export              | Purpose                   |
-| ------------------- | ------------------------- |
-| `ClickHouseService` | Query/insert client       |
-| `ClickHouseModule`  | NestJS module with config |
+| Export              | Purpose                       |
+| ------------------- | ----------------------------- |
+| `ClickHouseService` | Query/insert client           |
+| `ClickHouseModule`  | NestJS module with config     |
+| `isHealthy()`       | Check connection status       |
+| `batchInsert()`     | Chunked insert for large data |
 
 ### Environment Variables
 
-| Variable              | Required | Description          |
-| --------------------- | -------- | -------------------- |
-| `CLICKHOUSE_HOST`     | Yes      | ClickHouse host      |
-| `CLICKHOUSE_PORT`     | No       | Port (default: 8123) |
-| `CLICKHOUSE_DATABASE` | Yes      | Database name        |
-| `CLICKHOUSE_USERNAME` | Yes      | Username             |
-| `CLICKHOUSE_PASSWORD` | Yes      | Password             |
+| Variable                           | Required | Default | Description                   |
+| ---------------------------------- | -------- | ------- | ----------------------------- |
+| `CLICKHOUSE_HOST`                  | Yes      | -       | ClickHouse host               |
+| `CLICKHOUSE_PORT`                  | No       | 8123    | Port                          |
+| `CLICKHOUSE_DATABASE`              | Yes      | -       | Database name                 |
+| `CLICKHOUSE_USERNAME`              | Yes      | -       | Username                      |
+| `CLICKHOUSE_PASSWORD`              | Yes      | -       | Password                      |
+| `CLICKHOUSE_ASYNC_INSERT`          | No       | true    | Enable async insert           |
+| `CLICKHOUSE_WAIT_FOR_ASYNC_INSERT` | No       | true    | Wait for insert (audit: true) |
+| `CLICKHOUSE_MAX_RETRIES`           | No       | 3       | Connection retry attempts     |
+
+**Tip**: For analytics service, set `CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=false` for higher throughput.
 
 ---
 

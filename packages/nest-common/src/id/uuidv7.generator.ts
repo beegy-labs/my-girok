@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 /**
  * RFC 9562 UUIDv7 Generator
  *
@@ -8,6 +10,8 @@
  * - 2 bits: Variant (10)
  * - 62 bits: rand_b (random)
  *
+ * Security: Uses crypto.randomBytes() for cryptographically secure random values
+ *
  * @see https://www.rfc-editor.org/rfc/rfc9562.html
  */
 export class UUIDv7 {
@@ -16,6 +20,7 @@ export class UUIDv7 {
 
   /**
    * Generate RFC 9562 compliant UUIDv7
+   * Uses crypto.randomBytes for security-critical random generation
    * @returns UUID string in format: xxxxxxxx-xxxx-7xxx-yxxx-xxxxxxxxxxxx
    */
   static generate(): string {
@@ -25,16 +30,18 @@ export class UUIDv7 {
     if (timestamp === this.lastTimestamp) {
       this.counter++;
       // Overflow protection: if counter exceeds 12 bits, wait for next ms
+      // This is extremely rare (>4096 UUIDs in 1ms) and acceptable per RFC 9562
       if (this.counter > 0xfff) {
         this.counter = 0;
-        // Busy wait for next millisecond
+        // Busy wait for next millisecond - rare edge case
         while (Date.now() === timestamp) {
-          // spin
+          // spin - this loop runs at most ~1ms
         }
         return this.generate();
       }
     } else {
-      this.counter = Math.floor(Math.random() * 0x100); // Random start for new ms
+      // Random start for new millisecond (0-255) for better distribution
+      this.counter = this.getSecureRandomByte() & 0xff;
       this.lastTimestamp = timestamp;
     }
 
@@ -44,12 +51,12 @@ export class UUIDv7 {
     // 12-bit rand_a (using counter for monotonicity)
     const randA = (this.counter & 0xfff).toString(16).padStart(3, '0');
 
-    // 62-bit rand_b (random bytes)
-    const randB = this.generateRandomHex(15);
+    // 62-bit rand_b (cryptographically secure random bytes)
+    const randB = this.generateSecureRandomHex(15);
 
     // Construct UUID: tttttttt-tttt-7xxx-yxxx-xxxxxxxxxxxx
     // y = 8, 9, a, or b (variant bits: 10xx)
-    const variantByte = 0x80 | (Math.floor(Math.random() * 64) & 0x3f);
+    const variantByte = 0x80 | (this.getSecureRandomByte() & 0x3f);
     const variantHex = variantByte.toString(16).padStart(2, '0');
 
     return `${timestampHex.slice(0, 8)}-${timestampHex.slice(8, 12)}-7${randA}-${variantHex}${randB.slice(0, 2)}-${randB.slice(2, 14)}`;
@@ -102,11 +109,9 @@ export class UUIDv7 {
   static fromTime(time: Date | number): string {
     const ts = typeof time === 'number' ? time : time.getTime();
     const timestampHex = ts.toString(16).padStart(12, '0');
-    const randA = Math.floor(Math.random() * 0xfff)
-      .toString(16)
-      .padStart(3, '0');
-    const randB = this.generateRandomHex(15);
-    const variantByte = 0x80 | (Math.floor(Math.random() * 64) & 0x3f);
+    const randA = (this.getSecureRandomByte() & 0xfff).toString(16).padStart(3, '0');
+    const randB = this.generateSecureRandomHex(15);
+    const variantByte = 0x80 | (this.getSecureRandomByte() & 0x3f);
     const variantHex = variantByte.toString(16).padStart(2, '0');
 
     return `${timestampHex.slice(0, 8)}-${timestampHex.slice(8, 12)}-7${randA}-${variantHex}${randB.slice(0, 2)}-${randB.slice(2, 14)}`;
@@ -121,12 +126,22 @@ export class UUIDv7 {
     return this.extractTimestamp(uuid).toISOString();
   }
 
-  private static generateRandomHex(length: number): string {
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += Math.floor(Math.random() * 16).toString(16);
-    }
-    return result;
+  /**
+   * Generate cryptographically secure random hex string
+   * @param length - Number of hex characters
+   * @returns Hex string
+   */
+  private static generateSecureRandomHex(length: number): string {
+    const bytes = randomBytes(Math.ceil(length / 2));
+    return bytes.toString('hex').slice(0, length);
+  }
+
+  /**
+   * Get a single cryptographically secure random byte
+   * @returns Random number 0-255
+   */
+  private static getSecureRandomByte(): number {
+    return randomBytes(1)[0];
   }
 }
 

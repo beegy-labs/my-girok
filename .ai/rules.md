@@ -39,7 +39,7 @@
 | Types    | Duplicate types → Use `packages/types`          |
 | Utils    | Duplicate NestJS/UI utils → Use shared packages |
 | DB       | Use `prisma migrate` → Use goose (SSOT)         |
-| DB       | Use UUID type → Use TEXT with gen_random_uuid() |
+| DB       | Use TEXT for IDs → Use native UUID with UUIDv7  |
 | DB       | Auto-sync ArgoCD for DB → Manual Sync only      |
 | Code     | Prisma in Controllers → Use Services            |
 | Code     | Hardcode secrets → Use ConfigService            |
@@ -130,7 +130,7 @@ pnpm prisma db pull && pnpm prisma generate
 ```sql
 -- +goose Up
 CREATE TABLE features (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 );
 

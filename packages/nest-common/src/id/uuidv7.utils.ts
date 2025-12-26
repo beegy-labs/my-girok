@@ -62,7 +62,15 @@ export function filterByTimeRange<T extends Record<string, unknown>>(
  */
 export function getCreatedAt<T extends { id: string }>(entity: T): Date | null {
   try {
-    return ID.getTimestamp(entity.id);
+    if (!ID.isValid(entity.id)) {
+      return null;
+    }
+    const date = ID.getTimestamp(entity.id);
+    // Check for invalid date (NaN)
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    return date;
   } catch {
     return null;
   }
