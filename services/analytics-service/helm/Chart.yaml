@@ -1,0 +1,20 @@
+apiVersion: v2
+name: analytics-service
+description: Analytics and Business Intelligence microservice for My-Girok (ClickHouse-based)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - analytics
+  - business-intelligence
+  - clickhouse
+  - events
+
+maintainers:
+  - name: Beegy Team
+    email: dev@beegy.net
+
+home: https://github.com/beegy/my-girok
+sources:
+  - https://github.com/beegy/my-girok
