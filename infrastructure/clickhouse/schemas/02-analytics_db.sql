@@ -11,9 +11,9 @@ CREATE DATABASE IF NOT EXISTS analytics_db ON CLUSTER 'my_cluster';
 -- Sessions
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.sessions_local ON CLUSTER 'my_cluster' (
-    session_id String,                  -- ULID
-    user_id Nullable(String),           -- ULID (null for anonymous)
-    anonymous_id String,                -- Generated client-side
+    session_id UUID DEFAULT generateUUIDv7(), -- UUIDv7 (RFC 9562)
+    user_id Nullable(UUID),             -- UUIDv7 (null for anonymous)
+    anonymous_id UUID,                  -- UUIDv7 (generated client-side)
 
     started_at DateTime64(3),
     ended_at Nullable(DateTime64(3)),
@@ -54,17 +54,17 @@ ORDER BY (toDate(started_at), session_id)
 TTL started_at + INTERVAL 1 YEAR;
 
 CREATE TABLE IF NOT EXISTS analytics_db.sessions ON CLUSTER 'my_cluster' AS analytics_db.sessions_local
-ENGINE = Distributed('my_cluster', 'analytics_db', 'sessions_local', xxHash64(session_id));
+ENGINE = Distributed('my_cluster', 'analytics_db', 'sessions_local', xxHash64(toString(session_id)));
 
 
 -- ============================================================
 -- Events
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.events_local ON CLUSTER 'my_cluster' (
-    id String,                          -- ULID
+    id UUID DEFAULT generateUUIDv7(),   -- UUIDv7 (RFC 9562)
     timestamp DateTime64(3),
-    session_id String,
-    user_id Nullable(String),
+    session_id UUID,                     -- UUIDv7
+    user_id Nullable(UUID),              -- UUIDv7
 
     event_name LowCardinality(String),  -- 'click', 'form_submit', 'purchase', etc.
     event_category LowCardinality(String), -- 'navigation', 'conversion', 'engagement'
@@ -84,17 +84,17 @@ ORDER BY (session_id, timestamp)
 TTL timestamp + INTERVAL 90 DAY;
 
 CREATE TABLE IF NOT EXISTS analytics_db.events ON CLUSTER 'my_cluster' AS analytics_db.events_local
-ENGINE = Distributed('my_cluster', 'analytics_db', 'events_local', xxHash64(session_id));
+ENGINE = Distributed('my_cluster', 'analytics_db', 'events_local', xxHash64(toString(session_id)));
 
 
 -- ============================================================
 -- Page Views
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.page_views_local ON CLUSTER 'my_cluster' (
-    id String,
+    id UUID DEFAULT generateUUIDv7(),   -- UUIDv7 (RFC 9562)
     timestamp DateTime64(3),
-    session_id String,
-    user_id Nullable(String),
+    session_id UUID,                     -- UUIDv7
+    user_id Nullable(UUID),              -- UUIDv7
 
     page_path String,
     page_title String,
@@ -118,7 +118,7 @@ ORDER BY (session_id, timestamp)
 TTL timestamp + INTERVAL 90 DAY;
 
 CREATE TABLE IF NOT EXISTS analytics_db.page_views ON CLUSTER 'my_cluster' AS analytics_db.page_views_local
-ENGINE = Distributed('my_cluster', 'analytics_db', 'page_views_local', xxHash64(session_id));
+ENGINE = Distributed('my_cluster', 'analytics_db', 'page_views_local', xxHash64(toString(session_id)));
 
 
 -- ============================================================
@@ -126,8 +126,8 @@ ENGINE = Distributed('my_cluster', 'analytics_db', 'page_views_local', xxHash64(
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.funnel_events_local ON CLUSTER 'my_cluster' (
     timestamp DateTime64(3),
-    session_id String,
-    user_id Nullable(String),
+    session_id UUID,                     -- UUIDv7
+    user_id Nullable(UUID),              -- UUIDv7
 
     funnel_name LowCardinality(String), -- 'signup', 'checkout', 'onboarding'
     step_number UInt8,
@@ -145,14 +145,14 @@ ORDER BY (funnel_name, session_id, step_number)
 TTL timestamp + INTERVAL 90 DAY;
 
 CREATE TABLE IF NOT EXISTS analytics_db.funnel_events ON CLUSTER 'my_cluster' AS analytics_db.funnel_events_local
-ENGINE = Distributed('my_cluster', 'analytics_db', 'funnel_events_local', xxHash64(session_id));
+ENGINE = Distributed('my_cluster', 'analytics_db', 'funnel_events_local', xxHash64(toString(session_id)));
 
 
 -- ============================================================
 -- User Profiles (Aggregated)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.user_profiles_local ON CLUSTER 'my_cluster' (
-    user_id String,
+    user_id UUID,                        -- UUIDv7
     updated_at DateTime64(3),
 
     first_seen_at DateTime64(3),
@@ -188,17 +188,17 @@ CREATE TABLE IF NOT EXISTS analytics_db.user_profiles_local ON CLUSTER 'my_clust
 ORDER BY user_id;
 
 CREATE TABLE IF NOT EXISTS analytics_db.user_profiles ON CLUSTER 'my_cluster' AS analytics_db.user_profiles_local
-ENGINE = Distributed('my_cluster', 'analytics_db', 'user_profiles_local', xxHash64(user_id));
+ENGINE = Distributed('my_cluster', 'analytics_db', 'user_profiles_local', xxHash64(toString(user_id)));
 
 
 -- ============================================================
 -- Error Tracking
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.errors_local ON CLUSTER 'my_cluster' (
-    id String,                          -- ULID
+    id UUID DEFAULT generateUUIDv7(),   -- UUIDv7 (RFC 9562)
     timestamp DateTime64(3),
-    session_id String,
-    user_id Nullable(String),
+    session_id UUID,                     -- UUIDv7
+    user_id Nullable(UUID),              -- UUIDv7
 
     error_type LowCardinality(String),  -- 'javascript', 'network', 'api'
     error_message String,
@@ -218,4 +218,4 @@ ORDER BY (error_type, timestamp)
 TTL timestamp + INTERVAL 30 DAY;
 
 CREATE TABLE IF NOT EXISTS analytics_db.errors ON CLUSTER 'my_cluster' AS analytics_db.errors_local
-ENGINE = Distributed('my_cluster', 'analytics_db', 'errors_local', xxHash64(session_id));
+ENGINE = Distributed('my_cluster', 'analytics_db', 'errors_local', xxHash64(toString(session_id)));

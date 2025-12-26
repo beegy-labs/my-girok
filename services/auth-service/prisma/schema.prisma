@@ -10,7 +10,7 @@ datasource db {
 }
 
 model User {
-  id               String              @id @default(uuid())
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email            String              @unique
   password         String?
   name             String?
@@ -50,8 +50,8 @@ model User {
 }
 
 model Session {
-  id           String   @id @default(uuid())
-  userId       String   @map("user_id")
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
   refreshToken String   @unique @map("refresh_token")
   expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -63,12 +63,12 @@ model Session {
 }
 
 model DomainAccessToken {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   domain    String
   token     String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
-  userId    String   @map("user_id")
+  userId    String   @map("user_id") @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -78,7 +78,7 @@ model DomainAccessToken {
 }
 
 model OAuthProviderConfig {
-  id           String       @id @default(uuid())
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   provider     AuthProvider @unique
   enabled      Boolean      @default(true)
   description  String?
@@ -87,13 +87,13 @@ model OAuthProviderConfig {
   clientSecret String?      @map("client_secret")
   displayName  String       @map("display_name")
   updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
-  updatedBy    String?      @map("updated_by")
+  updatedBy    String?      @map("updated_by") @db.Uuid
 
   @@map("oauth_provider_configs")
 }
 
 model LegalDocument {
-  id                                        String              @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id                                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type                                      LegalDocumentType
   version                                   String              @db.VarChar(50)
   locale                                    String              @default("ko") @db.VarChar(10)
@@ -104,9 +104,9 @@ model LegalDocument {
   isActive                                  Boolean             @default(true) @map("is_active")
   createdAt                                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                                 DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  created_by                                String?
-  updated_by                                String?
-  serviceId                                 String?             @map("service_id")
+  created_by                                String?             @db.Uuid
+  updated_by                                String?             @db.Uuid
+  serviceId                                 String?             @map("service_id") @db.Uuid
   countryCode                               String?             @map("country_code") @db.VarChar(2)
 
   admins_legal_documents_created_byToadmins admins?             @relation("legal_documents_created_byToadmins", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -123,10 +123,10 @@ model LegalDocument {
 }
 
 model UserConsent {
-  id              String         @id @default(dbgenerated("(gen_random_uuid())::text"))
-  userId          String         @map("user_id")
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String         @map("user_id") @db.Uuid
   consentType     ConsentType    @map("consent_type")
-  documentId      String?        @map("document_id")
+  documentId      String?        @map("document_id") @db.Uuid
   documentVersion String?        @map("document_version") @db.VarChar(50)
   agreed          Boolean        @default(true)
   agreedAt        DateTime       @map("agreed_at") @db.Timestamptz(6)
@@ -134,7 +134,7 @@ model UserConsent {
   ipAddress       String?        @map("ip_address") @db.VarChar(45)
   userAgent       String?        @map("user_agent")
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  serviceId       String?        @map("service_id")
+  serviceId       String?        @map("service_id") @db.Uuid
   countryCode     String         @map("country_code") @db.VarChar(2)
 
   document LegalDocument? @relation(fields: [documentId], references: [id], onUpdate: NoAction)
@@ -151,8 +151,8 @@ model UserConsent {
 }
 
 model admin_sessions {
-  id            String   @id @default(dbgenerated("(gen_random_uuid())::text"))
-  admin_id      String
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admin_id      String   @db.Uuid
   refresh_token String   @unique
   expires_at    DateTime @db.Timestamptz(6)
   created_at    DateTime @default(now()) @db.Timestamptz(6)
@@ -163,9 +163,9 @@ model admin_sessions {
 }
 
 model admin_user_links {
-  id         String          @id @default(dbgenerated("(gen_random_uuid())::text"))
-  admin_id   String
-  user_id    String
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admin_id   String          @db.Uuid
+  user_id    String          @db.Uuid
   link_type  admin_link_type @default(OPERATOR)
   created_at DateTime        @default(now()) @db.Timestamptz(6)
   admins     admins          @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -178,14 +178,14 @@ model admin_user_links {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model admins {
-  id                                                 String               @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id                                                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email                                              String               @unique
   password                                           String
   name                                               String
   scope                                              admin_scope          @default(TENANT)
-  tenant_id                                          String?
-  parent_id                                          String?
-  role_id                                            String
+  tenant_id                                          String?              @db.Uuid
+  parent_id                                          String?              @db.Uuid
+  role_id                                            String               @db.Uuid
   is_active                                          Boolean              @default(true)
   last_login_at                                      DateTime?            @db.Timestamptz(6)
   created_at                                         DateTime             @default(now()) @db.Timestamptz(6)
@@ -217,11 +217,11 @@ model admins {
 }
 
 model audit_logs {
-  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
-  admin_id     String
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admin_id     String   @db.Uuid
   action       String
   resource     String
-  resource_id  String?
+  resource_id  String?  @db.Uuid
   before_state Json?
   after_state  Json?
   ip_address   String?
@@ -243,7 +243,7 @@ model goose_db_version {
 }
 
 model permissions {
-  id                  String               @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   resource            String
   action              String
   scope               admin_scope?
@@ -251,7 +251,7 @@ model permissions {
   description         String?
   category            String
   tenant_type         tenant_type?
-  service_id          String?              @map("service_id")
+  service_id          String?              @map("service_id") @db.Uuid
 
   role_permissions    role_permissions[]
   operatorPermissions OperatorPermission[]
@@ -264,8 +264,8 @@ model permissions {
 }
 
 model role_permissions {
-  role_id       String
-  permission_id String
+  role_id       String      @db.Uuid
+  permission_id String      @db.Uuid
   conditions    Json?
   permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -275,18 +275,18 @@ model role_permissions {
 }
 
 model roles {
-  id               String             @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name             String
   display_name     String
   description      String?
   scope            admin_scope
   tenant_type      tenant_type?
   level            Int                @default(0)
-  parent_id        String?
+  parent_id        String?            @db.Uuid
   is_system        Boolean            @default(false)
   created_at       DateTime           @default(now()) @db.Timestamptz(6)
   updated_at       DateTime           @default(now()) @db.Timestamptz(6)
-  service_id       String?            @map("service_id")
+  service_id       String?            @map("service_id") @db.Uuid
   country_code     String?            @map("country_code") @db.VarChar(2)
 
   admins           admins[]
@@ -304,14 +304,14 @@ model roles {
 }
 
 model tenants {
-  id          String        @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   type        tenant_type   @default(INTERNAL)
   slug        String        @unique
   status      tenant_status @default(PENDING)
   settings    Json?
   approved_at DateTime?     @db.Timestamptz(6)
-  approved_by String?
+  approved_by String?       @db.Uuid
   created_at  DateTime      @default(now()) @db.Timestamptz(6)
   updated_at  DateTime      @default(now()) @db.Timestamptz(6)
   admins      admins[]
@@ -321,7 +321,7 @@ model tenants {
 }
 
 model Service {
-  id               String        @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   slug             String        @unique @db.VarChar(50)
   name             String        @db.VarChar(100)
   description      String?
@@ -352,8 +352,8 @@ model Service {
 }
 
 model ServiceConsentRequirement {
-  id             String            @id @default(dbgenerated("(gen_random_uuid())::text"))
-  serviceId      String            @map("service_id")
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceId      String            @map("service_id") @db.Uuid
   countryCode    String            @map("country_code") @db.VarChar(2)
   consentType    ConsentType       @map("consent_type")
   isRequired     Boolean           @default(false) @map("is_required")
@@ -372,7 +372,7 @@ model ServiceConsentRequirement {
 }
 
 model LawRegistry {
-  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   code        String   @unique @db.VarChar(20)
   countryCode String   @map("country_code") @db.VarChar(2)
   name        String   @db.VarChar(100)
@@ -387,11 +387,11 @@ model LawRegistry {
 }
 
 model UserService {
-  id          String            @id @default(dbgenerated("(gen_random_uuid())::text"))
-  userId      String            @map("user_id")
-  serviceId   String            @map("service_id")
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String            @map("user_id") @db.Uuid
+  serviceId   String            @map("service_id") @db.Uuid
   status      UserServiceStatus @default(ACTIVE)
-  tierId      String?           @map("tier_id")
+  tierId      String?           @map("tier_id") @db.Uuid
   countryCode String            @map("country_code") @db.VarChar(2)
   joinedAt    DateTime          @default(now()) @map("joined_at") @db.Timestamptz(6)
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -411,8 +411,8 @@ model UserService {
 }
 
 model PersonalInfo {
-  id               String    @id @default(dbgenerated("(gen_random_uuid())::text"))
-  userId           String    @unique @map("user_id")
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @unique @map("user_id") @db.Uuid
   name             String?   @db.VarChar(100)
   birthDate        DateTime? @map("birth_date") @db.Date
   gender           Gender?
@@ -434,11 +434,11 @@ model PersonalInfo {
 }
 
 model PersonalInfoAccessLog {
-  id             String       @id @default(dbgenerated("(gen_random_uuid())::text"))
-  personalInfoId String       @map("personal_info_id")
-  serviceId      String?      @map("service_id")
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  personalInfoId String       @map("personal_info_id") @db.Uuid
+  serviceId      String?      @map("service_id") @db.Uuid
   accessorType   AccessorType @map("accessor_type")
-  accessorId     String       @map("accessor_id")
+  accessorId     String       @map("accessor_id") @db.Uuid
   action         AccessAction
   fields         String[]
   ipAddress      String?      @map("ip_address") @db.VarChar(45)
@@ -456,9 +456,9 @@ model PersonalInfoAccessLog {
 }
 
 model OperatorInvitation {
-  id           String           @id @default(dbgenerated("(gen_random_uuid())::text"))
-  adminId      String           @map("admin_id")
-  serviceId    String           @map("service_id")
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminId      String           @map("admin_id") @db.Uuid
+  serviceId    String           @map("service_id") @db.Uuid
   countryCode  String           @map("country_code") @db.VarChar(2)
   email        String           @db.VarChar(255)
   name         String           @db.VarChar(100)
@@ -484,15 +484,15 @@ model OperatorInvitation {
 }
 
 model Operator {
-  id           String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email        String    @db.VarChar(255)
   password     String
   name         String    @db.VarChar(100)
-  adminId      String    @map("admin_id")
-  serviceId    String    @map("service_id")
+  adminId      String    @map("admin_id") @db.Uuid
+  serviceId    String    @map("service_id") @db.Uuid
   countryCode  String    @map("country_code") @db.VarChar(2)
   isActive     Boolean   @default(true) @map("is_active")
-  invitationId String?   @map("invitation_id")
+  invitationId String?   @map("invitation_id") @db.Uuid
   lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -514,10 +514,10 @@ model Operator {
 }
 
 model OperatorPermission {
-  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
-  operatorId   String   @map("operator_id")
-  permissionId String   @map("permission_id")
-  grantedBy    String   @map("granted_by")
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operatorId   String   @map("operator_id") @db.Uuid
+  permissionId String   @map("permission_id") @db.Uuid
+  grantedBy    String   @map("granted_by") @db.Uuid
   grantedAt    DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
 
   operator   Operator    @relation(fields: [operatorId], references: [id], onDelete: Cascade)
@@ -531,8 +531,8 @@ model OperatorPermission {
 }
 
 model OperatorSession {
-  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
-  operatorId   String   @map("operator_id")
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operatorId   String   @map("operator_id") @db.Uuid
   refreshToken String   @unique @map("refresh_token")
   expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -545,11 +545,11 @@ model OperatorSession {
 }
 
 model AdminService {
-  id          String   @id @default(dbgenerated("(gen_random_uuid())::text"))
-  adminId     String   @map("admin_id")
-  serviceId   String   @map("service_id")
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminId     String   @map("admin_id") @db.Uuid
+  serviceId   String   @map("service_id") @db.Uuid
   countryCode String?  @map("country_code") @db.VarChar(2)
-  roleId      String   @map("role_id")
+  roleId      String   @map("role_id") @db.Uuid
   isPrimary   Boolean  @default(false) @map("is_primary")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
@@ -565,10 +565,10 @@ model AdminService {
 }
 
 model AccountLink {
-  id              String            @id @default(dbgenerated("(gen_random_uuid())::text"))
-  primaryUserId   String            @map("primary_user_id")
-  linkedUserId    String            @map("linked_user_id")
-  linkedServiceId String            @map("linked_service_id")
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  primaryUserId   String            @map("primary_user_id") @db.Uuid
+  linkedUserId    String            @map("linked_user_id") @db.Uuid
+  linkedServiceId String            @map("linked_service_id") @db.Uuid
   status          AccountLinkStatus @default(PENDING)
   linkedAt        DateTime?         @map("linked_at") @db.Timestamptz(6)
   createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -586,11 +586,11 @@ model AccountLink {
 }
 
 model PlatformConsent {
-  id          String         @id @default(dbgenerated("(gen_random_uuid())::text"))
-  userId      String         @map("user_id")
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String         @map("user_id") @db.Uuid
   consentType ConsentType    @map("consent_type")
   countryCode String         @map("country_code") @db.VarChar(2)
-  documentId  String?        @map("document_id")
+  documentId  String?        @map("document_id") @db.Uuid
   agreed      Boolean        @default(true)
   agreedAt    DateTime       @map("agreed_at") @db.Timestamptz(6)
   withdrawnAt DateTime?      @map("withdrawn_at") @db.Timestamptz(6)
@@ -609,8 +609,8 @@ model PlatformConsent {
 }
 
 model Tier {
-  id           String        @id @default(dbgenerated("(gen_random_uuid())::text"))
-  serviceId    String        @map("service_id")
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceId    String        @map("service_id") @db.Uuid
   name         String        @db.VarChar(50)
   level        Int           @default(0)
   benefits     Json?
@@ -629,18 +629,18 @@ model Tier {
 }
 
 model UserSanction {
-  id           String         @id @default(dbgenerated("(gen_random_uuid())::text"))
-  userId       String         @map("user_id")
-  serviceId    String?        @map("service_id")
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  serviceId    String?        @map("service_id") @db.Uuid
   type         SanctionType
   status       SanctionStatus @default(ACTIVE)
   reason       String
-  issuedBy     String         @map("issued_by")
+  issuedBy     String         @map("issued_by") @db.Uuid
   issuedByType String         @map("issued_by_type") @db.VarChar(20)
   startAt      DateTime       @map("start_at") @db.Timestamptz(6)
   endAt        DateTime?      @map("end_at") @db.Timestamptz(6)
   revokedAt    DateTime?      @map("revoked_at") @db.Timestamptz(6)
-  revokedBy    String?        @map("revoked_by")
+  revokedBy    String?        @map("revoked_by") @db.Uuid
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -654,17 +654,17 @@ model UserSanction {
 }
 
 model AdminSanction {
-  id        String         @id @default(dbgenerated("(gen_random_uuid())::text"))
-  adminId   String         @map("admin_id")
-  serviceId String?        @map("service_id")
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminId   String         @map("admin_id") @db.Uuid
+  serviceId String?        @map("service_id") @db.Uuid
   type      SanctionType
   status    SanctionStatus @default(ACTIVE)
   reason    String
-  issuedBy  String         @map("issued_by")
+  issuedBy  String         @map("issued_by") @db.Uuid
   startAt   DateTime       @map("start_at") @db.Timestamptz(6)
   endAt     DateTime?      @map("end_at") @db.Timestamptz(6)
   revokedAt DateTime?      @map("revoked_at") @db.Timestamptz(6)
-  revokedBy String?        @map("revoked_by")
+  revokedBy String?        @map("revoked_by") @db.Uuid
   createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
 
   admin   admins   @relation(fields: [adminId], references: [id], onDelete: Cascade)
@@ -677,16 +677,16 @@ model AdminSanction {
 }
 
 model OperatorSanction {
-  id         String         @id @default(dbgenerated("(gen_random_uuid())::text"))
-  operatorId String         @map("operator_id")
+  id         String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operatorId String         @map("operator_id") @db.Uuid
   type       SanctionType
   status     SanctionStatus @default(ACTIVE)
   reason     String
-  issuedBy   String         @map("issued_by")
+  issuedBy   String         @map("issued_by") @db.Uuid
   startAt    DateTime       @map("start_at") @db.Timestamptz(6)
   endAt      DateTime?      @map("end_at") @db.Timestamptz(6)
   revokedAt  DateTime?      @map("revoked_at") @db.Timestamptz(6)
-  revokedBy  String?        @map("revoked_by")
+  revokedBy  String?        @map("revoked_by") @db.Uuid
   createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
 
   operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
@@ -697,11 +697,11 @@ model OperatorSanction {
 }
 
 model OperatorUserLink {
-  id         String           @id @default(dbgenerated("(gen_random_uuid())::text"))
-  operatorId String           @map("operator_id")
-  userId     String           @map("user_id")
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operatorId String           @map("operator_id") @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
   type       OperatorLinkType
-  assignedBy String?          @map("assigned_by")
+  assignedBy String?          @map("assigned_by") @db.Uuid
   note       String?
   isActive   Boolean          @default(true) @map("is_active")
   createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)

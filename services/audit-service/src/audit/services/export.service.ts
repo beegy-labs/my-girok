@@ -118,7 +118,7 @@ export class ExportService {
     const sql = `
       SELECT *
       FROM audit_db.access_logs
-      WHERE user_id = {userId:String}
+      WHERE user_id = {userId:UUID}
         AND timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}
       ORDER BY timestamp DESC
@@ -137,7 +137,7 @@ export class ExportService {
     const sql = `
       SELECT *
       FROM audit_db.consent_history
-      WHERE user_id = {userId:String}
+      WHERE user_id = {userId:UUID}
         AND timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}
       ORDER BY timestamp DESC
@@ -156,7 +156,7 @@ export class ExportService {
     const sql = `
       SELECT *
       FROM audit_db.admin_actions
-      WHERE target_id = {targetUserId:String}
+      WHERE target_id = {targetUserId:UUID}
         AND target_type = 'user'
         AND timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}

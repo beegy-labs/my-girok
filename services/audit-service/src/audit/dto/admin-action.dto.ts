@@ -3,7 +3,7 @@ import { IsString, IsOptional, IsDateString, IsInt, Min, Max } from 'class-valid
 import { Type } from 'class-transformer';
 
 export class AdminActionQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by admin ID (ULID)' })
+  @ApiPropertyOptional({ description: 'Filter by admin ID (UUIDv7)' })
   @IsOptional()
   @IsString()
   adminId?: string;

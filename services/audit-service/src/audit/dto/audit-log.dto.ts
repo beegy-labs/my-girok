@@ -3,7 +3,7 @@ import { IsString, IsOptional, IsDateString, IsInt, Min, Max } from 'class-valid
 import { Type } from 'class-transformer';
 
 export class AuditLogQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by user ID (ULID)' })
+  @ApiPropertyOptional({ description: 'Filter by user ID (UUIDv7)' })
   @IsOptional()
   @IsString()
   userId?: string;

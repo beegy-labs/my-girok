@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class PageViewDto {
-  @ApiProperty({ description: 'Session ID (ULID)' })
+  @ApiProperty({ description: 'Session ID (UUIDv7)' })
   @IsString()
   sessionId!: string;
 

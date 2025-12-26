@@ -3,7 +3,7 @@ import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsBoolean } from '
 import { Type, Transform } from 'class-transformer';
 
 export class ConsentHistoryQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by user ID (ULID)' })
+  @ApiPropertyOptional({ description: 'Filter by user ID (UUIDv7)' })
   @IsOptional()
   @IsString()
   userId?: string;

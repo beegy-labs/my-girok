@@ -1,7 +1,7 @@
-import { ID } from './ulid.generator';
+import { ID } from './uuidv7.generator';
 
 /**
- * Property decorator that auto-generates ULID if not set
+ * Property decorator that auto-generates UUIDv7 if not set
  *
  * @example
  * class CreateEventDto {

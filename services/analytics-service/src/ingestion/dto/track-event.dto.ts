@@ -74,7 +74,7 @@ class EventContext {
 }
 
 export class TrackEventDto {
-  @ApiProperty({ description: 'Session ID (ULID)' })
+  @ApiProperty({ description: 'Session ID (UUIDv7)' })
   @IsString()
   sessionId!: string;
 
