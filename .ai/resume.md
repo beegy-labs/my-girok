@@ -102,14 +102,14 @@ const handleSubmit = async (data) => {
 
 ## Korean Market Fields
 
-| Field             | Type     | Purpose                             |
-| ----------------- | -------- | ----------------------------------- |
-| birthDate         | string   | YYYY-MM-DD, 만 나이 calculation     |
-| gender            | enum     | MALE, FEMALE, OTHER                 |
-| militaryService   | enum     | COMPLETED, EXEMPTED, NOT_APPLICABLE |
-| coverLetter       | string   | 자기소개서                          |
-| applicationReason | string   | 지원 동기                           |
-| keyAchievements   | string[] | 주요 성과                           |
+| Field             | Type     | Purpose                                |
+| ----------------- | -------- | -------------------------------------- |
+| birthDate         | string   | YYYY-MM-DD, 만 나이 calculation        |
+| gender            | enum     | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY |
+| militaryService   | enum     | COMPLETED, EXEMPTED, NOT_APPLICABLE    |
+| coverLetter       | string   | 자기소개서                             |
+| applicationReason | string   | 지원 동기                              |
+| keyAchievements   | string[] | 주요 성과                              |
 
 ## Print & PDF
 
@@ -156,6 +156,14 @@ const handleSubmit = async (data) => {
 | `apps/web-main/src/components/resume/HierarchicalDescription.tsx` | Reusable 4-depth |
 
 ## Recent Updates
+
+**2025-12-26**: Resume DB Optimization
+
+- Removed `birthYear` field - use `birthDate` only
+- Added `PREFER_NOT_TO_SAY` to Gender enum
+- Extended SectionType: KEY_ACHIEVEMENTS, APPLICATION_REASON, ATTACHMENTS, COVER_LETTER
+- Added soft delete (deletedAt) to Resume
+- ShareLink.token now uses UUIDv7
 
 **2025-12-23**: Fixed PDF rendering crash (#321)
 

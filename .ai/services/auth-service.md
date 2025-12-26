@@ -120,4 +120,45 @@ createDocument(@CurrentAdmin() admin: AdminPayload) { }
 
 ---
 
-**Detailed docs**: `docs/services/AUTH_SERVICE.md`
+## Global Account System
+
+> For detailed policy and architecture: `docs/policies/GLOBAL_ACCOUNT.md`
+
+### Quick Reference
+
+| Mode    | Description                               |
+| ------- | ----------------------------------------- |
+| SERVICE | Per-service independent account (default) |
+| UNIFIED | Integrated account across services        |
+
+### API Endpoints
+
+| Category      | Endpoints                                                |
+| ------------- | -------------------------------------------------------- |
+| Service       | `POST /v1/services/:slug/join`, `DELETE .../withdraw`    |
+| Linking       | `POST /v1/users/me/link-account`, `POST .../accept-link` |
+| Operator      | `POST /v1/admin/operators`, `POST .../invite`            |
+| Law Registry  | `GET /v1/admin/laws`, `POST /v1/admin/laws/seed`         |
+| Personal Info | `GET/PATCH/DELETE /v1/users/me/personal-info`            |
+
+### Guards
+
+```typescript
+@UseGuards(UnifiedAuthGuard)                    // Token type routing
+@UseGuards(UnifiedAuthGuard, AccountTypeGuard)  // USER/ADMIN/OPERATOR
+@UseGuards(UnifiedAuthGuard, ServiceAccessGuard) // Service membership
+@UseGuards(UnifiedAuthGuard, CountryConsentGuard) // Country consent
+```
+
+### Decorators
+
+| Decorator                   | Purpose                    |
+| --------------------------- | -------------------------- |
+| `@CurrentUser()`            | Get user/admin/operator    |
+| `@RequireAccountType(type)` | Restrict by account type   |
+| `@RequireService(slug)`     | Require service membership |
+| `@Permissions(perm)`        | Admin permission check     |
+
+---
+
+**Guides**: `docs/guides/OPERATOR_MANAGEMENT.md`, `docs/guides/ACCOUNT_LINKING.md`

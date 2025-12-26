@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../database/prisma.service';
 import { ResumeService } from '../resume/resume.service';
 import { CreateShareLinkDto, UpdateShareLinkDto, ShareDuration } from './dto';
-import { createId } from '@paralleldrive/cuid2';
+import { UUIDv7 } from '@my-girok/nest-common';
 
 @Injectable()
 export class ShareService {
@@ -22,7 +22,9 @@ export class ShareService {
       case ShareDuration.THREE_MONTHS:
         return new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
       case ShareDuration.CUSTOM:
-        return customDate ? new Date(customDate) : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        return customDate
+          ? new Date(customDate)
+          : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       case ShareDuration.PERMANENT:
         return null;
       default:
@@ -38,7 +40,7 @@ export class ShareService {
 
     const shareLink = await this.prisma.shareLink.create({
       data: {
-        token: createId(),
+        token: UUIDv7.generate(), // UUIDv7 for consistent ID strategy
         resourceType: 'RESUME',
         resourceId: resume.id,
         userId,
@@ -59,7 +61,7 @@ export class ShareService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return shareLinks.map(link => ({
+    return shareLinks.map((link) => ({
       ...link,
       shareUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/shared/${link.token}`,
     }));

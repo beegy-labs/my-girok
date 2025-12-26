@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { Public } from '@my-girok/nest-common';
 import { AdminAuthService } from '../services/admin-auth.service';
 import {
@@ -7,7 +7,6 @@ import {
   AdminLoginResponse,
   AdminProfileResponse,
 } from '../dto/admin-auth.dto';
-import { AdminAuthGuard } from '../guards/admin-auth.guard';
 import { CurrentAdmin } from '../decorators/current-admin.decorator';
 import { AdminPayload } from '../types/admin.types';
 
@@ -42,10 +41,9 @@ export class AdminAuthController {
   /**
    * Get current admin profile
    * GET /v1/admin/auth/me
+   * Now uses UnifiedAuthGuard - validates admin token automatically
    */
   @Get('me')
-  @Public() // Bypass global JwtAuthGuard - AdminAuthGuard handles auth
-  @UseGuards(AdminAuthGuard)
   async getProfile(@CurrentAdmin() admin: AdminPayload): Promise<AdminProfileResponse> {
     return this.adminAuthService.getProfile(admin.sub);
   }
@@ -53,11 +51,10 @@ export class AdminAuthController {
   /**
    * Admin logout
    * POST /v1/admin/auth/logout
+   * Now uses UnifiedAuthGuard - validates admin token automatically
    */
   @Post('logout')
-  @Public() // Bypass global JwtAuthGuard - AdminAuthGuard handles auth
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AdminAuthGuard)
   async logout(@CurrentAdmin() admin: AdminPayload, @Body() dto: AdminRefreshDto): Promise<void> {
     await this.adminAuthService.logout(admin.sub, dto.refreshToken);
   }

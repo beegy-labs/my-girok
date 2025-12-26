@@ -106,7 +106,15 @@ Kubernetes deployment guide:
 - [Security](policies/SECURITY.md) - Security best practices
 - [Testing](policies/TESTING.md) - Testing standards
 - [Legal & Consent](policies/LEGAL_CONSENT.md) - GDPR, PIPA compliance
+- [Global Account System](policies/GLOBAL_ACCOUNT.md) - Multi-service account architecture
 - [LLM Guidelines](policies/LLM_GUIDELINES.md) - AI assistant guidelines
+
+### Global Account System
+
+- [Global Account Policy](policies/GLOBAL_ACCOUNT.md) - Account modes, consent architecture
+- [Operator Management](guides/OPERATOR_MANAGEMENT.md) - Create and manage operators
+- [Account Linking](guides/ACCOUNT_LINKING.md) - Link SERVICE to UNIFIED mode
+- [Consent Flow](guides/CONSENT_FLOW.md) - Country-specific consent handling
 
 ## For AI Assistants
 
