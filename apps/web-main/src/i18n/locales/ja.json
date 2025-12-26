@@ -254,9 +254,6 @@
       "phone": "電話",
       "address": "住所"
     },
-    "birthYear": "生年",
-    "birthYearPlaceholder": "例: 1994",
-    "birthYearHint": "年のみ (例: 1994)",
     "birthDate": "生年月日",
     "birthDatePlaceholder": "例: 1994-03-15",
     "birthDateHint": "正確な年齢計算のため生年月日を入力してください",

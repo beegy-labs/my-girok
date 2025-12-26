@@ -255,9 +255,6 @@
       "phone": "Phone",
       "address": "Address"
     },
-    "birthYear": "Birth Year",
-    "birthYearPlaceholder": "e.g., 1994",
-    "birthYearHint": "Year only (e.g., 1994)",
     "birthDate": "Birth Date",
     "birthDatePlaceholder": "e.g., 1994-03-15",
     "birthDateHint": "Enter full birth date for accurate age calculation",

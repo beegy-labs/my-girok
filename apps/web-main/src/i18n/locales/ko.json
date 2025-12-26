@@ -255,9 +255,6 @@
       "phone": "전화번호",
       "address": "주소"
     },
-    "birthYear": "출생 연도",
-    "birthYearPlaceholder": "예: 1994",
-    "birthYearHint": "연도만 입력 (예: 1994)",
     "birthDate": "생년월일",
     "birthDatePlaceholder": "예: 1994-03-15",
     "birthDateHint": "정확한 만 나이 계산을 위해 생년월일을 입력하세요",
