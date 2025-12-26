@@ -266,12 +266,14 @@
     "genderOptions": {
       "MALE": "Male",
       "FEMALE": "Female",
-      "OTHER": "Other"
+      "OTHER": "Other",
+      "PREFER_NOT_TO_SAY": "Prefer not to say"
     },
     "genderLabels": {
       "MALE": "M",
       "FEMALE": "F",
-      "OTHER": "Other"
+      "OTHER": "Other",
+      "PREFER_NOT_TO_SAY": "N/A"
     },
     "age": "{{age}} y/o",
     "sections": {

@@ -266,12 +266,14 @@
     "genderOptions": {
       "MALE": "남성",
       "FEMALE": "여성",
-      "OTHER": "기타"
+      "OTHER": "기타",
+      "PREFER_NOT_TO_SAY": "비공개"
     },
     "genderLabels": {
       "MALE": "남",
       "FEMALE": "여",
-      "OTHER": "기타"
+      "OTHER": "기타",
+      "PREFER_NOT_TO_SAY": "비공개"
     },
     "age": "{{age}}세",
     "sections": {

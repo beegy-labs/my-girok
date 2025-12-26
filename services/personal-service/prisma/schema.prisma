@@ -113,9 +113,13 @@ model ResumeSection {
 enum SectionType {
   SKILLS
   EXPERIENCE
-  PROJECT
+  PROJECT           // @deprecated - kept for backward compatibility
   EDUCATION
   CERTIFICATE
+  KEY_ACHIEVEMENTS  // Frontend section: 핵심 성과
+  APPLICATION_REASON // Frontend section: 지원 동기
+  ATTACHMENTS       // Frontend section: 첨부파일
+  COVER_LETTER      // Frontend section: 자기소개서
 }
 
 enum PaperSize {

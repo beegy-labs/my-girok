@@ -404,6 +404,7 @@ const translations: Record<
     'resume.genderLabels.MALE': '남',
     'resume.genderLabels.FEMALE': '여',
     'resume.genderLabels.OTHER': '기타',
+    'resume.genderLabels.PREFER_NOT_TO_SAY': '비공개',
     'resume.age': (p) => `${p.age}세`,
     'resume.contactInfo.email': '이메일',
     'resume.contactInfo.phone': '연락처',
@@ -442,6 +443,7 @@ const translations: Record<
     'resume.genderLabels.MALE': 'M',
     'resume.genderLabels.FEMALE': 'F',
     'resume.genderLabels.OTHER': 'Other',
+    'resume.genderLabels.PREFER_NOT_TO_SAY': 'N/A',
     'resume.age': (p) => `${p.age} y/o`,
     'resume.contactInfo.email': 'Email',
     'resume.contactInfo.phone': 'Phone',
@@ -480,6 +482,7 @@ const translations: Record<
     'resume.genderLabels.MALE': '男',
     'resume.genderLabels.FEMALE': '女',
     'resume.genderLabels.OTHER': 'その他',
+    'resume.genderLabels.PREFER_NOT_TO_SAY': '非公開',
     'resume.age': (p) => `${p.age}歳`,
     'resume.contactInfo.email': 'メール',
     'resume.contactInfo.phone': '電話',
@@ -620,17 +623,15 @@ function HeaderInfoContent({ resume, t }: HeaderInfoContentProps) {
     <View>
       <Text style={styles.name}>
         {sanitizeText(resume.name)}
-        {(resume.gender || resume.birthDate || resume.birthYear) && (
+        {(resume.gender || resume.birthDate) && (
           <Text style={styles.nameInfo}>
             {' '}
             {resume.gender && t(getGenderLabelKey(resume.gender))}
-            {resume.gender && (resume.birthDate || resume.birthYear) && ', '}
+            {resume.gender && resume.birthDate && ', '}
             {(() => {
               const age = getAge(resume);
               if (!age) return '';
-              const birthYear = resume.birthDate
-                ? new Date(resume.birthDate).getFullYear()
-                : resume.birthYear;
+              const birthYear = new Date(resume.birthDate!).getFullYear();
               return `${birthYear} (${t('resume.age', { age })})`;
             })()}
           </Text>

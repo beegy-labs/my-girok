@@ -90,16 +90,14 @@ export default function ResumeContent({
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-theme-text-primary mb-2">
               {resume.name}
-              {(resume.gender || resume.birthDate || resume.birthYear) && (
+              {(resume.gender || resume.birthDate) && (
                 <span className="ml-3 text-lg font-normal text-theme-text-tertiary">
                   {resume.gender && <span>{t(getGenderLabelKey(resume.gender))}</span>}
-                  {resume.gender && (resume.birthDate || resume.birthYear) && <span>, </span>}
+                  {resume.gender && resume.birthDate && <span>, </span>}
                   {(() => {
                     const age = getAge(resume);
                     if (!age) return null;
-                    const birthYear = resume.birthDate
-                      ? new Date(resume.birthDate).getFullYear()
-                      : resume.birthYear;
+                    const birthYear = new Date(resume.birthDate!).getFullYear();
                     return (
                       <span>
                         {birthYear} ({t('resume.age', { age })})

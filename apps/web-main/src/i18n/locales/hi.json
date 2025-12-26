@@ -262,12 +262,14 @@
     "genderOptions": {
       "MALE": "पुरुष",
       "FEMALE": "महिला",
-      "OTHER": "अन्य"
+      "OTHER": "अन्य",
+      "PREFER_NOT_TO_SAY": "बताना नहीं चाहते"
     },
     "genderLabels": {
       "MALE": "पु",
       "FEMALE": "म",
-      "OTHER": "अन्य"
+      "OTHER": "अन्य",
+      "PREFER_NOT_TO_SAY": "गोपनीय"
     },
     "age": "{{age}} वर्ष",
     "sections": {
