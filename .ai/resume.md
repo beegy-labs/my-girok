@@ -102,14 +102,14 @@ const handleSubmit = async (data) => {
 
 ## Korean Market Fields
 
-| Field             | Type     | Purpose                             |
-| ----------------- | -------- | ----------------------------------- |
-| birthDate         | string   | YYYY-MM-DD, 만 나이 calculation     |
-| gender            | enum     | MALE, FEMALE, OTHER                 |
-| militaryService   | enum     | COMPLETED, EXEMPTED, NOT_APPLICABLE |
-| coverLetter       | string   | 자기소개서                          |
-| applicationReason | string   | 지원 동기                           |
-| keyAchievements   | string[] | 주요 성과                           |
+| Field             | Type     | Purpose                                |
+| ----------------- | -------- | -------------------------------------- |
+| birthDate         | string   | YYYY-MM-DD, 만 나이 calculation        |
+| gender            | enum     | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY |
+| militaryService   | enum     | COMPLETED, EXEMPTED, NOT_APPLICABLE    |
+| coverLetter       | string   | 자기소개서                             |
+| applicationReason | string   | 지원 동기                              |
+| keyAchievements   | string[] | 주요 성과                              |
 
 ## Print & PDF
 

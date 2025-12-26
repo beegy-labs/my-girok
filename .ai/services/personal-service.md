@@ -84,7 +84,7 @@ model ExperienceProject {
 | Enum            | Values                                                  |
 | --------------- | ------------------------------------------------------- |
 | PaperSize       | A4, LETTER                                              |
-| Gender          | MALE, FEMALE, OTHER                                     |
+| Gender          | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                  |
 | MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                     |
 | DegreeType      | HIGH_SCHOOL, ASSOCIATE_2/3, BACHELOR, MASTER, DOCTORATE |
 | SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE     |
