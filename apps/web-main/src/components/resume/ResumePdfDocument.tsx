@@ -540,6 +540,7 @@ function getGenderLabelKey(gender: Gender): string {
     [Gender.MALE]: 'resume.genderLabels.MALE',
     [Gender.FEMALE]: 'resume.genderLabels.FEMALE',
     [Gender.OTHER]: 'resume.genderLabels.OTHER',
+    [Gender.PREFER_NOT_TO_SAY]: 'resume.genderLabels.PREFER_NOT_TO_SAY',
   };
   return keyMap[gender];
 }

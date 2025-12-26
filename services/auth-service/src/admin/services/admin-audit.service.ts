@@ -3,102 +3,64 @@ import { PrismaService } from '../../database/prisma.service';
 import {
   AuditLogListQuery,
   AuditLogListResponse,
-  AuditLogResponse,
   AuditLogFilterOptions,
 } from '../dto/admin-audit.dto';
 
+/**
+ * AdminAuditService
+ *
+ * TODO: Migrate to ClickHouse audit_db.audit_logs
+ * Audit logs have been moved from PostgreSQL to ClickHouse for better performance.
+ * See: services/audit-service for ClickHouse integration
+ *
+ * This service currently returns empty data as PostgreSQL audit_logs table was removed.
+ * Integration with ClickHouse audit_db should be implemented.
+ */
 @Injectable()
 export class AdminAuditService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
    * List audit logs with filters and pagination
+   * TODO: Implement ClickHouse query
    */
   async listAuditLogs(query: AuditLogListQuery): Promise<AuditLogListResponse> {
-    const { action, resource, adminId, dateFrom, dateTo, page = 1, limit = 20 } = query;
+    const { page = 1, limit = 20 } = query;
 
-    const where: Record<string, unknown> = {};
-
-    if (action) {
-      where.action = action;
-    }
-    if (resource) {
-      where.resource = resource;
-    }
-    if (adminId) {
-      where.admin_id = adminId;
-    }
-    if (dateFrom || dateTo) {
-      where.created_at = {};
-      if (dateFrom) {
-        (where.created_at as Record<string, Date>).gte = new Date(dateFrom);
-      }
-      if (dateTo) {
-        (where.created_at as Record<string, Date>).lte = new Date(dateTo);
-      }
-    }
-
-    const [items, total] = await Promise.all([
-      this.prisma.audit_logs.findMany({
-        where,
-        include: {
-          admins: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: { created_at: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.audit_logs.count({ where }),
-    ]);
+    // TODO: Query ClickHouse audit_db.audit_logs
+    console.log('[AdminAuditService] listAuditLogs - TODO: Implement ClickHouse query', query);
 
     return {
-      items: items.map((item) => this.mapToResponse(item)),
-      total,
+      items: [],
+      total: 0,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: 0,
     };
   }
 
   /**
    * Get filter options for UI
+   * TODO: Implement ClickHouse query
    */
   async getFilterOptions(): Promise<AuditLogFilterOptions> {
-    const [actions, resources, admins] = await Promise.all([
-      this.prisma.audit_logs.findMany({
-        select: { action: true },
-        distinct: ['action'],
-        orderBy: { action: 'asc' },
-      }),
-      this.prisma.audit_logs.findMany({
-        select: { resource: true },
-        distinct: ['resource'],
-        orderBy: { resource: 'asc' },
-      }),
-      this.prisma.admins.findMany({
-        where: {
-          audit_logs: {
-            some: {},
-          },
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-        orderBy: { name: 'asc' },
-      }),
-    ]);
+    // TODO: Query ClickHouse audit_db for distinct values
+    console.log('[AdminAuditService] getFilterOptions - TODO: Implement ClickHouse query');
+
+    // Return admins from PostgreSQL (still available)
+    const admins = await this.prisma.admins.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+      orderBy: { name: 'asc' },
+      take: 100,
+    });
 
     return {
-      actions: actions.map((a) => a.action),
-      resources: resources.map((r) => r.resource),
+      actions: [],
+      resources: [],
       admins: admins.map((a) => ({
         id: a.id,
         name: a.name,
@@ -109,48 +71,12 @@ export class AdminAuditService {
 
   /**
    * Export audit logs as CSV
+   * TODO: Implement ClickHouse query
    */
   async exportCsv(query: AuditLogListQuery): Promise<string> {
-    // Get all matching logs (no pagination for export)
-    const { action, resource, adminId, dateFrom, dateTo } = query;
+    // TODO: Query ClickHouse audit_db.audit_logs
+    console.log('[AdminAuditService] exportCsv - TODO: Implement ClickHouse query', query);
 
-    const where: Record<string, unknown> = {};
-
-    if (action) {
-      where.action = action;
-    }
-    if (resource) {
-      where.resource = resource;
-    }
-    if (adminId) {
-      where.admin_id = adminId;
-    }
-    if (dateFrom || dateTo) {
-      where.created_at = {};
-      if (dateFrom) {
-        (where.created_at as Record<string, Date>).gte = new Date(dateFrom);
-      }
-      if (dateTo) {
-        (where.created_at as Record<string, Date>).lte = new Date(dateTo);
-      }
-    }
-
-    const items = await this.prisma.audit_logs.findMany({
-      where,
-      include: {
-        admins: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: { created_at: 'desc' },
-      take: 10000, // Limit export to 10k rows
-    });
-
-    // Generate CSV
     const headers = [
       'ID',
       'Date',
@@ -162,60 +88,6 @@ export class AdminAuditService {
       'User Agent',
     ];
 
-    const rows = items.map((item) => [
-      item.id,
-      item.created_at.toISOString(),
-      item.admins.name,
-      item.action,
-      item.resource,
-      item.resource_id || '',
-      item.ip_address || '',
-      item.user_agent || '',
-    ]);
-
-    const csvContent = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-
-    return csvContent;
-  }
-
-  /**
-   * Map database entity to response DTO
-   */
-  private mapToResponse(item: {
-    id: string;
-    admin_id: string;
-    action: string;
-    resource: string;
-    resource_id: string | null;
-    before_state: unknown;
-    after_state: unknown;
-    ip_address: string | null;
-    user_agent: string | null;
-    created_at: Date;
-    admins: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  }): AuditLogResponse {
-    return {
-      id: item.id,
-      adminId: item.admin_id,
-      admin: {
-        id: item.admins.id,
-        name: item.admins.name,
-        email: item.admins.email,
-      },
-      action: item.action,
-      resource: item.resource,
-      resourceId: item.resource_id,
-      beforeState: item.before_state as Record<string, unknown> | null,
-      afterState: item.after_state as Record<string, unknown> | null,
-      ipAddress: item.ip_address,
-      userAgent: item.user_agent,
-      createdAt: item.created_at,
-    };
+    return headers.join(',') + '\n';
   }
 }

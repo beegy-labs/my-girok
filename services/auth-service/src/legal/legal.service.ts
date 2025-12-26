@@ -318,10 +318,11 @@ export class LegalService {
     // Atomic transaction: Create all consents or rollback on failure
     const consentRecords = await this.prisma.$transaction(
       consents.map((consent) =>
-        this.prisma.userConsent.create({
+        this.prisma.consent.create({
           data: {
             userId,
             consentType: consent.type,
+            scope: 'SERVICE',
             documentId: consent.documentId,
             documentVersion: consent.documentId ? documentMap.get(consent.documentId) : undefined,
             agreed: consent.agreed,
@@ -352,7 +353,7 @@ export class LegalService {
    * ```
    */
   async getUserConsents(userId: string): Promise<UserConsentWithDocument[]> {
-    const consents = await this.prisma.userConsent.findMany({
+    const consents = await this.prisma.consent.findMany({
       where: {
         userId,
         withdrawnAt: null,
@@ -409,7 +410,7 @@ export class LegalService {
     }
 
     // Find existing active consent
-    const existingConsent = await this.prisma.userConsent.findFirst({
+    const existingConsent = await this.prisma.consent.findFirst({
       where: {
         userId,
         consentType,
@@ -420,7 +421,7 @@ export class LegalService {
 
     if (existingConsent && !agreed) {
       // Withdraw consent
-      return this.prisma.userConsent.update({
+      return this.prisma.consent.update({
         where: { id: existingConsent.id },
         data: { withdrawnAt: now },
       });
@@ -438,10 +439,11 @@ export class LegalService {
 
       // Derive countryCode from locale
       const countryCode = locale === 'ko' ? 'KR' : locale.toUpperCase().slice(0, 2);
-      return this.prisma.userConsent.create({
+      return this.prisma.consent.create({
         data: {
           userId,
           consentType,
+          scope: 'SERVICE',
           countryCode,
           documentId: document?.id,
           documentVersion: document?.version,
@@ -481,7 +483,7 @@ export class LegalService {
       .filter((r: ConsentRequirement) => r.required)
       .map((r: ConsentRequirement) => r.type);
 
-    const consents = await this.prisma.userConsent.findMany({
+    const consents = await this.prisma.consent.findMany({
       where: {
         userId,
         consentType: { in: requiredTypes },

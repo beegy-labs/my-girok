@@ -5,12 +5,15 @@ import { PrismaService } from '../../database/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { AdminLoginDto, AdminLoginResponse, AdminProfileResponse } from '../dto/admin-auth.dto';
 import { AdminPayload, AdminWithRelations, AdminServicePayload } from '../types/admin.types';
+import { hashToken, getSessionExpiresAt } from '../../common/utils/session.utils';
 
-interface AdminSession {
+interface UnifiedSession {
   id: string;
-  adminId: string;
-  refreshToken: string;
+  subjectId: string;
+  subjectType: string;
+  tokenHash: string;
   expiresAt: Date;
+  revokedAt: Date | null;
 }
 
 @Injectable()
@@ -91,17 +94,19 @@ export class AdminAuthService {
       // Verify token is valid
       this.jwtService.verify(refreshToken);
 
-      // Find session
-      const sessions = await this.prisma.$queryRaw<AdminSession[]>`
-        SELECT id, admin_id as "adminId", refresh_token as "refreshToken", expires_at as "expiresAt"
-        FROM admin_sessions
-        WHERE refresh_token = ${refreshToken}
+      // Find session using token hash
+      const tokenHash = hashToken(refreshToken);
+      const sessions = await this.prisma.$queryRaw<UnifiedSession[]>`
+        SELECT id, subject_id as "subjectId", subject_type as "subjectType",
+               token_hash as "tokenHash", expires_at as "expiresAt", revoked_at as "revokedAt"
+        FROM sessions
+        WHERE token_hash = ${tokenHash} AND subject_type = 'ADMIN'
         LIMIT 1
       `;
 
       const session = sessions[0];
 
-      if (!session || new Date(session.expiresAt) < new Date()) {
+      if (!session || new Date(session.expiresAt) < new Date() || session.revokedAt) {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
@@ -117,7 +122,7 @@ export class AdminAuthService {
         FROM admins a
         LEFT JOIN tenants t ON a.tenant_id = t.id
         JOIN roles r ON a.role_id = r.id
-        WHERE a.id = ${session.adminId}
+        WHERE a.id = ${session.subjectId}
         LIMIT 1
       `;
 
@@ -130,11 +135,14 @@ export class AdminAuthService {
       const permissions = await this.getAdminPermissions(admin.roleId);
       const tokens = await this.generateTokens(admin, permissions);
 
-      // Update session
+      // Update session with new token hash
+      const newTokenHash = hashToken(tokens.refreshToken);
+      const newExpiresAt = getSessionExpiresAt();
       await this.prisma.$executeRaw`
-        UPDATE admin_sessions
-        SET refresh_token = ${tokens.refreshToken},
-            expires_at = ${new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)}
+        UPDATE sessions
+        SET token_hash = ${newTokenHash},
+            refresh_token = ${tokens.refreshToken},
+            expires_at = ${newExpiresAt}
         WHERE id = ${session.id}
       `;
 
@@ -148,9 +156,12 @@ export class AdminAuthService {
   }
 
   async logout(adminId: string, refreshToken: string): Promise<void> {
+    const tokenHash = hashToken(refreshToken);
+    // Soft delete: mark session as revoked
     await this.prisma.$executeRaw`
-      DELETE FROM admin_sessions
-      WHERE admin_id = ${adminId} AND refresh_token = ${refreshToken}
+      UPDATE sessions
+      SET revoked_at = NOW()
+      WHERE subject_id = ${adminId} AND subject_type = 'ADMIN' AND token_hash = ${tokenHash}
     `;
 
     await this.logAudit(adminId, 'logout', 'admin', adminId);
@@ -318,19 +329,13 @@ export class AdminAuthService {
   }
 
   private async saveAdminSession(adminId: string, refreshToken: string): Promise<void> {
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+    const tokenHash = hashToken(refreshToken);
+    const expiresAt = getSessionExpiresAt();
 
-    // Note: admin_sessions table needs to be created
-    // For now, we'll skip session persistence if table doesn't exist
-    try {
-      await this.prisma.$executeRaw`
-        INSERT INTO admin_sessions (id, admin_id, refresh_token, expires_at, created_at)
-        VALUES (gen_random_uuid()::TEXT, ${adminId}, ${refreshToken}, ${expiresAt}, NOW())
-      `;
-    } catch {
-      // Table might not exist yet, skip silently for now
-      console.warn('admin_sessions table not found, skipping session save');
-    }
+    await this.prisma.$executeRaw`
+      INSERT INTO sessions (id, subject_id, subject_type, token_hash, refresh_token, expires_at, created_at)
+      VALUES (gen_random_uuid(), ${adminId}, 'ADMIN', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
+    `;
   }
 
   private async logAudit(
@@ -339,9 +344,11 @@ export class AdminAuthService {
     resource: string,
     resourceId?: string,
   ): Promise<void> {
-    await this.prisma.$executeRaw`
-      INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
-      VALUES (gen_random_uuid()::TEXT, ${adminId}, ${action}, ${resource}, ${resourceId || null}, NOW())
-    `;
+    // TODO: Migrate to ClickHouse audit_db.audit_logs
+    // Audit logs have been moved to ClickHouse for better performance and analytics
+    // See: services/audit-service for ClickHouse integration
+    console.log(
+      `[AUDIT] admin=${adminId} action=${action} resource=${resource} resourceId=${resourceId}`,
+    );
   }
 }

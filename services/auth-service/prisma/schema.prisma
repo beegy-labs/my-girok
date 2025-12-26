@@ -28,16 +28,13 @@ model User {
   timezone         String?             @db.VarChar(50)
   accountMode      AccountMode         @default(SERVICE) @map("account_mode")
   countryCode      String?             @map("country_code") @db.VarChar(2)
-  admin_user_links     admin_user_links[]
+  deletedAt        DateTime?           @map("deleted_at") @db.Timestamptz(6)
   domainAccess         DomainAccessToken[]
-  sessions             Session[]
-  consents             UserConsent[]
+  consents             Consent[]
   userServices         UserService[]
   personalInfo         PersonalInfo?
   primaryAccountLinks  AccountLink[]       @relation("PrimaryUser")
   linkedAccountLinks   AccountLink[]       @relation("LinkedUser")
-  platformConsents     PlatformConsent[]
-  sanctions            UserSanction[]
   operatorUserLinks    OperatorUserLink[]
 
   @@index([externalId])
@@ -50,16 +47,29 @@ model User {
 }
 
 model Session {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  refreshToken String   @unique @map("refresh_token")
-  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectId    String            @map("subject_id") @db.Uuid
+  subjectType  SessionSubjectType @map("subject_type")
+  tokenHash    String            @unique @map("token_hash") @db.VarChar(64)
+  refreshToken String?           @map("refresh_token") // Deprecated: will be removed in future
+  expiresAt    DateTime          @map("expires_at") @db.Timestamptz(6)
+  revokedAt    DateTime?         @map("revoked_at") @db.Timestamptz(6)
+  ipAddress    String?           @map("ip_address") @db.VarChar(45)
+  userAgent    String?           @map("user_agent")
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  @@index([userId])
-  @@index([refreshToken])
+  @@index([subjectId, subjectType])
+  @@index([tokenHash])
+  @@index([expiresAt])
   @@map("sessions")
+}
+
+enum SessionSubjectType {
+  USER
+  ADMIN
+  OPERATOR
+
+  @@map("session_subject_type")
 }
 
 model DomainAccessToken {
@@ -112,8 +122,7 @@ model LegalDocument {
   admins_legal_documents_created_byToadmins admins?             @relation("legal_documents_created_byToadmins", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   admins_legal_documents_updated_byToadmins admins?             @relation("legal_documents_updated_byToadmins", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service                                   Service?            @relation(fields: [serviceId], references: [id])
-  consents                                  UserConsent[]
-  platformConsents                          PlatformConsent[]
+  consents                                  Consent[]
 
   @@unique([type, version, locale, serviceId, countryCode])
   @@index([type, locale, isActive], map: "idx_legal_documents_type_locale_active")
@@ -122,10 +131,13 @@ model LegalDocument {
   @@map("legal_documents")
 }
 
-model UserConsent {
+model Consent {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId          String         @map("user_id") @db.Uuid
   consentType     ConsentType    @map("consent_type")
+  scope           ConsentScope   @default(SERVICE)
+  serviceId       String?        @map("service_id") @db.Uuid
+  countryCode     String         @map("country_code") @db.VarChar(2)
   documentId      String?        @map("document_id") @db.Uuid
   documentVersion String?        @map("document_version") @db.VarChar(50)
   agreed          Boolean        @default(true)
@@ -134,47 +146,28 @@ model UserConsent {
   ipAddress       String?        @map("ip_address") @db.VarChar(45)
   userAgent       String?        @map("user_agent")
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  serviceId       String?        @map("service_id") @db.Uuid
-  countryCode     String         @map("country_code") @db.VarChar(2)
 
-  document LegalDocument? @relation(fields: [documentId], references: [id], onUpdate: NoAction)
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document LegalDocument? @relation(fields: [documentId], references: [id])
   service  Service?       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, serviceId, countryCode, consentType, documentVersion])
-  @@index([agreedAt], map: "idx_user_consents_agreed_at")
-  @@index([consentType], map: "idx_user_consents_consent_type")
-  @@index([userId], map: "idx_user_consents_user_id")
+  @@index([userId])
   @@index([serviceId])
   @@index([countryCode])
-  @@map("user_consents")
+  @@index([consentType])
+  @@index([scope])
+  @@index([agreedAt])
+  @@map("consents")
 }
 
-model admin_sessions {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  admin_id      String   @db.Uuid
-  refresh_token String   @unique
-  expires_at    DateTime @db.Timestamptz(6)
-  created_at    DateTime @default(now()) @db.Timestamptz(6)
-  admins        admins   @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+enum ConsentScope {
+  SERVICE
+  PLATFORM
 
-  @@index([admin_id], map: "idx_admin_sessions_admin_id")
-  @@index([refresh_token], map: "idx_admin_sessions_refresh_token")
+  @@map("consent_scope")
 }
 
-model admin_user_links {
-  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  admin_id   String          @db.Uuid
-  user_id    String          @db.Uuid
-  link_type  admin_link_type @default(OPERATOR)
-  created_at DateTime        @default(now()) @db.Timestamptz(6)
-  admins     admins          @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users      User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([admin_id, user_id])
-  @@index([admin_id], map: "idx_admin_user_links_admin_id")
-  @@index([user_id], map: "idx_admin_user_links_user_id")
-}
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model admins {
@@ -192,21 +185,18 @@ model admins {
   updated_at                                         DateTime             @default(now()) @db.Timestamptz(6)
   account_mode                                       AccountMode          @default(SERVICE) @map("account_mode")
   country_code                                       String?              @map("country_code") @db.VarChar(2)
+  deleted_at                                         DateTime?            @db.Timestamptz(6)
 
-  admin_sessions                                     admin_sessions[]
-  admin_user_links                                   admin_user_links[]
   admins                                             admins?              @relation("adminsToadmins", fields: [parent_id], references: [id], onUpdate: NoAction)
   other_admins                                       admins[]             @relation("adminsToadmins")
   roles                                              roles                @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                                            tenants?             @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  audit_logs                                         audit_logs[]
   legal_documents_legal_documents_created_byToadmins LegalDocument[]      @relation("legal_documents_created_byToadmins")
   legal_documents_legal_documents_updated_byToadmins LegalDocument[]      @relation("legal_documents_updated_byToadmins")
   operators                                          Operator[]
   operatorInvitations                                OperatorInvitation[]
   operatorPermissions                                OperatorPermission[]
   adminServices                                      AdminService[]
-  sanctions                                          AdminSanction[]
 
   @@index([email], map: "idx_admins_email")
   @@index([parent_id], map: "idx_admins_parent_id")
@@ -216,24 +206,6 @@ model admins {
   @@index([country_code])
 }
 
-model audit_logs {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  admin_id     String   @db.Uuid
-  action       String
-  resource     String
-  resource_id  String?  @db.Uuid
-  before_state Json?
-  after_state  Json?
-  ip_address   String?
-  user_agent   String?
-  created_at   DateTime @default(now()) @db.Timestamptz(6)
-  admins       admins   @relation(fields: [admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([action], map: "idx_audit_logs_action")
-  @@index([admin_id, created_at], map: "idx_audit_logs_admin_id_created_at")
-  @@index([created_at], map: "idx_audit_logs_created_at")
-  @@index([resource, resource_id], map: "idx_audit_logs_resource_resource_id")
-}
 
 model goose_db_version {
   id         Int      @id @default(autoincrement())
@@ -332,7 +304,7 @@ model Service {
   updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   userServices           UserService[]
-  consents               UserConsent[]
+  consents               Consent[]
   legalDocuments         LegalDocument[]
   consentRequirements    ServiceConsentRequirement[]
   personalInfoAccessLogs PersonalInfoAccessLog[]
@@ -343,8 +315,7 @@ model Service {
   adminServices          AdminService[]
   accountLinks           AccountLink[]
   tiers                  Tier[]
-  userSanctions          UserSanction[]
-  adminSanctions         AdminSanction[]
+  sanctions              Sanction[]
 
   @@index([slug])
   @@index([isActive])
@@ -496,13 +467,12 @@ model Operator {
   lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   admin       admins              @relation(fields: [adminId], references: [id], onDelete: Cascade)
   service     Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   invitation  OperatorInvitation? @relation(fields: [invitationId], references: [id])
   permissions OperatorPermission[]
-  sessions    OperatorSession[]
-  sanctions   OperatorSanction[]
   userLinks   OperatorUserLink[]
 
   @@unique([email, serviceId])
@@ -530,19 +500,6 @@ model OperatorPermission {
   @@map("operator_permissions")
 }
 
-model OperatorSession {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  operatorId   String   @map("operator_id") @db.Uuid
-  refreshToken String   @unique @map("refresh_token")
-  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
-
-  @@index([operatorId])
-  @@index([refreshToken])
-  @@map("operator_sessions")
-}
 
 model AdminService {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -585,28 +542,6 @@ model AccountLink {
   @@map("account_links")
 }
 
-model PlatformConsent {
-  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String         @map("user_id") @db.Uuid
-  consentType ConsentType    @map("consent_type")
-  countryCode String         @map("country_code") @db.VarChar(2)
-  documentId  String?        @map("document_id") @db.Uuid
-  agreed      Boolean        @default(true)
-  agreedAt    DateTime       @map("agreed_at") @db.Timestamptz(6)
-  withdrawnAt DateTime?      @map("withdrawn_at") @db.Timestamptz(6)
-  ipAddress   String?        @map("ip_address") @db.VarChar(45)
-  userAgent   String?        @map("user_agent")
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  document LegalDocument? @relation(fields: [documentId], references: [id])
-
-  @@unique([userId, consentType, countryCode])
-  @@index([userId])
-  @@index([consentType])
-  @@index([countryCode])
-  @@map("platform_consents")
-}
 
 model Tier {
   id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -628,72 +563,37 @@ model Tier {
   @@map("tiers")
 }
 
-model UserSanction {
-  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String         @map("user_id") @db.Uuid
-  serviceId    String?        @map("service_id") @db.Uuid
+model Sanction {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectId    String              @map("subject_id") @db.Uuid
+  subjectType  SanctionSubjectType @map("subject_type")
+  serviceId    String?             @map("service_id") @db.Uuid
   type         SanctionType
-  status       SanctionStatus @default(ACTIVE)
+  status       SanctionStatus      @default(ACTIVE)
   reason       String
-  issuedBy     String         @map("issued_by") @db.Uuid
-  issuedByType String         @map("issued_by_type") @db.VarChar(20)
-  startAt      DateTime       @map("start_at") @db.Timestamptz(6)
-  endAt        DateTime?      @map("end_at") @db.Timestamptz(6)
-  revokedAt    DateTime?      @map("revoked_at") @db.Timestamptz(6)
-  revokedBy    String?        @map("revoked_by") @db.Uuid
-  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  issuedBy     String              @map("issued_by") @db.Uuid
+  issuedByType String              @default("ADMIN") @map("issued_by_type") @db.VarChar(20)
+  startAt      DateTime            @map("start_at") @db.Timestamptz(6)
+  endAt        DateTime?           @map("end_at") @db.Timestamptz(6)
+  revokedAt    DateTime?           @map("revoked_at") @db.Timestamptz(6)
+  revokedBy    String?             @map("revoked_by") @db.Uuid
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   service Service? @relation(fields: [serviceId], references: [id])
 
-  @@index([userId])
+  @@index([subjectId, subjectType])
   @@index([serviceId])
   @@index([status])
   @@index([type])
-  @@map("user_sanctions")
+  @@map("sanctions")
 }
 
-model AdminSanction {
-  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  adminId   String         @map("admin_id") @db.Uuid
-  serviceId String?        @map("service_id") @db.Uuid
-  type      SanctionType
-  status    SanctionStatus @default(ACTIVE)
-  reason    String
-  issuedBy  String         @map("issued_by") @db.Uuid
-  startAt   DateTime       @map("start_at") @db.Timestamptz(6)
-  endAt     DateTime?      @map("end_at") @db.Timestamptz(6)
-  revokedAt DateTime?      @map("revoked_at") @db.Timestamptz(6)
-  revokedBy String?        @map("revoked_by") @db.Uuid
-  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+enum SanctionSubjectType {
+  USER
+  ADMIN
+  OPERATOR
 
-  admin   admins   @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  service Service? @relation(fields: [serviceId], references: [id])
-
-  @@index([adminId])
-  @@index([serviceId])
-  @@index([status])
-  @@map("admin_sanctions")
-}
-
-model OperatorSanction {
-  id         String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  operatorId String         @map("operator_id") @db.Uuid
-  type       SanctionType
-  status     SanctionStatus @default(ACTIVE)
-  reason     String
-  issuedBy   String         @map("issued_by") @db.Uuid
-  startAt    DateTime       @map("start_at") @db.Timestamptz(6)
-  endAt      DateTime?      @map("end_at") @db.Timestamptz(6)
-  revokedAt  DateTime?      @map("revoked_at") @db.Timestamptz(6)
-  revokedBy  String?        @map("revoked_by") @db.Uuid
-  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
-
-  @@index([operatorId])
-  @@index([status])
-  @@map("operator_sanctions")
+  @@map("sanction_subject_type")
 }
 
 model OperatorUserLink {
@@ -821,12 +721,6 @@ enum AuthProvider {
   APPLE
 }
 
-enum admin_link_type {
-  OPERATOR
-  MODERATOR
-  SUPPORT
-  IMPERSONATE
-}
 
 enum admin_scope {
   SYSTEM

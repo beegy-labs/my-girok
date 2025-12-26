@@ -16,6 +16,7 @@ import {
   LegacyUserJwtPayload,
 } from '@my-girok/types';
 import { generateUniqueExternalId } from '../common/utils/id-generator';
+import { hashToken, getSessionExpiresAt } from '../common/utils/session.utils';
 
 @Injectable()
 export class AuthService {
@@ -127,26 +128,37 @@ export class AuthService {
     try {
       this.jwtService.verify(refreshToken);
 
+      const tokenHash = hashToken(refreshToken);
       const session = await this.prisma.session.findUnique({
-        where: { refreshToken },
-        include: { user: true },
+        where: { tokenHash },
       });
 
-      if (!session || session.expiresAt < new Date()) {
+      if (!session || session.expiresAt < new Date() || session.revokedAt) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const tokens = await this.generateTokens(
-        session.user.id,
-        session.user.email,
-        session.user.role,
-      );
+      if (session.subjectType !== 'USER') {
+        throw new UnauthorizedException('Invalid session type');
+      }
 
+      // Fetch user
+      const user = await this.prisma.user.findUnique({
+        where: { id: session.subjectId },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+      // Update session with new token hash
       await this.prisma.session.update({
         where: { id: session.id },
         data: {
+          tokenHash: hashToken(tokens.refreshToken),
           refreshToken: tokens.refreshToken,
-          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+          expiresAt: getSessionExpiresAt(),
         },
       });
 
@@ -157,10 +169,16 @@ export class AuthService {
   }
 
   async logout(userId: string, refreshToken: string): Promise<void> {
-    await this.prisma.session.deleteMany({
+    const tokenHash = hashToken(refreshToken);
+    // Soft delete: mark session as revoked instead of deleting
+    await this.prisma.session.updateMany({
       where: {
-        userId,
-        refreshToken,
+        subjectId: userId,
+        subjectType: 'USER',
+        tokenHash,
+      },
+      data: {
+        revokedAt: new Date(),
       },
     });
   }
@@ -319,14 +337,21 @@ export class AuthService {
     return services;
   }
 
-  async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
-
+  async saveRefreshToken(
+    userId: string,
+    refreshToken: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<void> {
     await this.prisma.session.create({
       data: {
-        userId,
-        refreshToken,
-        expiresAt,
+        subjectId: userId,
+        subjectType: 'USER',
+        tokenHash: hashToken(refreshToken),
+        refreshToken, // Keep for backward compatibility during migration
+        expiresAt: getSessionExpiresAt(),
+        ipAddress,
+        userAgent,
       },
     });
   }

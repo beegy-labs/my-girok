@@ -403,10 +403,11 @@ export class AccountLinkingService {
     consents: PlatformConsentInput[],
   ): Promise<void> {
     for (const consent of consents) {
-      // Check if consent exists
+      // Check if consent exists (PLATFORM scope)
       const existing = await this.prisma.$queryRaw<{ id: string }[]>`
-        SELECT id FROM platform_consents
+        SELECT id FROM consents
         WHERE user_id = ${userId}
+          AND scope = 'PLATFORM'
           AND consent_type = ${consent.type}::consent_type
           AND country_code = ${consent.countryCode}
         LIMIT 1
@@ -415,20 +416,20 @@ export class AccountLinkingService {
       if (existing.length) {
         // Update existing
         await this.prisma.$executeRaw`
-          UPDATE platform_consents
+          UPDATE consents
           SET agreed = ${consent.agreed},
               document_id = ${consent.documentId || null},
               agreed_at = NOW()
           WHERE id = ${existing[0].id}
         `;
       } else {
-        // Create new
+        // Create new with PLATFORM scope
         await this.prisma.$executeRaw`
-          INSERT INTO platform_consents (
-            id, user_id, consent_type, country_code, document_id, agreed, agreed_at, created_at
+          INSERT INTO consents (
+            id, user_id, consent_type, scope, country_code, document_id, agreed, agreed_at, created_at
           )
           VALUES (
-            gen_random_uuid()::TEXT, ${userId}, ${consent.type}::consent_type,
+            gen_random_uuid(), ${userId}, ${consent.type}::consent_type, 'PLATFORM',
             ${consent.countryCode}, ${consent.documentId || null}, ${consent.agreed},
             NOW(), NOW()
           )

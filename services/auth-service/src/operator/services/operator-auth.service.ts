@@ -19,12 +19,15 @@ import {
   OperatorWithRelations,
   OperatorPermissionRow,
 } from '../types/operator.types';
+import { hashToken, getSessionExpiresAt } from '../../common/utils/session.utils';
 
-interface OperatorSession {
+interface UnifiedSession {
   id: string;
-  operatorId: string;
-  refreshToken: string;
+  subjectId: string;
+  subjectType: string;
+  tokenHash: string;
   expiresAt: Date;
+  revokedAt: Date | null;
 }
 
 interface InvitationRow {
@@ -213,17 +216,19 @@ export class OperatorAuthService {
       // Verify token
       this.jwtService.verify(refreshToken);
 
-      // Find session
-      const sessions = await this.prisma.$queryRaw<OperatorSession[]>`
-        SELECT id, operator_id as "operatorId", refresh_token as "refreshToken", expires_at as "expiresAt"
-        FROM operator_sessions
-        WHERE refresh_token = ${refreshToken}
+      // Find session using token hash
+      const tokenHash = hashToken(refreshToken);
+      const sessions = await this.prisma.$queryRaw<UnifiedSession[]>`
+        SELECT id, subject_id as "subjectId", subject_type as "subjectType",
+               token_hash as "tokenHash", expires_at as "expiresAt", revoked_at as "revokedAt"
+        FROM sessions
+        WHERE token_hash = ${tokenHash} AND subject_type = 'OPERATOR'
         LIMIT 1
       `;
 
       const session = sessions[0];
 
-      if (!session || new Date(session.expiresAt) < new Date()) {
+      if (!session || new Date(session.expiresAt) < new Date() || session.revokedAt) {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
@@ -237,7 +242,7 @@ export class OperatorAuthService {
           o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
         FROM operators o
         JOIN services s ON o.service_id = s.id
-        WHERE o.id = ${session.operatorId}
+        WHERE o.id = ${session.subjectId}
         LIMIT 1
       `;
 
@@ -250,11 +255,14 @@ export class OperatorAuthService {
       const permissions = await this.getOperatorPermissions(operator.id);
       const tokens = await this.generateTokens(operator, permissions);
 
-      // Update session
+      // Update session with new token hash
+      const newTokenHash = hashToken(tokens.refreshToken);
+      const newExpiresAt = getSessionExpiresAt();
       await this.prisma.$executeRaw`
-        UPDATE operator_sessions
-        SET refresh_token = ${tokens.refreshToken},
-            expires_at = ${new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)}
+        UPDATE sessions
+        SET token_hash = ${newTokenHash},
+            refresh_token = ${tokens.refreshToken},
+            expires_at = ${newExpiresAt}
         WHERE id = ${session.id}
       `;
 
@@ -271,9 +279,12 @@ export class OperatorAuthService {
    * Logout
    */
   async logout(operatorId: string, refreshToken: string): Promise<void> {
+    const tokenHash = hashToken(refreshToken);
+    // Soft delete: mark session as revoked
     await this.prisma.$executeRaw`
-      DELETE FROM operator_sessions
-      WHERE operator_id = ${operatorId} AND refresh_token = ${refreshToken}
+      UPDATE sessions
+      SET revoked_at = NOW()
+      WHERE subject_id = ${operatorId} AND subject_type = 'OPERATOR' AND token_hash = ${tokenHash}
     `;
   }
 
@@ -364,11 +375,12 @@ export class OperatorAuthService {
   }
 
   private async saveOperatorSession(operatorId: string, refreshToken: string): Promise<void> {
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+    const tokenHash = hashToken(refreshToken);
+    const expiresAt = getSessionExpiresAt();
 
     await this.prisma.$executeRaw`
-      INSERT INTO operator_sessions (id, operator_id, refresh_token, expires_at, created_at)
-      VALUES (gen_random_uuid()::TEXT, ${operatorId}, ${refreshToken}, ${expiresAt}, NOW())
+      INSERT INTO sessions (id, subject_id, subject_type, token_hash, refresh_token, expires_at, created_at)
+      VALUES (gen_random_uuid(), ${operatorId}, 'OPERATOR', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
     `;
   }
 }
