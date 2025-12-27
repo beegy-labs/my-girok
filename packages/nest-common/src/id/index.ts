@@ -5,9 +5,6 @@
 // Generator
 export { UUIDv7, ID } from './uuidv7.generator';
 
-// Prisma Extension
-export { uuidv7Extension } from './prisma.extension';
-
 // Validation Pipes
 export { ParseUUIDPipe, ParseUUIDv7Pipe, UUIDValidationPipe, IdValidationPipe } from './uuid.pipe';
 
@@ -31,5 +28,11 @@ export {
 // =============================================================================
 
 export { ID as ULID } from './ulid.generator';
-export { ulidExtension } from './prisma.extension';
 export { ParseUlidPipe } from './ulid.pipe';
+
+// =============================================================================
+// Prisma Extensions (Import separately to avoid loading @prisma/client)
+// Usage: import { uuidv7Extension } from '@my-girok/nest-common/dist/id/prisma.extension';
+// =============================================================================
+// Note: Prisma extensions are NOT exported from main barrel to prevent
+// loading @prisma/client in services that don't use Prisma (e.g., ClickHouse-only services)
