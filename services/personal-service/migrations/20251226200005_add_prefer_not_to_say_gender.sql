@@ -2,8 +2,9 @@
 -- Migration: Add PREFER_NOT_TO_SAY to Gender enum
 -- Issue: Resume DB optimization - Phase 1
 -- 2025 Best Practice: Complete gender options for user privacy
+--
+-- Note: IF NOT EXISTS makes this idempotent (already applied via Prisma)
 
--- Add new enum value to Gender
 ALTER TYPE "Gender" ADD VALUE IF NOT EXISTS 'PREFER_NOT_TO_SAY';
 
 -- +goose Down
