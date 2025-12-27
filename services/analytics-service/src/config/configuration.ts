@@ -1,5 +1,5 @@
 export default () => ({
-  port: parseInt(process.env.PORT || '4003', 10),
+  port: parseInt(process.env.PORT || '3004', 10),
 
   clickhouse: {
     host: process.env.CLICKHOUSE_HOST || 'localhost',
