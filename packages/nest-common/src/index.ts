@@ -25,5 +25,5 @@ export * from './health';
 // ID (UUIDv7 - RFC 9562)
 export * from './id';
 
-// ClickHouse
-export * from './clickhouse';
+// ClickHouse - Import separately: @my-girok/nest-common/clickhouse
+// Not exported from main barrel to prevent loading @clickhouse/client in services that don't use it

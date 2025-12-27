@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '../../node_modules/.prisma/auth-client';
-import { uuidv7Extension } from '@my-girok/nest-common';
+import { uuidv7Extension } from '@my-girok/nest-common/prisma';
 
 /**
  * Prisma service for database connection management

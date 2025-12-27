@@ -4,6 +4,30 @@
   "description": "Shared NestJS utilities and components for my-girok microservices",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./prisma": {
+      "types": "./dist/prisma.d.ts",
+      "default": "./dist/prisma.js"
+    },
+    "./clickhouse": {
+      "types": "./dist/clickhouse-entry.d.ts",
+      "default": "./dist/clickhouse-entry.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "prisma": [
+        "./dist/prisma.d.ts"
+      ],
+      "clickhouse": [
+        "./dist/clickhouse-entry.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -34,6 +58,9 @@
   },
   "peerDependenciesMeta": {
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@prisma/client": {
       "optional": true
     }
   },

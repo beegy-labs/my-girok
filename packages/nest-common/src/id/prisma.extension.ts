@@ -1,50 +1,59 @@
-import { Prisma } from '@prisma/client';
 import { ID as ULID_ID } from './ulid.generator';
 import { ID as UUID_ID } from './uuidv7.generator';
+
+/**
+ * Prisma extension type definition (compatible with Prisma.defineExtension)
+ * Avoids importing @prisma/client at module load time
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PrismaExtension = any;
 
 /**
  * Factory function to create Prisma extension for auto-generating IDs
  * Eliminates code duplication between ULID and UUIDv7 extensions
  *
+ * Note: This implementation avoids using Prisma.defineExtension to prevent
+ * loading @prisma/client at module initialization time. The extension
+ * works identically at runtime.
+ *
  * @param generator - ID generation function
  * @param name - Extension name for debugging
  */
-const createIdExtension = (generator: () => string, name: string) =>
-  Prisma.defineExtension({
-    name,
-    query: {
-      $allModels: {
-        async create({ args, query }) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const data = args.data as any;
-          if (data && typeof data === 'object' && !data.id) {
-            data.id = generator();
-          }
-          return query(args);
-        },
-        async createMany({ args, query }) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const dataArray = args.data as any[];
-          if (Array.isArray(dataArray)) {
-            for (const item of dataArray) {
-              if (!item.id) {
-                item.id = generator();
-              }
+const createIdExtension = (generator: () => string, name: string): PrismaExtension => ({
+  name,
+  query: {
+    $allModels: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async create({ args, query }: any) {
+        const data = args.data;
+        if (data && typeof data === 'object' && !data.id) {
+          data.id = generator();
+        }
+        return query(args);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async createMany({ args, query }: any) {
+        const dataArray = args.data;
+        if (Array.isArray(dataArray)) {
+          for (const item of dataArray) {
+            if (!item.id) {
+              item.id = generator();
             }
           }
-          return query(args);
-        },
-        async upsert({ args, query }) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const create = args.create as any;
-          if (create && typeof create === 'object' && !create.id) {
-            create.id = generator();
-          }
-          return query(args);
-        },
+        }
+        return query(args);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async upsert({ args, query }: any) {
+        const create = args.create;
+        if (create && typeof create === 'object' && !create.id) {
+          create.id = generator();
+        }
+        return query(args);
       },
     },
-  });
+  },
+});
 
 /**
  * Prisma extension that auto-generates ULID for id field
