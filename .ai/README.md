@@ -107,6 +107,26 @@
 → Read: `apps/web-main.md` (Advertisement section)
 → Full guide: `docs/guides/ADSENSE_GUIDE.md`
 
+## Global Account System
+
+**Quick Reference:**
+
+| Concept                        | Location                                   |
+| ------------------------------ | ------------------------------------------ |
+| Account Mode (SERVICE/UNIFIED) | `services/auth-service.md#account-mode`    |
+| Service Join API               | `services/auth-service.md#service-api`     |
+| Consent by Country             | `services/auth-service.md#consent-api`     |
+| Unified Guard System           | `services/auth-service.md#guards`          |
+| Operator Management            | `services/auth-service.md#operator-api`    |
+| Law Registry                   | `services/auth-service.md#law-registry`    |
+| Account Linking                | `services/auth-service.md#account-linking` |
+
+**Token Types:**
+
+- `USER_ACCESS` - User auth with services, countryCode
+- `ADMIN_ACCESS` - Admin auth with scope, permissions
+- `OPERATOR_ACCESS` - Operator auth with serviceSlug, countryCode
+
 ## Current Architecture
 
 ```

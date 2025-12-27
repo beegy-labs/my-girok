@@ -1,0 +1,20 @@
+apiVersion: v2
+name: audit-service
+description: Audit and Compliance microservice for My-Girok (ClickHouse-based)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - audit
+  - compliance
+  - clickhouse
+  - logging
+
+maintainers:
+  - name: Beegy Team
+    email: dev@beegy.net
+
+home: https://github.com/beegy/my-girok
+sources:
+  - https://github.com/beegy/my-girok

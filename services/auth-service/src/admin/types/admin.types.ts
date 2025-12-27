@@ -8,6 +8,16 @@ export type TenantStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'TERMINATED';
 export type AdminLinkType = 'OPERATOR' | 'MODERATOR' | 'SUPPORT' | 'IMPERSONATE';
 
 /**
+ * Admin service payload for JWT
+ */
+export interface AdminServicePayload {
+  roleId: string;
+  roleName: string;
+  countries: string[];
+  permissions: string[];
+}
+
+/**
  * Admin JWT Payload - stored in token and attached to request
  */
 export interface AdminPayload {
@@ -15,14 +25,16 @@ export interface AdminPayload {
   email: string;
   name: string;
   type: 'ADMIN_ACCESS';
+  accountMode: 'SERVICE' | 'UNIFIED';
   scope: AdminScope;
   tenantId: string | null;
-  tenantSlug?: string;
-  tenantType?: TenantType;
+  tenantSlug?: string | null;
+  tenantType?: TenantType | null;
   roleId: string;
   roleName: string;
   level: number;
   permissions: string[]; // Cached permission keys
+  services: Record<string, AdminServicePayload>; // Service-specific roles/permissions
 }
 
 /**
@@ -33,6 +45,8 @@ export interface Admin {
   email: string;
   password: string;
   name: string;
+  accountMode: 'SERVICE' | 'UNIFIED';
+  countryCode: string | null;
   scope: AdminScope;
   tenantId: string | null;
   parentId: string | null;

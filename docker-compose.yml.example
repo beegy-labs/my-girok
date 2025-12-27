@@ -53,6 +53,33 @@ services:
     networks:
       - my-girok-network
 
+  # ClickHouse - Analytics and Audit Database
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    container_name: my-girok-clickhouse
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-change-this-password}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./infrastructure/clickhouse/schemas:/docker-entrypoint-initdb.d
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my-girok-network
+
   # Auth Service
   auth-service:
     build:
@@ -111,6 +138,96 @@ services:
     #   - ./services/auth-service/src:/app/services/auth-service/src:ro
     # command: ["pnpm", "dev"]
 
+  # Personal Service
+  personal-service:
+    build:
+      context: .
+      dockerfile: services/personal-service/Dockerfile
+    container_name: my-girok-personal-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3002
+      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_PERSONAL_NAME:-girok_personal}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-secure-secret-min-32-chars}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3002:3002"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
+
+  # Audit Service - Compliance and Logging (ClickHouse)
+  audit-service:
+    build:
+      context: .
+      dockerfile: services/audit-service/Dockerfile
+    container_name: my-girok-audit-service
+    restart: unless-stopped
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3003
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_DATABASE: audit_db
+      CLICKHOUSE_USERNAME: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-change-this-password}
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-secure-secret-min-32-chars}
+    ports:
+      - "3003:3003"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
+
+  # Analytics Service - Business Intelligence (ClickHouse)
+  analytics-service:
+    build:
+      context: .
+      dockerfile: services/analytics-service/Dockerfile
+    container_name: my-girok-analytics-service
+    restart: unless-stopped
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3004
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_DATABASE: analytics_db
+      CLICKHOUSE_USERNAME: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-change-this-password}
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-secure-secret-min-32-chars}
+    ports:
+      - "3004:3004"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3004/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
+
   # Web Main Application
   web-main:
     build:
@@ -157,6 +274,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  clickhouse_data:
     driver: local
 
 # Network

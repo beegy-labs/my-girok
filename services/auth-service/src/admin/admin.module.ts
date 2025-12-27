@@ -5,16 +5,31 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 // Database
 import { DatabaseModule } from '../database/database.module';
 
+// Users module for PersonalInfoService
+import { UsersModule } from '../users/users.module';
+
 // Controllers
 import {
   AdminAuthController,
   TenantController,
   AdminLegalController,
   AdminAuditController,
+  OperatorController,
+  AuditQueryController,
+  LawRegistryController,
 } from './controllers';
+import { UserPersonalInfoController } from './controllers/user-personal-info.controller';
 
 // Services
-import { AdminAuthService, TenantService, AdminLegalService, AdminAuditService } from './services';
+import {
+  AdminAuthService,
+  TenantService,
+  AdminLegalService,
+  AdminAuditService,
+  OperatorService,
+  AuditQueryService,
+  LawRegistryService,
+} from './services';
 
 // Guards
 import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
@@ -22,6 +37,7 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
 @Module({
   imports: [
     DatabaseModule,
+    UsersModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -36,18 +52,38 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
       },
     }),
   ],
-  controllers: [AdminAuthController, TenantController, AdminLegalController, AdminAuditController],
+  controllers: [
+    AdminAuthController,
+    TenantController,
+    AdminLegalController,
+    AdminAuditController,
+    OperatorController,
+    UserPersonalInfoController,
+    AuditQueryController,
+    LawRegistryController,
+  ],
   providers: [
     // Services
     AdminAuthService,
     TenantService,
     AdminLegalService,
     AdminAuditService,
+    OperatorService,
+    AuditQueryService,
+    LawRegistryService,
     // Guards
     AdminAuthGuard,
     PermissionGuard,
     TenantGuard,
   ],
-  exports: [AdminAuthService, TenantService, AdminLegalService, AdminAuditService],
+  exports: [
+    AdminAuthService,
+    TenantService,
+    AdminLegalService,
+    AdminAuditService,
+    OperatorService,
+    AuditQueryService,
+    LawRegistryService,
+  ],
 })
 export class AdminModule {}

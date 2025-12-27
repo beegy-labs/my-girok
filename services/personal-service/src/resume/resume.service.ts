@@ -1,11 +1,21 @@
-import { Injectable, NotFoundException, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { CopyStatus } from '../../node_modules/.prisma/personal-client';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { FileCopyService } from '../queue/services/file-copy.service';
-import { CreateResumeDto, UpdateResumeDto, UpdateSectionOrderDto, ToggleSectionVisibilityDto } from './dto';
+import {
+  CreateResumeDto,
+  UpdateResumeDto,
+  UpdateSectionOrderDto,
+  ToggleSectionVisibilityDto,
+} from './dto';
 import { AttachmentType } from '../storage/dto';
 import { firstValueFrom } from 'rxjs';
 
@@ -83,7 +93,12 @@ export class ResumeService {
     if (resume.experiences && Array.isArray(resume.experiences)) {
       resume.experiences = resume.experiences.map((exp: any) => {
         if (!exp.showSalary) {
-          const { salary: _salary, salaryUnit: _salaryUnit, showSalary: _showSalary, ...rest } = exp;
+          const {
+            salary: _salary,
+            salaryUnit: _salaryUnit,
+            showSalary: _showSalary,
+            ...rest
+          } = exp;
           return rest;
         }
         return exp;
@@ -164,7 +179,6 @@ export class ResumeService {
           summary: dto.summary,
           keyAchievements: dto.keyAchievements ?? [],
           profileImage: profileImageValue,
-          birthYear: dto.birthYear,
           birthDate: dto.birthDate,
           gender: dto.gender,
           militaryService: dto.militaryService,
@@ -175,64 +189,72 @@ export class ResumeService {
           militaryServiceEndDate: dto.militaryServiceEndDate,
           coverLetter: dto.coverLetter,
           applicationReason: dto.applicationReason,
-        skills: dto.skills ? {
-          create: dto.skills.map(skill => ({
-            ...skill,
-            items: skill.items as any, // Cast to any for Prisma Json type
-          })),
-        } : undefined,
-        experiences: dto.experiences ? {
-          create: dto.experiences.map((exp, expIdx) => {
-            const expData: any = {
-              company: exp.company,
-              startDate: exp.startDate,
-              endDate: exp.endDate || null,
-              isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
-              finalPosition: exp.finalPosition,
-              jobTitle: exp.jobTitle,
-              salary: exp.salary,
-              salaryUnit: exp.salaryUnit,
-              showSalary: exp.showSalary ?? false,
-              order: exp.order ?? 0,
-              visible: exp.visible ?? true,
-            };
+          skills: dto.skills
+            ? {
+                create: dto.skills.map((skill) => ({
+                  ...skill,
+                  items: skill.items as any, // Cast to any for Prisma Json type
+                })),
+              }
+            : undefined,
+          experiences: dto.experiences
+            ? {
+                create: dto.experiences.map((exp, expIdx) => {
+                  const expData: any = {
+                    company: exp.company,
+                    startDate: exp.startDate,
+                    endDate: exp.endDate || null,
+                    isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
+                    finalPosition: exp.finalPosition,
+                    jobTitle: exp.jobTitle,
+                    salary: exp.salary,
+                    salaryUnit: exp.salaryUnit,
+                    showSalary: exp.showSalary ?? false,
+                    order: exp.order ?? 0,
+                    visible: exp.visible ?? true,
+                  };
 
-            // Only add projects if they exist (without achievements)
-            if (exp.projects && exp.projects.length > 0) {
-              expData.projects = {
-                create: exp.projects.map((project, projIdx) => {
-                  // Store achievements for later creation
-                  if (project.achievements && project.achievements.length > 0) {
-                    const key = expIdx * 1000 + projIdx; // Create unique key
-                    projectAchievementsMap.set(key, project.achievements);
+                  // Only add projects if they exist (without achievements)
+                  if (exp.projects && exp.projects.length > 0) {
+                    expData.projects = {
+                      create: exp.projects.map((project, projIdx) => {
+                        // Store achievements for later creation
+                        if (project.achievements && project.achievements.length > 0) {
+                          const key = expIdx * 1000 + projIdx; // Create unique key
+                          projectAchievementsMap.set(key, project.achievements);
+                        }
+
+                        // Create project without achievements
+                        return {
+                          name: project.name,
+                          startDate: project.startDate,
+                          endDate: project.endDate || null,
+                          description: project.description,
+                          role: project.role,
+                          techStack: project.techStack,
+                          url: project.url,
+                          githubUrl: project.githubUrl,
+                          order: project.order ?? 0,
+                        };
+                      }),
+                    };
                   }
 
-                  // Create project without achievements
-                  return {
-                    name: project.name,
-                    startDate: project.startDate,
-                    endDate: project.endDate || null,
-                    description: project.description,
-                    role: project.role,
-                    techStack: project.techStack,
-                    url: project.url,
-                    githubUrl: project.githubUrl,
-                    order: project.order ?? 0,
-                  };
+                  return expData;
                 }),
-              };
-            }
-
-            return expData;
-          }),
-        } : undefined,
-        // NOTE: Projects are now handled within experiences (ExperienceProject model)
-        educations: dto.educations ? {
-          create: dto.educations,
-        } : undefined,
-        certificates: dto.certificates ? {
-          create: dto.certificates,
-        } : undefined,
+              }
+            : undefined,
+          // NOTE: Projects are now handled within experiences (ExperienceProject model)
+          educations: dto.educations
+            ? {
+                create: dto.educations,
+              }
+            : undefined,
+          certificates: dto.certificates
+            ? {
+                create: dto.certificates,
+              }
+            : undefined,
           sections: {
             create: [
               { type: 'SKILLS', order: 0, visible: true },
@@ -300,10 +322,10 @@ export class ResumeService {
     });
   }
 
-  // Get all resumes for a user
+  // Get all resumes for a user (excluding soft-deleted)
   async findAllByUserId(userId: string) {
     const resumes = await this.prisma.resume.findMany({
-      where: { userId: userId },
+      where: { userId: userId, deletedAt: null },
       include: this.RESUME_FULL_INCLUDE,
       orderBy: [
         { isDefault: 'desc' }, // Default resume first
@@ -312,18 +334,15 @@ export class ResumeService {
     });
 
     // Sanitize salary info for all resumes (remove salary fields where showSalary is false)
-    return resumes.map(resume => this.sanitizeSalaryInfo(resume));
+    return resumes.map((resume) => this.sanitizeSalaryInfo(resume));
   }
 
-  // Get default resume or first resume for a user
+  // Get default resume or first resume for a user (excluding soft-deleted)
   async getDefaultResume(userId: string) {
     const resume = await this.prisma.resume.findFirst({
-      where: { userId: userId },
+      where: { userId: userId, deletedAt: null },
       include: this.RESUME_FULL_INCLUDE,
-      orderBy: [
-        { isDefault: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
     });
 
     if (!resume) {
@@ -334,10 +353,10 @@ export class ResumeService {
     return this.sanitizeSalaryInfo(resume);
   }
 
-  // Get specific resume by ID (with ownership check)
+  // Get specific resume by ID (with ownership check, excluding soft-deleted)
   async findByIdAndUserId(resumeId: string, userId: string) {
     const resume = await this.prisma.resume.findFirst({
-      where: { id: resumeId, userId: userId },
+      where: { id: resumeId, userId: userId, deletedAt: null },
       include: this.RESUME_FULL_INCLUDE,
     });
 
@@ -355,192 +374,195 @@ export class ResumeService {
       const resume = await this.findByIdAndUserId(resumeId, userId);
 
       return await this.prisma.$transaction(async (tx) => {
-      // If setting as default, unset all other default resumes
-      if (dto.isDefault) {
-        await tx.resume.updateMany({
-          where: { userId: userId, isDefault: true, id: { not: resume.id } },
-          data: { isDefault: false },
+        // If setting as default, unset all other default resumes
+        if (dto.isDefault) {
+          await tx.resume.updateMany({
+            where: { userId: userId, isDefault: true, id: { not: resume.id } },
+            data: { isDefault: false },
+          });
+        }
+
+        // Update basic info
+        await tx.resume.update({
+          where: { id: resume.id },
+          data: {
+            title: dto.title,
+            description: dto.description,
+            isDefault: dto.isDefault,
+            paperSize: dto.paperSize,
+            name: dto.name,
+            email: dto.email,
+            phone: dto.phone,
+            address: dto.address,
+            github: dto.github,
+            blog: dto.blog,
+            linkedin: dto.linkedin,
+            portfolio: dto.portfolio,
+            summary: dto.summary,
+            keyAchievements: dto.keyAchievements,
+            profileImage: dto.profileImage,
+            birthDate: dto.birthDate,
+            gender: dto.gender,
+            militaryService: dto.militaryService,
+            militaryDischarge: dto.militaryDischarge,
+            militaryRank: dto.militaryRank,
+            militaryDischargeType: dto.militaryDischargeType,
+            militaryServiceStartDate: dto.militaryServiceStartDate,
+            militaryServiceEndDate: dto.militaryServiceEndDate,
+            coverLetter: dto.coverLetter,
+            applicationReason: dto.applicationReason,
+          },
         });
-      }
 
-      // Update basic info
-      await tx.resume.update({
-        where: { id: resume.id },
-        data: {
-          title: dto.title,
-          description: dto.description,
-          isDefault: dto.isDefault,
-          paperSize: dto.paperSize,
-          name: dto.name,
-          email: dto.email,
-          phone: dto.phone,
-          address: dto.address,
-          github: dto.github,
-          blog: dto.blog,
-          linkedin: dto.linkedin,
-          portfolio: dto.portfolio,
-          summary: dto.summary,
-          keyAchievements: dto.keyAchievements,
-          profileImage: dto.profileImage,
-          birthYear: dto.birthYear,
-          birthDate: dto.birthDate,
-          gender: dto.gender,
-          militaryService: dto.militaryService,
-          militaryDischarge: dto.militaryDischarge,
-          militaryRank: dto.militaryRank,
-          militaryDischargeType: dto.militaryDischargeType,
-          militaryServiceStartDate: dto.militaryServiceStartDate,
-          militaryServiceEndDate: dto.militaryServiceEndDate,
-          coverLetter: dto.coverLetter,
-          applicationReason: dto.applicationReason,
-        },
-      });
+        // Update nested data if provided
+        if (dto.skills) {
+          await tx.skill.deleteMany({ where: { resumeId: resume.id } });
+          // Use individual creates instead of createMany for proper JSON serialization
+          for (const skill of dto.skills) {
+            await tx.skill.create({
+              data: {
+                resumeId: resume.id,
+                category: skill.category,
+                items: skill.items as any, // Cast to any for Prisma Json type
+                order: skill.order ?? 0,
+                visible: skill.visible ?? true,
+              },
+            });
+          }
+        }
 
-      // Update nested data if provided
-      if (dto.skills) {
-        await tx.skill.deleteMany({ where: { resumeId: resume.id } });
-        // Use individual creates instead of createMany for proper JSON serialization
-        for (const skill of dto.skills) {
-          await tx.skill.create({
-            data: {
+        if (dto.experiences) {
+          await tx.experience.deleteMany({ where: { resumeId: resume.id } });
+
+          for (const exp of dto.experiences) {
+            // Log experience data before creating
+            this.logger.debug(
+              `Creating experience: ${JSON.stringify({
+                company: exp.company,
+                startDate: exp.startDate,
+                endDate: exp.endDate,
+                isCurrentlyWorking: exp.isCurrentlyWorking,
+                finalPosition: exp.finalPosition,
+                jobTitle: exp.jobTitle,
+                projectsCount: exp.projects?.length || 0,
+              })}`,
+            );
+
+            const experienceData: any = {
               resumeId: resume.id,
-              category: skill.category,
-              items: skill.items as any, // Cast to any for Prisma Json type
-              order: skill.order ?? 0,
-              visible: skill.visible ?? true,
-            },
-          });
-        }
-      }
-
-      if (dto.experiences) {
-        await tx.experience.deleteMany({ where: { resumeId: resume.id } });
-
-        for (const exp of dto.experiences) {
-          // Log experience data before creating
-          this.logger.debug(`Creating experience: ${JSON.stringify({
-            company: exp.company,
-            startDate: exp.startDate,
-            endDate: exp.endDate,
-            isCurrentlyWorking: exp.isCurrentlyWorking,
-            finalPosition: exp.finalPosition,
-            jobTitle: exp.jobTitle,
-            projectsCount: exp.projects?.length || 0,
-          })}`);
-
-          const experienceData: any = {
-            resumeId: resume.id,
-            company: exp.company,
-            startDate: exp.startDate,
-            endDate: exp.endDate || null,
-            isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
-            finalPosition: exp.finalPosition,
-            jobTitle: exp.jobTitle,
-            salary: exp.salary,
-            salaryUnit: exp.salaryUnit,
-            showSalary: exp.showSalary ?? false,
-            order: exp.order ?? 0,
-            visible: exp.visible ?? true,
-          };
-
-          // Store project achievements for later creation
-          const projectAchievements: Array<{ projectIdx: number; achievements: any[] }> = [];
-
-          // Only add projects if they exist (without achievements)
-          if (exp.projects && exp.projects.length > 0) {
-            experienceData.projects = {
-              create: exp.projects.map((project, projIdx) => {
-                // Log each project
-                this.logger.debug(`Creating project in experience: ${JSON.stringify({
-                  name: project.name,
-                  startDate: project.startDate,
-                  endDate: project.endDate,
-                  achievementsCount: project.achievements?.length || 0,
-                })}`);
-
-                // Store achievements for later
-                if (project.achievements && project.achievements.length > 0) {
-                  projectAchievements.push({
-                    projectIdx: projIdx,
-                    achievements: project.achievements,
-                  });
-                }
-
-                // Create project without achievements
-                return {
-                  name: project.name,
-                  startDate: project.startDate,
-                  endDate: project.endDate || null,
-                  description: project.description,
-                  role: project.role,
-                  techStack: project.techStack,
-                  url: project.url,
-                  githubUrl: project.githubUrl,
-                  order: project.order ?? 0,
-                };
-              }),
+              company: exp.company,
+              startDate: exp.startDate,
+              endDate: exp.endDate || null,
+              isCurrentlyWorking: exp.isCurrentlyWorking ?? false,
+              finalPosition: exp.finalPosition,
+              jobTitle: exp.jobTitle,
+              salary: exp.salary,
+              salaryUnit: exp.salaryUnit,
+              showSalary: exp.showSalary ?? false,
+              order: exp.order ?? 0,
+              visible: exp.visible ?? true,
             };
-          }
 
-          this.logger.debug(`Full experience data: ${JSON.stringify(experienceData, null, 2)}`);
+            // Store project achievements for later creation
+            const projectAchievements: Array<{ projectIdx: number; achievements: any[] }> = [];
 
-          // Create experience with projects
-          const createdExperience = await tx.experience.create({
-            data: experienceData,
-            include: { projects: { orderBy: [{ order: 'asc' }] } },
-          });
+            // Only add projects if they exist (without achievements)
+            if (exp.projects && exp.projects.length > 0) {
+              experienceData.projects = {
+                create: exp.projects.map((project, projIdx) => {
+                  // Log each project
+                  this.logger.debug(
+                    `Creating project in experience: ${JSON.stringify({
+                      name: project.name,
+                      startDate: project.startDate,
+                      endDate: project.endDate,
+                      achievementsCount: project.achievements?.length || 0,
+                    })}`,
+                  );
 
-          // Create achievements for each project
-          for (const { projectIdx, achievements } of projectAchievements) {
-            const projectId = createdExperience.projects[projectIdx].id;
-            await this.createAchievements(achievements, projectId, null, tx);
+                  // Store achievements for later
+                  if (project.achievements && project.achievements.length > 0) {
+                    projectAchievements.push({
+                      projectIdx: projIdx,
+                      achievements: project.achievements,
+                    });
+                  }
+
+                  // Create project without achievements
+                  return {
+                    name: project.name,
+                    startDate: project.startDate,
+                    endDate: project.endDate || null,
+                    description: project.description,
+                    role: project.role,
+                    techStack: project.techStack,
+                    url: project.url,
+                    githubUrl: project.githubUrl,
+                    order: project.order ?? 0,
+                  };
+                }),
+              };
+            }
+
+            this.logger.debug(`Full experience data: ${JSON.stringify(experienceData, null, 2)}`);
+
+            // Create experience with projects
+            const createdExperience = await tx.experience.create({
+              data: experienceData,
+              include: { projects: { orderBy: [{ order: 'asc' }] } },
+            });
+
+            // Create achievements for each project
+            for (const { projectIdx, achievements } of projectAchievements) {
+              const projectId = createdExperience.projects[projectIdx].id;
+              await this.createAchievements(achievements, projectId, null, tx);
+            }
           }
         }
-      }
 
-      // NOTE: Projects are now handled within experiences (ExperienceProject model)
-      // Independent Project model is no longer used for resume projects
+        // NOTE: Projects are now handled within experiences (ExperienceProject model)
+        // Independent Project model is no longer used for resume projects
 
-      if (dto.educations) {
-        await tx.education.deleteMany({ where: { resumeId: resume.id } });
-        await tx.education.createMany({
-          data: dto.educations.map(edu => ({ ...edu, resumeId: resume.id })),
-        });
-      }
-
-      if (dto.certificates) {
-        await tx.certificate.deleteMany({ where: { resumeId: resume.id } });
-        await tx.certificate.createMany({
-          data: dto.certificates.map(cert => ({ ...cert, resumeId: resume.id })),
-        });
-      }
-
-      // Handle profileImageTempKey: move from temp to permanent storage
-      if (dto.profileImageTempKey) {
-        try {
-          const result = await this.storageService.moveFromTemp(
-            dto.profileImageTempKey,
-            userId,
-            resume.id,
-          );
-          // Update resume with permanent image URL (use original color image per policy)
-          // Grayscale conversion is optional via UI toggle, not automatic
-          await tx.resume.update({
-            where: { id: resume.id },
-            data: { profileImage: result.fileUrl },
+        if (dto.educations) {
+          await tx.education.deleteMany({ where: { resumeId: resume.id } });
+          await tx.education.createMany({
+            data: dto.educations.map((edu) => ({ ...edu, resumeId: resume.id })),
           });
-        } catch (error: any) {
-          this.logger.warn(`Failed to move temp profile image: ${error.message}`);
-          // Continue without updating profile image - not critical
         }
-      }
 
-      // Return updated resume with hierarchical achievements
-      return await tx.resume.findUnique({
-        where: { id: resume.id },
-        include: this.RESUME_FULL_INCLUDE,
+        if (dto.certificates) {
+          await tx.certificate.deleteMany({ where: { resumeId: resume.id } });
+          await tx.certificate.createMany({
+            data: dto.certificates.map((cert) => ({ ...cert, resumeId: resume.id })),
+          });
+        }
+
+        // Handle profileImageTempKey: move from temp to permanent storage
+        if (dto.profileImageTempKey) {
+          try {
+            const result = await this.storageService.moveFromTemp(
+              dto.profileImageTempKey,
+              userId,
+              resume.id,
+            );
+            // Update resume with permanent image URL (use original color image per policy)
+            // Grayscale conversion is optional via UI toggle, not automatic
+            await tx.resume.update({
+              where: { id: resume.id },
+              data: { profileImage: result.fileUrl },
+            });
+          } catch (error: any) {
+            this.logger.warn(`Failed to move temp profile image: ${error.message}`);
+            // Continue without updating profile image - not critical
+          }
+        }
+
+        // Return updated resume with hierarchical achievements
+        return await tx.resume.findUnique({
+          where: { id: resume.id },
+          include: this.RESUME_FULL_INCLUDE,
+        });
       });
-    });
     } catch (error) {
       // Re-throw NotFoundException and other HTTP exceptions as-is
       if (error instanceof NotFoundException) {
@@ -553,7 +575,9 @@ export class ResumeService {
 
       // Log the complete error object for debugging
       this.logger.error(`Failed to update resume ${resumeId}: ${errorMessage}`);
-      this.logger.error(`Full error object: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`);
+      this.logger.error(
+        `Full error object: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+      );
       this.logger.error(`Stack trace: ${errorStack}`);
 
       throw new InternalServerErrorException(`Failed to update resume: ${errorMessage}`);
@@ -563,8 +587,10 @@ export class ResumeService {
   async delete(resumeId: string, userId: string) {
     const resume = await this.findByIdAndUserId(resumeId, userId);
 
-    await this.prisma.resume.delete({
+    // Soft delete: set deletedAt instead of hard delete for GDPR compliance
+    await this.prisma.resume.update({
       where: { id: resume.id },
+      data: { deletedAt: new Date() },
     });
 
     return { message: 'Resume deleted successfully' };
@@ -598,7 +624,7 @@ export class ResumeService {
       },
     });
 
-    if (!original || original.userId !== userId) {
+    if (!original || original.userId !== userId || original.deletedAt) {
       throw new NotFoundException('Resume not found');
     }
 
@@ -624,7 +650,6 @@ export class ResumeService {
           summary: original.summary,
           keyAchievements: original.keyAchievements,
           profileImage: original.profileImage,
-          birthYear: original.birthYear,
           birthDate: original.birthDate,
           gender: original.gender,
           militaryService: original.militaryService,
@@ -643,7 +668,7 @@ export class ResumeService {
       // Copy sections
       if (original.sections && original.sections.length > 0) {
         await tx.resumeSection.createMany({
-          data: original.sections.map(section => ({
+          data: original.sections.map((section) => ({
             resumeId: newResume.id,
             type: section.type,
             order: section.order,
@@ -688,7 +713,7 @@ export class ResumeService {
           // Only add projects if they exist (without achievements)
           if (exp.projects && exp.projects.length > 0) {
             expData.projects = {
-              create: exp.projects.map(project => ({
+              create: exp.projects.map((project) => ({
                 name: project.name,
                 startDate: project.startDate,
                 endDate: project.endDate,
@@ -727,7 +752,7 @@ export class ResumeService {
       // Copy educations
       if (original.educations && original.educations.length > 0) {
         await tx.education.createMany({
-          data: original.educations.map(edu => ({
+          data: original.educations.map((edu) => ({
             resumeId: newResume.id,
             school: edu.school,
             major: edu.major,
@@ -745,7 +770,7 @@ export class ResumeService {
       // Copy certificates
       if (original.certificates && original.certificates.length > 0) {
         await tx.certificate.createMany({
-          data: original.certificates.map(cert => ({
+          data: original.certificates.map((cert) => ({
             resumeId: newResume.id,
             name: cert.name,
             issuer: cert.issuer,
@@ -769,7 +794,7 @@ export class ResumeService {
         sourceResumeId: resumeId,
         targetResumeId: copy.id,
         userId,
-        attachments: original.attachments.map(att => ({
+        attachments: original.attachments.map((att) => ({
           id: att.id,
           type: att.type,
           fileName: att.fileName,
@@ -800,7 +825,6 @@ export class ResumeService {
       include: this.RESUME_FULL_INCLUDE,
     });
   }
-
 
   async setDefaultResume(resumeId: string, userId: string) {
     await this.findByIdAndUserId(resumeId, userId);
@@ -876,10 +900,10 @@ export class ResumeService {
     return this.findByIdAndUserId(resumeId, userId);
   }
 
-  // For public access (no auth required)
+  // For public access (no auth required, excluding soft-deleted)
   async findById(id: string) {
-    const resume = await this.prisma.resume.findUnique({
-      where: { id },
+    const resume = await this.prisma.resume.findFirst({
+      where: { id, deletedAt: null },
       include: {
         sections: {
           where: { visible: true },
@@ -925,19 +949,21 @@ export class ResumeService {
     let userId: string;
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ id: string }>(`${this.authServiceUrl}/v1/users/by-username/${username}`)
+        this.httpService.get<{ id: string }>(
+          `${this.authServiceUrl}/v1/users/by-username/${username}`,
+        ),
       );
       userId = response.data.id;
     } catch (_error) {
       throw new NotFoundException('User not found');
     }
 
-    // Then get the default resume (or first resume if no default)
+    // Then get the default resume (or first resume if no default, excluding soft-deleted)
     const resume = await this.prisma.resume.findFirst({
-      where: { userId },
+      where: { userId, deletedAt: null },
       orderBy: [
         { isDefault: 'desc' }, // Default resume first
-        { createdAt: 'desc' },  // Otherwise, most recent
+        { createdAt: 'desc' }, // Otherwise, most recent
       ],
       include: {
         sections: {
@@ -1130,7 +1156,12 @@ export class ResumeService {
   /**
    * Reorder attachments
    */
-  async reorderAttachments(resumeId: string, userId: string, type: AttachmentType, attachmentIds: string[]) {
+  async reorderAttachments(
+    resumeId: string,
+    userId: string,
+    type: AttachmentType,
+    attachmentIds: string[],
+  ) {
     await this.findByIdAndUserId(resumeId, userId);
 
     return await this.prisma.$transaction(async (tx) => {

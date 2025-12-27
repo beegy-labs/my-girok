@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import {
   JwtStrategy,
   LocalStrategy,
+  UnifiedJwtStrategy,
   // Temporarily disabled until OAuth credentials are configured
   // GoogleStrategy,
   // KakaoStrategy,
@@ -32,11 +33,12 @@ import {
     AuthService,
     JwtStrategy,
     LocalStrategy,
+    UnifiedJwtStrategy,
     // Temporarily disabled until OAuth credentials are configured
     // GoogleStrategy,
     // KakaoStrategy,
     // NaverStrategy,
   ],
-  exports: [AuthService],
+  exports: [AuthService, UnifiedJwtStrategy],
 })
 export class AuthModule {}

@@ -26,12 +26,12 @@ packages/types/src/
 
 ### Resume
 
-| Enum        | Values                                                             |
-| ----------- | ------------------------------------------------------------------ |
-| SectionType | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE                |
-| DegreeType  | HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE |
-| GpaFormat   | SCALE_4_0, SCALE_4_5, SCALE_100                                    |
-| Gender      | MALE, FEMALE, OTHER                                                |
+| Enum        | Values                                                                                                               |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| SectionType | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE, KEY_ACHIEVEMENTS, APPLICATION_REASON, ATTACHMENTS, COVER_LETTER |
+| DegreeType  | HIGH_SCHOOL, ASSOCIATE_2, ASSOCIATE_3, BACHELOR, MASTER, DOCTORATE                                                   |
+| GpaFormat   | SCALE_4_0, SCALE_4_5, SCALE_100                                                                                      |
+| Gender      | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                                                                               |
 
 ### Legal
 

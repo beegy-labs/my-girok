@@ -1,0 +1,147 @@
+# My-Girok Analytics Service Helm Values Example
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install my-girok-analytics . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit your actual configuration
+#   - Customize for your environment (development, staging, production)
+#   - Use Sealed Secrets for sensitive data in production
+
+# Number of replicas
+# Development: 1, Staging: 2, Production: 3+
+replicaCount: 2
+
+image:
+  repository: your-registry.io/my-girok/analytics-service
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 3004
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+  hosts:
+    - host: analytics-api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: analytics-api-tls
+      hosts:
+        - analytics-api.example.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - analytics-service
+          topologyKey: kubernetes.io/hostname
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+app:
+  nodeEnv: production
+  port: 3004
+
+  # ClickHouse Configuration
+  clickhouse:
+    port: 8123
+    database: analytics_db
+
+# ============================================================================
+# Sealed Secrets Configuration
+# ============================================================================
+# Use kubeseal to encrypt secrets before committing
+#
+# Example:
+#   kubectl create secret generic my-girok-analytics-service-secret \
+#     --from-literal=clickhouse-host="clickhouse.example.com" \
+#     --from-literal=clickhouse-username="analytics_user" \
+#     --from-literal=clickhouse-password="your-password" \
+#     --from-literal=jwt-secret="your-jwt-secret" \
+#     --dry-run=client -o yaml | \
+#   kubeseal --format yaml > sealed-secret.yaml
+
+sealedSecrets:
+  enabled: true
+  annotations:
+    sealedsecrets.bitnami.com/managed: "true"
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3

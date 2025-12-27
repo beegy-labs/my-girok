@@ -99,7 +99,6 @@ export default function ResumeEditPage() {
         summary: data.summary,
         keyAchievements: data.keyAchievements,
         profileImage: data.profileImage,
-        birthYear: data.birthYear, // deprecated - for backward compatibility
         birthDate: data.birthDate,
         gender: data.gender,
         militaryService: data.militaryService,

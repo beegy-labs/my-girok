@@ -1,5 +1,4 @@
 import { Controller, Get, Post, Put, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
-import { Public } from '@my-girok/nest-common';
 import { TenantService } from '../services/tenant.service';
 import {
   CreateTenantDto,
@@ -9,15 +8,13 @@ import {
   TenantResponse,
   TenantListResponse,
 } from '../dto/tenant.dto';
-import { AdminAuthGuard } from '../guards/admin-auth.guard';
 import { PermissionGuard } from '../guards/permission.guard';
 import { Permissions } from '../decorators/permissions.decorator';
 import { CurrentAdmin } from '../decorators/current-admin.decorator';
 import { AdminPayload } from '../types/admin.types';
 
 @Controller('admin/tenants')
-@Public() // Bypass global JwtAuthGuard - AdminAuthGuard handles auth
-@UseGuards(AdminAuthGuard, PermissionGuard)
+@UseGuards(PermissionGuard) // UnifiedAuthGuard handles auth globally
 export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 

@@ -37,9 +37,8 @@ export class AuditLogListQuery {
 
 export interface AuditLogAdmin {
   id: string;
-  username: string;
+  name: string;
   email: string;
-  displayName: string | null;
 }
 
 export interface AuditLogResponse {

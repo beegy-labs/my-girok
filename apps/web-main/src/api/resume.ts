@@ -24,20 +24,10 @@ import {
   // Utility functions
   getAge,
   calculateKoreanAge,
-  calculateAgeFromYear,
 } from '@my-girok/types';
 
 // Re-export for backward compatibility
-export {
-  SectionType,
-  DegreeType,
-  GpaFormat,
-  AttachmentType,
-  Gender,
-  getAge,
-  calculateKoreanAge,
-  calculateAgeFromYear,
-};
+export { SectionType, DegreeType, GpaFormat, AttachmentType, Gender, getAge, calculateKoreanAge };
 export type {
   PaperSize,
   SkillDescription,
@@ -79,7 +69,6 @@ export interface CreateResumeDto {
   profileImage?: string;
   profileImageTempKey?: string; // Temp file key for profile image (from temp-upload)
   // Birth Date and Gender
-  birthYear?: number; // 출생 연도 (e.g., 1994) - deprecated, use birthDate
   birthDate?: string; // 생년월일 (YYYY-MM-DD format) for accurate age calculation
   gender?: Gender; // 성별
   // Korean-specific fields

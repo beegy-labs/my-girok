@@ -15,3 +15,6 @@ export * from './legal/index.js';
 
 // Admin types
 export * from './admin/index.js';
+
+// Service types (Global Account System)
+export * from './service/index.js';

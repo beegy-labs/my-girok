@@ -18,8 +18,8 @@ import { PrismaService } from '../database/prisma.service';
           host: config.get<string>('VALKEY_HOST', 'localhost'),
           port: config.get<number>('VALKEY_PORT', 6379),
           password: config.get<string>('VALKEY_PASSWORD'),
-          db: config.get<number>('VALKEY_DB', 1),
         },
+        prefix: config.get<string>('VALKEY_PREFIX', 'local:'),
         defaultJobOptions: {
           attempts: 3,
           backoff: {

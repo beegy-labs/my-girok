@@ -39,14 +39,14 @@ User Input → ResumeForm → onChange (800ms debounce) → PDF Preview
 
 ## Korean Market Fields
 
-| Field             | Type                | Purpose                             |
-| ----------------- | ------------------- | ----------------------------------- |
-| birthDate         | string (YYYY-MM-DD) | 만 나이 calculation                 |
-| gender            | enum                | MALE, FEMALE, OTHER                 |
-| militaryService   | enum                | COMPLETED, EXEMPTED, NOT_APPLICABLE |
-| coverLetter       | string              | 자기소개서                          |
-| applicationReason | string              | 지원 동기                           |
-| keyAchievements   | string[]            | 주요 성과                           |
+| Field             | Type                | Purpose                                |
+| ----------------- | ------------------- | -------------------------------------- |
+| birthDate         | string (YYYY-MM-DD) | 만 나이 calculation                    |
+| gender            | enum                | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY |
+| militaryService   | enum                | COMPLETED, EXEMPTED, NOT_APPLICABLE    |
+| coverLetter       | string              | 자기소개서                             |
+| applicationReason | string              | 지원 동기                              |
+| keyAchievements   | string[]            | 주요 성과                              |
 
 ## Hierarchical Achievements (4 Depth)
 
@@ -316,6 +316,14 @@ className = 'p-3 gap-3 mb-3'; // ❌ 12px
 | `.ai/resume.md`                                  | LLM quick reference |
 
 ## Changelog
+
+### 2025-12-26
+
+- Removed `birthYear` field - use `birthDate` only
+- Added `PREFER_NOT_TO_SAY` to Gender enum
+- Extended SectionType: KEY_ACHIEVEMENTS, APPLICATION_REASON, ATTACHMENTS, COVER_LETTER
+- Added soft delete (deletedAt) to Resume model
+- ShareLink.token now uses UUIDv7 instead of cuid()
 
 ### 2025-12-23
 

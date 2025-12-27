@@ -169,7 +169,7 @@ describe('Resume Data Validation for PDF', () => {
       address: 'Seoul, Korea',
       summary: 'Full summary',
       gender: Gender.MALE,
-      birthYear: 1990,
+      birthDate: '1990-01-15', // YYYY-MM-DD format for accurate age calculation
       github: 'https://github.com/test',
       linkedin: 'https://linkedin.com/in/test',
       blog: 'https://blog.test.com',

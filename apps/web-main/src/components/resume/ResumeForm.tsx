@@ -268,7 +268,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     summary: resume?.summary || '',
     keyAchievements: resume?.keyAchievements || [],
     profileImage: resume?.profileImage || '',
-    birthYear: resume?.birthYear, // deprecated - kept for backward compatibility
     birthDate: resume?.birthDate || '',
     gender: resume?.gender,
     militaryService: resume?.militaryService,
@@ -604,8 +603,6 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
     setFormData((prev) => ({
       ...prev,
       birthDate: value || undefined,
-      // Auto-populate birthYear for backward compatibility
-      birthYear: value ? new Date(value).getFullYear() : undefined,
     }));
   }, []);
 
@@ -1058,6 +1055,9 @@ export default function ResumeForm({ resume, onSubmit, onChange }: ResumeFormPro
                 <option value="MALE">{t('resume.genderOptions.MALE')}</option>
                 <option value="FEMALE">{t('resume.genderOptions.FEMALE')}</option>
                 <option value="OTHER">{t('resume.genderOptions.OTHER')}</option>
+                <option value="PREFER_NOT_TO_SAY">
+                  {t('resume.genderOptions.PREFER_NOT_TO_SAY')}
+                </option>
               </select>
             </div>
           </div>

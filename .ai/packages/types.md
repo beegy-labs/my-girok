@@ -7,7 +7,9 @@
 ```
 packages/types/src/
 ├── auth/     # Role, AuthProvider, DTOs
-├── user/     # User, Session
+├── user/     # User, Session, AccountLink
+├── admin/    # Operator, Permission
+├── service/  # Service, Consent (Global Account)
 ├── resume/   # Resume, Experience, Skill
 ├── legal/    # ConsentType, Documents
 ├── common/   # ApiResponse, Pagination
@@ -42,12 +44,86 @@ interface AuthPayload {
   refreshToken: string;
 }
 
+// Legacy JWT (backward compatible)
 interface JwtPayload {
-  sub: string; // User ID
+  sub: string;
   email: string;
   role: Role;
   type: 'ACCESS' | 'REFRESH' | 'DOMAIN_ACCESS';
 }
+
+// New Global Account JWT Types
+interface UserJwtPayload {
+  sub: string;
+  email: string;
+  type: 'USER_ACCESS' | 'USER_REFRESH';
+  accountMode: 'SERVICE' | 'UNIFIED';
+  countryCode: string;
+  services: { [slug: string]: { status: string; countries: string[] } };
+}
+
+interface AdminJwtPayload {
+  sub: string;
+  email: string;
+  name: string;
+  type: 'ADMIN_ACCESS' | 'ADMIN_REFRESH';
+  scope: 'SYSTEM' | 'TENANT';
+  tenantId?: string;
+  roleId: string;
+  roleName: string;
+  level: number;
+  permissions: string[];
+  services?: { [slug: string]: { roleId: string; countries: string[] } };
+}
+
+interface OperatorJwtPayload {
+  sub: string;
+  email: string;
+  name: string;
+  type: 'OPERATOR_ACCESS' | 'OPERATOR_REFRESH';
+  adminId: string;
+  serviceId: string;
+  serviceSlug: string;
+  countryCode: string;
+  permissions: string[];
+}
+
+type JwtPayloadUnion = UserJwtPayload | AdminJwtPayload | OperatorJwtPayload;
+
+// Type Guards
+function isUserPayload(payload: JwtPayloadUnion): payload is UserJwtPayload;
+function isAdminPayload(payload: JwtPayloadUnion): payload is AdminJwtPayload;
+function isOperatorPayload(payload: JwtPayloadUnion): payload is OperatorJwtPayload;
+function isLegacyPayload(payload: JwtPayloadUnion): payload is LegacyUserJwtPayload;
+
+// Entity Type Guards
+function isAuthenticatedUser(entity: AuthenticatedEntity): entity is AuthenticatedUser;
+function isAuthenticatedAdmin(entity: AuthenticatedEntity): entity is AuthenticatedAdmin;
+function isAuthenticatedOperator(entity: AuthenticatedEntity): entity is AuthenticatedOperator;
+
+// Permission & Access Helpers
+function hasPermission(entity: AuthenticatedEntity, permission: string): boolean;
+function hasServiceAccess(entity: AuthenticatedEntity, serviceSlug: string): boolean;
+function hasCountryAccess(
+  entity: AuthenticatedEntity,
+  serviceSlug: string,
+  countryCode: string,
+): boolean;
+```
+
+### Permission & Access Helper Usage
+
+```typescript
+import { hasPermission, hasServiceAccess, hasCountryAccess } from '@my-girok/types';
+
+// Check permission (supports wildcards: '*', 'legal:*')
+if (hasPermission(user, 'legal:read')) { ... }
+
+// Check service access
+if (hasServiceAccess(user, 'my-girok')) { ... }
+
+// Check country access within service
+if (hasCountryAccess(user, 'my-girok', 'KR')) { ... }
 ```
 
 ## User
@@ -70,9 +146,13 @@ interface User {
 enum SectionType {
   SKILLS,
   EXPERIENCE,
-  PROJECT,
+  PROJECT, // @deprecated - kept for backward compatibility
   EDUCATION,
   CERTIFICATE,
+  KEY_ACHIEVEMENTS, // 핵심 성과
+  APPLICATION_REASON, // 지원 동기
+  ATTACHMENTS, // 첨부파일
+  COVER_LETTER, // 자기소개서
 }
 enum DegreeType {
   HIGH_SCHOOL,
@@ -86,6 +166,7 @@ enum Gender {
   MALE,
   FEMALE,
   OTHER,
+  PREFER_NOT_TO_SAY,
 }
 
 // Core
@@ -115,6 +196,27 @@ interface Skill {
 }
 ```
 
+## Account & Service
+
+```typescript
+enum AccountMode {
+  SERVICE, // Per-service independent
+  UNIFIED, // Integrated across services
+}
+
+enum UserServiceStatus {
+  ACTIVE,
+  SUSPENDED,
+  WITHDRAWN,
+}
+
+enum AccountLinkStatus {
+  PENDING,
+  ACTIVE,
+  UNLINKED,
+}
+```
+
 ## Legal
 
 ```typescript
@@ -123,13 +225,55 @@ enum ConsentType {
   PRIVACY_POLICY, // Required
   MARKETING_EMAIL, // Optional
   MARKETING_PUSH, // Optional
-  MARKETING_PUSH_NIGHT, // Korea only
+  MARKETING_PUSH_NIGHT, // Korea PIPA
+  MARKETING_SMS, // Optional
+  PERSONALIZED_ADS, // Optional
+  THIRD_PARTY_SHARING, // Optional
+  CROSS_BORDER_TRANSFER, // Japan APPI
+  CROSS_SERVICE_SHARING, // UNIFIED mode
 }
 
 interface UserConsentPayload {
   consentType: ConsentType;
+  countryCode: string;
   agreed: boolean;
   agreedAt: Date;
+}
+```
+
+## Service (Global Account)
+
+```typescript
+// Row types for raw SQL queries
+interface ServiceRow {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+interface UserServiceRow {
+  userId: string;
+  serviceId: string;
+  serviceSlug: string;
+  countryCode: string;
+  status: string;
+  joinedAt: Date;
+}
+
+interface ConsentRequirementRow {
+  id: string;
+  serviceId: string;
+  consentType: string;
+  countryCode: string;
+  isRequired: boolean;
+}
+
+interface UserConsentRow {
+  id: string;
+  userId: string;
+  serviceId: string;
+  consentType: string;
+  agreed: boolean;
 }
 ```
 

@@ -1,4 +1,16 @@
-import { IsString, IsEmail, IsOptional, IsArray, ValidateNested, IsBoolean, IsInt, Min, IsEnum, IsDateString, ValidateIf } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsBoolean,
+  IsInt,
+  Min,
+  IsEnum,
+  IsDateString,
+  ValidateIf,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -11,6 +23,7 @@ export enum Gender {
   MALE = 'MALE',
   FEMALE = 'FEMALE',
   OTHER = 'OTHER',
+  PREFER_NOT_TO_SAY = 'PREFER_NOT_TO_SAY',
 }
 
 export enum MilitaryService {
@@ -29,9 +42,9 @@ export enum DegreeType {
 }
 
 export enum GpaFormat {
-  SCALE_4_0 = 'SCALE_4_0',   // 4.0 scale (US: 3.8/4.0)
-  SCALE_4_5 = 'SCALE_4_5',   // 4.5 scale (KR: 4.2/4.5)
-  SCALE_100 = 'SCALE_100',   // 100-point scale (JP: 85/100)
+  SCALE_4_0 = 'SCALE_4_0', // 4.0 scale (US: 3.8/4.0)
+  SCALE_4_5 = 'SCALE_4_5', // 4.5 scale (KR: 4.2/4.5)
+  SCALE_100 = 'SCALE_100', // 100-point scale (JP: 85/100)
 }
 
 export class SkillDescriptionDto {
@@ -50,7 +63,10 @@ export class SkillDescriptionDto {
   @Min(0)
   order?: number;
 
-  @ApiPropertyOptional({ type: [SkillDescriptionDto], description: 'Child descriptions (recursive structure)' })
+  @ApiPropertyOptional({
+    type: [SkillDescriptionDto],
+    description: 'Child descriptions (recursive structure)',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -70,10 +86,15 @@ export class SkillItemDto {
 
   @ApiPropertyOptional({
     example: [
-      { content: 'React Hooks와 Context API를 활용한 전역 상태 관리', depth: 1, order: 0, children: [] }
+      {
+        content: 'React Hooks와 Context API를 활용한 전역 상태 관리',
+        depth: 1,
+        order: 0,
+        children: [],
+      },
     ],
     type: [SkillDescriptionDto],
-    description: 'Hierarchical descriptions (4 depth levels)'
+    description: 'Hierarchical descriptions (4 depth levels)',
   })
   @IsOptional()
   @IsArray()
@@ -90,9 +111,9 @@ export class CreateSkillDto {
   @ApiProperty({
     example: [
       { name: 'React', description: '3년 실무 경험' },
-      { name: 'TypeScript', description: '2년 실무 경험' }
+      { name: 'TypeScript', description: '2년 실무 경험' },
     ],
-    type: [SkillItemDto]
+    type: [SkillItemDto],
   })
   @IsArray()
   @ValidateNested({ each: true })
@@ -127,7 +148,10 @@ export class CreateProjectAchievementDto {
   @Min(0)
   order?: number;
 
-  @ApiPropertyOptional({ type: [CreateProjectAchievementDto], description: 'Child achievements (recursive structure)' })
+  @ApiPropertyOptional({
+    type: [CreateProjectAchievementDto],
+    description: 'Child achievements (recursive structure)',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -160,7 +184,10 @@ export class CreateExperienceProjectDto {
   @IsString()
   role?: string | null;
 
-  @ApiPropertyOptional({ type: [CreateProjectAchievementDto], description: 'Hierarchical achievements (4 depth levels)' })
+  @ApiPropertyOptional({
+    type: [CreateProjectAchievementDto],
+    description: 'Hierarchical achievements (4 depth levels)',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -225,7 +252,10 @@ export class CreateExperienceDto {
   @Min(0)
   salary?: number;
 
-  @ApiPropertyOptional({ example: '만원', description: 'Salary unit (e.g., "만원", "USD", "EUR", "JPY")' })
+  @ApiPropertyOptional({
+    example: '만원',
+    description: 'Salary unit (e.g., "만원", "USD", "EUR", "JPY")',
+  })
   @IsOptional()
   @IsString()
   salaryUnit?: string;
@@ -235,7 +265,10 @@ export class CreateExperienceDto {
   @IsBoolean()
   showSalary?: boolean;
 
-  @ApiPropertyOptional({ type: [CreateExperienceProjectDto], description: 'List of projects at this company' })
+  @ApiPropertyOptional({
+    type: [CreateExperienceProjectDto],
+    description: 'List of projects at this company',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -348,11 +381,17 @@ export class CreateCertificateDto {
 }
 
 export class CreateResumeDto {
-  @ApiProperty({ example: '대기업용 이력서', description: 'Resume title (e.g., "대기업용", "스타트업용")' })
+  @ApiProperty({
+    example: '대기업용 이력서',
+    description: 'Resume title (e.g., "대기업용", "스타트업용")',
+  })
   @IsString()
   title!: string;
 
-  @ApiPropertyOptional({ example: '네이버, 카카오 지원용 이력서', description: 'Brief description of resume purpose' })
+  @ApiPropertyOptional({
+    example: '네이버, 카카오 지원용 이력서',
+    description: 'Brief description of resume purpose',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
@@ -363,7 +402,11 @@ export class CreateResumeDto {
   @IsBoolean()
   isDefault?: boolean;
 
-  @ApiPropertyOptional({ enum: PaperSize, default: PaperSize.A4, description: 'Preferred paper size for PDF export' })
+  @ApiPropertyOptional({
+    enum: PaperSize,
+    default: PaperSize.A4,
+    description: 'Preferred paper size for PDF export',
+  })
   @IsOptional()
   @IsEnum(PaperSize)
   paperSize?: PaperSize;
@@ -382,7 +425,10 @@ export class CreateResumeDto {
   @IsString()
   phone?: string | null;
 
-  @ApiPropertyOptional({ example: '서울특별시 강남구', description: 'Address (City/District level)' })
+  @ApiPropertyOptional({
+    example: '서울특별시 강남구',
+    description: 'Address (City/District level)',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
@@ -420,7 +466,7 @@ export class CreateResumeDto {
 
   @ApiPropertyOptional({
     example: ['API 응답 속도 40% 개선 (평균 500ms → 300ms)', 'MAU 200만 달성, 전월 대비 30% 성장'],
-    description: 'Key achievements (3-5 major accomplishments)'
+    description: 'Key achievements (3-5 major accomplishments)',
   })
   @IsOptional()
   @IsArray()
@@ -435,36 +481,43 @@ export class CreateResumeDto {
 
   @ApiPropertyOptional({
     example: 'tmp/user123/abc-def-ghi.jpg',
-    description: 'Temporary file key from temp-upload endpoint. File will be moved to permanent storage on save.'
+    description:
+      'Temporary file key from temp-upload endpoint. File will be moved to permanent storage on save.',
   })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
   profileImageTempKey?: string | null;
 
-  @ApiPropertyOptional({ example: 1994, description: 'Birth year (e.g., 1994) - deprecated, use birthDate' })
-  @IsOptional()
-  @IsInt()
-  @Min(1900)
-  birthYear?: number;
-
-  @ApiPropertyOptional({ example: '1994-03-15', description: 'Birth date (YYYY-MM-DD format) for accurate age calculation' })
+  @ApiPropertyOptional({
+    example: '1994-03-15',
+    description: 'Birth date (YYYY-MM-DD format) for accurate age calculation',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsDateString()
   birthDate?: string | null;
 
-  @ApiPropertyOptional({ enum: Gender, description: 'Gender (MALE, FEMALE, OTHER)' })
+  @ApiPropertyOptional({
+    enum: Gender,
+    description: 'Gender (MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY)',
+  })
   @IsOptional()
   @IsEnum(Gender)
   gender?: Gender;
 
-  @ApiPropertyOptional({ enum: MilitaryService, description: 'Military service status (Korean-specific)' })
+  @ApiPropertyOptional({
+    enum: MilitaryService,
+    description: 'Military service status (Korean-specific)',
+  })
   @IsOptional()
   @IsEnum(MilitaryService)
   militaryService?: MilitaryService;
 
-  @ApiPropertyOptional({ example: '병장 제대, 2020.01 - 2021.10', description: 'Military service details (Korean-specific)' })
+  @ApiPropertyOptional({
+    example: '병장 제대, 2020.01 - 2021.10',
+    description: 'Military service details (Korean-specific)',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
@@ -476,31 +529,46 @@ export class CreateResumeDto {
   @IsString()
   militaryRank?: string | null;
 
-  @ApiPropertyOptional({ example: '만기전역', description: 'Discharge type (e.g., 만기전역, 의병전역)' })
+  @ApiPropertyOptional({
+    example: '만기전역',
+    description: 'Discharge type (e.g., 만기전역, 의병전역)',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
   militaryDischargeType?: string | null;
 
-  @ApiPropertyOptional({ example: '2020-01', description: 'Military service start date (YYYY-MM format)' })
+  @ApiPropertyOptional({
+    example: '2020-01',
+    description: 'Military service start date (YYYY-MM format)',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
   militaryServiceStartDate?: string | null;
 
-  @ApiPropertyOptional({ example: '2021-10', description: 'Military service end date (YYYY-MM format)' })
+  @ApiPropertyOptional({
+    example: '2021-10',
+    description: 'Military service end date (YYYY-MM format)',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
   militaryServiceEndDate?: string | null;
 
-  @ApiPropertyOptional({ example: '저는 백엔드 개발자로서...', description: 'Cover letter (Korean-specific)' })
+  @ApiPropertyOptional({
+    example: '저는 백엔드 개발자로서...',
+    description: 'Cover letter (Korean-specific)',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
   coverLetter?: string | null;
 
-  @ApiPropertyOptional({ example: '귀사의 비전과 저의 기술 역량이 잘 맞을 것으로 판단하여 지원하게 되었습니다...', description: 'Application reason (Korean-specific)' })
+  @ApiPropertyOptional({
+    example: '귀사의 비전과 저의 기술 역량이 잘 맞을 것으로 판단하여 지원하게 되었습니다...',
+    description: 'Application reason (Korean-specific)',
+  })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()
