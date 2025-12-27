@@ -5,6 +5,7 @@
 --
 -- Note: IF NOT EXISTS makes this idempotent (already applied via Prisma)
 
+-- +goose StatementBegin
 -- 1. Add deletedAt column to resumes table (if not exists)
 DO $$
 BEGIN
@@ -15,6 +16,7 @@ BEGIN
         ALTER TABLE resumes ADD COLUMN deleted_at TIMESTAMPTZ(6);
     END IF;
 END $$;
+-- +goose StatementEnd
 
 -- 2. Create partial index for efficient filtering of active resumes
 CREATE INDEX IF NOT EXISTS idx_resumes_deleted_at ON resumes(deleted_at) WHERE deleted_at IS NULL;

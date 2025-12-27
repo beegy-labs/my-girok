@@ -5,6 +5,7 @@
 --
 -- Note: Using DO blocks for idempotent constraint creation
 
+-- +goose StatementBegin
 -- 1. Add check constraint for depth (1-4)
 DO $$
 BEGIN
@@ -12,7 +13,9 @@ BEGIN
         ALTER TABLE project_achievements ADD CONSTRAINT chk_achievement_depth CHECK (depth >= 1 AND depth <= 4);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 -- 2. Add check constraint for order (non-negative)
 DO $$
 BEGIN
@@ -20,7 +23,9 @@ BEGIN
         ALTER TABLE project_achievements ADD CONSTRAINT chk_achievement_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 -- 3. Add similar constraints to other ordered tables
 DO $$
 BEGIN
@@ -28,48 +33,61 @@ BEGIN
         ALTER TABLE resume_sections ADD CONSTRAINT chk_section_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_skill_order') THEN
         ALTER TABLE skills ADD CONSTRAINT chk_skill_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_experience_order') THEN
         ALTER TABLE experiences ADD CONSTRAINT chk_experience_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_project_order') THEN
         ALTER TABLE experience_projects ADD CONSTRAINT chk_project_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_education_order') THEN
         ALTER TABLE educations ADD CONSTRAINT chk_education_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_certificate_order') THEN
         ALTER TABLE certificates ADD CONSTRAINT chk_certificate_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_attachment_order') THEN
         ALTER TABLE resume_attachments ADD CONSTRAINT chk_attachment_order CHECK ("order" >= 0);
     END IF;
 END $$;
+-- +goose StatementEnd
 
 -- +goose Down
 -- Rollback: Remove constraints

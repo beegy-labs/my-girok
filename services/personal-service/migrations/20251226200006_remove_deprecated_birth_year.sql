@@ -5,6 +5,7 @@
 --
 -- Note: IF EXISTS makes this idempotent (already applied via Prisma)
 
+-- +goose StatementBegin
 -- 1. Migrate any birthYear-only data to birthDate (if birthDate is null)
 -- This is a no-op if birth_year column doesn't exist
 DO $$
@@ -18,6 +19,7 @@ BEGIN
         WHERE birth_year IS NOT NULL AND birth_date IS NULL;
     END IF;
 END $$;
+-- +goose StatementEnd
 
 -- 2. Drop the deprecated column (IF EXISTS for idempotency)
 ALTER TABLE resumes DROP COLUMN IF EXISTS birth_year;
