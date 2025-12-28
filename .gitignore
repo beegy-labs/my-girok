@@ -125,3 +125,4 @@ storybook-static/
 # Local development
 .local/
 *.local
+apps/web-admin/.vite-cache/
