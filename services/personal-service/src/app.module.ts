@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { Keyv } from 'keyv';
+import KeyvRedis from '@keyv/redis';
 import {
   JwtAuthGuard,
   JwtStrategy,
@@ -15,12 +18,33 @@ import { PrismaService } from './database/prisma.service';
 import { ResumeModule } from './resume/resume.module';
 import { ShareModule } from './share/share.module';
 import { UserPreferencesModule } from './user-preferences/user-preferences.module';
+import configuration from './config/configuration';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      load: [configuration],
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async (configService: ConfigService) => {
+        const host = configService.get('valkey.host');
+        const port = configService.get('valkey.port');
+        const password = configService.get('valkey.password');
+        const db = configService.get('valkey.db');
+
+        // Build Redis URL: redis://[:password@]host[:port][/db]
+        const authPart = password ? `:${password}@` : '';
+        const redisUrl = `redis://${authPart}${host}:${port}/${db}`;
+
+        return {
+          stores: [new Keyv({ store: new KeyvRedis(redisUrl) })],
+          ttl: 300000, // 5 minutes default
+        };
+      },
+      inject: [ConfigService],
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -38,10 +62,12 @@ import { UserPreferencesModule } from './user-preferences/user-preferences.modul
         };
       },
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     ResumeModule,
     ShareModule,
     HealthModule,
