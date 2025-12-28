@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Param, NotFoundException, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard, ParseUlidPipe } from '@my-girok/nest-common';
+import { JwtAuthGuard, ParseUUIDPipe } from '@my-girok/nest-common';
 import { AdminActionService } from '../services/admin-action.service';
 import {
   AdminActionQueryDto,
@@ -29,7 +29,7 @@ export class AdminActionController {
   @ApiResponse({ status: 200, description: 'Admin action found' })
   @ApiResponse({ status: 404, description: 'Admin action not found' })
   async getAdminActionById(
-    @Param('id', ParseUlidPipe) id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<AdminActionResponseDto> {
     const action = await this.adminActionService.getAdminActionById(id);
     if (!action) {
