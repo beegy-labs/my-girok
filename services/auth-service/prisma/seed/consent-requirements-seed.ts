@@ -7,6 +7,7 @@
  */
 
 import { PrismaClient } from '../../node_modules/.prisma/auth-client';
+import { ID } from '@my-girok/nest-common';
 
 const prisma = new PrismaClient();
 
@@ -233,13 +234,14 @@ async function seedConsentRequirements() {
     const serviceId = service[0].id;
 
     for (const consent of config.consents) {
+      const reqId = ID.generate();
       await prisma.$executeRaw`
         INSERT INTO service_consent_requirements (
           id, service_id, country_code, consent_type, is_required,
           document_type, display_order, label_key, description_key
         )
         VALUES (
-          gen_random_uuid()::TEXT,
+          ${reqId},
           ${serviceId},
           ${config.countryCode},
           ${consent.type}::consent_type,
