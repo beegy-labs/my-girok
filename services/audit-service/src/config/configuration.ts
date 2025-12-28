@@ -17,6 +17,13 @@ export default () => ({
     secret: process.env.JWT_SECRET,
   },
 
+  valkey: {
+    host: process.env.VALKEY_HOST || 'localhost',
+    port: parseInt(process.env.VALKEY_PORT || '6379', 10),
+    password: process.env.VALKEY_PASSWORD || '',
+    db: parseInt(process.env.VALKEY_DB || '3', 10), // DB 3 for audit-service
+  },
+
   export: {
     s3Bucket: process.env.EXPORT_S3_BUCKET,
     s3Region: process.env.EXPORT_S3_REGION || 'ap-northeast-2',
