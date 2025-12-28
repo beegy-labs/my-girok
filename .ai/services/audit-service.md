@@ -14,19 +14,43 @@
 
 ### Audit Logs
 
-| Method | Path                    | Auth  | Description      |
-| ------ | ----------------------- | ----- | ---------------- |
-| POST   | `/v1/audit/logs`        | Admin | Write audit log  |
-| GET    | `/v1/audit/logs`        | Admin | Query logs       |
-| GET    | `/v1/audit/logs/export` | Admin | Export to CSV    |
-| GET    | `/v1/audit/logs/stats`  | Admin | Aggregated stats |
+| Method | Path                    | Auth          | Description      |
+| ------ | ----------------------- | ------------- | ---------------- |
+| POST   | `/v1/audit/logs`        | `audit:write` | Write audit log  |
+| GET    | `/v1/audit/logs`        | `audit:read`  | Query logs       |
+| GET    | `/v1/audit/logs/:id`    | `audit:read`  | Get single log   |
+| GET    | `/v1/audit/logs/export` | `audit:read`  | Export to CSV    |
+| GET    | `/v1/audit/logs/stats`  | `audit:read`  | Aggregated stats |
+
+### Consent History
+
+| Method | Path                          | Auth         | Description          |
+| ------ | ----------------------------- | ------------ | -------------------- |
+| GET    | `/v1/consent/history`         | `audit:read` | Query consent logs   |
+| GET    | `/v1/consent/history/:userId` | `audit:read` | User consent history |
+| GET    | `/v1/consent/stats`           | `audit:read` | Consent statistics   |
+
+### Admin Actions
+
+| Method | Path                    | Auth         | Description         |
+| ------ | ----------------------- | ------------ | ------------------- |
+| GET    | `/v1/admin-actions`     | `audit:read` | Query admin actions |
+| GET    | `/v1/admin-actions/:id` | `audit:read` | Get single action   |
+
+### Data Exports (GDPR)
+
+| Method | Path                       | Auth           | Description          |
+| ------ | -------------------------- | -------------- | -------------------- |
+| POST   | `/v1/exports`              | `export:write` | Request data export  |
+| GET    | `/v1/exports/:id`          | `export:read`  | Get export status    |
+| GET    | `/v1/exports/:id/download` | `export:read`  | Download export file |
 
 ### Retention
 
-| Method | Path                     | Auth  | Description   |
-| ------ | ------------------------ | ----- | ------------- |
-| GET    | `/v1/retention/policies` | Admin | List policies |
-| PUT    | `/v1/retention/policies` | Admin | Update policy |
+| Method | Path                     | Auth              | Description   |
+| ------ | ------------------------ | ----------------- | ------------- |
+| GET    | `/v1/retention/policies` | `retention:read`  | List policies |
+| PUT    | `/v1/retention/policies` | `retention:write` | Update policy |
 
 ## ClickHouse Schema
 

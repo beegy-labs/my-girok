@@ -14,22 +14,47 @@
 
 ### Ingestion
 
-| Method | Path                  | Auth | Description     |
-| ------ | --------------------- | ---- | --------------- |
-| POST   | `/v1/ingest/session`  | API  | Start session   |
-| POST   | `/v1/ingest/event`    | API  | Track event     |
-| POST   | `/v1/ingest/pageview` | API  | Track page view |
-| POST   | `/v1/ingest/batch`    | API  | Batch ingest    |
+| Method | Path                  | Auth | Description         |
+| ------ | --------------------- | ---- | ------------------- |
+| POST   | `/v1/ingest/session`  | API  | Start session       |
+| POST   | `/v1/ingest/event`    | API  | Track event         |
+| POST   | `/v1/ingest/pageview` | API  | Track page view     |
+| POST   | `/v1/ingest/error`    | API  | Track error         |
+| POST   | `/v1/ingest/batch`    | API  | Batch ingest        |
+| POST   | `/v1/ingest/identify` | API  | Link anonymous→user |
 
-### Queries
+### Sessions
 
-| Method | Path                   | Auth  | Description      |
-| ------ | ---------------------- | ----- | ---------------- |
-| GET    | `/v1/sessions`         | Admin | Session list     |
-| GET    | `/v1/sessions/stats`   | Admin | Session stats    |
-| GET    | `/v1/events`           | Admin | Event list       |
-| GET    | `/v1/funnels/:name`    | Admin | Funnel analysis  |
-| GET    | `/v1/behavior/summary` | Admin | Behavior summary |
+| Method | Path                        | Auth             | Description       |
+| ------ | --------------------------- | ---------------- | ----------------- |
+| GET    | `/v1/sessions`              | `analytics:read` | Session list      |
+| GET    | `/v1/sessions/stats`        | `analytics:read` | Session stats     |
+| GET    | `/v1/sessions/summary`      | `analytics:read` | Session summary   |
+| GET    | `/v1/sessions/distribution` | `analytics:read` | Device/Browser/OS |
+| GET    | `/v1/sessions/:id/timeline` | `analytics:read` | Session timeline  |
+
+### Events
+
+| Method | Path         | Auth             | Description |
+| ------ | ------------ | ---------------- | ----------- |
+| GET    | `/v1/events` | `analytics:read` | Event list  |
+
+### Behavior
+
+| Method | Path                        | Auth             | Description        |
+| ------ | --------------------------- | ---------------- | ------------------ |
+| GET    | `/v1/behavior/summary`      | `analytics:read` | Behavior summary   |
+| GET    | `/v1/behavior/top-events`   | `analytics:read` | Top events         |
+| GET    | `/v1/behavior/by-category`  | `analytics:read` | Events by category |
+| GET    | `/v1/behavior/user/:userId` | `analytics:read` | User behavior      |
+
+### Funnels
+
+| Method | Path                        | Auth             | Description      |
+| ------ | --------------------------- | ---------------- | ---------------- |
+| GET    | `/v1/funnels/:name`         | `analytics:read` | Funnel analysis  |
+| GET    | `/v1/funnels/compare`       | `analytics:read` | Compare funnels  |
+| GET    | `/v1/funnels/dropoff/:step` | `analytics:read` | Dropoff analysis |
 
 ## ClickHouse Schema
 

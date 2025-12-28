@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   Logger,
   InternalServerErrorException,
   Inject,
@@ -509,7 +510,11 @@ export class ResumeService {
               };
             }
 
-            this.logger.debug(`Full experience data: ${JSON.stringify(experienceData, null, 2)}`);
+            // Log sanitized experience data (never log salary information)
+            const sanitizedForLog = { ...experienceData };
+            delete sanitizedForLog.salary;
+            delete sanitizedForLog.salaryUnit;
+            this.logger.debug(`Full experience data: ${JSON.stringify(sanitizedForLog, null, 2)}`);
 
             // Create experience with projects
             const createdExperience = await tx.experience.create({
@@ -950,6 +955,12 @@ export class ResumeService {
 
   // Get user's default resume by username (public access)
   async getPublicResumeByUsername(username: string) {
+    // Security: Validate username format before cache/API calls
+    const VALID_USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,32}$/;
+    if (!VALID_USERNAME_PATTERN.test(username)) {
+      throw new BadRequestException('Invalid username format');
+    }
+
     // First, get user ID from cache or auth-service
     const cacheKey = CacheKey.make('personal', 'user_id', username.toLowerCase());
     let userId = await this.cache.get<string>(cacheKey);

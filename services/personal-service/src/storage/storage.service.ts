@@ -412,13 +412,23 @@ export class StorageService {
 
   /**
    * Validate image file for grayscale conversion
+   * Security: Validates MIME type, file extension, and size
    */
   private validateImageFile(file: Express.Multer.File): void {
     const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
 
     if (!allowedImageTypes.includes(file.mimetype)) {
       throw new BadRequestException(
         `Invalid image type: ${file.mimetype}. Allowed types for profile photos: ${allowedImageTypes.join(', ')}`,
+      );
+    }
+
+    // Security: Validate file extension matches MIME type
+    const ext = this.getFileExtension(file.originalname).toLowerCase();
+    if (!allowedExtensions.includes(ext)) {
+      throw new BadRequestException(
+        `Invalid file extension: ${ext}. Allowed extensions: ${allowedExtensions.join(', ')}`,
       );
     }
 

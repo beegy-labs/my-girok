@@ -270,10 +270,19 @@ export class ExportService {
         const values = headers.map((h) => {
           const val = (record as Record<string, unknown>)[h];
           if (val === null || val === undefined) return '';
-          if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
-            return `"${val.replace(/"/g, '""')}"`;
+          const str = String(val);
+
+          // Security: Prevent CSV formula injection by quoting values starting with formula chars
+          const needsQuoting =
+            str.match(/^[=+\-@\t\r]/) || // Formula injection chars
+            str.includes(',') ||
+            str.includes('"') ||
+            str.includes('\n');
+
+          if (needsQuoting) {
+            return `"${str.replace(/"/g, '""')}"`;
           }
-          return String(val);
+          return str;
         });
         lines.push(values.join(','));
       }

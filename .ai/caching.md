@@ -146,10 +146,11 @@ async handlePermissionUpdate({ roleId }) {
 
 ### analytics-service
 
-| Key Pattern                                     | TTL | Invalidation Trigger |
-| ----------------------------------------------- | --- | -------------------- |
-| `analytics:behavior_summary:{serviceId}:{date}` | 5m  | Refreshable MV       |
-| `analytics:funnel:{funnelId}:{date}`            | 15m | Refreshable MV       |
+| Key Pattern                             | TTL | Invalidation Trigger |
+| --------------------------------------- | --- | -------------------- |
+| `analytics:behavior:{serviceId}:{date}` | 5m  | Refreshable MV       |
+| `analytics:funnel:{funnelId}:{date}`    | 15m | Refreshable MV       |
+| `analytics:session:{serviceId}:{date}`  | 5m  | Refreshable MV       |
 
 ## Implementation Snippets
 
