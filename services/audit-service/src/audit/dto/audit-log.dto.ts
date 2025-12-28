@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDateString, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AuditLogQueryDto {
   @ApiPropertyOptional({ description: 'Filter by user ID (UUIDv7)' })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   userId?: string;
 
   @ApiPropertyOptional({

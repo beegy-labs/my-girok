@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 import {
   BehaviorQueryDto,
@@ -10,6 +10,18 @@ import {
   BehaviorSummary,
   AggregationInterval,
 } from './dto/behavior-query.dto';
+
+/**
+ * Whitelist of allowed date truncation functions in ClickHouse
+ * Maps enum values to safe SQL function names
+ * This prevents SQL injection via the interval parameter
+ */
+const DATE_TRUNC_FUNCTIONS: Record<AggregationInterval, string> = {
+  [AggregationInterval.HOUR]: 'toStartOfHour',
+  [AggregationInterval.DAY]: 'toStartOfDay',
+  [AggregationInterval.WEEK]: 'toStartOfWeek',
+  [AggregationInterval.MONTH]: 'toStartOfMonth',
+};
 
 @Injectable()
 export class BehaviorService {
@@ -81,7 +93,13 @@ export class BehaviorService {
 
   async getTimeSeries(query: BehaviorQueryDto): Promise<TimeSeriesResult[]> {
     const interval = query.interval ?? AggregationInterval.DAY;
-    const truncFunc = this.getDateTruncFunction(interval);
+
+    // Use whitelist lookup to get safe SQL function name
+    // This prevents SQL injection via the interval parameter
+    const truncFunc = DATE_TRUNC_FUNCTIONS[interval];
+    if (!truncFunc) {
+      throw new BadRequestException(`Invalid aggregation interval: ${interval}`);
+    }
 
     const sql = `
       SELECT
@@ -149,6 +167,7 @@ export class BehaviorService {
         AND timestamp <= {endDate:DateTime64}
       GROUP BY event_category
       ORDER BY count DESC
+      LIMIT 100
     `;
 
     const params = {
@@ -274,20 +293,5 @@ export class BehaviorService {
       category: row.category,
       count: parseInt(row.count, 10),
     }));
-  }
-
-  private getDateTruncFunction(interval: AggregationInterval): string {
-    switch (interval) {
-      case AggregationInterval.HOUR:
-        return 'toStartOfHour';
-      case AggregationInterval.DAY:
-        return 'toStartOfDay';
-      case AggregationInterval.WEEK:
-        return 'toStartOfWeek';
-      case AggregationInterval.MONTH:
-        return 'toStartOfMonth';
-      default:
-        return 'toStartOfDay';
-    }
   }
 }

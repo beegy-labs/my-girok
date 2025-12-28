@@ -114,6 +114,7 @@ export class OperatorAuthService {
 
   /**
    * Accept invitation and create operator account
+   * Uses transaction to ensure atomicity of operator creation, permission assignment, and invitation update
    */
   async acceptInvitation(dto: AcceptInvitationDto): Promise<OperatorLoginResponse> {
     // Find valid invitation
@@ -136,58 +137,62 @@ export class OperatorAuthService {
       throw new BadRequestException('Invalid or expired invitation');
     }
 
-    // Create operator in transaction
+    // Hash password before transaction
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-
-    // Create operator
     const operatorId = ID.generate();
-    await this.prisma.$executeRaw`
-      INSERT INTO operators (
-        id, email, password, name, admin_id, service_id, country_code,
-        is_active, invitation_id, created_at, updated_at
-      )
-      VALUES (
-        ${operatorId}, ${invitation.email}, ${hashedPassword}, ${invitation.name},
-        ${invitation.adminId}, ${invitation.serviceId}, ${invitation.countryCode},
-        true, ${invitation.id}, NOW(), NOW()
-      )
-    `;
-
-    // Assign permissions
     const permissionIds = invitation.permissions || [];
-    for (const permissionId of permissionIds) {
-      const opPermId = ID.generate();
-      await this.prisma.$executeRaw`
-        INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
-        VALUES (${opPermId}, ${operatorId}, ${permissionId}, ${invitation.adminId}, NOW())
+
+    // Create operator, assign permissions, and update invitation in transaction
+    const operator = await this.prisma.$transaction(async (tx) => {
+      // Create operator
+      await tx.$executeRaw`
+        INSERT INTO operators (
+          id, email, password, name, admin_id, service_id, country_code,
+          is_active, invitation_id, created_at, updated_at
+        )
+        VALUES (
+          ${operatorId}, ${invitation.email}, ${hashedPassword}, ${invitation.name},
+          ${invitation.adminId}, ${invitation.serviceId}, ${invitation.countryCode},
+          true, ${invitation.id}, NOW(), NOW()
+        )
       `;
-    }
 
-    // Update invitation status
-    await this.prisma.$executeRaw`
-      UPDATE operator_invitations
-      SET status = 'ACCEPTED', accepted_at = NOW()
-      WHERE id = ${invitation.id}
-    `;
+      // Assign permissions
+      for (const permissionId of permissionIds) {
+        const opPermId = ID.generate();
+        await tx.$executeRaw`
+          INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
+          VALUES (${opPermId}, ${operatorId}, ${permissionId}, ${invitation.adminId}, NOW())
+        `;
+      }
 
-    // Get full operator info
-    const fullOperators = await this.prisma.$queryRaw<OperatorWithRelations[]>`
-      SELECT
-        o.id, o.email, o.password, o.name,
-        o.admin_id as "adminId", o.service_id as "serviceId",
-        s.slug as "serviceSlug", s.name as "serviceName",
-        o.country_code as "countryCode", o.is_active as "isActive",
-        o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
-      FROM operators o
-      JOIN services s ON o.service_id = s.id
-      WHERE o.id = ${operatorId}
-      LIMIT 1
-    `;
+      // Update invitation status
+      await tx.$executeRaw`
+        UPDATE operator_invitations
+        SET status = 'ACCEPTED', accepted_at = NOW()
+        WHERE id = ${invitation.id}
+      `;
 
-    const operator = fullOperators[0];
+      // Get full operator info within transaction
+      const fullOperators = await tx.$queryRaw<OperatorWithRelations[]>`
+        SELECT
+          o.id, o.email, o.password, o.name,
+          o.admin_id as "adminId", o.service_id as "serviceId",
+          s.slug as "serviceSlug", s.name as "serviceName",
+          o.country_code as "countryCode", o.is_active as "isActive",
+          o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
+        FROM operators o
+        JOIN services s ON o.service_id = s.id
+        WHERE o.id = ${operatorId}
+        LIMIT 1
+      `;
+
+      return fullOperators[0];
+    });
+
     const permissions = permissionIds.length ? await this.getOperatorPermissions(operatorId) : [];
 
-    // Generate tokens
+    // Generate tokens (outside transaction - no DB write needed)
     const tokens = await this.generateTokens(operator, permissions);
 
     // Save session

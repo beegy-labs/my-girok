@@ -1025,7 +1025,7 @@ export class ResumeService {
   /**
    * Upload file attachment to resume
    * For PROFILE_PHOTO type, automatically converts to grayscale
-   * @Transactional decorator ensures DB consistency
+   * File upload happens outside transaction; cleanup on failure ensures no orphaned files
    */
   async uploadAttachment(
     resumeId: string,
@@ -1038,45 +1038,51 @@ export class ResumeService {
     // Verify resume ownership
     await this.findByIdAndUserId(resumeId, userId);
 
-    return await this.prisma.$transaction(async (tx) => {
-      let fileUrl: string;
-      let fileKey: string;
-      let originalUrl: string | null = null;
-      let isProcessed = false;
+    // Upload file BEFORE transaction to avoid holding transaction during I/O
+    const uploadResult = await this.storageService.uploadFile(file, userId, resumeId);
+    const { fileUrl, fileKey } = uploadResult;
 
-      // Upload all files normally (no grayscale conversion)
-      const result = await this.storageService.uploadFile(file, userId, resumeId);
-      fileUrl = result.fileUrl;
-      fileKey = result.fileKey;
+    try {
+      // Create DB record in transaction
+      const attachment = await this.prisma.$transaction(async (tx) => {
+        // Get current max order for this type
+        const maxOrder = await tx.resumeAttachment.findFirst({
+          where: { resumeId, type },
+          orderBy: [{ order: 'desc' }],
+          select: { order: true },
+        });
 
-      // Get current max order for this type
-      const maxOrder = await tx.resumeAttachment.findFirst({
-        where: { resumeId, type },
-        orderBy: [{ order: 'desc' }],
-        select: { order: true },
-      });
-
-      // Create attachment record
-      const attachment = await tx.resumeAttachment.create({
-        data: {
-          resumeId,
-          type,
-          fileName: file.originalname,
-          fileKey,
-          fileUrl,
-          fileSize: file.size,
-          mimeType: file.mimetype,
-          isProcessed,
-          originalUrl,
-          title,
-          description,
-          order: (maxOrder?.order ?? -1) + 1,
-          visible: true,
-        },
+        // Create attachment record
+        return await tx.resumeAttachment.create({
+          data: {
+            resumeId,
+            type,
+            fileName: file.originalname,
+            fileKey,
+            fileUrl,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            isProcessed: false,
+            originalUrl: null,
+            title,
+            description,
+            order: (maxOrder?.order ?? -1) + 1,
+            visible: true,
+          },
+        });
       });
 
       return attachment;
-    });
+    } catch (error) {
+      // Cleanup orphaned file if DB operation fails
+      this.logger.warn(`DB operation failed, cleaning up uploaded file: ${fileKey}`);
+      try {
+        await this.storageService.deleteFile(fileKey);
+      } catch (cleanupError) {
+        this.logger.error(`Failed to cleanup orphaned file: ${fileKey}`, cleanupError);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -1105,36 +1111,55 @@ export class ResumeService {
 
   /**
    * Delete attachment
-   * @Transactional ensures both file and DB record are deleted atomically
+   * Deletes DB record first, then files with best-effort cleanup
+   * This prevents orphaned DB records pointing to deleted files
    */
   async deleteAttachment(attachmentId: string, resumeId: string, userId: string) {
     await this.findByIdAndUserId(resumeId, userId);
 
-    return await this.prisma.$transaction(async (tx) => {
-      const attachment = await tx.resumeAttachment.findFirst({
-        where: { id: attachmentId, resumeId },
-      });
-
-      if (!attachment) {
-        throw new NotFoundException('Attachment not found');
-      }
-
-      // Delete from storage
-      await this.storageService.deleteFile(attachment.fileKey);
-
-      // If there's an original file (for grayscale photos), delete it too
-      if (attachment.originalUrl) {
-        const originalKey = attachment.originalUrl.split('/').slice(-4).join('/');
-        await this.storageService.deleteFile(originalKey);
-      }
-
-      // Delete from database
-      await tx.resumeAttachment.delete({
-        where: { id: attachmentId },
-      });
-
-      return { message: 'Attachment deleted successfully' };
+    // Find attachment first
+    const attachment = await this.prisma.resumeAttachment.findFirst({
+      where: { id: attachmentId, resumeId },
     });
+
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found');
+    }
+
+    // Store file keys for cleanup
+    const fileKey = attachment.fileKey;
+    const originalKey = attachment.originalUrl
+      ? attachment.originalUrl.split('/').slice(-4).join('/')
+      : null;
+
+    // Delete from database FIRST (authoritative source)
+    await this.prisma.resumeAttachment.delete({
+      where: { id: attachmentId },
+    });
+
+    // Delete files from storage (best-effort, log failures for manual cleanup)
+    try {
+      await this.storageService.deleteFile(fileKey);
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete file from storage: ${fileKey}. Manual cleanup required.`,
+        error,
+      );
+    }
+
+    // If there's an original file (for grayscale photos), delete it too
+    if (originalKey) {
+      try {
+        await this.storageService.deleteFile(originalKey);
+      } catch (error) {
+        this.logger.error(
+          `Failed to delete original file: ${originalKey}. Manual cleanup required.`,
+          error,
+        );
+      }
+    }
+
+    return { message: 'Attachment deleted successfully' };
   }
 
   /**
