@@ -527,12 +527,18 @@ importers:
       '@clickhouse/client':
         specifier: ^1.8.1
         version: 1.15.0
+      '@keyv/redis':
+        specifier: ^5.1.5
+        version: 5.1.5(keyv@5.5.5)
       '@my-girok/nest-common':
         specifier: workspace:*
         version: link:../../packages/nest-common
       '@my-girok/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@nestjs/cache-manager':
+        specifier: ^3.1.0
+        version: 3.1.0(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(cache-manager@7.2.7)(keyv@5.5.5)(rxjs@7.8.2)
       '@nestjs/common':
         specifier: 'catalog:'
         version: 11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -557,6 +563,9 @@ importers:
       '@nestjs/throttler':
         specifier: ^6.5.0
         version: 6.5.0(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(reflect-metadata@0.2.2)
+      cache-manager:
+        specifier: ^7.2.7
+        version: 7.2.7
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -569,6 +578,9 @@ importers:
       helmet:
         specifier: 'catalog:'
         version: 8.1.0
+      keyv:
+        specifier: ^5.5.5
+        version: 5.5.5
       passport:
         specifier: 'catalog:'
         version: 0.7.0
@@ -772,6 +784,9 @@ importers:
       '@apollo/server':
         specifier: ^5.2.0
         version: 5.2.0(graphql@16.12.0)
+      '@keyv/redis':
+        specifier: ^5.1.5
+        version: 5.1.5(keyv@5.5.5)
       '@my-girok/nest-common':
         specifier: workspace:*
         version: link:../../packages/nest-common
@@ -781,6 +796,9 @@ importers:
       '@nestjs/apollo':
         specifier: ^13.2.1
         version: 13.2.1(@apollo/server@5.2.0(graphql@16.12.0))(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(@nestjs/graphql@13.2.0(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(graphql@16.12.0)(reflect-metadata@0.2.2))(graphql@16.12.0)
+      '@nestjs/cache-manager':
+        specifier: ^3.1.0
+        version: 3.1.0(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(cache-manager@7.2.7)(keyv@5.5.5)(rxjs@7.8.2)
       '@nestjs/common':
         specifier: 'catalog:'
         version: 11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -820,6 +838,9 @@ importers:
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
+      cache-manager:
+        specifier: ^7.2.7
+        version: 7.2.7
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -832,6 +853,9 @@ importers:
       helmet:
         specifier: 'catalog:'
         version: 8.1.0
+      keyv:
+        specifier: ^5.5.5
+        version: 5.5.5
       passport:
         specifier: 'catalog:'
         version: 0.7.0
@@ -929,6 +953,9 @@ importers:
       '@apollo/server':
         specifier: ^5.2.0
         version: 5.2.0(graphql@16.12.0)
+      '@keyv/redis':
+        specifier: ^5.1.5
+        version: 5.1.5(keyv@5.5.5)
       '@my-girok/nest-common':
         specifier: workspace:*
         version: link:../../packages/nest-common
@@ -944,6 +971,9 @@ importers:
       '@nestjs/bullmq':
         specifier: ^11.0.4
         version: 11.0.4(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(bullmq@5.66.0)
+      '@nestjs/cache-manager':
+        specifier: ^3.1.0
+        version: 3.1.0(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(cache-manager@7.2.7)(keyv@5.5.5)(rxjs@7.8.2)
       '@nestjs/common':
         specifier: 'catalog:'
         version: 11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -986,6 +1016,9 @@ importers:
       bullmq:
         specifier: ^5.66.0
         version: 5.66.0
+      cache-manager:
+        specifier: ^7.2.7
+        version: 7.2.7
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -998,6 +1031,9 @@ importers:
       helmet:
         specifier: 'catalog:'
         version: 8.1.0
+      keyv:
+        specifier: ^5.5.5
+        version: 5.5.5
       minio:
         specifier: ^8.0.6
         version: 8.0.6
