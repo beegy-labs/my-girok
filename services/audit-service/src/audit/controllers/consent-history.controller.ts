@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard, ParseUlidPipe } from '@my-girok/nest-common';
+import { JwtAuthGuard, ParseUUIDPipe } from '@my-girok/nest-common';
 import { ConsentHistoryService } from '../services/consent-history.service';
 import {
   ConsentHistoryQueryDto,
@@ -37,7 +37,7 @@ export class ConsentHistoryController {
   @ApiOperation({ summary: 'Get consent history for a specific user' })
   @ApiResponse({ status: 200, description: 'User consent history retrieved' })
   async getUserConsentHistory(
-    @Param('userId', ParseUlidPipe) userId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
   ): Promise<ConsentHistoryResponseDto[]> {
     return this.consentHistoryService.getUserConsentHistory(userId);
   }

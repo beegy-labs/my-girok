@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { OperatorService } from '../services/operator.service';
 import {
@@ -79,7 +80,7 @@ export class OperatorController {
    */
   @Get(':id')
   @Permissions('operator:read')
-  async findById(@Param('id') id: string): Promise<OperatorResponse> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<OperatorResponse> {
     return this.operatorService.findById(id);
   }
 
@@ -91,7 +92,7 @@ export class OperatorController {
   @Permissions('operator:update')
   async update(
     @CurrentAdmin() admin: AdminPayload,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateOperatorDto,
   ): Promise<OperatorResponse> {
     return this.operatorService.update(admin.sub, id, dto);
@@ -104,7 +105,10 @@ export class OperatorController {
   @Delete(':id')
   @Permissions('operator:delete')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@CurrentAdmin() admin: AdminPayload, @Param('id') id: string): Promise<void> {
+  async delete(
+    @CurrentAdmin() admin: AdminPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.operatorService.delete(admin.sub, id);
   }
 
@@ -117,7 +121,7 @@ export class OperatorController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async grantPermission(
     @CurrentAdmin() admin: AdminPayload,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: GrantPermissionDto,
   ): Promise<void> {
     return this.operatorService.grantPermission(admin.sub, id, dto.permissionId);
@@ -132,8 +136,8 @@ export class OperatorController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async revokePermission(
     @CurrentAdmin() admin: AdminPayload,
-    @Param('id') id: string,
-    @Param('pid') permissionId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('pid', ParseUUIDPipe) permissionId: string,
   ): Promise<void> {
     return this.operatorService.revokePermission(admin.sub, id, permissionId);
   }

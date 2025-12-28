@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
+// Note: Using tagged template literals ($queryRaw) which are SQL-injection safe
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service';
@@ -254,7 +255,8 @@ export class OperatorService {
 
   /**
    * Find operators with parameterized filters
-   * Each filter combination uses a separate parameterized query for safety
+   * All parameters are passed via tagged template literals (SQL-injection safe)
+   * Uses COALESCE pattern: filter matches if value equals param OR param is null
    */
   private async findOperatorsWithFilters(
     adminId: string | null,
@@ -263,8 +265,11 @@ export class OperatorService {
     isActive?: boolean,
     search?: string,
   ): Promise<OperatorRow[]> {
-    // Base query without dynamic conditions
-    const baseSelect = `
+    // Use COALESCE pattern for optional filters
+    // Each condition is: (column = param OR param IS NULL)
+    const searchPattern = search ? `%${search}%` : null;
+
+    return this.prisma.$queryRaw<OperatorRow[]>`
       SELECT
         o.id, o.email, o.name, o.service_id as "serviceId",
         s.slug as "serviceSlug", s.name as "serviceName",
@@ -272,108 +277,17 @@ export class OperatorService {
         o.last_login_at as "lastLoginAt", o.created_at as "createdAt"
       FROM operators o
       JOIN services s ON o.service_id = s.id
-    `;
-
-    // Use different query paths based on filter presence
-    // This avoids dynamic SQL construction while maintaining flexibility
-    if (adminId && serviceSlug && search) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE o.admin_id = ${adminId}
-          AND s.slug = ${serviceSlug}
-          AND (o.email ILIKE ${`%${search}%`} OR o.name ILIKE ${`%${search}%`})
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    if (adminId && serviceSlug) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE o.admin_id = ${adminId}
-          AND s.slug = ${serviceSlug}
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    if (adminId && search) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE o.admin_id = ${adminId}
-          AND (o.email ILIKE ${`%${search}%`} OR o.name ILIKE ${`%${search}%`})
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    if (adminId) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE o.admin_id = ${adminId}
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    if (serviceSlug && search) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE s.slug = ${serviceSlug}
-          AND (o.email ILIKE ${`%${search}%`} OR o.name ILIKE ${`%${search}%`})
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    if (serviceSlug) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE s.slug = ${serviceSlug}
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    if (search) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE (o.email ILIKE ${`%${search}%`} OR o.name ILIKE ${`%${search}%`})
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    // No filters - return all (for system admins)
-    if (isActive !== undefined || countryCode) {
-      return this.prisma.$queryRaw<OperatorRow[]>`
-        ${this.prisma.$queryRawUnsafe(baseSelect)}
-        WHERE 1=1
-          ${isActive !== undefined ? this.prisma.$queryRawUnsafe(`AND o.is_active = ${isActive}`) : this.prisma.$queryRawUnsafe('')}
-          ${countryCode ? this.prisma.$queryRawUnsafe(`AND o.country_code = '${this.escapeString(countryCode)}'`) : this.prisma.$queryRawUnsafe('')}
-        ORDER BY o.created_at DESC
-      `;
-    }
-
-    return this.prisma.$queryRaw<OperatorRow[]>`
-      ${this.prisma.$queryRawUnsafe(baseSelect)}
+      WHERE (o.admin_id = ${adminId} OR ${adminId}::TEXT IS NULL)
+        AND (s.slug = ${serviceSlug ?? null} OR ${serviceSlug ?? null}::TEXT IS NULL)
+        AND (o.country_code = ${countryCode ?? null} OR ${countryCode ?? null}::TEXT IS NULL)
+        AND (o.is_active = ${isActive ?? null} OR ${isActive ?? null}::BOOLEAN IS NULL)
+        AND (
+          ${searchPattern}::TEXT IS NULL
+          OR o.email ILIKE ${searchPattern}
+          OR o.name ILIKE ${searchPattern}
+        )
       ORDER BY o.created_at DESC
     `;
-  }
-
-  /**
-   * Escape string for safe SQL interpolation
-   * Only allows alphanumeric, underscore, and hyphen
-   */
-  private escapeString(value: string): string {
-    return value.replace(/[^a-zA-Z0-9_-]/g, '');
   }
 
   /**
