@@ -3,11 +3,17 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  Inject,
 } from '@nestjs/common';
-import { ID } from '@my-girok/nest-common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { ID, CacheKey } from '@my-girok/nest-common';
 import { PrismaService } from '../database/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { ConsentType } from '@my-girok/types';
+
+// TTL for service lookup cache (24 hours in milliseconds)
+const SERVICE_CACHE_TTL = 24 * 60 * 60 * 1000;
 import {
   ConsentInput,
   ConsentRequirementResponse,
@@ -67,17 +73,21 @@ export class ServicesService {
   constructor(
     private prisma: PrismaService,
     private authService: AuthService,
+    @Inject(CACHE_MANAGER) private cache: Cache,
   ) {}
 
   /**
-   * Get consent requirements for a service and country
+   * Get service by slug with caching
+   * Cache key: {env}:auth:service:{slug}
+   * TTL: 24 hours
    */
-  async getConsentRequirements(
-    slug: string,
-    countryCode: string,
-    _locale: string = 'en',
-  ): Promise<ConsentRequirementResponse[]> {
-    // Find service
+  private async getServiceBySlug(slug: string): Promise<ServiceRow> {
+    const cacheKey = CacheKey.make('auth', 'service', slug);
+    const cached = await this.cache.get<ServiceRow>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const services = await this.prisma.$queryRaw<ServiceRow[]>`
       SELECT id, slug, name, required_consents as "requiredConsents"
       FROM services
@@ -90,6 +100,20 @@ export class ServicesService {
     }
 
     const service = services[0];
+    await this.cache.set(cacheKey, service, SERVICE_CACHE_TTL);
+    return service;
+  }
+
+  /**
+   * Get consent requirements for a service and country
+   */
+  async getConsentRequirements(
+    slug: string,
+    countryCode: string,
+    _locale: string = 'en',
+  ): Promise<ConsentRequirementResponse[]> {
+    // Find service (cached)
+    const service = await this.getServiceBySlug(slug);
 
     // Get consent requirements for this service and country
     const requirements = await this.prisma.$queryRaw<ConsentRequirementRow[]>`
@@ -126,19 +150,8 @@ export class ServicesService {
     ip: string,
     userAgent: string,
   ): Promise<ServiceJoinResponse> {
-    // Find service
-    const services = await this.prisma.$queryRaw<ServiceRow[]>`
-      SELECT id, slug, name, required_consents as "requiredConsents"
-      FROM services
-      WHERE slug = ${slug} AND is_active = true
-      LIMIT 1
-    `;
-
-    if (!services.length) {
-      throw new NotFoundException(`Service not found: ${slug}`);
-    }
-
-    const service = services[0];
+    // Find service (cached)
+    const service = await this.getServiceBySlug(slug);
 
     // Check if already joined
     const existingJoin = await this.prisma.$queryRaw<UserServiceRow[]>`
@@ -212,18 +225,8 @@ export class ServicesService {
     ip: string,
     userAgent: string,
   ): Promise<AddCountryConsentResponse> {
-    // Find service
-    const services = await this.prisma.$queryRaw<ServiceRow[]>`
-      SELECT id, slug, name FROM services
-      WHERE slug = ${slug} AND is_active = true
-      LIMIT 1
-    `;
-
-    if (!services.length) {
-      throw new NotFoundException(`Service not found: ${slug}`);
-    }
-
-    const service = services[0];
+    // Find service (cached)
+    const service = await this.getServiceBySlug(slug);
 
     // Check if user has joined this service (any country)
     const existingJoin = await this.prisma.$queryRaw<UserServiceRow[]>`
@@ -300,18 +303,8 @@ export class ServicesService {
     slug: string,
     countryCode?: string,
   ): Promise<UserConsentResponse[]> {
-    // Find service
-    const services = await this.prisma.$queryRaw<ServiceRow[]>`
-      SELECT id FROM services
-      WHERE slug = ${slug} AND is_active = true
-      LIMIT 1
-    `;
-
-    if (!services.length) {
-      throw new NotFoundException(`Service not found: ${slug}`);
-    }
-
-    const service = services[0];
+    // Find service (cached)
+    const service = await this.getServiceBySlug(slug);
 
     let consents: UserConsentRow[];
 
@@ -365,18 +358,8 @@ export class ServicesService {
     ip: string,
     userAgent: string,
   ): Promise<UpdateConsentResponse> {
-    // Find service
-    const services = await this.prisma.$queryRaw<ServiceRow[]>`
-      SELECT id FROM services
-      WHERE slug = ${slug} AND is_active = true
-      LIMIT 1
-    `;
-
-    if (!services.length) {
-      throw new NotFoundException(`Service not found: ${slug}`);
-    }
-
-    const service = services[0];
+    // Find service (cached)
+    const service = await this.getServiceBySlug(slug);
 
     // Find existing consent
     const existingConsents = await this.prisma.$queryRaw<UserConsentRow[]>`
@@ -455,18 +438,8 @@ export class ServicesService {
     countryCode?: string,
     _reason?: string,
   ): Promise<void> {
-    // Find service
-    const services = await this.prisma.$queryRaw<ServiceRow[]>`
-      SELECT id FROM services
-      WHERE slug = ${slug} AND is_active = true
-      LIMIT 1
-    `;
-
-    if (!services.length) {
-      throw new NotFoundException(`Service not found: ${slug}`);
-    }
-
-    const service = services[0];
+    // Find service (cached)
+    const service = await this.getServiceBySlug(slug);
 
     // Process withdrawal in transaction (CLAUDE.md: @Transactional for multi-step DB)
     await this.prisma.$transaction(async (tx) => {

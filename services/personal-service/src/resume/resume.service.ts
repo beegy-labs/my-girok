@@ -3,9 +3,13 @@ import {
   NotFoundException,
   Logger,
   InternalServerErrorException,
+  Inject,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { CacheKey } from '@my-girok/nest-common';
 import { CopyStatus } from '../../node_modules/.prisma/personal-client';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -18,6 +22,9 @@ import {
 } from './dto';
 import { AttachmentType } from '../storage/dto';
 import { firstValueFrom } from 'rxjs';
+
+// TTL for username to userId cache (2 hours in milliseconds)
+const USERNAME_CACHE_TTL = 2 * 60 * 60 * 1000;
 
 @Injectable()
 export class ResumeService {
@@ -76,6 +83,7 @@ export class ResumeService {
     private configService: ConfigService,
     private storageService: StorageService,
     private fileCopyService: FileCopyService,
+    @Inject(CACHE_MANAGER) private cache: Cache,
   ) {
     this.authServiceUrl = this.configService.get('AUTH_SERVICE_URL') || 'http://auth-service:4001';
   }
@@ -945,17 +953,24 @@ export class ResumeService {
 
   // Get user's default resume by username (public access)
   async getPublicResumeByUsername(username: string) {
-    // First, get user ID from auth-service using username
-    let userId: string;
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get<{ id: string }>(
-          `${this.authServiceUrl}/v1/users/by-username/${username}`,
-        ),
-      );
-      userId = response.data.id;
-    } catch (_error) {
-      throw new NotFoundException('User not found');
+    // First, get user ID from cache or auth-service
+    const cacheKey = CacheKey.make('personal', 'user_id', username.toLowerCase());
+    let userId = await this.cache.get<string>(cacheKey);
+
+    if (!userId) {
+      // Not in cache, fetch from auth-service
+      try {
+        const response = await firstValueFrom(
+          this.httpService.get<{ id: string }>(
+            `${this.authServiceUrl}/v1/users/by-username/${username}`,
+          ),
+        );
+        userId = response.data.id;
+        // Cache the result
+        await this.cache.set(cacheKey, userId, USERNAME_CACHE_TTL);
+      } catch (_error) {
+        throw new NotFoundException('User not found');
+      }
     }
 
     // Then get the default resume (or first resume if no default, excluding soft-deleted)
