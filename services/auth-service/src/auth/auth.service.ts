@@ -245,8 +245,11 @@ export class AuthService {
         JOIN services s ON us.service_id = s.id
         WHERE us.user_id = ${userId} AND us.status = 'ACTIVE'
       `;
-    } catch {
+    } catch (error) {
       // Table might not exist yet in dev, continue with empty services
+      console.debug(
+        `[AuthService] user_services query skipped: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
 
     const services = this.buildUserServicesPayload(userServices);

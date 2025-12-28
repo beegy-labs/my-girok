@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param } from '@nestjs/common';
+import { Controller, Get, Query, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SessionService } from './session.service';
 import {
@@ -38,7 +38,9 @@ export class SessionController {
   @Get(':sessionId/timeline')
   @ApiOperation({ summary: 'Get session event timeline' })
   @ApiResponse({ status: 200, description: 'Session timeline returned' })
-  async getSessionTimeline(@Param('sessionId') sessionId: string): Promise<SessionTimeline> {
+  async getSessionTimeline(
+    @Param('sessionId', ParseUUIDPipe) sessionId: string,
+  ): Promise<SessionTimeline> {
     return this.sessionService.getSessionTimeline(sessionId);
   }
 }

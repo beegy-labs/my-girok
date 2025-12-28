@@ -55,10 +55,12 @@ export class ShareService {
     };
   }
 
-  async findAllByUser(userId: string) {
+  async findAllByUser(userId: string, limit: number = 100, offset: number = 0) {
     const shareLinks = await this.prisma.shareLink.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
     });
 
     return shareLinks.map((link) => ({
