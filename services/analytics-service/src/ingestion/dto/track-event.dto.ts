@@ -7,8 +7,36 @@ import {
   IsArray,
   IsUUID,
   MaxLength,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+/**
+ * Maximum allowed size for event properties JSON (100KB)
+ * Prevents DoS attacks via large payloads
+ */
+const MAX_PROPERTIES_SIZE = 100 * 1024;
+
+/**
+ * Custom validator to limit JSON object size
+ */
+@ValidatorConstraint({ name: 'jsonSizeLimit', async: false })
+class JsonSizeLimitValidator implements ValidatorConstraintInterface {
+  validate(value: unknown, args: ValidationArguments): boolean {
+    if (value === undefined || value === null) return true;
+    const jsonString = JSON.stringify(value);
+    const maxSize = args.constraints[0] || MAX_PROPERTIES_SIZE;
+    return jsonString.length <= maxSize;
+  }
+
+  defaultMessage(args: ValidationArguments): string {
+    const maxSize = args.constraints[0] || MAX_PROPERTIES_SIZE;
+    return `Properties JSON exceeds maximum size of ${maxSize} bytes`;
+  }
+}
 
 class PageContext {
   @ApiPropertyOptional()
@@ -96,13 +124,15 @@ export class TrackEventDto {
   @IsUUID()
   userId?: string;
 
-  @ApiProperty({ description: 'Event name' })
+  @ApiProperty({ description: 'Event name (max 255 characters)' })
   @IsString()
+  @MaxLength(255)
   eventName!: string;
 
-  @ApiPropertyOptional({ description: 'Event properties' })
+  @ApiPropertyOptional({ description: 'Event properties (max 100KB JSON)' })
   @IsOptional()
   @IsObject()
+  @Validate(JsonSizeLimitValidator, [MAX_PROPERTIES_SIZE])
   properties?: Record<string, unknown>;
 
   @ApiPropertyOptional({ description: 'Client timestamp (ISO 8601)' })

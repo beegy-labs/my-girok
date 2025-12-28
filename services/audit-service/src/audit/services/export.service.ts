@@ -2,11 +2,8 @@ import { Injectable, Logger, NotFoundException, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ClickHouseService } from '../../shared/clickhouse/clickhouse.service';
-import { ID, CacheKey } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
 import { CreateExportDto, ExportResponseDto, ExportStatus, ExportType } from '../dto/export.dto';
-
-// TTL for export records: 24 hours in milliseconds
-const EXPORT_TTL = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class ExportService {
@@ -37,7 +34,7 @@ export class ExportService {
       createdAt: new Date().toISOString(),
     };
 
-    await this.cache.set(cacheKey, exportRecord, EXPORT_TTL);
+    await this.cache.set(cacheKey, exportRecord, CacheTTL.EXPORT_STATUS);
     this.logger.debug(`Cache SET: ${cacheKey}`);
 
     // Start async processing
@@ -47,7 +44,7 @@ export class ExportService {
       if (record) {
         record.status = ExportStatus.FAILED;
         record.error = error.message;
-        await this.cache.set(cacheKey, record, EXPORT_TTL);
+        await this.cache.set(cacheKey, record, CacheTTL.EXPORT_STATUS);
       }
     });
 
@@ -91,7 +88,7 @@ export class ExportService {
     if (!record) return;
 
     record.status = ExportStatus.PROCESSING;
-    await this.cache.set(cacheKey, record, EXPORT_TTL);
+    await this.cache.set(cacheKey, record, CacheTTL.EXPORT_STATUS);
 
     const data: Record<string, unknown[]> = {};
 
@@ -122,10 +119,15 @@ export class ExportService {
       }
     }
 
-    // Generate file (PDF/CSV)
-    // In production, upload to S3 and store URL
+    // TODO: Implement actual file generation and S3 upload (Issue #TBD)
+    // Steps needed:
+    // 1. Generate PDF/CSV from data using pdfmake or csv-stringify
+    // 2. Upload to S3 using @aws-sdk/client-s3 with pre-signed URL
+    // 3. Store S3 key in export record for download endpoint
+    // 4. Add cleanup job to delete expired exports from S3
+    // Currently: Only logging placeholder
     const fileName = `audit-export-${exportId}.${dto.format}`;
-    this.logger.log(`Generated export file: ${fileName}`);
+    this.logger.warn(`[TODO] File generation not implemented. Placeholder: ${fileName}`);
 
     // Log the export action
     await this.logExportAction(exportId, dto.userId, requestedBy);
@@ -135,7 +137,7 @@ export class ExportService {
     record.downloadUrl = `/v1/audit/export/${exportId}/download`;
 
     // Save completed status to cache
-    await this.cache.set(cacheKey, record, EXPORT_TTL);
+    await this.cache.set(cacheKey, record, CacheTTL.EXPORT_STATUS);
     this.logger.log(`Export ${exportId} completed and cached`);
   }
 
