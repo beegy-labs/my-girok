@@ -16,6 +16,7 @@ import {
   GracefulShutdownService,
   // Cache
   CacheKey,
+  CacheTTL,
   // ID (UUIDv7 - RFC 9562)
   ID,
   UUIDv7,
@@ -139,6 +140,29 @@ CacheKey.pattern('auth', 'permissions', '*');
 | ----------- | --------------------------- | ------------------------------- |
 | `make()`    | Create prefixed key         | `dev:auth:service:homeshopping` |
 | `pattern()` | Create pattern for KEYS cmd | `dev:personal:user_prefs:*`     |
+
+## CacheTTL Constants
+
+Standardized TTL values (in milliseconds) for cache-manager v5+.
+
+```typescript
+import { CacheTTL } from '@my-girok/nest-common';
+
+await this.cache.set(key, data, CacheTTL.STATIC_CONFIG); // 24h
+await this.cache.set(key, data, CacheTTL.USER_DATA); // 5m
+await this.cache.set(key, data, CacheTTL.SESSION); // 30m
+```
+
+| Constant          | Duration | Use Cases                    |
+| ----------------- | -------- | ---------------------------- |
+| `STATIC_CONFIG`   | 24h      | services, permissions        |
+| `SEMI_STATIC`     | 15m      | legal documents, funnel data |
+| `USER_DATA`       | 5m       | preferences, analytics       |
+| `SESSION`         | 30m      | admin/operator sessions      |
+| `SHORT_LIVED`     | 1m       | rate limits, temp tokens     |
+| `EPHEMERAL`       | 10s      | real-time metrics            |
+| `USERNAME_LOOKUP` | 2h       | username → userId mapping    |
+| `EXPORT_STATUS`   | 24h      | export job tracking          |
 
 **Policy**: `docs/policies/CACHING.md`
 

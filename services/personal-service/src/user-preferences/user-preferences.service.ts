@@ -7,12 +7,9 @@ import {
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { CacheKey } from '@my-girok/nest-common';
+import { CacheKey, CacheTTL } from '@my-girok/nest-common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateUserPreferencesDto, UpdateUserPreferencesDto } from './dto';
-
-// TTL for user preferences cache (1 hour in milliseconds)
-const PREFERENCES_CACHE_TTL = 60 * 60 * 1000;
 
 @Injectable()
 export class UserPreferencesService {
@@ -74,8 +71,8 @@ export class UserPreferencesService {
         });
       }
 
-      // Cache the result
-      await this.cache.set(cacheKey, preferences, PREFERENCES_CACHE_TTL);
+      // Cache the result (1 hour TTL for user data)
+      await this.cache.set(cacheKey, preferences, CacheTTL.SESSION);
 
       return preferences;
     } catch (error) {
