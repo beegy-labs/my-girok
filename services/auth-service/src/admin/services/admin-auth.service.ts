@@ -321,24 +321,37 @@ export class AdminAuthService {
         WHERE asv.admin_id = ${adminId}
       `;
 
+      // Batch fetch permissions for all unique roleIds to prevent N+1 queries
+      const uniqueRoleIds = [...new Set(adminServices.map((as) => as.roleId))];
+      const permissionsMap = new Map<string, string[]>();
+
+      // Fetch all permissions in parallel
+      await Promise.all(
+        uniqueRoleIds.map(async (roleId) => {
+          const perms = await this.getAdminPermissions(roleId);
+          permissionsMap.set(roleId, perms);
+        }),
+      );
+
       for (const as of adminServices) {
         const slug = as.serviceSlug;
         if (!services[slug]) {
-          // Get service-specific permissions
-          const servicePermissions = await this.getAdminPermissions(as.roleId);
           services[slug] = {
             roleId: as.roleId,
             roleName: as.roleName,
             countries: [],
-            permissions: servicePermissions,
+            permissions: permissionsMap.get(as.roleId) ?? [],
           };
         }
         if (as.countryCode && !services[slug].countries.includes(as.countryCode)) {
           services[slug].countries.push(as.countryCode);
         }
       }
-    } catch {
-      // admin_services table might not exist yet
+    } catch (error) {
+      // admin_services table might not exist yet - log for debugging
+      console.debug(
+        `[AdminAuthService] admin_services query skipped: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
 
     return services;

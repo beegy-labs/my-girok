@@ -184,7 +184,7 @@ export class ConsentHistoryService {
     const agreed = parseInt(overall.agreed, 10);
     const disagreed = parseInt(overall.disagreed, 10);
 
-    // By type
+    // By type (limited to prevent unbounded results)
     const byTypeSql = `
       SELECT
         consent_type,
@@ -193,6 +193,8 @@ export class ConsentHistoryService {
       FROM audit_db.consent_history
       WHERE ${whereClause}
       GROUP BY consent_type
+      ORDER BY agreed + disagreed DESC
+      LIMIT 100
     `;
     const byTypeResult = await this.clickhouse.query<{
       consent_type: string;
@@ -208,7 +210,7 @@ export class ConsentHistoryService {
       };
     }
 
-    // By country
+    // By country (limited to prevent unbounded results)
     const byCountrySql = `
       SELECT
         country_code,
@@ -217,6 +219,8 @@ export class ConsentHistoryService {
       FROM audit_db.consent_history
       WHERE ${whereClause}
       GROUP BY country_code
+      ORDER BY agreed + disagreed DESC
+      LIMIT 200
     `;
     const byCountryResult = await this.clickhouse.query<{
       country_code: string;
