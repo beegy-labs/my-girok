@@ -71,6 +71,8 @@ Kubernetes deployment guide:
 
 - [Auth Service](services/AUTH_SERVICE.md) - Authentication, sessions, legal consent
 - [Personal Service](services/PERSONAL_SERVICE.md) - Resume management, file storage
+- [Audit Service](services/AUDIT_SERVICE.md) - Compliance logging (ClickHouse, 5yr retention)
+- [Analytics Service](services/ANALYTICS_SERVICE.md) - Business analytics (ClickHouse, MVs)
 
 ### Apps
 
@@ -80,6 +82,10 @@ Kubernetes deployment guide:
 
 - [Types Package](packages/TYPES.md) - Shared TypeScript types
 - [Nest Common](packages/nest-common.md) - NestJS shared utilities
+
+### Infrastructure
+
+- [ClickHouse](infrastructure/CLICKHOUSE.md) - Analytics database (MVs, schema, queries)
 
 ### Features
 
@@ -105,9 +111,15 @@ Kubernetes deployment guide:
 
 - [Security](policies/SECURITY.md) - Security best practices
 - [Testing](policies/TESTING.md) - Testing standards
+- [Caching](policies/CACHING.md) - Valkey/Redis caching strategy
 - [Legal & Consent](policies/LEGAL_CONSENT.md) - GDPR, PIPA compliance
 - [Global Account System](policies/GLOBAL_ACCOUNT.md) - Multi-service account architecture
 - [LLM Guidelines](policies/LLM_GUIDELINES.md) - AI assistant guidelines
+
+### Reports
+
+- [Final Optimization Report](reports/FINAL_OPTIMIZATION_REPORT.md) - Caching opportunities summary
+- [Optimization Report 2025](reports/OPTIMIZATION_REPORT_2025.md) - Full service analysis
 
 ### Global Account System
 
