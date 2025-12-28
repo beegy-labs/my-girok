@@ -851,6 +851,9 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(express@5.2.1)
     devDependencies:
+      '@clickhouse/client':
+        specifier: ^1.8.1
+        version: 1.15.0
       '@nestjs/cli':
         specifier: 'catalog:'
         version: 11.0.14(@types/node@25.0.1)(esbuild@0.27.1)
@@ -1017,6 +1020,9 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0
     devDependencies:
+      '@clickhouse/client':
+        specifier: ^1.8.1
+        version: 1.15.0
       '@nestjs/cli':
         specifier: 'catalog:'
         version: 11.0.14(@types/node@25.0.1)(esbuild@0.27.1)
