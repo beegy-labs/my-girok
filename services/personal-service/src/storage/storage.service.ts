@@ -1,7 +1,12 @@
-import { Injectable, Logger, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
-import { v4 as uuid } from 'uuid';
+import { ID } from '@my-girok/nest-common';
 
 /**
  * Storage Service for MinIO Integration
@@ -23,10 +28,13 @@ export class StorageService {
     const secretKey = this.configService.get<string>('MINIO_SECRET_KEY');
 
     this.bucketName = this.configService.get<string>('MINIO_BUCKET_NAME') || 'my-girok-resumes';
-    this.publicUrl = this.configService.get<string>('MINIO_PUBLIC_URL') || `http://${endPoint}:${port}`;
+    this.publicUrl =
+      this.configService.get<string>('MINIO_PUBLIC_URL') || `http://${endPoint}:${port}`;
 
     if (!accessKey || !secretKey) {
-      throw new Error('MinIO credentials not configured. Please set MINIO_ACCESS_KEY and MINIO_SECRET_KEY');
+      throw new Error(
+        'MinIO credentials not configured. Please set MINIO_ACCESS_KEY and MINIO_SECRET_KEY',
+      );
     }
 
     this.minioClient = new Minio.Client({
@@ -111,9 +119,15 @@ export class StorageService {
   private async logCorsSetupInstructions(_corsXML: string): Promise<void> {
     // This is a simplified implementation
     // In production, you might want to use MinIO admin client or configure CORS via kubectl/helm
-    this.logger.log('CORS configuration should be set via MinIO admin console or kubectl for production');
-    this.logger.log('For local development, use: mc anonymous set-json public myminio/my-girok-resumes');
-    this.logger.log('And configure CORS in MinIO console under Buckets > my-girok-resumes > Access Rules');
+    this.logger.log(
+      'CORS configuration should be set via MinIO admin console or kubectl for production',
+    );
+    this.logger.log(
+      'For local development, use: mc anonymous set-json public myminio/my-girok-resumes',
+    );
+    this.logger.log(
+      'And configure CORS in MinIO console under Buckets > my-girok-resumes > Access Rules',
+    );
     this.logger.log('See scripts/configure-minio-cors.sh for automated CORS setup');
   }
 
@@ -132,19 +146,13 @@ export class StorageService {
     this.validateFile(file);
 
     const fileExtension = this.getFileExtension(file.originalname);
-    const fileKey = `resumes/${userId}/${resumeId}/${uuid()}${fileExtension}`;
+    const fileKey = `resumes/${userId}/${resumeId}/${ID.generate()}${fileExtension}`;
 
     try {
-      await this.minioClient.putObject(
-        this.bucketName,
-        fileKey,
-        file.buffer,
-        file.size,
-        {
-          'Content-Type': file.mimetype,
-          'X-Amz-Meta-Original-Name': encodeURIComponent(file.originalname),
-        },
-      );
+      await this.minioClient.putObject(this.bucketName, fileKey, file.buffer, file.size, {
+        'Content-Type': file.mimetype,
+        'X-Amz-Meta-Original-Name': encodeURIComponent(file.originalname),
+      });
 
       const fileUrl = `${this.publicUrl}/${this.bucketName}/${fileKey}`;
 
@@ -172,7 +180,7 @@ export class StorageService {
     try {
       // Extract file extension from source key
       const fileExtension = this.getFileExtension(sourceKey);
-      const newFileKey = `resumes/${userId}/${resumeId}/${uuid()}${fileExtension}`;
+      const newFileKey = `resumes/${userId}/${resumeId}/${ID.generate()}${fileExtension}`;
 
       // Copy object using MinIO copyObject method
       const conds = new Minio.CopyConditions();
@@ -213,7 +221,9 @@ export class StorageService {
    * @param fileKey - MinIO object key
    * @returns Object with stream and metadata
    */
-  async getFileStream(fileKey: string): Promise<{ stream: any; contentType: string; size: number }> {
+  async getFileStream(
+    fileKey: string,
+  ): Promise<{ stream: any; contentType: string; size: number }> {
     try {
       // Get object metadata
       const stat = await this.minioClient.statObject(this.bucketName, fileKey);
@@ -261,21 +271,15 @@ export class StorageService {
     this.validateImageFile(file);
 
     const fileExtension = this.getFileExtension(file.originalname);
-    const tempKey = `tmp/${userId}/${uuid()}${fileExtension}`;
+    const tempKey = `tmp/${userId}/${ID.generate()}${fileExtension}`;
 
     try {
-      await this.minioClient.putObject(
-        this.bucketName,
-        tempKey,
-        file.buffer,
-        file.size,
-        {
-          'Content-Type': file.mimetype,
-          'X-Amz-Meta-Original-Name': encodeURIComponent(file.originalname),
-          'X-Amz-Meta-Temp': 'true',
-          'X-Amz-Meta-User-Id': userId,
-        },
-      );
+      await this.minioClient.putObject(this.bucketName, tempKey, file.buffer, file.size, {
+        'Content-Type': file.mimetype,
+        'X-Amz-Meta-Original-Name': encodeURIComponent(file.originalname),
+        'X-Amz-Meta-Temp': 'true',
+        'X-Amz-Meta-User-Id': userId,
+      });
 
       // Generate presigned URL for preview (1 hour validity)
       const previewUrl = await this.getPresignedUrl(tempKey, 3600);
@@ -334,19 +338,13 @@ export class StorageService {
 
       // Generate permanent file key
       const fileExtension = this.getFileExtension(originalName);
-      const fileKey = `resumes/${userId}/${resumeId}/${uuid()}${fileExtension}`;
+      const fileKey = `resumes/${userId}/${resumeId}/${ID.generate()}${fileExtension}`;
 
       // Upload to permanent location
-      await this.minioClient.putObject(
-        this.bucketName,
-        fileKey,
-        fileBuffer,
-        fileBuffer.length,
-        {
-          'Content-Type': mimeType,
-          'X-Amz-Meta-Original-Name': encodeURIComponent(originalName),
-        },
-      );
+      await this.minioClient.putObject(this.bucketName, fileKey, fileBuffer, fileBuffer.length, {
+        'Content-Type': mimeType,
+        'X-Amz-Meta-Original-Name': encodeURIComponent(originalName),
+      });
 
       const fileUrl = `${this.publicUrl}/${this.bucketName}/${fileKey}`;
 
