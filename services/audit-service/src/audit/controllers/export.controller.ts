@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard, ParseUlidPipe, CurrentUser } from '@my-girok/nest-common';
+import { JwtAuthGuard, ParseUUIDPipe, CurrentUser } from '@my-girok/nest-common';
 import { ExportService } from '../services/export.service';
 import { CreateExportDto, ExportResponseDto } from '../dto/export.dto';
 
@@ -26,7 +26,7 @@ export class ExportController {
   @ApiOperation({ summary: 'Get export status' })
   @ApiResponse({ status: 200, description: 'Export status retrieved' })
   async getExportStatus(
-    @Param('exportId', ParseUlidPipe) exportId: string,
+    @Param('exportId', ParseUUIDPipe) exportId: string,
   ): Promise<ExportResponseDto> {
     return this.exportService.getExportStatus(exportId);
   }
@@ -36,7 +36,7 @@ export class ExportController {
   @ApiResponse({ status: 200, description: 'File download' })
   @ApiResponse({ status: 404, description: 'Export not found or not ready' })
   async downloadExport(
-    @Param('exportId', ParseUlidPipe) exportId: string,
+    @Param('exportId', ParseUUIDPipe) exportId: string,
     @Res() res: Response,
   ): Promise<void> {
     const downloadUrl = await this.exportService.getExportDownloadUrl(exportId);
