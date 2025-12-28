@@ -194,12 +194,16 @@ export class ServicesService {
       select: { email: true, accountMode: true, countryCode: true },
     });
 
+    if (!user) {
+      throw new NotFoundException(`User ${userId} not found`);
+    }
+
     // Generate new tokens with updated services
     const tokens = await this.authService.generateTokensWithServices(
       userId,
-      user!.email,
-      (user!.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
-      user!.countryCode || 'KR',
+      user.email,
+      (user.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
+      user.countryCode || 'KR',
       userServices,
     );
 
@@ -282,12 +286,16 @@ export class ServicesService {
       select: { email: true, accountMode: true, countryCode: true },
     });
 
+    if (!user) {
+      throw new NotFoundException(`User ${userId} not found`);
+    }
+
     // Generate new tokens with updated services
     const tokens = await this.authService.generateTokensWithServices(
       userId,
-      user!.email,
-      (user!.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
-      user!.countryCode || 'KR',
+      user.email,
+      (user.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
+      user.countryCode || 'KR',
       userServices,
     );
 

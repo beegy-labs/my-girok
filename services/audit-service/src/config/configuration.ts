@@ -24,8 +24,16 @@ export default () => ({
     db: parseInt(process.env.VALKEY_DB || '3', 10), // DB 3 for audit-service
   },
 
+  minio: {
+    endpoint: process.env.MINIO_ENDPOINT || 'localhost',
+    port: parseInt(process.env.MINIO_PORT || '9000', 10),
+    useSSL: process.env.MINIO_USE_SSL === 'true',
+    accessKey: process.env.MINIO_ACCESS_KEY,
+    secretKey: process.env.MINIO_SECRET_KEY,
+  },
+
   export: {
-    s3Bucket: process.env.EXPORT_S3_BUCKET,
-    s3Region: process.env.EXPORT_S3_REGION || 'ap-northeast-2',
+    bucket: process.env.EXPORT_S3_BUCKET,
+    region: process.env.EXPORT_S3_REGION || 'ap-northeast-2',
   },
 });

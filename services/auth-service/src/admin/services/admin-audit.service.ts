@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   AuditLogListQuery,
@@ -18,6 +18,8 @@ import {
  */
 @Injectable()
 export class AdminAuditService {
+  private readonly logger = new Logger(AdminAuditService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -28,7 +30,7 @@ export class AdminAuditService {
     const { page = 1, limit = 20 } = query;
 
     // TODO: Query ClickHouse audit_db.audit_logs
-    console.log('[AdminAuditService] listAuditLogs - TODO: Implement ClickHouse query', query);
+    this.logger.warn('listAuditLogs: ClickHouse query not yet implemented', { query });
 
     return {
       items: [],
@@ -45,7 +47,7 @@ export class AdminAuditService {
    */
   async getFilterOptions(): Promise<AuditLogFilterOptions> {
     // TODO: Query ClickHouse audit_db for distinct values
-    console.log('[AdminAuditService] getFilterOptions - TODO: Implement ClickHouse query');
+    this.logger.warn('getFilterOptions: ClickHouse query not yet implemented');
 
     // Return admins from PostgreSQL (still available)
     const admins = await this.prisma.admins.findMany({
@@ -75,7 +77,7 @@ export class AdminAuditService {
    */
   async exportCsv(query: AuditLogListQuery): Promise<string> {
     // TODO: Query ClickHouse audit_db.audit_logs
-    console.log('[AdminAuditService] exportCsv - TODO: Implement ClickHouse query', query);
+    this.logger.warn('exportCsv: ClickHouse query not yet implemented', { query });
 
     const headers = [
       'ID',
