@@ -186,6 +186,15 @@ export class UserPreferencesService {
 
       this.logger.log(`Deleted preferences for user: ${userId}`);
     } catch (error) {
+      // Handle Prisma "Record not found" error (P2025)
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2025'
+      ) {
+        throw new NotFoundException(`User preferences not found for user: ${userId}`);
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(

@@ -271,6 +271,7 @@ export class OperatorService {
     // Each condition is: (column = param OR param IS NULL)
     const searchPattern = search ? `%${search}%` : null;
 
+    // Add LIMIT to prevent unbounded queries
     return this.prisma.$queryRaw<OperatorRow[]>`
       SELECT
         o.id, o.email, o.name, o.service_id as "serviceId",
@@ -289,6 +290,7 @@ export class OperatorService {
           OR o.name ILIKE ${searchPattern}
         )
       ORDER BY o.created_at DESC
+      LIMIT 1000
     `;
   }
 

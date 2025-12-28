@@ -224,10 +224,8 @@ export class FunnelService {
     endDate: string,
     groupColumn: string,
   ): Promise<(number | null)[]> {
-    const avgTimes: (number | null)[] = [];
-
-    for (let i = 0; i < steps.length - 1; i++) {
-      const currentStep = steps[i];
+    // Use Promise.all to parallelize queries instead of sequential execution
+    const queries = steps.slice(0, -1).map((currentStep, i) => {
       const nextStep = steps[i + 1];
 
       const sql = `
@@ -247,15 +245,18 @@ export class FunnelService {
         )
       `;
 
-      const result = await this.clickhouse.query<{ avg_time: string }>(sql, {
+      return this.clickhouse.query<{ avg_time: string }>(sql, {
         currentStep,
         nextStep,
         startDate,
         endDate,
       });
-      avgTimes.push(result.data[0]?.avg_time ? parseFloat(result.data[0].avg_time) : null);
-    }
+    });
 
-    return avgTimes;
+    const results = await Promise.all(queries);
+
+    return results.map((result) =>
+      result.data[0]?.avg_time ? parseFloat(result.data[0].avg_time) : null,
+    );
   }
 }
