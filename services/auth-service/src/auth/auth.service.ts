@@ -157,7 +157,7 @@ export class AuthService {
         where: { id: session.id },
         data: {
           tokenHash: hashToken(tokens.refreshToken),
-          refreshToken: tokens.refreshToken,
+          // Security: Only store hash, never plaintext refresh token
           expiresAt: getSessionExpiresAt(),
         },
       });
@@ -351,7 +351,7 @@ export class AuthService {
         subjectId: userId,
         subjectType: 'USER',
         tokenHash: hashToken(refreshToken),
-        refreshToken, // Keep for backward compatibility during migration
+        // Security: Only store hash, never plaintext refresh token
         expiresAt: getSessionExpiresAt(),
         ipAddress,
         userAgent,

@@ -41,9 +41,11 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  // SECURITY.md: Refresh endpoint limited to 10 req/min per IP to prevent token brute-force
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   async refreshToken(@Body() dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto.refreshToken);
   }

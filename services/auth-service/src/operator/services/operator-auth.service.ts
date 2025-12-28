@@ -260,13 +260,12 @@ export class OperatorAuthService {
       const permissions = await this.getOperatorPermissions(operator.id);
       const tokens = await this.generateTokens(operator, permissions);
 
-      // Update session with new token hash
+      // Update session with new token hash (Security: Only store hash, never plaintext)
       const newTokenHash = hashToken(tokens.refreshToken);
       const newExpiresAt = getSessionExpiresAt();
       await this.prisma.$executeRaw`
         UPDATE sessions
         SET token_hash = ${newTokenHash},
-            refresh_token = ${tokens.refreshToken},
             expires_at = ${newExpiresAt}
         WHERE id = ${session.id}
       `;
@@ -384,9 +383,10 @@ export class OperatorAuthService {
     const expiresAt = getSessionExpiresAt();
     const sessionId = ID.generate();
 
+    // Security: Only store token hash, never plaintext refresh token
     await this.prisma.$executeRaw`
-      INSERT INTO sessions (id, subject_id, subject_type, token_hash, refresh_token, expires_at, created_at)
-      VALUES (${sessionId}, ${operatorId}, 'OPERATOR', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
+      INSERT INTO sessions (id, subject_id, subject_type, token_hash, expires_at, created_at)
+      VALUES (${sessionId}, ${operatorId}, 'OPERATOR', ${tokenHash}, ${expiresAt}, NOW())
     `;
   }
 }
