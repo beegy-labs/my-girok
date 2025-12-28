@@ -17,6 +17,13 @@ export default () => ({
     secret: process.env.JWT_SECRET,
   },
 
+  valkey: {
+    host: process.env.VALKEY_HOST || 'localhost',
+    port: parseInt(process.env.VALKEY_PORT || '6379', 10),
+    password: process.env.VALKEY_PASSWORD || '',
+    db: parseInt(process.env.VALKEY_DB || '4', 10), // DB 4 for analytics-service
+  },
+
   rateLimit: {
     events: parseInt(process.env.RATE_LIMIT_EVENTS || '100', 10),
     window: parseInt(process.env.RATE_LIMIT_WINDOW || '60', 10),
