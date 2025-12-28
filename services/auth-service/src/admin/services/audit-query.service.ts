@@ -87,6 +87,10 @@ export class AuditQueryService {
     return this.getStatsFromPostgres(query, admin);
   }
 
+  /**
+   * Query PostgreSQL with parameterized filters
+   * Uses COALESCE pattern for optional filters (SQL-injection safe)
+   */
   private async queryPostgres(
     query: AuditLogQueryDto,
     admin: AdminPayload,
@@ -95,58 +99,48 @@ export class AuditQueryService {
     const limit = query.limit || 20;
     const offset = (page - 1) * limit;
 
-    // Build WHERE conditions
-    const conditions: string[] = [];
-
-    if (query.actorId) {
-      conditions.push(`al.admin_id = '${query.actorId}'`);
-    }
-
-    if (query.resource) {
-      conditions.push(`al.resource = '${query.resource}'`);
-    }
-
-    if (query.action) {
-      conditions.push(`al.action = '${query.action}'`);
-    }
-
-    if (query.targetId) {
-      conditions.push(`al.resource_id = '${query.targetId}'`);
-    }
-
-    if (query.startDate) {
-      conditions.push(`al.created_at >= '${query.startDate}'`);
-    }
-
-    if (query.endDate) {
-      conditions.push(`al.created_at <= '${query.endDate}'`);
-    }
+    // Use COALESCE pattern: (column = param OR param IS NULL)
+    const actorIdFilter = query.actorId ?? null;
+    const resourceFilter = query.resource ?? null;
+    const actionFilter = query.action ?? null;
+    const targetIdFilter = query.targetId ?? null;
+    const startDateFilter = query.startDate ? new Date(query.startDate) : null;
+    const endDateFilter = query.endDate ? new Date(query.endDate) : null;
 
     // Admin scope filtering (non-system admins can only see their own logs)
-    if (admin.scope !== 'SYSTEM') {
-      conditions.push(`al.admin_id = '${admin.sub}'`);
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const scopeFilter = admin.scope !== 'SYSTEM' ? admin.sub : null;
 
     // Count total
-    const countResult = await this.prisma.$queryRawUnsafe<CountResult[]>(`
-      SELECT COUNT(*) as count FROM audit_logs al ${whereClause}
-    `);
+    const countResult = await this.prisma.$queryRaw<CountResult[]>`
+      SELECT COUNT(*) as count FROM audit_logs al
+      WHERE (al.admin_id = ${actorIdFilter} OR ${actorIdFilter}::TEXT IS NULL)
+        AND (al.resource = ${resourceFilter} OR ${resourceFilter}::TEXT IS NULL)
+        AND (al.action = ${actionFilter} OR ${actionFilter}::TEXT IS NULL)
+        AND (al.resource_id = ${targetIdFilter} OR ${targetIdFilter}::TEXT IS NULL)
+        AND (al.created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+        AND (al.created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+        AND (al.admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
+    `;
     const total = Number(countResult[0]?.count || 0);
 
     // Get paginated results
-    const rows = await this.prisma.$queryRawUnsafe<AuditLogRow[]>(`
+    const rows = await this.prisma.$queryRaw<AuditLogRow[]>`
       SELECT
         al.id, al.admin_id, al.action, al.resource, al.resource_id,
         al.before_state, al.after_state, al.ip_address, al.user_agent,
         al.created_at, a.email as admin_email, a.name as admin_name
       FROM audit_logs al
       LEFT JOIN admins a ON al.admin_id = a.id
-      ${whereClause}
+      WHERE (al.admin_id = ${actorIdFilter} OR ${actorIdFilter}::TEXT IS NULL)
+        AND (al.resource = ${resourceFilter} OR ${resourceFilter}::TEXT IS NULL)
+        AND (al.action = ${actionFilter} OR ${actionFilter}::TEXT IS NULL)
+        AND (al.resource_id = ${targetIdFilter} OR ${targetIdFilter}::TEXT IS NULL)
+        AND (al.created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+        AND (al.created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+        AND (al.admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
       ORDER BY al.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
-    `);
+    `;
 
     const data: AuditLogResponse[] = rows.map((row) => ({
       id: row.id,
@@ -179,71 +173,91 @@ export class AuditQueryService {
     };
   }
 
+  /**
+   * Get stats from PostgreSQL with parameterized filters
+   * Uses COALESCE pattern for optional filters (SQL-injection safe)
+   */
   private async getStatsFromPostgres(
     query: AuditStatsQueryDto,
     admin: AdminPayload,
   ): Promise<AuditStatsResponse> {
-    const conditions: string[] = [];
-
-    if (query.startDate) {
-      conditions.push(`created_at >= '${query.startDate}'`);
-    }
-
-    if (query.endDate) {
-      conditions.push(`created_at <= '${query.endDate}'`);
-    }
-
-    if (admin.scope !== 'SYSTEM') {
-      conditions.push(`admin_id = '${admin.sub}'`);
-    }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    // Use COALESCE pattern for optional filters
+    const startDateFilter = query.startDate ? new Date(query.startDate) : null;
+    const endDateFilter = query.endDate ? new Date(query.endDate) : null;
+    const scopeFilter = admin.scope !== 'SYSTEM' ? admin.sub : null;
 
     // Get total stats
-    const totalStats = await this.prisma.$queryRawUnsafe<StatsResult[]>(`
+    const totalStats = await this.prisma.$queryRaw<StatsResult[]>`
       SELECT
         COUNT(*) as total,
         COUNT(*) as success_count
       FROM audit_logs
-      ${whereClause}
-    `);
+      WHERE (created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+        AND (created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+        AND (admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
+    `;
 
     // Get by actor
-    const byActor = await this.prisma.$queryRawUnsafe<ActorCountResult[]>(`
+    const byActor = await this.prisma.$queryRaw<ActorCountResult[]>`
       SELECT admin_id, COUNT(*) as count
       FROM audit_logs
-      ${whereClause}
+      WHERE (created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+        AND (created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+        AND (admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
       GROUP BY admin_id
       ORDER BY count DESC
       LIMIT 10
-    `);
+    `;
 
     // Get by resource/action
-    const byResource = await this.prisma.$queryRawUnsafe<ResourceCountResult[]>(`
+    const byResource = await this.prisma.$queryRaw<ResourceCountResult[]>`
       SELECT resource, action, COUNT(*) as count
       FROM audit_logs
-      ${whereClause}
+      WHERE (created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+        AND (created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+        AND (admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
       GROUP BY resource, action
       ORDER BY count DESC
       LIMIT 10
-    `);
+    `;
 
-    // Get timeline
-    const dateFormat =
-      query.groupBy === 'month'
-        ? "DATE_TRUNC('month', created_at)"
-        : query.groupBy === 'week'
-          ? "DATE_TRUNC('week', created_at)"
-          : "DATE_TRUNC('day', created_at)";
+    // Get timeline - use separate queries for different group by options
+    let timeline: TimelineResult[];
 
-    const timeline = await this.prisma.$queryRawUnsafe<TimelineResult[]>(`
-      SELECT ${dateFormat} as date, COUNT(*) as count
-      FROM audit_logs
-      ${whereClause}
-      GROUP BY ${dateFormat}
-      ORDER BY date DESC
-      LIMIT 30
-    `);
+    if (query.groupBy === 'month') {
+      timeline = await this.prisma.$queryRaw<TimelineResult[]>`
+        SELECT DATE_TRUNC('month', created_at) as date, COUNT(*) as count
+        FROM audit_logs
+        WHERE (created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+          AND (created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+          AND (admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
+        GROUP BY DATE_TRUNC('month', created_at)
+        ORDER BY date DESC
+        LIMIT 30
+      `;
+    } else if (query.groupBy === 'week') {
+      timeline = await this.prisma.$queryRaw<TimelineResult[]>`
+        SELECT DATE_TRUNC('week', created_at) as date, COUNT(*) as count
+        FROM audit_logs
+        WHERE (created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+          AND (created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+          AND (admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
+        GROUP BY DATE_TRUNC('week', created_at)
+        ORDER BY date DESC
+        LIMIT 30
+      `;
+    } else {
+      timeline = await this.prisma.$queryRaw<TimelineResult[]>`
+        SELECT DATE_TRUNC('day', created_at) as date, COUNT(*) as count
+        FROM audit_logs
+        WHERE (created_at >= ${startDateFilter} OR ${startDateFilter}::TIMESTAMP IS NULL)
+          AND (created_at <= ${endDateFilter} OR ${endDateFilter}::TIMESTAMP IS NULL)
+          AND (admin_id = ${scopeFilter} OR ${scopeFilter}::TEXT IS NULL)
+        GROUP BY DATE_TRUNC('day', created_at)
+        ORDER BY date DESC
+        LIMIT 30
+      `;
+    }
 
     return {
       totalActions: Number(totalStats[0]?.total || 0),

@@ -53,49 +53,41 @@ export class AdminLegalService {
   // LEGAL DOCUMENTS
   // ============================================================
 
+  /**
+   * List documents with parameterized filters
+   * Uses COALESCE pattern for optional filters (SQL-injection safe)
+   */
   async listDocuments(query: DocumentListQuery): Promise<DocumentListResponse> {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const offset = (page - 1) * limit;
 
-    const conditions: string[] = ['1=1'];
-    const params: unknown[] = [];
+    // Use COALESCE pattern: (column = param OR param IS NULL)
+    const typeFilter = query.type ?? null;
+    const localeFilter = query.locale ?? null;
+    const isActiveFilter = query.isActive ?? null;
 
-    if (query.type) {
-      params.push(query.type);
-      conditions.push(`type = $${params.length}::"LegalDocumentType"`);
-    }
-
-    if (query.locale) {
-      params.push(query.locale);
-      conditions.push(`locale = $${params.length}`);
-    }
-
-    if (query.isActive !== undefined) {
-      params.push(query.isActive);
-      conditions.push(`is_active = $${params.length}`);
-    }
-
-    const whereClause = conditions.join(' AND ');
-
-    const countResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
-      `SELECT COUNT(*) as count FROM legal_documents WHERE ${whereClause}`,
-      ...params,
-    );
+    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count FROM legal_documents
+      WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
+        AND (locale = ${localeFilter} OR ${localeFilter}::TEXT IS NULL)
+        AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
+    `;
     const total = Number(countResult[0].count);
 
-    const items = await this.prisma.$queryRawUnsafe<LegalDocumentRow[]>(
-      `SELECT
+    const items = await this.prisma.$queryRaw<LegalDocumentRow[]>`
+      SELECT
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
       FROM legal_documents
-      WHERE ${whereClause}
+      WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
+        AND (locale = ${localeFilter} OR ${localeFilter}::TEXT IS NULL)
+        AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
       ORDER BY type, locale, created_at DESC
-      LIMIT ${limit} OFFSET ${offset}`,
-      ...params,
-    );
+      LIMIT ${limit} OFFSET ${offset}
+    `;
 
     return {
       items: items as DocumentResponse[],
@@ -178,6 +170,10 @@ export class AdminLegalService {
     return docs[0] as DocumentResponse;
   }
 
+  /**
+   * Update document with parameterized queries
+   * Uses COALESCE pattern for conditional updates (SQL-injection safe)
+   */
   async updateDocument(
     id: string,
     dto: UpdateLegalDocumentDto,
@@ -185,45 +181,30 @@ export class AdminLegalService {
   ): Promise<DocumentResponse> {
     const existing = await this.getDocumentById(id);
 
-    const updates: string[] = [`updated_by = '${admin.sub}'`];
-    const params: unknown[] = [id];
+    // Use COALESCE pattern for conditional updates
+    const titleValue = dto.title ?? null;
+    const contentValue = dto.content ?? null;
+    const summaryValue = dto.summary ?? null;
+    const effectiveDateValue = dto.effectiveDate ? new Date(dto.effectiveDate) : null;
+    const isActiveValue = dto.isActive ?? null;
 
-    if (dto.title !== undefined) {
-      params.push(dto.title);
-      updates.push(`title = $${params.length}`);
-    }
-
-    if (dto.content !== undefined) {
-      params.push(dto.content);
-      updates.push(`content = $${params.length}`);
-    }
-
-    if (dto.summary !== undefined) {
-      params.push(dto.summary);
-      updates.push(`summary = $${params.length}`);
-    }
-
-    if (dto.effectiveDate !== undefined) {
-      params.push(new Date(dto.effectiveDate));
-      updates.push(`effective_date = $${params.length}`);
-    }
-
-    if (dto.isActive !== undefined) {
-      params.push(dto.isActive);
-      updates.push(`is_active = $${params.length}`);
-    }
-
-    const docs = await this.prisma.$queryRawUnsafe<LegalDocumentRow[]>(
-      `UPDATE legal_documents
-      SET ${updates.join(', ')}
-      WHERE id = $1
+    const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>`
+      UPDATE legal_documents
+      SET
+        title = COALESCE(${titleValue}, title),
+        content = COALESCE(${contentValue}, content),
+        summary = COALESCE(${summaryValue}, summary),
+        effective_date = COALESCE(${effectiveDateValue}, effective_date),
+        is_active = COALESCE(${isActiveValue}, is_active),
+        updated_by = ${admin.sub},
+        updated_at = NOW()
+      WHERE id = ${id}
       RETURNING
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
         created_by as "createdBy", updated_by as "updatedBy",
-        created_at as "createdAt", updated_at as "updatedAt"`,
-      ...params,
-    );
+        created_at as "createdAt", updated_at as "updatedAt"
+    `;
 
     // Log audit
     await this.logAudit(admin.sub, 'update', 'legal_document', id, existing, dto);
@@ -248,49 +229,34 @@ export class AdminLegalService {
   // CONSENTS
   // ============================================================
 
+  /**
+   * List consents with parameterized filters
+   * Uses COALESCE pattern for optional filters (SQL-injection safe)
+   */
   async listConsents(query: ConsentListQuery): Promise<ConsentListResponse> {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const offset = (page - 1) * limit;
 
-    const conditions: string[] = ['1=1'];
-    const params: unknown[] = [];
+    // Use COALESCE pattern: (column = param OR param IS NULL)
+    const consentTypeFilter = query.consentType ?? null;
+    const userIdFilter = query.userId ?? null;
+    const agreedFilter = query.agreed ?? null;
+    const dateFromFilter = query.dateFrom ? new Date(query.dateFrom) : null;
+    const dateToFilter = query.dateTo ? new Date(query.dateTo) : null;
 
-    if (query.consentType) {
-      params.push(query.consentType);
-      conditions.push(`c.consent_type = $${params.length}::"ConsentType"`);
-    }
-
-    if (query.userId) {
-      params.push(query.userId);
-      conditions.push(`c.user_id = $${params.length}`);
-    }
-
-    if (query.agreed !== undefined) {
-      params.push(query.agreed);
-      conditions.push(`c.agreed = $${params.length}`);
-    }
-
-    if (query.dateFrom) {
-      params.push(new Date(query.dateFrom));
-      conditions.push(`c.agreed_at >= $${params.length}`);
-    }
-
-    if (query.dateTo) {
-      params.push(new Date(query.dateTo));
-      conditions.push(`c.agreed_at <= $${params.length}`);
-    }
-
-    const whereClause = conditions.join(' AND ');
-
-    const countResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
-      `SELECT COUNT(*) as count FROM user_consents c WHERE ${whereClause}`,
-      ...params,
-    );
+    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count FROM user_consents c
+      WHERE (c.consent_type::TEXT = ${consentTypeFilter} OR ${consentTypeFilter}::TEXT IS NULL)
+        AND (c.user_id = ${userIdFilter} OR ${userIdFilter}::TEXT IS NULL)
+        AND (c.agreed = ${agreedFilter} OR ${agreedFilter}::BOOLEAN IS NULL)
+        AND (c.agreed_at >= ${dateFromFilter} OR ${dateFromFilter}::TIMESTAMP IS NULL)
+        AND (c.agreed_at <= ${dateToFilter} OR ${dateToFilter}::TIMESTAMP IS NULL)
+    `;
     const total = Number(countResult[0].count);
 
-    const items = await this.prisma.$queryRawUnsafe<ConsentRow[]>(
-      `SELECT
+    const items = await this.prisma.$queryRaw<ConsentRow[]>`
+      SELECT
         c.id, c.user_id as "userId", c.consent_type as "consentType",
         c.document_id as "documentId", c.document_version as "documentVersion",
         c.agreed, c.agreed_at as "agreedAt", c.withdrawn_at as "withdrawnAt",
@@ -298,11 +264,14 @@ export class AdminLegalService {
         u.email as "userEmail", u.name as "userName", u.region as "userRegion"
       FROM user_consents c
       JOIN users u ON c.user_id = u.id
-      WHERE ${whereClause}
+      WHERE (c.consent_type::TEXT = ${consentTypeFilter} OR ${consentTypeFilter}::TEXT IS NULL)
+        AND (c.user_id = ${userIdFilter} OR ${userIdFilter}::TEXT IS NULL)
+        AND (c.agreed = ${agreedFilter} OR ${agreedFilter}::BOOLEAN IS NULL)
+        AND (c.agreed_at >= ${dateFromFilter} OR ${dateFromFilter}::TIMESTAMP IS NULL)
+        AND (c.agreed_at <= ${dateToFilter} OR ${dateToFilter}::TIMESTAMP IS NULL)
       ORDER BY c.agreed_at DESC
-      LIMIT ${limit} OFFSET ${offset}`,
-      ...params,
-    );
+      LIMIT ${limit} OFFSET ${offset}
+    `;
 
     const mappedItems: ConsentResponse[] = items.map((c) => ({
       id: c.id,

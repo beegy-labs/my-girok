@@ -78,6 +78,7 @@ export class PersonalInfoService {
 
   /**
    * Update current user's personal info
+   * Uses parameterized queries with COALESCE pattern (SQL-injection safe)
    */
   async updatePersonalInfo(
     userId: string,
@@ -96,26 +97,36 @@ export class PersonalInfoService {
     let personalInfoId: string;
 
     if (existing.length) {
-      // Update existing
+      // Update existing using COALESCE pattern (SQL-injection safe)
       personalInfoId = existing[0].id;
 
-      const setClauses: string[] = ['updated_at = NOW()'];
+      const nameValue = dto.name ?? null;
+      const birthDateValue = dto.birthDate ? new Date(dto.birthDate) : null;
+      const genderValue = dto.gender ?? null;
+      const phoneCountryCodeValue = dto.phoneCountryCode ?? null;
+      const phoneNumberValue = dto.phoneNumber ?? null;
+      const countryCodeValue = dto.countryCode ?? null;
+      const regionValue = dto.region ?? null;
+      const cityValue = dto.city ?? null;
+      const addressValue = dto.address ?? null;
+      const postalCodeValue = dto.postalCode ?? null;
 
-      if (dto.name !== undefined) setClauses.push(`name = '${dto.name}'`);
-      if (dto.birthDate !== undefined) setClauses.push(`birth_date = '${dto.birthDate}'`);
-      if (dto.gender !== undefined) setClauses.push(`gender = '${dto.gender}'`);
-      if (dto.phoneCountryCode !== undefined)
-        setClauses.push(`phone_country_code = '${dto.phoneCountryCode}'`);
-      if (dto.phoneNumber !== undefined) setClauses.push(`phone_number = '${dto.phoneNumber}'`);
-      if (dto.countryCode !== undefined) setClauses.push(`country_code = '${dto.countryCode}'`);
-      if (dto.region !== undefined) setClauses.push(`region = '${dto.region}'`);
-      if (dto.city !== undefined) setClauses.push(`city = '${dto.city}'`);
-      if (dto.address !== undefined) setClauses.push(`address = '${dto.address}'`);
-      if (dto.postalCode !== undefined) setClauses.push(`postal_code = '${dto.postalCode}'`);
-
-      await this.prisma.$executeRawUnsafe(`
-        UPDATE personal_info SET ${setClauses.join(', ')} WHERE id = '${personalInfoId}'
-      `);
+      await this.prisma.$executeRaw`
+        UPDATE personal_info
+        SET
+          name = COALESCE(${nameValue}, name),
+          birth_date = COALESCE(${birthDateValue}, birth_date),
+          gender = COALESCE(${genderValue}::gender, gender),
+          phone_country_code = COALESCE(${phoneCountryCodeValue}, phone_country_code),
+          phone_number = COALESCE(${phoneNumberValue}, phone_number),
+          country_code = COALESCE(${countryCodeValue}, country_code),
+          region = COALESCE(${regionValue}, region),
+          city = COALESCE(${cityValue}, city),
+          address = COALESCE(${addressValue}, address),
+          postal_code = COALESCE(${postalCodeValue}, postal_code),
+          updated_at = NOW()
+        WHERE id = ${personalInfoId}
+      `;
     } else {
       // Create new
       const result = await this.prisma.$queryRaw<{ id: string }[]>`
