@@ -14,6 +14,8 @@ import {
   HttpExceptionFilter,
   HealthModule,
   GracefulShutdownService,
+  // Cache
+  CacheKey,
   // ID (UUIDv7 - RFC 9562)
   ID,
   UUIDv7,
@@ -116,6 +118,29 @@ SIGTERM → /health/ready 503 → drain 5s → close → exit 0
 | `JWT_SECRET`   | Yes      | JWT signing secret      |
 | `PORT`         | No       | Server port             |
 | `CORS_ORIGINS` | No       | Comma-separated origins |
+
+## CacheKey Helper
+
+Environment-prefixed cache keys for shared Valkey instance.
+
+```typescript
+import { CacheKey } from '@my-girok/nest-common';
+
+// Generate key with auto environment prefix
+CacheKey.make('auth', 'permissions', roleId);
+// → "dev:auth:permissions:550e8400-e29b-41d4-a716-446655440000"
+
+// Pattern for invalidation
+CacheKey.pattern('auth', 'permissions', '*');
+// → "dev:auth:permissions:*"
+```
+
+| Method      | Purpose                     | Example Output                  |
+| ----------- | --------------------------- | ------------------------------- |
+| `make()`    | Create prefixed key         | `dev:auth:service:homeshopping` |
+| `pattern()` | Create pattern for KEYS cmd | `dev:personal:user_prefs:*`     |
+
+**Policy**: `docs/policies/CACHING.md`
 
 ## ID (UUIDv7 - RFC 9562)
 
