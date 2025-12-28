@@ -7,6 +7,7 @@ import {
 // Note: Using tagged template literals ($queryRaw) which are SQL-injection safe
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateOperatorDto,
@@ -115,34 +116,34 @@ export class OperatorService {
     // Process in transaction (CLAUDE.md: @Transactional for multi-step DB)
     const operatorId = await this.prisma.$transaction(async (tx) => {
       // Create operator
-      const operators = await tx.$queryRaw<{ id: string }[]>`
+      const opId = ID.generate();
+      await tx.$executeRaw`
         INSERT INTO operators (
           id, email, password, name, admin_id, service_id, country_code,
           is_active, created_at, updated_at
         )
         VALUES (
-          gen_random_uuid()::TEXT, ${dto.email}, ${hashedPassword}, ${dto.name},
+          ${opId}, ${dto.email}, ${hashedPassword}, ${dto.name},
           ${adminId}, ${service.id}, ${dto.countryCode}, true, NOW(), NOW()
         )
-        RETURNING id
       `;
-
-      const opId = operators[0].id;
 
       // Grant permissions if provided
       if (dto.permissionIds?.length) {
         for (const permissionId of dto.permissionIds) {
+          const opPermId = ID.generate();
           await tx.$executeRaw`
             INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
-            VALUES (gen_random_uuid()::TEXT, ${opId}, ${permissionId}, ${adminId}, NOW())
+            VALUES (${opPermId}, ${opId}, ${permissionId}, ${adminId}, NOW())
           `;
         }
       }
 
       // Log audit within transaction
+      const auditId = ID.generate();
       await tx.$executeRaw`
         INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
-        VALUES (gen_random_uuid()::TEXT, ${adminId}, 'create', 'operator', ${opId}, NOW())
+        VALUES (${auditId}, ${adminId}, 'create', 'operator', ${opId}, NOW())
       `;
 
       return opId;
@@ -174,13 +175,14 @@ export class OperatorService {
     const tempPassword = dto.type === 'DIRECT' ? dto.tempPassword : null;
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
+    const invitationId = ID.generate();
     const invitations = await this.prisma.$queryRaw<InvitationResponse[]>`
       INSERT INTO operator_invitations (
         id, admin_id, service_id, country_code, email, name, type,
         status, token, temp_password, permissions, expires_at, created_at
       )
       VALUES (
-        gen_random_uuid()::TEXT, ${adminId}, ${service.id}, ${dto.countryCode},
+        ${invitationId}, ${adminId}, ${service.id}, ${dto.countryCode},
         ${dto.email}, ${dto.name}, ${dto.type}::invitation_type, 'PENDING',
         ${token}, ${tempPassword}, ${JSON.stringify(dto.permissionIds)}::jsonb,
         ${expiresAt}, NOW()
@@ -406,9 +408,10 @@ export class OperatorService {
       throw new ConflictException('Permission already granted');
     }
 
+    const opPermId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
-      VALUES (gen_random_uuid()::TEXT, ${operatorId}, ${permissionId}, ${adminId}, NOW())
+      VALUES (${opPermId}, ${operatorId}, ${permissionId}, ${adminId}, NOW())
     `;
 
     // Log audit
@@ -453,9 +456,10 @@ export class OperatorService {
     resource: string,
     resourceId?: string,
   ): Promise<void> {
+    const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
-      VALUES (gen_random_uuid()::TEXT, ${adminId}, ${action}, ${resource}, ${resourceId || null}, NOW())
+      VALUES (${auditId}, ${adminId}, ${action}, ${resource}, ${resourceId || null}, NOW())
     `;
   }
 }

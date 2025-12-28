@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateLegalDocumentDto,
@@ -136,13 +137,14 @@ export class AdminLegalService {
       );
     }
 
+    const docId = ID.generate();
     const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>`
       INSERT INTO legal_documents (
         id, type, version, locale, title, content, summary,
         effective_date, is_active, created_by
       )
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${docId},
         ${dto.type}::"LegalDocumentType",
         ${dto.version},
         ${dto.locale},
@@ -388,10 +390,11 @@ export class AdminLegalService {
     before: unknown,
     after: unknown,
   ): Promise<void> {
+    const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, before_state, after_state)
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${auditId},
         ${adminId},
         ${action},
         ${resource},

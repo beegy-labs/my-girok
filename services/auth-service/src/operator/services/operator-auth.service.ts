@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import * as bcrypt from 'bcrypt';
 import {
@@ -139,27 +140,26 @@ export class OperatorAuthService {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     // Create operator
-    const operators = await this.prisma.$queryRaw<{ id: string }[]>`
+    const operatorId = ID.generate();
+    await this.prisma.$executeRaw`
       INSERT INTO operators (
         id, email, password, name, admin_id, service_id, country_code,
         is_active, invitation_id, created_at, updated_at
       )
       VALUES (
-        gen_random_uuid()::TEXT, ${invitation.email}, ${hashedPassword}, ${invitation.name},
+        ${operatorId}, ${invitation.email}, ${hashedPassword}, ${invitation.name},
         ${invitation.adminId}, ${invitation.serviceId}, ${invitation.countryCode},
         true, ${invitation.id}, NOW(), NOW()
       )
-      RETURNING id
     `;
-
-    const operatorId = operators[0].id;
 
     // Assign permissions
     const permissionIds = invitation.permissions || [];
     for (const permissionId of permissionIds) {
+      const opPermId = ID.generate();
       await this.prisma.$executeRaw`
         INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
-        VALUES (gen_random_uuid()::TEXT, ${operatorId}, ${permissionId}, ${invitation.adminId}, NOW())
+        VALUES (${opPermId}, ${operatorId}, ${permissionId}, ${invitation.adminId}, NOW())
       `;
     }
 
@@ -377,10 +377,11 @@ export class OperatorAuthService {
   private async saveOperatorSession(operatorId: string, refreshToken: string): Promise<void> {
     const tokenHash = hashToken(refreshToken);
     const expiresAt = getSessionExpiresAt();
+    const sessionId = ID.generate();
 
     await this.prisma.$executeRaw`
       INSERT INTO sessions (id, subject_id, subject_type, token_hash, refresh_token, expires_at, created_at)
-      VALUES (gen_random_uuid(), ${operatorId}, 'OPERATOR', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
+      VALUES (${sessionId}, ${operatorId}, 'OPERATOR', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
     `;
   }
 }
