@@ -4,6 +4,7 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateTenantDto,
@@ -128,10 +129,11 @@ export class TenantService {
       throw new ConflictException('Slug already in use');
     }
 
+    const tenantId = ID.generate();
     const tenants = await this.prisma.$queryRaw<Tenant[]>`
       INSERT INTO tenants (id, name, type, slug, status, settings)
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${tenantId},
         ${dto.name},
         ${dto.type || 'INTERNAL'}::tenant_type,
         ${dto.slug},
@@ -235,10 +237,11 @@ export class TenantService {
     }
 
     // Log audit
+    const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, before_state, after_state)
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${auditId},
         ${admin.sub},
         'update_status',
         'tenant',

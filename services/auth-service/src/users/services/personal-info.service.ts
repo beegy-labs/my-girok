@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { UpdatePersonalInfoDto, PersonalInfoResponse } from '../dto/personal-info.dto';
 
@@ -129,7 +130,8 @@ export class PersonalInfoService {
       `;
     } else {
       // Create new
-      const result = await this.prisma.$queryRaw<{ id: string }[]>`
+      personalInfoId = ID.generate();
+      await this.prisma.$executeRaw`
         INSERT INTO personal_info (
           id, user_id, name, birth_date, gender,
           phone_country_code, phone_number, country_code,
@@ -137,7 +139,7 @@ export class PersonalInfoService {
           created_at, updated_at
         )
         VALUES (
-          gen_random_uuid()::TEXT, ${userId},
+          ${personalInfoId}, ${userId},
           ${dto.name || null}, ${dto.birthDate ? new Date(dto.birthDate) : null},
           ${dto.gender || null}::gender, ${dto.phoneCountryCode || null},
           ${dto.phoneNumber || null}, ${dto.countryCode || null},
@@ -145,9 +147,7 @@ export class PersonalInfoService {
           ${dto.address || null}, ${dto.postalCode || null},
           NOW(), NOW()
         )
-        RETURNING id
       `;
-      personalInfoId = result[0].id;
     }
 
     // Log access
@@ -369,13 +369,14 @@ export class PersonalInfoService {
   }
 
   private async logAccess(data: AccessLogData): Promise<void> {
+    const logId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO personal_info_access_logs (
         id, personal_info_id, service_id, accessor_type, accessor_id,
         action, fields, ip_address, user_agent, accessed_at
       )
       VALUES (
-        gen_random_uuid()::TEXT, ${data.personalInfoId}, ${data.serviceId || null},
+        ${logId}, ${data.personalInfoId}, ${data.serviceId || null},
         ${data.accessorType}::accessor_type, ${data.accessorId},
         ${data.action}::access_action, ${data.fields},
         ${data.ip}, ${data.userAgent}, NOW()

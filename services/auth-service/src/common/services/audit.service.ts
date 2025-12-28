@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditEntry } from '../types/audit.types';
 
@@ -87,13 +88,14 @@ export class AuditService {
    * Write audit entry to PostgreSQL (for backup/immediate queries)
    */
   private async writeToPostgres(entry: AuditEntry): Promise<void> {
+    const auditId = ID.generate();
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (
         id, admin_id, action, resource, resource_id,
         before_state, after_state, ip_address, user_agent, created_at
       )
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${auditId},
         ${entry.actorId},
         ${entry.action},
         ${entry.resource},

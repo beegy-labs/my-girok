@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuthService } from '../../auth/auth.service';
 import {
@@ -180,12 +181,13 @@ export class AccountLinkingService {
     }
 
     // Create pending link
+    const linkId = ID.generate();
     const links = await this.prisma.$queryRaw<AccountLinkRow[]>`
       INSERT INTO account_links (
         id, primary_user_id, linked_user_id, linked_service_id, status, created_at
       )
       VALUES (
-        gen_random_uuid()::TEXT, ${primaryUserId}, ${dto.linkedUserId},
+        ${linkId}, ${primaryUserId}, ${dto.linkedUserId},
         ${linkedUserServices[0].serviceId}, 'PENDING', NOW()
       )
       RETURNING
@@ -448,12 +450,13 @@ export class AccountLinkingService {
         `;
       } else {
         // Create new with PLATFORM scope
+        const consentId = ID.generate();
         await tx.$executeRaw`
           INSERT INTO consents (
             id, user_id, consent_type, scope, country_code, document_id, agreed, agreed_at, created_at
           )
           VALUES (
-            gen_random_uuid(), ${userId}, ${consent.type}::consent_type, 'PLATFORM',
+            ${consentId}, ${userId}, ${consent.type}::consent_type, 'PLATFORM',
             ${consent.countryCode}, ${consent.documentId || null}, ${consent.agreed},
             NOW(), NOW()
           )
