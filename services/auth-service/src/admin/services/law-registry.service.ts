@@ -26,47 +26,38 @@ interface LawRow {
 export class LawRegistryService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Find all laws with parameterized filters
+   * Uses COALESCE pattern for optional filters (SQL-injection safe)
+   */
   async findAll(query: LawQueryDto): Promise<LawListResponse> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const offset = (page - 1) * limit;
 
-    let whereClause = 'WHERE 1=1';
-    const params: unknown[] = [];
-    let paramIndex = 1;
+    // Use COALESCE pattern: (column = param OR param IS NULL)
+    const countryCodeFilter = query.countryCode ?? null;
+    const isActiveFilter = query.isActive ?? null;
 
-    if (query.countryCode) {
-      whereClause += ` AND country_code = $${paramIndex}`;
-      params.push(query.countryCode);
-      paramIndex++;
-    }
-
-    if (query.isActive !== undefined) {
-      whereClause += ` AND is_active = $${paramIndex}`;
-      params.push(query.isActive);
-      paramIndex++;
-    }
-
-    // Get total count
-    const countResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
-      `SELECT COUNT(*) as count FROM law_registry ${whereClause}`,
-      ...params,
-    );
+    // Get total count with parameterized query
+    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count FROM law_registry
+      WHERE (country_code = ${countryCodeFilter} OR ${countryCodeFilter}::TEXT IS NULL)
+        AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
+    `;
     const total = Number(countResult[0]?.count ?? 0);
 
     // Get data with pagination
-    const data = await this.prisma.$queryRawUnsafe<LawRow[]>(
-      `SELECT
+    const data = await this.prisma.$queryRaw<LawRow[]>`
+      SELECT
         id, code, country_code as "countryCode", name, requirements,
         is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
       FROM law_registry
-      ${whereClause}
+      WHERE (country_code = ${countryCodeFilter} OR ${countryCodeFilter}::TEXT IS NULL)
+        AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
       ORDER BY created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      ...params,
-      limit,
-      offset,
-    );
+      LIMIT ${limit} OFFSET ${offset}
+    `;
 
     return {
       data: data.map((row) => ({
@@ -128,41 +119,30 @@ export class LawRegistryService {
     };
   }
 
+  /**
+   * Update law with parameterized queries
+   * Uses COALESCE pattern for conditional updates (SQL-injection safe)
+   */
   async update(code: string, dto: UpdateLawDto): Promise<LawResponse> {
     await this.findByCode(code); // Ensure exists
 
-    const setClauses: string[] = ['updated_at = NOW()'];
-    const params: unknown[] = [];
-    let paramIndex = 1;
+    // Use COALESCE pattern for conditional updates
+    const nameValue = dto.name ?? null;
+    const requirementsValue = dto.requirements ? JSON.stringify(dto.requirements) : null;
+    const isActiveValue = dto.isActive ?? null;
 
-    if (dto.name !== undefined) {
-      setClauses.push(`name = $${paramIndex}`);
-      params.push(dto.name);
-      paramIndex++;
-    }
-
-    if (dto.requirements !== undefined) {
-      setClauses.push(`requirements = $${paramIndex}::jsonb`);
-      params.push(JSON.stringify(dto.requirements));
-      paramIndex++;
-    }
-
-    if (dto.isActive !== undefined) {
-      setClauses.push(`is_active = $${paramIndex}`);
-      params.push(dto.isActive);
-      paramIndex++;
-    }
-
-    const updated = await this.prisma.$queryRawUnsafe<LawRow[]>(
-      `UPDATE law_registry
-       SET ${setClauses.join(', ')}
-       WHERE code = $${paramIndex}
-       RETURNING
-         id, code, country_code as "countryCode", name, requirements,
-         is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
-      ...params,
-      code,
-    );
+    const updated = await this.prisma.$queryRaw<LawRow[]>`
+      UPDATE law_registry
+      SET
+        name = COALESCE(${nameValue}, name),
+        requirements = COALESCE(${requirementsValue}::jsonb, requirements),
+        is_active = COALESCE(${isActiveValue}, is_active),
+        updated_at = NOW()
+      WHERE code = ${code}
+      RETURNING
+        id, code, country_code as "countryCode", name, requirements,
+        is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+    `;
 
     return {
       ...updated[0],

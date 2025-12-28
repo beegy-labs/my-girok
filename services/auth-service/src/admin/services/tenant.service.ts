@@ -19,51 +19,50 @@ import { Tenant, TenantStatus, AdminPayload } from '../types/admin.types';
 export class TenantService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * List tenants with parameterized filters
+   * Uses COALESCE pattern for optional filters (SQL-injection safe)
+   */
   async list(query: TenantListQuery): Promise<TenantListResponse> {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const offset = (page - 1) * limit;
 
-    // Build WHERE conditions
-    const conditions: string[] = ['1=1'];
-    const params: unknown[] = [];
+    // Use COALESCE pattern: (column = param OR param IS NULL)
+    const typeFilter = query.type ?? null;
+    const statusFilter = query.status ?? null;
+    const searchPattern = query.search ? `%${query.search}%` : null;
 
-    if (query.type) {
-      params.push(query.type);
-      conditions.push(`type = $${params.length}::tenant_type`);
-    }
-
-    if (query.status) {
-      params.push(query.status);
-      conditions.push(`status = $${params.length}::tenant_status`);
-    }
-
-    if (query.search) {
-      params.push(`%${query.search}%`);
-      conditions.push(`(name ILIKE $${params.length} OR slug ILIKE $${params.length})`);
-    }
-
-    const whereClause = conditions.join(' AND ');
-
-    // Get total count
-    const countResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
-      `SELECT COUNT(*) as count FROM tenants WHERE ${whereClause}`,
-      ...params,
-    );
+    // Get total count with parameterized query
+    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count FROM tenants
+      WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
+        AND (status::TEXT = ${statusFilter} OR ${statusFilter}::TEXT IS NULL)
+        AND (
+          ${searchPattern}::TEXT IS NULL
+          OR name ILIKE ${searchPattern}
+          OR slug ILIKE ${searchPattern}
+        )
+    `;
     const total = Number(countResult[0].count);
 
-    // Get items
-    const items = await this.prisma.$queryRawUnsafe<Tenant[]>(
-      `SELECT
+    // Get items with parameterized query
+    const items = await this.prisma.$queryRaw<Tenant[]>`
+      SELECT
         id, name, type, slug, status, settings,
         approved_at as "approvedAt", approved_by as "approvedBy",
         created_at as "createdAt", updated_at as "updatedAt"
       FROM tenants
-      WHERE ${whereClause}
+      WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
+        AND (status::TEXT = ${statusFilter} OR ${statusFilter}::TEXT IS NULL)
+        AND (
+          ${searchPattern}::TEXT IS NULL
+          OR name ILIKE ${searchPattern}
+          OR slug ILIKE ${searchPattern}
+        )
       ORDER BY created_at DESC
-      LIMIT ${limit} OFFSET ${offset}`,
-      ...params,
-    );
+      LIMIT ${limit} OFFSET ${offset}
+    `;
 
     // Get admin counts for each tenant
     const tenantIds = items.map((t) => t.id);
@@ -151,37 +150,34 @@ export class TenantService {
     };
   }
 
+  /**
+   * Update tenant with parameterized queries
+   * Uses conditional update pattern (SQL-injection safe)
+   */
   async update(id: string, dto: UpdateTenantDto): Promise<TenantResponse> {
     // Check tenant exists
     await this.findById(id);
 
-    const updates: string[] = [];
-    const params: unknown[] = [id];
-
-    if (dto.name !== undefined) {
-      params.push(dto.name);
-      updates.push(`name = $${params.length}`);
-    }
-
-    if (dto.settings !== undefined) {
-      params.push(JSON.stringify(dto.settings));
-      updates.push(`settings = $${params.length}::JSONB`);
-    }
-
-    if (updates.length === 0) {
+    if (dto.name === undefined && dto.settings === undefined) {
       return this.findById(id);
     }
 
-    const tenants = await this.prisma.$queryRawUnsafe<Tenant[]>(
-      `UPDATE tenants
-      SET ${updates.join(', ')}
-      WHERE id = $1
+    // Use COALESCE pattern for conditional updates
+    const nameValue = dto.name ?? null;
+    const settingsValue = dto.settings ? JSON.stringify(dto.settings) : null;
+
+    const tenants = await this.prisma.$queryRaw<Tenant[]>`
+      UPDATE tenants
+      SET
+        name = COALESCE(${nameValue}, name),
+        settings = COALESCE(${settingsValue}::JSONB, settings),
+        updated_at = NOW()
+      WHERE id = ${id}
       RETURNING
         id, name, type, slug, status, settings,
         approved_at as "approvedAt", approved_by as "approvedBy",
-        created_at as "createdAt", updated_at as "updatedAt"`,
-      ...params,
-    );
+        created_at as "createdAt", updated_at as "updatedAt"
+    `;
 
     const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
       SELECT COUNT(*) as count FROM admins WHERE tenant_id = ${id}
@@ -193,6 +189,10 @@ export class TenantService {
     };
   }
 
+  /**
+   * Update tenant status with parameterized queries
+   * Uses separate queries for different status transitions (SQL-injection safe)
+   */
   async updateStatus(
     id: string,
     dto: UpdateTenantStatusDto,
@@ -203,26 +203,36 @@ export class TenantService {
     // Validate status transition
     this.validateStatusTransition(tenant.status, dto.status);
 
-    const updates: string[] = [`status = '${dto.status}'::tenant_status`];
-    const params: unknown[] = [id];
+    let tenants: Tenant[];
 
-    // Set approval info if activating
+    // Use separate parameterized queries for different cases
     if (dto.status === 'ACTIVE' && tenant.status === 'PENDING') {
-      updates.push(`approved_at = NOW()`);
-      params.push(admin.sub);
-      updates.push(`approved_by = $${params.length}`);
+      // Activation case: set approval info
+      tenants = await this.prisma.$queryRaw<Tenant[]>`
+        UPDATE tenants
+        SET status = ${dto.status}::tenant_status,
+            approved_at = NOW(),
+            approved_by = ${admin.sub},
+            updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING
+          id, name, type, slug, status, settings,
+          approved_at as "approvedAt", approved_by as "approvedBy",
+          created_at as "createdAt", updated_at as "updatedAt"
+      `;
+    } else {
+      // Other status changes: just update status
+      tenants = await this.prisma.$queryRaw<Tenant[]>`
+        UPDATE tenants
+        SET status = ${dto.status}::tenant_status,
+            updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING
+          id, name, type, slug, status, settings,
+          approved_at as "approvedAt", approved_by as "approvedBy",
+          created_at as "createdAt", updated_at as "updatedAt"
+      `;
     }
-
-    const tenants = await this.prisma.$queryRawUnsafe<Tenant[]>(
-      `UPDATE tenants
-      SET ${updates.join(', ')}
-      WHERE id = $1
-      RETURNING
-        id, name, type, slug, status, settings,
-        approved_at as "approvedAt", approved_by as "approvedBy",
-        created_at as "createdAt", updated_at as "updatedAt"`,
-      ...params,
-    );
 
     // Log audit
     await this.prisma.$executeRaw`
@@ -270,31 +280,26 @@ export class TenantService {
 
   /**
    * Update current admin's tenant settings
+   * Uses parameterized queries (SQL-injection safe)
    */
   async updateMyTenant(tenantId: string, dto: UpdateTenantDto): Promise<TenantResponse> {
     // Tenant admins can only update settings, not name
-    const updates: string[] = [];
-    const params: unknown[] = [tenantId];
-
-    if (dto.settings !== undefined) {
-      params.push(JSON.stringify(dto.settings));
-      updates.push(`settings = $${params.length}::JSONB`);
-    }
-
-    if (updates.length === 0) {
+    if (dto.settings === undefined) {
       return this.findById(tenantId);
     }
 
-    const tenants = await this.prisma.$queryRawUnsafe<Tenant[]>(
-      `UPDATE tenants
-      SET ${updates.join(', ')}
-      WHERE id = $1
+    const settingsValue = JSON.stringify(dto.settings);
+
+    const tenants = await this.prisma.$queryRaw<Tenant[]>`
+      UPDATE tenants
+      SET settings = ${settingsValue}::JSONB,
+          updated_at = NOW()
+      WHERE id = ${tenantId}
       RETURNING
         id, name, type, slug, status, settings,
         approved_at as "approvedAt", approved_by as "approvedBy",
-        created_at as "createdAt", updated_at as "updatedAt"`,
-      ...params,
-    );
+        created_at as "createdAt", updated_at as "updatedAt"
+    `;
 
     const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
       SELECT COUNT(*) as count FROM admins WHERE tenant_id = ${tenantId}
