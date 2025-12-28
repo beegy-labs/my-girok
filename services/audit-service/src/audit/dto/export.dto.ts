@@ -2,8 +2,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsDateString, IsEnum, IsArray, IsOptional, IsUUID } from 'class-validator';
 
 export enum ExportFormat {
-  PDF = 'pdf',
   CSV = 'csv',
+  JSON = 'json',
 }
 
 export enum ExportType {

@@ -1,18 +1,42 @@
 import { Injectable, Logger, NotFoundException, Inject } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { Client as MinioClient } from 'minio';
 import { ClickHouseService } from '../../shared/clickhouse/clickhouse.service';
 import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
-import { CreateExportDto, ExportResponseDto, ExportStatus, ExportType } from '../dto/export.dto';
+import {
+  CreateExportDto,
+  ExportResponseDto,
+  ExportStatus,
+  ExportType,
+  ExportFormat,
+} from '../dto/export.dto';
 
 @Injectable()
 export class ExportService {
   private readonly logger = new Logger(ExportService.name);
+  private readonly minioClient: MinioClient;
+  private readonly exportBucket: string;
 
   constructor(
     private readonly clickhouse: ClickHouseService,
+    private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
-  ) {}
+  ) {
+    const minioConfig = this.configService.get('minio');
+    const exportConfig = this.configService.get('export');
+
+    this.minioClient = new MinioClient({
+      endPoint: minioConfig?.endpoint || 'localhost',
+      port: minioConfig?.port || 9000,
+      useSSL: minioConfig?.useSSL || false,
+      accessKey: minioConfig?.accessKey || '',
+      secretKey: minioConfig?.secretKey || '',
+    });
+
+    this.exportBucket = exportConfig?.bucket || 'audit-exports';
+  }
 
   /**
    * Generate cache key for export record
@@ -74,8 +98,9 @@ export class ExportService {
     if (record.status !== ExportStatus.COMPLETED) {
       throw new NotFoundException(`Export ${exportId} is not ready for download`);
     }
-    // In production, generate a pre-signed S3 URL
-    return record.downloadUrl ?? '';
+
+    // Generate presigned URL for MinIO download
+    return this.getPresignedDownloadUrl(exportId, record.format);
   }
 
   private async processExport(
@@ -119,15 +144,13 @@ export class ExportService {
       }
     }
 
-    // TODO: Implement actual file generation and S3 upload (Issue #TBD)
-    // Steps needed:
-    // 1. Generate PDF/CSV from data using pdfmake or csv-stringify
-    // 2. Upload to S3 using @aws-sdk/client-s3 with pre-signed URL
-    // 3. Store S3 key in export record for download endpoint
-    // 4. Add cleanup job to delete expired exports from S3
-    // Currently: Only logging placeholder
+    // Generate file content based on format
     const fileName = `audit-export-${exportId}.${dto.format}`;
-    this.logger.warn(`[TODO] File generation not implemented. Placeholder: ${fileName}`);
+    const fileContent = await this.generateFileContent(data, dto.format);
+
+    // Upload to MinIO
+    await this.uploadToMinIO(fileName, fileContent, dto.format);
+    this.logger.log(`Export file uploaded to MinIO: ${fileName}`);
 
     // Log the export action
     await this.logExportAction(exportId, dto.userId, requestedBy);
@@ -217,5 +240,79 @@ export class ExportService {
         retention_until: new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ]);
+  }
+
+  /**
+   * Generate file content based on format (CSV or JSON)
+   */
+  private async generateFileContent(
+    data: Record<string, unknown[]>,
+    format: ExportFormat,
+  ): Promise<Buffer> {
+    if (format === 'json') {
+      return Buffer.from(JSON.stringify(data, null, 2), 'utf-8');
+    }
+
+    // CSV format: combine all data types into sections
+    const lines: string[] = [];
+
+    for (const [section, records] of Object.entries(data)) {
+      if (records.length === 0) continue;
+
+      lines.push(`# ${section.toUpperCase()}`);
+
+      // Get headers from first record
+      const headers = Object.keys(records[0] as object);
+      lines.push(headers.join(','));
+
+      // Add data rows
+      for (const record of records) {
+        const values = headers.map((h) => {
+          const val = (record as Record<string, unknown>)[h];
+          if (val === null || val === undefined) return '';
+          if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
+            return `"${val.replace(/"/g, '""')}"`;
+          }
+          return String(val);
+        });
+        lines.push(values.join(','));
+      }
+
+      lines.push(''); // Empty line between sections
+    }
+
+    return Buffer.from(lines.join('\n'), 'utf-8');
+  }
+
+  /**
+   * Upload file to MinIO bucket
+   */
+  private async uploadToMinIO(
+    fileName: string,
+    content: Buffer,
+    format: ExportFormat,
+  ): Promise<void> {
+    const contentType = format === 'json' ? 'application/json' : 'text/csv';
+
+    // Ensure bucket exists
+    const bucketExists = await this.minioClient.bucketExists(this.exportBucket);
+    if (!bucketExists) {
+      await this.minioClient.makeBucket(this.exportBucket);
+      this.logger.log(`Created MinIO bucket: ${this.exportBucket}`);
+    }
+
+    await this.minioClient.putObject(this.exportBucket, fileName, content, content.length, {
+      'Content-Type': contentType,
+    });
+  }
+
+  /**
+   * Generate presigned URL for export file download
+   */
+  async getPresignedDownloadUrl(exportId: string, format: ExportFormat): Promise<string> {
+    const fileName = `audit-export-${exportId}.${format}`;
+    const expirySeconds = 3600; // 1 hour
+
+    return this.minioClient.presignedGetObject(this.exportBucket, fileName, expirySeconds);
   }
 }
