@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { AdminLoginDto, AdminLoginResponse, AdminProfileResponse } from '../dto/admin-auth.dto';
@@ -331,10 +332,11 @@ export class AdminAuthService {
   private async saveAdminSession(adminId: string, refreshToken: string): Promise<void> {
     const tokenHash = hashToken(refreshToken);
     const expiresAt = getSessionExpiresAt();
+    const sessionId = ID.generate();
 
     await this.prisma.$executeRaw`
       INSERT INTO sessions (id, subject_id, subject_type, token_hash, refresh_token, expires_at, created_at)
-      VALUES (gen_random_uuid(), ${adminId}, 'ADMIN', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
+      VALUES (${sessionId}, ${adminId}, 'ADMIN', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
     `;
   }
 

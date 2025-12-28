@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { ConsentType } from '../../../node_modules/.prisma/auth-client';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateLawDto,
@@ -99,13 +100,14 @@ export class LawRegistryService {
     }
 
     const isActive = dto.isActive ?? true;
+    const lawId = ID.generate();
 
     const created = await this.prisma.$queryRaw<LawRow[]>`
       INSERT INTO law_registry (
         id, code, country_code, name, requirements, is_active, created_at, updated_at
       )
       VALUES (
-        gen_random_uuid()::TEXT, ${dto.code}, ${dto.countryCode}, ${dto.name},
+        ${lawId}, ${dto.code}, ${dto.countryCode}, ${dto.name},
         ${JSON.stringify(dto.requirements)}::jsonb, ${isActive}, NOW(), NOW()
       )
       RETURNING
