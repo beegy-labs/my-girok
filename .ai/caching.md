@@ -209,6 +209,38 @@ this.logger.debug(`Cache ${cached ? 'HIT' : 'MISS'}: ${key}`);
 - Key count by prefix
 - Eviction rate
 
+## ClickHouse Materialized Views
+
+Pre-aggregated analytics data for dashboard queries.
+
+### Available MVs
+
+| MV Name                                       | Target Table           | Engine           | TTL | Purpose                     |
+| --------------------------------------------- | ---------------------- | ---------------- | --- | --------------------------- |
+| `daily_session_stats_mv`                      | daily_session_stats    | SummingMergeTree | 1y  | Daily session metrics       |
+| `hourly_event_counts_mv`                      | hourly_event_counts    | SummingMergeTree | 90d | Event frequency trends      |
+| `page_performance_mv`                         | page_performance_stats | SummingMergeTree | 90d | Page load & Core Web Vitals |
+| `funnel_stats_mv`                             | funnel_stats           | SummingMergeTree | 90d | Funnel conversion rates     |
+| `hourly_session_metrics_mv`                   | hourly_session_metrics | SummingMergeTree | 30d | Hourly session trends       |
+| `session_dist_{device,browser,os,country}_mv` | session_distributions  | SummingMergeTree | 90d | Session breakdowns          |
+| `utm_campaign_stats_mv`                       | utm_campaign_stats     | SummingMergeTree | 90d | Campaign attribution        |
+
+### Query Optimization
+
+```sql
+-- Instead of scanning raw sessions table:
+SELECT date, session_count, bounce_count FROM session_distributions
+WHERE dimension_type = 'device' AND date >= today() - 7;
+
+-- UTM campaign performance:
+SELECT utm_source, utm_medium, session_count, conversion_count
+FROM utm_campaign_stats WHERE date = today();
+```
+
+### Schema Location
+
+`infrastructure/clickhouse/schemas/03-materialized_views.sql`
+
 ## Environment Variables
 
 ```env
