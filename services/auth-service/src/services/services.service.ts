@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
+import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../database/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { ConsentType } from '@my-girok/types';
@@ -545,7 +546,7 @@ export class ServicesService {
     userAgent: string,
   ): Promise<string> {
     // Generate IDs
-    const userServiceId = crypto.randomUUID();
+    const userServiceId = ID.generate();
     const now = new Date();
 
     // Process in transaction (CLAUDE.md: @Transactional for multi-step DB)
@@ -558,7 +559,7 @@ export class ServicesService {
 
       // Create consents
       for (const consent of consents) {
-        const consentId = crypto.randomUUID();
+        const consentId = ID.generate();
         await tx.$executeRaw`
           INSERT INTO user_consents (
             id, user_id, service_id, consent_type, country_code,

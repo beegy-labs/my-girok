@@ -9,6 +9,7 @@
  */
 
 import { PrismaClient } from '../../node_modules/.prisma/auth-client';
+import { ID } from '@my-girok/nest-common';
 
 const prisma = new PrismaClient();
 
@@ -116,10 +117,11 @@ async function seedServices() {
   console.log('Seeding services...');
 
   for (const service of services) {
+    const serviceId = ID.generate();
     await prisma.$executeRaw`
       INSERT INTO services (id, slug, name, description, is_active, settings, required_consents)
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${serviceId},
         ${service.slug},
         ${service.name},
         ${service.description},
@@ -143,10 +145,11 @@ async function seedLawRegistry() {
   console.log('Seeding law registry...');
 
   for (const law of lawRegistry) {
+    const lawId = ID.generate();
     await prisma.$executeRaw`
       INSERT INTO law_registry (id, code, country_code, name, requirements, is_active)
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${lawId},
         ${law.code},
         ${law.countryCode},
         ${law.name},

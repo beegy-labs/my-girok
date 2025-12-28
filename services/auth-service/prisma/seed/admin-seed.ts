@@ -12,6 +12,7 @@
 
 import { PrismaClient } from '../../node_modules/.prisma/auth-client';
 import * as bcrypt from 'bcrypt';
+import { ID } from '@my-girok/nest-common';
 import { getAllPermissions } from '../../src/admin/config/permissions.config';
 import { getAllRoles } from '../../src/admin/config/roles.config';
 
@@ -32,10 +33,11 @@ async function seedPermissions() {
   const permissions = getAllPermissions();
 
   for (const perm of permissions) {
+    const permId = ID.generate();
     await prisma.$executeRaw`
       INSERT INTO permissions (id, resource, action, scope, display_name, description, category, tenant_type)
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${permId},
         ${perm.resource},
         ${perm.action},
         ${perm.scope}::admin_scope,
@@ -61,10 +63,11 @@ async function seedRoles() {
 
   // First pass: create roles without parent
   for (const role of roles) {
+    const roleId = ID.generate();
     await prisma.$executeRaw`
       INSERT INTO roles (id, name, display_name, description, scope, tenant_type, level, is_system)
       VALUES (
-        gen_random_uuid()::TEXT,
+        ${roleId},
         ${role.name},
         ${role.displayName},
         ${role.description || null},
@@ -165,10 +168,11 @@ async function seedInitialAdmin() {
     return;
   }
 
+  const adminId = ID.generate();
   await prisma.$executeRaw`
     INSERT INTO admins (id, email, password, name, scope, role_id, is_active)
     SELECT
-      gen_random_uuid()::TEXT,
+      ${adminId},
       ${INITIAL_ADMIN.email},
       ${hashedPassword},
       ${INITIAL_ADMIN.name},

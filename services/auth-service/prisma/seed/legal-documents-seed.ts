@@ -11,6 +11,7 @@
  */
 
 import { PrismaClient } from '../../node_modules/.prisma/auth-client';
+import { ID } from '@my-girok/nest-common';
 
 const prisma = new PrismaClient();
 
@@ -481,11 +482,12 @@ async function seedLegalDocuments() {
       continue;
     }
 
+    const docId = ID.generate();
     await prisma.$executeRaw`
       INSERT INTO legal_documents (
         id, type, version, locale, title, content, summary, effective_date, is_active, created_at, updated_at
       ) VALUES (
-        gen_random_uuid()::TEXT,
+        ${docId},
         ${doc.type}::legal_document_type,
         ${doc.version},
         ${doc.locale},
