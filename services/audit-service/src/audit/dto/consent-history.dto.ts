@@ -1,11 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsInt,
+  Min,
+  Max,
+  IsBoolean,
+  IsUUID,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export class ConsentHistoryQueryDto {
   @ApiPropertyOptional({ description: 'Filter by user ID (UUIDv7)' })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   userId?: string;
 
   @ApiPropertyOptional({

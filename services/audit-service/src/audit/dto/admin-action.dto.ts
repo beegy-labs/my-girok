@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDateString, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class AdminActionQueryDto {
   @ApiPropertyOptional({ description: 'Filter by admin ID (UUIDv7)' })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   adminId?: string;
 
   @ApiPropertyOptional({
@@ -24,9 +24,9 @@ export class AdminActionQueryDto {
   @IsString()
   targetType?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by target ID' })
+  @ApiPropertyOptional({ description: 'Filter by target ID (UUIDv7)' })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   targetId?: string;
 
   @ApiProperty({ description: 'Start date (ISO 8601)' })

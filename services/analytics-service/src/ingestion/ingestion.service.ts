@@ -32,6 +32,12 @@ const ALLOWED_INSERT_TABLES = new Set([
   'analytics_db.user_profiles',
 ]);
 
+/**
+ * Maximum batch size for event ingestion
+ * Prevents memory exhaustion and ClickHouse timeout issues
+ */
+const MAX_BATCH_SIZE = 1000;
+
 @Injectable()
 export class IngestionService {
   private readonly logger = new Logger(IngestionService.name);
@@ -69,6 +75,17 @@ export class IngestionService {
   }
 
   async trackEvents(events: TrackEventDto[], clientIp: string): Promise<void> {
+    // Validate batch size to prevent memory exhaustion
+    if (events.length > MAX_BATCH_SIZE) {
+      throw new BadRequestException(
+        `Batch size ${events.length} exceeds maximum of ${MAX_BATCH_SIZE}. Please split into smaller batches.`,
+      );
+    }
+
+    if (events.length === 0) {
+      return;
+    }
+
     const anonymizedIp = this.anonymizeIp(clientIp);
 
     const rows = events.map((event) => ({

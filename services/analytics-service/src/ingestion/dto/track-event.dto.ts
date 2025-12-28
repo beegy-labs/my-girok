@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsObject, ValidateNested, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsObject,
+  ValidateNested,
+  IsArray,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PageContext {
@@ -75,16 +83,17 @@ class EventContext {
 
 export class TrackEventDto {
   @ApiProperty({ description: 'Session ID (UUIDv7)' })
-  @IsString()
+  @IsUUID()
   sessionId!: string;
 
   @ApiProperty({ description: 'Anonymous ID (device fingerprint)' })
   @IsString()
+  @MaxLength(64)
   anonymousId!: string;
 
-  @ApiPropertyOptional({ description: 'User ID if logged in' })
+  @ApiPropertyOptional({ description: 'User ID if logged in (UUIDv7)' })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   userId?: string;
 
   @ApiProperty({ description: 'Event name' })
