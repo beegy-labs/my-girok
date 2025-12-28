@@ -50,6 +50,31 @@ CacheKey.make('auth', 'permissions', roleId);
 // → "dev:auth:permissions:550e8400..."
 ```
 
+## CacheTTL Constants
+
+Standardized TTL values from `@my-girok/nest-common`:
+
+```typescript
+import { CacheTTL } from '@my-girok/nest-common';
+
+await this.cache.set(key, data, CacheTTL.STATIC_CONFIG); // 24h
+await this.cache.set(key, data, CacheTTL.SEMI_STATIC); // 15m
+await this.cache.set(key, data, CacheTTL.USER_DATA); // 5m
+await this.cache.set(key, data, CacheTTL.SESSION); // 30m
+await this.cache.set(key, data, CacheTTL.SHORT_LIVED); // 1m
+```
+
+| Constant          | Duration | Use Cases                              |
+| ----------------- | -------- | -------------------------------------- |
+| `STATIC_CONFIG`   | 24h      | services, oauth_providers, permissions |
+| `SEMI_STATIC`     | 15m      | legal_documents, funnel data           |
+| `USER_DATA`       | 5m       | user_prefs, resume_meta, analytics     |
+| `SESSION`         | 30m      | admin/operator sessions                |
+| `SHORT_LIVED`     | 1m       | rate_limit, temp_tokens                |
+| `EPHEMERAL`       | 10s      | real-time metrics                      |
+| `USERNAME_LOOKUP` | 2h       | username to userId mapping             |
+| `EXPORT_STATUS`   | 24h      | export job status                      |
+
 ## TTL Policy
 
 | Category          | TTL             | Examples                                |

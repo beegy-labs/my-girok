@@ -7,13 +7,10 @@ import {
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { ID, CacheKey } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
 import { PrismaService } from '../database/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { ConsentType } from '@my-girok/types';
-
-// TTL for service lookup cache (24 hours in milliseconds)
-const SERVICE_CACHE_TTL = 24 * 60 * 60 * 1000;
 import {
   ConsentInput,
   ConsentRequirementResponse,
@@ -100,8 +97,17 @@ export class ServicesService {
     }
 
     const service = services[0];
-    await this.cache.set(cacheKey, service, SERVICE_CACHE_TTL);
+    await this.cache.set(cacheKey, service, CacheTTL.STATIC_CONFIG);
     return service;
+  }
+
+  /**
+   * Invalidate service cache by slug
+   * Should be called when service configuration is updated
+   */
+  async invalidateServiceCache(slug: string): Promise<void> {
+    const cacheKey = CacheKey.make('auth', 'service', slug);
+    await this.cache.del(cacheKey);
   }
 
   /**

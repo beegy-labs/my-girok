@@ -226,13 +226,42 @@ export class IngestionService {
     await this.clickhouse.insert('analytics_db.sessions', [row]);
   }
 
+  /**
+   * Anonymize IP address for GDPR compliance
+   * - IPv4: Zeroes last octet (e.g., 192.168.1.100 → 192.168.1.0)
+   * - IPv6: Zeroes last 80 bits (e.g., 2001:db8::1 → 2001:db8::)
+   */
   private anonymizeIp(ip: string): string {
-    // GDPR: Remove last octet
-    const parts = ip.split('.');
-    if (parts.length === 4) {
-      parts[3] = '0';
-      return parts.join('.');
+    // IPv4: Remove last octet
+    if (ip.includes('.') && !ip.includes(':')) {
+      const parts = ip.split('.');
+      if (parts.length === 4) {
+        parts[3] = '0';
+        return parts.join('.');
+      }
+      return ip;
     }
+
+    // IPv6: Zero last 80 bits (keep first 48 bits for /48 prefix)
+    // This follows GDPR recommendation for IP anonymization
+    if (ip.includes(':')) {
+      // Handle IPv4-mapped IPv6 (::ffff:192.168.1.1)
+      if (ip.toLowerCase().startsWith('::ffff:')) {
+        const ipv4Part = ip.substring(7);
+        return '::ffff:' + this.anonymizeIp(ipv4Part);
+      }
+
+      // Expand and anonymize IPv6
+      const parts = ip.split(':');
+      // Keep first 3 groups (48 bits), zero the rest
+      const anonymized = parts.slice(0, 3).concat(['0', '0', '0', '0', '0']);
+      // Compress consecutive zeros for valid IPv6 notation
+      return anonymized
+        .slice(0, 8)
+        .join(':')
+        .replace(/:0:0:0:0:0$/, '::');
+    }
+
     return ip;
   }
 

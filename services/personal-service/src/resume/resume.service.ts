@@ -9,7 +9,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { CacheKey } from '@my-girok/nest-common';
+import { CacheKey, CacheTTL } from '@my-girok/nest-common';
 import { CopyStatus } from '../../node_modules/.prisma/personal-client';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -22,9 +22,6 @@ import {
 } from './dto';
 import { AttachmentType } from '../storage/dto';
 import { firstValueFrom } from 'rxjs';
-
-// TTL for username to userId cache (2 hours in milliseconds)
-const USERNAME_CACHE_TTL = 2 * 60 * 60 * 1000;
 
 @Injectable()
 export class ResumeService {
@@ -967,7 +964,7 @@ export class ResumeService {
         );
         userId = response.data.id;
         // Cache the result
-        await this.cache.set(cacheKey, userId, USERNAME_CACHE_TTL);
+        await this.cache.set(cacheKey, userId, CacheTTL.USERNAME_LOOKUP);
       } catch (_error) {
         throw new NotFoundException('User not found');
       }

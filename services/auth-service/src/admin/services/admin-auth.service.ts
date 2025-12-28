@@ -1,17 +1,20 @@
-import { Injectable, UnauthorizedException, ForbiddenException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { ID, CacheKey } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { AdminLoginDto, AdminLoginResponse, AdminProfileResponse } from '../dto/admin-auth.dto';
 import { AdminPayload, AdminWithRelations, AdminServicePayload } from '../types/admin.types';
 import { hashToken, getSessionExpiresAt } from '../../common/utils/session.utils';
-
-// TTL for role permissions cache (24 hours in milliseconds)
-const PERMISSIONS_CACHE_TTL = 24 * 60 * 60 * 1000;
 
 interface UnifiedSession {
   id: string;
@@ -24,6 +27,8 @@ interface UnifiedSession {
 
 @Injectable()
 export class AdminAuthService {
+  private readonly logger = new Logger(AdminAuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -142,13 +147,12 @@ export class AdminAuthService {
       const permissions = await this.getAdminPermissions(admin.roleId);
       const tokens = await this.generateTokens(admin, permissions);
 
-      // Update session with new token hash
+      // Update session with new token hash (no plaintext storage for security)
       const newTokenHash = hashToken(tokens.refreshToken);
       const newExpiresAt = getSessionExpiresAt();
       await this.prisma.$executeRaw`
         UPDATE sessions
         SET token_hash = ${newTokenHash},
-            refresh_token = ${tokens.refreshToken},
             expires_at = ${newExpiresAt}
         WHERE id = ${session.id}
       `;
@@ -252,7 +256,7 @@ export class AdminAuthService {
     const result = permissionKeys.length === Number(allCount[0].count) ? ['*'] : permissionKeys;
 
     // Cache the result
-    await this.cache.set(cacheKey, result, PERMISSIONS_CACHE_TTL);
+    await this.cache.set(cacheKey, result, CacheTTL.STATIC_CONFIG);
 
     return result;
   }
@@ -349,8 +353,8 @@ export class AdminAuthService {
       }
     } catch (error) {
       // admin_services table might not exist yet - log for debugging
-      console.debug(
-        `[AdminAuthService] admin_services query skipped: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      this.logger.debug(
+        `admin_services query skipped: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
 
@@ -362,9 +366,10 @@ export class AdminAuthService {
     const expiresAt = getSessionExpiresAt();
     const sessionId = ID.generate();
 
+    // Store only token hash, never plaintext refresh token (security best practice)
     await this.prisma.$executeRaw`
-      INSERT INTO sessions (id, subject_id, subject_type, token_hash, refresh_token, expires_at, created_at)
-      VALUES (${sessionId}, ${adminId}, 'ADMIN', ${tokenHash}, ${refreshToken}, ${expiresAt}, NOW())
+      INSERT INTO sessions (id, subject_id, subject_type, token_hash, expires_at, created_at)
+      VALUES (${sessionId}, ${adminId}, 'ADMIN', ${tokenHash}, ${expiresAt}, NOW())
     `;
   }
 
@@ -377,7 +382,7 @@ export class AdminAuthService {
     // TODO: Migrate to ClickHouse audit_db.audit_logs
     // Audit logs have been moved to ClickHouse for better performance and analytics
     // See: services/audit-service for ClickHouse integration
-    console.log(
+    this.logger.log(
       `[AUDIT] admin=${adminId} action=${action} resource=${resource} resourceId=${resourceId}`,
     );
   }
