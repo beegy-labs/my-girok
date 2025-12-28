@@ -155,18 +155,6 @@ export class AccountLinkingService {
       throw new BadRequestException('Both accounts are already UNIFIED');
     }
 
-    // Check for existing link
-    const existingLinks = await this.prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM account_links
-      WHERE (primary_user_id = ${primaryUserId} AND linked_user_id = ${dto.linkedUserId})
-         OR (primary_user_id = ${dto.linkedUserId} AND linked_user_id = ${primaryUserId})
-      LIMIT 1
-    `;
-
-    if (existingLinks.length) {
-      throw new ConflictException('Link already exists or pending');
-    }
-
     // Get linked user's primary service
     const linkedUserServices = await this.prisma.$queryRaw<{ serviceId: string }[]>`
       SELECT service_id as "serviceId"
@@ -180,7 +168,8 @@ export class AccountLinkingService {
       throw new BadRequestException('Linked user has no service');
     }
 
-    // Create pending link
+    // Create pending link with ON CONFLICT to prevent race conditions
+    // Uses unique constraint on (primary_user_id, linked_user_id) to handle concurrent requests
     const linkId = ID.generate();
     const links = await this.prisma.$queryRaw<AccountLinkRow[]>`
       INSERT INTO account_links (
@@ -190,11 +179,29 @@ export class AccountLinkingService {
         ${linkId}, ${primaryUserId}, ${dto.linkedUserId},
         ${linkedUserServices[0].serviceId}, 'PENDING', NOW()
       )
+      ON CONFLICT (primary_user_id, linked_user_id) DO NOTHING
       RETURNING
         id, primary_user_id as "primaryUserId", linked_user_id as "linkedUserId",
         linked_service_id as "linkedServiceId", status,
         linked_at as "linkedAt", created_at as "createdAt"
     `;
+
+    // Check reverse direction as well
+    if (!links.length) {
+      const reverseLinks = await this.prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM account_links
+        WHERE (primary_user_id = ${primaryUserId} AND linked_user_id = ${dto.linkedUserId})
+           OR (primary_user_id = ${dto.linkedUserId} AND linked_user_id = ${primaryUserId})
+        LIMIT 1
+      `;
+
+      if (reverseLinks.length) {
+        throw new ConflictException('Link already exists or pending');
+      }
+
+      // Insert failed for unknown reason, retry once
+      throw new ConflictException('Failed to create link, please try again');
+    }
 
     return links[0];
   }

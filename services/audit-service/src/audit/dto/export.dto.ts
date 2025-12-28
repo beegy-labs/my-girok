@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsDateString, IsEnum, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsDateString, IsEnum, IsArray, IsOptional, IsUUID } from 'class-validator';
 
 export enum ExportFormat {
   PDF = 'pdf',
@@ -20,8 +20,8 @@ export enum ExportStatus {
 }
 
 export class CreateExportDto {
-  @ApiProperty({ description: 'User ID to export data for' })
-  @IsString()
+  @ApiProperty({ description: 'User ID to export data for (UUIDv7)' })
+  @IsUUID()
   userId!: string;
 
   @ApiProperty({ enum: ExportFormat, description: 'Export format' })
@@ -63,9 +63,9 @@ export interface ExportResponseDto {
 }
 
 export class ExportListQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by user ID' })
+  @ApiPropertyOptional({ description: 'Filter by user ID (UUIDv7)' })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   userId?: string;
 
   @ApiPropertyOptional({ enum: ExportStatus, description: 'Filter by status' })
