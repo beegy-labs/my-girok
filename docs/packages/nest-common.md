@@ -255,6 +255,37 @@ For detailed caching policies, see `docs/policies/CACHING.md`.
 
 ---
 
+## CacheTTL Constants
+
+Standardized TTL values (in milliseconds) for cache-manager v7+.
+
+### Usage
+
+```typescript
+import { CacheTTL } from '@my-girok/nest-common';
+
+await this.cache.set(key, data, CacheTTL.STATIC_CONFIG); // 24h
+await this.cache.set(key, data, CacheTTL.USER_DATA); // 5m
+await this.cache.set(key, data, CacheTTL.SESSION); // 30m
+```
+
+### Constants
+
+| Constant          | Duration | Use Cases                              |
+| ----------------- | -------- | -------------------------------------- |
+| `STATIC_CONFIG`   | 24h      | services, oauth_providers, permissions |
+| `SEMI_STATIC`     | 15m      | legal_documents, funnel data           |
+| `USER_DATA`       | 5m       | user_prefs, resume_meta, analytics     |
+| `SESSION`         | 30m      | admin/operator sessions                |
+| `SHORT_LIVED`     | 1m       | rate_limit, temp_tokens                |
+| `EPHEMERAL`       | 10s      | real-time metrics                      |
+| `USERNAME_LOOKUP` | 2h       | username → userId mapping              |
+| `EXPORT_STATUS`   | 24h      | export job tracking                    |
+
+For detailed caching policies, see `docs/policies/CACHING.md`.
+
+---
+
 ## ID Generation (UUIDv7 - RFC 9562)
 
 UUIDv7 provides time-sortable, globally unique identifiers that are compatible with database UUID types. This replaces ULID as the standard ID format.

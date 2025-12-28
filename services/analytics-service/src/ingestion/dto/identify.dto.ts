@@ -1,13 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsObject } from 'class-validator';
+import { IsOptional, IsObject, IsUUID } from 'class-validator';
 
 export class IdentifyDto {
-  @ApiProperty({ description: 'Anonymous ID to link' })
-  @IsString()
+  @ApiProperty({ description: 'Anonymous ID to link (UUIDv7)' })
+  @IsUUID()
   anonymousId!: string;
 
-  @ApiProperty({ description: 'User ID to identify' })
-  @IsString()
+  @ApiProperty({ description: 'User ID to identify (UUIDv7)' })
+  @IsUUID()
   userId!: string;
 
   @ApiPropertyOptional({ description: 'User traits' })
