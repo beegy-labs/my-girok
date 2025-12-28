@@ -118,6 +118,22 @@ createDocument(@CurrentAdmin() admin: AdminPayload) { }
 - Rate limiting: 5 req/min (login/register)
 - Account lockout: 5 failed attempts (30 min)
 
+## Caching (Valkey)
+
+| Data             | Key Pattern                 | TTL | Invalidation   |
+| ---------------- | --------------------------- | --- | -------------- |
+| Role Permissions | `auth:permissions:{roleId}` | 24h | role update    |
+| Service Config   | `auth:service:{slug}`       | 24h | service update |
+
+```typescript
+import { CacheKey } from '@my-girok/nest-common';
+
+const key = CacheKey.make('auth', 'permissions', roleId);
+// → "dev:auth:permissions:550e8400..."
+```
+
+**Policy**: `docs/policies/CACHING.md` | `.ai/caching.md`
+
 ---
 
 ## Global Account System

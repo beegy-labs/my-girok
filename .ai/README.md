@@ -37,6 +37,8 @@
 
 - **[services/auth-service.md](services/auth-service.md)** - Authentication, authorization & Legal/Consent API (REST)
 - **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST)
+- **[services/audit-service.md](services/audit-service.md)** - Compliance logging (ClickHouse, 5yr retention)
+- **[services/analytics-service.md](services/analytics-service.md)** - Business analytics (ClickHouse, MVs)
 
 ### Frontend Apps (Implemented)
 
@@ -140,11 +142,18 @@
 │  api.girok.dev │ auth.girok.dev │ my.girok.dev             │
 └──────────┬─────────────┬────────────────────────────────────┘
            │             │
-    ┌──────▼──────┐  ┌───▼────────┐
-    │Auth Service │  │  Personal  │
-    │ (REST+gRPC) │  │  Service   │
-    │ PostgreSQL  │  │ PostgreSQL │
-    └─────────────┘  └────────────┘
+    ┌──────▼──────┐  ┌───▼────────┐  ┌────────────┐  ┌────────────┐
+    │Auth Service │  │  Personal  │  │   Audit    │  │ Analytics  │
+    │ (REST+gRPC) │  │  Service   │  │  Service   │  │  Service   │
+    │ PostgreSQL  │  │ PostgreSQL │  │ ClickHouse │  │ ClickHouse │
+    └─────────────┘  └────────────┘  └────────────┘  └────────────┘
+           │               │               │               │
+           └───────────────┴───────────────┴───────────────┘
+                                   │
+                            ┌──────▼──────┐
+                            │   Valkey    │
+                            │ (Caching)   │
+                            └─────────────┘
 ```
 
 **Planned (Not Implemented):**

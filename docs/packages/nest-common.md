@@ -212,4 +212,224 @@ export class AppModule {}
 
 ---
 
+## CacheKey Helper
+
+The `CacheKey` helper provides environment-prefixed cache keys for shared Valkey instances. This allows multiple environments (dev, release, prod) to share the same Valkey cluster without key collisions.
+
+### Usage
+
+```typescript
+import { CacheKey } from '@my-girok/nest-common';
+
+// Generate key with automatic environment prefix
+const key = CacheKey.make('auth', 'permissions', roleId);
+// Development: "dev:auth:permissions:550e8400-e29b-41d4-a716-446655440000"
+// Production:  "prod:auth:permissions:550e8400-e29b-41d4-a716-446655440000"
+
+// Create pattern for bulk invalidation (KEYS command)
+const pattern = CacheKey.pattern('auth', 'permissions', '*');
+// → "dev:auth:permissions:*"
+```
+
+### Key Format
+
+```
+{env}:{service}:{entity}:{identifier}
+```
+
+| Segment    | Description                      | Examples                    |
+| ---------- | -------------------------------- | --------------------------- |
+| env        | NODE_ENV (dev/release/prod)      | `dev`, `prod`               |
+| service    | Service name                     | `auth`, `personal`, `audit` |
+| entity     | Data type                        | `permissions`, `service`    |
+| identifier | Unique ID (UUID, slug, username) | UUIDv7, `homeshopping`      |
+
+### Methods
+
+| Method                  | Purpose                     | Return Example                  |
+| ----------------------- | --------------------------- | ------------------------------- |
+| `CacheKey.make(...)`    | Create prefixed cache key   | `dev:auth:service:homeshopping` |
+| `CacheKey.pattern(...)` | Create pattern for KEYS cmd | `dev:personal:user_prefs:*`     |
+
+For detailed caching policies, see `docs/policies/CACHING.md`.
+
+---
+
+## ID Generation (UUIDv7 - RFC 9562)
+
+UUIDv7 provides time-sortable, globally unique identifiers that are compatible with database UUID types. This replaces ULID as the standard ID format.
+
+### Why UUIDv7?
+
+- **Time-sortable**: Lexicographic sort = chronological sort
+- **DB-native**: Works with PostgreSQL UUID, ClickHouse UUID types
+- **No conversion**: Direct storage without string conversion
+- **Monotonic**: Ordered within the same millisecond
+
+### Basic Usage
+
+```typescript
+import { ID, UUIDv7 } from '@my-girok/nest-common';
+
+// Generate new ID (uses crypto.randomBytes internally)
+const id = ID.generate(); // "01935c6d-c2d0-7abc-8def-1234567890ab"
+
+// Validate
+ID.isValid(id); // true (any UUID v1-8)
+UUIDv7.isValid(id); // true (UUIDv7 only)
+
+// Extract timestamp (built into UUIDv7)
+ID.getTimestamp(id); // Date object
+UUIDv7.extractTimestamp(id);
+
+// Compare (lexicographic = chronological for UUIDv7)
+ID.compare(id1, id2); // -1, 0, 1
+```
+
+### Validation Pipes
+
+```typescript
+import { ParseUUIDPipe, ParseUUIDv7Pipe } from '@my-girok/nest-common';
+
+@Get(':id')
+async get(@Param('id', ParseUUIDPipe) id: string) {}    // Any UUID (v1-8)
+
+@Get(':id')
+async get(@Param('id', ParseUUIDv7Pipe) id: string) {}  // UUIDv7 only
+```
+
+### Prisma Extension
+
+```typescript
+import { uuidv7Extension } from '@my-girok/nest-common';
+
+// Auto-generate id for new records
+const prisma = new PrismaClient().$extends(uuidv7Extension);
+
+// Now all inserts auto-generate UUIDv7 id
+const user = await prisma.user.create({
+  data: { email: 'test@example.com' }, // id auto-generated
+});
+```
+
+### Decorator
+
+```typescript
+import { GenerateId } from '@my-girok/nest-common';
+
+class CreateUserDto {
+  @GenerateId()
+  id: string; // Auto-populated on instantiation
+
+  email: string;
+}
+```
+
+### Utility Functions
+
+```typescript
+import { sortByUUID, filterByTimeRange, getCreatedAt, parseUUIDv7 } from '@my-girok/nest-common';
+
+// Sort by UUID (chronological for UUIDv7)
+const sorted = sortByUUID(items, 'id', 'desc');
+
+// Filter by time range using UUID timestamp
+const recent = filterByTimeRange(items, 'id', startDate, endDate);
+
+// Extract creation time from entity
+const createdAt = getCreatedAt(entity); // Date | null
+
+// Parse UUIDv7 into components
+const { timestamp, version, variant, isValid } = parseUUIDv7(uuid);
+```
+
+---
+
+## ClickHouse Integration
+
+Shared ClickHouse client for analytics and audit services with SQL injection prevention.
+
+### Module Setup
+
+```typescript
+import { ClickHouseModule } from '@my-girok/nest-common';
+
+@Module({
+  imports: [ClickHouseModule],
+})
+export class AppModule {}
+```
+
+### Service Usage
+
+```typescript
+import { ClickHouseService, createQueryBuilder } from '@my-girok/nest-common';
+
+@Injectable()
+export class MyService {
+  constructor(private clickhouse: ClickHouseService) {}
+
+  async query() {
+    const result = await this.clickhouse.query<MyType>('SELECT * FROM table WHERE id = {id:UUID}', {
+      id: someUuid,
+    });
+    return result.data;
+  }
+
+  async insert() {
+    await this.clickhouse.insert('table', [{ id, data }]);
+  }
+
+  async batchInsert() {
+    // For large datasets (auto-chunks by 10000)
+    await this.clickhouse.batchInsert('table', largeDataset, 5000);
+  }
+}
+```
+
+### Query Builder (SQL Injection Prevention)
+
+```typescript
+import { createQueryBuilder } from '@my-girok/nest-common';
+
+const builder = createQueryBuilder()
+  .whereBetween('timestamp', startDate, endDate, 'DateTime64')
+  .whereOptional('user_id', '=', userId, 'UUID')
+  .whereIn('event_name', events, 'String');
+
+const { whereClause, params } = builder.build();
+const sql = `SELECT * FROM events ${whereClause} LIMIT 100`;
+const result = await clickhouse.query(sql, params);
+```
+
+### Query Builder Methods
+
+| Method                           | Purpose                                       |
+| -------------------------------- | --------------------------------------------- |
+| `where()`                        | Add required condition                        |
+| `whereOptional()`                | Add condition if value exists                 |
+| `whereIn()`                      | IN clause with array                          |
+| `whereInOptional()`              | IN clause if array not empty                  |
+| `whereBetween()`                 | Range condition                               |
+| `whereNull()` / `whereNotNull()` | NULL checks                                   |
+| `whereRaw()`                     | Raw SQL condition (use caution)               |
+| `build()`                        | Returns `{ conditions, params, whereClause }` |
+
+### Environment Variables
+
+| Variable                           | Required | Default | Description                |
+| ---------------------------------- | -------- | ------- | -------------------------- |
+| `CLICKHOUSE_HOST`                  | Yes      | -       | ClickHouse host            |
+| `CLICKHOUSE_PORT`                  | No       | 8123    | Port                       |
+| `CLICKHOUSE_DATABASE`              | Yes      | -       | Database name              |
+| `CLICKHOUSE_USERNAME`              | Yes      | -       | Username                   |
+| `CLICKHOUSE_PASSWORD`              | Yes      | -       | Password                   |
+| `CLICKHOUSE_ASYNC_INSERT`          | No       | true    | Enable async insert        |
+| `CLICKHOUSE_WAIT_FOR_ASYNC_INSERT` | No       | true    | Wait for insert completion |
+| `CLICKHOUSE_MAX_RETRIES`           | No       | 3       | Connection retry attempts  |
+
+**Tip**: For analytics-service, set `CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=false` for higher throughput. For audit-service, keep it `true` for guaranteed writes.
+
+---
+
 **Quick reference**: `.ai/packages/nest-common.md`

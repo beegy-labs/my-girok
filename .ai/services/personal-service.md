@@ -112,7 +112,24 @@ MINIO_ENDPOINT=minio:9000
 MINIO_BUCKET=my-girok-resumes
 VALKEY_HOST=localhost
 VALKEY_PORT=6379
+VALKEY_DB=1
 ```
+
+## Caching (Valkey DB 1)
+
+| Data             | Key Pattern                     | TTL | Invalidation |
+| ---------------- | ------------------------------- | --- | ------------ |
+| Username→UserId  | `personal:user_id:{username}`   | 2h  | user delete  |
+| User Preferences | `personal:preferences:{userId}` | 1h  | prefs update |
+
+```typescript
+import { CacheKey } from '@my-girok/nest-common';
+
+const key = CacheKey.make('personal', 'preferences', userId);
+// → "dev:personal:preferences:550e8400..."
+```
+
+**Policy**: `docs/policies/CACHING.md` | `.ai/caching.md`
 
 ---
 
