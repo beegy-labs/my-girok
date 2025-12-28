@@ -46,6 +46,12 @@ Full guide: `docs/DATABASE.md`
 **Working on Helm/Kubernetes deployment?**
 Read: `.ai/helm-deployment.md` + `.ai/ci-cd.md`
 
+### Caching & Performance
+
+**Working on caching with Valkey/Redis?**
+Read: `.ai/caching.md`
+Full guide: `docs/policies/CACHING.md`
+
 ### Other Tasks
 
 **Creating a PR?**
@@ -69,6 +75,7 @@ my-girok/
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
 │   ├── architecture.md       # Architecture patterns (2025)
+│   ├── caching.md            # Valkey/Redis caching patterns
 │   ├── database.md           # goose + ArgoCD migration strategy
 │   ├── ssot.md               # Single Source of Truth strategy
 │   ├── i18n-locale.md        # Internationalization & Locale

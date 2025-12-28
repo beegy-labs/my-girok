@@ -16,6 +16,7 @@
 
 - **[rules.md](rules.md)** - Essential DO/DON'T rules (READ FIRST)
 - **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
+- **[caching.md](caching.md)** - Valkey/Redis caching patterns (Cache-Aside)
 - **[ssot.md](ssot.md)** - Single Source of Truth strategy (Tailwind CSS 4)
 - **[i18n-locale.md](i18n-locale.md)** - Internationalization & Locale system
 - **[resume.md](resume.md)** - Resume feature documentation
@@ -80,6 +81,10 @@
 
 **"I need testing/security/performance info..."**
 → Read: `testing.md` or refer to `docs/policies/` for detailed documentation
+
+**"I need to implement caching..."**
+→ Read: `caching.md`
+→ Full guide: `docs/policies/CACHING.md`
 
 **"I need to create a new NestJS service..."**
 → Read: `rules.md` + `packages/nest-common.md`
