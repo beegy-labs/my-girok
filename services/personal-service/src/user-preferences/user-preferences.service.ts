@@ -3,25 +3,54 @@ import {
   NotFoundException,
   Logger,
   InternalServerErrorException,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { CacheKey } from '@my-girok/nest-common';
 import { PrismaService } from '../database/prisma.service';
-import {
-  CreateUserPreferencesDto,
-  UpdateUserPreferencesDto,
-} from './dto';
+import { CreateUserPreferencesDto, UpdateUserPreferencesDto } from './dto';
+
+// TTL for user preferences cache (1 hour in milliseconds)
+const PREFERENCES_CACHE_TTL = 60 * 60 * 1000;
 
 @Injectable()
 export class UserPreferencesService {
   private readonly logger = new Logger(UserPreferencesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cache: Cache,
+  ) {}
+
+  /**
+   * Get cache key for user preferences
+   */
+  private getCacheKey(userId: string): string {
+    return CacheKey.make('personal', 'preferences', userId);
+  }
+
+  /**
+   * Invalidate user preferences cache
+   */
+  private async invalidateCache(userId: string): Promise<void> {
+    await this.cache.del(this.getCacheKey(userId));
+  }
 
   /**
    * Get user preferences by userId
    * Creates default preferences if not exists
+   * Uses cache with 1 hour TTL
    */
   async getUserPreferences(userId: string) {
     try {
+      // Check cache first
+      const cacheKey = this.getCacheKey(userId);
+      const cached = await this.cache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       // Try to find existing preferences
       let preferences = await this.prisma.userPreferences.findUnique({
         where: { userId },
@@ -29,9 +58,7 @@ export class UserPreferencesService {
 
       // If not found, create default preferences
       if (!preferences) {
-        this.logger.log(
-          `Creating default preferences for user: ${userId}`,
-        );
+        this.logger.log(`Creating default preferences for user: ${userId}`);
         preferences = await this.prisma.userPreferences.create({
           data: {
             userId,
@@ -47,6 +74,9 @@ export class UserPreferencesService {
         });
       }
 
+      // Cache the result
+      await this.cache.set(cacheKey, preferences, PREFERENCES_CACHE_TTL);
+
       return preferences;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -55,20 +85,16 @@ export class UserPreferencesService {
         `Failed to get user preferences for user ${userId}: ${errorMessage}`,
         errorStack,
       );
-      throw new InternalServerErrorException(
-        'Failed to retrieve user preferences',
-      );
+      throw new InternalServerErrorException('Failed to retrieve user preferences');
     }
   }
 
   /**
    * Create or update user preferences
    * Uses upsert to handle both create and update
+   * Invalidates cache after update
    */
-  async upsertUserPreferences(
-    userId: string,
-    dto: CreateUserPreferencesDto,
-  ) {
+  async upsertUserPreferences(userId: string, dto: CreateUserPreferencesDto) {
     try {
       const preferences = await this.prisma.userPreferences.upsert({
         where: { userId },
@@ -83,6 +109,9 @@ export class UserPreferencesService {
         },
       });
 
+      // Invalidate cache
+      await this.invalidateCache(userId);
+
       this.logger.log(`Upserted preferences for user: ${userId}`);
       return preferences;
     } catch (error) {
@@ -92,19 +121,15 @@ export class UserPreferencesService {
         `Failed to upsert user preferences for user ${userId}: ${errorMessage}`,
         errorStack,
       );
-      throw new InternalServerErrorException(
-        'Failed to save user preferences',
-      );
+      throw new InternalServerErrorException('Failed to save user preferences');
     }
   }
 
   /**
    * Update user preferences (partial update)
+   * Invalidates cache after update
    */
-  async updateUserPreferences(
-    userId: string,
-    dto: UpdateUserPreferencesDto,
-  ) {
+  async updateUserPreferences(userId: string, dto: UpdateUserPreferencesDto) {
     try {
       // Check if preferences exist
       const existing = await this.prisma.userPreferences.findUnique({
@@ -112,9 +137,7 @@ export class UserPreferencesService {
       });
 
       if (!existing) {
-        throw new NotFoundException(
-          `User preferences not found for user: ${userId}`,
-        );
+        throw new NotFoundException(`User preferences not found for user: ${userId}`);
       }
 
       // Update preferences
@@ -127,6 +150,9 @@ export class UserPreferencesService {
           }),
         },
       });
+
+      // Invalidate cache
+      await this.invalidateCache(userId);
 
       this.logger.log(`Updated preferences for user: ${userId}`);
       return preferences;
@@ -141,20 +167,22 @@ export class UserPreferencesService {
         `Failed to update user preferences for user ${userId}: ${errorMessage}`,
         errorStack,
       );
-      throw new InternalServerErrorException(
-        'Failed to update user preferences',
-      );
+      throw new InternalServerErrorException('Failed to update user preferences');
     }
   }
 
   /**
    * Delete user preferences
+   * Invalidates cache after deletion
    */
   async deleteUserPreferences(userId: string) {
     try {
       await this.prisma.userPreferences.delete({
         where: { userId },
       });
+
+      // Invalidate cache
+      await this.invalidateCache(userId);
 
       this.logger.log(`Deleted preferences for user: ${userId}`);
     } catch (error) {
@@ -164,9 +192,7 @@ export class UserPreferencesService {
         `Failed to delete user preferences for user ${userId}: ${errorMessage}`,
         errorStack,
       );
-      throw new InternalServerErrorException(
-        'Failed to delete user preferences',
-      );
+      throw new InternalServerErrorException('Failed to delete user preferences');
     }
   }
 }

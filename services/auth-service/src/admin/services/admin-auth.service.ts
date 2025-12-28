@@ -1,12 +1,17 @@
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { ID } from '@my-girok/nest-common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { ID, CacheKey } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { AdminLoginDto, AdminLoginResponse, AdminProfileResponse } from '../dto/admin-auth.dto';
 import { AdminPayload, AdminWithRelations, AdminServicePayload } from '../types/admin.types';
 import { hashToken, getSessionExpiresAt } from '../../common/utils/session.utils';
+
+// TTL for role permissions cache (24 hours in milliseconds)
+const PERMISSIONS_CACHE_TTL = 24 * 60 * 60 * 1000;
 
 interface UnifiedSession {
   id: string;
@@ -23,6 +28,7 @@ export class AdminAuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Inject(CACHE_MANAGER) private cache: Cache,
   ) {}
 
   async login(dto: AdminLoginDto): Promise<AdminLoginResponse> {
@@ -221,6 +227,14 @@ export class AdminAuthService {
   }
 
   private async getAdminPermissions(roleId: string): Promise<string[]> {
+    // Check cache first
+    const cacheKey = CacheKey.make('auth', 'permissions', roleId);
+    const cached = await this.cache.get<string[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Query from database
     const permissions = await this.prisma.$queryRaw<{ key: string }[]>`
       SELECT CONCAT(p.resource, ':', p.action) as key
       FROM role_permissions rp
@@ -235,11 +249,12 @@ export class AdminAuthService {
       SELECT COUNT(*) as count FROM permissions
     `;
 
-    if (permissionKeys.length === Number(allCount[0].count)) {
-      return ['*'];
-    }
+    const result = permissionKeys.length === Number(allCount[0].count) ? ['*'] : permissionKeys;
 
-    return permissionKeys;
+    // Cache the result
+    await this.cache.set(cacheKey, result, PERMISSIONS_CACHE_TTL);
+
+    return result;
   }
 
   private async generateTokens(
