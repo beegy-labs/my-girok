@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -19,6 +20,10 @@ import {
   LawRegistryController,
   AdminServicesController,
   GlobalSettingsController,
+  ServiceConfigController,
+  ServiceFeatureController,
+  ServiceTesterController,
+  SanctionController,
 } from './controllers';
 import { UserPersonalInfoController } from './controllers/user-personal-info.controller';
 
@@ -33,10 +38,18 @@ import {
   LawRegistryService,
   AdminServicesService,
   GlobalSettingsService,
+  AuditLogService,
+  ServiceConfigService,
+  ServiceFeatureService,
+  ServiceTesterService,
+  SanctionService,
 } from './services';
 
 // Guards
-import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
+import { AdminAuthGuard, PermissionGuard, TenantGuard, AdminServiceAccessGuard } from './guards';
+
+// Interceptors
+import { AuditInterceptor } from './interceptors';
 
 @Module({
   imports: [
@@ -67,8 +80,17 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
     LawRegistryController,
     AdminServicesController,
     GlobalSettingsController,
+    ServiceConfigController,
+    ServiceFeatureController,
+    ServiceTesterController,
+    SanctionController,
   ],
   providers: [
+    // Interceptors (global for AdminModule)
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
     // Services
     AdminAuthService,
     TenantService,
@@ -79,10 +101,16 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
     LawRegistryService,
     AdminServicesService,
     GlobalSettingsService,
+    AuditLogService,
+    ServiceConfigService,
+    ServiceFeatureService,
+    ServiceTesterService,
+    SanctionService,
     // Guards
     AdminAuthGuard,
     PermissionGuard,
     TenantGuard,
+    AdminServiceAccessGuard,
   ],
   exports: [
     AdminAuthService,
@@ -94,6 +122,12 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
     LawRegistryService,
     AdminServicesService,
     GlobalSettingsService,
+    AuditLogService,
+    ServiceConfigService,
+    ServiceFeatureService,
+    ServiceTesterService,
+    SanctionService,
+    AdminServiceAccessGuard,
   ],
 })
 export class AdminModule {}

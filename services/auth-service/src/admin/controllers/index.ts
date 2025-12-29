@@ -8,3 +8,7 @@ export * from './audit-query.controller';
 export * from './law-registry.controller';
 export * from './admin-services.controller';
 export * from './global-settings.controller';
+export * from './service-config.controller';
+export * from './service-feature.controller';
+export * from './service-tester.controller';
+export * from './sanction.controller';
