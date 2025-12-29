@@ -83,6 +83,24 @@ export interface ServiceCountryListResponse {
   };
 }
 
+// Service Supported Locales
+export interface ServiceLocale {
+  id: string;
+  serviceId: string;
+  locale: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceLocaleListResponse {
+  data: ServiceLocale[];
+  meta: {
+    total: number;
+    serviceId: string;
+  };
+}
+
 // ============================================================
 // API Functions
 // ============================================================
@@ -158,5 +176,24 @@ export const servicesApi = {
 
   async removeServiceCountry(serviceId: string, countryCode: string) {
     await apiClient.delete(`/services/${serviceId}/countries/${countryCode}`);
+  },
+
+  // Service Supported Locales
+  async listServiceLocales(serviceId: string) {
+    const { data } = await apiClient.get<ServiceLocaleListResponse>(
+      `/services/${serviceId}/locales`,
+    );
+    return data;
+  },
+
+  async addServiceLocale(serviceId: string, locale: string) {
+    const { data } = await apiClient.post<ServiceLocale>(`/services/${serviceId}/locales`, {
+      locale,
+    });
+    return data;
+  },
+
+  async removeServiceLocale(serviceId: string, locale: string) {
+    await apiClient.delete(`/services/${serviceId}/locales/${locale}`);
   },
 };

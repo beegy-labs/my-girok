@@ -203,3 +203,33 @@ export interface ServiceCountryListResponse {
     serviceId: string;
   };
 }
+
+// ============================================================
+// Service Supported Locales DTOs
+// ============================================================
+
+export class AddServiceLocaleDto {
+  @IsString()
+  @Length(2, 10)
+  @Matches(/^[a-z]{2}(-[A-Z]{2})?$/, {
+    message: 'Locale must be in format: ko, en, ja, or ko-KR',
+  })
+  locale!: string;
+}
+
+export interface ServiceLocaleResponse {
+  id: string;
+  serviceId: string;
+  locale: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ServiceLocaleListResponse {
+  data: ServiceLocaleResponse[];
+  meta: {
+    total: number;
+    serviceId: string;
+  };
+}

@@ -15,6 +15,9 @@ import {
   AddServiceCountryDto,
   ServiceCountryResponse,
   ServiceCountryListResponse,
+  AddServiceLocaleDto,
+  ServiceLocaleResponse,
+  ServiceLocaleListResponse,
 } from '../dto/admin-services.dto';
 
 interface ServiceRow {
@@ -46,6 +49,15 @@ interface ServiceCountryRow {
   id: string;
   serviceId: string;
   countryCode: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ServiceLocaleRow {
+  id: string;
+  serviceId: string;
+  locale: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -395,6 +407,71 @@ export class AdminServicesService {
       UPDATE service_supported_countries
       SET is_active = FALSE, updated_at = NOW()
       WHERE service_id = ${serviceId}::uuid AND country_code = ${countryCode}
+    `,
+    );
+  }
+
+  // ============================================================
+  // SERVICE SUPPORTED LOCALES
+  // ============================================================
+
+  async listServiceLocales(serviceId: string): Promise<ServiceLocaleListResponse> {
+    // Verify service exists
+    await this.getServiceById(serviceId);
+
+    const data = await this.prisma.$queryRaw<ServiceLocaleRow[]>(
+      Prisma.sql`
+      SELECT
+        id, service_id as "serviceId", locale,
+        is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+      FROM service_supported_locales
+      WHERE service_id = ${serviceId}::uuid AND is_active = TRUE
+      ORDER BY locale ASC
+    `,
+    );
+
+    return {
+      data: data as ServiceLocaleResponse[],
+      meta: { total: data.length, serviceId },
+    };
+  }
+
+  async addServiceLocale(
+    serviceId: string,
+    dto: AddServiceLocaleDto,
+  ): Promise<ServiceLocaleResponse> {
+    // Verify service exists
+    await this.getServiceById(serviceId);
+
+    const localeId = ID.generate();
+
+    // Upsert: insert new or reactivate existing
+    const result = await this.prisma.$queryRaw<ServiceLocaleRow[]>(
+      Prisma.sql`
+      INSERT INTO service_supported_locales (id, service_id, locale)
+      VALUES (${localeId}::uuid, ${serviceId}::uuid, ${dto.locale})
+      ON CONFLICT (service_id, locale) DO UPDATE SET
+        is_active = TRUE,
+        updated_at = NOW()
+      RETURNING
+        id, service_id as "serviceId", locale,
+        is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+    `,
+    );
+
+    return result[0] as ServiceLocaleResponse;
+  }
+
+  async removeServiceLocale(serviceId: string, locale: string): Promise<void> {
+    // Verify service exists
+    await this.getServiceById(serviceId);
+
+    // Soft delete (set is_active = FALSE)
+    await this.prisma.$executeRaw(
+      Prisma.sql`
+      UPDATE service_supported_locales
+      SET is_active = FALSE, updated_at = NOW()
+      WHERE service_id = ${serviceId}::uuid AND locale = ${locale}
     `,
     );
   }

@@ -7,15 +7,17 @@ import {
   AlertCircle,
   Globe,
   ClipboardList,
+  Languages,
   Settings,
   CheckCircle,
   XCircle,
 } from 'lucide-react';
 import { servicesApi, Service } from '../../api/services';
 import ServiceCountriesTab from './ServiceCountriesTab';
+import ServiceLocalesTab from './ServiceLocalesTab';
 import ServiceConsentsTab from './ServiceConsentsTab';
 
-type TabType = 'countries' | 'consents';
+type TabType = 'countries' | 'locales' | 'consents';
 
 export default function ServiceDetailPage() {
   const { t } = useTranslation();
@@ -65,6 +67,7 @@ export default function ServiceDetailPage() {
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'countries', label: t('services.countriesTab'), icon: <Globe size={18} /> },
+    { id: 'locales', label: t('services.localesTab'), icon: <Languages size={18} /> },
     { id: 'consents', label: t('services.consentsTab'), icon: <ClipboardList size={18} /> },
   ];
 
@@ -132,6 +135,7 @@ export default function ServiceDetailPage() {
       {/* Tab Content */}
       <div>
         {activeTab === 'countries' && <ServiceCountriesTab serviceId={serviceId!} />}
+        {activeTab === 'locales' && <ServiceLocalesTab serviceId={serviceId!} />}
         {activeTab === 'consents' && <ServiceConsentsTab serviceId={serviceId!} />}
       </div>
     </div>

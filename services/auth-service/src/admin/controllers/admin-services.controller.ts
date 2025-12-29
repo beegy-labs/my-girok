@@ -26,6 +26,9 @@ import {
   AddServiceCountryDto,
   ServiceCountryResponse,
   ServiceCountryListResponse,
+  AddServiceLocaleDto,
+  ServiceLocaleResponse,
+  ServiceLocaleListResponse,
 } from '../dto/admin-services.dto';
 import { Permissions } from '../decorators/permissions.decorator';
 import { PermissionGuard } from '../guards/permission.guard';
@@ -196,5 +199,49 @@ export class AdminServicesController {
     @Param('countryCode') countryCode: string,
   ): Promise<void> {
     return this.adminServicesService.removeServiceCountry(serviceId, countryCode);
+  }
+
+  // ============================================================
+  // SERVICE SUPPORTED LOCALES
+  // ============================================================
+
+  /**
+   * List supported locales for a service
+   * GET /v1/admin/services/:serviceId/locales
+   */
+  @Get(':serviceId/locales')
+  @Permissions('service:read')
+  async listServiceLocales(
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+  ): Promise<ServiceLocaleListResponse> {
+    return this.adminServicesService.listServiceLocales(serviceId);
+  }
+
+  /**
+   * Add a supported locale to a service
+   * POST /v1/admin/services/:serviceId/locales
+   */
+  @Post(':serviceId/locales')
+  @Permissions('service:update')
+  @HttpCode(HttpStatus.CREATED)
+  async addServiceLocale(
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Body() dto: AddServiceLocaleDto,
+  ): Promise<ServiceLocaleResponse> {
+    return this.adminServicesService.addServiceLocale(serviceId, dto);
+  }
+
+  /**
+   * Remove a supported locale from a service (soft delete)
+   * DELETE /v1/admin/services/:serviceId/locales/:locale
+   */
+  @Delete(':serviceId/locales/:locale')
+  @Permissions('service:update')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeServiceLocale(
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Param('locale') locale: string,
+  ): Promise<void> {
+    return this.adminServicesService.removeServiceLocale(serviceId, locale);
   }
 }
