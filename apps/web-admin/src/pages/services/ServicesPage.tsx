@@ -106,10 +106,10 @@ export default function ServicesPage() {
                   </td>
                   <td className="text-right">
                     <Link
-                      to={`/services/${service.id}/consents`}
+                      to={`/services/${service.id}`}
                       className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-theme-text-primary hover:bg-theme-bg-secondary rounded-lg transition-colors"
                     >
-                      Manage Consents
+                      Manage
                       <ChevronRight size={16} />
                     </Link>
                   </td>

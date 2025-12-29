@@ -65,6 +65,24 @@ export interface UpdateConsentRequirementDto {
   descriptionKey?: string;
 }
 
+// Service Supported Countries
+export interface ServiceCountry {
+  id: string;
+  serviceId: string;
+  countryCode: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceCountryListResponse {
+  data: ServiceCountry[];
+  meta: {
+    total: number;
+    serviceId: string;
+  };
+}
+
 // ============================================================
 // API Functions
 // ============================================================
@@ -121,5 +139,24 @@ export const servicesApi = {
 
   async deleteConsentRequirement(serviceId: string, id: string) {
     await apiClient.delete(`/services/${serviceId}/consent-requirements/${id}`);
+  },
+
+  // Service Supported Countries
+  async listServiceCountries(serviceId: string) {
+    const { data } = await apiClient.get<ServiceCountryListResponse>(
+      `/services/${serviceId}/countries`,
+    );
+    return data;
+  },
+
+  async addServiceCountry(serviceId: string, countryCode: string) {
+    const { data } = await apiClient.post<ServiceCountry>(`/services/${serviceId}/countries`, {
+      countryCode,
+    });
+    return data;
+  },
+
+  async removeServiceCountry(serviceId: string, countryCode: string) {
+    await apiClient.delete(`/services/${serviceId}/countries/${countryCode}`);
   },
 };
