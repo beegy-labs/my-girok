@@ -559,7 +559,8 @@ export class AdminAuditService {
         trace_id as traceId
       FROM audit_db.admin_ui_events
       WHERE session_id = {sessionId:String}
-      ORDER BY timestamp ASC`,
+      ORDER BY timestamp ASC
+      LIMIT ${MAX_UNBOUNDED_RESULTS}`,
         { sessionId },
       ),
     );

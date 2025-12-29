@@ -1,3 +1,7 @@
+// CRITICAL: OTEL must be initialized FIRST before any other imports
+import { initOtel } from '@my-girok/nest-common';
+initOtel({ serviceName: 'audit-service' });
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { configureApp } from '@my-girok/nest-common';

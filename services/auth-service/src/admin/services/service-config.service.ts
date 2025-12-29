@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Inject } from '@nes
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '../../../node_modules/.prisma/auth-client';
-import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditLogService } from './audit-log.service';
 import { AdminPayload } from '../types/admin.types';
@@ -72,6 +72,7 @@ export class ServiceConfigService {
     return result;
   }
 
+  @Transactional()
   async addDomain(
     serviceId: string,
     dto: AddDomainDto,
@@ -133,6 +134,7 @@ export class ServiceConfigService {
     };
   }
 
+  @Transactional()
   async removeDomain(
     serviceId: string,
     domain: string,
@@ -232,6 +234,7 @@ export class ServiceConfigService {
     return result;
   }
 
+  @Transactional()
   async updateConfig(
     serviceId: string,
     dto: UpdateServiceConfigDto,

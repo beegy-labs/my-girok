@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Inject } from '@nes
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '../../../node_modules/.prisma/auth-client';
-import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditLogService } from './audit-log.service';
 import { AdminPayload } from '../types/admin.types';
@@ -225,6 +225,7 @@ export class SanctionService {
     return result;
   }
 
+  @Transactional()
   async create(
     serviceId: string,
     dto: CreateSanctionDto,
@@ -311,6 +312,7 @@ export class SanctionService {
     return sanction;
   }
 
+  @Transactional()
   async update(
     serviceId: string,
     id: string,
@@ -362,6 +364,7 @@ export class SanctionService {
   // SANCTION ACTIONS
   // ============================================================
 
+  @Transactional()
   async revoke(
     serviceId: string,
     id: string,
@@ -405,6 +408,7 @@ export class SanctionService {
     return afterSanction;
   }
 
+  @Transactional()
   async extend(
     serviceId: string,
     id: string,
@@ -448,6 +452,7 @@ export class SanctionService {
     return afterSanction;
   }
 
+  @Transactional()
   async reduce(
     serviceId: string,
     id: string,
@@ -510,6 +515,7 @@ export class SanctionService {
     };
   }
 
+  @Transactional()
   async reviewAppeal(
     serviceId: string,
     id: string,
@@ -602,6 +608,7 @@ export class SanctionService {
     return notifications as SanctionNotificationResponseDto[];
   }
 
+  @Transactional()
   async resendNotifications(
     serviceId: string,
     sanctionId: string,

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { AdminAuditService } from '../services/admin-audit.service';
 import { AdminAuthGuard } from '../guards/admin-auth.guard';
 import {
@@ -29,7 +29,7 @@ export class AdminAuditController {
   }
 
   @Get('ui-events/:id')
-  async getUIEventById(@Param('id') id: string): Promise<UIEventResponse | null> {
+  async getUIEventById(@Param('id', ParseUUIDPipe) id: string): Promise<UIEventResponse | null> {
     return this.adminAuditService.getUIEventById(id);
   }
 
@@ -41,7 +41,7 @@ export class AdminAuditController {
   }
 
   @Get('api-logs/:id')
-  async getAPILogById(@Param('id') id: string): Promise<APILogResponse | null> {
+  async getAPILogById(@Param('id', ParseUUIDPipe) id: string): Promise<APILogResponse | null> {
     return this.adminAuditService.getAPILogById(id);
   }
 
@@ -55,7 +55,7 @@ export class AdminAuditController {
   }
 
   @Get('audit-logs/:id')
-  async getAuditLogById(@Param('id') id: string): Promise<AuditLogResponse | null> {
+  async getAuditLogById(@Param('id', ParseUUIDPipe) id: string): Promise<AuditLogResponse | null> {
     return this.adminAuditService.getAuditLogById(id);
   }
 
@@ -67,12 +67,16 @@ export class AdminAuditController {
   }
 
   @Get('sessions/:sessionId')
-  async getSessionById(@Param('sessionId') sessionId: string): Promise<SessionResponse | null> {
+  async getSessionById(
+    @Param('sessionId', ParseUUIDPipe) sessionId: string,
+  ): Promise<SessionResponse | null> {
     return this.adminAuditService.getSessionById(sessionId);
   }
 
   @Get('sessions/:sessionId/events')
-  async getSessionEvents(@Param('sessionId') sessionId: string): Promise<UIEventResponse[]> {
+  async getSessionEvents(
+    @Param('sessionId', ParseUUIDPipe) sessionId: string,
+  ): Promise<UIEventResponse[]> {
     return this.adminAuditService.getSessionEvents(sessionId);
   }
 
@@ -87,7 +91,7 @@ export class AdminAuditController {
 
   @Get('actors/:actorId/activity')
   async getActorActivity(
-    @Param('actorId') actorId: string,
+    @Param('actorId', ParseUUIDPipe) actorId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ): Promise<AuditLogResponse[]> {
@@ -97,7 +101,9 @@ export class AdminAuditController {
   // ===== Target History =====
 
   @Get('targets/:targetId/history')
-  async getTargetHistory(@Param('targetId') targetId: string): Promise<AuditLogResponse[]> {
+  async getTargetHistory(
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ): Promise<AuditLogResponse[]> {
     return this.adminAuditService.getTargetHistory(targetId);
   }
 

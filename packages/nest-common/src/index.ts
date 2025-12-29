@@ -31,5 +31,17 @@ export * from './cache';
 // Resilience Patterns (Circuit Breaker)
 export * from './resilience';
 
+// Logging (Pino structured logging)
+export * from './logging';
+
+// OpenTelemetry (OTEL)
+export * from './otel';
+
+// Audit (Checksum chain integrity)
+export * from './audit';
+
+// Rate Limiting
+export * from './rate-limit';
+
 // ClickHouse - Import separately: @my-girok/nest-common/clickhouse
 // Not exported from main barrel to prevent loading @clickhouse/client in services that don't use it

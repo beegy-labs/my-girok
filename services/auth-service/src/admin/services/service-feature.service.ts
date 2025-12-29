@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Inject } from '@nes
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '../../../node_modules/.prisma/auth-client';
-import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditLogService } from './audit-log.service';
 import { AdminPayload } from '../types/admin.types';
@@ -157,6 +157,7 @@ export class ServiceFeatureService {
     return features[0] as ServiceFeatureResponseDto;
   }
 
+  @Transactional()
   async create(
     serviceId: string,
     dto: CreateServiceFeatureDto,
@@ -239,6 +240,7 @@ export class ServiceFeatureService {
     return feature;
   }
 
+  @Transactional()
   async update(
     serviceId: string,
     id: string,
@@ -352,6 +354,7 @@ export class ServiceFeatureService {
     return result[0]?.maxDepth ?? 0;
   }
 
+  @Transactional()
   async delete(serviceId: string, id: string, admin: AdminPayload): Promise<{ success: boolean }> {
     const feature = await this.findOne(serviceId, id);
 
@@ -389,6 +392,7 @@ export class ServiceFeatureService {
     return { success: true };
   }
 
+  @Transactional()
   async bulk(
     serviceId: string,
     dto: BulkFeatureOperationDto,

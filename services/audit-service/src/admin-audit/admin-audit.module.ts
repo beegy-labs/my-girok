@@ -3,7 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ClickHouseModule } from '@my-girok/nest-common/clickhouse';
 import { AdminAuditController } from './controllers/admin-audit.controller';
+import { IntegrityController } from './controllers/integrity.controller';
 import { AdminAuditService } from './services/admin-audit.service';
+import { IntegrityService } from './services/integrity.service';
 import { AdminAuthGuard } from './guards/admin-auth.guard';
 
 @Module({
@@ -17,8 +19,8 @@ import { AdminAuthGuard } from './guards/admin-auth.guard';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AdminAuditController],
-  providers: [AdminAuditService, AdminAuthGuard],
-  exports: [AdminAuditService],
+  controllers: [AdminAuditController, IntegrityController],
+  providers: [AdminAuditService, IntegrityService, AdminAuthGuard],
+  exports: [AdminAuditService, IntegrityService],
 })
 export class AdminAuditModule {}
