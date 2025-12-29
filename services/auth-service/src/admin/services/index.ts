@@ -7,3 +7,8 @@ export * from './audit-query.service';
 export * from './law-registry.service';
 export * from './admin-services.service';
 export * from './global-settings.service';
+export * from './audit-log.service';
+export * from './service-config.service';
+export * from './service-feature.service';
+export * from './service-tester.service';
+export * from './sanction.service';

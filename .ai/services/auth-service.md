@@ -336,4 +336,113 @@ Admin reviews → appealStatus: UNDER_REVIEW
 
 ---
 
+## Admin Service APIs (#407-#411)
+
+### Service Configuration API (#407)
+
+```
+GET    /v1/admin/services/:serviceId/domains        # List domains
+POST   /v1/admin/services/:serviceId/domains        # Add domain
+DELETE /v1/admin/services/:serviceId/domains/:domain # Remove domain
+GET    /v1/admin/services/:serviceId/config         # Get config
+PATCH  /v1/admin/services/:serviceId/config         # Update config
+```
+
+### Service Feature API (#408)
+
+```
+GET    /v1/admin/services/:serviceId/features       # List features (hierarchical)
+POST   /v1/admin/services/:serviceId/features       # Create feature
+GET    /v1/admin/services/:serviceId/features/:id   # Get feature
+PATCH  /v1/admin/services/:serviceId/features/:id   # Update feature
+DELETE /v1/admin/services/:serviceId/features/:id   # Delete feature
+POST   /v1/admin/services/:serviceId/features/bulk  # Bulk operations
+
+# Feature Permissions
+GET    /v1/admin/services/:serviceId/features/:id/permissions      # List
+POST   /v1/admin/services/:serviceId/features/:id/permissions      # Create
+DELETE /v1/admin/services/:serviceId/features/:id/permissions/:pid # Delete
+```
+
+### Service Tester API (#409)
+
+```
+# User Testers
+GET    /v1/admin/services/:serviceId/testers/users       # List
+POST   /v1/admin/services/:serviceId/testers/users       # Create
+GET    /v1/admin/services/:serviceId/testers/users/:id   # Get
+PATCH  /v1/admin/services/:serviceId/testers/users/:id   # Update
+DELETE /v1/admin/services/:serviceId/testers/users/:id   # Delete
+
+# Admin Testers
+GET    /v1/admin/services/:serviceId/testers/admins      # List
+POST   /v1/admin/services/:serviceId/testers/admins      # Create
+DELETE /v1/admin/services/:serviceId/testers/admins/:id  # Delete
+```
+
+### Sanction API (#410)
+
+```
+# CRUD
+GET    /v1/admin/services/:serviceId/sanctions           # List (paginated)
+POST   /v1/admin/services/:serviceId/sanctions           # Create
+GET    /v1/admin/services/:serviceId/sanctions/:id       # Get
+PATCH  /v1/admin/services/:serviceId/sanctions/:id       # Update
+
+# Actions
+POST   /v1/admin/services/:serviceId/sanctions/:id/revoke    # Revoke
+POST   /v1/admin/services/:serviceId/sanctions/:id/extend    # Extend duration
+POST   /v1/admin/services/:serviceId/sanctions/:id/reduce    # Reduce duration
+
+# Appeal
+GET    /v1/admin/services/:serviceId/sanctions/:id/appeal    # Get appeal
+POST   /v1/admin/services/:serviceId/sanctions/:id/appeal/review # Review
+
+# Notifications
+GET    /v1/admin/services/:serviceId/sanctions/:id/notifications     # List
+POST   /v1/admin/services/:serviceId/sanctions/:id/notifications/resend # Resend
+```
+
+### Guards & Interceptors (#411)
+
+#### AdminServiceAccessGuard
+
+```typescript
+@UseGuards(AdminServiceAccessGuard)
+@Get('config')
+getConfig(@Param('serviceId') serviceId: string) {}
+```
+
+**Validation Order:**
+
+1. Check tester status (bypasses if tester)
+2. Domain validation (if enabled)
+3. IP whitelist validation (if enabled)
+4. Maintenance mode check
+
+#### AuditInterceptor
+
+Global interceptor for API logging with:
+
+- Request/response body sanitization (passwords, tokens, etc.)
+- Correlation headers (x-request-id, x-session-id, x-ui-event-id)
+- OTEL-compatible structured logging
+
+```typescript
+// Sensitive keys automatically redacted:
+[
+  'password',
+  'token',
+  'secret',
+  'apiKey',
+  'authorization',
+  'refreshToken',
+  'accessToken',
+  'creditCard',
+  'ssn',
+];
+```
+
+---
+
 **Guides**: `docs/guides/OPERATOR_MANAGEMENT.md`, `docs/guides/ACCOUNT_LINKING.md`
