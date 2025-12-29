@@ -23,6 +23,14 @@ Read: `.ai/rules.md` + `.ai/services/auth-service.md`
 **Working on resume/profile?**
 Read: `.ai/rules.md` + `.ai/services/personal-service.md`
 
+**Working on audit/compliance logging?**
+Read: `.ai/rules.md` + `.ai/services/audit-service.md`
+Full guide: `docs/services/AUDIT_SERVICE.md`
+
+**Working on analytics/business intelligence?**
+Read: `.ai/rules.md` + `.ai/services/analytics-service.md`
+Full guide: `docs/services/ANALYTICS_SERVICE.md`
+
 ### Frontend Development
 
 **Working on web app?**
@@ -84,7 +92,9 @@ my-girok/
 │   ├── pull-requests.md      # PR guidelines
 │   ├── services/             # Backend service APIs
 │   │   ├── auth-service.md   # Authentication (REST + Legal API)
-│   │   └── personal-service.md # Resume, Profile
+│   │   ├── personal-service.md # Resume, Profile
+│   │   ├── audit-service.md  # Compliance logging (ClickHouse)
+│   │   └── analytics-service.md # Business analytics (ClickHouse)
 │   ├── packages/             # Shared packages
 │   │   ├── design-tokens.md  # WCAG 2.1 AAA design tokens (SSOT)
 │   │   ├── nest-common.md
