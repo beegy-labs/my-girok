@@ -28,5 +28,8 @@ export * from './id';
 // Cache (Valkey/Redis key helpers)
 export * from './cache';
 
+// Resilience Patterns (Circuit Breaker)
+export * from './resilience';
+
 // ClickHouse - Import separately: @my-girok/nest-common/clickhouse
 // Not exported from main barrel to prevent loading @clickhouse/client in services that don't use it

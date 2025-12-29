@@ -445,4 +445,103 @@ Global interceptor for API logging with:
 
 ---
 
+## Law Registry API
+
+Per-country legal requirements management.
+
+```
+GET    /v1/admin/laws                          # List laws (paginated)
+GET    /v1/admin/laws/:code                    # Get law by code
+POST   /v1/admin/laws                          # Create law
+PATCH  /v1/admin/laws/:code                    # Update law
+DELETE /v1/admin/laws/:code                    # Delete law
+GET    /v1/admin/laws/:code/consent-requirements # Get consent requirements
+POST   /v1/admin/laws/seed                     # Seed default laws
+```
+
+### Permissions
+
+| Endpoint   | Permission   |
+| ---------- | ------------ |
+| GET laws   | `law:read`   |
+| POST law   | `law:create` |
+| PATCH law  | `law:update` |
+| DELETE law | `law:delete` |
+
+### Law Requirements Structure
+
+```typescript
+interface LawRequirements {
+  requiredConsents: ConsentType[];
+  optionalConsents: ConsentType[];
+  specialRequirements?: {
+    nightTimePush?: { start: number; end: number };
+    dataRetention?: { maxDays: number };
+    minAge?: number;
+    parentalConsent?: { ageThreshold: number };
+    crossBorderTransfer?: { requireExplicit: boolean };
+  };
+}
+```
+
+---
+
+## Global Settings API
+
+System-wide country and locale configuration.
+
+### Supported Countries
+
+```
+GET    /v1/admin/settings/countries            # List countries
+GET    /v1/admin/settings/countries/:code      # Get country
+POST   /v1/admin/settings/countries            # Create country
+PATCH  /v1/admin/settings/countries/:code      # Update country
+DELETE /v1/admin/settings/countries/:code      # Delete country
+```
+
+### Supported Locales
+
+```
+GET    /v1/admin/settings/locales              # List locales
+GET    /v1/admin/settings/locales/:code        # Get locale
+POST   /v1/admin/settings/locales              # Create locale
+PATCH  /v1/admin/settings/locales/:code        # Update locale
+DELETE /v1/admin/settings/locales/:code        # Delete locale
+```
+
+### Permissions
+
+| Endpoint       | Permission        |
+| -------------- | ----------------- |
+| GET countries  | `settings:read`   |
+| GET locales    | `settings:read`   |
+| POST/PATCH/DEL | `settings:update` |
+
+### Country Code Format
+
+ISO 3166-1 alpha-2 (e.g., KR, US, JP)
+
+### Locale Code Format
+
+IETF BCP 47 (e.g., ko, en, ja, ko-KR)
+
+---
+
+## User Personal Info API (Admin)
+
+Admin access to user personal information.
+
+```
+GET    /v1/admin/users/:id/personal-info       # Get user's personal info
+```
+
+### Permissions
+
+| Endpoint          | Permission           |
+| ----------------- | -------------------- |
+| GET personal-info | `personal_info:read` |
+
+---
+
 **Guides**: `docs/guides/OPERATOR_MANAGEMENT.md`, `docs/guides/ACCOUNT_LINKING.md`

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle, RefreshCw, Eye } from 'lucide-react';
-import { auditApi, AuditLog } from '../../api/audit';
+import { auditApi, type AuditLogResponse } from '../../api/audit';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { Pagination } from '../../components/molecules/Pagination';
@@ -24,12 +24,12 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
   const { t } = useTranslation();
   const { trackSearch } = useAuditEvent();
 
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<AuditLogResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLogResponse | null>(null);
   const limit = 20;
 
   // Filters
@@ -49,11 +49,14 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
         action: action || undefined,
         resource: resource || `service:${serviceId}`,
       });
-      setLogs(result.items);
-      setTotal(result.total);
+      setLogs(result.data);
+      setTotal(result.meta.total);
     } catch (err) {
       setError(t('audit.loadFailed'));
-      console.error(err);
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
@@ -63,11 +66,32 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
     fetchLogs();
   }, [fetchLogs]);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(async () => {
     setPage(1);
-    trackSearch(`action:${action} resource:${resource}`, total);
-    fetchLogs();
-  };
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await auditApi.listLogs({
+        page: 1,
+        limit,
+        action: action || undefined,
+        resource: resource || `service:${serviceId}`,
+      });
+      setLogs(result.data);
+      setTotal(result.meta.total);
+      // Track search AFTER getting results with correct count
+      trackSearch(`action:${action} resource:${resource}`, result.meta.total);
+    } catch (err) {
+      setError(t('audit.loadFailed'));
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [serviceId, action, resource, limit, trackSearch, t]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString();
@@ -153,7 +177,7 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
                 {logs.map((log) => (
                   <tr key={log.id} className="hover:bg-theme-bg-secondary">
                     <td className="px-4 py-3 text-sm text-theme-text-primary whitespace-nowrap">
-                      {formatDate(log.createdAt)}
+                      {formatDate(log.timestamp)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -166,14 +190,14 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
                     </td>
                     <td className="px-4 py-3 text-sm text-theme-text-primary">
                       {log.resource}
-                      {log.resourceId && (
+                      {log.targetId && (
                         <code className="ml-1 px-1 py-0.5 bg-theme-bg-secondary rounded text-xs">
-                          {log.resourceId.substring(0, 8)}...
+                          {log.targetId.substring(0, 8)}...
                         </code>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-theme-text-secondary">
-                      {log.admin?.email || log.adminId || '-'}
+                      {log.actorEmail || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-theme-text-secondary font-mono">
                       {log.ipAddress ?? '-'}
@@ -231,7 +255,7 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-theme-text-secondary">{t('audit.timestamp')}</div>
-                  <div className="text-theme-text-primary">{formatDate(selectedLog.createdAt)}</div>
+                  <div className="text-theme-text-primary">{formatDate(selectedLog.timestamp)}</div>
                 </div>
                 <div>
                   <div className="text-sm text-theme-text-secondary">{t('audit.action')}</div>
@@ -248,14 +272,18 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
                   <div className="text-theme-text-primary">{selectedLog.resource}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-theme-text-secondary">{t('audit.resourceId')}</div>
-                  <code className="text-sm text-theme-text-primary">{selectedLog.resourceId}</code>
+                  <div className="text-sm text-theme-text-secondary">{t('audit.targetId')}</div>
+                  <code className="text-sm text-theme-text-primary">
+                    {selectedLog.targetId || '-'}
+                  </code>
                 </div>
                 <div>
                   <div className="text-sm text-theme-text-secondary">{t('audit.actor')}</div>
-                  <div className="text-theme-text-primary">
-                    {selectedLog.admin?.email || selectedLog.adminId}
-                  </div>
+                  <div className="text-theme-text-primary">{selectedLog.actorEmail}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-theme-text-secondary">{t('audit.actorType')}</div>
+                  <div className="text-theme-text-primary">{selectedLog.actorType}</div>
                 </div>
                 <div>
                   <div className="text-sm text-theme-text-secondary">{t('audit.ip')}</div>
@@ -263,29 +291,41 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
                     {selectedLog.ipAddress ?? '-'}
                   </div>
                 </div>
+                <div>
+                  <div className="text-sm text-theme-text-secondary">{t('audit.method')}</div>
+                  <div className="text-theme-text-primary">{selectedLog.method}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-theme-text-secondary">{t('audit.path')}</div>
+                  <div className="text-theme-text-primary font-mono text-xs truncate">
+                    {selectedLog.path}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-theme-text-secondary">{t('audit.statusCode')}</div>
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs ${
+                      selectedLog.success
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {selectedLog.statusCode}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-sm text-theme-text-secondary">{t('audit.duration')}</div>
+                  <div className="text-theme-text-primary">{selectedLog.durationMs}ms</div>
+                </div>
+                {selectedLog.errorMessage && (
+                  <div className="col-span-2">
+                    <div className="text-sm text-theme-text-secondary">
+                      {t('audit.errorMessage')}
+                    </div>
+                    <div className="text-red-600">{selectedLog.errorMessage}</div>
+                  </div>
+                )}
               </div>
-
-              {selectedLog.beforeState && Object.keys(selectedLog.beforeState).length > 0 && (
-                <div>
-                  <div className="text-sm text-theme-text-secondary mb-2">
-                    {t('audit.beforeState')}
-                  </div>
-                  <pre className="p-3 bg-theme-bg-secondary rounded-lg text-sm overflow-auto">
-                    {JSON.stringify(selectedLog.beforeState, null, 2)}
-                  </pre>
-                </div>
-              )}
-
-              {selectedLog.afterState && Object.keys(selectedLog.afterState).length > 0 && (
-                <div>
-                  <div className="text-sm text-theme-text-secondary mb-2">
-                    {t('audit.afterState')}
-                  </div>
-                  <pre className="p-3 bg-theme-bg-secondary rounded-lg text-sm overflow-auto">
-                    {JSON.stringify(selectedLog.afterState, null, 2)}
-                  </pre>
-                </div>
-              )}
             </div>
           </Card>
         </div>

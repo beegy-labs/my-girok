@@ -31,6 +31,10 @@ import {
   parseUUIDv7,
   isUUID,
   isUUIDv7,
+  // Resilience
+  CircuitBreaker,
+  CircuitBreakerError,
+  CircuitState,
   // ClickHouse
   ClickHouseService,
   ClickHouseModule,
@@ -240,6 +244,59 @@ const { timestamp, version, variant, isValid } = parseUUIDv7(uuid);
 // For backward compatibility only (deprecated)
 import { ULID, ulidExtension, ParseUlidPipe } from '@my-girok/nest-common';
 ```
+
+## Circuit Breaker
+
+Resilience pattern to prevent cascading failures.
+
+```typescript
+import { CircuitBreaker, CircuitState } from '@my-girok/nest-common';
+
+// Create circuit breaker
+const breaker = new CircuitBreaker({
+  name: 'clickhouse',
+  failureThreshold: 5, // Open after 5 failures
+  resetTimeout: 30000, // Wait 30s before testing
+  successThreshold: 2, // Need 2 successes to close
+});
+
+// Execute with circuit breaker protection
+const result = await breaker.execute(async () => {
+  return clickhouse.query({ query: 'SELECT 1' });
+});
+
+// Execute with fallback (never throws)
+const data = await breaker.executeWithFallback(
+  async () => clickhouse.query(sql),
+  () => [], // Fallback value
+);
+
+// Check state
+breaker.getState(); // CLOSED, OPEN, HALF_OPEN
+breaker.isAvailable(); // Can we make requests?
+breaker.getStats(); // { state, failureCount, successCount, lastFailureTime }
+breaker.reset(); // Manual reset to CLOSED
+```
+
+### Circuit States
+
+| State     | Description      | Behavior                    |
+| --------- | ---------------- | --------------------------- |
+| CLOSED    | Normal operation | Requests pass through       |
+| OPEN      | Service failing  | Requests rejected/fallback  |
+| HALF_OPEN | Testing recovery | Allow 1 request for testing |
+
+### Options
+
+| Option             | Default  | Description                |
+| ------------------ | -------- | -------------------------- |
+| `name`             | required | Name for logging           |
+| `failureThreshold` | 5        | Failures before opening    |
+| `resetTimeout`     | 30000    | Ms before testing recovery |
+| `successThreshold` | 2        | Successes to close circuit |
+| `fallback`         | -        | Default fallback function  |
+
+---
 
 ## ClickHouse
 

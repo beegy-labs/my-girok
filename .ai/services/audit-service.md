@@ -54,14 +54,21 @@
 
 ### Admin Audit Query API
 
-| Method | Path                           | Auth         | Description            |
-| ------ | ------------------------------ | ------------ | ---------------------- |
-| GET    | `/v1/admin-audit/ui-events`    | `audit:read` | Query UI events        |
-| GET    | `/v1/admin-audit/api-logs`     | `audit:read` | Query API logs         |
-| GET    | `/v1/admin-audit/data-changes` | `audit:read` | Query data change logs |
-| GET    | `/v1/admin-audit/sessions`     | `audit:read` | Query admin sessions   |
-| GET    | `/v1/admin-audit/actor/:id`    | `audit:read` | Actor activity summary |
-| GET    | `/v1/admin-audit/errors`       | `audit:read` | Error statistics       |
+| Method | Path                                   | Auth         | Description             |
+| ------ | -------------------------------------- | ------------ | ----------------------- |
+| GET    | `/v1/audit/ui-events`                  | `audit:read` | Query UI events         |
+| GET    | `/v1/audit/ui-events/:id`              | `audit:read` | Get single UI event     |
+| GET    | `/v1/audit/api-logs`                   | `audit:read` | Query API logs          |
+| GET    | `/v1/audit/api-logs/:id`               | `audit:read` | Get single API log      |
+| GET    | `/v1/audit/audit-logs`                 | `audit:read` | Query data change logs  |
+| GET    | `/v1/audit/audit-logs/:id`             | `audit:read` | Get single audit log    |
+| GET    | `/v1/audit/sessions`                   | `audit:read` | Query admin sessions    |
+| GET    | `/v1/audit/sessions/:sessionId/events` | `audit:read` | Session events          |
+| GET    | `/v1/audit/traces/:traceId`            | `audit:read` | Trace details           |
+| GET    | `/v1/audit/targets/:targetId/history`  | `audit:read` | Resource change history |
+| GET    | `/v1/audit/actor/:id`                  | `audit:read` | Actor activity summary  |
+| GET    | `/v1/audit/errors`                     | `audit:read` | Error statistics        |
+| GET    | `/v1/audit/stats/overview`             | `audit:read` | Stats overview          |
 
 ## ClickHouse Schema
 

@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Keyv } from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import { HttpExceptionFilter, HealthModule } from '@my-girok/nest-common';
@@ -51,6 +52,8 @@ import configuration from './config/configuration';
         limit: 100, // 100 requests per minute (default for public endpoints)
       },
     ]),
+    // Event Emitter for cache invalidation events
+    EventEmitterModule.forRoot(),
     DatabaseModule,
     CommonModule,
     AuthModule,

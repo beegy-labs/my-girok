@@ -1,7 +1,48 @@
 import apiClient from './client';
+import type {
+  // Service Config types
+  ServiceConfig,
+  DomainResponse,
+  UpdateServiceConfigDto,
+  AuditLevel,
+  // Service Feature types
+  ServiceFeature,
+  ServiceFeatureListResponse,
+  CreateServiceFeatureDto,
+  UpdateServiceFeatureDto,
+  PermissionTargetType,
+  FeatureAction,
+  // Service Tester types
+  TesterUser,
+  TesterAdmin,
+  TesterUserListResponse,
+  TesterAdminListResponse,
+  CreateTesterUserDto,
+  CreateTesterAdminDto,
+} from '@my-girok/types';
+
+// Re-export types for convenience
+export type {
+  ServiceConfig,
+  DomainResponse,
+  UpdateServiceConfigDto,
+  AuditLevel,
+  ServiceFeature,
+  ServiceFeatureListResponse,
+  CreateServiceFeatureDto,
+  UpdateServiceFeatureDto,
+  PermissionTargetType,
+  FeatureAction,
+  TesterUser,
+  TesterAdmin,
+  TesterUserListResponse,
+  TesterAdminListResponse,
+  CreateTesterUserDto,
+  CreateTesterAdminDto,
+};
 
 // ============================================================
-// Types
+// Service Types (local - not yet in @my-girok/types)
 // ============================================================
 
 export interface Service {
@@ -24,6 +65,7 @@ export interface ServiceListResponse {
   };
 }
 
+// Consent Requirements
 export interface ConsentRequirement {
   id: string;
   serviceId: string;
@@ -99,179 +141,6 @@ export interface ServiceLocaleListResponse {
     total: number;
     serviceId: string;
   };
-}
-
-// Service Config
-export type AuditLevel = 'MINIMAL' | 'STANDARD' | 'VERBOSE' | 'DEBUG';
-
-export interface ServiceConfig {
-  id: string;
-  serviceId: string;
-  jwtValidation: boolean;
-  domainValidation: boolean;
-  ipWhitelistEnabled: boolean;
-  ipWhitelist: string[];
-  rateLimitEnabled: boolean;
-  rateLimitRequests: number;
-  rateLimitWindow: number;
-  maintenanceMode: boolean;
-  maintenanceMessage: string | null;
-  auditLevel: AuditLevel;
-  createdAt: string;
-  updatedAt: string;
-  updatedBy: string | null;
-}
-
-export interface DomainResponse {
-  domains: string[];
-  primaryDomain: string | null;
-}
-
-export interface UpdateServiceConfigDto {
-  jwtValidation?: boolean;
-  domainValidation?: boolean;
-  ipWhitelistEnabled?: boolean;
-  ipWhitelist?: string[];
-  rateLimitEnabled?: boolean;
-  rateLimitRequests?: number;
-  rateLimitWindow?: number;
-  maintenanceMode?: boolean;
-  maintenanceMessage?: string;
-  auditLevel?: AuditLevel;
-  reason: string;
-}
-
-// Service Features
-export type PermissionTargetType = 'ALL_USERS' | 'USER' | 'TIER' | 'COUNTRY' | 'ROLE';
-export type FeatureAction = 'USE' | 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'ADMIN';
-
-export interface ServiceFeature {
-  id: string;
-  serviceId: string;
-  code: string;
-  name: string;
-  description: string | null;
-  category: string;
-  parentId: string | null;
-  path: string;
-  depth: number;
-  displayOrder: number;
-  isActive: boolean;
-  isDefault: boolean;
-  icon: string | null;
-  color: string | null;
-  createdAt: string;
-  updatedAt: string;
-  children?: ServiceFeature[];
-}
-
-export interface ServiceFeatureListResponse {
-  data: ServiceFeature[];
-  meta: {
-    total: number;
-    serviceId: string;
-    category?: string;
-  };
-}
-
-export interface CreateServiceFeatureDto {
-  code: string;
-  name: string;
-  description?: string;
-  category: string;
-  parentId?: string;
-  displayOrder?: number;
-  isActive?: boolean;
-  isDefault?: boolean;
-  icon?: string;
-  color?: string;
-}
-
-export interface UpdateServiceFeatureDto {
-  name?: string;
-  description?: string;
-  category?: string;
-  parentId?: string;
-  displayOrder?: number;
-  isActive?: boolean;
-  isDefault?: boolean;
-  icon?: string;
-  color?: string;
-}
-
-// Service Testers
-export interface TesterUser {
-  id: string;
-  serviceId: string;
-  userId: string;
-  user: {
-    id: string;
-    email: string;
-    name: string | null;
-    avatar: string | null;
-  };
-  bypassAll: boolean;
-  bypassDomain: boolean;
-  bypassIP: boolean;
-  bypassRate: boolean;
-  note: string | null;
-  expiresAt: string | null;
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string;
-}
-
-export interface TesterAdmin {
-  id: string;
-  serviceId: string;
-  adminId: string;
-  admin: {
-    id: string;
-    email: string;
-    name: string;
-  };
-  bypassAll: boolean;
-  bypassDomain: boolean;
-  note: string | null;
-  expiresAt: string | null;
-  createdAt: string;
-  createdBy: string;
-}
-
-export interface TesterUserListResponse {
-  data: TesterUser[];
-  meta: {
-    total: number;
-    serviceId: string;
-  };
-}
-
-export interface TesterAdminListResponse {
-  data: TesterAdmin[];
-  meta: {
-    total: number;
-    serviceId: string;
-  };
-}
-
-export interface CreateTesterUserDto {
-  userId: string;
-  bypassAll?: boolean;
-  bypassDomain?: boolean;
-  bypassIP?: boolean;
-  bypassRate?: boolean;
-  note?: string;
-  expiresAt?: string;
-  reason: string;
-}
-
-export interface CreateTesterAdminDto {
-  adminId: string;
-  bypassAll?: boolean;
-  bypassDomain?: boolean;
-  note?: string;
-  expiresAt?: string;
-  reason: string;
 }
 
 // ============================================================
@@ -459,8 +328,9 @@ export const servicesApi = {
   },
 
   async deleteUserTester(serviceId: string, userId: string, reason: string) {
+    // Note: Using query param instead of body for REST compliance
     await apiClient.delete(`/services/${serviceId}/testers/users/${userId}`, {
-      data: { reason },
+      params: { reason },
     });
   },
 
@@ -480,8 +350,9 @@ export const servicesApi = {
   },
 
   async deleteAdminTester(serviceId: string, adminId: string, reason: string) {
+    // Note: Using query param instead of body for REST compliance
     await apiClient.delete(`/services/${serviceId}/testers/admins/${adminId}`, {
-      data: { reason },
+      params: { reason },
     });
   },
 };

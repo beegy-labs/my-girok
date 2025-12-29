@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '../../../node_modules/.prisma/auth-client';
-import { ID } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditLogService } from './audit-log.service';
 import { AdminPayload } from '../types/admin.types';
@@ -13,6 +15,10 @@ import {
   FeaturePermissionResponseDto,
   ServiceFeatureListResponseDto,
 } from '../dto/service-feature.dto';
+
+// Cache key helper
+const FEATURES_CACHE_KEY = (serviceId: string) =>
+  CacheKey.make('auth', 'service_features', serviceId);
 
 interface FeatureRow {
   id: string;
@@ -59,13 +65,33 @@ export class ServiceFeatureService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLogService: AuditLogService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /**
+   * Invalidate feature cache for a service
+   */
+  private async invalidateCache(serviceId: string): Promise<void> {
+    await this.cache.del(FEATURES_CACHE_KEY(serviceId));
+    this.eventEmitter.emit('service.features.updated', { serviceId });
+  }
 
   // ============================================================
   // FEATURE CRUD
   // ============================================================
 
   async list(serviceId: string, options: ListOptions): Promise<ServiceFeatureListResponseDto> {
+    // Only cache when fetching all active features with children (default case)
+    const isDefaultQuery =
+      !options.category && !options.includeInactive && options.includeChildren !== false;
+    const cacheKey = FEATURES_CACHE_KEY(serviceId);
+
+    if (isDefaultQuery) {
+      const cached = await this.cache.get<ServiceFeatureListResponseDto>(cacheKey);
+      if (cached) return cached;
+    }
+
     const categoryFilter = options.category ?? null;
     const includeInactive = options.includeInactive ?? false;
 
@@ -92,7 +118,7 @@ export class ServiceFeatureService {
       result = features as ServiceFeatureResponseDto[];
     }
 
-    return {
+    const response: ServiceFeatureListResponseDto = {
       data: result,
       meta: {
         total: features.length,
@@ -100,6 +126,13 @@ export class ServiceFeatureService {
         category: options.category,
       },
     };
+
+    // Cache default queries for 1 hour
+    if (isDefaultQuery) {
+      await this.cache.set(cacheKey, response, CacheTTL.STATIC_CONFIG);
+    }
+
+    return response;
   }
 
   async findOne(serviceId: string, id: string): Promise<ServiceFeatureResponseDto> {
@@ -201,6 +234,8 @@ export class ServiceFeatureService {
       admin,
     });
 
+    await this.invalidateCache(serviceId);
+
     return feature;
   }
 
@@ -270,6 +305,8 @@ export class ServiceFeatureService {
       admin,
     });
 
+    await this.invalidateCache(serviceId);
+
     return afterFeature;
   }
 
@@ -305,6 +342,8 @@ export class ServiceFeatureService {
       admin,
     });
 
+    await this.invalidateCache(serviceId);
+
     return { success: true };
   }
 
@@ -339,6 +378,8 @@ export class ServiceFeatureService {
       afterState: dto,
       admin,
     });
+
+    await this.invalidateCache(serviceId);
 
     return this.list(serviceId, { includeChildren: true });
   }
