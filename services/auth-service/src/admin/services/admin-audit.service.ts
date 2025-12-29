@@ -50,7 +50,7 @@ export class AdminAuditService {
     this.logger.warn('getFilterOptions: ClickHouse query not yet implemented');
 
     // Return admins from PostgreSQL (still available)
-    const admins = await this.prisma.admins.findMany({
+    const admins = await this.prisma.admin.findMany({
       select: {
         id: true,
         name: true,
