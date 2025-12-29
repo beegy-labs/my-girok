@@ -1,9 +1,12 @@
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, useMemo, FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Loader2, AlertCircle, Eye, Code } from 'lucide-react';
 import { legalApi, CreateDocumentRequest, UpdateDocumentRequest } from '../../api/legal';
+import { servicesApi, Service } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import MarkdownEditor from '../../components/MarkdownEditor';
+import { COUNTRY_OPTIONS } from '../../config/country.config';
 
 const DOCUMENT_TYPES = [
   { value: 'TERMS_OF_SERVICE', label: 'Terms of Service' },
@@ -17,11 +20,13 @@ const LOCALES = [
   { value: 'ko', label: 'Korean' },
   { value: 'en', label: 'English' },
   { value: 'ja', label: 'Japanese' },
+  { value: 'hi', label: 'Hindi' },
 ];
 
 export default function DocumentEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { hasPermission } = useAdminAuthStore();
   const isNew = !id;
 
@@ -29,6 +34,7 @@ export default function DocumentEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
 
   // Form state
   const [type, setType] = useState<CreateDocumentRequest['type']>('TERMS_OF_SERVICE');
@@ -39,6 +45,28 @@ export default function DocumentEditPage() {
   const [summary, setSummary] = useState('');
   const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().split('T')[0]);
   const [isActive, setIsActive] = useState(true);
+  const [serviceId, setServiceId] = useState('');
+  const [countryCode, setCountryCode] = useState('');
+
+  // Service options for dropdown
+  const serviceOptions = useMemo(
+    () => [
+      { value: '', label: t('common.all') },
+      ...services.map((s) => ({ value: s.id, label: s.name })),
+    ],
+    [services, t],
+  );
+
+  // Country options for dropdown
+  const countryOptions = useMemo(
+    () => [{ value: '', label: t('common.all') }, ...COUNTRY_OPTIONS],
+    [t],
+  );
+
+  // Fetch services on mount
+  useEffect(() => {
+    servicesApi.listServices({ isActive: true }).then((res) => setServices(res.data));
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -60,8 +88,10 @@ export default function DocumentEditPage() {
       setSummary(doc.summary || '');
       setEffectiveDate(doc.effectiveDate.split('T')[0]);
       setIsActive(doc.isActive);
+      setServiceId(doc.serviceId || '');
+      setCountryCode(doc.countryCode || '');
     } catch (err) {
-      setError('Failed to load document');
+      setError(t('legal.loadFailed'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -83,6 +113,8 @@ export default function DocumentEditPage() {
           content,
           summary: summary || undefined,
           effectiveDate: new Date(effectiveDate).toISOString(),
+          serviceId: serviceId || undefined,
+          countryCode: countryCode || undefined,
         };
         await legalApi.createDocument(data);
       } else {
@@ -98,7 +130,7 @@ export default function DocumentEditPage() {
 
       navigate('/compliance/documents');
     } catch (err) {
-      setError(isNew ? 'Failed to create document' : 'Failed to update document');
+      setError(isNew ? t('legal.saveFailed') : t('legal.saveFailed'));
       console.error(err);
     } finally {
       setSaving(false);
@@ -214,6 +246,42 @@ export default function DocumentEditPage() {
                 onChange={(e) => setEffectiveDate(e.target.value)}
                 className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                {t('menu.services')}
+              </label>
+              <select
+                value={serviceId}
+                onChange={(e) => setServiceId(e.target.value)}
+                disabled={!isNew}
+                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary disabled:opacity-50"
+              >
+                {serviceOptions.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                {t('services.country')}
+              </label>
+              <select
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                disabled={!isNew}
+                className="w-full px-4 py-3 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary disabled:opacity-50"
+              >
+                {countryOptions.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

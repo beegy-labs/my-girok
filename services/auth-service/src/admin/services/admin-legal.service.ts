@@ -25,6 +25,8 @@ interface LegalDocumentRow {
   summary: string | null;
   effectiveDate: Date;
   isActive: boolean;
+  serviceId: string | null;
+  countryCode: string | null;
   createdBy: string | null;
   updatedBy: string | null;
   createdAt: Date;
@@ -68,6 +70,8 @@ export class AdminLegalService {
     const typeFilter = query.type ?? null;
     const localeFilter = query.locale ?? null;
     const isActiveFilter = query.isActive ?? null;
+    const serviceIdFilter = query.serviceId ?? null;
+    const countryCodeFilter = query.countryCode ?? null;
 
     const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>(
       Prisma.sql`
@@ -75,6 +79,8 @@ export class AdminLegalService {
       WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
         AND (locale = ${localeFilter} OR ${localeFilter}::TEXT IS NULL)
         AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
+        AND (service_id = ${serviceIdFilter}::uuid OR ${serviceIdFilter}::TEXT IS NULL)
+        AND (country_code = ${countryCodeFilter} OR ${countryCodeFilter}::TEXT IS NULL)
     `,
     );
     const total = Number(countResult[0].count);
@@ -84,13 +90,16 @@ export class AdminLegalService {
       SELECT
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
       FROM legal_documents
       WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
         AND (locale = ${localeFilter} OR ${localeFilter}::TEXT IS NULL)
         AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
-      ORDER BY type, locale, created_at DESC
+        AND (service_id = ${serviceIdFilter}::uuid OR ${serviceIdFilter}::TEXT IS NULL)
+        AND (country_code = ${countryCodeFilter} OR ${countryCodeFilter}::TEXT IS NULL)
+      ORDER BY service_id NULLS FIRST, country_code NULLS FIRST, type, locale, created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `,
     );
@@ -110,6 +119,7 @@ export class AdminLegalService {
       SELECT
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
       FROM legal_documents
@@ -129,20 +139,27 @@ export class AdminLegalService {
     dto: CreateLegalDocumentDto,
     admin: AdminPayload,
   ): Promise<DocumentResponse> {
-    // Check for duplicate type+version+locale
+    // Check for duplicate type+version+locale+serviceId+countryCode
+    const serviceIdValue = dto.serviceId ?? null;
+    const countryCodeValue = dto.countryCode ?? null;
+
     const existing = await this.prisma.$queryRaw<{ id: string }[]>(
       Prisma.sql`
       SELECT id FROM legal_documents
       WHERE type = ${dto.type}::"LegalDocumentType"
         AND version = ${dto.version}
         AND locale = ${dto.locale}
+        AND (service_id = ${serviceIdValue}::uuid OR (${serviceIdValue}::TEXT IS NULL AND service_id IS NULL))
+        AND (country_code = ${countryCodeValue} OR (${countryCodeValue}::TEXT IS NULL AND country_code IS NULL))
       LIMIT 1
     `,
     );
 
     if (existing.length > 0) {
+      const serviceInfo = dto.serviceId ? ` service:${dto.serviceId}` : '';
+      const countryInfo = dto.countryCode ? ` country:${dto.countryCode}` : '';
       throw new ConflictException(
-        `Document ${dto.type} v${dto.version} (${dto.locale}) already exists`,
+        `Document ${dto.type} v${dto.version} (${dto.locale})${serviceInfo}${countryInfo} already exists`,
       );
     }
 
@@ -151,7 +168,7 @@ export class AdminLegalService {
       Prisma.sql`
       INSERT INTO legal_documents (
         id, type, version, locale, title, content, summary,
-        effective_date, is_active, created_by
+        effective_date, is_active, service_id, country_code, created_by
       )
       VALUES (
         ${docId}::uuid,
@@ -163,11 +180,14 @@ export class AdminLegalService {
         ${dto.summary || null},
         ${new Date(dto.effectiveDate)},
         TRUE,
+        ${serviceIdValue}::uuid,
+        ${countryCodeValue},
         ${admin.sub}::uuid
       )
       RETURNING
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
     `,
@@ -178,6 +198,8 @@ export class AdminLegalService {
       type: dto.type,
       version: dto.version,
       locale: dto.locale,
+      serviceId: dto.serviceId,
+      countryCode: dto.countryCode,
     });
 
     return docs[0] as DocumentResponse;
@@ -216,6 +238,7 @@ export class AdminLegalService {
       RETURNING
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
     `,

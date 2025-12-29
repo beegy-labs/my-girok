@@ -26,6 +26,8 @@ export interface AdminLegalDocument {
   summary: string | null;
   effectiveDate: string;
   isActive: boolean;
+  serviceId: string | null;
+  countryCode: string | null;
   createdBy: string | null;
   updatedBy: string | null;
   createdAt: string;
@@ -41,6 +43,8 @@ export interface AdminDocumentListQuery {
   type?: string;
   locale?: string;
   isActive?: boolean;
+  serviceId?: string;
+  countryCode?: string;
 }
 
 /**
@@ -65,6 +69,8 @@ export interface CreateAdminDocumentDto {
   content: string;
   summary?: string;
   effectiveDate: string;
+  serviceId?: string;
+  countryCode?: string;
 }
 
 /**
