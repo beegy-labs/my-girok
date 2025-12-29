@@ -1,6 +1,7 @@
 // apps/web-admin/src/components/atoms/Button.tsx
-import { memo, forwardRef, ButtonHTMLAttributes, ReactNode } from 'react';
+import { memo, forwardRef, ButtonHTMLAttributes, ReactNode, useCallback } from 'react';
 import { Loader2, LucideIcon } from 'lucide-react';
+import { trackClick } from '../../lib/otel';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -12,6 +13,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconPosition?: 'left' | 'right';
   loading?: boolean;
   children: ReactNode;
+  /** When set, tracks button clicks with this name */
+  trackingName?: string;
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -46,16 +49,30 @@ export const Button = memo(
         disabled,
         className = '',
         children,
+        trackingName,
+        onClick,
         ...props
       },
       ref,
     ) => {
       const isDisabled = disabled || loading;
 
+      const handleClick = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+          if (trackingName) {
+            const buttonText = typeof children === 'string' ? children : undefined;
+            trackClick(trackingName, props.id, buttonText);
+          }
+          onClick?.(e);
+        },
+        [trackingName, onClick, children, props.id],
+      );
+
       return (
         <button
           ref={ref}
           disabled={isDisabled}
+          onClick={handleClick}
           className={`
           inline-flex items-center justify-center rounded-lg font-medium
           transition-all duration-200

@@ -4,11 +4,13 @@ import { withTranslation, WithTranslation } from 'react-i18next';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from './atoms/Button';
 import { Card } from './atoms/Card';
+import { trackError } from '../lib/otel';
 
 interface Props extends WithTranslation {
   children: ReactNode;
   fallback?: ReactNode;
   onReset?: () => void;
+  componentName?: string;
 }
 
 interface State {
@@ -26,6 +28,10 @@ class ErrorBoundaryComponent extends Component<Props, State> {
   }
 
   componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
+    // Track error with OTEL
+    const errorInstance = error instanceof Error ? error : new Error(String(error));
+    trackError(errorInstance, this.props.componentName || 'ErrorBoundary');
+
     // Only log in development
     if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught:', error, errorInfo);

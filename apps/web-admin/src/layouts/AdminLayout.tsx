@@ -7,6 +7,7 @@ import { authApi } from '../api';
 import { useState } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { useMenuStore } from '../stores/menuStore';
+import { usePageTracking, useUserTracking } from '../hooks';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇺🇸' },
@@ -23,6 +24,10 @@ export default function AdminLayout() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const { isMobileOpen, setMobileOpen } = useMenuStore();
+
+  // OTEL tracking hooks
+  usePageTracking();
+  useUserTracking();
 
   const currentLang = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0];
 
