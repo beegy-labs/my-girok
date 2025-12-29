@@ -16,6 +16,8 @@ const ConsentExamplesPage = lazy(() => import('./pages/legal/ConsentExamplesPage
 const TenantsPage = lazy(() => import('./pages/tenants/TenantsPage'));
 const TenantEditPage = lazy(() => import('./pages/tenants/TenantEditPage'));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogsPage'));
+const ServicesPage = lazy(() => import('./pages/services/ServicesPage'));
+const ServiceConsentsPage = lazy(() => import('./pages/services/ServiceConsentsPage'));
 
 // Page wrapper with Suspense and Error Boundary
 function PageWrapper() {
@@ -131,6 +133,22 @@ export const router = createBrowserRouter([
             element: (
               <PrivateRoute permission="audit:read">
                 <AuditLogsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'services',
+            element: (
+              <PrivateRoute permission="service:read">
+                <ServicesPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'services/:serviceId/consents',
+            element: (
+              <PrivateRoute permission="service:read">
+                <ServiceConsentsPage />
               </PrivateRoute>
             ),
           },

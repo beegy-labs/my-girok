@@ -9,6 +9,7 @@ import {
   Building2,
   ClipboardList,
   Settings,
+  Layers,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -64,6 +65,13 @@ export const MENU_CONFIG: MenuItem[] = [
         labelKey: 'menu.countryExamples',
       },
     ],
+  },
+  {
+    id: 'services',
+    path: '/services',
+    icon: Layers,
+    labelKey: 'menu.services',
+    permission: 'service:read',
   },
   {
     id: 'tenants',
