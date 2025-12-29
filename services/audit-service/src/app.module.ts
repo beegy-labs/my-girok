@@ -7,6 +7,7 @@ import { Keyv } from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import { ClickHouseModule } from './shared/clickhouse/clickhouse.module';
 import { AuditModule } from './audit/audit.module';
+import { AdminAuditModule } from './admin-audit/admin-audit.module';
 import { RetentionModule } from './retention/retention.module';
 import configuration from './config/configuration';
 
@@ -39,6 +40,7 @@ import configuration from './config/configuration';
     HealthModule,
     ClickHouseModule,
     AuditModule,
+    AdminAuditModule,
     RetentionModule,
   ],
 })

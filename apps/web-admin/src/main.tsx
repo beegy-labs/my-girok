@@ -4,8 +4,12 @@ import { RouterProvider } from 'react-router';
 import { HelmetProvider } from 'react-helmet-async';
 import { router } from './router';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { initOtel } from './lib/otel';
 import './index.css';
 import './i18n/config';
+
+// Initialize OpenTelemetry
+initOtel();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
