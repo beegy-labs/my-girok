@@ -13,6 +13,10 @@ import {
   XCircle,
   FileText,
   BarChart3,
+  Cog,
+  Puzzle,
+  Users,
+  ScrollText,
 } from 'lucide-react';
 import { servicesApi, Service } from '../../api/services';
 import ServiceCountriesTab from './ServiceCountriesTab';
@@ -20,16 +24,36 @@ import ServiceLocalesTab from './ServiceLocalesTab';
 import ServiceConsentsTab from './ServiceConsentsTab';
 import ServiceDocumentsTab from './ServiceDocumentsTab';
 import ServiceAnalyticsTab from './ServiceAnalyticsTab';
+import ServiceConfigTab from './ServiceConfigTab';
+import ServiceFeaturesTab from './ServiceFeaturesTab';
+import ServiceTestersTab from './ServiceTestersTab';
+import ServiceAuditTab from './ServiceAuditTab';
+import { useAuditEvent } from '../../hooks';
 
-type TabType = 'countries' | 'locales' | 'consents' | 'documents' | 'analytics';
+type TabType =
+  | 'countries'
+  | 'locales'
+  | 'consents'
+  | 'documents'
+  | 'analytics'
+  | 'config'
+  | 'features'
+  | 'testers'
+  | 'audit';
 
 export default function ServiceDetailPage() {
   const { t } = useTranslation();
   const { serviceId } = useParams<{ serviceId: string }>();
+  const { trackTabChange } = useAuditEvent();
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('countries');
+
+  const handleTabChange = (tab: TabType) => {
+    trackTabChange(tab, activeTab);
+    setActiveTab(tab);
+  };
 
   const fetchService = useCallback(async () => {
     if (!serviceId) return;
@@ -75,6 +99,10 @@ export default function ServiceDetailPage() {
     { id: 'consents', label: t('services.consentsTab'), icon: <ClipboardList size={18} /> },
     { id: 'documents', label: t('services.documentsTab'), icon: <FileText size={18} /> },
     { id: 'analytics', label: t('services.analyticsTab'), icon: <BarChart3 size={18} /> },
+    { id: 'config', label: t('services.configTab'), icon: <Cog size={18} /> },
+    { id: 'features', label: t('services.featuresTab'), icon: <Puzzle size={18} /> },
+    { id: 'testers', label: t('services.testersTab'), icon: <Users size={18} /> },
+    { id: 'audit', label: t('services.auditTab'), icon: <ScrollText size={18} /> },
   ];
 
   return (
@@ -119,20 +147,20 @@ export default function ServiceDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-theme-border-default">
-        <nav className="flex gap-4">
+      <div className="border-b border-theme-border-default overflow-x-auto">
+        <nav className="flex gap-2 min-w-max">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center gap-2 px-3 py-3 border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'border-theme-primary text-theme-primary'
                   : 'border-transparent text-theme-text-secondary hover:text-theme-text-primary'
               }`}
             >
               {tab.icon}
-              <span className="font-medium">{tab.label}</span>
+              <span className="font-medium text-sm">{tab.label}</span>
             </button>
           ))}
         </nav>
@@ -145,6 +173,10 @@ export default function ServiceDetailPage() {
         {activeTab === 'consents' && <ServiceConsentsTab serviceId={serviceId!} />}
         {activeTab === 'documents' && <ServiceDocumentsTab serviceId={serviceId!} />}
         {activeTab === 'analytics' && <ServiceAnalyticsTab serviceId={serviceId!} />}
+        {activeTab === 'config' && <ServiceConfigTab serviceId={serviceId!} />}
+        {activeTab === 'features' && <ServiceFeaturesTab serviceId={serviceId!} />}
+        {activeTab === 'testers' && <ServiceTestersTab serviceId={serviceId!} />}
+        {activeTab === 'audit' && <ServiceAuditTab serviceId={serviceId!} />}
       </div>
     </div>
   );
