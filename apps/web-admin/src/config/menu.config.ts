@@ -1,15 +1,18 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard,
-  Scale,
   FileText,
   Users,
   BarChart3,
   Globe,
   Building2,
   ClipboardList,
-  Settings,
   Layers,
+  Shield,
+  Settings2,
+  Grid3X3,
+  ClipboardCheck,
+  Cog,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -20,11 +23,24 @@ export interface MenuItem {
   permission?: string;
   children?: MenuItem[];
   badge?: 'new' | 'beta';
+  /** For future dynamic menu configuration */
+  order?: number;
+  /** Parent menu ID for dynamic restructuring */
+  parentId?: string | null;
 }
 
 /**
- * SSOT Menu Configuration
+ * SSOT Menu Configuration - 2025 Best Practices
+ *
+ * Structure:
+ * - Dashboard: Overview and quick access
+ * - Services: Service management (N services, countries, consents)
+ * - Compliance: Legal documents, consent history, analytics, regional rules
+ * - Organization: Partners (tenants), operators (future)
+ * - System: Audit logs, settings, menu config (future)
+ *
  * Supports up to 5 depth levels with permission-based filtering
+ * Designed for future dynamic menu configuration from admin settings
  */
 export const MENU_CONFIG: MenuItem[] = [
   {
@@ -32,66 +48,104 @@ export const MENU_CONFIG: MenuItem[] = [
     path: '/',
     icon: LayoutDashboard,
     labelKey: 'menu.dashboard',
+    order: 0,
+    parentId: null,
   },
   {
-    id: 'legal',
-    icon: Scale,
-    labelKey: 'menu.legal',
-    permission: 'legal:read',
+    id: 'services',
+    icon: Layers,
+    labelKey: 'menu.services',
+    permission: 'service:read',
+    order: 1,
+    parentId: null,
     children: [
       {
-        id: 'legal-documents',
-        path: '/legal/documents',
-        icon: FileText,
-        labelKey: 'menu.legalDocuments',
-      },
-      {
-        id: 'legal-consents',
-        path: '/legal/consents',
-        icon: Users,
-        labelKey: 'menu.consents',
-      },
-      {
-        id: 'legal-stats',
-        path: '/legal/consent-stats',
-        icon: BarChart3,
-        labelKey: 'menu.consentStats',
-        badge: 'new',
-      },
-      {
-        id: 'legal-examples',
-        path: '/legal/examples',
-        icon: Globe,
-        labelKey: 'menu.countryExamples',
+        id: 'services-list',
+        path: '/services',
+        icon: Grid3X3,
+        labelKey: 'menu.servicesList',
+        order: 0,
       },
     ],
   },
   {
-    id: 'services',
-    path: '/services',
-    icon: Layers,
-    labelKey: 'menu.services',
-    permission: 'service:read',
+    id: 'compliance',
+    icon: Shield,
+    labelKey: 'menu.compliance',
+    permission: 'legal:read',
+    order: 2,
+    parentId: null,
+    children: [
+      {
+        id: 'compliance-documents',
+        path: '/compliance/documents',
+        icon: FileText,
+        labelKey: 'menu.documents',
+        order: 0,
+      },
+      {
+        id: 'compliance-consents',
+        path: '/compliance/consents',
+        icon: ClipboardCheck,
+        labelKey: 'menu.consentHistory',
+        order: 1,
+      },
+      {
+        id: 'compliance-analytics',
+        path: '/compliance/analytics',
+        icon: BarChart3,
+        labelKey: 'menu.analytics',
+        order: 2,
+      },
+      {
+        id: 'compliance-regions',
+        path: '/compliance/regions',
+        icon: Globe,
+        labelKey: 'menu.regionalRules',
+        order: 3,
+      },
+    ],
   },
   {
-    id: 'tenants',
-    path: '/tenants',
+    id: 'organization',
     icon: Building2,
-    labelKey: 'menu.tenants',
+    labelKey: 'menu.organization',
     permission: 'tenant:read',
+    order: 3,
+    parentId: null,
+    children: [
+      {
+        id: 'organization-partners',
+        path: '/organization/partners',
+        icon: Users,
+        labelKey: 'menu.partners',
+        order: 0,
+      },
+    ],
   },
   {
-    id: 'audit',
-    path: '/audit-logs',
-    icon: ClipboardList,
-    labelKey: 'menu.auditLogs',
-    permission: 'audit:read',
-  },
-  {
-    id: 'settings',
-    path: '/settings',
-    icon: Settings,
-    labelKey: 'menu.settings',
+    id: 'system',
+    icon: Settings2,
+    labelKey: 'menu.system',
+    order: 4,
+    parentId: null,
+    children: [
+      {
+        id: 'system-audit',
+        path: '/system/audit-logs',
+        icon: ClipboardList,
+        labelKey: 'menu.auditLogs',
+        permission: 'audit:read',
+        order: 0,
+      },
+      {
+        id: 'system-settings',
+        path: '/system/settings',
+        icon: Cog,
+        labelKey: 'menu.settings',
+        order: 1,
+      },
+    ],
   },
 ];
 

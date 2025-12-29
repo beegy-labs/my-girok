@@ -72,7 +72,7 @@ export default function TenantsPage() {
         </div>
         {canCreate && (
           <Link
-            to="/tenants/new"
+            to="/organization/partners/new"
             className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus size={18} />
@@ -196,7 +196,7 @@ export default function TenantsPage() {
                     <td>
                       {canEdit && (
                         <button
-                          onClick={() => navigate(`/tenants/${tenant.id}`)}
+                          onClick={() => navigate(`/organization/partners/${tenant.id}`)}
                           className="p-2 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded-lg transition-colors"
                           title={t('common.edit')}
                         >

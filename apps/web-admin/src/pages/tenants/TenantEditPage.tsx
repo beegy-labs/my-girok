@@ -104,7 +104,7 @@ export default function TenantEditPage() {
         await tenantApi.update(id!, data);
       }
 
-      navigate('/tenants');
+      navigate('/organization/partners');
     } catch (err) {
       setError(isNew ? 'Failed to create tenant' : 'Failed to update tenant');
       logger.error('Failed to save tenant', err);
@@ -184,7 +184,7 @@ export default function TenantEditPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          to="/tenants"
+          to="/organization/partners"
           className="p-2 hover:bg-theme-bg-secondary rounded-lg transition-colors"
         >
           <ArrowLeft size={20} className="text-theme-text-secondary" />
@@ -375,7 +375,7 @@ export default function TenantEditPage() {
         {/* Actions */}
         <div className="flex items-center justify-end gap-4">
           <Link
-            to="/tenants"
+            to="/organization/partners"
             className="px-6 py-3 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
           >
             {t('common.cancel')}

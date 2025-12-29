@@ -96,7 +96,7 @@ export default function DocumentEditPage() {
         await legalApi.updateDocument(id!, data);
       }
 
-      navigate('/legal/documents');
+      navigate('/compliance/documents');
     } catch (err) {
       setError(isNew ? 'Failed to create document' : 'Failed to update document');
       console.error(err);
@@ -120,7 +120,7 @@ export default function DocumentEditPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          to="/legal/documents"
+          to="/compliance/documents"
           className="p-2 hover:bg-theme-bg-secondary rounded-lg transition-colors"
         >
           <ArrowLeft size={20} className="text-theme-text-secondary" />
@@ -278,7 +278,7 @@ export default function DocumentEditPage() {
         {/* Actions */}
         <div className="flex items-center justify-end gap-4">
           <Link
-            to="/legal/documents"
+            to="/compliance/documents"
             className="px-6 py-3 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
           >
             Cancel

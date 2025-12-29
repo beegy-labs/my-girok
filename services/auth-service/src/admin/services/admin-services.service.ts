@@ -12,6 +12,9 @@ import {
   ConsentRequirementResponse,
   ConsentRequirementListResponse,
   BulkUpdateConsentRequirementsDto,
+  AddServiceCountryDto,
+  ServiceCountryResponse,
+  ServiceCountryListResponse,
 } from '../dto/admin-services.dto';
 
 interface ServiceRow {
@@ -35,6 +38,15 @@ interface ConsentRequirementRow {
   displayOrder: number;
   labelKey: string;
   descriptionKey: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ServiceCountryRow {
+  id: string;
+  serviceId: string;
+  countryCode: string;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -320,5 +332,70 @@ export class AdminServicesService {
 
     // Return updated list
     return this.listConsentRequirements(serviceId, { countryCode: dto.countryCode });
+  }
+
+  // ============================================================
+  // SERVICE SUPPORTED COUNTRIES
+  // ============================================================
+
+  async listServiceCountries(serviceId: string): Promise<ServiceCountryListResponse> {
+    // Verify service exists
+    await this.getServiceById(serviceId);
+
+    const data = await this.prisma.$queryRaw<ServiceCountryRow[]>(
+      Prisma.sql`
+      SELECT
+        id, service_id as "serviceId", country_code as "countryCode",
+        is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+      FROM service_supported_countries
+      WHERE service_id = ${serviceId}::uuid AND is_active = TRUE
+      ORDER BY country_code ASC
+    `,
+    );
+
+    return {
+      data: data as ServiceCountryResponse[],
+      meta: { total: data.length, serviceId },
+    };
+  }
+
+  async addServiceCountry(
+    serviceId: string,
+    dto: AddServiceCountryDto,
+  ): Promise<ServiceCountryResponse> {
+    // Verify service exists
+    await this.getServiceById(serviceId);
+
+    const countryId = ID.generate();
+
+    // Upsert: insert new or reactivate existing
+    const result = await this.prisma.$queryRaw<ServiceCountryRow[]>(
+      Prisma.sql`
+      INSERT INTO service_supported_countries (id, service_id, country_code)
+      VALUES (${countryId}::uuid, ${serviceId}::uuid, ${dto.countryCode})
+      ON CONFLICT (service_id, country_code) DO UPDATE SET
+        is_active = TRUE,
+        updated_at = NOW()
+      RETURNING
+        id, service_id as "serviceId", country_code as "countryCode",
+        is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+    `,
+    );
+
+    return result[0] as ServiceCountryResponse;
+  }
+
+  async removeServiceCountry(serviceId: string, countryCode: string): Promise<void> {
+    // Verify service exists
+    await this.getServiceById(serviceId);
+
+    // Soft delete (set is_active = FALSE)
+    await this.prisma.$executeRaw(
+      Prisma.sql`
+      UPDATE service_supported_countries
+      SET is_active = FALSE, updated_at = NOW()
+      WHERE service_id = ${serviceId}::uuid AND country_code = ${countryCode}
+    `,
+    );
   }
 }

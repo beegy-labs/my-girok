@@ -106,7 +106,7 @@ export default function DocumentsPage() {
         </div>
         {canCreate && (
           <Link
-            to="/legal/documents/new"
+            to="/compliance/documents/new"
             className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus size={18} />
@@ -211,7 +211,7 @@ export default function DocumentsPage() {
                     <div className="flex items-center gap-2">
                       {canEdit && (
                         <button
-                          onClick={() => navigate(`/legal/documents/${doc.id}`)}
+                          onClick={() => navigate(`/compliance/documents/${doc.id}`)}
                           className="p-2 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded-lg transition-colors"
                           title={t('common.edit')}
                         >

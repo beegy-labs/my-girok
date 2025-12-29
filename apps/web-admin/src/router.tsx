@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Outlet } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import AdminLayout from './layouts/AdminLayout';
 import PrivateRoute from './components/PrivateRoute';
 import LoginPage from './pages/LoginPage';
@@ -52,90 +52,13 @@ export const router = createBrowserRouter([
       {
         element: <PageWrapper />,
         children: [
+          // Dashboard
           {
             index: true,
             element: <DashboardPage />,
           },
-          {
-            path: 'legal/documents',
-            element: (
-              <PrivateRoute permission="legal:read">
-                <DocumentsPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'legal/documents/new',
-            element: (
-              <PrivateRoute permission="legal:create">
-                <DocumentEditPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'legal/documents/:id',
-            element: (
-              <PrivateRoute permission="legal:read">
-                <DocumentEditPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'legal/consents',
-            element: (
-              <PrivateRoute permission="legal:read">
-                <ConsentsPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'legal/consent-stats',
-            element: (
-              <PrivateRoute permission="legal:read">
-                <ConsentStatsPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'legal/examples',
-            element: (
-              <PrivateRoute permission="legal:read">
-                <ConsentExamplesPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'tenants',
-            element: (
-              <PrivateRoute permission="tenant:read">
-                <TenantsPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'tenants/new',
-            element: (
-              <PrivateRoute permission="tenant:create">
-                <TenantEditPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'tenants/:id',
-            element: (
-              <PrivateRoute permission="tenant:read">
-                <TenantEditPage />
-              </PrivateRoute>
-            ),
-          },
-          {
-            path: 'audit-logs',
-            element: (
-              <PrivateRoute permission="audit:read">
-                <AuditLogsPage />
-              </PrivateRoute>
-            ),
-          },
+
+          // Services
           {
             path: 'services',
             element: (
@@ -152,6 +75,106 @@ export const router = createBrowserRouter([
               </PrivateRoute>
             ),
           },
+
+          // Compliance (new structure)
+          {
+            path: 'compliance/documents',
+            element: (
+              <PrivateRoute permission="legal:read">
+                <DocumentsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'compliance/documents/new',
+            element: (
+              <PrivateRoute permission="legal:create">
+                <DocumentEditPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'compliance/documents/:id',
+            element: (
+              <PrivateRoute permission="legal:read">
+                <DocumentEditPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'compliance/consents',
+            element: (
+              <PrivateRoute permission="legal:read">
+                <ConsentsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'compliance/analytics',
+            element: (
+              <PrivateRoute permission="legal:read">
+                <ConsentStatsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'compliance/regions',
+            element: (
+              <PrivateRoute permission="legal:read">
+                <ConsentExamplesPage />
+              </PrivateRoute>
+            ),
+          },
+
+          // Organization
+          {
+            path: 'organization/partners',
+            element: (
+              <PrivateRoute permission="tenant:read">
+                <TenantsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'organization/partners/new',
+            element: (
+              <PrivateRoute permission="tenant:create">
+                <TenantEditPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'organization/partners/:id',
+            element: (
+              <PrivateRoute permission="tenant:read">
+                <TenantEditPage />
+              </PrivateRoute>
+            ),
+          },
+
+          // System
+          {
+            path: 'system/audit-logs',
+            element: (
+              <PrivateRoute permission="audit:read">
+                <AuditLogsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/settings',
+            element: <div className="text-theme-text-primary">Settings page coming soon</div>,
+          },
+
+          // Legacy redirects for backward compatibility
+          { path: 'legal/documents', element: <Navigate to="/compliance/documents" replace /> },
+          { path: 'legal/documents/*', element: <Navigate to="/compliance/documents" replace /> },
+          { path: 'legal/consents', element: <Navigate to="/compliance/consents" replace /> },
+          { path: 'legal/consent-stats', element: <Navigate to="/compliance/analytics" replace /> },
+          { path: 'legal/examples', element: <Navigate to="/compliance/regions" replace /> },
+          { path: 'tenants', element: <Navigate to="/organization/partners" replace /> },
+          { path: 'tenants/*', element: <Navigate to="/organization/partners" replace /> },
+          { path: 'audit-logs', element: <Navigate to="/system/audit-logs" replace /> },
         ],
       },
     ],

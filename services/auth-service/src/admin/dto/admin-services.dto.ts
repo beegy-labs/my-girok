@@ -8,6 +8,8 @@ import {
   ValidateNested,
   Min,
   Max,
+  Length,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ConsentType, LegalDocumentType } from '../../../node_modules/.prisma/auth-client';
@@ -172,4 +174,32 @@ export class BulkUpdateConsentRequirementsDto {
   @ValidateNested({ each: true })
   @Type(() => BulkConsentRequirementItemDto)
   requirements!: BulkConsentRequirementItemDto[];
+}
+
+// ============================================================
+// Service Supported Countries DTOs
+// ============================================================
+
+export class AddServiceCountryDto {
+  @IsString()
+  @Length(2, 2)
+  @Matches(/^[A-Z]{2}$/, { message: 'Country code must be ISO 3166-1 alpha-2 (uppercase)' })
+  countryCode!: string;
+}
+
+export interface ServiceCountryResponse {
+  id: string;
+  serviceId: string;
+  countryCode: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ServiceCountryListResponse {
+  data: ServiceCountryResponse[];
+  meta: {
+    total: number;
+    serviceId: string;
+  };
 }

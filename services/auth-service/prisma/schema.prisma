@@ -316,10 +316,27 @@ model Service {
   accountLinks           AccountLink[]
   tiers                  Tier[]
   sanctions              Sanction[]
+  supportedCountries     ServiceSupportedCountry[]
 
   @@index([slug])
   @@index([isActive])
   @@map("services")
+}
+
+model ServiceSupportedCountry {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceId   String   @map("service_id") @db.Uuid
+  countryCode String   @map("country_code") @db.VarChar(2)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, countryCode])
+  @@index([serviceId])
+  @@index([countryCode])
+  @@map("service_supported_countries")
 }
 
 model ServiceConsentRequirement {

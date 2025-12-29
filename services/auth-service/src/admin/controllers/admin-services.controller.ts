@@ -23,6 +23,9 @@ import {
   ConsentRequirementResponse,
   ConsentRequirementListResponse,
   BulkUpdateConsentRequirementsDto,
+  AddServiceCountryDto,
+  ServiceCountryResponse,
+  ServiceCountryListResponse,
 } from '../dto/admin-services.dto';
 import { Permissions } from '../decorators/permissions.decorator';
 import { PermissionGuard } from '../guards/permission.guard';
@@ -149,5 +152,49 @@ export class AdminServicesController {
     @Body() dto: BulkUpdateConsentRequirementsDto,
   ): Promise<ConsentRequirementListResponse> {
     return this.adminServicesService.bulkUpdateConsentRequirements(serviceId, dto);
+  }
+
+  // ============================================================
+  // SERVICE SUPPORTED COUNTRIES
+  // ============================================================
+
+  /**
+   * List supported countries for a service
+   * GET /v1/admin/services/:serviceId/countries
+   */
+  @Get(':serviceId/countries')
+  @Permissions('service:read')
+  async listServiceCountries(
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+  ): Promise<ServiceCountryListResponse> {
+    return this.adminServicesService.listServiceCountries(serviceId);
+  }
+
+  /**
+   * Add a supported country to a service
+   * POST /v1/admin/services/:serviceId/countries
+   */
+  @Post(':serviceId/countries')
+  @Permissions('service:update')
+  @HttpCode(HttpStatus.CREATED)
+  async addServiceCountry(
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Body() dto: AddServiceCountryDto,
+  ): Promise<ServiceCountryResponse> {
+    return this.adminServicesService.addServiceCountry(serviceId, dto);
+  }
+
+  /**
+   * Remove a supported country from a service (soft delete)
+   * DELETE /v1/admin/services/:serviceId/countries/:countryCode
+   */
+  @Delete(':serviceId/countries/:countryCode')
+  @Permissions('service:update')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeServiceCountry(
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Param('countryCode') countryCode: string,
+  ): Promise<void> {
+    return this.adminServicesService.removeServiceCountry(serviceId, countryCode);
   }
 }
