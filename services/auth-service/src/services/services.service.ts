@@ -134,7 +134,7 @@ export class ServicesService {
         scr.label_key as "labelKey",
         scr.description_key as "descriptionKey"
       FROM service_consent_requirements scr
-      WHERE scr.service_id = ${service.id}
+      WHERE scr.service_id = ${service.id}::uuid
         AND scr.country_code = ${countryCode}
       ORDER BY scr.display_order ASC
     `;
@@ -162,8 +162,8 @@ export class ServicesService {
     // Check if already joined
     const existingJoin = await this.prisma.$queryRaw<UserServiceRow[]>`
       SELECT id FROM user_services
-      WHERE user_id = ${userId}
-        AND service_id = ${service.id}
+      WHERE user_id = ${userId}::uuid
+        AND service_id = ${service.id}::uuid
         AND country_code = ${countryCode}
       LIMIT 1
     `;
@@ -241,8 +241,8 @@ export class ServicesService {
     // Check if user has joined this service (any country)
     const existingJoin = await this.prisma.$queryRaw<UserServiceRow[]>`
       SELECT id FROM user_services
-      WHERE user_id = ${userId}
-        AND service_id = ${service.id}
+      WHERE user_id = ${userId}::uuid
+        AND service_id = ${service.id}::uuid
         AND status = 'ACTIVE'
       LIMIT 1
     `;
@@ -254,8 +254,8 @@ export class ServicesService {
     // Check if already has consent for this country
     const existingCountry = await this.prisma.$queryRaw<UserServiceRow[]>`
       SELECT id FROM user_services
-      WHERE user_id = ${userId}
-        AND service_id = ${service.id}
+      WHERE user_id = ${userId}::uuid
+        AND service_id = ${service.id}::uuid
         AND country_code = ${countryCode}
       LIMIT 1
     `;
@@ -330,8 +330,8 @@ export class ServicesService {
           document_id as "documentId", agreed, agreed_at as "agreedAt",
           withdrawn_at as "withdrawnAt"
         FROM user_consents
-        WHERE user_id = ${userId}
-          AND service_id = ${service.id}
+        WHERE user_id = ${userId}::uuid
+          AND service_id = ${service.id}::uuid
           AND country_code = ${countryCode}
         ORDER BY consent_type ASC
       `;
@@ -343,8 +343,8 @@ export class ServicesService {
           document_id as "documentId", agreed, agreed_at as "agreedAt",
           withdrawn_at as "withdrawnAt"
         FROM user_consents
-        WHERE user_id = ${userId}
-          AND service_id = ${service.id}
+        WHERE user_id = ${userId}::uuid
+          AND service_id = ${service.id}::uuid
         ORDER BY country_code ASC, consent_type ASC
       `;
     }
@@ -378,8 +378,8 @@ export class ServicesService {
     // Find existing consent
     const existingConsents = await this.prisma.$queryRaw<UserConsentRow[]>`
       SELECT id, agreed FROM user_consents
-      WHERE user_id = ${userId}
-        AND service_id = ${service.id}
+      WHERE user_id = ${userId}::uuid
+        AND service_id = ${service.id}::uuid
         AND consent_type = ${consentType}
         AND country_code = ${countryCode}
       LIMIT 1
@@ -393,7 +393,7 @@ export class ServicesService {
     if (!agreed) {
       const requirements = await this.prisma.$queryRaw<ConsentRequirementRow[]>`
         SELECT is_required as "isRequired" FROM service_consent_requirements
-        WHERE service_id = ${service.id}
+        WHERE service_id = ${service.id}::uuid
           AND country_code = ${countryCode}
           AND consent_type = ${consentType}
           AND is_required = true
@@ -415,7 +415,7 @@ export class ServicesService {
           ip_address = ${ip},
           user_agent = ${userAgent},
           updated_at = NOW()
-      WHERE id = ${existingConsents[0].id}
+      WHERE id = ${existingConsents[0].id}::uuid
     `;
 
     // Get updated consent
@@ -425,7 +425,7 @@ export class ServicesService {
         document_id as "documentId", agreed, agreed_at as "agreedAt",
         withdrawn_at as "withdrawnAt"
       FROM user_consents
-      WHERE id = ${existingConsents[0].id}
+      WHERE id = ${existingConsents[0].id}::uuid
     `;
 
     const consent = updatedConsents[0];
@@ -462,8 +462,8 @@ export class ServicesService {
         await tx.$executeRaw`
           UPDATE user_services
           SET status = 'WITHDRAWN', updated_at = NOW()
-          WHERE user_id = ${userId}
-            AND service_id = ${service.id}
+          WHERE user_id = ${userId}::uuid
+            AND service_id = ${service.id}::uuid
             AND country_code = ${countryCode}
         `;
 
@@ -471,8 +471,8 @@ export class ServicesService {
         await tx.$executeRaw`
           UPDATE user_consents
           SET agreed = false, withdrawn_at = NOW(), updated_at = NOW()
-          WHERE user_id = ${userId}
-            AND service_id = ${service.id}
+          WHERE user_id = ${userId}::uuid
+            AND service_id = ${service.id}::uuid
             AND country_code = ${countryCode}
         `;
       } else {
@@ -480,16 +480,16 @@ export class ServicesService {
         await tx.$executeRaw`
           UPDATE user_services
           SET status = 'WITHDRAWN', updated_at = NOW()
-          WHERE user_id = ${userId}
-            AND service_id = ${service.id}
+          WHERE user_id = ${userId}::uuid
+            AND service_id = ${service.id}::uuid
         `;
 
         // Withdraw all consents
         await tx.$executeRaw`
           UPDATE user_consents
           SET agreed = false, withdrawn_at = NOW(), updated_at = NOW()
-          WHERE user_id = ${userId}
-            AND service_id = ${service.id}
+          WHERE user_id = ${userId}::uuid
+            AND service_id = ${service.id}::uuid
         `;
       }
     });
@@ -508,7 +508,7 @@ export class ServicesService {
     const requirements = await this.prisma.$queryRaw<ConsentRequirementRow[]>`
       SELECT consent_type as "consentType", is_required as "isRequired"
       FROM service_consent_requirements
-      WHERE service_id = ${serviceId}
+      WHERE service_id = ${serviceId}::uuid
         AND country_code = ${countryCode}
         AND is_required = true
     `;
@@ -541,7 +541,7 @@ export class ServicesService {
       // Create user_service
       await tx.$executeRaw`
         INSERT INTO user_services (id, user_id, service_id, country_code, status, joined_at, created_at, updated_at)
-        VALUES (${userServiceId}, ${userId}, ${serviceId}, ${countryCode}, 'ACTIVE', ${now}, ${now}, ${now})
+        VALUES (${userServiceId}::uuid, ${userId}::uuid, ${serviceId}::uuid, ${countryCode}, 'ACTIVE', ${now}, ${now}, ${now})
       `;
 
       // Create consents
@@ -553,8 +553,8 @@ export class ServicesService {
             document_id, agreed, agreed_at, ip_address, user_agent, created_at, updated_at
           )
           VALUES (
-            ${consentId}, ${userId}, ${serviceId}, ${consent.type}, ${countryCode},
-            ${consent.documentId || null}, ${consent.agreed}, ${consent.agreed ? now : null},
+            ${consentId}::uuid, ${userId}::uuid, ${serviceId}::uuid, ${consent.type}, ${countryCode},
+            ${consent.documentId ? consent.documentId : null}::uuid, ${consent.agreed}, ${consent.agreed ? now : null},
             ${ip}, ${userAgent}, ${now}, ${now}
           )
         `;
@@ -573,7 +573,7 @@ export class ServicesService {
       SELECT us.status, us.country_code as "countryCode", s.slug as "serviceSlug"
       FROM user_services us
       JOIN services s ON us.service_id = s.id
-      WHERE us.user_id = ${userId} AND us.status = 'ACTIVE'
+      WHERE us.user_id = ${userId}::uuid AND us.status = 'ACTIVE'
     `;
   }
 }

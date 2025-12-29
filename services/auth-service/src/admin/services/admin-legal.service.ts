@@ -107,7 +107,7 @@ export class AdminLegalService {
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
       FROM legal_documents
-      WHERE id = ${id}
+      WHERE id = ${id}::uuid
       LIMIT 1
     `;
 
@@ -144,7 +144,7 @@ export class AdminLegalService {
         effective_date, is_active, created_by
       )
       VALUES (
-        ${docId},
+        ${docId}::uuid,
         ${dto.type}::"LegalDocumentType",
         ${dto.version},
         ${dto.locale},
@@ -153,7 +153,7 @@ export class AdminLegalService {
         ${dto.summary || null},
         ${new Date(dto.effectiveDate)},
         TRUE,
-        ${admin.sub}
+        ${admin.sub}::uuid
       )
       RETURNING
         id, type, version, locale, title, content, summary,
@@ -198,9 +198,9 @@ export class AdminLegalService {
         summary = COALESCE(${summaryValue}, summary),
         effective_date = COALESCE(${effectiveDateValue}, effective_date),
         is_active = COALESCE(${isActiveValue}, is_active),
-        updated_by = ${admin.sub},
+        updated_by = ${admin.sub}::uuid,
         updated_at = NOW()
-      WHERE id = ${id}
+      WHERE id = ${id}::uuid
       RETURNING
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
@@ -220,8 +220,8 @@ export class AdminLegalService {
     // Soft delete
     await this.prisma.$executeRaw`
       UPDATE legal_documents
-      SET is_active = FALSE, updated_by = ${admin.sub}
-      WHERE id = ${id}
+      SET is_active = FALSE, updated_by = ${admin.sub}::uuid
+      WHERE id = ${id}::uuid
     `;
 
     await this.logAudit(admin.sub, 'delete', 'legal_document', id, existing, null);
@@ -250,7 +250,7 @@ export class AdminLegalService {
     const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
       SELECT COUNT(*) as count FROM user_consents c
       WHERE (c.consent_type::TEXT = ${consentTypeFilter} OR ${consentTypeFilter}::TEXT IS NULL)
-        AND (c.user_id = ${userIdFilter} OR ${userIdFilter}::TEXT IS NULL)
+        AND (c.user_id = ${userIdFilter}::uuid OR ${userIdFilter}::TEXT IS NULL)
         AND (c.agreed = ${agreedFilter} OR ${agreedFilter}::BOOLEAN IS NULL)
         AND (c.agreed_at >= ${dateFromFilter} OR ${dateFromFilter}::TIMESTAMP IS NULL)
         AND (c.agreed_at <= ${dateToFilter} OR ${dateToFilter}::TIMESTAMP IS NULL)
@@ -267,7 +267,7 @@ export class AdminLegalService {
       FROM user_consents c
       JOIN users u ON c.user_id = u.id
       WHERE (c.consent_type::TEXT = ${consentTypeFilter} OR ${consentTypeFilter}::TEXT IS NULL)
-        AND (c.user_id = ${userIdFilter} OR ${userIdFilter}::TEXT IS NULL)
+        AND (c.user_id = ${userIdFilter}::uuid OR ${userIdFilter}::TEXT IS NULL)
         AND (c.agreed = ${agreedFilter} OR ${agreedFilter}::BOOLEAN IS NULL)
         AND (c.agreed_at >= ${dateFromFilter} OR ${dateFromFilter}::TIMESTAMP IS NULL)
         AND (c.agreed_at <= ${dateToFilter} OR ${dateToFilter}::TIMESTAMP IS NULL)
@@ -394,11 +394,11 @@ export class AdminLegalService {
     await this.prisma.$executeRaw`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, before_state, after_state)
       VALUES (
-        ${auditId},
-        ${adminId},
+        ${auditId}::uuid,
+        ${adminId}::uuid,
         ${action},
         ${resource},
-        ${resourceId},
+        ${resourceId}::uuid,
         ${before ? JSON.stringify(before) : null}::JSONB,
         ${after ? JSON.stringify(after) : null}::JSONB
       )
