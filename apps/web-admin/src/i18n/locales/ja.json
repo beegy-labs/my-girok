@@ -61,6 +61,8 @@
     "organization": "組織管理",
     "partners": "パートナー",
     "system": "システム",
+    "supportedCountries": "対応国",
+    "supportedLocales": "対応言語",
     "auditLogs": "監査ログ",
     "settings": "設定"
   },

@@ -61,6 +61,8 @@
     "organization": "संगठन प्रबंधन",
     "partners": "साझेदार",
     "system": "सिस्टम",
+    "supportedCountries": "समर्थित देश",
+    "supportedLocales": "समर्थित भाषाएं",
     "auditLogs": "ऑडिट लॉग",
     "settings": "सेटिंग्स"
   },

@@ -324,6 +324,46 @@ model Service {
   @@map("services")
 }
 
+// ============================================================
+// GLOBAL SETTINGS (SSOT - Master Lists)
+// ============================================================
+
+model SupportedCountry {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String   @unique @db.VarChar(2) // ISO 3166-1 alpha-2
+  name         String   @db.VarChar(100)
+  nativeName   String?  @map("native_name") @db.VarChar(100)
+  flagEmoji    String?  @map("flag_emoji") @db.VarChar(10)
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@map("supported_countries")
+}
+
+model SupportedLocale {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String   @unique @db.VarChar(10) // e.g., 'ko', 'en', 'ja', 'ko-KR'
+  name         String   @db.VarChar(100) // English name
+  nativeName   String?  @map("native_name") @db.VarChar(100) // Native name (한국어, English, etc.)
+  flagEmoji    String?  @map("flag_emoji") @db.VarChar(10)
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@map("supported_locales")
+}
+
+// ============================================================
+// PER-SERVICE SETTINGS (References Global Master Lists)
+// ============================================================
+
 model ServiceSupportedCountry {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   serviceId   String   @map("service_id") @db.Uuid

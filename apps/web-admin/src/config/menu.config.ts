@@ -13,6 +13,7 @@ import {
   Grid3X3,
   ClipboardCheck,
   Cog,
+  Languages,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -131,19 +132,35 @@ export const MENU_CONFIG: MenuItem[] = [
     parentId: null,
     children: [
       {
+        id: 'system-countries',
+        path: '/system/countries',
+        icon: Globe,
+        labelKey: 'menu.supportedCountries',
+        permission: 'settings:read',
+        order: 0,
+      },
+      {
+        id: 'system-locales',
+        path: '/system/locales',
+        icon: Languages,
+        labelKey: 'menu.supportedLocales',
+        permission: 'settings:read',
+        order: 1,
+      },
+      {
         id: 'system-audit',
         path: '/system/audit-logs',
         icon: ClipboardList,
         labelKey: 'menu.auditLogs',
         permission: 'audit:read',
-        order: 0,
+        order: 2,
       },
       {
         id: 'system-settings',
         path: '/system/settings',
         icon: Cog,
         labelKey: 'menu.settings',
-        order: 1,
+        order: 3,
       },
     ],
   },

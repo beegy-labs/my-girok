@@ -18,6 +18,7 @@ import {
   AuditQueryController,
   LawRegistryController,
   AdminServicesController,
+  GlobalSettingsController,
 } from './controllers';
 import { UserPersonalInfoController } from './controllers/user-personal-info.controller';
 
@@ -31,6 +32,7 @@ import {
   AuditQueryService,
   LawRegistryService,
   AdminServicesService,
+  GlobalSettingsService,
 } from './services';
 
 // Guards
@@ -64,6 +66,7 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
     AuditQueryController,
     LawRegistryController,
     AdminServicesController,
+    GlobalSettingsController,
   ],
   providers: [
     // Services
@@ -75,6 +78,7 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
     AuditQueryService,
     LawRegistryService,
     AdminServicesService,
+    GlobalSettingsService,
     // Guards
     AdminAuthGuard,
     PermissionGuard,
@@ -89,6 +93,7 @@ import { AdminAuthGuard, PermissionGuard, TenantGuard } from './guards';
     AuditQueryService,
     LawRegistryService,
     AdminServicesService,
+    GlobalSettingsService,
   ],
 })
 export class AdminModule {}

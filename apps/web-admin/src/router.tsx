@@ -19,6 +19,8 @@ const AuditLogsPage = lazy(() => import('./pages/AuditLogsPage'));
 const ServicesPage = lazy(() => import('./pages/services/ServicesPage'));
 const ServiceDetailPage = lazy(() => import('./pages/services/ServiceDetailPage'));
 const ServiceConsentsPage = lazy(() => import('./pages/services/ServiceConsentsPage'));
+const SupportedCountriesPage = lazy(() => import('./pages/system/SupportedCountriesPage'));
+const SupportedLocalesPage = lazy(() => import('./pages/system/SupportedLocalesPage'));
 
 // Page wrapper with Suspense and Error Boundary
 function PageWrapper() {
@@ -162,6 +164,22 @@ export const router = createBrowserRouter([
           },
 
           // System
+          {
+            path: 'system/countries',
+            element: (
+              <PrivateRoute permission="settings:read">
+                <SupportedCountriesPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/locales',
+            element: (
+              <PrivateRoute permission="settings:read">
+                <SupportedLocalesPage />
+              </PrivateRoute>
+            ),
+          },
           {
             path: 'system/audit-logs',
             element: (
