@@ -77,9 +77,9 @@ export class AdminAuthService {
     // Save refresh token
     await this.saveAdminSession(admin.id, tokens.refreshToken);
 
-    // Update last login
+    // Update last login (cast to uuid for PostgreSQL type safety)
     await this.prisma.$executeRaw`
-      UPDATE admins SET last_login_at = NOW() WHERE id = ${admin.id}
+      UPDATE admins SET last_login_at = NOW() WHERE id = ${admin.id}::uuid
     `;
 
     // Log audit
@@ -106,7 +106,7 @@ export class AdminAuthService {
       // Verify token is valid
       this.jwtService.verify(refreshToken);
 
-      // Find session using token hash
+      // Find session using token hash (no UUID cast needed - tokenHash is text)
       const tokenHash = hashToken(refreshToken);
       const sessions = await this.prisma.$queryRaw<UnifiedSession[]>`
         SELECT id, subject_id as "subjectId", subject_type as "subjectType",
@@ -122,7 +122,7 @@ export class AdminAuthService {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
-      // Get admin with role
+      // Get admin with role (cast to uuid for PostgreSQL type safety)
       const admins = await this.prisma.$queryRaw<AdminWithRelations[]>`
         SELECT
           a.id, a.email, a.name, a.scope, a.tenant_id as "tenantId",
@@ -134,7 +134,7 @@ export class AdminAuthService {
         FROM admins a
         LEFT JOIN tenants t ON a.tenant_id = t.id
         JOIN roles r ON a.role_id = r.id
-        WHERE a.id = ${session.subjectId}
+        WHERE a.id = ${session.subjectId}::uuid
         LIMIT 1
       `;
 
@@ -154,7 +154,7 @@ export class AdminAuthService {
         UPDATE sessions
         SET token_hash = ${newTokenHash},
             expires_at = ${newExpiresAt}
-        WHERE id = ${session.id}
+        WHERE id = ${session.id}::uuid
       `;
 
       return tokens;
@@ -168,17 +168,18 @@ export class AdminAuthService {
 
   async logout(adminId: string, refreshToken: string): Promise<void> {
     const tokenHash = hashToken(refreshToken);
-    // Soft delete: mark session as revoked
+    // Soft delete: mark session as revoked (cast to uuid for PostgreSQL type safety)
     await this.prisma.$executeRaw`
       UPDATE sessions
       SET revoked_at = NOW()
-      WHERE subject_id = ${adminId} AND subject_type = 'ADMIN' AND token_hash = ${tokenHash}
+      WHERE subject_id = ${adminId}::uuid AND subject_type = 'ADMIN' AND token_hash = ${tokenHash}
     `;
 
     await this.logAudit(adminId, 'logout', 'admin', adminId);
   }
 
   async getProfile(adminId: string): Promise<AdminProfileResponse> {
+    // Cast to uuid for PostgreSQL type safety
     const admins = await this.prisma.$queryRaw<AdminWithRelations[]>`
       SELECT
         a.id, a.email, a.name, a.scope, a.tenant_id as "tenantId",
@@ -191,7 +192,7 @@ export class AdminAuthService {
       FROM admins a
       LEFT JOIN tenants t ON a.tenant_id = t.id
       JOIN roles r ON a.role_id = r.id
-      WHERE a.id = ${adminId}
+      WHERE a.id = ${adminId}::uuid
       LIMIT 1
     `;
 
@@ -238,12 +239,12 @@ export class AdminAuthService {
       return cached;
     }
 
-    // Query from database
+    // Query from database (cast to uuid for PostgreSQL type safety)
     const permissions = await this.prisma.$queryRaw<{ key: string }[]>`
       SELECT CONCAT(p.resource, ':', p.action) as key
       FROM role_permissions rp
       JOIN permissions p ON rp.permission_id = p.id
-      WHERE rp.role_id = ${roleId}
+      WHERE rp.role_id = ${roleId}::uuid
     `;
 
     const permissionKeys = permissions.map((p) => p.key);
@@ -306,6 +307,7 @@ export class AdminAuthService {
     const services: Record<string, AdminServicePayload> = {};
 
     try {
+      // Cast to uuid for PostgreSQL type safety
       const adminServices = await this.prisma.$queryRaw<
         Array<{
           serviceSlug: string;
@@ -322,7 +324,7 @@ export class AdminAuthService {
         FROM admin_services asv
         JOIN services s ON asv.service_id = s.id
         JOIN roles r ON asv.role_id = r.id
-        WHERE asv.admin_id = ${adminId}
+        WHERE asv.admin_id = ${adminId}::uuid
       `;
 
       // Batch fetch permissions for all unique roleIds to prevent N+1 queries
@@ -367,9 +369,10 @@ export class AdminAuthService {
     const sessionId = ID.generate();
 
     // Store only token hash, never plaintext refresh token (security best practice)
+    // Cast to uuid for PostgreSQL type safety
     await this.prisma.$executeRaw`
       INSERT INTO sessions (id, subject_id, subject_type, token_hash, expires_at, created_at)
-      VALUES (${sessionId}, ${adminId}, 'ADMIN', ${tokenHash}, ${expiresAt}, NOW())
+      VALUES (${sessionId}::uuid, ${adminId}::uuid, 'ADMIN', ${tokenHash}, ${expiresAt}, NOW())
     `;
   }
 
