@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '../../../node_modules/.prisma/auth-client';
 import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -24,6 +25,8 @@ interface LegalDocumentRow {
   summary: string | null;
   effectiveDate: Date;
   isActive: boolean;
+  serviceId: string | null;
+  countryCode: string | null;
   createdBy: string | null;
   updatedBy: string | null;
   createdAt: Date;
@@ -67,28 +70,39 @@ export class AdminLegalService {
     const typeFilter = query.type ?? null;
     const localeFilter = query.locale ?? null;
     const isActiveFilter = query.isActive ?? null;
+    const serviceIdFilter = query.serviceId ?? null;
+    const countryCodeFilter = query.countryCode ?? null;
 
-    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
+    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>(
+      Prisma.sql`
       SELECT COUNT(*) as count FROM legal_documents
       WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
         AND (locale = ${localeFilter} OR ${localeFilter}::TEXT IS NULL)
         AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
-    `;
+        AND (service_id = ${serviceIdFilter}::uuid OR ${serviceIdFilter}::TEXT IS NULL)
+        AND (country_code = ${countryCodeFilter} OR ${countryCodeFilter}::TEXT IS NULL)
+    `,
+    );
     const total = Number(countResult[0].count);
 
-    const items = await this.prisma.$queryRaw<LegalDocumentRow[]>`
+    const items = await this.prisma.$queryRaw<LegalDocumentRow[]>(
+      Prisma.sql`
       SELECT
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
       FROM legal_documents
       WHERE (type::TEXT = ${typeFilter} OR ${typeFilter}::TEXT IS NULL)
         AND (locale = ${localeFilter} OR ${localeFilter}::TEXT IS NULL)
         AND (is_active = ${isActiveFilter} OR ${isActiveFilter}::BOOLEAN IS NULL)
-      ORDER BY type, locale, created_at DESC
+        AND (service_id = ${serviceIdFilter}::uuid OR ${serviceIdFilter}::TEXT IS NULL)
+        AND (country_code = ${countryCodeFilter} OR ${countryCodeFilter}::TEXT IS NULL)
+      ORDER BY service_id NULLS FIRST, country_code NULLS FIRST, type, locale, created_at DESC
       LIMIT ${limit} OFFSET ${offset}
-    `;
+    `,
+    );
 
     return {
       items: items as DocumentResponse[],
@@ -100,16 +114,19 @@ export class AdminLegalService {
   }
 
   async getDocumentById(id: string): Promise<DocumentResponse> {
-    const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>`
+    const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>(
+      Prisma.sql`
       SELECT
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
       FROM legal_documents
       WHERE id = ${id}::uuid
       LIMIT 1
-    `;
+    `,
+    );
 
     if (docs.length === 0) {
       throw new NotFoundException('Document not found');
@@ -122,26 +139,36 @@ export class AdminLegalService {
     dto: CreateLegalDocumentDto,
     admin: AdminPayload,
   ): Promise<DocumentResponse> {
-    // Check for duplicate type+version+locale
-    const existing = await this.prisma.$queryRaw<{ id: string }[]>`
+    // Check for duplicate type+version+locale+serviceId+countryCode
+    const serviceIdValue = dto.serviceId ?? null;
+    const countryCodeValue = dto.countryCode ?? null;
+
+    const existing = await this.prisma.$queryRaw<{ id: string }[]>(
+      Prisma.sql`
       SELECT id FROM legal_documents
       WHERE type = ${dto.type}::"LegalDocumentType"
         AND version = ${dto.version}
         AND locale = ${dto.locale}
+        AND (service_id = ${serviceIdValue}::uuid OR (${serviceIdValue}::TEXT IS NULL AND service_id IS NULL))
+        AND (country_code = ${countryCodeValue} OR (${countryCodeValue}::TEXT IS NULL AND country_code IS NULL))
       LIMIT 1
-    `;
+    `,
+    );
 
     if (existing.length > 0) {
+      const serviceInfo = dto.serviceId ? ` service:${dto.serviceId}` : '';
+      const countryInfo = dto.countryCode ? ` country:${dto.countryCode}` : '';
       throw new ConflictException(
-        `Document ${dto.type} v${dto.version} (${dto.locale}) already exists`,
+        `Document ${dto.type} v${dto.version} (${dto.locale})${serviceInfo}${countryInfo} already exists`,
       );
     }
 
     const docId = ID.generate();
-    const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>`
+    const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>(
+      Prisma.sql`
       INSERT INTO legal_documents (
         id, type, version, locale, title, content, summary,
-        effective_date, is_active, created_by
+        effective_date, is_active, service_id, country_code, created_by
       )
       VALUES (
         ${docId}::uuid,
@@ -153,20 +180,26 @@ export class AdminLegalService {
         ${dto.summary || null},
         ${new Date(dto.effectiveDate)},
         TRUE,
+        ${serviceIdValue}::uuid,
+        ${countryCodeValue},
         ${admin.sub}::uuid
       )
       RETURNING
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
-    `;
+    `,
+    );
 
     // Log audit
     await this.logAudit(admin.sub, 'create', 'legal_document', docs[0].id, null, {
       type: dto.type,
       version: dto.version,
       locale: dto.locale,
+      serviceId: dto.serviceId,
+      countryCode: dto.countryCode,
     });
 
     return docs[0] as DocumentResponse;
@@ -190,7 +223,8 @@ export class AdminLegalService {
     const effectiveDateValue = dto.effectiveDate ? new Date(dto.effectiveDate) : null;
     const isActiveValue = dto.isActive ?? null;
 
-    const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>`
+    const docs = await this.prisma.$queryRaw<LegalDocumentRow[]>(
+      Prisma.sql`
       UPDATE legal_documents
       SET
         title = COALESCE(${titleValue}, title),
@@ -204,9 +238,11 @@ export class AdminLegalService {
       RETURNING
         id, type, version, locale, title, content, summary,
         effective_date as "effectiveDate", is_active as "isActive",
+        service_id as "serviceId", country_code as "countryCode",
         created_by as "createdBy", updated_by as "updatedBy",
         created_at as "createdAt", updated_at as "updatedAt"
-    `;
+    `,
+    );
 
     // Log audit
     await this.logAudit(admin.sub, 'update', 'legal_document', id, existing, dto);
@@ -218,11 +254,13 @@ export class AdminLegalService {
     const existing = await this.getDocumentById(id);
 
     // Soft delete
-    await this.prisma.$executeRaw`
+    await this.prisma.$executeRaw(
+      Prisma.sql`
       UPDATE legal_documents
       SET is_active = FALSE, updated_by = ${admin.sub}::uuid
       WHERE id = ${id}::uuid
-    `;
+    `,
+    );
 
     await this.logAudit(admin.sub, 'delete', 'legal_document', id, existing, null);
   }
@@ -247,17 +285,20 @@ export class AdminLegalService {
     const dateFromFilter = query.dateFrom ? new Date(query.dateFrom) : null;
     const dateToFilter = query.dateTo ? new Date(query.dateTo) : null;
 
-    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>`
+    const countResult = await this.prisma.$queryRaw<{ count: bigint }[]>(
+      Prisma.sql`
       SELECT COUNT(*) as count FROM user_consents c
       WHERE (c.consent_type::TEXT = ${consentTypeFilter} OR ${consentTypeFilter}::TEXT IS NULL)
         AND (c.user_id = ${userIdFilter}::uuid OR ${userIdFilter}::TEXT IS NULL)
         AND (c.agreed = ${agreedFilter} OR ${agreedFilter}::BOOLEAN IS NULL)
         AND (c.agreed_at >= ${dateFromFilter} OR ${dateFromFilter}::TIMESTAMP IS NULL)
         AND (c.agreed_at <= ${dateToFilter} OR ${dateToFilter}::TIMESTAMP IS NULL)
-    `;
+    `,
+    );
     const total = Number(countResult[0].count);
 
-    const items = await this.prisma.$queryRaw<ConsentRow[]>`
+    const items = await this.prisma.$queryRaw<ConsentRow[]>(
+      Prisma.sql`
       SELECT
         c.id, c.user_id as "userId", c.consent_type as "consentType",
         c.document_id as "documentId", c.document_version as "documentVersion",
@@ -273,7 +314,8 @@ export class AdminLegalService {
         AND (c.agreed_at <= ${dateToFilter} OR ${dateToFilter}::TIMESTAMP IS NULL)
       ORDER BY c.agreed_at DESC
       LIMIT ${limit} OFFSET ${offset}
-    `;
+    `,
+    );
 
     const mappedItems: ConsentResponse[] = items.map((c) => ({
       id: c.id,
@@ -307,7 +349,8 @@ export class AdminLegalService {
     // Stats by type
     const byType = await this.prisma.$queryRaw<
       { type: string; total: bigint; agreed: bigint; withdrawn: bigint }[]
-    >`
+    >(
+      Prisma.sql`
       SELECT
         consent_type as type,
         COUNT(*) as total,
@@ -316,10 +359,12 @@ export class AdminLegalService {
       FROM user_consents
       GROUP BY consent_type
       ORDER BY consent_type
-    `;
+    `,
+    );
 
     // Stats by region
-    const byRegion = await this.prisma.$queryRaw<{ region: string; total: bigint }[]>`
+    const byRegion = await this.prisma.$queryRaw<{ region: string; total: bigint }[]>(
+      Prisma.sql`
       SELECT
         COALESCE(u.region, 'UNKNOWN') as region,
         COUNT(*) as total
@@ -327,12 +372,14 @@ export class AdminLegalService {
       JOIN users u ON c.user_id = u.id
       GROUP BY u.region
       ORDER BY total DESC
-    `;
+    `,
+    );
 
     // Recent activity (last 30 days)
     const recentActivity = await this.prisma.$queryRaw<
       { date: Date; agreed: bigint; withdrawn: bigint }[]
-    >`
+    >(
+      Prisma.sql`
       SELECT
         DATE(agreed_at) as date,
         COUNT(*) FILTER (WHERE agreed = TRUE) as agreed,
@@ -341,18 +388,21 @@ export class AdminLegalService {
       WHERE agreed_at >= NOW() - INTERVAL '30 days'
       GROUP BY DATE(agreed_at)
       ORDER BY date DESC
-    `;
+    `,
+    );
 
     // Summary
     const summary = await this.prisma.$queryRaw<
       { totalConsents: bigint; totalUsers: bigint; agreedCount: bigint }[]
-    >`
+    >(
+      Prisma.sql`
       SELECT
         COUNT(*) as "totalConsents",
         COUNT(DISTINCT user_id) as "totalUsers",
         COUNT(*) FILTER (WHERE agreed = TRUE AND withdrawn_at IS NULL) as "agreedCount"
       FROM user_consents
-    `;
+    `,
+    );
 
     const totalConsents = Number(summary[0].totalConsents);
     const agreedCount = Number(summary[0].agreedCount);
@@ -391,7 +441,8 @@ export class AdminLegalService {
     after: unknown,
   ): Promise<void> {
     const auditId = ID.generate();
-    await this.prisma.$executeRaw`
+    await this.prisma.$executeRaw(
+      Prisma.sql`
       INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, before_state, after_state)
       VALUES (
         ${auditId}::uuid,
@@ -402,6 +453,7 @@ export class AdminLegalService {
         ${before ? JSON.stringify(before) : null}::JSONB,
         ${after ? JSON.stringify(after) : null}::JSONB
       )
-    `;
+    `,
+    );
   }
 }

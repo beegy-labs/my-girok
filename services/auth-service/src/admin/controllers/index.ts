@@ -6,3 +6,5 @@ export * from './operator.controller';
 export * from './user-personal-info.controller';
 export * from './audit-query.controller';
 export * from './law-registry.controller';
+export * from './admin-services.controller';
+export * from './global-settings.controller';

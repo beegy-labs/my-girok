@@ -17,6 +17,8 @@ export const legalApi = {
     if (query?.type) params.append('type', query.type);
     if (query?.locale) params.append('locale', query.locale);
     if (query?.isActive !== undefined) params.append('isActive', query.isActive.toString());
+    if (query?.serviceId) params.append('serviceId', query.serviceId);
+    if (query?.countryCode) params.append('countryCode', query.countryCode);
 
     const response = await apiClient.get<AdminDocumentListResponse>(`/legal/documents?${params}`);
     return response.data;
