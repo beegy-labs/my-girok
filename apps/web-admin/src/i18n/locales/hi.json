@@ -294,6 +294,19 @@
     "descriptionKey": "विवरण कुंजी",
     "country": "देश",
     "order": "क्रम",
-    "noConsents": "कोई सहमति आवश्यकता नहीं मिली। एक बनाने के लिए \"सहमति जोड़ें\" पर क्लिक करें।"
+    "noConsents": "कोई सहमति आवश्यकता नहीं मिली। एक बनाने के लिए \"सहमति जोड़ें\" पर क्लिक करें।",
+    "documentsTab": "दस्तावेज़",
+    "analyticsTab": "विश्लेषण",
+    "documentsDescription": "इस सेवा के कानूनी दस्तावेज़ प्रबंधित करें",
+    "noDocuments": "इस सेवा के लिए कोई दस्तावेज़ नहीं मिला",
+    "loadAnalyticsFailed": "विश्लेषण लोड करने में विफल",
+    "totalDocuments": "कुल दस्तावेज़",
+    "totalConsents": "सहमति आवश्यकताएं",
+    "activeCountries": "सक्रिय देश",
+    "activeLocales": "सक्रिय भाषाएं",
+    "documentsByType": "प्रकार के अनुसार दस्तावेज़",
+    "consentsByCountry": "देश के अनुसार सहमति",
+    "noDocumentsChart": "प्रदर्शित करने के लिए कोई दस्तावेज़ नहीं",
+    "noConsentsChart": "प्रदर्शित करने के लिए कोई सहमति आवश्यकता नहीं"
   }
 }

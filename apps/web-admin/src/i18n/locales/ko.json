@@ -319,7 +319,20 @@
     "descriptionKey": "설명 키",
     "country": "국가",
     "order": "순서",
-    "noConsents": "동의 항목이 없습니다. \"동의 항목 추가\"를 클릭하여 추가하세요."
+    "noConsents": "동의 항목이 없습니다. \"동의 항목 추가\"를 클릭하여 추가하세요.",
+    "documentsTab": "문서",
+    "analyticsTab": "분석",
+    "documentsDescription": "이 서비스의 법적 문서를 관리합니다",
+    "noDocuments": "이 서비스에 대한 문서가 없습니다",
+    "loadAnalyticsFailed": "분석 데이터를 불러오는데 실패했습니다",
+    "totalDocuments": "전체 문서",
+    "totalConsents": "동의 요건",
+    "activeCountries": "활성 국가",
+    "activeLocales": "활성 언어",
+    "documentsByType": "유형별 문서",
+    "consentsByCountry": "국가별 동의 요건",
+    "noDocumentsChart": "표시할 문서가 없습니다",
+    "noConsentsChart": "표시할 동의 요건이 없습니다"
   },
   "tenants": {
     "title": "파트너 관리",

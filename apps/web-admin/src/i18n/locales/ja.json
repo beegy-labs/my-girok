@@ -294,6 +294,19 @@
     "descriptionKey": "説明キー",
     "country": "国",
     "order": "順序",
-    "noConsents": "同意要件がありません。「同意を追加」をクリックして作成してください。"
+    "noConsents": "同意要件がありません。「同意を追加」をクリックして作成してください。",
+    "documentsTab": "文書",
+    "analyticsTab": "分析",
+    "documentsDescription": "このサービスの法的文書を管理します",
+    "noDocuments": "このサービスの文書が見つかりません",
+    "loadAnalyticsFailed": "分析データの読み込みに失敗しました",
+    "totalDocuments": "文書総数",
+    "totalConsents": "同意要件",
+    "activeCountries": "有効な国",
+    "activeLocales": "有効な言語",
+    "documentsByType": "タイプ別文書",
+    "consentsByCountry": "国別同意要件",
+    "noDocumentsChart": "表示する文書がありません",
+    "noConsentsChart": "表示する同意要件がありません"
   }
 }

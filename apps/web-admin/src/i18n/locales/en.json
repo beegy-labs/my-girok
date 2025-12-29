@@ -279,7 +279,20 @@
     "descriptionKey": "Description Key",
     "country": "Country",
     "order": "Order",
-    "noConsents": "No consent requirements found. Click \"Add Consent\" to create one."
+    "noConsents": "No consent requirements found. Click \"Add Consent\" to create one.",
+    "documentsTab": "Documents",
+    "analyticsTab": "Analytics",
+    "documentsDescription": "Manage legal documents for this service",
+    "noDocuments": "No documents found for this service",
+    "loadAnalyticsFailed": "Failed to load analytics",
+    "totalDocuments": "Total Documents",
+    "totalConsents": "Consent Requirements",
+    "activeCountries": "Active Countries",
+    "activeLocales": "Active Locales",
+    "documentsByType": "Documents by Type",
+    "consentsByCountry": "Consents by Country",
+    "noDocumentsChart": "No documents to display",
+    "noConsentsChart": "No consent requirements to display"
   },
   "tenants": {
     "title": "Partner Management",

@@ -11,13 +11,17 @@ import {
   Settings,
   CheckCircle,
   XCircle,
+  FileText,
+  BarChart3,
 } from 'lucide-react';
 import { servicesApi, Service } from '../../api/services';
 import ServiceCountriesTab from './ServiceCountriesTab';
 import ServiceLocalesTab from './ServiceLocalesTab';
 import ServiceConsentsTab from './ServiceConsentsTab';
+import ServiceDocumentsTab from './ServiceDocumentsTab';
+import ServiceAnalyticsTab from './ServiceAnalyticsTab';
 
-type TabType = 'countries' | 'locales' | 'consents';
+type TabType = 'countries' | 'locales' | 'consents' | 'documents' | 'analytics';
 
 export default function ServiceDetailPage() {
   const { t } = useTranslation();
@@ -69,6 +73,8 @@ export default function ServiceDetailPage() {
     { id: 'countries', label: t('services.countriesTab'), icon: <Globe size={18} /> },
     { id: 'locales', label: t('services.localesTab'), icon: <Languages size={18} /> },
     { id: 'consents', label: t('services.consentsTab'), icon: <ClipboardList size={18} /> },
+    { id: 'documents', label: t('services.documentsTab'), icon: <FileText size={18} /> },
+    { id: 'analytics', label: t('services.analyticsTab'), icon: <BarChart3 size={18} /> },
   ];
 
   return (
@@ -137,6 +143,8 @@ export default function ServiceDetailPage() {
         {activeTab === 'countries' && <ServiceCountriesTab serviceId={serviceId!} />}
         {activeTab === 'locales' && <ServiceLocalesTab serviceId={serviceId!} />}
         {activeTab === 'consents' && <ServiceConsentsTab serviceId={serviceId!} />}
+        {activeTab === 'documents' && <ServiceDocumentsTab serviceId={serviceId!} />}
+        {activeTab === 'analytics' && <ServiceAnalyticsTab serviceId={serviceId!} />}
       </div>
     </div>
   );
