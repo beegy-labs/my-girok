@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   Globe,
   Plus,
@@ -50,7 +51,7 @@ export default function SupportedCountriesPage() {
       setCountries(result.data);
     } catch (err) {
       setError(t('settings.loadCountriesFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.saveCountryFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }
@@ -105,7 +106,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.saveCountryFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }
@@ -122,7 +123,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.deleteCountryFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }
@@ -139,7 +140,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.saveCountryFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import { Download, RefreshCw } from 'lucide-react';
 import {
   BarChart,
@@ -73,7 +74,7 @@ export default function ConsentStatsPage() {
       setStats(response);
     } catch (err) {
       setError(t('common.error'));
-      console.error('Failed to fetch consent stats:', err);
+      logger.error('Failed to fetch consent stats:', err);
     } finally {
       setLoading(false);
     }

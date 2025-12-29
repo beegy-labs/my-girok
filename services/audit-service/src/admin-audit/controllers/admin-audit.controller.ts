@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { AdminAuditService } from '../services/admin-audit.service';
+import { AdminAuthGuard } from '../guards/admin-auth.guard';
 import {
   UIEventsQueryDto,
   APILogsQueryDto,
@@ -16,16 +17,14 @@ import {
 } from '../dto/admin-audit.dto';
 
 @Controller('v1/audit')
+@UseGuards(AdminAuthGuard)
 export class AdminAuditController {
-  private readonly logger = new Logger(AdminAuditController.name);
-
   constructor(private readonly adminAuditService: AdminAuditService) {}
 
   // ===== UI Events =====
 
   @Get('ui-events')
   async getUIEvents(@Query() query: UIEventsQueryDto): Promise<PaginatedResponse<UIEventResponse>> {
-    this.logger.debug(`Getting UI events with query: ${JSON.stringify(query)}`);
     return this.adminAuditService.getUIEvents(query);
   }
 
@@ -38,7 +37,6 @@ export class AdminAuditController {
 
   @Get('api-logs')
   async getAPILogs(@Query() query: APILogsQueryDto): Promise<PaginatedResponse<APILogResponse>> {
-    this.logger.debug(`Getting API logs with query: ${JSON.stringify(query)}`);
     return this.adminAuditService.getAPILogs(query);
   }
 
@@ -53,7 +51,6 @@ export class AdminAuditController {
   async getAuditLogs(
     @Query() query: AuditLogsQueryDto,
   ): Promise<PaginatedResponse<AuditLogResponse>> {
-    this.logger.debug(`Getting audit logs with query: ${JSON.stringify(query)}`);
     return this.adminAuditService.getAuditLogs(query);
   }
 
@@ -66,7 +63,6 @@ export class AdminAuditController {
 
   @Get('sessions')
   async getSessions(@Query() query: SessionsQueryDto): Promise<PaginatedResponse<SessionResponse>> {
-    this.logger.debug(`Getting sessions with query: ${JSON.stringify(query)}`);
     return this.adminAuditService.getSessions(query);
   }
 
@@ -109,7 +105,6 @@ export class AdminAuditController {
 
   @Get('stats/overview')
   async getStatsOverview(@Query() query: StatsQueryDto): Promise<StatsResponse> {
-    this.logger.debug(`Getting stats overview with query: ${JSON.stringify(query)}`);
     return this.adminAuditService.getStats(query);
   }
 }

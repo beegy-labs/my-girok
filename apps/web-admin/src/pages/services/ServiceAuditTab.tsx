@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import { Loader2, AlertCircle, RefreshCw, Eye } from 'lucide-react';
 import { auditApi, type AuditLogResponse } from '../../api/audit';
 import { Button } from '../../components/atoms/Button';
@@ -55,7 +56,7 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
       setError(t('audit.loadFailed'));
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
-        console.error(err);
+        logger.error('Operation failed', err);
       }
     } finally {
       setLoading(false);
@@ -86,7 +87,7 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
       setError(t('audit.loadFailed'));
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
-        console.error(err);
+        logger.error('Operation failed', err);
       }
     } finally {
       setLoading(false);

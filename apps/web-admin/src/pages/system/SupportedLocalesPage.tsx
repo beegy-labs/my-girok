@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   Languages,
   Plus,
@@ -50,7 +51,7 @@ export default function SupportedLocalesPage() {
       setLocales(result.data);
     } catch (err) {
       setError(t('settings.loadLocalesFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.saveLocaleFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }
@@ -105,7 +106,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.saveLocaleFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }
@@ -122,7 +123,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.deleteLocaleFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }
@@ -139,7 +140,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.saveLocaleFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }

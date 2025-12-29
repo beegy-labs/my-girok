@@ -58,6 +58,44 @@ GET             /v1/admin/legal/consents[/stats]  # legal:read
 GET             /v1/admin/audit/logs[/export]     # audit:read
 ```
 
+### Service Management
+
+```
+GET|POST        /v1/admin/services              # service:read|create
+GET|PUT         /v1/admin/services/:id          # service:read|update
+GET|POST|PUT|DELETE /v1/admin/services/:id/features  # service:update
+GET|POST|DELETE /v1/admin/services/:id/testers/users  # service:update
+GET|POST|DELETE /v1/admin/services/:id/testers/admins # service:update
+GET|PUT         /v1/admin/services/:id/config   # service:update
+```
+
+### Sanctions
+
+```
+GET|POST        /v1/admin/services/:serviceId/sanctions     # sanction:read|create
+GET|PUT|DELETE  /v1/admin/services/:serviceId/sanctions/:id # sanction:*
+POST            /v1/admin/services/:serviceId/sanctions/:id/revoke  # sanction:revoke
+POST            /v1/admin/services/:serviceId/sanctions/:id/extend  # sanction:update
+POST            /v1/admin/services/:serviceId/sanctions/:id/reduce  # sanction:update
+GET|PUT         /v1/admin/services/:serviceId/sanctions/:id/appeal  # sanction:appeal
+GET|POST        /v1/admin/services/:serviceId/sanctions/:id/notifications # sanction:notify
+```
+
+#### Sanction Types
+
+| Type                  | Description                     |
+| --------------------- | ------------------------------- |
+| `WARNING`             | Warning notice, no restrictions |
+| `TEMPORARY_BAN`       | Time-limited access restriction |
+| `PERMANENT_BAN`       | Indefinite access restriction   |
+| `FEATURE_RESTRICTION` | Specific feature access blocked |
+
+#### Appeal Flow
+
+1. User submits appeal → `appealStatus: PENDING`
+2. Admin reviews → `UNDER_REVIEW`
+3. Decision: `APPROVED` (revokes sanction) | `REJECTED` | `ESCALATED`
+
 ## Key Flows
 
 ### Registration

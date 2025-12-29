@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Download, TrendingUp, TrendingDown } from 'lucide-react';
+import { logger } from '../../utils/logger';
 import { legalApi, ConsentStats } from '../../api/legal';
 
 export default function ConsentsPage() {
@@ -20,7 +21,7 @@ export default function ConsentsPage() {
       setStats(data);
     } catch (err) {
       setError('Failed to load consent statistics');
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setLoading(false);
     }

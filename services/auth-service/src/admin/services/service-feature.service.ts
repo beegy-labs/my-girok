@@ -250,8 +250,11 @@ export class ServiceFeatureService {
     // Handle parent change
     let path = beforeFeature.path;
     let depth = beforeFeature.depth;
+    const oldPath = beforeFeature.path;
+    let pathChanged = false;
 
     if (dto.parentId !== undefined && dto.parentId !== beforeFeature.parentId) {
+      pathChanged = true;
       if (dto.parentId) {
         const parent = await this.findOne(serviceId, dto.parentId);
         path = `${parent.path}/${beforeFeature.code.toLowerCase()}`;
@@ -259,6 +262,14 @@ export class ServiceFeatureService {
 
         if (depth > 4) {
           throw new BadRequestException('Maximum feature depth is 4');
+        }
+
+        // Check if new depth would exceed max for any children
+        const maxChildDepth = await this.getMaxChildDepth(id);
+        if (maxChildDepth > 0 && depth + maxChildDepth > 4) {
+          throw new BadRequestException(
+            `Moving to this parent would exceed maximum depth for child features (current max child depth: ${maxChildDepth})`,
+          );
         }
       } else {
         path = `/${beforeFeature.code.toLowerCase()}`;
@@ -294,6 +305,22 @@ export class ServiceFeatureService {
 
     const afterFeature = updated[0] as ServiceFeatureResponseDto;
 
+    // Update all children paths if parent changed
+    if (pathChanged) {
+      const depthDiff = depth - beforeFeature.depth;
+      await this.prisma.$executeRaw(
+        Prisma.sql`
+        UPDATE service_features
+        SET
+          path = ${path} || SUBSTRING(path FROM LENGTH(${oldPath}) + 1),
+          depth = depth + ${depthDiff},
+          updated_at = NOW()
+        WHERE service_id = ${serviceId}::uuid
+          AND path LIKE ${oldPath + '/%'}
+      `,
+      );
+    }
+
     await this.auditLogService.log({
       resource: 'service_feature',
       action: 'update',
@@ -308,6 +335,21 @@ export class ServiceFeatureService {
     await this.invalidateCache(serviceId);
 
     return afterFeature;
+  }
+
+  /**
+   * Get the maximum relative depth of all descendants
+   */
+  private async getMaxChildDepth(featureId: string): Promise<number> {
+    const result = await this.prisma.$queryRaw<{ maxDepth: number | null }[]>(
+      Prisma.sql`
+      SELECT MAX(c.depth - p.depth) as "maxDepth"
+      FROM service_features c
+      JOIN service_features p ON p.id = ${featureId}::uuid
+      WHERE c.path LIKE p.path || '/%'
+    `,
+    );
+    return result[0]?.maxDepth ?? 0;
   }
 
   async delete(serviceId: string, id: string, admin: AdminPayload): Promise<{ success: boolean }> {
@@ -353,19 +395,31 @@ export class ServiceFeatureService {
     admin: AdminPayload,
   ): Promise<ServiceFeatureListResponseDto> {
     switch (dto.operation) {
-      case 'reorder':
-        for (const item of dto.items) {
-          if (item.id && item.displayOrder !== undefined) {
-            await this.prisma.$executeRaw(
-              Prisma.sql`
-              UPDATE service_features
-              SET display_order = ${item.displayOrder}, updated_at = NOW()
-              WHERE id = ${item.id}::uuid AND service_id = ${serviceId}::uuid
-            `,
-            );
-          }
+      case 'reorder': {
+        // Optimized: Single UPDATE with CASE WHEN instead of N individual queries
+        const validItems = dto.items.filter((item) => item.id && item.displayOrder !== undefined);
+
+        if (validItems.length > 0) {
+          // Build CASE WHEN clause for batch update
+          const caseClauseParts = validItems.map(
+            (item) => Prisma.sql`WHEN id = ${item.id}::uuid THEN ${item.displayOrder}`,
+          );
+
+          const idList = validItems.map((item) => Prisma.sql`${item.id}::uuid`);
+
+          await this.prisma.$executeRaw(
+            Prisma.sql`
+            UPDATE service_features
+            SET
+              display_order = CASE ${Prisma.join(caseClauseParts, ' ')} ELSE display_order END,
+              updated_at = NOW()
+            WHERE service_id = ${serviceId}::uuid
+              AND id IN (${Prisma.join(idList, ', ')})
+          `,
+          );
         }
         break;
+      }
       // Other operations can be added as needed
     }
 

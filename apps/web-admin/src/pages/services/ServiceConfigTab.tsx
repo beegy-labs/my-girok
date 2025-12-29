@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -57,7 +58,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setFormData(configResult);
     } catch (err) {
       setError(t('services.loadConfigFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
     } catch (err) {
       setError(t('services.saveConfigFailed'));
       trackFormSubmit('ServiceConfigForm', 'update', false);
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setSaving(false);
     }
@@ -115,7 +116,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setDomains(domainsResult);
     } catch (err) {
       setError(t('services.addDomainFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setAddingDomain(false);
     }
@@ -127,7 +128,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setDomains(result);
     } catch (err) {
       setError(t('services.removeDomainFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     }
   };
 

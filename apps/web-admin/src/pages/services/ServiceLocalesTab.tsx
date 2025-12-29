@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import { Plus, X, Loader2, AlertCircle, Languages } from 'lucide-react';
 import { servicesApi, ServiceLocale } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
@@ -30,7 +31,7 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
       setLocales(result.data);
     } catch (err) {
       setError(t('services.loadLocalesFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,7 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
       fetchLocales();
     } catch (err) {
       setError(t('services.addLocaleFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setAdding(false);
     }
@@ -67,7 +68,7 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
       fetchLocales();
     } catch (err) {
       setError(t('services.removeLocaleFailed'));
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setRemoving(null);
     }

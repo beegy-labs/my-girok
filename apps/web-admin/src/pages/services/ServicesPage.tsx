@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import { logger } from '../../utils/logger';
 import { Loader2, AlertCircle, Settings, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 import { servicesApi, ServiceListResponse } from '../../api/services';
 
@@ -21,7 +22,7 @@ export default function ServicesPage() {
       setData(result);
     } catch (err) {
       setError('Failed to load services');
-      console.error(err);
+      logger.error('Operation failed', err);
     } finally {
       setLoading(false);
     }

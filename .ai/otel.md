@@ -98,19 +98,18 @@ const getNextSequence = (): number => {
 ## Event Tracking
 
 ```typescript
-import { useAuditLogger } from '@/hooks/useAuditLogger';
+import { useAuditEvent } from '@/hooks';
 
 const AuditedButton = () => {
-  const { trackClick } = useAuditLogger();
+  const { trackButtonClick, trackFormSubmit } = useAuditEvent();
 
   return (
     <Button
-      onClick={() => trackClick({
-        eventName: 'sanction_create_btn',
-        eventCategory: 'sanction',
-        componentId: 'sanction-create-btn',
-        componentType: 'button',
-      })}
+      onClick={() => trackButtonClick(
+        'sanction_create_btn',  // componentName
+        'create-sanction',     // targetId
+        'Create Sanction'      // targetText
+      )}
     >
       Create Sanction
     </Button>

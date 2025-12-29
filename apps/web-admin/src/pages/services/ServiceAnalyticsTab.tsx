@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   BarChart3,
   FileText,
@@ -105,7 +106,7 @@ export default function ServiceAnalyticsTab({ serviceId }: ServiceAnalyticsTabPr
       });
     } catch (err) {
       setError(t('services.loadAnalyticsFailed'));
-      console.error('Failed to load service analytics', err);
+      logger.error('Failed to load service analytics', err);
     } finally {
       setLoading(false);
     }
