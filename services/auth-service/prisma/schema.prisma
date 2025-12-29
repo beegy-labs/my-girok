@@ -10,32 +10,33 @@ datasource db {
 }
 
 model User {
-  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email            String              @unique
-  password         String?
-  name             String?
-  avatar           String?
-  role             Role                @default(USER)
-  provider         AuthProvider        @default(LOCAL)
-  username         String              @unique
-  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
-  emailVerified    Boolean             @default(false) @map("email_verified")
-  providerId       String?             @map("provider_id")
-  externalId       String?             @unique @map("external_id") @db.VarChar(10)
-  region           String?             @db.VarChar(50)
-  locale           String?             @db.VarChar(10)
-  timezone         String?             @db.VarChar(50)
-  accountMode      AccountMode         @default(SERVICE) @map("account_mode")
-  countryCode      String?             @map("country_code") @db.VarChar(2)
-  deletedAt        DateTime?           @map("deleted_at") @db.Timestamptz(6)
-  domainAccess         DomainAccessToken[]
-  consents             Consent[]
-  userServices         UserService[]
-  personalInfo         PersonalInfo?
-  primaryAccountLinks  AccountLink[]       @relation("PrimaryUser")
-  linkedAccountLinks   AccountLink[]       @relation("LinkedUser")
-  operatorUserLinks    OperatorUserLink[]
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String              @unique
+  password            String?
+  name                String?
+  avatar              String?
+  role                Role                @default(USER)
+  provider            AuthProvider        @default(LOCAL)
+  username            String              @unique
+  createdAt           DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  emailVerified       Boolean             @default(false) @map("email_verified")
+  providerId          String?             @map("provider_id")
+  externalId          String?             @unique @map("external_id") @db.VarChar(10)
+  region              String?             @db.VarChar(50)
+  locale              String?             @db.VarChar(10)
+  timezone            String?             @db.VarChar(50)
+  accountMode         AccountMode         @default(SERVICE) @map("account_mode")
+  countryCode         String?             @map("country_code") @db.VarChar(2)
+  deletedAt           DateTime?           @map("deleted_at") @db.Timestamptz(6)
+  domainAccess        DomainAccessToken[]
+  consents            Consent[]
+  userServices        UserService[]
+  personalInfo        PersonalInfo?
+  primaryAccountLinks AccountLink[]       @relation("PrimaryUser")
+  linkedAccountLinks  AccountLink[]       @relation("LinkedUser")
+  operatorUserLinks   OperatorUserLink[]
+  testerServices      ServiceTesterUser[]
 
   @@index([externalId])
   @@index([email])
@@ -47,16 +48,16 @@ model User {
 }
 
 model Session {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  subjectId    String            @map("subject_id") @db.Uuid
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subjectId    String             @map("subject_id") @db.Uuid
   subjectType  SessionSubjectType @map("subject_type")
-  tokenHash    String            @unique @map("token_hash") @db.VarChar(64)
-  refreshToken String?           @map("refresh_token") // Deprecated: will be removed in future
-  expiresAt    DateTime          @map("expires_at") @db.Timestamptz(6)
-  revokedAt    DateTime?         @map("revoked_at") @db.Timestamptz(6)
-  ipAddress    String?           @map("ip_address") @db.VarChar(45)
-  userAgent    String?           @map("user_agent")
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  tokenHash    String             @unique @map("token_hash") @db.VarChar(64)
+  refreshToken String?            @map("refresh_token") // Deprecated: will be removed in future
+  expiresAt    DateTime           @map("expires_at") @db.Timestamptz(6)
+  revokedAt    DateTime?          @map("revoked_at") @db.Timestamptz(6)
+  ipAddress    String?            @map("ip_address") @db.VarChar(45)
+  userAgent    String?            @map("user_agent")
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([subjectId, subjectType])
   @@index([tokenHash])
@@ -103,25 +104,25 @@ model OAuthProviderConfig {
 }
 
 model LegalDocument {
-  id                                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type                                      LegalDocumentType
-  version                                   String              @db.VarChar(50)
-  locale                                    String              @default("ko") @db.VarChar(10)
-  title                                     String              @db.VarChar(255)
-  content                                   String
-  summary                                   String?
-  effectiveDate                             DateTime            @map("effective_date") @db.Timestamptz(6)
-  isActive                                  Boolean             @default(true) @map("is_active")
-  createdAt                                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                                 DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  created_by                                String?             @db.Uuid
-  updated_by                                String?             @db.Uuid
-  serviceId                                 String?             @map("service_id") @db.Uuid
-  countryCode                               String?             @map("country_code") @db.VarChar(2)
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type          LegalDocumentType
+  version       String            @db.VarChar(50)
+  locale        String            @default("ko") @db.VarChar(10)
+  title         String            @db.VarChar(255)
+  content       String
+  summary       String?
+  effectiveDate DateTime          @map("effective_date") @db.Timestamptz(6)
+  isActive      Boolean           @default(true) @map("is_active")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  created_by    String?           @db.Uuid
+  updated_by    String?           @db.Uuid
+  serviceId     String?           @map("service_id") @db.Uuid
+  countryCode   String?           @map("country_code") @db.VarChar(2)
 
-  admins_legal_documents_created_byToadmins admins?             @relation("legal_documents_created_byToadmins", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  admins_legal_documents_updated_byToadmins admins?             @relation("legal_documents_updated_byToadmins", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  service                                   Service?            @relation(fields: [serviceId], references: [id])
+  admins_legal_documents_created_byToadmins admins?   @relation("legal_documents_created_byToadmins", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  admins_legal_documents_updated_byToadmins admins?   @relation("legal_documents_updated_byToadmins", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service                                   Service?  @relation(fields: [serviceId], references: [id])
   consents                                  Consent[]
 
   @@unique([type, version, locale, serviceId, countryCode])
@@ -132,20 +133,20 @@ model LegalDocument {
 }
 
 model Consent {
-  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String         @map("user_id") @db.Uuid
-  consentType     ConsentType    @map("consent_type")
-  scope           ConsentScope   @default(SERVICE)
-  serviceId       String?        @map("service_id") @db.Uuid
-  countryCode     String         @map("country_code") @db.VarChar(2)
-  documentId      String?        @map("document_id") @db.Uuid
-  documentVersion String?        @map("document_version") @db.VarChar(50)
-  agreed          Boolean        @default(true)
-  agreedAt        DateTime       @map("agreed_at") @db.Timestamptz(6)
-  withdrawnAt     DateTime?      @map("withdrawn_at") @db.Timestamptz(6)
-  ipAddress       String?        @map("ip_address") @db.VarChar(45)
-  userAgent       String?        @map("user_agent")
-  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  consentType     ConsentType  @map("consent_type")
+  scope           ConsentScope @default(SERVICE)
+  serviceId       String?      @map("service_id") @db.Uuid
+  countryCode     String       @map("country_code") @db.VarChar(2)
+  documentId      String?      @map("document_id") @db.Uuid
+  documentVersion String?      @map("document_version") @db.VarChar(50)
+  agreed          Boolean      @default(true)
+  agreedAt        DateTime     @map("agreed_at") @db.Timestamptz(6)
+  withdrawnAt     DateTime?    @map("withdrawn_at") @db.Timestamptz(6)
+  ipAddress       String?      @map("ip_address") @db.VarChar(45)
+  userAgent       String?      @map("user_agent")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   document LegalDocument? @relation(fields: [documentId], references: [id])
@@ -167,25 +168,23 @@ enum ConsentScope {
   @@map("consent_scope")
 }
 
-
-
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model admins {
-  id                                                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                                              String               @unique
-  password                                           String
-  name                                               String
-  scope                                              admin_scope          @default(TENANT)
-  tenant_id                                          String?              @db.Uuid
-  parent_id                                          String?              @db.Uuid
-  role_id                                            String               @db.Uuid
-  is_active                                          Boolean              @default(true)
-  last_login_at                                      DateTime?            @db.Timestamptz(6)
-  created_at                                         DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at                                         DateTime             @default(now()) @db.Timestamptz(6)
-  account_mode                                       AccountMode          @default(SERVICE) @map("account_mode")
-  country_code                                       String?              @map("country_code") @db.VarChar(2)
-  deleted_at                                         DateTime?            @db.Timestamptz(6)
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String      @unique
+  password      String
+  name          String
+  scope         admin_scope @default(TENANT)
+  tenant_id     String?     @db.Uuid
+  parent_id     String?     @db.Uuid
+  role_id       String      @db.Uuid
+  is_active     Boolean     @default(true)
+  last_login_at DateTime?   @db.Timestamptz(6)
+  created_at    DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime    @default(now()) @db.Timestamptz(6)
+  account_mode  AccountMode @default(SERVICE) @map("account_mode")
+  country_code  String?     @map("country_code") @db.VarChar(2)
+  deleted_at    DateTime?   @db.Timestamptz(6)
 
   admins                                             admins?              @relation("adminsToadmins", fields: [parent_id], references: [id], onUpdate: NoAction)
   other_admins                                       admins[]             @relation("adminsToadmins")
@@ -197,6 +196,7 @@ model admins {
   operatorInvitations                                OperatorInvitation[]
   operatorPermissions                                OperatorPermission[]
   adminServices                                      AdminService[]
+  testerServices                                     ServiceTesterAdmin[]
 
   @@index([email], map: "idx_admins_email")
   @@index([parent_id], map: "idx_admins_parent_id")
@@ -206,7 +206,6 @@ model admins {
   @@index([country_code])
 }
 
-
 model goose_db_version {
   id         Int      @id @default(autoincrement())
   version_id BigInt
@@ -215,15 +214,15 @@ model goose_db_version {
 }
 
 model permissions {
-  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  resource            String
-  action              String
-  scope               admin_scope?
-  display_name        String
-  description         String?
-  category            String
-  tenant_type         tenant_type?
-  service_id          String?              @map("service_id") @db.Uuid
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resource     String
+  action       String
+  scope        admin_scope?
+  display_name String
+  description  String?
+  category     String
+  tenant_type  tenant_type?
+  service_id   String?      @map("service_id") @db.Uuid
 
   role_permissions    role_permissions[]
   operatorPermissions OperatorPermission[]
@@ -247,19 +246,19 @@ model role_permissions {
 }
 
 model roles {
-  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name             String
-  display_name     String
-  description      String?
-  scope            admin_scope
-  tenant_type      tenant_type?
-  level            Int                @default(0)
-  parent_id        String?            @db.Uuid
-  is_system        Boolean            @default(false)
-  created_at       DateTime           @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
-  service_id       String?            @map("service_id") @db.Uuid
-  country_code     String?            @map("country_code") @db.VarChar(2)
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  display_name String
+  description  String?
+  scope        admin_scope
+  tenant_type  tenant_type?
+  level        Int          @default(0)
+  parent_id    String?      @db.Uuid
+  is_system    Boolean      @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  service_id   String?      @map("service_id") @db.Uuid
+  country_code String?      @map("country_code") @db.VarChar(2)
 
   admins           admins[]
   role_permissions role_permissions[]
@@ -293,15 +292,16 @@ model tenants {
 }
 
 model Service {
-  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug             String        @unique @db.VarChar(50)
-  name             String        @db.VarChar(100)
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String   @unique @db.VarChar(50)
+  name             String   @db.VarChar(100)
   description      String?
-  isActive         Boolean       @default(true) @map("is_active")
+  isActive         Boolean  @default(true) @map("is_active")
   settings         Json?
-  requiredConsents Json?         @map("required_consents")
-  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  requiredConsents Json?    @map("required_consents")
+  domains          String[] @default([])
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   userServices           UserService[]
   consents               Consent[]
@@ -318,6 +318,11 @@ model Service {
   sanctions              Sanction[]
   supportedCountries     ServiceSupportedCountry[]
   supportedLocales       ServiceSupportedLocale[]
+  config                 ServiceConfig?
+  features               ServiceFeature[]
+  featurePermissions     ServiceFeaturePermission[]
+  testerUsers            ServiceTesterUser[]
+  testerAdmins           ServiceTesterAdmin[]
 
   @@index([slug])
   @@index([isActive])
@@ -417,14 +422,14 @@ model ServiceConsentRequirement {
 }
 
 model LawRegistry {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code        String   @unique @db.VarChar(20)
-  countryCode String   @map("country_code") @db.VarChar(2)
-  name        String   @db.VarChar(100)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String   @unique @db.VarChar(20)
+  countryCode  String   @map("country_code") @db.VarChar(2)
+  name         String   @db.VarChar(100)
   requirements Json
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([countryCode])
   @@index([code])
@@ -543,9 +548,9 @@ model Operator {
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  admin       admins              @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  service     Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  invitation  OperatorInvitation? @relation(fields: [invitationId], references: [id])
+  admin       admins               @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  service     Service              @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  invitation  OperatorInvitation?  @relation(fields: [invitationId], references: [id])
   permissions OperatorPermission[]
   userLinks   OperatorUserLink[]
 
@@ -573,7 +578,6 @@ model OperatorPermission {
   @@index([permissionId])
   @@map("operator_permissions")
 }
-
 
 model AdminService {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -616,17 +620,185 @@ model AccountLink {
   @@map("account_links")
 }
 
+// ============================================================
+// SERVICE CONFIGURATION & FEATURES (#399, #400)
+// ============================================================
+
+model ServiceConfig {
+  id        String @id @db.Uuid
+  serviceId String @unique @map("service_id") @db.Uuid
+
+  // Validation Settings
+  jwtValidation      Boolean  @default(true) @map("jwt_validation")
+  domainValidation   Boolean  @default(true) @map("domain_validation")
+  ipWhitelistEnabled Boolean  @default(false) @map("ip_whitelist_enabled")
+  ipWhitelist        String[] @default([]) @map("ip_whitelist")
+
+  // Rate Limiting
+  rateLimitEnabled  Boolean @default(true) @map("rate_limit_enabled")
+  rateLimitRequests Int     @default(1000) @map("rate_limit_requests")
+  rateLimitWindow   Int     @default(60) @map("rate_limit_window")
+
+  // Feature Flags
+  maintenanceMode    Boolean @default(false) @map("maintenance_mode")
+  maintenanceMessage String? @map("maintenance_message")
+
+  // Audit Settings
+  auditLevel AuditLevel @default(STANDARD) @map("audit_level")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@map("service_configs")
+}
+
+model ServiceFeature {
+  id          String  @id @db.Uuid
+  serviceId   String  @map("service_id") @db.Uuid
+  code        String  @db.VarChar(50)
+  name        String  @db.VarChar(100)
+  description String?
+  category    String  @db.VarChar(50)
+
+  // Hierarchy
+  parentId String? @map("parent_id") @db.Uuid
+  path     String  @db.VarChar(500)
+  depth    Int     @default(1)
+
+  // Settings
+  displayOrder Int     @default(0) @map("display_order")
+  isActive     Boolean @default(true) @map("is_active")
+  isDefault    Boolean @default(true) @map("is_default")
+
+  // Metadata
+  icon  String? @db.VarChar(50)
+  color String? @db.VarChar(20)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  service     Service                    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  parent      ServiceFeature?            @relation("FeatureHierarchy", fields: [parentId], references: [id])
+  children    ServiceFeature[]           @relation("FeatureHierarchy")
+  permissions ServiceFeaturePermission[]
+
+  @@unique([serviceId, code])
+  @@index([serviceId, category])
+  @@index([parentId])
+  @@index([path])
+  @@index([isActive])
+  @@map("service_features")
+}
+
+model ServiceFeaturePermission {
+  id        String @id @db.Uuid
+  featureId String @map("feature_id") @db.Uuid
+  serviceId String @map("service_id") @db.Uuid
+
+  // Target
+  targetType PermissionTargetType @map("target_type")
+  targetId   String?              @map("target_id") @db.Uuid
+
+  // Permission
+  action    FeatureAction
+  isAllowed Boolean       @default(true) @map("is_allowed")
+
+  // Conditions
+  conditions Json?
+
+  // Validity
+  validFrom  DateTime? @map("valid_from") @db.Timestamptz(6)
+  validUntil DateTime? @map("valid_until") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdBy String   @map("created_by") @db.Uuid
+
+  feature ServiceFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  service Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([featureId])
+  @@index([serviceId, targetType, targetId])
+  @@index([validFrom, validUntil])
+  @@map("service_feature_permissions")
+}
+
+// ============================================================
+// SERVICE TESTERS (#401)
+// ============================================================
+
+model ServiceTesterUser {
+  id        String @id @db.Uuid
+  serviceId String @map("service_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+
+  // Bypass Settings
+  bypassAll    Boolean @default(false) @map("bypass_all")
+  bypassDomain Boolean @default(true) @map("bypass_domain")
+  bypassIP     Boolean @default(true) @map("bypass_ip")
+  bypassRate   Boolean @default(false) @map("bypass_rate")
+
+  // Metadata
+  note      String?
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdBy String   @map("created_by") @db.Uuid
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, userId])
+  @@index([serviceId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("service_tester_users")
+}
+
+model ServiceTesterAdmin {
+  id        String @id @db.Uuid
+  serviceId String @map("service_id") @db.Uuid
+  adminId   String @map("admin_id") @db.Uuid
+
+  // Bypass Settings
+  bypassAll    Boolean @default(false) @map("bypass_all")
+  bypassDomain Boolean @default(true) @map("bypass_domain")
+
+  // Metadata
+  note      String?
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdBy String   @map("created_by") @db.Uuid
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  admin   admins  @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, adminId])
+  @@index([serviceId])
+  @@index([adminId])
+  @@index([expiresAt])
+  @@map("service_tester_admins")
+}
+
+// ============================================================
+// TIERS
+// ============================================================
 
 model Tier {
-  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  serviceId    String        @map("service_id") @db.Uuid
-  name         String        @db.VarChar(50)
-  level        Int           @default(0)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceId    String   @map("service_id") @db.Uuid
+  name         String   @db.VarChar(50)
+  level        Int      @default(0)
   benefits     Json?
   requirements Json?
-  isActive     Boolean       @default(true) @map("is_active")
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   service      Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   userServices UserService[]
@@ -638,28 +810,89 @@ model Tier {
 }
 
 model Sanction {
-  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  subjectId    String              @map("subject_id") @db.Uuid
-  subjectType  SanctionSubjectType @map("subject_type")
-  serviceId    String?             @map("service_id") @db.Uuid
-  type         SanctionType
-  status       SanctionStatus      @default(ACTIVE)
-  reason       String
-  issuedBy     String              @map("issued_by") @db.Uuid
-  issuedByType String              @default("ADMIN") @map("issued_by_type") @db.VarChar(20)
-  startAt      DateTime            @map("start_at") @db.Timestamptz(6)
-  endAt        DateTime?           @map("end_at") @db.Timestamptz(6)
-  revokedAt    DateTime?           @map("revoked_at") @db.Timestamptz(6)
-  revokedBy    String?             @map("revoked_by") @db.Uuid
-  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-  service Service? @relation(fields: [serviceId], references: [id])
+  // Subject
+  subjectId   String              @map("subject_id") @db.Uuid
+  subjectType SanctionSubjectType @map("subject_type")
+
+  // Scope (#402)
+  serviceId String?       @map("service_id") @db.Uuid
+  scope     SanctionScope @default(SERVICE)
+
+  // Type & Status
+  type     SanctionType
+  status   SanctionStatus   @default(ACTIVE)
+  severity SanctionSeverity @default(MEDIUM)
+
+  // Feature Restrictions (#402)
+  restrictedFeatures String[] @default([]) @map("restricted_features")
+
+  // Details
+  reason            String
+  internalNote      String?  @map("internal_note")
+  evidenceUrls      String[] @default([]) @map("evidence_urls")
+  relatedSanctionId String?  @map("related_sanction_id") @db.Uuid
+
+  // Issuer
+  issuedBy     String     @map("issued_by") @db.Uuid
+  issuedByType IssuerType @default(ADMIN) @map("issued_by_type")
+
+  // Timing
+  startAt DateTime  @map("start_at") @db.Timestamptz(6)
+  endAt   DateTime? @map("end_at") @db.Timestamptz(6)
+
+  // Revocation
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz(6)
+  revokedBy    String?   @map("revoked_by") @db.Uuid
+  revokeReason String?   @map("revoke_reason")
+
+  // Appeal (#402)
+  appealStatus     AppealStatus? @map("appeal_status")
+  appealedAt       DateTime?     @map("appealed_at") @db.Timestamptz(6)
+  appealReason     String?       @map("appeal_reason")
+  appealReviewedBy String?       @map("appeal_reviewed_by") @db.Uuid
+  appealReviewedAt DateTime?     @map("appeal_reviewed_at") @db.Timestamptz(6)
+  appealResponse   String?       @map("appeal_response")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  service         Service?               @relation(fields: [serviceId], references: [id])
+  relatedSanction Sanction?              @relation("SanctionChain", fields: [relatedSanctionId], references: [id])
+  followUps       Sanction[]             @relation("SanctionChain")
+  notifications   SanctionNotification[]
 
   @@index([subjectId, subjectType])
   @@index([serviceId])
   @@index([status])
   @@index([type])
+  @@index([severity])
+  @@index([scope])
+  @@index([appealStatus])
+  @@index([relatedSanctionId])
   @@map("sanctions")
+}
+
+model SanctionNotification {
+  id         String @id @db.Uuid
+  sanctionId String @map("sanction_id") @db.Uuid
+
+  channel NotificationChannel
+  status  NotificationStatus  @default(PENDING)
+
+  sentAt DateTime? @map("sent_at") @db.Timestamptz(6)
+  readAt DateTime? @map("read_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  sanction Sanction @relation(fields: [sanctionId], references: [id], onDelete: Cascade)
+
+  @@index([sanctionId])
+  @@index([status])
+  @@map("sanction_notifications")
 }
 
 enum SanctionSubjectType {
@@ -780,6 +1013,93 @@ enum SanctionStatus {
   @@map("sanction_status")
 }
 
+// ============================================================
+// NEW ENUMS (#399-#402)
+// ============================================================
+
+enum AuditLevel {
+  MINIMAL
+  STANDARD
+  VERBOSE
+  DEBUG
+
+  @@map("audit_level")
+}
+
+enum PermissionTargetType {
+  ALL_USERS
+  USER
+  TIER
+  COUNTRY
+  ROLE
+
+  @@map("permission_target_type")
+}
+
+enum FeatureAction {
+  USE
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  ADMIN
+
+  @@map("feature_action")
+}
+
+enum SanctionScope {
+  PLATFORM
+  SERVICE
+
+  @@map("sanction_scope")
+}
+
+enum SanctionSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("sanction_severity")
+}
+
+enum IssuerType {
+  ADMIN
+  OPERATOR
+  SYSTEM
+
+  @@map("issuer_type")
+}
+
+enum AppealStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ESCALATED
+
+  @@map("appeal_status")
+}
+
+enum NotificationChannel {
+  EMAIL
+  PUSH
+  SMS
+  IN_APP
+
+  @@map("notification_channel")
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+
+  @@map("notification_status")
+}
+
 enum OperatorLinkType {
   ASSIGNED
   SELF_CLAIMED
@@ -794,7 +1114,6 @@ enum AuthProvider {
   NAVER
   APPLE
 }
-
 
 enum admin_scope {
   SYSTEM
