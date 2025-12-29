@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, AlertCircle, Loader2 } from 'lucide-react';
-import { legalApi, LegalDocument, DocumentListResponse } from '../../api/legal';
-import { servicesApi, Service } from '../../api/services';
+import { Plus, Pencil, Trash2, AlertCircle, Loader2, FileText } from 'lucide-react';
+import { legalApi, LegalDocument } from '../../api/legal';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { FilterBar } from '../../components/molecules/FilterBar';
@@ -12,7 +11,11 @@ import { logger } from '../../utils/logger';
 import { getDocumentTypeOptions, getLocaleOptions } from '../../config/legal.config';
 import { COUNTRY_OPTIONS } from '../../config/country.config';
 
-export default function DocumentsPage() {
+interface ServiceDocumentsTabProps {
+  serviceId: string;
+}
+
+export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { hasPermission } = useAdminAuthStore();
@@ -26,7 +29,6 @@ export default function DocumentsPage() {
   );
 
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -41,21 +43,7 @@ export default function DocumentsPage() {
   const [type, setType] = useState('');
   const [locale, setLocale] = useState('');
   const [isActive, setIsActive] = useState<boolean | undefined>(undefined);
-  const [serviceId, setServiceId] = useState('');
   const [countryCode, setCountryCode] = useState('');
-
-  // Fetch services for filter dropdown
-  useEffect(() => {
-    servicesApi.listServices({ isActive: true }).then((res) => setServices(res.data));
-  }, []);
-
-  const serviceOptions = useMemo(
-    () => [
-      { value: '', label: t('common.all') },
-      ...services.map((s) => ({ value: s.id, label: s.name })),
-    ],
-    [services, t],
-  );
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -67,13 +55,13 @@ export default function DocumentsPage() {
     setError(null);
 
     try {
-      const response: DocumentListResponse = await legalApi.listDocuments({
+      const response = await legalApi.listDocuments({
         page,
         limit: 20,
+        serviceId, // Always filter by this service
         type: type || undefined,
         locale: locale || undefined,
         isActive,
-        serviceId: serviceId || undefined,
         countryCode: countryCode || undefined,
       });
 
@@ -86,7 +74,7 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, type, locale, isActive, serviceId, countryCode, t]);
+  }, [page, serviceId, type, locale, isActive, countryCode, t]);
 
   useEffect(() => {
     fetchDocuments();
@@ -121,34 +109,23 @@ export default function DocumentsPage() {
   const canDelete = hasPermission('legal:delete');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-theme-text-primary">{t('legal.documents')}</h1>
-          <p className="text-theme-text-secondary mt-1">{t('legal.documentsDescription')}</p>
-        </div>
+        <p className="text-theme-text-secondary">{t('services.documentsDescription')}</p>
         {canCreate && (
-          <Link
-            to="/compliance/documents/new"
+          <button
+            onClick={() => navigate(`/compliance/documents/new?serviceId=${serviceId}`)}
             className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity"
           >
             <Plus size={18} />
             <span>{t('legal.newDocument')}</span>
-          </Link>
+          </button>
         )}
       </div>
 
       {/* Filters */}
       <FilterBar summary={t('legal.documentCount', { count: total })}>
-        <Select
-          value={serviceId}
-          onChange={(e) => {
-            setServiceId(e.target.value);
-            setPage(1);
-          }}
-          options={serviceOptions}
-        />
         <Select
           value={countryCode}
           onChange={(e) => {
@@ -204,7 +181,6 @@ export default function DocumentsPage() {
               <th>{t('legal.title')}</th>
               <th>{t('legal.version')}</th>
               <th>{t('legal.locale')}</th>
-              <th>{t('menu.services')}</th>
               <th>{t('services.country')}</th>
               <th>{t('common.status')}</th>
               <th>{t('legal.effectiveDate')}</th>
@@ -214,21 +190,27 @@ export default function DocumentsPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={9} className="text-center py-8">
+                <td colSpan={8} className="text-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto text-theme-text-tertiary" />
                 </td>
               </tr>
             ) : documents.length === 0 ? (
               <tr>
-                <td colSpan={9} className="text-center py-8 text-theme-text-tertiary">
-                  {t('legal.noDocuments')}
+                <td colSpan={8} className="text-center py-12">
+                  <FileText size={48} className="mx-auto mb-4 text-theme-text-tertiary" />
+                  <p className="text-theme-text-secondary">{t('services.noDocuments')}</p>
+                  {canCreate && (
+                    <button
+                      onClick={() => navigate(`/compliance/documents/new?serviceId=${serviceId}`)}
+                      className="mt-4 text-theme-primary hover:underline"
+                    >
+                      {t('legal.newDocument')}
+                    </button>
+                  )}
                 </td>
               </tr>
             ) : (
               documents.map((doc) => {
-                const serviceName = doc.serviceId
-                  ? services.find((s) => s.id === doc.serviceId)?.name || '-'
-                  : t('common.all');
                 const countryName = doc.countryCode
                   ? COUNTRY_OPTIONS.find((c) => c.value === doc.countryCode)?.label ||
                     doc.countryCode
@@ -243,7 +225,6 @@ export default function DocumentsPage() {
                     <td className="font-medium text-theme-text-primary">{doc.title}</td>
                     <td className="text-theme-text-secondary">v{doc.version}</td>
                     <td className="uppercase text-theme-text-secondary">{doc.locale}</td>
-                    <td className="text-theme-text-secondary">{serviceName}</td>
                     <td className="text-theme-text-secondary">{countryName}</td>
                     <td>
                       <span

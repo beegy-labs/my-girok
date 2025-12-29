@@ -5,8 +5,10 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   MaxLength,
+  Length,
 } from 'class-validator';
 
 // Re-use from existing schema
@@ -60,6 +62,16 @@ export class CreateLegalDocumentDto {
 
   @IsDateString()
   effectiveDate!: string;
+
+  @IsOptional()
+  @IsUUID()
+  serviceId?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(2, 2)
+  @Matches(/^[A-Z]{2}$/, { message: 'Country code must be ISO 3166-1 alpha-2 (uppercase)' })
+  countryCode?: string;
 }
 
 export class UpdateLegalDocumentDto {
@@ -90,6 +102,8 @@ export interface DocumentListQuery {
   type?: LegalDocumentType;
   locale?: string;
   isActive?: boolean;
+  serviceId?: string;
+  countryCode?: string;
   page?: number;
   limit?: number;
 }
@@ -104,6 +118,8 @@ export interface DocumentResponse {
   summary: string | null;
   effectiveDate: Date;
   isActive: boolean;
+  serviceId: string | null;
+  countryCode: string | null;
   createdBy: string | null;
   updatedBy: string | null;
   createdAt: Date;

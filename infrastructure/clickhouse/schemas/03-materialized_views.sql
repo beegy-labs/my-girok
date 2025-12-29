@@ -275,3 +275,215 @@ AS SELECT
     uniq(user_id) as unique_users
 FROM analytics_db.sessions_local
 GROUP BY date, utm_source, utm_medium, utm_campaign;
+
+
+-- ============================================================
+-- Admin Audit Materialized Views (#406)
+-- Pre-aggregated data for admin dashboard
+-- ============================================================
+
+-- ============================================================
+-- Hourly UI Event Aggregates
+-- ============================================================
+CREATE TABLE IF NOT EXISTS audit_db.admin_ui_events_hourly ON CLUSTER 'my_cluster' (
+    hour DateTime,
+    actor_id UUID,
+    service_id Nullable(UUID),
+    event_type LowCardinality(String),
+    event_category LowCardinality(String),
+    event_count UInt64,
+    unique_sessions UInt64,
+    avg_tti_ms Float64
+) ENGINE = ReplicatedSummingMergeTree(
+    '/clickhouse/tables/{shard}/audit/admin_ui_events_hourly',
+    '{replica}'
+)
+PARTITION BY toYYYYMM(hour)
+ORDER BY (hour, actor_id, service_id, event_type, event_category)
+TTL hour + INTERVAL 90 DAY;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS audit_db.admin_ui_events_hourly_mv ON CLUSTER 'my_cluster'
+TO audit_db.admin_ui_events_hourly
+AS SELECT
+    toStartOfHour(timestamp) as hour,
+    actor_id,
+    service_id,
+    event_type,
+    event_category,
+    count() as event_count,
+    uniq(session_id) as unique_sessions,
+    avg(time_to_interaction_ms) as avg_tti_ms
+FROM audit_db.admin_ui_events_local
+GROUP BY hour, actor_id, service_id, event_type, event_category;
+
+
+-- ============================================================
+-- Daily Audit Summary
+-- ============================================================
+CREATE TABLE IF NOT EXISTS audit_db.admin_audit_daily ON CLUSTER 'my_cluster' (
+    date Date,
+    service_id UUID,
+    resource LowCardinality(String),
+    action LowCardinality(String),
+    action_count UInt64,
+    unique_actors UInt64,
+    unique_targets UInt64
+) ENGINE = ReplicatedSummingMergeTree(
+    '/clickhouse/tables/{shard}/audit/admin_audit_daily',
+    '{replica}'
+)
+PARTITION BY toYYYYMM(date)
+ORDER BY (date, service_id, resource, action)
+TTL date + INTERVAL 2 YEAR;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS audit_db.admin_audit_daily_mv ON CLUSTER 'my_cluster'
+TO audit_db.admin_audit_daily
+AS SELECT
+    toDate(timestamp) as date,
+    service_id,
+    resource,
+    action,
+    count() as action_count,
+    uniq(actor_id) as unique_actors,
+    uniq(target_id) as unique_targets
+FROM audit_db.admin_audit_logs_local
+GROUP BY date, service_id, resource, action;
+
+
+-- ============================================================
+-- Error Tracking (30 day retention)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS audit_db.admin_errors ON CLUSTER 'my_cluster' (
+    minute DateTime,
+    service_id Nullable(UUID),
+    path_template String,
+    error_type LowCardinality(Nullable(String)),
+    error_count UInt64,
+    sample_error Nullable(String)
+) ENGINE = ReplicatedSummingMergeTree(
+    '/clickhouse/tables/{shard}/audit/admin_errors',
+    '{replica}'
+)
+PARTITION BY toYYYYMM(minute)
+ORDER BY (minute, service_id, path_template, error_type)
+TTL minute + INTERVAL 30 DAY;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS audit_db.admin_errors_mv ON CLUSTER 'my_cluster'
+TO audit_db.admin_errors
+AS SELECT
+    toStartOfMinute(timestamp) as minute,
+    service_id,
+    path_template,
+    error_type,
+    count() as error_count,
+    any(error_message) as sample_error
+FROM audit_db.admin_api_logs_local
+WHERE status_code >= 400
+GROUP BY minute, service_id, path_template, error_type;
+
+
+-- ============================================================
+-- Actor Daily Activity Summary
+-- ============================================================
+CREATE TABLE IF NOT EXISTS audit_db.admin_actor_daily ON CLUSTER 'my_cluster' (
+    date Date,
+    actor_id UUID,
+    actor_email LowCardinality(String),
+    ui_events UInt64,
+    api_calls UInt64,
+    data_changes UInt64,
+    errors UInt64,
+    unique_services UInt64,
+    active_minutes UInt64
+) ENGINE = ReplicatedSummingMergeTree(
+    '/clickhouse/tables/{shard}/audit/admin_actor_daily',
+    '{replica}'
+)
+PARTITION BY toYYYYMM(date)
+ORDER BY (date, actor_id)
+TTL date + INTERVAL 1 YEAR;
+
+-- MV for UI events
+CREATE MATERIALIZED VIEW IF NOT EXISTS audit_db.admin_actor_daily_ui_mv ON CLUSTER 'my_cluster'
+TO audit_db.admin_actor_daily
+AS SELECT
+    toDate(timestamp) as date,
+    actor_id,
+    actor_email,
+    count() as ui_events,
+    0 as api_calls,
+    0 as data_changes,
+    countIf(event_type = 'error') as errors,
+    uniq(service_id) as unique_services,
+    uniq(toStartOfMinute(timestamp)) as active_minutes
+FROM audit_db.admin_ui_events_local
+GROUP BY date, actor_id, actor_email;
+
+-- MV for API calls
+CREATE MATERIALIZED VIEW IF NOT EXISTS audit_db.admin_actor_daily_api_mv ON CLUSTER 'my_cluster'
+TO audit_db.admin_actor_daily
+AS SELECT
+    toDate(timestamp) as date,
+    actor_id,
+    actor_email,
+    0 as ui_events,
+    count() as api_calls,
+    0 as data_changes,
+    countIf(status_code >= 400) as errors,
+    uniq(service_id) as unique_services,
+    uniq(toStartOfMinute(timestamp)) as active_minutes
+FROM audit_db.admin_api_logs_local
+GROUP BY date, actor_id, actor_email;
+
+-- MV for data changes
+CREATE MATERIALIZED VIEW IF NOT EXISTS audit_db.admin_actor_daily_audit_mv ON CLUSTER 'my_cluster'
+TO audit_db.admin_actor_daily
+AS SELECT
+    toDate(timestamp) as date,
+    actor_id,
+    actor_email,
+    0 as ui_events,
+    0 as api_calls,
+    count() as data_changes,
+    0 as errors,
+    uniq(service_id) as unique_services,
+    uniq(toStartOfMinute(timestamp)) as active_minutes
+FROM audit_db.admin_audit_logs_local
+GROUP BY date, actor_id, actor_email;
+
+
+-- ============================================================
+-- API Performance Hourly Stats
+-- ============================================================
+CREATE TABLE IF NOT EXISTS audit_db.admin_api_performance_hourly ON CLUSTER 'my_cluster' (
+    hour DateTime,
+    path_template String,
+    method LowCardinality(String),
+    request_count UInt64,
+    error_count UInt64,
+    total_response_time_ms UInt64,
+    max_response_time_ms UInt32,
+    p95_response_time_ms Float64,
+    p99_response_time_ms Float64
+) ENGINE = ReplicatedSummingMergeTree(
+    '/clickhouse/tables/{shard}/audit/admin_api_performance_hourly',
+    '{replica}'
+)
+PARTITION BY toYYYYMM(hour)
+ORDER BY (hour, path_template, method)
+TTL hour + INTERVAL 30 DAY;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS audit_db.admin_api_performance_hourly_mv ON CLUSTER 'my_cluster'
+TO audit_db.admin_api_performance_hourly
+AS SELECT
+    toStartOfHour(timestamp) as hour,
+    path_template,
+    method,
+    count() as request_count,
+    countIf(status_code >= 400) as error_count,
+    sum(response_time_ms) as total_response_time_ms,
+    max(response_time_ms) as max_response_time_ms,
+    quantile(0.95)(response_time_ms) as p95_response_time_ms,
+    quantile(0.99)(response_time_ms) as p99_response_time_ms
+FROM audit_db.admin_api_logs_local
+GROUP BY hour, path_template, method;
