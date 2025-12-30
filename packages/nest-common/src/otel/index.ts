@@ -1,5 +1,5 @@
 // OTEL SDK initialization (MUST be imported first in main.ts)
-export { initOtel, shutdownOtel, getOtelSdk } from './otel-sdk';
+export { initOtel, shutdownOtel, getOtelSdk, isOtelInitialized } from './otel-sdk';
 export type { OtelConfig } from './otel-sdk';
 
 // NestJS Module for lifecycle management

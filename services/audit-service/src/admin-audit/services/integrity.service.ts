@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClickHouseService } from '@my-girok/nest-common/clickhouse';
 import { ChecksumService, CircuitBreaker } from '@my-girok/nest-common';
 import {
@@ -39,7 +39,6 @@ interface DateRangeRow {
 
 @Injectable()
 export class IntegrityService {
-  private readonly logger = new Logger(IntegrityService.name);
   private readonly checksumService = new ChecksumService();
   private readonly circuitBreaker: CircuitBreaker;
 
@@ -74,12 +73,12 @@ export class IntegrityService {
     }
 
     if (query.actorId) {
-      conditions.push('actor_id = {actorId:String}');
+      conditions.push('actor_id = {actorId:UUID}');
       params.actorId = query.actorId;
     }
 
     if (query.serviceId) {
-      conditions.push('service_id = {serviceId:String}');
+      conditions.push('service_id = {serviceId:UUID}');
       params.serviceId = query.serviceId;
     }
 

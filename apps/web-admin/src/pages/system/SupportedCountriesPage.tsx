@@ -51,7 +51,7 @@ export default function SupportedCountriesPage() {
       setCountries(result.data);
     } catch (err) {
       setError(t('settings.loadCountriesFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch supported countries', err);
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.saveCountryFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to create country', { code: formData.code, error: err });
     } finally {
       setSaving(false);
     }
@@ -106,7 +106,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.saveCountryFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to update country', { code, error: err });
     } finally {
       setSaving(false);
     }
@@ -123,7 +123,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.deleteCountryFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to delete country', { code, error: err });
     } finally {
       setSaving(false);
     }
@@ -140,7 +140,7 @@ export default function SupportedCountriesPage() {
       fetchCountries();
     } catch (err) {
       setError(t('settings.saveCountryFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to toggle country status', { code: country.code, error: err });
     } finally {
       setSaving(false);
     }

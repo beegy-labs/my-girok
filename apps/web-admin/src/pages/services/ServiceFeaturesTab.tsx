@@ -63,7 +63,7 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
       setFeatures(result.data);
     } catch (err) {
       setError(t('services.loadFeaturesFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch service features', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -140,7 +140,11 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
     } catch (err) {
       setError(t('services.saveFeatureFailed'));
       trackFormSubmit('ServiceFeatureForm', editingFeature ? 'update' : 'create', false);
-      logger.error('Operation failed', err);
+      logger.error('Failed to save service feature', {
+        serviceId,
+        featureId: editingFeature?.id,
+        error: err,
+      });
     } finally {
       setSaving(false);
     }
@@ -155,7 +159,11 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
       fetchFeatures();
     } catch (err) {
       setError(t('services.deleteFeatureFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to delete service feature', {
+        serviceId,
+        featureId: deletingFeature.id,
+        error: err,
+      });
     }
   };
 
@@ -167,7 +175,11 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
       fetchFeatures();
     } catch (err) {
       setError(t('services.updateFeatureFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to toggle feature status', {
+        serviceId,
+        featureId: feature.id,
+        error: err,
+      });
     }
   };
 

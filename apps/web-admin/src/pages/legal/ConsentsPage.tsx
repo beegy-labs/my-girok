@@ -21,7 +21,7 @@ export default function ConsentsPage() {
       setStats(data);
     } catch (err) {
       setError('Failed to load consent statistics');
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch consent stats', err);
     } finally {
       setLoading(false);
     }

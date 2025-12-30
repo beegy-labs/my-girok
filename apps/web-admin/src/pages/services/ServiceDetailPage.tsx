@@ -67,7 +67,7 @@ export default function ServiceDetailPage() {
       setService(result);
     } catch (err) {
       setError(t('services.loadFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch service details', { serviceId, error: err });
     } finally {
       setLoading(false);
     }

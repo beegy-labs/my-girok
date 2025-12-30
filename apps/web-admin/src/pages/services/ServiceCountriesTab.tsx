@@ -31,7 +31,7 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
       setCountries(result.data);
     } catch (err) {
       setError(t('services.loadCountriesFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch service countries', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,11 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
       fetchCountries();
     } catch (err) {
       setError(t('services.addCountryFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to add service country', {
+        serviceId,
+        countryCode: selectedCountry,
+        error: err,
+      });
     } finally {
       setAdding(false);
     }
@@ -68,7 +72,7 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
       fetchCountries();
     } catch (err) {
       setError(t('services.removeCountryFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to remove service country', { serviceId, countryCode, error: err });
     } finally {
       setRemoving(null);
     }

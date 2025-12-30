@@ -240,7 +240,7 @@ export class ServiceFeatureService {
     return feature;
   }
 
-  @Transactional()
+  @Transactional({ isolationLevel: 'Serializable', timeout: 60000, maxRetries: 5 })
   async update(
     serviceId: string,
     id: string,

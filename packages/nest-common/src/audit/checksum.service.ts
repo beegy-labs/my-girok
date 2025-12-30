@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, timingSafeEqual } from 'crypto';
 import type { AuditLogChecksumFields } from './checksum.types';
 
 /**
@@ -199,17 +199,20 @@ export class ChecksumService {
 
   /**
    * Timing-safe string comparison to prevent timing attacks.
+   * Uses Node.js crypto.timingSafeEqual for verified constant-time comparison.
    */
   private secureCompare(a: string, b: string): boolean {
-    if (a.length !== b.length) {
+    // SHA-256 hex strings are always 64 characters
+    // Use Buffer comparison for proper timing-safe comparison
+    const bufA = Buffer.from(a, 'utf8');
+    const bufB = Buffer.from(b, 'utf8');
+
+    // Length check is safe here since SHA-256 always produces same length
+    if (bufA.length !== bufB.length) {
       return false;
     }
 
-    let result = 0;
-    for (let i = 0; i < a.length; i++) {
-      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-    }
-    return result === 0;
+    return timingSafeEqual(bufA, bufB);
   }
 }
 

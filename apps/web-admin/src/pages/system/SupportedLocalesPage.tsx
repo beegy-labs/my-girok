@@ -51,7 +51,7 @@ export default function SupportedLocalesPage() {
       setLocales(result.data);
     } catch (err) {
       setError(t('settings.loadLocalesFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch supported locales', err);
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.saveLocaleFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to create locale', { code: formData.code, error: err });
     } finally {
       setSaving(false);
     }
@@ -106,7 +106,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.saveLocaleFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to update locale', { code, error: err });
     } finally {
       setSaving(false);
     }
@@ -123,7 +123,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.deleteLocaleFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to delete locale', { code, error: err });
     } finally {
       setSaving(false);
     }
@@ -140,7 +140,7 @@ export default function SupportedLocalesPage() {
       fetchLocales();
     } catch (err) {
       setError(t('settings.saveLocaleFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to toggle locale status', { code: locale.code, error: err });
     } finally {
       setSaving(false);
     }

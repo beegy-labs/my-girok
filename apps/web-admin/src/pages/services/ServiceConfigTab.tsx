@@ -58,7 +58,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setFormData(configResult);
     } catch (err) {
       setError(t('services.loadConfigFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch service config', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
     } catch (err) {
       setError(t('services.saveConfigFailed'));
       trackFormSubmit('ServiceConfigForm', 'update', false);
-      logger.error('Operation failed', err);
+      logger.error('Failed to save service config', { serviceId, error: err });
     } finally {
       setSaving(false);
     }
@@ -116,7 +116,11 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setDomains(domainsResult);
     } catch (err) {
       setError(t('services.addDomainFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to add service domain', {
+        serviceId,
+        domain: newDomain.trim(),
+        error: err,
+      });
     } finally {
       setAddingDomain(false);
     }
@@ -128,7 +132,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setDomains(result);
     } catch (err) {
       setError(t('services.removeDomainFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to remove service domain', { serviceId, domain, error: err });
     }
   };
 

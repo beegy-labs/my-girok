@@ -3,18 +3,25 @@
   "version": "0.1.0",
   "description": "Shared NestJS utilities and components for my-girok microservices",
   "main": "dist/index.js",
+  "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./prisma": {
       "types": "./dist/prisma.d.ts",
+      "import": "./dist/esm/prisma.js",
+      "require": "./dist/prisma.js",
       "default": "./dist/prisma.js"
     },
     "./clickhouse": {
       "types": "./dist/clickhouse-entry.d.ts",
+      "import": "./dist/esm/clickhouse-entry.js",
+      "require": "./dist/clickhouse-entry.js",
       "default": "./dist/clickhouse-entry.js"
     }
   },
@@ -29,7 +36,9 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm run build:cjs && pnpm run build:esm",
+    "build:cjs": "tsc",
+    "build:esm": "tsc -p tsconfig.esm.json",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -99,6 +108,7 @@
     "@opentelemetry/sdk-node": "^0.57.0",
     "@opentelemetry/semantic-conventions": "^1.30.0",
     "helmet": "catalog:",
+    "ioredis": "^5.4.1",
     "nestjs-pino": "^4.2.0",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",

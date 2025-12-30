@@ -13,6 +13,7 @@ import {
   HttpExceptionFilter,
   HealthModule,
   PinoLoggerModule,
+  OtelModule,
 } from '@my-girok/nest-common';
 
 import { PrismaService } from './database/prisma.service';
@@ -23,6 +24,7 @@ import configuration from './config/configuration';
 
 @Module({
   imports: [
+    OtelModule.forRoot(),
     PinoLoggerModule.forRoot({
       serviceName: 'personal-service',
     }),

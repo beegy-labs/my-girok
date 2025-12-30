@@ -6,7 +6,12 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Keyv } from 'keyv';
 import KeyvRedis from '@keyv/redis';
-import { HttpExceptionFilter, HealthModule, PinoLoggerModule } from '@my-girok/nest-common';
+import {
+  HttpExceptionFilter,
+  HealthModule,
+  PinoLoggerModule,
+  OtelModule,
+} from '@my-girok/nest-common';
 import { UnifiedAuthGuard } from './auth/guards';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
@@ -21,6 +26,7 @@ import configuration from './config/configuration';
 
 @Module({
   imports: [
+    OtelModule.forRoot(),
     PinoLoggerModule.forRoot({
       serviceName: 'auth-service',
     }),

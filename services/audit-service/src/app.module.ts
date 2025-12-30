@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ScheduleModule } from '@nestjs/schedule';
-import { HealthModule, PinoLoggerModule } from '@my-girok/nest-common';
+import { HealthModule, PinoLoggerModule, OtelModule } from '@my-girok/nest-common';
 import { Keyv } from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import { ClickHouseModule } from './shared/clickhouse/clickhouse.module';
@@ -13,6 +13,7 @@ import configuration from './config/configuration';
 
 @Module({
   imports: [
+    OtelModule.forRoot(),
     PinoLoggerModule.forRoot({
       serviceName: 'audit-service',
     }),

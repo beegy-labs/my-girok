@@ -515,7 +515,7 @@ export class SanctionService {
     };
   }
 
-  @Transactional()
+  @Transactional({ isolationLevel: 'Serializable', timeout: 45000, maxRetries: 5 })
   async reviewAppeal(
     serviceId: string,
     id: string,

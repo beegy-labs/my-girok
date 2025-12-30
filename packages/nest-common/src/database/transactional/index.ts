@@ -11,5 +11,9 @@ export {
 export type { TransactionContext } from './transaction-context';
 
 // Transactional Decorator
-export { Transactional, getPrismaClient } from './transactional.decorator';
-export type { TransactionalOptions } from './transactional.decorator';
+export { Transactional, getPrismaClient, getCurrentTransactionId } from './transactional.decorator';
+export type {
+  TransactionalOptions,
+  TransactionIsolationLevel,
+  TransactionPropagation,
+} from './transactional.decorator';

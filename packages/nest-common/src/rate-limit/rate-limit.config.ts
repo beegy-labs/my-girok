@@ -8,8 +8,31 @@ export interface ThrottlerConfig {
 }
 
 /**
+ * Parse environment variable as integer with fallback.
+ */
+function parseEnvInt(key: string, fallback: number): number {
+  const value = process.env[key];
+  if (value === undefined) return fallback;
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? fallback : parsed;
+}
+
+/**
+ * Default TTL for rate limiting (configurable via RATE_LIMIT_TTL env var).
+ * @default 60000 (1 minute)
+ */
+const DEFAULT_TTL = parseEnvInt('RATE_LIMIT_TTL', 60000);
+
+/**
  * Rate limit tiers for different endpoint types.
- * These are recommended defaults that can be overridden per-service.
+ * These are recommended defaults that can be overridden via environment variables:
+ * - RATE_LIMIT_TTL: Default TTL in milliseconds (default: 60000)
+ * - RATE_LIMIT_STANDARD: Limit for standard endpoints (default: 100)
+ * - RATE_LIMIT_AUTH: Limit for auth endpoints (default: 10)
+ * - RATE_LIMIT_HIGH_FREQUENCY: Limit for high-frequency endpoints (default: 1000)
+ * - RATE_LIMIT_WRITE_HEAVY: Limit for write-heavy endpoints (default: 30)
+ * - RATE_LIMIT_ADMIN: Limit for admin endpoints (default: 200)
+ * - RATE_LIMIT_PUBLIC: Limit for public endpoints (default: 50)
  */
 export const RateLimitTiers: Record<string, ThrottlerConfig> = {
   /**
@@ -18,8 +41,8 @@ export const RateLimitTiers: Record<string, ThrottlerConfig> = {
    */
   STANDARD: {
     name: 'standard',
-    ttl: 60000, // 1 minute
-    limit: 100,
+    ttl: DEFAULT_TTL,
+    limit: parseEnvInt('RATE_LIMIT_STANDARD', 100),
   },
 
   /**
@@ -28,8 +51,8 @@ export const RateLimitTiers: Record<string, ThrottlerConfig> = {
    */
   AUTH: {
     name: 'auth',
-    ttl: 60000, // 1 minute
-    limit: 10,
+    ttl: DEFAULT_TTL,
+    limit: parseEnvInt('RATE_LIMIT_AUTH', 10),
   },
 
   /**
@@ -38,8 +61,8 @@ export const RateLimitTiers: Record<string, ThrottlerConfig> = {
    */
   HIGH_FREQUENCY: {
     name: 'high-frequency',
-    ttl: 60000, // 1 minute
-    limit: 1000,
+    ttl: DEFAULT_TTL,
+    limit: parseEnvInt('RATE_LIMIT_HIGH_FREQUENCY', 1000),
   },
 
   /**
@@ -48,8 +71,8 @@ export const RateLimitTiers: Record<string, ThrottlerConfig> = {
    */
   WRITE_HEAVY: {
     name: 'write-heavy',
-    ttl: 60000, // 1 minute
-    limit: 30,
+    ttl: DEFAULT_TTL,
+    limit: parseEnvInt('RATE_LIMIT_WRITE_HEAVY', 30),
   },
 
   /**
@@ -58,8 +81,8 @@ export const RateLimitTiers: Record<string, ThrottlerConfig> = {
    */
   ADMIN: {
     name: 'admin',
-    ttl: 60000, // 1 minute
-    limit: 200,
+    ttl: DEFAULT_TTL,
+    limit: parseEnvInt('RATE_LIMIT_ADMIN', 200),
   },
 
   /**
@@ -68,10 +91,10 @@ export const RateLimitTiers: Record<string, ThrottlerConfig> = {
    */
   PUBLIC: {
     name: 'public',
-    ttl: 60000, // 1 minute
-    limit: 50,
+    ttl: DEFAULT_TTL,
+    limit: parseEnvInt('RATE_LIMIT_PUBLIC', 50),
   },
-} as const;
+};
 
 export type RateLimitTier = keyof typeof RateLimitTiers;
 

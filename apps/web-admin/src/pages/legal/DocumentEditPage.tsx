@@ -93,7 +93,7 @@ export default function DocumentEditPage() {
       setCountryCode(doc.countryCode || '');
     } catch (err) {
       setError(t('legal.loadFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch document', { documentId: id, error: err });
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,11 @@ export default function DocumentEditPage() {
       navigate('/compliance/documents');
     } catch (err) {
       setError(isNew ? t('legal.saveFailed') : t('legal.saveFailed'));
-      logger.error('Operation failed', err);
+      logger.error(isNew ? 'Failed to create document' : 'Failed to update document', {
+        documentId: id,
+        type,
+        error: err,
+      });
     } finally {
       setSaving(false);
     }

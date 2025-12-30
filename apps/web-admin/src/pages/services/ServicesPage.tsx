@@ -22,7 +22,7 @@ export default function ServicesPage() {
       setData(result);
     } catch (err) {
       setError('Failed to load services');
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch services list', err);
     } finally {
       setLoading(false);
     }

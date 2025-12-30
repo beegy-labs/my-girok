@@ -61,7 +61,7 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
       setAdminTesters(adminsResult.data);
     } catch (err) {
       setError(t('services.loadTestersFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to fetch service testers', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
     } catch (err) {
       setError(t('services.addTesterFailed'));
       trackFormSubmit('TesterForm', 'create', false);
-      logger.error('Operation failed', err);
+      logger.error('Failed to add tester', { serviceId, type: activeTab, error: err });
     } finally {
       setSaving(false);
     }
@@ -139,7 +139,12 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
       fetchData();
     } catch (err) {
       setError(t('services.deleteTesterFailed'));
-      logger.error('Operation failed', err);
+      logger.error('Failed to delete tester', {
+        serviceId,
+        testerId: deletingTester.id,
+        type: deletingTester.type,
+        error: err,
+      });
     }
   };
 

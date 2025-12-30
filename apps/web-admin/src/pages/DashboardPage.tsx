@@ -32,7 +32,7 @@ export default function DashboardPage() {
         setStats(data);
       } catch (err) {
         setError(t('dashboard.failedToLoad'));
-        logger.error('Operation failed', err);
+        logger.error('Failed to fetch dashboard stats', err);
       } finally {
         setLoading(false);
       }

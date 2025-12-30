@@ -56,7 +56,13 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
       setError(t('audit.loadFailed'));
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
-        logger.error('Operation failed', err);
+        logger.error('Failed to fetch audit logs', {
+          serviceId,
+          page,
+          action,
+          resource,
+          error: err,
+        });
       }
     } finally {
       setLoading(false);
@@ -87,7 +93,7 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
       setError(t('audit.loadFailed'));
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
-        logger.error('Operation failed', err);
+        logger.error('Failed to search audit logs', { serviceId, action, resource, error: err });
       }
     } finally {
       setLoading(false);
