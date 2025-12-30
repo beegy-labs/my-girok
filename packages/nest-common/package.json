@@ -5,6 +5,10 @@
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": [
+    "./dist/otel/otel-sdk.js",
+    "./dist/esm/otel/otel-sdk.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

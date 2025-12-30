@@ -2,14 +2,7 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nes
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Response } from 'express';
-import { RateLimitHeaders } from './rate-limit.config';
-
-/**
- * Metadata keys for rate limit info set by the throttler guard
- */
-const THROTTLER_LIMIT = 'THROTTLER_LIMIT';
-const THROTTLER_TTL = 'THROTTLER_TTL';
-const THROTTLER_HITS = 'THROTTLER_HITS';
+import { RateLimitHeaders, RATE_LIMIT_METADATA } from './rate-limit.config';
 
 /**
  * Interceptor that adds standard rate limit headers to HTTP responses.
@@ -51,35 +44,58 @@ export class RateLimitHeadersInterceptor implements NestInterceptor {
     /**
      * Sets rate limit headers on the response.
      * Called for both success and error scenarios.
+     * Uses try-catch to handle race condition with headersSent.
      */
     const setRateLimitHeaders = (): void => {
-      // Skip if headers already sent
-      if (response.headersSent) {
-        return;
-      }
+      try {
+        // Skip if headers already sent
+        if (response.headersSent) {
+          return;
+        }
 
-      const limit = request[THROTTLER_LIMIT] as number | undefined;
-      const ttl = request[THROTTLER_TTL] as number | undefined;
-      const hits = request[THROTTLER_HITS] as number | undefined;
+        const limit = (request as Record<string, unknown>)[RATE_LIMIT_METADATA.LIMIT] as
+          | number
+          | undefined;
+        const ttl = (request as Record<string, unknown>)[RATE_LIMIT_METADATA.TTL] as
+          | number
+          | undefined;
+        const hits = (request as Record<string, unknown>)[RATE_LIMIT_METADATA.HITS] as
+          | number
+          | undefined;
+        // Use actual TTL from Redis if available, otherwise fall back to configured TTL
+        const timeToExpire = (request as Record<string, unknown>)[
+          RATE_LIMIT_METADATA.TIME_TO_EXPIRE
+        ] as number | undefined;
 
-      if (limit === undefined || ttl === undefined) {
-        return;
-      }
+        // Validate required values exist and TTL is positive
+        if (limit === undefined || ttl === undefined || ttl <= 0) {
+          return;
+        }
 
-      // Calculate remaining requests (use hits if available, otherwise estimate)
-      const currentHits = hits ?? 1;
-      const remaining = Math.max(0, limit - currentHits);
-      const resetTimeSeconds = Math.ceil(Date.now() / 1000 + ttl / 1000);
-      const retryAfterSeconds = Math.ceil(ttl / 1000);
+        // Calculate remaining requests (use hits if available, otherwise estimate)
+        const currentHits = hits ?? 1;
+        const remaining = Math.max(0, limit - currentHits);
 
-      // Set standard rate limit headers
-      response.setHeader(RateLimitHeaders.LIMIT, String(limit));
-      response.setHeader(RateLimitHeaders.REMAINING, String(remaining));
-      response.setHeader(RateLimitHeaders.RESET, String(resetTimeSeconds));
+        // Use actual time to expire from Redis for accurate reset time
+        // Falls back to configured TTL if Redis TTL is not available
+        const actualTtl = timeToExpire !== undefined && timeToExpire > 0 ? timeToExpire : ttl;
+        // IETF spec: RateLimit-Reset uses delta seconds (not Unix timestamp)
+        const resetTimeSeconds = Math.ceil(actualTtl / 1000);
+        const retryAfterSeconds = Math.ceil(actualTtl / 1000);
 
-      // Set Retry-After when rate limit is exhausted or exceeded
-      if (remaining === 0) {
-        response.setHeader(RateLimitHeaders.RETRY_AFTER, String(retryAfterSeconds));
+        // Set standard rate limit headers per IETF spec
+        response.setHeader(RateLimitHeaders.LIMIT, String(limit));
+        response.setHeader(RateLimitHeaders.REMAINING, String(remaining));
+        response.setHeader(RateLimitHeaders.RESET, String(resetTimeSeconds));
+        // RateLimit-Policy header format: limit;w=windowSeconds
+        response.setHeader(RateLimitHeaders.POLICY, `${limit};w=${Math.ceil(ttl / 1000)}`);
+
+        // Set Retry-After when rate limit is exhausted, exceeded, or on 429 response
+        if (remaining === 0 || response.statusCode === 429) {
+          response.setHeader(RateLimitHeaders.RETRY_AFTER, String(retryAfterSeconds));
+        }
+      } catch {
+        // Headers already sent or other error - ignore silently
       }
     };
 
@@ -118,14 +134,5 @@ export class RateLimitHeadersInterceptor implements NestInterceptor {
  * export class AppModule {}
  * ```
  */
-export { RateLimitHeaders };
-
-/**
- * Metadata keys exported for custom guard implementations.
- * Use these keys to set rate limit info on the request object.
- */
-export const RATE_LIMIT_METADATA = {
-  LIMIT: THROTTLER_LIMIT,
-  TTL: THROTTLER_TTL,
-  HITS: THROTTLER_HITS,
-} as const;
+// Re-export from config for backward compatibility
+export { RateLimitHeaders, RATE_LIMIT_METADATA } from './rate-limit.config';

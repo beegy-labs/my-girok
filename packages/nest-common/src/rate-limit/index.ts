@@ -1,5 +1,5 @@
 // Rate Limit Module
-export { RateLimitModule } from './rate-limit.module';
+export { RateLimitModule, REDIS_THROTTLER_STORAGE } from './rate-limit.module';
 
 // Rate Limit Configuration
 export {
@@ -19,6 +19,9 @@ export type {
 
 // Rate Limit Headers Interceptor
 export { RateLimitHeadersInterceptor, RATE_LIMIT_METADATA } from './rate-limit-headers.interceptor';
+
+// Rate Limit Guard (custom guard that sets metadata for headers interceptor)
+export { RateLimitGuard } from './rate-limit.guard';
 
 // Re-export useful decorators from @nestjs/throttler
 export { Throttle, SkipThrottle } from '@nestjs/throttler';

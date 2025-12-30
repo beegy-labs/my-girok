@@ -2,8 +2,13 @@
 export { PinoLoggerModule, PinoLoggerModuleOptions } from './pino-logger.module';
 
 // Pino Configuration
-export { createPinoConfig, createPinoHttpConfig } from './pino.config';
-export type { LogLevel, PinoConfigOptions } from './pino.config';
+export {
+  createPinoConfig,
+  createPinoHttpConfig,
+  SENSITIVE_FIELD_PATHS,
+  DEFAULT_HEALTH_ENDPOINTS,
+} from './pino.config';
+export type { LogLevel, PinoConfigOptions, PinoHttpConfigResult } from './pino.config';
 
 // Log Schema Interfaces
 export type {
