@@ -444,6 +444,7 @@ import { NestFactory } from '@nestjs/core';
 | `resourceAttributes`   | `{}`                    | Additional OTEL attributes  |
 | `disabled`             | `false`                 | Disable OTEL entirely       |
 | `debug`                | `false`                 | Enable OTEL debug logging   |
+| `enforceHttps`         | `false`                 | Require HTTPS in production |
 
 ### Helper Functions
 
@@ -604,14 +605,18 @@ export class AuthController {
 | `circuitBreakerThreshold` | `5`         | Failures before open   |
 | `circuitBreakerResetTime` | `30000`     | Reset wait time        |
 
-### Response Headers
+### Response Headers (IETF RFC 9110)
 
 ```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1704067260
-Retry-After: 60  (when 429)
+RateLimit-Limit: 100
+RateLimit-Remaining: 95
+RateLimit-Reset: 60          (delta seconds until reset)
+RateLimit-Policy: 100;w=60   (limit;window in seconds)
+Retry-After: 60              (when 429)
 ```
+
+> **Note**: Headers follow IETF RateLimit Fields draft standard.
+> Reset value is delta seconds (not Unix timestamp).
 
 ### Environment Variables
 

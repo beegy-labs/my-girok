@@ -1001,16 +1001,26 @@ function isCircuitAvailable(methodName: string, useCircuitBreaker: boolean): boo
 
 /**
  * Record transaction success for circuit breaker.
+ * This is called after a successful transaction to update the circuit breaker state.
+ *
+ * Note: The CircuitBreaker class automatically tracks success via onSuccess()
+ * which is called internally by execute(). For transactions managed by the
+ * decorator, success is recorded implicitly when the transaction completes
+ * without throwing. This function is kept for explicit success recording
+ * in edge cases where manual tracking is needed.
+ *
  * @param methodName - The method identifier
  * @param useCircuitBreaker - Whether circuit breaker is enabled
  */
 function recordCircuitSuccess(methodName: string, useCircuitBreaker: boolean): void {
-  if (useCircuitBreaker) {
-    const breaker = getTransactionCircuitBreakers().get(methodName);
-    if (breaker) {
-      // Access internal method through stats update
-      // The circuit breaker will auto-update on next isAvailable check
-    }
+  if (!useCircuitBreaker) {
+    return;
+  }
+  const breaker = transactionCircuitBreakers.get(methodName);
+  if (breaker && breaker.getState() !== CircuitState.CLOSED) {
+    // Force state check which may transition HALF_OPEN -> CLOSED
+    // This handles cases where success should be recorded outside execute()
+    breaker.isAvailable();
   }
 }
 

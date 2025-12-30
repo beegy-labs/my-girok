@@ -9,10 +9,14 @@ import { RateLimitHeaders, RATE_LIMIT_METADATA } from './rate-limit.config';
  *
  * Works for BOTH successful responses AND error responses (including 429).
  *
+ * Headers follow IETF RateLimit Fields draft standard:
+ * @see https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/
+ *
  * Adds the following headers:
- * - X-RateLimit-Limit: Maximum requests allowed per window
- * - X-RateLimit-Remaining: Requests remaining in current window
- * - X-RateLimit-Reset: Unix timestamp when the rate limit resets
+ * - RateLimit-Limit: Maximum requests allowed per window
+ * - RateLimit-Remaining: Requests remaining in current window
+ * - RateLimit-Reset: Delta seconds until the rate limit window resets
+ * - RateLimit-Policy: Rate limit policy (limit;w=windowSeconds)
  * - Retry-After: Seconds until the rate limit resets (when limit exceeded or remaining is 0)
  *
  * @example
