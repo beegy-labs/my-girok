@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router';
+import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -102,7 +103,11 @@ export default function ServiceConsentsPage() {
       setData(requirementsResult);
     } catch (err) {
       setError('Failed to load service data');
-      console.error(err);
+      logger.error('Failed to fetch service consents', {
+        serviceId,
+        countryCode: selectedCountry,
+        error: err,
+      });
     } finally {
       setLoading(false);
     }
@@ -164,7 +169,11 @@ export default function ServiceConsentsPage() {
       handleCancelEdit();
       await fetchData();
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to save consent requirement', {
+        serviceId,
+        consentId: editingId,
+        error: err,
+      });
       setError('Failed to save consent requirement');
     } finally {
       setSaving(false);
@@ -178,7 +187,11 @@ export default function ServiceConsentsPage() {
       await servicesApi.deleteConsentRequirement(serviceId, id);
       await fetchData();
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to delete consent requirement', {
+        serviceId,
+        consentId: id,
+        error: err,
+      });
       setError('Failed to delete consent requirement');
     }
   };

@@ -3,9 +3,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Keyv } from 'keyv';
 import KeyvRedis from '@keyv/redis';
-import { HttpExceptionFilter, HealthModule } from '@my-girok/nest-common';
+import {
+  HttpExceptionFilter,
+  HealthModule,
+  PinoLoggerModule,
+  OtelModule,
+} from '@my-girok/nest-common';
 import { UnifiedAuthGuard } from './auth/guards';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
@@ -20,6 +26,10 @@ import configuration from './config/configuration';
 
 @Module({
   imports: [
+    OtelModule.forRoot(),
+    PinoLoggerModule.forRoot({
+      serviceName: 'auth-service',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -51,6 +61,8 @@ import configuration from './config/configuration';
         limit: 100, // 100 requests per minute (default for public endpoints)
       },
     ]),
+    // Event Emitter for cache invalidation events
+    EventEmitterModule.forRoot(),
     DatabaseModule,
     CommonModule,
     AuthModule,

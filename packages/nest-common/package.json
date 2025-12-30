@@ -3,18 +3,29 @@
   "version": "0.1.0",
   "description": "Shared NestJS utilities and components for my-girok microservices",
   "main": "dist/index.js",
+  "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": [
+    "./dist/otel/otel-sdk.js",
+    "./dist/esm/otel/otel-sdk.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./prisma": {
       "types": "./dist/prisma.d.ts",
+      "import": "./dist/esm/prisma.js",
+      "require": "./dist/prisma.js",
       "default": "./dist/prisma.js"
     },
     "./clickhouse": {
       "types": "./dist/clickhouse-entry.d.ts",
+      "import": "./dist/esm/clickhouse-entry.js",
+      "require": "./dist/clickhouse-entry.js",
       "default": "./dist/clickhouse-entry.js"
     }
   },
@@ -29,7 +40,9 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm run build:cjs && pnpm run build:esm",
+    "build:cjs": "tsc",
+    "build:esm": "tsc -p tsconfig.esm.json",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -50,6 +63,7 @@
     "@nestjs/passport": "^10.0.0 || ^11.0.0",
     "@nestjs/platform-express": "^10.0.0 || ^11.0.0",
     "@nestjs/swagger": "^7.0.0 || ^11.0.0",
+    "@nestjs/throttler": "^6.0.0 || ^7.0.0",
     "@prisma/client": "^5.0.0 || ^6.0.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -58,6 +72,9 @@
   },
   "peerDependenciesMeta": {
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@nestjs/throttler": {
       "optional": true
     },
     "@prisma/client": {
@@ -72,6 +89,7 @@
     "@nestjs/passport": "catalog:",
     "@nestjs/platform-express": "catalog:",
     "@nestjs/swagger": "catalog:",
+    "@nestjs/throttler": "^6.4.0",
     "@types/express": "catalog:",
     "@types/jest": "^29.5.14",
     "@types/node": "catalog:",
@@ -85,7 +103,20 @@
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.54.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.57.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.57.0",
+    "@opentelemetry/resources": "^1.30.0",
+    "@opentelemetry/sdk-metrics": "^1.30.0",
+    "@opentelemetry/sdk-node": "^0.57.0",
+    "@opentelemetry/semantic-conventions": "^1.30.0",
     "helmet": "catalog:",
+    "ioredis": "^5.4.1",
+    "nestjs-pino": "^4.2.0",
+    "pino": "^9.6.0",
+    "pino-http": "^10.4.0",
+    "pino-pretty": "^13.0.0",
     "ulid": "^3.0.2"
   }
 }

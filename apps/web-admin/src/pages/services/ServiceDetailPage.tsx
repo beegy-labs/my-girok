@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   ArrowLeft,
   Loader2,
@@ -66,7 +67,7 @@ export default function ServiceDetailPage() {
       setService(result);
     } catch (err) {
       setError(t('services.loadFailed'));
-      console.error(err);
+      logger.error('Failed to fetch service details', { serviceId, error: err });
     } finally {
       setLoading(false);
     }

@@ -463,4 +463,542 @@ const result = await clickhouse.query(sql, params);
 
 ---
 
+## OpenTelemetry (OTEL) SDK
+
+The OTEL SDK provides auto-instrumentation for distributed tracing and metrics collection across all microservices.
+
+### Critical: Import Order
+
+The OTEL SDK **MUST** be imported and initialized as the **FIRST** import in your `main.ts` file, before any other imports:
+
+```typescript
+// main.ts - FIRST LINES
+import { initOtel } from '@my-girok/nest-common';
+initOtel({ serviceName: 'auth-service' });
+
+// Then other imports...
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  // ...
+}
+bootstrap();
+```
+
+This ensures all modules (HTTP, database, etc.) are properly instrumented before they're loaded.
+
+### Configuration Options
+
+```typescript
+interface OtelConfig {
+  serviceName: string; // Required: Service identifier
+  serviceVersion?: string; // Default: SERVICE_VERSION env or '0.0.0'
+  serviceNamespace?: string; // Default: 'my-girok'
+  environment?: string; // Default: NODE_ENV
+  otlpEndpoint?: string; // Default: OTEL_EXPORTER_OTLP_ENDPOINT or http://localhost:4318
+  samplingRatio?: number; // Default: 1.0 (100% sampling)
+  metricExportInterval?: number; // Default: 60000ms (1 minute)
+  metricExportTimeout?: number; // Default: 30000ms
+  traceExportTimeout?: number; // Default: 30000ms
+  ignoreEndpoints?: string[]; // Default: ['/health', '/ready', '/live', '/metrics', ...]
+  resourceAttributes?: Record<string, string | number | boolean>;
+  disabled?: boolean; // Default: false
+  debug?: boolean; // Default: false
+}
+```
+
+### Production Configuration Example
+
+```typescript
+initOtel({
+  serviceName: 'auth-service',
+  serviceVersion: process.env.SERVICE_VERSION,
+  samplingRatio: 0.1, // 10% sampling in production
+  otlpEndpoint: 'https://otel-collector.example.com:4318',
+  resourceAttributes: {
+    'deployment.region': 'ap-northeast-2',
+  },
+});
+```
+
+### Helper Functions
+
+```typescript
+import { initOtel, shutdownOtel, getOtelSdk, isOtelInitialized } from '@my-girok/nest-common';
+
+// Graceful shutdown (call before app termination)
+await shutdownOtel(10000); // 10 second timeout
+
+// Check initialization status
+if (isOtelInitialized()) {
+  console.log('OTEL is active');
+}
+
+// Get SDK instance (for advanced use cases)
+const sdk = getOtelSdk();
+```
+
+### Environment Variables
+
+| Variable                      | Default                 | Description                 |
+| ----------------------------- | ----------------------- | --------------------------- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318` | OTLP collector endpoint     |
+| `OTEL_SDK_DISABLED`           | `false`                 | Set `true` to disable OTEL  |
+| `OTEL_DEBUG`                  | `false`                 | Enable OTEL debug logging   |
+| `OTEL_TRACES_SAMPLER_ARG`     | `1.0`                   | Sampling ratio (0.0-1.0)    |
+| `OTEL_TRACE_EXPORT_TIMEOUT`   | `30000`                 | Trace export timeout (ms)   |
+| `OTEL_METRIC_EXPORT_INTERVAL` | `60000`                 | Metric export interval (ms) |
+| `SERVICE_VERSION`             | `0.0.0`                 | Service version for traces  |
+| `SERVICE_NAMESPACE`           | `my-girok`              | Service namespace           |
+| `K8S_NAMESPACE`               | -                       | Kubernetes namespace        |
+| `POD_NAME`                    | -                       | Kubernetes pod name         |
+
+### Resource Attributes
+
+The SDK automatically sets these OpenTelemetry resource attributes:
+
+- `service.name`, `service.version`, `service.namespace`, `service.instance.id`
+- `process.pid`, `process.runtime.name`, `process.runtime.version`
+- `telemetry.sdk.name`, `telemetry.sdk.version`, `telemetry.sdk.language`
+- `deployment.environment.name`, `host.name`, `host.arch`
+- Kubernetes attributes (when running in K8s)
+
+---
+
+## Pino Logging
+
+Structured logging with ECS 8.11.0 compliance, OTEL trace correlation, and comprehensive security features.
+
+### Module Setup
+
+```typescript
+import { PinoLoggerModule, createPinoHttpConfig } from '@my-girok/nest-common';
+
+@Module({
+  imports: [
+    PinoLoggerModule.forRoot(
+      createPinoHttpConfig({
+        serviceName: 'auth-service',
+        serviceVersion: '1.0.0',
+        level: 'info',
+        additionalRedactPaths: ['req.body.customSecret'],
+      }),
+    ),
+  ],
+})
+export class AppModule {}
+```
+
+### Configuration Options
+
+```typescript
+interface PinoConfigOptions {
+  serviceName?: string; // Default: SERVICE_NAME env
+  serviceVersion?: string; // Default: SERVICE_VERSION env
+  environment?: string; // Default: NODE_ENV
+  level?: string; // Default: 'debug' (dev) / 'info' (prod)
+  additionalRedactPaths?: string[]; // Extra fields to redact
+}
+```
+
+### Security Features
+
+#### 1. Sensitive Field Redaction (100+ patterns)
+
+The logger automatically redacts sensitive fields from logs:
+
+**Authentication & Tokens:**
+
+```
+password, token, secret, apiKey, authorization, refreshToken, accessToken,
+bearerToken, jwtToken, sessionToken, csrfToken, x-csrf-token
+```
+
+**Personal Information (PII):**
+
+```
+ssn, email, phone, address, dateOfBirth, passportNumber, driversLicense
+```
+
+**Financial Data:**
+
+```
+creditCard, cardNumber, cvv, bankAccount, accountNumber, routingNumber, iban, pin
+```
+
+**Cloud Credentials:**
+
+```
+awsSecretAccessKey, azureClientSecret, gcpServiceAccountKey, clientSecret
+```
+
+**Deep Wildcards** (matches at any nesting level):
+
+```
+**.password, **.token, **.secret, **.apiKey, **.creditCard, **.ssn
+```
+
+#### 2. Log Injection Prevention
+
+The logger sanitizes all user-controlled strings:
+
+- **Unicode normalization (NFKC)**: Prevents homoglyph attacks
+- **ANSI escape stripping**: Removes terminal control codes
+- **Control character removal**: ASCII (0x00-0x1F, 0x7F), Unicode (0x80-0x9F)
+- **Zero-width character removal**: U+200B-U+200D, U+FEFF
+- **Bidirectional text override removal**: U+202A-U+202E
+- **Length limits**: Prevents log bloat attacks
+
+#### 3. IP Address Validation
+
+Client IP addresses are validated against IPv4/IPv6 patterns before logging.
+
+#### 4. Request ID Validation
+
+Only UUID-formatted request IDs are accepted; invalid IDs are replaced with new UUIDs.
+
+### Log Output Format (ECS 8.11.0)
+
+```json
+{
+  "@timestamp": "2024-01-01T00:00:00.000Z",
+  "log.level": "info",
+  "message": "Request completed in 45ms with status 200",
+  "ecs.version": "8.11.0",
+  "service.name": "auth-service",
+  "service.version": "1.0.0",
+  "service.environment": "production",
+  "trace.id": "abc123def456...",
+  "span.id": "789xyz...",
+  "trace.sampled": true,
+  "http.request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "http.method": "POST",
+  "http.path": "/v1/auth/login",
+  "http.status_code": 200,
+  "http.response_time_ms": 45,
+  "client.ip": "192.168.1.1",
+  "event.category": "web",
+  "event.outcome": "success"
+}
+```
+
+### Automatic Health Endpoint Skipping
+
+These endpoints are automatically excluded from request logging:
+
+- `/health`, `/health/ready`, `/health/live`
+- `/healthz`, `/readyz`, `/livez`
+- `/metrics`, `/ping`, `/_health`
+
+---
+
+## Rate Limiting
+
+Distributed rate limiting with Redis/Valkey storage, circuit breaker pattern, and fail-open fallback.
+
+### Basic Setup (In-Memory)
+
+```typescript
+import { RateLimitModule } from '@my-girok/nest-common';
+
+@Module({
+  imports: [RateLimitModule.forRoot()],
+})
+export class AppModule {}
+```
+
+### Distributed Setup (Redis/Valkey)
+
+```typescript
+@Module({
+  imports: [
+    RateLimitModule.forRoot({
+      defaultTier: 'AUTH',
+      redisUrl: 'redis://localhost:6379',
+      keyPrefix: 'myapp:throttle:',
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Async Configuration
+
+```typescript
+@Module({
+  imports: [RateLimitModule.forRootAsync()],
+})
+export class AppModule {}
+
+// Reads from environment:
+// - VALKEY_URL or REDIS_URL
+// - RATE_LIMIT_TIER (STANDARD, AUTH, etc.)
+// - RATE_LIMIT_KEY_PREFIX
+```
+
+### Pre-Configured Rate Limit Tiers
+
+| Tier             | Limit    | TTL | Description                     |
+| ---------------- | -------- | --- | ------------------------------- |
+| `STANDARD`       | 100 req  | 60s | Default for most APIs           |
+| `AUTH`           | 10 req   | 60s | Login, register, password reset |
+| `HIGH_FREQUENCY` | 1000 req | 60s | Public read-heavy endpoints     |
+| `WRITE_HEAVY`    | 30 req   | 60s | Create, update operations       |
+| `ADMIN`          | 500 req  | 60s | Admin panel APIs                |
+| `PUBLIC`         | 50 req   | 60s | Unauthenticated endpoints       |
+
+### Controller Usage
+
+```typescript
+import { Throttle, SkipThrottle } from '@my-girok/nest-common';
+
+@Controller('auth')
+export class AuthController {
+  // Custom rate limit for this endpoint
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('login')
+  async login(@Body() dto: LoginDto) {
+    // Only 5 attempts per minute
+  }
+
+  // Skip rate limiting entirely
+  @SkipThrottle()
+  @Get('health')
+  health() {
+    return { status: 'ok' };
+  }
+}
+```
+
+### Redis Storage Configuration
+
+```typescript
+interface RedisThrottlerStorageOptions {
+  url: string; // Required: Redis connection URL
+  keyPrefix?: string; // Default: 'throttle:'
+  connectTimeout?: number; // Default: 5000ms
+  commandTimeout?: number; // Default: 3000ms
+  tls?: boolean; // Default: false
+  enableFallback?: boolean; // Default: true (fail-open)
+  circuitBreakerThreshold?: number; // Default: 5 failures
+  circuitBreakerResetTime?: number; // Default: 30000ms
+}
+```
+
+### Circuit Breaker Behavior
+
+The Redis storage includes a circuit breaker to handle Redis failures:
+
+1. **CLOSED** (normal): Requests go to Redis
+2. **OPEN** (after threshold failures): Requests bypass Redis, use fallback
+3. **HALF-OPEN** (after reset time): Single test request to Redis
+
+With `enableFallback: true` (default), requests are **allowed** when Redis is unavailable.
+
+### Response Headers
+
+All responses include rate limit headers:
+
+```
+X-RateLimit-Limit: 100        # Maximum requests per window
+X-RateLimit-Remaining: 95     # Remaining requests
+X-RateLimit-Reset: 1704067260 # Unix timestamp when limit resets
+Retry-After: 60               # Seconds to wait (only when 429)
+```
+
+### Environment Variables
+
+| Variable                    | Default     | Description                     |
+| --------------------------- | ----------- | ------------------------------- |
+| `RATE_LIMIT_TTL`            | `60000`     | Default TTL in milliseconds     |
+| `RATE_LIMIT_STANDARD`       | `100`       | Standard tier limit             |
+| `RATE_LIMIT_AUTH`           | `10`        | Auth tier limit                 |
+| `RATE_LIMIT_HIGH_FREQUENCY` | `1000`      | High frequency tier limit       |
+| `RATE_LIMIT_WRITE_HEAVY`    | `30`        | Write heavy tier limit          |
+| `RATE_LIMIT_ADMIN`          | `500`       | Admin tier limit                |
+| `RATE_LIMIT_PUBLIC`         | `50`        | Public tier limit               |
+| `VALKEY_URL`                | -           | Valkey connection URL           |
+| `REDIS_URL`                 | -           | Redis connection URL (fallback) |
+| `RATE_LIMIT_KEY_PREFIX`     | `throttle:` | Redis key prefix                |
+| `RATE_LIMIT_TIER`           | `STANDARD`  | Default tier (for forRootAsync) |
+
+---
+
+## @Transactional Decorator
+
+Declarative transaction management for Prisma with AsyncLocalStorage-based context propagation, automatic retry on deadlock, and OTEL tracing.
+
+### Basic Usage
+
+```typescript
+import { Transactional, getPrismaClient } from '@my-girok/nest-common';
+
+@Injectable()
+export class UserService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  @Transactional()
+  async createUserWithProfile(dto: CreateUserDto) {
+    // All operations share the same transaction
+    const user = await this.prisma.user.create({
+      data: { email: dto.email },
+    });
+
+    // This also runs in the same transaction!
+    await this.profileService.createProfile(user.id, dto.profile);
+
+    return user;
+  }
+}
+```
+
+### Propagation Modes
+
+The decorator supports 6 propagation modes, similar to Spring's `@Transactional`:
+
+| Mode                 | Behavior                                  | Use Case                              |
+| -------------------- | ----------------------------------------- | ------------------------------------- |
+| `required` (default) | Join existing transaction or create new   | Most operations                       |
+| `requires_new`       | Always create new, suspend existing       | Audit logs, independent operations    |
+| `supports`           | Use existing if available, none otherwise | Optional transaction participation    |
+| `mandatory`          | Must have existing, throw if none         | Operations that require transaction   |
+| `never`              | Must NOT have existing, throw if exists   | Operations that must run outside tx   |
+| `not_supported`      | Suspend existing, run without transaction | Read-only queries, external API calls |
+
+```typescript
+@Transactional({ propagation: 'requires_new' })
+async auditLog(action: string) {
+  // Always in its own transaction, even if called from another @Transactional method
+}
+
+@Transactional({ propagation: 'mandatory' })
+async updateInventory(productId: string, quantity: number) {
+  // Throws error if called without existing transaction
+}
+```
+
+### Configuration Options
+
+```typescript
+interface TransactionalOptions {
+  timeout?: number; // Default: 30000ms (min: 1000, max: 300000)
+  isolationLevel?: TransactionIsolationLevel; // Default: 'ReadCommitted'
+  maxRetries?: number; // Default: 3 (total attempts)
+  retryDelay?: number; // Default: 100ms (base delay)
+  prismaProperty?: string; // Default: 'prisma'
+  propagation?: TransactionPropagation; // Default: 'required'
+  enableTracing?: boolean; // Default: true
+}
+
+type TransactionIsolationLevel =
+  | 'ReadUncommitted'
+  | 'ReadCommitted'
+  | 'RepeatableRead'
+  | 'Serializable'
+  | 'Snapshot';
+```
+
+### Automatic Retry Logic
+
+The decorator automatically retries on transient errors using **full jitter exponential backoff**:
+
+**Retryable errors:**
+
+- Prisma: `P2034` (deadlock), `P2024` (pool timeout), `P2028` (tx error), `P1001/P1002/P1017` (connection)
+- PostgreSQL: `40001` (serialization), `40P01` (deadlock), `53300` (too many connections), `55P03` (lock timeout)
+- Network: `ECONNREFUSED`, `ETIMEDOUT`, `ECONNRESET`
+
+**Non-retryable errors (fail immediately):**
+
+- `23505` (unique violation), `23503` (FK violation), `42P01` (undefined table), syntax errors
+
+### Helper Functions
+
+```typescript
+import {
+  getPrismaClient,
+  isInTransaction,
+  getCurrentTransactionId,
+  getTransactionDepth,
+} from '@my-girok/nest-common';
+
+// Get transaction-aware Prisma client
+async someMethod() {
+  const client = getPrismaClient(this.prisma);
+  // Uses transaction client if in transaction, otherwise normal client
+}
+
+// Check if currently in transaction
+if (isInTransaction()) {
+  // We're inside a @Transactional method
+}
+
+// Get current transaction ID (for logging)
+const txId = getCurrentTransactionId(); // 'tx_abc123...' or undefined
+
+// Get nesting depth
+const depth = getTransactionDepth(); // 0, 1, 2, ...
+```
+
+### OTEL Integration
+
+When `enableTracing: true` (default), each transaction creates an OTEL span with:
+
+```
+db.operation: transaction
+db.system: postgresql
+db.transaction.id: tx_m2x9k1_abc123
+db.transaction.isolation_level: ReadCommitted
+db.transaction.attempt: 1
+db.transaction.timeout_ms: 30000
+db.transaction.propagation: required
+```
+
+### Max Depth Protection
+
+Transactions are limited to 10 nesting levels to prevent stack overflow. Exceeding this throws an error.
+
+### Example: Complex Transaction with Multiple Services
+
+```typescript
+@Injectable()
+export class OrderService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly inventoryService: InventoryService,
+    private readonly paymentService: PaymentService,
+    private readonly auditService: AuditService,
+  ) {}
+
+  @Transactional({ timeout: 60000, isolationLevel: 'Serializable' })
+  async createOrder(dto: CreateOrderDto) {
+    // 1. Create order
+    const order = await this.prisma.order.create({ data: dto });
+
+    // 2. Update inventory (same transaction via AsyncLocalStorage)
+    await this.inventoryService.decrementStock(dto.productId, dto.quantity);
+
+    // 3. Process payment (same transaction)
+    await this.paymentService.charge(dto.userId, order.total);
+
+    // 4. Audit log (new independent transaction)
+    await this.auditService.log('order.created', order.id);
+
+    return order;
+  }
+}
+
+@Injectable()
+export class AuditService {
+  @Transactional({ propagation: 'requires_new' })
+  async log(action: string, entityId: string) {
+    // Always commits, even if parent transaction rolls back
+  }
+}
+```
+
+---
+
 **Quick reference**: `.ai/packages/nest-common.md`

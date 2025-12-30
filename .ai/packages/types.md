@@ -298,6 +298,78 @@ interface PaginatedResponse<T> {
 import { User, Role, Resume, ApiResponse } from '@my-girok/types';
 ```
 
+## Service Admin Types (Global Account)
+
+```typescript
+// Service Configuration
+type AuditLevel = 'MINIMAL' | 'STANDARD' | 'VERBOSE' | 'DEBUG';
+
+interface ServiceConfig {
+  id: string;
+  serviceId: string;
+  jwtValidation: boolean;
+  domainValidation: boolean;
+  ipWhitelistEnabled: boolean;
+  ipWhitelist: string[];
+  rateLimitEnabled: boolean;
+  rateLimitRequests: number;
+  rateLimitWindow: number;
+  maintenanceMode: boolean;
+  maintenanceMessage: string | null;
+  auditLevel: AuditLevel;
+}
+
+// Service Features (Hierarchical)
+type PermissionTargetType = 'ALL_USERS' | 'USER' | 'TIER' | 'COUNTRY' | 'ROLE';
+type FeatureAction = 'USE' | 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'ADMIN';
+
+interface ServiceFeature {
+  id: string;
+  serviceId: string;
+  code: string;
+  name: string;
+  category: string;
+  parentId: string | null;
+  path: string; // Materialized path: /feature/sub
+  depth: number; // 1-4 (max)
+  displayOrder: number;
+  isActive: boolean;
+  children?: ServiceFeature[];
+}
+
+// Service Testers
+interface TesterUser {
+  id: string;
+  serviceId: string;
+  userId: string;
+  user: { id: string; email: string; name: string | null };
+  bypassAll: boolean;
+  bypassDomain: boolean;
+  bypassIP: boolean;
+  bypassRate: boolean;
+  expiresAt: string | null;
+}
+
+// Sanctions
+type SanctionType = 'WARNING' | 'TEMPORARY_BAN' | 'PERMANENT_BAN' | 'FEATURE_RESTRICTION';
+type SanctionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+type SanctionSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+type AppealStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'ESCALATED';
+
+interface Sanction {
+  id: string;
+  subjectId: string;
+  subjectType: 'USER' | 'ADMIN' | 'OPERATOR';
+  scope: 'PLATFORM' | 'SERVICE';
+  type: SanctionType;
+  status: SanctionStatus;
+  severity: SanctionSeverity;
+  restrictedFeatures: string[];
+  reason: string;
+  appealStatus: AppealStatus | null;
+}
+```
+
 ## Commands
 
 ```bash

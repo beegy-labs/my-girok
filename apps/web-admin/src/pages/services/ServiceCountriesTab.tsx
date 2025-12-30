@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import { Plus, X, Loader2, AlertCircle, Globe } from 'lucide-react';
 import { servicesApi, ServiceCountry } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
@@ -30,7 +31,7 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
       setCountries(result.data);
     } catch (err) {
       setError(t('services.loadCountriesFailed'));
-      console.error(err);
+      logger.error('Failed to fetch service countries', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,11 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
       fetchCountries();
     } catch (err) {
       setError(t('services.addCountryFailed'));
-      console.error(err);
+      logger.error('Failed to add service country', {
+        serviceId,
+        countryCode: selectedCountry,
+        error: err,
+      });
     } finally {
       setAdding(false);
     }
@@ -67,7 +72,7 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
       fetchCountries();
     } catch (err) {
       setError(t('services.removeCountryFailed'));
-      console.error(err);
+      logger.error('Failed to remove service country', { serviceId, countryCode, error: err });
     } finally {
       setRemoving(null);
     }

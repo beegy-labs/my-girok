@@ -1,80 +1,26 @@
 import apiClient from './client';
+import type {
+  SupportedCountry,
+  SupportedCountryListResponse,
+  CreateSupportedCountryDto,
+  UpdateSupportedCountryDto,
+  SupportedLocale,
+  SupportedLocaleListResponse,
+  CreateSupportedLocaleDto,
+  UpdateSupportedLocaleDto,
+} from '@my-girok/types';
 
-// ============================================================
-// Types
-// ============================================================
-
-export interface SupportedCountry {
-  id: string;
-  code: string;
-  name: string;
-  nativeName: string | null;
-  flagEmoji: string | null;
-  isActive: boolean;
-  displayOrder: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SupportedCountryListResponse {
-  data: SupportedCountry[];
-  meta: {
-    total: number;
-  };
-}
-
-export interface CreateSupportedCountryDto {
-  code: string;
-  name: string;
-  nativeName?: string;
-  flagEmoji?: string;
-  isActive?: boolean;
-  displayOrder?: number;
-}
-
-export interface UpdateSupportedCountryDto {
-  name?: string;
-  nativeName?: string;
-  flagEmoji?: string;
-  isActive?: boolean;
-  displayOrder?: number;
-}
-
-export interface SupportedLocale {
-  id: string;
-  code: string;
-  name: string;
-  nativeName: string | null;
-  flagEmoji: string | null;
-  isActive: boolean;
-  displayOrder: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SupportedLocaleListResponse {
-  data: SupportedLocale[];
-  meta: {
-    total: number;
-  };
-}
-
-export interface CreateSupportedLocaleDto {
-  code: string;
-  name: string;
-  nativeName?: string;
-  flagEmoji?: string;
-  isActive?: boolean;
-  displayOrder?: number;
-}
-
-export interface UpdateSupportedLocaleDto {
-  name?: string;
-  nativeName?: string;
-  flagEmoji?: string;
-  isActive?: boolean;
-  displayOrder?: number;
-}
+// Re-export types for convenience
+export type {
+  SupportedCountry,
+  SupportedCountryListResponse,
+  CreateSupportedCountryDto,
+  UpdateSupportedCountryDto,
+  SupportedLocale,
+  SupportedLocaleListResponse,
+  CreateSupportedLocaleDto,
+  UpdateSupportedLocaleDto,
+} from '@my-girok/types';
 
 // ============================================================
 // API Functions

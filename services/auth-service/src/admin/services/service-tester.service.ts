@@ -1,9 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '../../../node_modules/.prisma/auth-client';
-import { ID } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditLogService } from './audit-log.service';
 import { AdminPayload } from '../types/admin.types';
+
+// Cache key helpers
+const TESTERS_USER_CACHE_KEY = (serviceId: string) =>
+  CacheKey.make('auth', 'service_testers', serviceId, 'users');
+const TESTERS_ADMIN_CACHE_KEY = (serviceId: string) =>
+  CacheKey.make('auth', 'service_testers', serviceId, 'admins');
+const TESTER_BYPASS_CACHE_KEY = (userId: string, serviceId: string) =>
+  CacheKey.make('auth', 'tester_bypass', userId, serviceId);
 import {
   CreateTesterUserDto,
   UpdateTesterUserDto,
@@ -52,7 +62,25 @@ export class ServiceTesterService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLogService: AuditLogService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /**
+   * Invalidate tester caches for a service
+   */
+  private async invalidateUserTesterCache(serviceId: string, userId?: string): Promise<void> {
+    await this.cache.del(TESTERS_USER_CACHE_KEY(serviceId));
+    if (userId) {
+      await this.cache.del(TESTER_BYPASS_CACHE_KEY(userId, serviceId));
+    }
+    this.eventEmitter.emit('service.testers.updated', { serviceId, type: 'user', userId });
+  }
+
+  private async invalidateAdminTesterCache(serviceId: string): Promise<void> {
+    await this.cache.del(TESTERS_ADMIN_CACHE_KEY(serviceId));
+    this.eventEmitter.emit('service.testers.updated', { serviceId, type: 'admin' });
+  }
 
   // ============================================================
   // USER TESTERS
@@ -62,6 +90,11 @@ export class ServiceTesterService {
     serviceId: string,
     _query: ListTesterUsersQueryDto,
   ): Promise<TesterUserListResponseDto> {
+    // Cache for default queries (no filter)
+    const cacheKey = TESTERS_USER_CACHE_KEY(serviceId);
+    const cached = await this.cache.get<TesterUserListResponseDto>(cacheKey);
+    if (cached) return cached;
+
     // Note: expiresWithin filter can be added with dynamic SQL if needed
     const testers = await this.prisma.$queryRaw<TesterUserRow[]>(
       Prisma.sql`
@@ -101,10 +134,14 @@ export class ServiceTesterService {
       updatedAt: t.updatedAt,
     }));
 
-    return {
+    const response: TesterUserListResponseDto = {
       data,
       meta: { total: data.length, serviceId },
     };
+
+    await this.cache.set(cacheKey, response, CacheTTL.SEMI_STATIC);
+
+    return response;
   }
 
   async getUserTester(serviceId: string, userId: string): Promise<TesterUserResponseDto> {
@@ -152,6 +189,7 @@ export class ServiceTesterService {
     };
   }
 
+  @Transactional()
   async createUserTester(
     serviceId: string,
     dto: CreateTesterUserDto,
@@ -216,9 +254,12 @@ export class ServiceTesterService {
       admin,
     });
 
+    await this.invalidateUserTesterCache(serviceId, dto.userId);
+
     return tester;
   }
 
+  @Transactional()
   async updateUserTester(
     serviceId: string,
     userId: string,
@@ -257,9 +298,12 @@ export class ServiceTesterService {
       admin,
     });
 
+    await this.invalidateUserTesterCache(serviceId, userId);
+
     return afterTester;
   }
 
+  @Transactional()
   async deleteUserTester(
     serviceId: string,
     userId: string,
@@ -286,6 +330,8 @@ export class ServiceTesterService {
       admin,
     });
 
+    await this.invalidateUserTesterCache(serviceId, userId);
+
     return { success: true };
   }
 
@@ -294,6 +340,10 @@ export class ServiceTesterService {
   // ============================================================
 
   async listAdminTesters(serviceId: string): Promise<TesterAdminListResponseDto> {
+    const cacheKey = TESTERS_ADMIN_CACHE_KEY(serviceId);
+    const cached = await this.cache.get<TesterAdminListResponseDto>(cacheKey);
+    if (cached) return cached;
+
     const testers = await this.prisma.$queryRaw<TesterAdminRow[]>(
       Prisma.sql`
       SELECT
@@ -326,12 +376,17 @@ export class ServiceTesterService {
       createdBy: t.createdBy,
     }));
 
-    return {
+    const response: TesterAdminListResponseDto = {
       data,
       meta: { total: data.length, serviceId },
     };
+
+    await this.cache.set(cacheKey, response, CacheTTL.SEMI_STATIC);
+
+    return response;
   }
 
+  @Transactional()
   async createAdminTester(
     serviceId: string,
     dto: CreateTesterAdminDto,
@@ -409,9 +464,12 @@ export class ServiceTesterService {
       admin,
     });
 
+    await this.invalidateAdminTesterCache(serviceId);
+
     return result;
   }
 
+  @Transactional()
   async deleteAdminTester(
     serviceId: string,
     adminId: string,
@@ -452,6 +510,8 @@ export class ServiceTesterService {
       reason,
       admin,
     });
+
+    await this.invalidateAdminTesterCache(serviceId);
 
     return { success: true };
   }

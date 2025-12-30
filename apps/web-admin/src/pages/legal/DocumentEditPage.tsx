@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import { ArrowLeft, Save, Loader2, AlertCircle, Eye, Code } from 'lucide-react';
 import { legalApi, CreateDocumentRequest, UpdateDocumentRequest } from '../../api/legal';
 import { servicesApi, Service } from '../../api/services';
@@ -92,7 +93,7 @@ export default function DocumentEditPage() {
       setCountryCode(doc.countryCode || '');
     } catch (err) {
       setError(t('legal.loadFailed'));
-      console.error(err);
+      logger.error('Failed to fetch document', { documentId: id, error: err });
     } finally {
       setLoading(false);
     }
@@ -131,7 +132,11 @@ export default function DocumentEditPage() {
       navigate('/compliance/documents');
     } catch (err) {
       setError(isNew ? t('legal.saveFailed') : t('legal.saveFailed'));
-      console.error(err);
+      logger.error(isNew ? 'Failed to create document' : 'Failed to update document', {
+        documentId: id,
+        type,
+        error: err,
+      });
     } finally {
       setSaving(false);
     }

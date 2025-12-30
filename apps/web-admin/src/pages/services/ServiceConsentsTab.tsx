@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -91,7 +92,11 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
       setRequirements(result.data);
     } catch (err) {
       setError(t('services.loadConsentsFailed'));
-      console.error(err);
+      logger.error('Failed to fetch consent requirements', {
+        serviceId,
+        countryCode: selectedCountry,
+        error: err,
+      });
     } finally {
       setLoading(false);
     }
@@ -157,7 +162,11 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
       handleCancelEdit();
       await fetchData();
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to save consent requirement', {
+        serviceId,
+        consentId: editingId,
+        error: err,
+      });
       setError(t('services.saveConsentFailed'));
     } finally {
       setSaving(false);
@@ -171,7 +180,11 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
       await servicesApi.deleteConsentRequirement(serviceId, id);
       await fetchData();
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to delete consent requirement', {
+        serviceId,
+        consentId: id,
+        error: err,
+      });
       setError(t('services.deleteConsentFailed'));
     }
   };

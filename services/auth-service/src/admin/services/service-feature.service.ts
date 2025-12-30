@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '../../../node_modules/.prisma/auth-client';
-import { ID } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditLogService } from './audit-log.service';
 import { AdminPayload } from '../types/admin.types';
@@ -13,6 +15,10 @@ import {
   FeaturePermissionResponseDto,
   ServiceFeatureListResponseDto,
 } from '../dto/service-feature.dto';
+
+// Cache key helper
+const FEATURES_CACHE_KEY = (serviceId: string) =>
+  CacheKey.make('auth', 'service_features', serviceId);
 
 interface FeatureRow {
   id: string;
@@ -59,13 +65,33 @@ export class ServiceFeatureService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLogService: AuditLogService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /**
+   * Invalidate feature cache for a service
+   */
+  private async invalidateCache(serviceId: string): Promise<void> {
+    await this.cache.del(FEATURES_CACHE_KEY(serviceId));
+    this.eventEmitter.emit('service.features.updated', { serviceId });
+  }
 
   // ============================================================
   // FEATURE CRUD
   // ============================================================
 
   async list(serviceId: string, options: ListOptions): Promise<ServiceFeatureListResponseDto> {
+    // Only cache when fetching all active features with children (default case)
+    const isDefaultQuery =
+      !options.category && !options.includeInactive && options.includeChildren !== false;
+    const cacheKey = FEATURES_CACHE_KEY(serviceId);
+
+    if (isDefaultQuery) {
+      const cached = await this.cache.get<ServiceFeatureListResponseDto>(cacheKey);
+      if (cached) return cached;
+    }
+
     const categoryFilter = options.category ?? null;
     const includeInactive = options.includeInactive ?? false;
 
@@ -92,7 +118,7 @@ export class ServiceFeatureService {
       result = features as ServiceFeatureResponseDto[];
     }
 
-    return {
+    const response: ServiceFeatureListResponseDto = {
       data: result,
       meta: {
         total: features.length,
@@ -100,6 +126,13 @@ export class ServiceFeatureService {
         category: options.category,
       },
     };
+
+    // Cache default queries for 1 hour
+    if (isDefaultQuery) {
+      await this.cache.set(cacheKey, response, CacheTTL.STATIC_CONFIG);
+    }
+
+    return response;
   }
 
   async findOne(serviceId: string, id: string): Promise<ServiceFeatureResponseDto> {
@@ -124,6 +157,7 @@ export class ServiceFeatureService {
     return features[0] as ServiceFeatureResponseDto;
   }
 
+  @Transactional()
   async create(
     serviceId: string,
     dto: CreateServiceFeatureDto,
@@ -201,9 +235,12 @@ export class ServiceFeatureService {
       admin,
     });
 
+    await this.invalidateCache(serviceId);
+
     return feature;
   }
 
+  @Transactional({ isolationLevel: 'Serializable', timeout: 60000, maxRetries: 5 })
   async update(
     serviceId: string,
     id: string,
@@ -215,8 +252,11 @@ export class ServiceFeatureService {
     // Handle parent change
     let path = beforeFeature.path;
     let depth = beforeFeature.depth;
+    const oldPath = beforeFeature.path;
+    let pathChanged = false;
 
     if (dto.parentId !== undefined && dto.parentId !== beforeFeature.parentId) {
+      pathChanged = true;
       if (dto.parentId) {
         const parent = await this.findOne(serviceId, dto.parentId);
         path = `${parent.path}/${beforeFeature.code.toLowerCase()}`;
@@ -224,6 +264,14 @@ export class ServiceFeatureService {
 
         if (depth > 4) {
           throw new BadRequestException('Maximum feature depth is 4');
+        }
+
+        // Check if new depth would exceed max for any children
+        const maxChildDepth = await this.getMaxChildDepth(id);
+        if (maxChildDepth > 0 && depth + maxChildDepth > 4) {
+          throw new BadRequestException(
+            `Moving to this parent would exceed maximum depth for child features (current max child depth: ${maxChildDepth})`,
+          );
         }
       } else {
         path = `/${beforeFeature.code.toLowerCase()}`;
@@ -259,6 +307,22 @@ export class ServiceFeatureService {
 
     const afterFeature = updated[0] as ServiceFeatureResponseDto;
 
+    // Update all children paths if parent changed
+    if (pathChanged) {
+      const depthDiff = depth - beforeFeature.depth;
+      await this.prisma.$executeRaw(
+        Prisma.sql`
+        UPDATE service_features
+        SET
+          path = ${path} || SUBSTRING(path FROM LENGTH(${oldPath}) + 1),
+          depth = depth + ${depthDiff},
+          updated_at = NOW()
+        WHERE service_id = ${serviceId}::uuid
+          AND path LIKE ${oldPath + '/%'}
+      `,
+      );
+    }
+
     await this.auditLogService.log({
       resource: 'service_feature',
       action: 'update',
@@ -270,9 +334,27 @@ export class ServiceFeatureService {
       admin,
     });
 
+    await this.invalidateCache(serviceId);
+
     return afterFeature;
   }
 
+  /**
+   * Get the maximum relative depth of all descendants
+   */
+  private async getMaxChildDepth(featureId: string): Promise<number> {
+    const result = await this.prisma.$queryRaw<{ maxDepth: number | null }[]>(
+      Prisma.sql`
+      SELECT MAX(c.depth - p.depth) as "maxDepth"
+      FROM service_features c
+      JOIN service_features p ON p.id = ${featureId}::uuid
+      WHERE c.path LIKE p.path || '/%'
+    `,
+    );
+    return result[0]?.maxDepth ?? 0;
+  }
+
+  @Transactional()
   async delete(serviceId: string, id: string, admin: AdminPayload): Promise<{ success: boolean }> {
     const feature = await this.findOne(serviceId, id);
 
@@ -305,28 +387,43 @@ export class ServiceFeatureService {
       admin,
     });
 
+    await this.invalidateCache(serviceId);
+
     return { success: true };
   }
 
+  @Transactional()
   async bulk(
     serviceId: string,
     dto: BulkFeatureOperationDto,
     admin: AdminPayload,
   ): Promise<ServiceFeatureListResponseDto> {
     switch (dto.operation) {
-      case 'reorder':
-        for (const item of dto.items) {
-          if (item.id && item.displayOrder !== undefined) {
-            await this.prisma.$executeRaw(
-              Prisma.sql`
-              UPDATE service_features
-              SET display_order = ${item.displayOrder}, updated_at = NOW()
-              WHERE id = ${item.id}::uuid AND service_id = ${serviceId}::uuid
-            `,
-            );
-          }
+      case 'reorder': {
+        // Optimized: Single UPDATE with CASE WHEN instead of N individual queries
+        const validItems = dto.items.filter((item) => item.id && item.displayOrder !== undefined);
+
+        if (validItems.length > 0) {
+          // Build CASE WHEN clause for batch update
+          const caseClauseParts = validItems.map(
+            (item) => Prisma.sql`WHEN id = ${item.id}::uuid THEN ${item.displayOrder}`,
+          );
+
+          const idList = validItems.map((item) => Prisma.sql`${item.id}::uuid`);
+
+          await this.prisma.$executeRaw(
+            Prisma.sql`
+            UPDATE service_features
+            SET
+              display_order = CASE ${Prisma.join(caseClauseParts, ' ')} ELSE display_order END,
+              updated_at = NOW()
+            WHERE service_id = ${serviceId}::uuid
+              AND id IN (${Prisma.join(idList, ', ')})
+          `,
+          );
         }
         break;
+      }
       // Other operations can be added as needed
     }
 
@@ -339,6 +436,8 @@ export class ServiceFeatureService {
       afterState: dto,
       admin,
     });
+
+    await this.invalidateCache(serviceId);
 
     return this.list(serviceId, { includeChildren: true });
   }

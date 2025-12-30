@@ -58,6 +58,44 @@ GET             /v1/admin/legal/consents[/stats]  # legal:read
 GET             /v1/admin/audit/logs[/export]     # audit:read
 ```
 
+### Service Management
+
+```
+GET|POST        /v1/admin/services              # service:read|create
+GET|PUT         /v1/admin/services/:id          # service:read|update
+GET|POST|PUT|DELETE /v1/admin/services/:id/features  # service:update
+GET|POST|DELETE /v1/admin/services/:id/testers/users  # service:update
+GET|POST|DELETE /v1/admin/services/:id/testers/admins # service:update
+GET|PUT         /v1/admin/services/:id/config   # service:update
+```
+
+### Sanctions
+
+```
+GET|POST        /v1/admin/services/:serviceId/sanctions     # sanction:read|create
+GET|PUT|DELETE  /v1/admin/services/:serviceId/sanctions/:id # sanction:*
+POST            /v1/admin/services/:serviceId/sanctions/:id/revoke  # sanction:revoke
+POST            /v1/admin/services/:serviceId/sanctions/:id/extend  # sanction:update
+POST            /v1/admin/services/:serviceId/sanctions/:id/reduce  # sanction:update
+GET|PUT         /v1/admin/services/:serviceId/sanctions/:id/appeal  # sanction:appeal
+GET|POST        /v1/admin/services/:serviceId/sanctions/:id/notifications # sanction:notify
+```
+
+#### Sanction Types
+
+| Type                  | Description                     |
+| --------------------- | ------------------------------- |
+| `WARNING`             | Warning notice, no restrictions |
+| `TEMPORARY_BAN`       | Time-limited access restriction |
+| `PERMANENT_BAN`       | Indefinite access restriction   |
+| `FEATURE_RESTRICTION` | Specific feature access blocked |
+
+#### Appeal Flow
+
+1. User submits appeal → `appealStatus: PENDING`
+2. Admin reviews → `UNDER_REVIEW`
+3. Decision: `APPROVED` (revokes sanction) | `REJECTED` | `ESCALATED`
+
 ## Key Flows
 
 ### Registration
@@ -442,6 +480,105 @@ Global interceptor for API logging with:
   'ssn',
 ];
 ```
+
+---
+
+## Law Registry API
+
+Per-country legal requirements management.
+
+```
+GET    /v1/admin/laws                          # List laws (paginated)
+GET    /v1/admin/laws/:code                    # Get law by code
+POST   /v1/admin/laws                          # Create law
+PATCH  /v1/admin/laws/:code                    # Update law
+DELETE /v1/admin/laws/:code                    # Delete law
+GET    /v1/admin/laws/:code/consent-requirements # Get consent requirements
+POST   /v1/admin/laws/seed                     # Seed default laws
+```
+
+### Permissions
+
+| Endpoint   | Permission   |
+| ---------- | ------------ |
+| GET laws   | `law:read`   |
+| POST law   | `law:create` |
+| PATCH law  | `law:update` |
+| DELETE law | `law:delete` |
+
+### Law Requirements Structure
+
+```typescript
+interface LawRequirements {
+  requiredConsents: ConsentType[];
+  optionalConsents: ConsentType[];
+  specialRequirements?: {
+    nightTimePush?: { start: number; end: number };
+    dataRetention?: { maxDays: number };
+    minAge?: number;
+    parentalConsent?: { ageThreshold: number };
+    crossBorderTransfer?: { requireExplicit: boolean };
+  };
+}
+```
+
+---
+
+## Global Settings API
+
+System-wide country and locale configuration.
+
+### Supported Countries
+
+```
+GET    /v1/admin/settings/countries            # List countries
+GET    /v1/admin/settings/countries/:code      # Get country
+POST   /v1/admin/settings/countries            # Create country
+PATCH  /v1/admin/settings/countries/:code      # Update country
+DELETE /v1/admin/settings/countries/:code      # Delete country
+```
+
+### Supported Locales
+
+```
+GET    /v1/admin/settings/locales              # List locales
+GET    /v1/admin/settings/locales/:code        # Get locale
+POST   /v1/admin/settings/locales              # Create locale
+PATCH  /v1/admin/settings/locales/:code        # Update locale
+DELETE /v1/admin/settings/locales/:code        # Delete locale
+```
+
+### Permissions
+
+| Endpoint       | Permission        |
+| -------------- | ----------------- |
+| GET countries  | `settings:read`   |
+| GET locales    | `settings:read`   |
+| POST/PATCH/DEL | `settings:update` |
+
+### Country Code Format
+
+ISO 3166-1 alpha-2 (e.g., KR, US, JP)
+
+### Locale Code Format
+
+IETF BCP 47 (e.g., ko, en, ja, ko-KR)
+
+---
+
+## User Personal Info API (Admin)
+
+Admin access to user personal information.
+
+```
+GET    /v1/admin/users/:id/personal-info       # Get user's personal info
+```
+
+### Permissions
+
+| Endpoint          | Permission           |
+| ----------------- | -------------------- |
+| GET personal-info | `personal_info:read` |
 
 ---
 

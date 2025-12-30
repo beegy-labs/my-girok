@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, RefreshCw, ChevronLeft, ChevronRight, Eye, X, Filter } from 'lucide-react';
 import {
   auditApi,
-  type AuditLog,
+  type AuditLogResponse,
   type AuditLogListQuery,
   type AuditLogFilterOptions,
 } from '../api/audit';
@@ -11,12 +11,12 @@ import { logger } from '../utils/logger';
 
 export default function AuditLogsPage() {
   const { t } = useTranslation();
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<AuditLogResponse[]>([]);
   const [filterOptions, setFilterOptions] = useState<AuditLogFilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLogResponse | null>(null);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -32,9 +32,9 @@ export default function AuditLogsPage() {
     setError(null);
     try {
       const response = await auditApi.listLogs({ ...filters, page, limit });
-      setLogs(response.items);
-      setTotalPages(response.totalPages);
-      setTotal(response.total);
+      setLogs(response.data);
+      setTotalPages(response.meta.totalPages);
+      setTotal(response.meta.total);
     } catch (err) {
       setError(t('common.error'));
       logger.error('Failed to fetch audit logs', err);
@@ -213,14 +213,14 @@ export default function AuditLogsPage() {
               </select>
             </div>
 
-            {/* Admin Filter */}
+            {/* Actor Filter */}
             <div>
               <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-                {t('audit.admin')}
+                {t('audit.actor')}
               </label>
               <select
-                value={filters.adminId || ''}
-                onChange={(e) => handleFilterChange('adminId', e.target.value)}
+                value={filters.actorId || ''}
+                onChange={(e) => handleFilterChange('actorId', e.target.value)}
                 className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
               >
                 <option value="">{t('common.all')}</option>
@@ -236,23 +236,23 @@ export default function AuditLogsPage() {
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-                  {t('audit.dateFrom')}
+                  {t('audit.startDate')}
                 </label>
                 <input
                   type="date"
-                  value={filters.dateFrom || ''}
-                  onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                  value={filters.startDate || ''}
+                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
                   className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
                 />
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-theme-text-secondary mb-1">
-                  {t('audit.dateTo')}
+                  {t('audit.endDate')}
                 </label>
                 <input
                   type="date"
-                  value={filters.dateTo || ''}
-                  onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                  value={filters.endDate || ''}
+                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
                   className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-bg-input text-theme-text-primary"
                 />
               </div>
@@ -279,7 +279,7 @@ export default function AuditLogsPage() {
                   {t('audit.date')}
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-theme-text-secondary">
-                  {t('audit.admin')}
+                  {t('audit.actor')}
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-theme-text-secondary">
                   {t('audit.action')}
@@ -299,14 +299,12 @@ export default function AuditLogsPage() {
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-theme-bg-secondary/50">
                   <td className="px-4 py-3 text-theme-text-primary whitespace-nowrap">
-                    {formatDate(log.createdAt)}
+                    {formatDate(log.timestamp)}
                   </td>
                   <td className="px-4 py-3">
                     <div>
-                      <p className="font-medium text-theme-text-primary">
-                        {log.admin.displayName || log.admin.username}
-                      </p>
-                      <p className="text-xs text-theme-text-tertiary">{log.admin.email}</p>
+                      <p className="font-medium text-theme-text-primary">{log.actorEmail}</p>
+                      <p className="text-xs text-theme-text-tertiary">{log.actorType}</p>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -318,9 +316,9 @@ export default function AuditLogsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-theme-text-primary">{log.resource}</p>
-                    {log.resourceId && (
+                    {log.targetId && (
                       <p className="text-xs text-theme-text-tertiary font-mono truncate max-w-[150px]">
-                        {log.resourceId}
+                        {log.targetId}
                       </p>
                     )}
                   </td>
@@ -328,14 +326,12 @@ export default function AuditLogsPage() {
                     {log.ipAddress || '-'}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {(log.beforeState || log.afterState) && (
-                      <button
-                        onClick={() => setSelectedLog(log)}
-                        className="p-1.5 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded transition-colors"
-                      >
-                        <Eye size={16} />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setSelectedLog(log)}
+                      className="p-1.5 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded transition-colors"
+                    >
+                      <Eye size={16} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -382,7 +378,7 @@ export default function AuditLogsPage() {
           <div className="bg-theme-bg-card border border-theme-border-default rounded-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-theme-border-default">
               <h3 className="text-lg font-semibold text-theme-text-primary">
-                {t('audit.stateChanges')}
+                {t('audit.logDetail')}
               </h3>
               <button
                 onClick={() => setSelectedLog(null)}
@@ -392,51 +388,55 @@ export default function AuditLogsPage() {
               </button>
             </div>
             <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Before State */}
-                <div>
-                  <h4 className="text-sm font-medium text-theme-text-secondary mb-2">
-                    {t('audit.beforeState')}
-                  </h4>
-                  <pre className="p-3 bg-theme-status-error-bg border border-theme-status-error-border rounded-lg text-xs overflow-x-auto text-theme-text-primary">
-                    {selectedLog.beforeState
-                      ? JSON.stringify(selectedLog.beforeState, null, 2)
-                      : '(empty)'}
-                  </pre>
-                </div>
-
-                {/* After State */}
-                <div>
-                  <h4 className="text-sm font-medium text-theme-text-secondary mb-2">
-                    {t('audit.afterState')}
-                  </h4>
-                  <pre className="p-3 bg-theme-status-success-bg border border-theme-status-success-border rounded-lg text-xs overflow-x-auto text-theme-text-primary">
-                    {selectedLog.afterState
-                      ? JSON.stringify(selectedLog.afterState, null, 2)
-                      : '(empty)'}
-                  </pre>
-                </div>
-              </div>
-
               {/* Meta Info */}
-              <div className="mt-4 p-3 bg-theme-bg-secondary rounded-lg">
+              <div className="p-3 bg-theme-bg-secondary rounded-lg">
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <dt className="text-theme-text-tertiary">{t('audit.admin')}:</dt>
-                  <dd className="text-theme-text-primary">
-                    {selectedLog.admin.displayName || selectedLog.admin.username}
-                  </dd>
+                  <dt className="text-theme-text-tertiary">{t('audit.actor')}:</dt>
+                  <dd className="text-theme-text-primary">{selectedLog.actorEmail}</dd>
+                  <dt className="text-theme-text-tertiary">{t('audit.actorType')}:</dt>
+                  <dd className="text-theme-text-primary">{selectedLog.actorType}</dd>
                   <dt className="text-theme-text-tertiary">{t('audit.action')}:</dt>
                   <dd className="text-theme-text-primary">{selectedLog.action}</dd>
                   <dt className="text-theme-text-tertiary">{t('audit.resource')}:</dt>
                   <dd className="text-theme-text-primary">{selectedLog.resource}</dd>
-                  <dt className="text-theme-text-tertiary">{t('audit.resourceId')}:</dt>
+                  <dt className="text-theme-text-tertiary">{t('audit.targetId')}:</dt>
                   <dd className="text-theme-text-primary font-mono text-xs">
-                    {selectedLog.resourceId || '-'}
+                    {selectedLog.targetId || '-'}
                   </dd>
-                  <dt className="text-theme-text-tertiary">{t('audit.userAgent')}:</dt>
-                  <dd className="text-theme-text-primary text-xs truncate">
-                    {selectedLog.userAgent || '-'}
+                  <dt className="text-theme-text-tertiary">{t('audit.method')}:</dt>
+                  <dd className="text-theme-text-primary">{selectedLog.method}</dd>
+                  <dt className="text-theme-text-tertiary">{t('audit.path')}:</dt>
+                  <dd className="text-theme-text-primary font-mono text-xs truncate">
+                    {selectedLog.path}
                   </dd>
+                  <dt className="text-theme-text-tertiary">{t('audit.statusCode')}:</dt>
+                  <dd className="text-theme-text-primary">
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs ${
+                        selectedLog.success
+                          ? 'bg-theme-status-success-bg text-theme-status-success-text'
+                          : 'bg-theme-status-error-bg text-theme-status-error-text'
+                      }`}
+                    >
+                      {selectedLog.statusCode}
+                    </span>
+                  </dd>
+                  <dt className="text-theme-text-tertiary">{t('audit.ipAddress')}:</dt>
+                  <dd className="text-theme-text-primary font-mono">{selectedLog.ipAddress}</dd>
+                  <dt className="text-theme-text-tertiary">{t('audit.duration')}:</dt>
+                  <dd className="text-theme-text-primary">{selectedLog.durationMs}ms</dd>
+                  {selectedLog.serviceSlug && (
+                    <>
+                      <dt className="text-theme-text-tertiary">{t('audit.service')}:</dt>
+                      <dd className="text-theme-text-primary">{selectedLog.serviceSlug}</dd>
+                    </>
+                  )}
+                  {selectedLog.errorMessage && (
+                    <>
+                      <dt className="text-theme-text-tertiary">{t('audit.errorMessage')}:</dt>
+                      <dd className="text-theme-status-error-text">{selectedLog.errorMessage}</dd>
+                    </>
+                  )}
                 </dl>
               </div>
             </div>

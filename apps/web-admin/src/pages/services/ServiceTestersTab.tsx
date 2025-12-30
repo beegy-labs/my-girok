@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import { Loader2, AlertCircle, Plus, Trash2, Users, Shield, Clock } from 'lucide-react';
 import { servicesApi, TesterUser, TesterAdmin } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
@@ -60,7 +61,7 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
       setAdminTesters(adminsResult.data);
     } catch (err) {
       setError(t('services.loadTestersFailed'));
-      console.error(err);
+      logger.error('Failed to fetch service testers', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
     } catch (err) {
       setError(t('services.addTesterFailed'));
       trackFormSubmit('TesterForm', 'create', false);
-      console.error(err);
+      logger.error('Failed to add tester', { serviceId, type: activeTab, error: err });
     } finally {
       setSaving(false);
     }
@@ -138,7 +139,12 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
       fetchData();
     } catch (err) {
       setError(t('services.deleteTesterFailed'));
-      console.error(err);
+      logger.error('Failed to delete tester', {
+        serviceId,
+        testerId: deletingTester.id,
+        type: deletingTester.type,
+        error: err,
+      });
     }
   };
 

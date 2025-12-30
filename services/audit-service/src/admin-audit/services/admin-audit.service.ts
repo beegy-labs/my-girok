@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ClickHouseService } from '@my-girok/nest-common/clickhouse';
+import { CircuitBreaker } from '@my-girok/nest-common';
 import {
   UIEventsQueryDto,
   APILogsQueryDto,
@@ -19,9 +20,35 @@ import {
   ErrorStats,
 } from '../dto/admin-audit.dto';
 
+/** Maximum results for unbounded queries (actor activity, target history) */
+const MAX_UNBOUNDED_RESULTS = 1000;
+
 @Injectable()
 export class AdminAuditService {
-  constructor(private readonly clickhouse: ClickHouseService) {}
+  private readonly logger = new Logger(AdminAuditService.name);
+  private readonly circuitBreaker: CircuitBreaker;
+
+  constructor(private readonly clickhouse: ClickHouseService) {
+    this.circuitBreaker = new CircuitBreaker({
+      name: 'clickhouse-audit',
+      failureThreshold: 5,
+      resetTimeout: 30000,
+      successThreshold: 2,
+    });
+  }
+
+  /**
+   * Execute a ClickHouse query with circuit breaker protection
+   */
+  private async executeQuery<T>(
+    queryFn: () => Promise<{ data: T[] }>,
+    fallbackData: T[] = [],
+  ): Promise<{ data: T[] }> {
+    return this.circuitBreaker.executeWithFallback(queryFn, () => {
+      this.logger.warn('Circuit breaker open, returning fallback data');
+      return { data: fallbackData };
+    });
+  }
 
   // ===== UI Events =====
 
@@ -81,16 +108,21 @@ export class AdminAuditService {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const offset = (page - 1) * limit;
 
-    // Get total count
-    const countResult = await this.clickhouse.query<{ count: number }>(
-      `SELECT count() as count FROM audit_db.admin_ui_events ${whereClause}`,
-      params,
+    // Get total count with circuit breaker
+    const countResult = await this.executeQuery<{ count: number }>(
+      () =>
+        this.clickhouse.query<{ count: number }>(
+          `SELECT count() as count FROM audit_db.admin_ui_events ${whereClause}`,
+          params,
+        ),
+      [{ count: 0 }],
     );
     const total = countResult.data[0]?.count || 0;
 
-    // Get data
-    const result = await this.clickhouse.query<UIEventResponse>(
-      `SELECT
+    // Get data with circuit breaker
+    const result = await this.executeQuery<UIEventResponse>(() =>
+      this.clickhouse.query<UIEventResponse>(
+        `SELECT
         id,
         timestamp,
         session_id as sessionId,
@@ -106,7 +138,8 @@ export class AdminAuditService {
       ${whereClause}
       ORDER BY timestamp DESC
       LIMIT {limit:UInt32} OFFSET {offset:UInt32}`,
-      { ...params, limit, offset },
+        { ...params, limit, offset },
+      ),
     );
 
     return {
@@ -121,8 +154,9 @@ export class AdminAuditService {
   }
 
   async getUIEventById(id: string): Promise<UIEventResponse | null> {
-    const result = await this.clickhouse.query<UIEventResponse>(
-      `SELECT
+    const result = await this.executeQuery<UIEventResponse>(() =>
+      this.clickhouse.query<UIEventResponse>(
+        `SELECT
         id,
         timestamp,
         session_id as sessionId,
@@ -137,7 +171,8 @@ export class AdminAuditService {
       FROM audit_db.admin_ui_events
       WHERE id = {id:UUID}
       LIMIT 1`,
-      { id },
+        { id },
+      ),
     );
     return result.data[0] || null;
   }
@@ -207,14 +242,19 @@ export class AdminAuditService {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const offset = (page - 1) * limit;
 
-    const countResult = await this.clickhouse.query<{ count: number }>(
-      `SELECT count() as count FROM audit_db.admin_api_logs ${whereClause}`,
-      params,
+    const countResult = await this.executeQuery<{ count: number }>(
+      () =>
+        this.clickhouse.query<{ count: number }>(
+          `SELECT count() as count FROM audit_db.admin_api_logs ${whereClause}`,
+          params,
+        ),
+      [{ count: 0 }],
     );
     const total = countResult.data[0]?.count || 0;
 
-    const result = await this.clickhouse.query<APILogResponse>(
-      `SELECT
+    const result = await this.executeQuery<APILogResponse>(() =>
+      this.clickhouse.query<APILogResponse>(
+        `SELECT
         id,
         timestamp,
         request_id as requestId,
@@ -233,7 +273,8 @@ export class AdminAuditService {
       ${whereClause}
       ORDER BY timestamp DESC
       LIMIT {limit:UInt32} OFFSET {offset:UInt32}`,
-      { ...params, limit, offset },
+        { ...params, limit, offset },
+      ),
     );
 
     return {
@@ -243,8 +284,9 @@ export class AdminAuditService {
   }
 
   async getAPILogById(id: string): Promise<APILogResponse | null> {
-    const result = await this.clickhouse.query<APILogResponse>(
-      `SELECT
+    const result = await this.executeQuery<APILogResponse>(() =>
+      this.clickhouse.query<APILogResponse>(
+        `SELECT
         id,
         timestamp,
         request_id as requestId,
@@ -262,7 +304,8 @@ export class AdminAuditService {
       FROM audit_db.admin_api_logs
       WHERE id = {id:UUID}
       LIMIT 1`,
-      { id },
+        { id },
+      ),
     );
     return result.data[0] || null;
   }
@@ -322,14 +365,19 @@ export class AdminAuditService {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const offset = (page - 1) * limit;
 
-    const countResult = await this.clickhouse.query<{ count: number }>(
-      `SELECT count() as count FROM audit_db.admin_audit_logs ${whereClause}`,
-      params,
+    const countResult = await this.executeQuery<{ count: number }>(
+      () =>
+        this.clickhouse.query<{ count: number }>(
+          `SELECT count() as count FROM audit_db.admin_audit_logs ${whereClause}`,
+          params,
+        ),
+      [{ count: 0 }],
     );
     const total = countResult.data[0]?.count || 0;
 
-    const result = await this.clickhouse.query<AuditLogResponse>(
-      `SELECT
+    const result = await this.executeQuery<AuditLogResponse>(() =>
+      this.clickhouse.query<AuditLogResponse>(
+        `SELECT
         id,
         timestamp,
         trace_id as traceId,
@@ -348,7 +396,8 @@ export class AdminAuditService {
       ${whereClause}
       ORDER BY timestamp DESC
       LIMIT {limit:UInt32} OFFSET {offset:UInt32}`,
-      { ...params, limit, offset },
+        { ...params, limit, offset },
+      ),
     );
 
     return {
@@ -358,8 +407,9 @@ export class AdminAuditService {
   }
 
   async getAuditLogById(id: string): Promise<AuditLogResponse | null> {
-    const result = await this.clickhouse.query<AuditLogResponse>(
-      `SELECT
+    const result = await this.executeQuery<AuditLogResponse>(() =>
+      this.clickhouse.query<AuditLogResponse>(
+        `SELECT
         id,
         timestamp,
         trace_id as traceId,
@@ -377,7 +427,8 @@ export class AdminAuditService {
       FROM audit_db.admin_audit_logs
       WHERE id = {id:UUID}
       LIMIT 1`,
-      { id },
+        { id },
+      ),
     );
     return result.data[0] || null;
   }
@@ -427,14 +478,19 @@ export class AdminAuditService {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const offset = (page - 1) * limit;
 
-    const countResult = await this.clickhouse.query<{ count: number }>(
-      `SELECT count() as count FROM audit_db.admin_sessions ${whereClause}`,
-      params,
+    const countResult = await this.executeQuery<{ count: number }>(
+      () =>
+        this.clickhouse.query<{ count: number }>(
+          `SELECT count() as count FROM audit_db.admin_sessions ${whereClause}`,
+          params,
+        ),
+      [{ count: 0 }],
     );
     const total = countResult.data[0]?.count || 0;
 
-    const result = await this.clickhouse.query<SessionResponse>(
-      `SELECT
+    const result = await this.executeQuery<SessionResponse>(() =>
+      this.clickhouse.query<SessionResponse>(
+        `SELECT
         session_id as sessionId,
         actor_id as actorId,
         actor_email as actorEmail,
@@ -451,7 +507,8 @@ export class AdminAuditService {
       ${whereClause}
       ORDER BY started_at DESC
       LIMIT {limit:UInt32} OFFSET {offset:UInt32}`,
-      { ...params, limit, offset },
+        { ...params, limit, offset },
+      ),
     );
 
     return {
@@ -461,8 +518,9 @@ export class AdminAuditService {
   }
 
   async getSessionById(sessionId: string): Promise<SessionResponse | null> {
-    const result = await this.clickhouse.query<SessionResponse>(
-      `SELECT
+    const result = await this.executeQuery<SessionResponse>(() =>
+      this.clickhouse.query<SessionResponse>(
+        `SELECT
         session_id as sessionId,
         actor_id as actorId,
         actor_email as actorEmail,
@@ -478,14 +536,16 @@ export class AdminAuditService {
       FROM audit_db.admin_sessions
       WHERE session_id = {sessionId:String}
       LIMIT 1`,
-      { sessionId },
+        { sessionId },
+      ),
     );
     return result.data[0] || null;
   }
 
   async getSessionEvents(sessionId: string): Promise<UIEventResponse[]> {
-    const result = await this.clickhouse.query<UIEventResponse>(
-      `SELECT
+    const result = await this.executeQuery<UIEventResponse>(() =>
+      this.clickhouse.query<UIEventResponse>(
+        `SELECT
         id,
         timestamp,
         session_id as sessionId,
@@ -499,8 +559,10 @@ export class AdminAuditService {
         trace_id as traceId
       FROM audit_db.admin_ui_events
       WHERE session_id = {sessionId:String}
-      ORDER BY timestamp ASC`,
-      { sessionId },
+      ORDER BY timestamp ASC
+      LIMIT ${MAX_UNBOUNDED_RESULTS}`,
+        { sessionId },
+      ),
     );
     return result.data;
   }
@@ -509,8 +571,9 @@ export class AdminAuditService {
 
   async getTraceById(traceId: string): Promise<TraceResponse> {
     const [uiEvents, apiLogs, auditLogs] = await Promise.all([
-      this.clickhouse.query<UIEventResponse>(
-        `SELECT
+      this.executeQuery<UIEventResponse>(() =>
+        this.clickhouse.query<UIEventResponse>(
+          `SELECT
           id, timestamp, session_id as sessionId, actor_id as actorId,
           actor_email as actorEmail, service_id as serviceId,
           event_type as eventType, event_name as eventName,
@@ -519,10 +582,12 @@ export class AdminAuditService {
         FROM audit_db.admin_ui_events
         WHERE trace_id = {traceId:String}
         ORDER BY timestamp ASC`,
-        { traceId },
+          { traceId },
+        ),
       ),
-      this.clickhouse.query<APILogResponse>(
-        `SELECT
+      this.executeQuery<APILogResponse>(() =>
+        this.clickhouse.query<APILogResponse>(
+          `SELECT
           id, timestamp, request_id as requestId, trace_id as traceId,
           actor_id as actorId, actor_email as actorEmail,
           service_id as serviceId, method, path, path_template as pathTemplate,
@@ -531,10 +596,12 @@ export class AdminAuditService {
         FROM audit_db.admin_api_logs
         WHERE trace_id = {traceId:String}
         ORDER BY timestamp ASC`,
-        { traceId },
+          { traceId },
+        ),
       ),
-      this.clickhouse.query<AuditLogResponse>(
-        `SELECT
+      this.executeQuery<AuditLogResponse>(() =>
+        this.clickhouse.query<AuditLogResponse>(
+          `SELECT
           id, timestamp, trace_id as traceId, actor_id as actorId,
           actor_email as actorEmail, actor_type as actorType,
           service_id as serviceId, resource, action,
@@ -544,7 +611,8 @@ export class AdminAuditService {
         FROM audit_db.admin_audit_logs
         WHERE trace_id = {traceId:String}
         ORDER BY timestamp ASC`,
-        { traceId },
+          { traceId },
+        ),
       ),
     ]);
 
@@ -563,21 +631,23 @@ export class AdminAuditService {
     startDate: string,
     endDate: string,
   ): Promise<AuditLogResponse[]> {
-    const result = await this.clickhouse.query<AuditLogResponse>(
-      `SELECT
-        id, timestamp, trace_id as traceId, actor_id as actorId,
-        actor_email as actorEmail, actor_type as actorType,
-        service_id as serviceId, resource, action,
-        target_id as targetId, target_name as targetName,
-        old_values as oldValues, new_values as newValues,
-        compliance_tags as complianceTags
-      FROM audit_db.admin_audit_logs
-      WHERE actor_id = {actorId:UUID}
-        AND date >= {startDate:Date}
-        AND date <= {endDate:Date}
-      ORDER BY timestamp DESC
-      LIMIT 1000`,
-      { actorId, startDate, endDate },
+    const result = await this.executeQuery<AuditLogResponse>(() =>
+      this.clickhouse.query<AuditLogResponse>(
+        `SELECT
+          id, timestamp, trace_id as traceId, actor_id as actorId,
+          actor_email as actorEmail, actor_type as actorType,
+          service_id as serviceId, resource, action,
+          target_id as targetId, target_name as targetName,
+          old_values as oldValues, new_values as newValues,
+          compliance_tags as complianceTags
+        FROM audit_db.admin_audit_logs
+        WHERE actor_id = {actorId:UUID}
+          AND date >= {startDate:Date}
+          AND date <= {endDate:Date}
+        ORDER BY timestamp DESC
+        LIMIT {maxResults:UInt32}`,
+        { actorId, startDate, endDate, maxResults: MAX_UNBOUNDED_RESULTS },
+      ),
     );
     return result.data;
   }
@@ -585,19 +655,21 @@ export class AdminAuditService {
   // ===== Target History =====
 
   async getTargetHistory(targetId: string): Promise<AuditLogResponse[]> {
-    const result = await this.clickhouse.query<AuditLogResponse>(
-      `SELECT
-        id, timestamp, trace_id as traceId, actor_id as actorId,
-        actor_email as actorEmail, actor_type as actorType,
-        service_id as serviceId, resource, action,
-        target_id as targetId, target_name as targetName,
-        old_values as oldValues, new_values as newValues,
-        compliance_tags as complianceTags
-      FROM audit_db.admin_audit_logs
-      WHERE target_id = {targetId:UUID}
-      ORDER BY timestamp DESC
-      LIMIT 1000`,
-      { targetId },
+    const result = await this.executeQuery<AuditLogResponse>(() =>
+      this.clickhouse.query<AuditLogResponse>(
+        `SELECT
+          id, timestamp, trace_id as traceId, actor_id as actorId,
+          actor_email as actorEmail, actor_type as actorType,
+          service_id as serviceId, resource, action,
+          target_id as targetId, target_name as targetName,
+          old_values as oldValues, new_values as newValues,
+          compliance_tags as complianceTags
+        FROM audit_db.admin_audit_logs
+        WHERE target_id = {targetId:UUID}
+        ORDER BY timestamp DESC
+        LIMIT {maxResults:UInt32}`,
+        { targetId, maxResults: MAX_UNBOUNDED_RESULTS },
+      ),
     );
     return result.data;
   }
@@ -616,30 +688,35 @@ export class AdminAuditService {
       this.getOverviewStats(startDate, endDate, serviceId),
 
       // Actions by resource
-      this.clickhouse.query<ActionStats>(
-        `SELECT resource, action, count() as count
+      this.executeQuery<ActionStats>(() =>
+        this.clickhouse.query<ActionStats>(
+          `SELECT resource, action, count() as count
         FROM audit_db.admin_audit_logs
         WHERE date >= {startDate:Date} AND date <= {endDate:Date} ${serviceFilter}
         GROUP BY resource, action
         ORDER BY count DESC
         LIMIT 50`,
-        params,
+          params,
+        ),
       ),
 
       // Top actors
-      this.clickhouse.query<ActorStats>(
-        `SELECT actor_id as actorId, actor_email as actorEmail, count() as count
+      this.executeQuery<ActorStats>(() =>
+        this.clickhouse.query<ActorStats>(
+          `SELECT actor_id as actorId, actor_email as actorEmail, count() as count
         FROM audit_db.admin_audit_logs
         WHERE date >= {startDate:Date} AND date <= {endDate:Date} ${serviceFilter}
         GROUP BY actor_id, actor_email
         ORDER BY count DESC
         LIMIT 10`,
-        params,
+          params,
+        ),
       ),
 
       // Error summary
-      this.clickhouse.query<ErrorStats>(
-        `SELECT error_type as errorType, count() as count
+      this.executeQuery<ErrorStats>(() =>
+        this.clickhouse.query<ErrorStats>(
+          `SELECT error_type as errorType, count() as count
         FROM audit_db.admin_api_logs
         WHERE date >= {startDate:Date} AND date <= {endDate:Date}
           ${serviceFilter}
@@ -647,7 +724,8 @@ export class AdminAuditService {
         GROUP BY error_type
         ORDER BY count DESC
         LIMIT 20`,
-        params,
+          params,
+        ),
       ),
     ]);
 
@@ -669,34 +747,54 @@ export class AdminAuditService {
     if (serviceId) params.serviceId = serviceId;
 
     const [uiCount, apiStats, auditCount, sessionCount, actorCount] = await Promise.all([
-      this.clickhouse.query<{ count: number }>(
-        `SELECT count() as count FROM audit_db.admin_ui_events
+      this.executeQuery<{ count: number }>(
+        () =>
+          this.clickhouse.query<{ count: number }>(
+            `SELECT count() as count FROM audit_db.admin_ui_events
         WHERE date >= {startDate:Date} AND date <= {endDate:Date} ${serviceFilter}`,
-        params,
+            params,
+          ),
+        [{ count: 0 }],
       ),
-      this.clickhouse.query<{ count: number; avgTime: number; errorCount: number }>(
-        `SELECT
+      this.executeQuery<{ count: number; avgTime: number; errorCount: number }>(
+        () =>
+          this.clickhouse.query<{ count: number; avgTime: number; errorCount: number }>(
+            `SELECT
           count() as count,
           avg(response_time_ms) as avgTime,
           countIf(status_code >= 400) as errorCount
         FROM audit_db.admin_api_logs
         WHERE date >= {startDate:Date} AND date <= {endDate:Date} ${serviceFilter}`,
-        params,
+            params,
+          ),
+        [{ count: 0, avgTime: 0, errorCount: 0 }],
       ),
-      this.clickhouse.query<{ count: number }>(
-        `SELECT count() as count FROM audit_db.admin_audit_logs
+      this.executeQuery<{ count: number }>(
+        () =>
+          this.clickhouse.query<{ count: number }>(
+            `SELECT count() as count FROM audit_db.admin_audit_logs
         WHERE date >= {startDate:Date} AND date <= {endDate:Date} ${serviceFilter}`,
-        params,
+            params,
+          ),
+        [{ count: 0 }],
       ),
-      this.clickhouse.query<{ count: number }>(
-        `SELECT count() as count FROM audit_db.admin_sessions
+      this.executeQuery<{ count: number }>(
+        () =>
+          this.clickhouse.query<{ count: number }>(
+            `SELECT count() as count FROM audit_db.admin_sessions
         WHERE date >= {startDate:Date} AND date <= {endDate:Date} ${serviceFilter}`,
-        params,
+            params,
+          ),
+        [{ count: 0 }],
       ),
-      this.clickhouse.query<{ count: number }>(
-        `SELECT uniq(actor_id) as count FROM audit_db.admin_audit_logs
+      this.executeQuery<{ count: number }>(
+        () =>
+          this.clickhouse.query<{ count: number }>(
+            `SELECT uniq(actor_id) as count FROM audit_db.admin_audit_logs
         WHERE date >= {startDate:Date} AND date <= {endDate:Date} ${serviceFilter}`,
-        params,
+            params,
+          ),
+        [{ count: 0 }],
       ),
     ]);
 

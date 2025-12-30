@@ -121,13 +121,22 @@ async handlePermissionUpdate({ roleId }) {
 
 ### auth-service
 
-| Key Pattern                       | TTL | Invalidation Trigger                  |
-| --------------------------------- | --- | ------------------------------------- |
-| `auth:role_permissions:{roleId}`  | 15m | role_permissions INSERT/UPDATE/DELETE |
-| `auth:service:{slug}`             | 1h  | services UPDATE                       |
-| `auth:legal_docs:{locale}:{type}` | 30m | legal_documents publish               |
-| `auth:oauth_provider:{provider}`  | 1h  | oauth_config UPDATE                   |
-| `auth:admin_perms:{adminId}`      | 15m | admin role change                     |
+| Key Pattern                               | TTL | Invalidation Trigger                  |
+| ----------------------------------------- | --- | ------------------------------------- |
+| `auth:role_permissions:{roleId}`          | 15m | role_permissions INSERT/UPDATE/DELETE |
+| `auth:service:{slug}`                     | 1h  | services UPDATE                       |
+| `auth:legal_docs:{locale}:{type}`         | 30m | legal_documents publish               |
+| `auth:oauth_provider:{provider}`          | 1h  | oauth_config UPDATE                   |
+| `auth:admin_perms:{adminId}`              | 15m | admin role change                     |
+| `auth:service_config:{serviceId}`         | 24h | service_configs UPDATE                |
+| `auth:service_domains:{serviceId}`        | 24h | services.domains UPDATE               |
+| `auth:service_features:{serviceId}`       | 24h | service_features CRUD                 |
+| `auth:service_testers:{serviceId}:users`  | 15m | service_tester_users CRUD             |
+| `auth:service_testers:{serviceId}:admins` | 15m | service_tester_admins CRUD            |
+| `auth:tester_bypass:{userId}:{serviceId}` | 5m  | service_tester_users UPDATE/DELETE    |
+| `auth:law_registry:{code}`                | 1h  | laws CRUD                             |
+| `auth:supported_countries`                | 1h  | supported_countries CRUD              |
+| `auth:supported_locales`                  | 1h  | supported_locales CRUD                |
 
 ### personal-service
 

@@ -57,9 +57,17 @@ export function initOtel(): void {
     tracer = trace.getTracer(otelConfig.serviceName, otelConfig.serviceVersion);
     isInitialized = true;
 
-    console.info('[OTEL] Initialized successfully');
+    // Production-safe logging (only in development)
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.info('[OTEL] Initialized successfully');
+    }
   } catch (error) {
-    console.error('[OTEL] Failed to initialize:', error);
+    // Always log errors but avoid stack traces in production
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.error('[OTEL] Failed to initialize:', error);
+    }
   }
 }
 
