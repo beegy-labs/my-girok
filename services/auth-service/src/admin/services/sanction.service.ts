@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '../../../node_modules/.prisma/auth-client';
-import { ID } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditLogService } from './audit-log.service';
 import { AdminPayload } from '../types/admin.types';
@@ -17,11 +19,18 @@ import {
   SanctionNotificationResponseDto,
   SanctionListResponseDto,
   AppealResponseDto,
+  SanctionSubjectType,
+  SanctionType,
   SanctionStatus,
   SanctionScope,
   SanctionSeverity,
+  AppealStatus,
   NotificationChannel,
 } from '../dto/sanction.dto';
+
+// Cache key helper
+const SANCTION_CACHE_KEY = (serviceId: string, sanctionId: string) =>
+  CacheKey.make('auth', 'sanction', serviceId, sanctionId);
 
 interface SanctionRow {
   id: string;
@@ -72,7 +81,22 @@ export class SanctionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLogService: AuditLogService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  /**
+   * Invalidate sanction cache for a service
+   */
+  private async invalidateCache(serviceId: string, sanctionId?: string): Promise<void> {
+    // Invalidate specific sanction cache if provided
+    if (sanctionId) {
+      await this.cache.del(SANCTION_CACHE_KEY(serviceId, sanctionId));
+    }
+    // Invalidate list cache (pattern-based - delete all list caches for service)
+    // Note: Simple approach - in production, consider using cache tags
+    this.eventEmitter.emit('sanction.updated', { serviceId, sanctionId });
+  }
 
   // ============================================================
   // SANCTION CRUD
@@ -146,8 +170,15 @@ export class SanctionService {
   async findOne(
     serviceId: string,
     id: string,
-    options?: { includeNotifications?: boolean },
+    options?: { includeNotifications?: boolean; skipCache?: boolean },
   ): Promise<SanctionResponseDto> {
+    // Check cache first (skip for includeNotifications as it's a composite query)
+    const cacheKey = SANCTION_CACHE_KEY(serviceId, id);
+    if (!options?.includeNotifications && !options?.skipCache) {
+      const cached = await this.cache.get<SanctionResponseDto>(cacheKey);
+      if (cached) return cached;
+    }
+
     const sanctions = await this.prisma.$queryRaw<SanctionRow[]>(
       Prisma.sql`
       SELECT
@@ -182,6 +213,11 @@ export class SanctionService {
 
     const result = this.mapSanctionRow(sanctions[0]);
 
+    // Cache the base result (without notifications) for 5 minutes
+    if (!options?.includeNotifications) {
+      await this.cache.set(cacheKey, result, CacheTTL.USER_DATA);
+    }
+
     if (options?.includeNotifications) {
       result.notifications = await this.getNotifications(serviceId, id);
     }
@@ -189,6 +225,7 @@ export class SanctionService {
     return result;
   }
 
+  @Transactional()
   async create(
     serviceId: string,
     dto: CreateSanctionDto,
@@ -254,7 +291,10 @@ export class SanctionService {
       );
     }
 
-    const sanction = await this.findOne(serviceId, sanctionId, { includeNotifications: true });
+    const sanction = await this.findOne(serviceId, sanctionId, {
+      includeNotifications: true,
+      skipCache: true,
+    });
 
     await this.auditLogService.log({
       resource: 'sanction',
@@ -267,9 +307,12 @@ export class SanctionService {
       admin,
     });
 
+    await this.invalidateCache(serviceId, sanctionId);
+
     return sanction;
   }
 
+  @Transactional()
   async update(
     serviceId: string,
     id: string,
@@ -299,7 +342,8 @@ export class SanctionService {
     `,
     );
 
-    const afterSanction = await this.findOne(serviceId, id);
+    await this.invalidateCache(serviceId, id);
+    const afterSanction = await this.findOne(serviceId, id, { skipCache: true });
 
     await this.auditLogService.log({
       resource: 'sanction',
@@ -320,6 +364,7 @@ export class SanctionService {
   // SANCTION ACTIONS
   // ============================================================
 
+  @Transactional()
   async revoke(
     serviceId: string,
     id: string,
@@ -345,7 +390,8 @@ export class SanctionService {
     `,
     );
 
-    const afterSanction = await this.findOne(serviceId, id);
+    await this.invalidateCache(serviceId, id);
+    const afterSanction = await this.findOne(serviceId, id, { skipCache: true });
 
     await this.auditLogService.log({
       resource: 'sanction',
@@ -362,6 +408,7 @@ export class SanctionService {
     return afterSanction;
   }
 
+  @Transactional()
   async extend(
     serviceId: string,
     id: string,
@@ -387,7 +434,8 @@ export class SanctionService {
     `,
     );
 
-    const afterSanction = await this.findOne(serviceId, id);
+    await this.invalidateCache(serviceId, id);
+    const afterSanction = await this.findOne(serviceId, id, { skipCache: true });
 
     await this.auditLogService.log({
       resource: 'sanction',
@@ -404,6 +452,7 @@ export class SanctionService {
     return afterSanction;
   }
 
+  @Transactional()
   async reduce(
     serviceId: string,
     id: string,
@@ -429,7 +478,8 @@ export class SanctionService {
     `,
     );
 
-    const afterSanction = await this.findOne(serviceId, id);
+    await this.invalidateCache(serviceId, id);
+    const afterSanction = await this.findOne(serviceId, id, { skipCache: true });
 
     await this.auditLogService.log({
       resource: 'sanction',
@@ -465,6 +515,7 @@ export class SanctionService {
     };
   }
 
+  @Transactional({ isolationLevel: 'Serializable', timeout: 45000, maxRetries: 5 })
   async reviewAppeal(
     serviceId: string,
     id: string,
@@ -514,7 +565,8 @@ export class SanctionService {
       );
     }
 
-    const afterSanction = await this.findOne(serviceId, id);
+    await this.invalidateCache(serviceId, id);
+    const afterSanction = await this.findOne(serviceId, id, { skipCache: true });
 
     await this.auditLogService.log({
       resource: 'sanction_appeal',
@@ -556,6 +608,7 @@ export class SanctionService {
     return notifications as SanctionNotificationResponseDto[];
   }
 
+  @Transactional()
   async resendNotifications(
     serviceId: string,
     sanctionId: string,
@@ -597,17 +650,17 @@ export class SanctionService {
     return {
       id: row.id,
       subjectId: row.subjectId,
-      subjectType: row.subjectType as any,
+      subjectType: row.subjectType as SanctionSubjectType,
       subject: {
         id: row.subjectId,
         email: row.subjectEmail,
         name: row.subjectName,
       },
       serviceId: row.serviceId,
-      scope: row.scope as any,
-      type: row.type as any,
-      status: row.status as any,
-      severity: row.severity as any,
+      scope: row.scope as SanctionScope,
+      type: row.type as SanctionType,
+      status: row.status as SanctionStatus,
+      severity: row.severity as SanctionSeverity,
       restrictedFeatures: row.restrictedFeatures || [],
       reason: row.reason,
       internalNote: row.internalNote,
@@ -624,7 +677,7 @@ export class SanctionService {
       revokedAt: row.revokedAt,
       revokedBy: row.revokedBy,
       revokeReason: row.revokeReason,
-      appealStatus: row.appealStatus as any,
+      appealStatus: row.appealStatus as AppealStatus | null,
       appealedAt: row.appealedAt,
       appealReason: row.appealReason,
       appealReviewedBy: row.appealReviewedBy,

@@ -4,7 +4,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { Keyv } from 'keyv';
 import KeyvRedis from '@keyv/redis';
-import { HealthModule } from '@my-girok/nest-common';
+import { HealthModule, PinoLoggerModule, OtelModule } from '@my-girok/nest-common';
 import { ClickHouseModule } from './shared/clickhouse/clickhouse.module';
 import { IngestionModule } from './ingestion/ingestion.module';
 import { BehaviorModule } from './behavior/behavior.module';
@@ -14,6 +14,10 @@ import configuration from './config/configuration';
 
 @Module({
   imports: [
+    OtelModule.forRoot(),
+    PinoLoggerModule.forRoot({
+      serviceName: 'analytics-service',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],

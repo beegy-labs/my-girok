@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -57,7 +58,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setFormData(configResult);
     } catch (err) {
       setError(t('services.loadConfigFailed'));
-      console.error(err);
+      logger.error('Failed to fetch service config', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
     } catch (err) {
       setError(t('services.saveConfigFailed'));
       trackFormSubmit('ServiceConfigForm', 'update', false);
-      console.error(err);
+      logger.error('Failed to save service config', { serviceId, error: err });
     } finally {
       setSaving(false);
     }
@@ -115,7 +116,11 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setDomains(domainsResult);
     } catch (err) {
       setError(t('services.addDomainFailed'));
-      console.error(err);
+      logger.error('Failed to add service domain', {
+        serviceId,
+        domain: newDomain.trim(),
+        error: err,
+      });
     } finally {
       setAddingDomain(false);
     }
@@ -127,7 +132,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setDomains(result);
     } catch (err) {
       setError(t('services.removeDomainFailed'));
-      console.error(err);
+      logger.error('Failed to remove service domain', { serviceId, domain, error: err });
     }
   };
 

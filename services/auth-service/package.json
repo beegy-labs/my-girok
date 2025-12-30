@@ -27,6 +27,7 @@
     "@nestjs/common": "catalog:",
     "@nestjs/config": "catalog:",
     "@nestjs/core": "catalog:",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/graphql": "^13.2.0",
     "@nestjs/jwt": "catalog:",
     "@nestjs/passport": "catalog:",

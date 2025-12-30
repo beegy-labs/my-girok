@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -62,7 +63,7 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
       setFeatures(result.data);
     } catch (err) {
       setError(t('services.loadFeaturesFailed'));
-      console.error(err);
+      logger.error('Failed to fetch service features', { serviceId, error: err });
     } finally {
       setLoading(false);
     }
@@ -139,7 +140,11 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
     } catch (err) {
       setError(t('services.saveFeatureFailed'));
       trackFormSubmit('ServiceFeatureForm', editingFeature ? 'update' : 'create', false);
-      console.error(err);
+      logger.error('Failed to save service feature', {
+        serviceId,
+        featureId: editingFeature?.id,
+        error: err,
+      });
     } finally {
       setSaving(false);
     }
@@ -154,7 +159,11 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
       fetchFeatures();
     } catch (err) {
       setError(t('services.deleteFeatureFailed'));
-      console.error(err);
+      logger.error('Failed to delete service feature', {
+        serviceId,
+        featureId: deletingFeature.id,
+        error: err,
+      });
     }
   };
 
@@ -166,7 +175,11 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
       fetchFeatures();
     } catch (err) {
       setError(t('services.updateFeatureFailed'));
-      console.error(err);
+      logger.error('Failed to toggle feature status', {
+        serviceId,
+        featureId: feature.id,
+        error: err,
+      });
     }
   };
 

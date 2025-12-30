@@ -7,7 +7,7 @@ import {
 // Note: Using tagged template literals ($queryRaw) which are SQL-injection safe
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { ID } from '@my-girok/nest-common';
+import { ID, Transactional } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateOperatorDto,
@@ -94,7 +94,9 @@ export class OperatorService {
 
   /**
    * Create a new operator
+   * Uses @Transactional decorator for automatic transaction management with proper isolation
    */
+  @Transactional({ isolationLevel: 'ReadCommitted', timeout: 30000, maxRetries: 3 })
   async create(adminId: string, dto: CreateOperatorDto): Promise<OperatorResponse> {
     await this.validateAdminServiceAccess(adminId, dto.serviceSlug);
 
@@ -113,41 +115,36 @@ export class OperatorService {
 
     const hashedPassword = await bcrypt.hash(dto.tempPassword, 10);
 
-    // Process in transaction (CLAUDE.md: @Transactional for multi-step DB)
-    const operatorId = await this.prisma.$transaction(async (tx) => {
-      // Create operator
-      const opId = ID.generate();
-      await tx.$executeRaw`
-        INSERT INTO operators (
-          id, email, password, name, admin_id, service_id, country_code,
-          is_active, created_at, updated_at
-        )
-        VALUES (
-          ${opId}, ${dto.email}, ${hashedPassword}, ${dto.name},
-          ${adminId}, ${service.id}, ${dto.countryCode}, true, NOW(), NOW()
-        )
-      `;
+    // Create operator
+    const operatorId = ID.generate();
+    await this.prisma.$executeRaw`
+      INSERT INTO operators (
+        id, email, password, name, admin_id, service_id, country_code,
+        is_active, created_at, updated_at
+      )
+      VALUES (
+        ${operatorId}, ${dto.email}, ${hashedPassword}, ${dto.name},
+        ${adminId}, ${service.id}, ${dto.countryCode}, true, NOW(), NOW()
+      )
+    `;
 
-      // Grant permissions if provided
-      if (dto.permissionIds?.length) {
-        for (const permissionId of dto.permissionIds) {
-          const opPermId = ID.generate();
-          await tx.$executeRaw`
-            INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
-            VALUES (${opPermId}, ${opId}, ${permissionId}, ${adminId}, NOW())
-          `;
-        }
+    // Grant permissions if provided
+    if (dto.permissionIds?.length) {
+      for (const permissionId of dto.permissionIds) {
+        const opPermId = ID.generate();
+        await this.prisma.$executeRaw`
+          INSERT INTO operator_permissions (id, operator_id, permission_id, granted_by, granted_at)
+          VALUES (${opPermId}, ${operatorId}, ${permissionId}, ${adminId}, NOW())
+        `;
       }
+    }
 
-      // Log audit within transaction
-      const auditId = ID.generate();
-      await tx.$executeRaw`
-        INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
-        VALUES (${auditId}, ${adminId}, 'create', 'operator', ${opId}, NOW())
-      `;
-
-      return opId;
-    });
+    // Log audit within transaction
+    const auditId = ID.generate();
+    await this.prisma.$executeRaw`
+      INSERT INTO audit_logs (id, admin_id, action, resource, resource_id, created_at)
+      VALUES (${auditId}, ${adminId}, 'create', 'operator', ${operatorId}, NOW())
+    `;
 
     return this.findById(operatorId);
   }
