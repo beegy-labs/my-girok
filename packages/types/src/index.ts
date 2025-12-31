@@ -18,3 +18,9 @@ export * from './admin/index.js';
 
 // Service types (Global Account System)
 export * from './service/index.js';
+
+// Identity Platform types
+export * from './identity/index.js';
+
+// Domain Events
+export * from './events/index.js';
