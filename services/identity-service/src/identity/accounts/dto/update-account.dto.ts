@@ -9,17 +9,7 @@ import {
   Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-/**
- * Account status enum
- */
-export enum AccountStatus {
-  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
-  ACTIVE = 'ACTIVE',
-  SUSPENDED = 'SUSPENDED',
-  DEACTIVATED = 'DEACTIVATED',
-  DELETED = 'DELETED',
-}
+import { AccountStatus } from '.prisma/identity-client';
 
 /**
  * DTO for updating an existing account

@@ -73,7 +73,9 @@ Central identity platform for N apps with shared user management:
 | Module Interfaces | `packages/types/src/identity/interfaces.ts` | Contract between modules  |
 | Event Types       | `packages/types/src/events/`                | Domain event schema       |
 | DB Schema         | `prisma/{module}/schema.prisma`             | Per-module Prisma         |
+| DTO Enums         | `.prisma/*-client` (Prisma generated)       | Runtime enum values       |
 | Constants         | `src/common/constants/index.ts`             | Service-specific config   |
+| Masking Utils     | `src/common/utils/masking.util.ts`          | PII masking for logs      |
 | Shared Utilities  | `@my-girok/nest-common`                     | CacheTTL, ID, Pagination  |
 
 ---
@@ -236,13 +238,13 @@ class ProfileComposer {
 
 ### Identity Module (identity_db)
 
-| Table           | Purpose             | Key Fields                             |
-| --------------- | ------------------- | -------------------------------------- |
-| `accounts`      | Core account + auth | id, email, username, status, mode      |
-| `sessions`      | Active sessions     | id, accountId, tokenHash, isActive     |
-| `devices`       | Registered devices  | id, accountId, fingerprint, deviceType |
-| `profiles`      | User profiles       | id, accountId, displayName, gender     |
-| `outbox_events` | Event outbox        | id, eventType, payload, status         |
+| Table           | Purpose             | Key Fields                                 |
+| --------------- | ------------------- | ------------------------------------------ |
+| `accounts`      | Core account + auth | id, email, username, status, mode          |
+| `sessions`      | Active sessions     | id, accountId, tokenHash, refreshTokenHash |
+| `devices`       | Registered devices  | id, accountId, fingerprint, deviceType     |
+| `profiles`      | User profiles       | id, accountId, displayName, gender         |
+| `outbox_events` | Event outbox        | id, eventType, payload, status             |
 
 ### Auth Module (auth_db)
 
@@ -299,7 +301,8 @@ services/identity-service/
     │   ├── messaging/             # Kafka producer/consumer
     │   ├── guards/                # JWT, API key guards
     │   ├── filters/               # Exception filters
-    │   └── decorators/            # @Public, etc.
+    │   ├── decorators/            # @Public, etc.
+    │   └── utils/                 # Masking, etc.
     │
     ├── identity/                  # Identity module
     │   ├── identity.module.ts
@@ -538,16 +541,20 @@ REFRESH_TOKEN_EXPIRES_IN=14d
 
 ## 2025 Best Practices
 
-| Standard             | Status | Implementation                   |
-| -------------------- | ------ | -------------------------------- |
-| RFC 9700 (OAuth 2.0) | ✅     | PKCE, no implicit                |
-| RFC 9068 (JWT)       | ✅     | `aud` claim, RS256               |
-| RFC 9562 (UUIDv7)    | ✅     | All IDs via `ID.generate()`      |
-| Transactional Outbox | ✅     | Per-DB outbox, Redpanda-ready    |
-| Saga Pattern         | ✅     | Registration, Account Deletion   |
-| API Composition      | ✅     | No cross-DB JOIN                 |
-| SSOT                 | ✅     | Types in `packages/types`        |
-| CacheTTL             | ✅     | `@my-girok/nest-common` CacheTTL |
+| Standard             | Status | Implementation                      |
+| -------------------- | ------ | ----------------------------------- |
+| RFC 9700 (OAuth 2.0) | ✅     | PKCE, no implicit                   |
+| RFC 9068 (JWT)       | ✅     | `aud` claim, RS256                  |
+| RFC 9562 (UUIDv7)    | ✅     | All IDs via `ID.generate()`         |
+| Transactional Outbox | ✅     | Per-DB outbox, Redpanda-ready       |
+| Saga Pattern         | ✅     | Registration, Account Deletion      |
+| API Composition      | ✅     | No cross-DB JOIN                    |
+| SSOT                 | ✅     | Types in `packages/types`           |
+| CacheTTL             | ✅     | `@my-girok/nest-common` CacheTTL    |
+| Token Hashing        | ✅     | refreshTokenHash (SHA-256)          |
+| PII Masking          | ✅     | `masking.util.ts` for all logs      |
+| Error Sanitization   | ✅     | No IDs in error messages            |
+| DTO SSOT             | ✅     | Enums from Prisma generated clients |
 
 ---
 

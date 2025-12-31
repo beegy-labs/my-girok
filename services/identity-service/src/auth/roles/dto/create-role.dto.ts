@@ -11,15 +11,7 @@ import {
   Max,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-/**
- * Role scope enumeration
- */
-export enum RoleScope {
-  PLATFORM = 'PLATFORM',
-  SERVICE = 'SERVICE',
-  OPERATOR = 'OPERATOR',
-}
+import { RoleScope } from '.prisma/identity-auth-client';
 
 /**
  * DTO for creating a new role

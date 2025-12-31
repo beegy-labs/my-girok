@@ -8,61 +8,14 @@ import {
   IsDateString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-/**
- * Sanction subject type enumeration
- */
-export enum SanctionSubjectType {
-  ACCOUNT = 'ACCOUNT',
-  OPERATOR = 'OPERATOR',
-}
-
-/**
- * Sanction type enumeration
- */
-export enum SanctionType {
-  WARNING = 'WARNING',
-  TEMPORARY_BAN = 'TEMPORARY_BAN',
-  PERMANENT_BAN = 'PERMANENT_BAN',
-  FEATURE_RESTRICTION = 'FEATURE_RESTRICTION',
-}
-
-/**
- * Sanction severity enumeration
- */
-export enum SanctionSeverity {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL',
-}
-
-/**
- * Sanction scope enumeration
- */
-export enum SanctionScope {
-  PLATFORM = 'PLATFORM',
-  SERVICE = 'SERVICE',
-}
-
-/**
- * Issuer type enumeration
- */
-export enum IssuerType {
-  ADMIN = 'ADMIN',
-  OPERATOR = 'OPERATOR',
-  SYSTEM = 'SYSTEM',
-}
-
-/**
- * Notification channel enumeration
- */
-export enum NotificationChannel {
-  EMAIL = 'EMAIL',
-  PUSH = 'PUSH',
-  SMS = 'SMS',
-  IN_APP = 'IN_APP',
-}
+import {
+  SanctionSubjectType,
+  SanctionType,
+  SanctionSeverity,
+  SanctionScope,
+  IssuerType,
+  NotificationChannel,
+} from '.prisma/identity-auth-client';
 
 /**
  * DTO for creating a sanction

@@ -8,27 +8,7 @@ import {
   IsEnum,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-/**
- * Auth provider enum for account creation
- */
-export enum AuthProvider {
-  LOCAL = 'LOCAL',
-  GOOGLE = 'GOOGLE',
-  KAKAO = 'KAKAO',
-  NAVER = 'NAVER',
-  APPLE = 'APPLE',
-  MICROSOFT = 'MICROSOFT',
-  GITHUB = 'GITHUB',
-}
-
-/**
- * Account mode enum
- */
-export enum AccountMode {
-  SERVICE = 'SERVICE',
-  UNIFIED = 'UNIFIED',
-}
+import { AuthProvider, AccountMode } from '.prisma/identity-client';
 
 /**
  * DTO for creating a new account

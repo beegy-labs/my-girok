@@ -11,26 +11,7 @@ import {
   Max,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-/**
- * Device type enum
- */
-export enum DeviceType {
-  WEB = 'WEB',
-  IOS = 'IOS',
-  ANDROID = 'ANDROID',
-  DESKTOP = 'DESKTOP',
-  OTHER = 'OTHER',
-}
-
-/**
- * Push platform enum
- */
-export enum PushPlatform {
-  FCM = 'FCM',
-  APNS = 'APNS',
-  WEB_PUSH = 'WEB_PUSH',
-}
+import { DeviceType, PushPlatform } from '.prisma/identity-client';
 
 /**
  * DTO for registering a new device

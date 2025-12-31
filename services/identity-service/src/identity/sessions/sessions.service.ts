@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma, Session } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { PaginatedResponse } from '../../common/pagination';
+import { maskUuid } from '../../common/utils/masking.util';
 import { CreateSessionDto, RevokeSessionDto, SessionQueryDto } from './dto';
 import * as crypto from 'crypto';
 
@@ -75,7 +76,7 @@ export class SessionsService {
    * Create a new session
    */
   async create(dto: CreateSessionDto): Promise<CreatedSessionResponse> {
-    this.logger.log(`Creating session for account: ${dto.accountId}`);
+    this.logger.log(`Creating session for account: ${maskUuid(dto.accountId)}`);
 
     // Verify account exists
     const account = await this.prisma.account.findUnique({
@@ -83,7 +84,7 @@ export class SessionsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${dto.accountId} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     // Check maximum sessions per account limit
@@ -100,7 +101,7 @@ export class SessionsService {
         where: { id: dto.deviceId },
       });
       if (!device) {
-        throw new NotFoundException(`Device with ID ${dto.deviceId} not found`);
+        throw new NotFoundException('Device not found');
       }
       if (device.accountId !== dto.accountId) {
         throw new BadRequestException('Device does not belong to the account');
@@ -121,7 +122,7 @@ export class SessionsService {
         accountId: dto.accountId,
         deviceId: dto.deviceId || null,
         tokenHash,
-        refreshToken: this.hashToken(refreshToken),
+        refreshTokenHash: this.hashToken(refreshToken),
         ipAddress: dto.ipAddress,
         userAgent: dto.userAgent,
         expiresAt,
@@ -130,7 +131,7 @@ export class SessionsService {
       },
     });
 
-    this.logger.log(`Session created with ID: ${session.id}`);
+    this.logger.log(`Session created with ID: ${maskUuid(session.id)}`);
 
     return {
       id: session.id,
@@ -158,7 +159,7 @@ export class SessionsService {
     });
 
     if (!session) {
-      throw new NotFoundException(`Session with ID ${id} not found`);
+      throw new NotFoundException('Session not found');
     }
 
     return this.toSessionResponse(session);
@@ -207,7 +208,7 @@ export class SessionsService {
     const refreshTokenHash = this.hashToken(refreshToken);
 
     const session = await this.prisma.session.findFirst({
-      where: { refreshToken: refreshTokenHash },
+      where: { refreshTokenHash },
     });
 
     if (!session) {
@@ -235,13 +236,13 @@ export class SessionsService {
       where: { id: session.id },
       data: {
         tokenHash: newTokenHash,
-        refreshToken: newRefreshTokenHash,
+        refreshTokenHash: newRefreshTokenHash,
         expiresAt: newExpiresAt,
         lastActivityAt: new Date(),
       },
     });
 
-    this.logger.log(`Session ${session.id} refreshed`);
+    this.logger.log(`Session ${maskUuid(session.id)} refreshed`);
 
     return {
       ...this.toSessionResponse(updatedSession),
@@ -259,7 +260,7 @@ export class SessionsService {
     });
 
     if (!session) {
-      throw new NotFoundException(`Session with ID ${id} not found`);
+      throw new NotFoundException('Session not found');
     }
 
     await this.prisma.session.update({
@@ -271,7 +272,7 @@ export class SessionsService {
       },
     });
 
-    this.logger.log(`Session ${id} revoked`);
+    this.logger.log(`Session ${maskUuid(id)} revoked`);
   }
 
   /**
@@ -293,7 +294,7 @@ export class SessionsService {
       },
     });
 
-    this.logger.log(`Revoked ${result.count} sessions for account ${accountId}`);
+    this.logger.log(`Revoked ${result.count} sessions for account ${maskUuid(accountId)}`);
     return result.count;
   }
 

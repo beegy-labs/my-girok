@@ -11,6 +11,7 @@ import { Prisma } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
 import { PaginatedResponse } from '../../common/pagination';
+import { maskUuid, maskEmail } from '../../common/utils/masking.util';
 import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-account.dto';
 import { UpdateAccountDto, AccountStatus, ChangePasswordDto } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
@@ -83,8 +84,7 @@ export class AccountsService {
    * Create a new account
    */
   async create(dto: CreateAccountDto): Promise<AccountEntity> {
-    const maskedEmail = dto.email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
-    this.logger.log(`Creating account for email: ${maskedEmail}`);
+    this.logger.log(`Creating account for email: ${maskEmail(dto.email)}`);
 
     // Check if email already exists
     const existingEmail = await this.prisma.account.findUnique({
@@ -147,7 +147,7 @@ export class AccountsService {
           },
         });
 
-        this.logger.log(`Account created with ID: ${account.id}`);
+        this.logger.log(`Account created with ID: ${maskUuid(account.id)}`);
         return AccountEntity.fromPrisma(account);
       } catch (error) {
         // Handle unique constraint violation (P2002)
@@ -183,7 +183,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     return AccountEntity.fromPrisma(account);
@@ -198,7 +198,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with external ID ${externalId} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     return AccountEntity.fromPrisma(account);
@@ -299,7 +299,7 @@ export class AccountsService {
     });
 
     if (!existing) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     // If email is being changed, check for conflicts
@@ -329,7 +329,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(`Account ${id} updated`);
+    this.logger.log(`Account ${maskUuid(id)} updated`);
     return AccountEntity.fromPrisma(account);
   }
 
@@ -342,7 +342,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     // If account has password, verify current password
@@ -366,7 +366,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(`Password changed for account ${id}`);
+    this.logger.log(`Password changed for account ${maskUuid(id)}`);
   }
 
   /**
@@ -378,7 +378,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     await this.prisma.account.update({
@@ -389,7 +389,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(`Account ${id} soft deleted`);
+    this.logger.log(`Account ${maskUuid(id)} soft deleted`);
   }
 
   /**
@@ -401,7 +401,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     await this.prisma.account.update({
@@ -413,7 +413,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(`Email verified for account ${id}`);
+    this.logger.log(`Email verified for account ${maskUuid(id)}`);
   }
 
   /**
@@ -427,7 +427,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     if (account.mfaEnabled) {
@@ -456,7 +456,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(`MFA setup initiated for account ${id}`);
+    this.logger.log(`MFA setup initiated for account ${maskUuid(id)}`);
 
     return {
       secret,
@@ -475,7 +475,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     if (!account.mfaSecret) {
@@ -513,7 +513,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(`MFA enabled for account ${id}`);
+    this.logger.log(`MFA enabled for account ${maskUuid(id)}`);
   }
 
   /**
@@ -546,7 +546,7 @@ export class AccountsService {
         return true;
       }
     } catch (error) {
-      this.logger.error(`Failed to verify TOTP for account ${id}`, error);
+      this.logger.error(`Failed to verify TOTP for account ${maskUuid(id)}`, error);
     }
 
     // If TOTP fails, try backup codes
@@ -563,7 +563,9 @@ export class AccountsService {
         data: { mfaBackupCodes: updatedBackupCodes },
       });
 
-      this.logger.log(`Backup code used for account ${id}, ${updatedBackupCodes.length} remaining`);
+      this.logger.log(
+        `Backup code used for account ${maskUuid(id)}, ${updatedBackupCodes.length} remaining`,
+      );
       return true;
     }
 
@@ -580,7 +582,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     if (!account.mfaEnabled) {
@@ -596,7 +598,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(`MFA disabled for account ${id}`);
+    this.logger.log(`MFA disabled for account ${maskUuid(id)}`);
   }
 
   /**
@@ -608,7 +610,7 @@ export class AccountsService {
     });
 
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
+      throw new NotFoundException('Account not found');
     }
 
     const updated = await this.prisma.account.update({
@@ -616,7 +618,7 @@ export class AccountsService {
       data: { status },
     });
 
-    this.logger.log(`Account ${id} status updated to ${status}`);
+    this.logger.log(`Account ${maskUuid(id)} status updated to ${status}`);
     return AccountEntity.fromPrisma(updated);
   }
 

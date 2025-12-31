@@ -162,7 +162,7 @@ export interface Session {
   id: string;
   accountId: string;
   tokenHash: string;
-  refreshToken: string | null;
+  refreshTokenHash: string | null;
 
   // Session metadata
   deviceId: string | null;

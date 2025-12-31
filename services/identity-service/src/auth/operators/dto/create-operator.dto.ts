@@ -12,14 +12,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-/**
- * Invitation type enumeration
- */
-export enum InvitationType {
-  EMAIL = 'EMAIL',
-  DIRECT = 'DIRECT',
-}
+import { InvitationType } from '.prisma/identity-auth-client';
 
 /**
  * DTO for creating an operator invitation
