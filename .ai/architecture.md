@@ -45,13 +45,13 @@
 
 ## Communication Strategy
 
-| Direction         | Protocol       | Use Case                   |
-| ----------------- | -------------- | -------------------------- |
-| Client → BFF      | GraphQL        | Main API, flexible queries |
-| Client → Service  | REST           | OAuth, simple APIs         |
-| BFF → Service     | gRPC           | High-performance internal  |
-| Service → Service | gRPC           | Internal communication     |
-| Async Events      | NATS JetStream | Decoupled messaging        |
+| Direction         | Protocol | Use Case                   |
+| ----------------- | -------- | -------------------------- |
+| Client → BFF      | GraphQL  | Main API, flexible queries |
+| Client → Service  | REST     | OAuth, simple APIs         |
+| BFF → Service     | gRPC     | High-performance internal  |
+| Service → Service | gRPC     | Internal communication     |
+| Async Events      | Redpanda | Kafka-compatible, no JVM   |
 
 ## Architecture Layers
 
@@ -76,8 +76,8 @@
                               │
                               ▼
                ┌─────────────────────────┐
-               │    NATS JetStream       │
-               │     (Async Events)      │
+               │       Redpanda          │
+               │  (Kafka API, no JVM)    │
                └─────────────────────────┘
 ```
 
@@ -143,16 +143,21 @@ Services ──OTEL──▶ OTEL Collector ──▶ ClickHouse
 
 ID Strategy: **UUIDv7** (RFC 9562, time-sortable, DB-native UUID)
 
-## NATS Events
+## Redpanda Events
 
 ```typescript
-// Publish
-await this.nats.publish('user.created', { userId, email });
+// Publish (Kafka-compatible API)
+await this.kafka.send({
+  topic: 'user.created',
+  messages: [{ value: JSON.stringify({ userId, email }) }],
+});
 
 // Subscribe
-@NatsSubscribe('user.created')
+@KafkaSubscribe('user.created')
 async handleUserCreated(data: UserCreatedEvent) { }
 ```
+
+> **Why Redpanda?** C++ native (no JVM), 1-2GB memory, ~1ms latency, Kafka API compatible
 
 ## Service Communication
 
@@ -160,8 +165,8 @@ async handleUserCreated(data: UserCreatedEvent) { }
 // DO: gRPC call
 const user = await this.authGrpcClient.getUser({ userId });
 
-// DO: Event publish
-await this.nats.publish('post.created', { postId });
+// DO: Event publish (Redpanda/Kafka)
+await this.kafka.send({ topic: 'post.created', messages: [{ value: postId }] });
 
 // DON'T: Direct import
 import { AuthService } from '../auth-service'; // NEVER
