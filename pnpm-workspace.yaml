@@ -50,11 +50,16 @@ catalog:
   '@nestjs/core': ^11.1.9
   '@nestjs/config': ^4.0.2
   '@nestjs/jwt': ^11.0.2
+  '@nestjs/microservices': ^11.1.9
   '@nestjs/passport': ^11.0.5
   '@nestjs/platform-express': ^11.1.9
   '@nestjs/swagger': ^11.2.3
   '@nestjs/testing': ^11.1.9
   '@nestjs/cli': ^11.0.14
+  '@nestjs/schedule': ^6.0.0
+
+  # Messaging (Kafka/Redpanda)
+  kafkajs: ^2.2.4
 
   # Database
   '@prisma/client': ^6.19.0

@@ -12,70 +12,71 @@ Central identity platform for N apps with shared user management:
 
 ---
 
-## Architecture Strategy
+## Architecture: Zero Migration
 
 ### Core Principle
 
-**Services Combined, DBs Pre-Separated, Redpanda-Ready**
+**Combined Service, Pre-Separated DBs, Interface-Based Communication**
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│              Current: Combined Service (Limited Hardware)            │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                    Identity Service                            │  │
-│  │  ┌─────────────┬─────────────┬─────────────┐                  │  │
-│  │  │  Identity   │    Auth     │    Legal    │                  │  │
-│  │  │   Module    │   Module    │   Module    │                  │  │
-│  │  └──────┬──────┴──────┬──────┴──────┬──────┘                  │  │
-│  │         │             │             │                          │  │
-│  │    In-Process    In-Process    In-Process                      │  │
-│  └─────────┼─────────────┼─────────────┼──────────────────────────┘  │
-│            │             │             │                             │
-│            ▼             ▼             ▼                             │
-│      identity_db     auth_db      legal_db   ← Pre-Separated         │
-│            │             │             │                             │
-│            └─────────────┼─────────────┘                             │
-│                          ▼                                           │
-│                   Outbox Tables  → (Future: Redpanda + Debezium)     │
-└──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                   identity-service (Single Deployment)                   │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │                        NestJS Application                         │  │
+│  │  ┌─────────────┬─────────────────┬───────────────┐               │  │
+│  │  │  Identity   │      Auth       │     Legal     │               │  │
+│  │  │   Module    │     Module      │    Module     │               │  │
+│  │  │             │                 │               │               │  │
+│  │  │ - Accounts  │ - Roles         │ - Consents    │               │  │
+│  │  │ - Sessions  │ - Permissions   │ - Documents   │               │  │
+│  │  │ - Devices   │ - Operators     │ - Law Registry│               │  │
+│  │  │ - Profiles  │ - Sanctions     │ - DSR         │               │  │
+│  │  └──────┬──────┴────────┬────────┴───────┬───────┘               │  │
+│  │         │ In-Process    │ In-Process     │ In-Process            │  │
+│  └─────────┼───────────────┼────────────────┼───────────────────────┘  │
+│            ▼               ▼                ▼                          │
+│      identity_db       auth_db          legal_db  ← Pre-Separated      │
+│            │               │                │                          │
+│            └───────────────┼────────────────┘                          │
+│                            ▼                                           │
+│                     Outbox Tables → (Future: Redpanda CDC)             │
+└─────────────────────────────────────────────────────────────────────────┘
 
-                        ⬇️ Hardware Added (128 cores, 496GB RAM)
+                        ⬇️ Hardware Added (Zero Code Change)
 
-┌──────────────────────────────────────────────────────────────────────┐
-│              Future: Separated Services (Zero Migration)              │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                │
-│  │  Identity   │   │    Auth     │   │    Legal    │                │
-│  │  Service    │   │   Service   │   │   Service   │                │
-│  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘                │
-│         │                 │                 │                        │
-│         ▼                 ▼                 ▼                        │
-│   identity_db         auth_db          legal_db  ← Same DBs          │
-│         │                 │                 │                        │
-│         └─────────────────┼─────────────────┘                        │
-│                           ▼                                          │
-│             Redpanda + Debezium CDC (Outbox Relay)                   │
-└──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Separated Services (Same Interfaces)                  │
+│  ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐       │
+│  │ identity-svc    │   │    auth-svc     │   │   legal-svc     │       │
+│  │ IIdentityModule │   │   IAuthModule   │   │  ILegalModule   │       │
+│  └────────┬────────┘   └────────┬────────┘   └────────┬────────┘       │
+│           │ gRPC               │ gRPC               │ gRPC            │
+│           ▼                    ▼                    ▼                  │
+│      identity_db           auth_db             legal_db ← Same DBs     │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Zero Migration Guarantee
 
-| Phase      | Hardware   | Services  | Communication | Event Broker        |
-| ---------- | ---------- | --------- | ------------- | ------------------- |
-| 1 (Now)    | Limited    | Combined  | In-Process    | Polling             |
-| 2 (Future) | 128c/496GB | Separated | gRPC          | Redpanda + Debezium |
-
-**Migration Required**: None (copy module folder + update routing)
+| Phase      | Services  | Communication | Event Broker | Code Change |
+| ---------- | --------- | ------------- | ------------ | ----------- |
+| 1 (Now)    | Combined  | In-Process    | Polling      | -           |
+| 2 (Future) | Separated | gRPC          | Redpanda CDC | **None**    |
 
 ---
 
 ## SSOT (Single Source of Truth)
 
-| Item              | SSOT Location                   | Purpose                  |
-| ----------------- | ------------------------------- | ------------------------ |
-| Module Interfaces | `packages/types/src/identity/`  | Contract between modules |
-| Event Types       | `packages/types/src/events/`    | Shared event schema      |
-| DB Schema         | `prisma/{module}/schema.prisma` | Per-module Prisma        |
-| App Config        | GitOps YAML                     | ArgoCD sync              |
+| Item              | Location                                    | Purpose                   |
+| ----------------- | ------------------------------------------- | ------------------------- |
+| Type Definitions  | `packages/types/src/identity/`              | Shared types & interfaces |
+| Module Interfaces | `packages/types/src/identity/interfaces.ts` | Contract between modules  |
+| Event Types       | `packages/types/src/events/`                | Domain event schema       |
+| DB Schema         | `prisma/{module}/schema.prisma`             | Per-module Prisma         |
+| DTO Enums         | `.prisma/*-client` (Prisma generated)       | Runtime enum values       |
+| Constants         | `src/common/constants/index.ts`             | Service-specific config   |
+| Masking Utils     | `src/common/utils/masking.util.ts`          | PII masking for logs      |
+| Shared Utilities  | `@my-girok/nest-common`                     | CacheTTL, ID, Pagination  |
 
 ---
 
@@ -83,113 +84,61 @@ Central identity platform for N apps with shared user management:
 
 > SSOT: `packages/types/src/identity/interfaces.ts`
 
-```typescript
-// === IDENTITY MODULE ===
-interface IIdentityModule {
-  getAccount(id: string): Promise<Account | null>;
-  createAccount(dto: CreateAccountDto): Promise<Account>;
-  getApp(slug: string): Promise<AppRegistry | null>;
-  getAppSecurityConfig(appId: string): Promise<AppSecurityConfig>;
-}
+| Interface           | DB          | Key Methods                                            |
+| ------------------- | ----------- | ------------------------------------------------------ |
+| `IIdentityModule`   | identity_db | accounts, sessions, devices, profiles                  |
+| `IAuthModule`       | auth_db     | getActiveSanctions, hasPermission, getAccountRoles     |
+| `ILegalModule`      | legal_db    | getAccountConsents, recordConsent, hasRequiredConsents |
+| `IIdentityPlatform` | -           | Aggregates all 3 modules                               |
 
-// === AUTH MODULE ===
-interface IAuthModule {
-  getActiveSanctions(accountId: string): Promise<Sanction[]>;
-  getAccountRoles(accountId: string, appId: string): Promise<Role[]>;
-}
-
-// === LEGAL MODULE ===
-interface ILegalModule {
-  getRequiredConsents(appId: string, countryCode: string): Promise<ConsentRequirement[]>;
-  recordConsent(dto: RecordConsentDto): Promise<AccountConsent>;
-}
-```
-
-**Implementation Swap**:
-
-```typescript
-// Combined: In-Process
-class IdentityModuleLocal implements IIdentityModule { ... }
-
-// Separated: gRPC Client
-class IdentityModuleRemote implements IIdentityModule { ... }
-
-// Switch via env
-provide: 'IIdentityModule',
-useClass: env.IDENTITY_MODE === 'remote' ? Remote : Local
-```
+**Implementation Swap**: `env.IDENTITY_MODE=remote` switches Local → gRPC (zero code change)
 
 ---
 
 ## Data Isolation Patterns
 
-### 1. Outbox Pattern (Redpanda-Ready)
+| Pattern              | Phase                              | Description                             |
+| -------------------- | ---------------------------------- | --------------------------------------- |
+| Transactional Outbox | Now: Polling, Future: Debezium CDC | Each DB has `outbox_events` table       |
+| Saga Orchestrator    | -                                  | Cross-DB transactions with compensation |
+| API Composition      | -                                  | No cross-DB JOIN, use interfaces        |
 
-```sql
--- Each DB has outbox table (UUIDv7)
-CREATE TABLE outbox_events (
-    id UUID PRIMARY KEY,              -- UUIDv7 from app
-    aggregate_type VARCHAR(50) NOT NULL,
-    aggregate_id UUID NOT NULL,
-    event_type VARCHAR(100) NOT NULL,
-    payload JSONB NOT NULL,
-    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
-    published_at TIMESTAMPTZ(6),
+**Saga Steps (Registration)**: Account → Profile → Consents → PublishEvent
 
-    INDEX idx_unpublished (created_at) WHERE published_at IS NULL
-);
-```
+---
 
-| Phase  | Relay Method      | Infrastructure      |
-| ------ | ----------------- | ------------------- |
-| Now    | Polling (5s cron) | None                |
-| Future | Debezium CDC      | Redpanda + Debezium |
+## Outbox Pattern
 
-### 2. Saga Pattern (Distributed Transactions)
+### Transactional Methods (Recommended)
 
 ```typescript
-// Registration Saga (In-Process, Kafka-Ready)
-class RegistrationSaga {
-  async execute(dto: RegisterDto): Promise<Account> {
-    const sagaId = ID.generate(); // UUIDv7
-
-    try {
-      // Step 1: Create account (identity_db)
-      const account = await this.identity.createAccount(dto);
-      await this.recordStep(sagaId, 'ACCOUNT_CREATED', account.id);
-
-      // Step 2: Record consents (legal_db)
-      await this.legal.recordConsents(account.id, dto.consents);
-      await this.recordStep(sagaId, 'CONSENTS_RECORDED', account.id);
-
-      // Step 3: Publish event (outbox)
-      await this.publishEvent('account.created', { accountId: account.id });
-
-      return account;
-    } catch (error) {
-      await this.compensate(sagaId);
-      throw error;
-    }
-  }
-}
+// Use publishIn*Transaction for atomicity with business logic
+await prisma.$transaction(async (tx) => {
+  const account = await tx.account.create({ data });
+  await outbox.publishInIdentityTransaction(tx, {
+    aggregateType: 'Account',
+    aggregateId: account.id,
+    eventType: 'ACCOUNT_CREATED',
+    payload: { ... }
+  });
+});
 ```
 
-### 3. API Composition (Cross-DB Queries)
+| Method                                    | Transaction     | Use Case                                  |
+| ----------------------------------------- | --------------- | ----------------------------------------- |
+| `publishInIdentityTransaction(tx, event)` | Within existing | Atomic with identity_db ops               |
+| `publishInAuthTransaction(tx, event)`     | Within existing | Atomic with auth_db ops                   |
+| `publishInLegalTransaction(tx, event)`    | Within existing | Atomic with legal_db ops                  |
+| `publish(db, event)`                      | Standalone      | @deprecated - use in saga final step only |
 
-```typescript
-// Cross-module query via interfaces (no cross-DB JOIN)
-class UserProfileComposer {
-  async getFullProfile(accountId: string): Promise<UserProfile> {
-    const [account, consents, sanctions] = await Promise.all([
-      this.identity.getAccount(accountId), // identity_db
-      this.legal.getConsents(accountId), // legal_db
-      this.auth.getSanctions(accountId), // auth_db
-    ]);
+### Saga Integration
 
-    return { ...account, consents, sanctions };
-  }
-}
-```
+Event publishing is the **final saga step** with retry and compensation:
+
+- Retry: 3 attempts with exponential backoff (1s → 2s → 4s)
+- Compensation: Events are NOT deleted (consumers handle gracefully)
+
+**Detailed implementation**: `docs/policies/IDENTITY_PLATFORM.md`
 
 ---
 
@@ -197,40 +146,39 @@ class UserProfileComposer {
 
 ### Identity Module (identity_db)
 
-| Table                  | Purpose                   | ID     |
-| ---------------------- | ------------------------- | ------ |
-| `accounts`             | Core account              | UUIDv7 |
-| `credentials`          | Password, passkeys, OAuth | UUIDv7 |
-| `sessions`             | Active sessions           | UUIDv7 |
-| `devices`              | Registered devices        | UUIDv7 |
-| `app_registry`         | Registered apps           | UUIDv7 |
-| `app_security_configs` | Per-app security          | UUIDv7 |
-| `app_test_modes`       | Test mode config          | UUIDv7 |
-| `app_service_status`   | Maintenance/shutdown      | UUIDv7 |
-| `app_version_policies` | Version requirements      | UUIDv7 |
-| `outbox_events`        | Event outbox              | UUIDv7 |
+| Table           | Purpose             | Key Fields                                                    |
+| --------------- | ------------------- | ------------------------------------------------------------- |
+| `accounts`      | Core account + auth | id, email, username, status, mode, mfaEnabled, lockedUntil    |
+| `sessions`      | Active sessions     | id, accountId, tokenHash, refreshTokenHash, expiresAt         |
+| `devices`       | Registered devices  | id, accountId, fingerprint, deviceType, osVersion, appVersion |
+| `profiles`      | User profiles       | id, accountId, displayName, gender, birthDate, address        |
+| `outbox_events` | Event outbox        | id, eventType, payload, status, retryCount                    |
 
 ### Auth Module (auth_db)
 
-| Table           | Purpose                | ID     |
-| --------------- | ---------------------- | ------ |
-| `roles`         | Role definitions       | UUIDv7 |
-| `permissions`   | Permission definitions | UUIDv7 |
-| `admins`        | Admin accounts         | UUIDv7 |
-| `operators`     | Service operators      | UUIDv7 |
-| `sanctions`     | Account sanctions      | UUIDv7 |
-| `api_keys`      | API key management     | UUIDv7 |
-| `outbox_events` | Event outbox           | UUIDv7 |
+| Table                    | Purpose                | Key Fields                            |
+| ------------------------ | ---------------------- | ------------------------------------- |
+| `roles`                  | Role definitions       | id, name, level, scope, parentId      |
+| `permissions`            | Permission definitions | id, resource, action, category, scope |
+| `role_permissions`       | Role-Permission join   | roleId, permissionId, conditions      |
+| `operators`              | Service operators      | id, accountId, serviceId, roleId      |
+| `operator_invitations`   | Invitation management  | id, email, token, expiresAt, status   |
+| `operator_permissions`   | Direct permissions     | operatorId, permissionId, grantedBy   |
+| `sanctions`              | Account sanctions      | id, subjectId, type, status, severity |
+| `sanction_notifications` | Sanction notices       | id, sanctionId, channel, sentAt       |
+| `outbox_events`          | Event outbox           | id, eventType, payload, status        |
 
 ### Legal Module (legal_db)
 
-| Table                   | Purpose         | ID     |
-| ----------------------- | --------------- | ------ |
-| `laws`                  | Law registry    | UUIDv7 |
-| `consent_documents`     | Legal documents | UUIDv7 |
-| `account_consents`      | User consents   | UUIDv7 |
-| `data_subject_requests` | GDPR DSR        | UUIDv7 |
-| `outbox_events`         | Event outbox    | UUIDv7 |
+| Table              | Purpose           | Key Fields                 |
+| ------------------ | ----------------- | -------------------------- |
+| `legal_documents`  | Legal documents   | id, type, version, content |
+| `consents`         | User consents     | id, accountId, consentType |
+| `consent_logs`     | Consent audit log | id, consentId, action      |
+| `law_registry`     | Law/regulation DB | id, code, countryCode      |
+| `dsr_requests`     | GDPR DSR          | id, accountId, requestType |
+| `dsr_request_logs` | DSR audit log     | id, requestId, action      |
+| `outbox_events`    | Event outbox      | id, eventType, payload     |
 
 ---
 
@@ -244,35 +192,262 @@ services/identity-service/
 │   └── legal/schema.prisma       # legal_db only
 │
 └── src/
-    ├── identity/                  # Copy this folder to extract
+    ├── database/                  # Multi-DB Prisma services
+    │   ├── database.module.ts
+    │   ├── base-prisma.service.ts # Base class + UUIDv7 extension
+    │   ├── identity-prisma.service.ts
+    │   ├── auth-prisma.service.ts
+    │   └── legal-prisma.service.ts
+    │
+    ├── common/                    # Shared utilities
+    │   ├── constants/             # Service-specific constants
+    │   ├── pagination/            # PaginationDto, PaginatedResponse
+    │   ├── saga/                  # Saga orchestrator
+    │   ├── outbox/                # Transactional outbox
+    │   ├── messaging/             # Kafka producer/consumer
+    │   ├── guards/                # JWT, API key guards
+    │   ├── filters/               # Exception filters
+    │   ├── decorators/            # @Public, etc.
+    │   └── utils/                 # Masking, etc.
+    │
+    ├── identity/                  # Identity module
     │   ├── identity.module.ts
-    │   ├── identity.prisma.ts     # identity_db connection
-    │   ├── identity.service.ts    # implements IIdentityModule
-    │   ├── controllers/
-    │   ├── services/
-    │   └── outbox.publisher.ts
+    │   ├── accounts/              # Account CRUD, MFA
+    │   ├── sessions/              # Session management
+    │   ├── devices/               # Device registration
+    │   └── profiles/              # User profiles
     │
-    ├── auth/                      # Copy this folder to extract
+    ├── auth/                      # Auth module
     │   ├── auth.module.ts
-    │   ├── auth.prisma.ts         # auth_db connection
-    │   ├── auth.service.ts        # implements IAuthModule
-    │   ├── controllers/
-    │   └── services/
+    │   ├── roles/                 # Role definitions, hierarchy
+    │   ├── permissions/           # Permission CRUD, checks
+    │   ├── operators/             # Operator management
+    │   └── sanctions/             # User sanctions, appeals
     │
-    ├── legal/                     # Copy this folder to extract
+    ├── legal/                     # Legal module
     │   ├── legal.module.ts
-    │   ├── legal.prisma.ts        # legal_db connection
-    │   ├── legal.service.ts       # implements ILegalModule
-    │   ├── controllers/
-    │   └── services/
+    │   ├── consents/              # Consent management
+    │   ├── legal-documents/       # Terms, policies
+    │   ├── law-registry/          # Country-specific laws
+    │   └── dsr-requests/          # GDPR DSR handling
     │
-    ├── saga/                      # Saga orchestrators
-    │   ├── registration.saga.ts
-    │   └── account-deletion.saga.ts
-    │
-    └── composition/               # Cross-module queries
-        └── user-profile.composer.ts
+    └── composition/               # Cross-module workflows
+        ├── registration/          # User registration saga
+        └── account-deletion/      # GDPR deletion saga
 ```
+
+---
+
+## API Endpoints
+
+### Public (No Auth)
+
+```
+POST   /registration              # User registration (saga)
+```
+
+### Identity Module
+
+```
+# Accounts
+POST   /accounts                  # Create account
+GET    /accounts                  # List accounts (paginated)
+GET    /accounts/:id              # Get account by ID
+GET    /accounts/external/:externalId  # Get by external ID (e.g., ACC_abc123)
+GET    /accounts/by-email/:email  # Get account by email
+GET    /accounts/by-username/:username  # Get account by username
+PATCH  /accounts/:id              # Update account
+DELETE /accounts/:id              # Soft delete account
+POST   /accounts/:id/verify-email # Verify email
+POST   /accounts/:id/change-password  # Change password (rate limited: 3/min)
+PATCH  /accounts/:id/status       # Update account status
+POST   /accounts/:id/mfa/enable   # Enable MFA (TOTP/SMS/EMAIL)
+POST   /accounts/:id/mfa/verify   # Verify and complete MFA setup
+POST   /accounts/:id/mfa/disable  # Disable MFA
+
+# Sessions
+POST   /sessions                  # Create session (rate: 10/min)
+GET    /sessions                  # List sessions (paginated)
+GET    /sessions/:id              # Get session by ID
+POST   /sessions/refresh          # Refresh tokens (rate: 30/min)
+POST   /sessions/validate         # Validate token (rate: 100/min)
+POST   /sessions/:id/touch        # Update activity timestamp
+DELETE /sessions/:id              # Revoke session
+DELETE /sessions/account/:accountId # Revoke all sessions
+GET    /sessions/account/:accountId/count # Active session count
+POST   /sessions/cleanup          # Admin: cleanup expired (rate: 1/min)
+
+# Devices
+POST   /devices                   # Register device
+GET    /devices/:id               # Get device by ID
+GET    /devices/account/:accountId # List account devices
+PATCH  /devices/:id               # Update device
+DELETE /devices/:id               # Remove device
+POST   /devices/:id/trust         # Trust device
+
+# Profiles
+GET    /profiles/:accountId       # Get profile
+PATCH  /profiles/:accountId       # Update profile
+```
+
+### Auth Module
+
+```
+# Roles
+GET    /roles                     # List roles
+POST   /roles                     # Create role
+GET    /roles/:id                 # Get role by ID
+PATCH  /roles/:id                 # Update role
+DELETE /roles/:id                 # Delete role
+GET    /roles/:id/permissions     # Get role permissions
+POST   /roles/:id/permissions     # Assign permissions
+DELETE /roles/:id/permissions     # Revoke permissions
+
+# Permissions
+GET    /permissions               # List permissions
+POST   /permissions               # Create permission
+GET    /permissions/:id           # Get permission by ID
+PATCH  /permissions/:id           # Update permission
+DELETE /permissions/:id           # Delete permission
+GET    /permissions/categories    # Get by category
+
+# Operators
+POST   /operators/invitations     # Create invitation
+POST   /operators/accept          # Accept invitation
+POST   /operators/direct          # Create directly
+GET    /operators/:id             # Get operator
+PATCH  /operators/:id             # Update operator
+DELETE /operators/:id             # Deactivate operator
+GET    /operators                 # List operators
+
+# Sanctions
+POST   /sanctions                 # Create sanction
+GET    /sanctions/:id             # Get sanction by ID
+PATCH  /sanctions/:id             # Update sanction
+POST   /sanctions/:id/revoke      # Revoke sanction
+POST   /sanctions/:id/appeal      # Submit appeal
+GET    /sanctions                 # List sanctions
+```
+
+### Legal Module
+
+```
+# Consents
+POST   /consents                  # Grant consent
+POST   /consents/bulk             # Grant bulk consents
+DELETE /consents/:id              # Withdraw consent
+GET    /consents/:id              # Get consent by ID
+GET    /consents/account/:accountId # Get account consents
+GET    /consents                  # List consents
+
+# Legal Documents
+POST   /legal-documents           # Create document
+GET    /legal-documents/:id       # Get by ID
+GET    /legal-documents/current   # Get current version
+GET    /legal-documents           # List documents
+
+# Law Registry
+POST   /law-registry              # Create law entry
+GET    /law-registry/:id          # Get by ID
+GET    /law-registry/code/:code   # Get by code
+GET    /law-registry/country/:code # Get by country
+GET    /law-registry              # List laws
+PATCH  /law-registry/:code        # Update law
+
+# DSR Requests
+POST   /dsr-requests              # Create DSR request
+GET    /dsr-requests/:id          # Get by ID
+PATCH  /dsr-requests/:id          # Update request
+POST   /dsr-requests/:id/complete # Complete request
+GET    /dsr-requests              # List requests
+```
+
+### Composition Layer
+
+```
+POST   /registration              # User registration saga
+POST   /account-deletion/immediate # Immediate deletion
+POST   /account-deletion/schedule  # Scheduled deletion
+```
+
+---
+
+## Event Types
+
+> SSOT: `packages/types/src/events/` (SCREAMING_SNAKE_CASE)
+
+```typescript
+// Identity Events
+'ACCOUNT_CREATED';
+'ACCOUNT_UPDATED';
+'ACCOUNT_DELETED';
+'SESSION_STARTED';
+'SESSION_ENDED';
+'DEVICE_REGISTERED';
+'DEVICE_TRUSTED';
+'MFA_ENABLED';
+'MFA_DISABLED';
+
+// Auth Events
+'ROLE_ASSIGNED';
+'ROLE_REVOKED';
+'SANCTION_APPLIED';
+'SANCTION_REVOKED';
+'SANCTION_APPEALED';
+
+// Legal Events
+'CONSENT_GRANTED';
+'CONSENT_WITHDRAWN';
+'DSR_REQUEST_SUBMITTED';
+'DSR_REQUEST_COMPLETED';
+```
+
+---
+
+## Environment Variables
+
+```env
+PORT=3005
+NODE_ENV=development
+
+# DBs (Pre-Separated - Zero Migration Ready)
+IDENTITY_DATABASE_URL=postgresql://...identity_db
+AUTH_DATABASE_URL=postgresql://...auth_db
+LEGAL_DATABASE_URL=postgresql://...legal_db
+
+# Module Mode (Combined → Separated)
+IDENTITY_MODE=local    # local | remote (gRPC)
+AUTH_MODE=local
+LEGAL_MODE=local
+
+# gRPC URLs (when MODE=remote)
+IDENTITY_GRPC_URL=identity-service:50051
+AUTH_GRPC_URL=auth-service:50051
+LEGAL_GRPC_URL=legal-service:50051
+
+# Future: Redpanda (Kafka-compatible)
+REDPANDA_BROKERS=      # Empty = use polling
+REDPANDA_ENABLED=false
+
+# JWT
+JWT_SECRET=...
+JWT_EXPIRES_IN=1h
+REFRESH_TOKEN_EXPIRES_IN=14d
+```
+
+---
+
+## Rate Limiting
+
+| Endpoint                             | Limit | TTL | Reason                    |
+| ------------------------------------ | ----- | --- | ------------------------- |
+| `POST /sessions`                     | 10    | 60s | Prevent session flood     |
+| `POST /sessions/refresh`             | 30    | 60s | Allow reasonable refresh  |
+| `POST /sessions/validate`            | 100   | 60s | High-frequency validation |
+| `POST /sessions/cleanup`             | 1     | 60s | Admin operation           |
+| `POST /accounts/:id/change-password` | 3     | 60s | Prevent brute force       |
+
+Uses `@Throttle` decorator from `@nestjs/throttler`.
 
 ---
 
@@ -294,109 +469,114 @@ services/identity-service/
 | STANDARD | ❌     | ✅  | ✅     | Staging     |
 | RELAXED  | ❌     | ✅  | ❌     | Development |
 
-### Test Mode Constraints
+### MFA & Account Security
 
-| Constraint   | Value     | Reason                  |
-| ------------ | --------- | ----------------------- |
-| Max Duration | 7 days    | Prevent forgotten tests |
-| IP Whitelist | Required  | No public test access   |
-| JWT          | Always ON | Security baseline       |
+- **MFA Methods**: TOTP (RFC 6238), SMS, EMAIL
+- **Lockout**: 5 failed attempts → 15min lock
+- **Fields**: `mfaEnabled`, `failedLoginAttempts`, `lockedUntil`
 
 ---
 
-## API Endpoints
+## 2025 Best Practices
 
-### Public (No Auth)
-
-```
-GET /v1/apps/:appSlug/check    # App launch check
-```
-
-### Identity Module
-
-```
-POST   /v1/identity/register
-POST   /v1/identity/login
-POST   /v1/identity/logout
-POST   /v1/identity/refresh
-GET    /v1/identity/me
-```
-
-### Auth Module
-
-```
-GET    /v1/auth/roles
-POST   /v1/auth/roles
-GET    /v1/auth/operators
-POST   /v1/admin/login
-```
-
-### Legal Module
-
-```
-GET    /v1/legal/consents/required
-POST   /v1/legal/consents
-GET    /v1/legal/documents
-```
-
-### Admin App Management
-
-```
-GET    /v1/admin/apps/:appId/security
-PATCH  /v1/admin/apps/:appId/security
-POST   /v1/admin/apps/:appId/test-mode
-POST   /v1/admin/apps/:appId/maintenance
-```
+| Standard             | Status | Implementation                      |
+| -------------------- | ------ | ----------------------------------- |
+| RFC 9700 (OAuth 2.0) | ✅     | PKCE, no implicit                   |
+| RFC 9068 (JWT)       | ✅     | `aud` claim, RS256                  |
+| RFC 9562 (UUIDv7)    | ✅     | All IDs via `ID.generate()`         |
+| Transactional Outbox | ✅     | Per-DB outbox, Redpanda-ready       |
+| Saga Pattern         | ✅     | Registration, Account Deletion      |
+| API Composition      | ✅     | No cross-DB JOIN                    |
+| SSOT                 | ✅     | Types in `packages/types`           |
+| CacheTTL             | ✅     | `@my-girok/nest-common` CacheTTL    |
+| Token Hashing        | ✅     | refreshTokenHash (SHA-256)          |
+| PII Masking          | ✅     | `masking.util.ts` for all logs      |
+| Error Sanitization   | ✅     | No IDs in error messages            |
+| DTO SSOT             | ✅     | Enums from Prisma generated clients |
 
 ---
 
-## Event Types
+## Constants Reference
 
-> SSOT: `packages/types/src/events/`
+> **SSOT**: `src/common/constants/index.ts`
+> **Strategy**: [.ai/ssot.md](../ssot.md#backend-constants--utilities)
+
+| Category            | Purpose          | Key Constants                                     |
+| ------------------- | ---------------- | ------------------------------------------------- |
+| `SESSION`           | Token expiry     | `DEFAULT_EXPIRY_MINUTES`, `REFRESH_TOKEN_DAYS`    |
+| `RATE_LIMIT`        | Auth protection  | `LOGIN_LIMIT`, `REGISTRATION_LIMIT`               |
+| `MFA`               | TOTP/Backup      | `TOTP_WINDOW`, `BACKUP_CODES_COUNT`               |
+| `ACCOUNT_SECURITY`  | Lockout          | `MAX_FAILED_ATTEMPTS`, `LOCKOUT_DURATION_MINUTES` |
+| `DSR_DEADLINE_DAYS` | GDPR/CCPA/PIPA   | Per-law deadline days                             |
+| `OUTBOX`            | Event processing | `POLL_INTERVAL_MS`, `BATCH_SIZE`                  |
+| `SANCTION`          | User bans        | `DEFAULT_DURATION_DAYS`, `APPEAL_WINDOW_DAYS`     |
+
+**Detailed values**: See `src/common/constants/index.ts` or `docs/services/IDENTITY_SERVICE.md`
+
+---
+
+## Guards & Security
+
+### ApiKeyGuard
+
+> Location: `src/common/guards/api-key.guard.ts`
+
+Service-to-service authentication with timing-safe comparison:
 
 ```typescript
-// Identity Events
-'identity.account.created';
-'identity.account.updated';
-'identity.account.deleted';
-'identity.session.created';
+// Usage: @UseGuards(ApiKeyGuard)
+// Header: X-API-Key: <api-key>
+// Env: API_KEYS=key1,key2,key3
+```
 
-// Auth Events
-'auth.sanction.created';
-'auth.role.assigned';
+| Feature      | Implementation                   |
+| ------------ | -------------------------------- |
+| Hash Storage | SHA-256, keys never stored plain |
+| Comparison   | `crypto.timingSafeEqual()`       |
+| Cache        | 1 minute TTL, auto-refresh       |
+| Production   | Required - throws if empty       |
 
-// Legal Events
-'legal.consent.granted';
-'legal.consent.revoked';
-'legal.dsr.requested';
+### @Public Decorator
+
+```typescript
+@Public()  // Skip API key validation
+@Get('health')
+health() { return { status: 'ok' }; }
 ```
 
 ---
 
-## Environment Variables
+## Crypto Service
 
-```env
-PORT=3005
-NODE_ENV=development
+> Location: `src/common/crypto/crypto.service.ts`
 
-# DBs (Pre-Separated)
-IDENTITY_DATABASE_URL=postgresql://...identity_db
-AUTH_DATABASE_URL=postgresql://...auth_db
-LEGAL_DATABASE_URL=postgresql://...legal_db
+| Method                 | Algorithm          | Use Case         |
+| ---------------------- | ------------------ | ---------------- |
+| `encrypt(plaintext)`   | AES-256-GCM        | MFA secrets      |
+| `decrypt(ciphertext)`  | AES-256-GCM        | MFA verification |
+| `hash(data)`           | SHA-256            | Backup codes     |
+| `generateToken(bytes)` | crypto.randomBytes | API tokens       |
+| `generateTotpSecret()` | Base32 (OTPAuth)   | TOTP setup       |
 
-# Module Mode (Combined → Separated)
-IDENTITY_MODE=local    # local | remote
-AUTH_MODE=local
-LEGAL_MODE=local
+**Ciphertext format**: `iv:authTag:encryptedData` (Base64)
 
-# Future: Redpanda (Kafka-compatible)
-REDPANDA_BROKERS=      # Empty = use polling
-REDPANDA_ENABLED=false
+**Env**: `ENCRYPTION_KEY` (32 bytes, Base64 encoded)
 
-# JWT
-JWT_PRIVATE_KEY=...
-JWT_PUBLIC_KEY=...
-```
+---
+
+## PII Masking Utilities
+
+> Location: `src/common/utils/masking.util.ts`
+
+| Function                 | Input                                  | Output                                 |
+| ------------------------ | -------------------------------------- | -------------------------------------- |
+| `maskUuid(uuid)`         | `550e8400-e29b-41d4-a716-446655440000` | `550e8400-****-****-****-********0000` |
+| `maskEmail(email)`       | `user@example.com`                     | `us***@example.com`                    |
+| `maskIpAddress(ip)`      | `192.168.1.100`                        | `192.168.*.*`                          |
+| `maskToken(token)`       | `abc123...xyz789`                      | `abc123...`                            |
+| `maskSensitiveData(obj)` | `{ password: 'secret' }`               | `{ password: '[REDACTED]' }`           |
+
+**Default sensitive fields**: `password`, `token`, `secret`, `mfaSecret`, `refreshToken`
 
 ---
 
@@ -408,82 +588,6 @@ JWT_PUBLIC_KEY=...
 | 2           | Hardware added | Extract services, enable gRPC    |
 | 3           | Scale needed   | Add Redpanda + Debezium CDC      |
 | 4           | Global scale   | Multi-region, read replicas      |
-
----
-
-## Future Changes Plan
-
-### Phase 2: Service Separation
-
-**Trigger**: Hardware upgrade (128c/496GB)
-
-| Item          | Before     | After                              |
-| ------------- | ---------- | ---------------------------------- |
-| Services      | 1 combined | 3 separate (identity, auth, legal) |
-| Communication | In-Process | gRPC                               |
-| Deployment    | 1 Helm     | 3 Helm charts                      |
-| Scaling       | Vertical   | Horizontal per-service             |
-
-```bash
-# Steps
-1. Copy module folder → new service
-2. Update Helm values (routing)
-3. Set MODULE_MODE=remote
-4. Deploy new service
-```
-
-### Phase 3: Redpanda Introduction
-
-**Trigger**: Event-driven scale needed
-
-| Item            | Before        | After                     |
-| --------------- | ------------- | ------------------------- |
-| Event Relay     | Polling (5s)  | Debezium CDC              |
-| Message Broker  | None          | Redpanda                  |
-| Event Guarantee | At-least-once | Exactly-once (idempotent) |
-| Latency         | 5s max        | Real-time (~1ms)          |
-
-```yaml
-# New Infrastructure
-- Redpanda Cluster (1 → 3 nodes)
-- Kafka Connect + Debezium
-- Schema Registry (optional)
-```
-
-### Phase 4: Global Scale
-
-**Trigger**: Multi-region users
-
-| Item    | Before        | After                            |
-| ------- | ------------- | -------------------------------- |
-| DB      | Single region | Multi-region (Citus/CockroachDB) |
-| Read    | Primary only  | Read replicas per region         |
-| Session | Valkey single | Valkey cluster                   |
-| CDN     | Edge caching  | Edge + regional cache            |
-
-### Future Features (Backlog)
-
-| Feature               | Priority | Phase | Notes                      |
-| --------------------- | -------- | ----- | -------------------------- |
-| DPoP Token (RFC 9449) | Medium   | 2+    | Prepared in JWT            |
-| Passkeys (WebAuthn)   | High     | 2     | Schema ready               |
-| Account Linking       | Medium   | 2     | SERVICE → UNIFIED mode     |
-| SSO Federation        | Low      | 3+    | Cross-app SSO              |
-| Audit Log Streaming   | Medium   | 3     | To ClickHouse via Redpanda |
-| ML Fraud Detection    | Low      | 4     | Anomaly detection          |
-
----
-
-## 2025 Best Practices
-
-| Standard             | Status | Implementation          |
-| -------------------- | ------ | ----------------------- |
-| RFC 9700 (OAuth 2.0) | ✅     | PKCE, no implicit       |
-| RFC 9068 (JWT)       | ✅     | `aud` claim, RS256      |
-| Transactional Outbox | ✅     | Redpanda-ready          |
-| Saga Pattern         | ✅     | In-process, extractable |
-| API Composition      | ✅     | No cross-DB JOIN        |
-| UUIDv7 (RFC 9562)    | ✅     | All IDs                 |
 
 ---
 

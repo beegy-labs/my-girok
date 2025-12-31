@@ -18,3 +18,18 @@ export * from './admin/index.js';
 
 // Service types (Global Account System)
 export * from './service/index.js';
+
+// Domain Events
+export * from './events/index.js';
+
+/**
+ * Identity Platform types
+ *
+ * For Zero Migration architecture, import identity types separately:
+ * import { Account, Session } from '@my-girok/types/identity';
+ *
+ * This avoids conflicts with existing auth/legal types and allows
+ * the identity module to be self-contained for future service separation.
+ */
+// NOT exported here to avoid type conflicts
+// Use: import * as Identity from '@my-girok/types/identity';
