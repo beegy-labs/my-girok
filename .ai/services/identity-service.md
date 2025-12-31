@@ -407,6 +407,70 @@ JWT_PUBLIC_KEY=...
 | 1 (Current) | -              | Combined service, polling outbox |
 | 2           | Hardware added | Extract services, enable gRPC    |
 | 3           | Scale needed   | Add Redpanda + Debezium CDC      |
+| 4           | Global scale   | Multi-region, read replicas      |
+
+---
+
+## Future Changes Plan
+
+### Phase 2: Service Separation
+
+**Trigger**: Hardware upgrade (128c/496GB)
+
+| Item          | Before     | After                              |
+| ------------- | ---------- | ---------------------------------- |
+| Services      | 1 combined | 3 separate (identity, auth, legal) |
+| Communication | In-Process | gRPC                               |
+| Deployment    | 1 Helm     | 3 Helm charts                      |
+| Scaling       | Vertical   | Horizontal per-service             |
+
+```bash
+# Steps
+1. Copy module folder → new service
+2. Update Helm values (routing)
+3. Set MODULE_MODE=remote
+4. Deploy new service
+```
+
+### Phase 3: Redpanda Introduction
+
+**Trigger**: Event-driven scale needed
+
+| Item            | Before        | After                     |
+| --------------- | ------------- | ------------------------- |
+| Event Relay     | Polling (5s)  | Debezium CDC              |
+| Message Broker  | None          | Redpanda                  |
+| Event Guarantee | At-least-once | Exactly-once (idempotent) |
+| Latency         | 5s max        | Real-time (~1ms)          |
+
+```yaml
+# New Infrastructure
+- Redpanda Cluster (1 → 3 nodes)
+- Kafka Connect + Debezium
+- Schema Registry (optional)
+```
+
+### Phase 4: Global Scale
+
+**Trigger**: Multi-region users
+
+| Item    | Before        | After                            |
+| ------- | ------------- | -------------------------------- |
+| DB      | Single region | Multi-region (Citus/CockroachDB) |
+| Read    | Primary only  | Read replicas per region         |
+| Session | Valkey single | Valkey cluster                   |
+| CDN     | Edge caching  | Edge + regional cache            |
+
+### Future Features (Backlog)
+
+| Feature               | Priority | Phase | Notes                      |
+| --------------------- | -------- | ----- | -------------------------- |
+| DPoP Token (RFC 9449) | Medium   | 2+    | Prepared in JWT            |
+| Passkeys (WebAuthn)   | High     | 2     | Schema ready               |
+| Account Linking       | Medium   | 2     | SERVICE → UNIFIED mode     |
+| SSO Federation        | Low      | 3+    | Cross-app SSO              |
+| Audit Log Streaming   | Medium   | 3     | To ClickHouse via Redpanda |
+| ML Fraud Detection    | Low      | 4     | Anomaly detection          |
 
 ---
 

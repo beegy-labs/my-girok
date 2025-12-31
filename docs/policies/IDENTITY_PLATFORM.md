@@ -1030,6 +1030,262 @@ interface AppCheckResponse {
 
 ---
 
+## Future Changes Plan
+
+### Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Evolution Roadmap                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Phase 1          Phase 2           Phase 3           Phase 4            │
+│  (Current)        (Hardware)        (Scale)           (Global)           │
+│  ────────         ──────────        ───────           ────────           │
+│                                                                          │
+│  Combined     →   Separated     →   + Redpanda    →   Multi-Region       │
+│  Service          Services          + Debezium        + Read Replicas    │
+│                                                                          │
+│  In-Process   →   gRPC          →   Event-Driven →   Geo-Distributed     │
+│                                                                          │
+│  Polling      →   Polling       →   CDC Real-time→   Global CDC          │
+│  Outbox           Outbox            Outbox           Outbox              │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  Constant: 3 Pre-Separated DBs (identity_db, auth_db, legal_db)  │   │
+│  │  Never requires DB migration                                      │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Phase 2: Service Separation
+
+**Trigger**: Hardware upgrade to 128 cores, 496GB RAM
+
+#### Changes
+
+| Component          | Before                    | After                  |
+| ------------------ | ------------------------- | ---------------------- |
+| Services           | 1 combined pod            | 3 separate pods        |
+| Communication      | In-Process function calls | gRPC (proto3)          |
+| Deployment         | 1 Helm chart              | 3 Helm charts          |
+| Scaling            | Vertical only             | Horizontal per-service |
+| Resource Isolation | Shared                    | Dedicated per-service  |
+
+#### Implementation Steps
+
+```bash
+# Step 1: Prepare new service (no code changes)
+cp -r services/identity-service/src/auth services/auth-service/src/
+cp -r services/identity-service/prisma/auth services/auth-service/prisma/
+
+# Step 2: Create Helm chart
+cp -r helm/identity-service helm/auth-service
+# Update values.yaml with auth-service specific config
+
+# Step 3: Generate gRPC stubs (if not already)
+protoc --ts_out=. --grpc_out=. proto/auth.proto
+
+# Step 4: Update environment
+AUTH_MODE=remote  # Switch from local to gRPC client
+
+# Step 5: Deploy
+helm upgrade auth-service ./helm/auth-service
+
+# Step 6: Update Gateway routing
+# /v1/auth/* → auth-service:3006
+```
+
+#### New gRPC Services
+
+```protobuf
+// proto/identity.proto
+service IdentityService {
+  rpc GetAccount(GetAccountRequest) returns (Account);
+  rpc CreateAccount(CreateAccountRequest) returns (Account);
+  rpc GetSession(GetSessionRequest) returns (Session);
+}
+
+// proto/auth.proto
+service AuthService {
+  rpc GetSanctions(GetSanctionsRequest) returns (SanctionList);
+  rpc GetRoles(GetRolesRequest) returns (RoleList);
+}
+
+// proto/legal.proto
+service LegalService {
+  rpc GetConsents(GetConsentsRequest) returns (ConsentList);
+  rpc RecordConsent(RecordConsentRequest) returns (Consent);
+}
+```
+
+### Phase 3: Redpanda Introduction
+
+**Trigger**: Need for real-time event streaming and better event guarantees
+
+#### Changes
+
+| Component        | Before            | After                           |
+| ---------------- | ----------------- | ------------------------------- |
+| Event Relay      | Polling (5s cron) | Debezium CDC (real-time)        |
+| Message Broker   | None              | Redpanda cluster                |
+| Event Guarantee  | At-least-once     | Exactly-once (with idempotency) |
+| Latency          | 0-5 seconds       | < 100ms                         |
+| Event Replay     | Not possible      | Full replay from offset         |
+| Schema Evolution | Manual            | Schema Registry                 |
+
+#### New Infrastructure
+
+```yaml
+# Redpanda Cluster
+apiVersion: redpanda.vectorized.io/v1alpha1
+kind: Cluster
+metadata:
+  name: identity-redpanda
+spec:
+  replicas: 3 # HA cluster
+  resources:
+    requests:
+      cpu: 2
+      memory: 4Gi
+  storage:
+    capacity: 100Gi
+    storageClassName: fast-ssd
+
+---
+# Debezium Connector per DB
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: identity-db-connector
+spec:
+  class: io.debezium.connector.postgresql.PostgresConnector
+  config:
+    database.hostname: identity-db
+    database.dbname: identity_db
+    table.include.list: public.outbox_events
+    slot.name: identity_outbox_slot
+    publication.name: identity_outbox_pub
+    transforms: outbox
+    transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+
+---
+# Schema Registry (optional but recommended)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schema-registry
+spec:
+  template:
+    spec:
+      containers:
+        - name: schema-registry
+          image: apicurio/apicurio-registry-mem:2.4
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: identity-redpanda:9092
+```
+
+#### Event Flow
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Service    │    │  PostgreSQL │    │  Debezium   │    │  Redpanda   │
+│  (NestJS)   │    │  (outbox)   │    │  Connector  │    │  Cluster    │
+└──────┬──────┘    └──────┬──────┘    └──────┬──────┘    └──────┬──────┘
+       │                  │                  │                  │
+       │ 1. INSERT        │                  │                  │
+       │ (same tx)        │                  │                  │
+       ├─────────────────►│                  │                  │
+       │                  │                  │                  │
+       │                  │ 2. CDC capture   │                  │
+       │                  ├─────────────────►│                  │
+       │                  │                  │                  │
+       │                  │                  │ 3. Publish       │
+       │                  │                  ├─────────────────►│
+       │                  │                  │                  │
+       │                  │                  │                  │ 4. Consume
+       │                  │                  │                  ├────────►
+```
+
+### Phase 4: Global Scale
+
+**Trigger**: Multi-region user base, latency requirements
+
+#### Changes
+
+| Component     | Before            | After                       |
+| ------------- | ----------------- | --------------------------- |
+| Database      | Single PostgreSQL | Citus or CockroachDB        |
+| Read Path     | Primary only      | Read replicas per region    |
+| Write Path    | Single region     | Write to nearest, replicate |
+| Session Store | Single Valkey     | Valkey Cluster (geo)        |
+| CDN           | Edge caching      | Edge + Regional cache       |
+| DNS           | Simple A record   | GeoDNS                      |
+
+#### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Global Architecture                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│        Asia (KR/JP)              US West              EU (DE/FR)         │
+│        ───────────               ───────              ──────────         │
+│                                                                          │
+│   ┌──────────────┐         ┌──────────────┐      ┌──────────────┐       │
+│   │ Edge + Cache │         │ Edge + Cache │      │ Edge + Cache │       │
+│   └──────┬───────┘         └──────┬───────┘      └──────┬───────┘       │
+│          │                        │                     │                │
+│          ▼                        ▼                     ▼                │
+│   ┌──────────────┐         ┌──────────────┐      ┌──────────────┐       │
+│   │   Services   │         │   Services   │      │   Services   │       │
+│   │  (Regional)  │         │  (Regional)  │      │  (Regional)  │       │
+│   └──────┬───────┘         └──────┬───────┘      └──────┬───────┘       │
+│          │                        │                     │                │
+│          ▼                        ▼                     ▼                │
+│   ┌──────────────┐         ┌──────────────┐      ┌──────────────┐       │
+│   │ Read Replica │         │ Read Replica │      │ Read Replica │       │
+│   └──────┬───────┘         └──────┬───────┘      └──────┬───────┘       │
+│          │                        │                     │                │
+│          └────────────────────────┼─────────────────────┘                │
+│                                   ▼                                      │
+│                          ┌──────────────┐                                │
+│                          │    Primary   │                                │
+│                          │  (Write DB)  │                                │
+│                          └──────────────┘                                │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Future Features Backlog
+
+| Feature                  | Priority | Phase | Description                      | Dependencies    |
+| ------------------------ | -------- | ----- | -------------------------------- | --------------- |
+| **DPoP Token Binding**   | Medium   | 2+    | RFC 9449 proof-of-possession     | JWT infra ready |
+| **Passkeys (WebAuthn)**  | High     | 2     | Passwordless authentication      | Schema ready    |
+| **Account Linking**      | Medium   | 2     | SERVICE → UNIFIED mode migration | UI needed       |
+| **SSO Federation**       | Low      | 3+    | Cross-app single sign-on         | Redpanda events |
+| **Audit Log Streaming**  | Medium   | 3     | Real-time to ClickHouse          | Redpanda        |
+| **Behavioral Analytics** | Medium   | 3     | Login patterns, risk scoring     | ClickHouse      |
+| **ML Fraud Detection**   | Low      | 4     | Anomaly detection, bot detection | Analytics data  |
+| **Biometric Auth**       | Low      | 4     | Face ID, fingerprint integration | Mobile SDK      |
+
+### Technology Evolution
+
+| Area              | Current    | Phase 2    | Phase 3      | Phase 4                 |
+| ----------------- | ---------- | ---------- | ------------ | ----------------------- |
+| **Service Mesh**  | None       | None       | Cilium       | Cilium + mTLS           |
+| **Observability** | OTEL       | OTEL       | OTEL + Tempo | Full stack              |
+| **Secrets**       | Vault      | Vault      | Vault        | Vault + HSM             |
+| **Auth**          | JWT RS256  | JWT RS256  | + DPoP       | + Hardware keys         |
+| **DB**            | PostgreSQL | PostgreSQL | PostgreSQL   | Citus/CockroachDB       |
+| **Cache**         | Valkey     | Valkey     | Valkey       | Valkey Cluster          |
+| **Events**        | Polling    | Polling    | Redpanda     | Redpanda (multi-region) |
+
+---
+
 ## 2025 Best Practices Compliance
 
 | Standard                      | Status | Implementation          |
