@@ -93,9 +93,9 @@ export interface CreateAccountDto {
 }
 
 /**
- * Update account DTO
+ * Update account DTO (Identity Platform)
  */
-export interface UpdateAccountDto {
+export interface IdentityUpdateAccountDto {
   email?: string;
   phoneNumber?: string;
   status?: AccountStatus;
@@ -106,10 +106,10 @@ export interface UpdateAccountDto {
 // ============================================================================
 
 /**
- * Session entity
+ * Session entity (Identity Platform)
  * Represents an active user session
  */
-export interface Session {
+export interface IdentitySession {
   id: string;
   accountId: string;
   deviceId: string | null;
@@ -278,9 +278,9 @@ export interface CreateProfileDto {
 }
 
 /**
- * Update profile DTO
+ * Update profile DTO (Identity Platform)
  */
-export interface UpdateProfileDto {
+export interface IdentityUpdateProfileDto {
   displayName?: string;
   firstName?: string;
   lastName?: string;

@@ -6,7 +6,6 @@
 import type { ConsentType } from './enums.js';
 import type {
   Consent,
-  ConsentSummary,
   ConsentListResponse,
   ConsentQueryDto,
   RecordConsentDto,

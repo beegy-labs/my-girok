@@ -5,19 +5,16 @@
 
 import type {
   Account,
-  AccountSummary,
   AccountListResponse,
   AccountQueryDto,
   CreateAccountDto,
-  UpdateAccountDto,
-  Session,
-  SessionSummary,
+  IdentityUpdateAccountDto,
+  IdentitySession,
   SessionListResponse,
   SessionQueryDto,
   CreateSessionDto,
   RevokeSessionDto,
   Device,
-  DeviceSummary,
   DeviceListResponse,
   DeviceQueryDto,
   RegisterDeviceDto,
@@ -25,7 +22,7 @@ import type {
   Profile,
   ProfileSummary,
   CreateProfileDto,
-  UpdateProfileDto,
+  IdentityUpdateProfileDto,
 } from './types.js';
 
 // ============================================================================
@@ -63,7 +60,7 @@ export interface IAccountService {
    * @param dto Update data
    * @returns Updated account
    */
-  updateAccount(accountId: string, dto: UpdateAccountDto): Promise<Account>;
+  updateAccount(accountId: string, dto: IdentityUpdateAccountDto): Promise<Account>;
 
   /**
    * Soft delete account
@@ -120,21 +117,21 @@ export interface ISessionService {
    * @param dto Session creation data
    * @returns Created session with tokens
    */
-  createSession(dto: CreateSessionDto): Promise<Session>;
+  createSession(dto: CreateSessionDto): Promise<IdentitySession>;
 
   /**
    * Get session by ID
    * @param sessionId Session ID
    * @returns Session or null if not found
    */
-  getSession(sessionId: string): Promise<Session | null>;
+  getSession(sessionId: string): Promise<IdentitySession | null>;
 
   /**
    * Refresh session tokens
    * @param refreshToken Current refresh token
    * @returns New session with refreshed tokens
    */
-  refreshSession(refreshToken: string): Promise<Session>;
+  refreshSession(refreshToken: string): Promise<IdentitySession>;
 
   /**
    * Revoke a session
@@ -270,7 +267,7 @@ export interface IProfileService {
    * @param dto Update data
    * @returns Updated profile
    */
-  updateProfile(accountId: string, dto: UpdateProfileDto): Promise<Profile>;
+  updateProfile(accountId: string, dto: IdentityUpdateProfileDto): Promise<Profile>;
 
   /**
    * Update profile avatar

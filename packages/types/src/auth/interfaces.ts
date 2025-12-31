@@ -5,7 +5,6 @@
 
 import type {
   RoleEntity,
-  RoleSummary,
   RoleListResponse,
   RoleQueryDto,
   CreateRoleDto,
