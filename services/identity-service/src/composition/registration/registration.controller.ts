@@ -2,6 +2,7 @@ import { Controller, Post, Body, HttpCode, HttpStatus, Req } from '@nestjs/commo
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
+import { Public } from '../../common/decorators/public.decorator';
 import { RegistrationService } from './registration.service';
 import { RegisterUserDto, RegistrationResponseDto } from './dto/registration.dto';
 
@@ -11,6 +12,7 @@ export class RegistrationController {
   constructor(private readonly registrationService: RegistrationService) {}
 
   @Post()
+  @Public() // Explicitly mark as public for new user registration
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ default: { limit: 5, ttl: 86400000 } }) // 5 per day per IP
   @ApiOperation({
