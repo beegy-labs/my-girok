@@ -1105,6 +1105,181 @@ VERO_API_URL=https://api.vero.dev
 # No hardcoding - fetch from database
 ```
 
+## Client Integration
+
+### App Check API
+
+The App Check API is called when the app launches to verify version requirements and service status. This API is **public** (no authentication required) and should be **heavily cached**.
+
+#### Endpoint
+
+```
+GET /v1/apps/{appSlug}/check
+```
+
+#### Request Headers
+
+| Header            | Required | Description                      |
+| ----------------- | -------- | -------------------------------- |
+| `X-App-Platform`  | Yes      | `IOS`, `ANDROID`, `WEB`          |
+| `X-App-Version`   | Yes      | Semantic version (e.g., `2.3.0`) |
+| `X-Device-ID`     | No       | Device identifier for analytics  |
+| `X-Device-Locale` | No       | User locale (e.g., `ko-KR`)      |
+
+#### Response Schema
+
+```typescript
+interface AppCheckResponse {
+  // Version status
+  version: {
+    status: 'UP_TO_DATE' | 'UPDATE_AVAILABLE' | 'UPDATE_REQUIRED' | 'DEPRECATED';
+    current: string; // Client's current version
+    latest: string; // Latest available version
+    minimum: string; // Minimum required version
+  };
+
+  // Update information (when update available/required)
+  update?: {
+    required: boolean; // true = force update
+    message: string; // Localized message
+    storeUrl: string; // App Store / Play Store URL
+    releaseNotes?: string; // What's new
+  };
+
+  // Service status
+  service: {
+    status: 'ACTIVE' | 'MAINTENANCE' | 'SUSPENDED';
+    message?: string; // Maintenance message
+    estimatedEndAt?: string; // ISO 8601
+  };
+
+  // Optional announcement
+  announcement?: {
+    id: string;
+    type: 'INFO' | 'WARNING' | 'CRITICAL';
+    title: string;
+    message: string;
+    actionUrl?: string;
+    dismissible: boolean;
+    expiresAt?: string;
+  };
+
+  // Server time for client sync
+  serverTime: string; // ISO 8601
+}
+```
+
+#### HTTP Status Codes
+
+| Status | Condition             | Client Action                |
+| ------ | --------------------- | ---------------------------- |
+| 200    | Normal or soft update | Continue to app              |
+| 426    | Force update required | Block app, redirect to store |
+| 503    | Maintenance mode      | Show maintenance screen      |
+| 410    | App terminated        | Show termination notice      |
+
+#### Response Examples
+
+**Normal (Up to Date)**:
+
+```json
+{
+  "version": {
+    "status": "UP_TO_DATE",
+    "current": "2.5.0",
+    "latest": "2.5.0",
+    "minimum": "2.0.0"
+  },
+  "service": { "status": "ACTIVE" },
+  "serverTime": "2025-01-15T10:30:00Z"
+}
+```
+
+**Force Update Required (426)**:
+
+```json
+{
+  "version": {
+    "status": "UPDATE_REQUIRED",
+    "current": "1.9.0",
+    "latest": "2.5.0",
+    "minimum": "2.0.0"
+  },
+  "update": {
+    "required": true,
+    "message": "보안 업데이트가 필요합니다",
+    "storeUrl": "https://apps.apple.com/app/id123456"
+  },
+  "service": { "status": "ACTIVE" },
+  "serverTime": "2025-01-15T10:30:00Z"
+}
+```
+
+**Maintenance Mode (503)**:
+
+```json
+{
+  "version": {
+    "status": "UP_TO_DATE",
+    "current": "2.5.0",
+    "latest": "2.5.0",
+    "minimum": "2.0.0"
+  },
+  "service": {
+    "status": "MAINTENANCE",
+    "message": "서버 점검 중입니다",
+    "estimatedEndAt": "2025-01-15T10:00:00+09:00"
+  },
+  "serverTime": "2025-01-15T09:30:00Z"
+}
+```
+
+#### Caching Strategy
+
+```
+Cache-Control: public, max-age=300
+ETag: "v2.5.0-active-{timestamp}"
+```
+
+| Layer       | TTL   | Purpose              |
+| ----------- | ----- | -------------------- |
+| Client      | 5 min | Reduce network calls |
+| CDN/Gateway | 5 min | Edge caching         |
+| Valkey      | 1 min | Service-level cache  |
+| Database    | -     | Source of truth      |
+
+#### Client Implementation
+
+```typescript
+// Call on app launch
+async function checkApp(): Promise<void> {
+  const res = await fetch(`${API_URL}/v1/apps/${APP_SLUG}/check`, {
+    headers: {
+      'X-App-Platform': Platform.OS.toUpperCase(),
+      'X-App-Version': APP_VERSION,
+    },
+  });
+
+  const data = await res.json();
+
+  if (res.status === 426 || data.update?.required) {
+    return showForceUpdate(data.update);
+  }
+
+  if (res.status === 503 || data.service.status === 'MAINTENANCE') {
+    return showMaintenance(data.service);
+  }
+
+  if (data.version.status === 'UPDATE_AVAILABLE') {
+    showOptionalUpdate(data.update);
+  }
+
+  proceedToApp();
+}
+```
+
+---
+
 ## Migration from auth-service
 
 ### Module Mapping

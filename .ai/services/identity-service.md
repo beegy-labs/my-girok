@@ -566,6 +566,54 @@ interface JWTPayload {
 
 ## API Endpoints
 
+### Public API (No Auth Required)
+
+```
+# App Check (called on app launch)
+GET    /v1/apps/:appSlug/check
+       Headers: X-App-Platform, X-App-Version
+       Response: version status, service status, announcements
+```
+
+**App Check Response**:
+
+```typescript
+interface AppCheckResponse {
+  version: {
+    status: 'UP_TO_DATE' | 'UPDATE_AVAILABLE' | 'UPDATE_REQUIRED' | 'DEPRECATED';
+    current: string;
+    latest: string;
+    minimum: string;
+  };
+  update?: {
+    required: boolean;
+    message: string;
+    storeUrl: string;
+  };
+  service: {
+    status: 'ACTIVE' | 'MAINTENANCE' | 'SUSPENDED';
+    message?: string;
+    estimatedEndAt?: string;
+  };
+  announcement?: {
+    id: string;
+    type: 'INFO' | 'WARNING' | 'CRITICAL';
+    title: string;
+    message: string;
+    dismissible: boolean;
+  };
+  serverTime: string;
+}
+```
+
+**HTTP Status**:
+
+| Status | Condition             | Client Action           |
+| ------ | --------------------- | ----------------------- |
+| 200    | Normal / Soft update  | Continue                |
+| 426    | Force update required | Block, go to store      |
+| 503    | Maintenance           | Show maintenance screen |
+
 ### Identity Module
 
 ```
