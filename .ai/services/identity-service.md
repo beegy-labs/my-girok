@@ -1,405 +1,489 @@
 # Identity Service
 
-> Multi-app user management platform with pre-separated databases
+> Multi-app user management platform with Zero Migration architecture
 
 ## Purpose
 
-Central identity platform for creating N apps with shared user management:
+Central identity platform for N apps with shared user management:
 
 - **my-girok** (api.girok.dev)
 - **vero** (api.vero.dev)
 - Future apps...
 
+---
+
 ## Architecture Strategy
 
+### Core Principle
+
+**Services Combined, DBs Pre-Separated, Redpanda-Ready**
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Identity Service (Combined)                   │
-│                                                                  │
-│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
-│   │  Identity   │   │    Auth     │   │    Legal    │           │
-│   │   Module    │   │   Module    │   │   Module    │           │
-│   │ (Accounts)  │   │  (Authz)    │   │ (Consent)   │           │
-│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
-│          │                 │                 │                   │
-└──────────┼─────────────────┼─────────────────┼───────────────────┘
-           │                 │                 │
-           ▼                 ▼                 ▼
-    ┌────────────┐    ┌────────────┐    ┌────────────┐
-    │identity_db │    │  auth_db   │    │  legal_db  │
-    │(PostgreSQL)│    │(PostgreSQL)│    │(PostgreSQL)│
-    └────────────┘    └────────────┘    └────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│              Current: Combined Service (Limited Hardware)            │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │                    Identity Service                            │  │
+│  │  ┌─────────────┬─────────────┬─────────────┐                  │  │
+│  │  │  Identity   │    Auth     │    Legal    │                  │  │
+│  │  │   Module    │   Module    │   Module    │                  │  │
+│  │  └──────┬──────┴──────┬──────┴──────┬──────┘                  │  │
+│  │         │             │             │                          │  │
+│  │    In-Process    In-Process    In-Process                      │  │
+│  └─────────┼─────────────┼─────────────┼──────────────────────────┘  │
+│            │             │             │                             │
+│            ▼             ▼             ▼                             │
+│      identity_db     auth_db      legal_db   ← Pre-Separated         │
+│            │             │             │                             │
+│            └─────────────┼─────────────┘                             │
+│                          ▼                                           │
+│                   Outbox Tables  → (Future: Redpanda + Debezium)     │
+└──────────────────────────────────────────────────────────────────────┘
+
+                        ⬇️ Hardware Added (128 cores, 496GB RAM)
+
+┌──────────────────────────────────────────────────────────────────────┐
+│              Future: Separated Services (Zero Migration)              │
+│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                │
+│  │  Identity   │   │    Auth     │   │    Legal    │                │
+│  │  Service    │   │   Service   │   │   Service   │                │
+│  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘                │
+│         │                 │                 │                        │
+│         ▼                 ▼                 ▼                        │
+│   identity_db         auth_db          legal_db  ← Same DBs          │
+│         │                 │                 │                        │
+│         └─────────────────┼─────────────────┘                        │
+│                           ▼                                          │
+│             Redpanda + Debezium CDC (Outbox Relay)                   │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-**Key Principle**: Services combined for operational simplicity, DBs pre-separated for future extraction.
+### Zero Migration Guarantee
+
+| Phase      | Hardware   | Services  | Communication | Event Broker        |
+| ---------- | ---------- | --------- | ------------- | ------------------- |
+| 1 (Now)    | Limited    | Combined  | In-Process    | Polling             |
+| 2 (Future) | 128c/496GB | Separated | gRPC          | Redpanda + Debezium |
+
+**Migration Required**: None (copy module folder + update routing)
+
+---
+
+## SSOT (Single Source of Truth)
+
+| Item              | SSOT Location                   | Purpose                  |
+| ----------------- | ------------------------------- | ------------------------ |
+| Module Interfaces | `packages/types/src/identity/`  | Contract between modules |
+| Event Types       | `packages/types/src/events/`    | Shared event schema      |
+| DB Schema         | `prisma/{module}/schema.prisma` | Per-module Prisma        |
+| App Config        | GitOps YAML                     | ArgoCD sync              |
+
+---
+
+## Module Interfaces
+
+> SSOT: `packages/types/src/identity/interfaces.ts`
+
+```typescript
+// === IDENTITY MODULE ===
+interface IIdentityModule {
+  getAccount(id: string): Promise<Account | null>;
+  createAccount(dto: CreateAccountDto): Promise<Account>;
+  getApp(slug: string): Promise<AppRegistry | null>;
+  getAppSecurityConfig(appId: string): Promise<AppSecurityConfig>;
+}
+
+// === AUTH MODULE ===
+interface IAuthModule {
+  getActiveSanctions(accountId: string): Promise<Sanction[]>;
+  getAccountRoles(accountId: string, appId: string): Promise<Role[]>;
+}
+
+// === LEGAL MODULE ===
+interface ILegalModule {
+  getRequiredConsents(appId: string, countryCode: string): Promise<ConsentRequirement[]>;
+  recordConsent(dto: RecordConsentDto): Promise<AccountConsent>;
+}
+```
+
+**Implementation Swap**:
+
+```typescript
+// Combined: In-Process
+class IdentityModuleLocal implements IIdentityModule { ... }
+
+// Separated: gRPC Client
+class IdentityModuleRemote implements IIdentityModule { ... }
+
+// Switch via env
+provide: 'IIdentityModule',
+useClass: env.IDENTITY_MODE === 'remote' ? Remote : Local
+```
+
+---
+
+## Data Isolation Patterns
+
+### 1. Outbox Pattern (Redpanda-Ready)
+
+```sql
+-- Each DB has outbox table (UUIDv7)
+CREATE TABLE outbox_events (
+    id UUID PRIMARY KEY,              -- UUIDv7 from app
+    aggregate_type VARCHAR(50) NOT NULL,
+    aggregate_id UUID NOT NULL,
+    event_type VARCHAR(100) NOT NULL,
+    payload JSONB NOT NULL,
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    published_at TIMESTAMPTZ(6),
+
+    INDEX idx_unpublished (created_at) WHERE published_at IS NULL
+);
+```
+
+| Phase  | Relay Method      | Infrastructure      |
+| ------ | ----------------- | ------------------- |
+| Now    | Polling (5s cron) | None                |
+| Future | Debezium CDC      | Redpanda + Debezium |
+
+### 2. Saga Pattern (Distributed Transactions)
+
+```typescript
+// Registration Saga (In-Process, Kafka-Ready)
+class RegistrationSaga {
+  async execute(dto: RegisterDto): Promise<Account> {
+    const sagaId = ID.generate(); // UUIDv7
+
+    try {
+      // Step 1: Create account (identity_db)
+      const account = await this.identity.createAccount(dto);
+      await this.recordStep(sagaId, 'ACCOUNT_CREATED', account.id);
+
+      // Step 2: Record consents (legal_db)
+      await this.legal.recordConsents(account.id, dto.consents);
+      await this.recordStep(sagaId, 'CONSENTS_RECORDED', account.id);
+
+      // Step 3: Publish event (outbox)
+      await this.publishEvent('account.created', { accountId: account.id });
+
+      return account;
+    } catch (error) {
+      await this.compensate(sagaId);
+      throw error;
+    }
+  }
+}
+```
+
+### 3. API Composition (Cross-DB Queries)
+
+```typescript
+// Cross-module query via interfaces (no cross-DB JOIN)
+class UserProfileComposer {
+  async getFullProfile(accountId: string): Promise<UserProfile> {
+    const [account, consents, sanctions] = await Promise.all([
+      this.identity.getAccount(accountId), // identity_db
+      this.legal.getConsents(accountId), // legal_db
+      this.auth.getSanctions(accountId), // auth_db
+    ]);
+
+    return { ...account, consents, sanctions };
+  }
+}
+```
+
+---
 
 ## Module Responsibilities
 
 ### Identity Module (identity_db)
 
-Account management and authentication.
-
-| Table              | Purpose                          |
-| ------------------ | -------------------------------- |
-| `accounts`         | Core account (email, status)     |
-| `account_profiles` | Profile data (name, avatar)      |
-| `credentials`      | Password, passkeys, OAuth tokens |
-| `sessions`         | Active sessions (Valkey backed)  |
-| `devices`          | Registered devices               |
-| `app_registry`     | Registered apps (my-girok, vero) |
-| `account_apps`     | Account-app relationships        |
+| Table                  | Purpose                   | ID     |
+| ---------------------- | ------------------------- | ------ |
+| `accounts`             | Core account              | UUIDv7 |
+| `credentials`          | Password, passkeys, OAuth | UUIDv7 |
+| `sessions`             | Active sessions           | UUIDv7 |
+| `devices`              | Registered devices        | UUIDv7 |
+| `app_registry`         | Registered apps           | UUIDv7 |
+| `app_security_configs` | Per-app security          | UUIDv7 |
+| `app_test_modes`       | Test mode config          | UUIDv7 |
+| `app_service_status`   | Maintenance/shutdown      | UUIDv7 |
+| `app_version_policies` | Version requirements      | UUIDv7 |
+| `outbox_events`        | Event outbox              | UUIDv7 |
 
 ### Auth Module (auth_db)
 
-Authorization and access control.
-
-| Table              | Purpose                 |
-| ------------------ | ----------------------- |
-| `roles`            | Role definitions        |
-| `permissions`      | Permission definitions  |
-| `role_permissions` | Role-permission mapping |
-| `admins`           | Admin accounts          |
-| `admin_roles`      | Admin-role mapping      |
-| `operators`        | Service operators       |
-| `sanctions`        | Account sanctions (ban) |
-| `api_keys`         | API key management      |
+| Table           | Purpose                | ID     |
+| --------------- | ---------------------- | ------ |
+| `roles`         | Role definitions       | UUIDv7 |
+| `permissions`   | Permission definitions | UUIDv7 |
+| `admins`        | Admin accounts         | UUIDv7 |
+| `operators`     | Service operators      | UUIDv7 |
+| `sanctions`     | Account sanctions      | UUIDv7 |
+| `api_keys`      | API key management     | UUIDv7 |
+| `outbox_events` | Event outbox           | UUIDv7 |
 
 ### Legal Module (legal_db)
 
-Global compliance and consent management.
+| Table                   | Purpose         | ID     |
+| ----------------------- | --------------- | ------ |
+| `laws`                  | Law registry    | UUIDv7 |
+| `consent_documents`     | Legal documents | UUIDv7 |
+| `account_consents`      | User consents   | UUIDv7 |
+| `data_subject_requests` | GDPR DSR        | UUIDv7 |
+| `outbox_events`         | Event outbox    | UUIDv7 |
 
-| Table                   | Purpose                      |
-| ----------------------- | ---------------------------- |
-| `laws`                  | Law registry (PIPA, GDPR...) |
-| `law_requirements`      | Per-law consent requirements |
-| `countries`             | Country definitions          |
-| `consent_documents`     | Legal document versions      |
-| `account_consents`      | User consent records         |
-| `data_subject_requests` | GDPR DSR tracking            |
+---
 
-## Global Law Registry
-
-| Code | Country | Name                                | Key Requirements            |
-| ---- | ------- | ----------------------------------- | --------------------------- |
-| PIPA | KR      | Personal Information Protection Act | Age 14+, night push consent |
-| GDPR | EU      | General Data Protection Regulation  | Age 16+, data portability   |
-| CCPA | US      | California Consumer Privacy Act     | Age 13+, opt-out rights     |
-| APPI | JP      | Act on Protection of Personal Info  | Cross-border transfer       |
-
-## Authentication Flow
+## Code Structure
 
 ```
-Browser
-   │
-   ▼
-Cilium Gateway (TLS, Rate Limit)
-   │
-   ▼
-Identity Service
-   │
-   ├──▶ identity_db (account lookup)
-   │
-   ├──▶ Valkey (session create/validate)
-   │
-   └──▶ JWT Issue
-        ├── Access Token (RS256, 15min, memory)
-        └── Refresh Token (HttpOnly Cookie, 14d)
+services/identity-service/
+├── prisma/
+│   ├── identity/schema.prisma    # identity_db only
+│   ├── auth/schema.prisma        # auth_db only
+│   └── legal/schema.prisma       # legal_db only
+│
+└── src/
+    ├── identity/                  # Copy this folder to extract
+    │   ├── identity.module.ts
+    │   ├── identity.prisma.ts     # identity_db connection
+    │   ├── identity.service.ts    # implements IIdentityModule
+    │   ├── controllers/
+    │   ├── services/
+    │   └── outbox.publisher.ts
+    │
+    ├── auth/                      # Copy this folder to extract
+    │   ├── auth.module.ts
+    │   ├── auth.prisma.ts         # auth_db connection
+    │   ├── auth.service.ts        # implements IAuthModule
+    │   ├── controllers/
+    │   └── services/
+    │
+    ├── legal/                     # Copy this folder to extract
+    │   ├── legal.module.ts
+    │   ├── legal.prisma.ts        # legal_db connection
+    │   ├── legal.service.ts       # implements ILegalModule
+    │   ├── controllers/
+    │   └── services/
+    │
+    ├── saga/                      # Saga orchestrators
+    │   ├── registration.saga.ts
+    │   └── account-deletion.saga.ts
+    │
+    └── composition/               # Cross-module queries
+        └── user-profile.composer.ts
 ```
 
-### Token Strategy
+---
 
-| Token         | TTL | Storage         | Verification   |
-| ------------- | --- | --------------- | -------------- |
-| Access Token  | 15m | Client memory   | Local (JWKS)   |
-| Refresh Token | 14d | HttpOnly Cookie | Valkey session |
+## Security
 
-**Hybrid Verification**: Local JWT validation + Valkey session check = Fast + Instant revocation
+### Triple-Layer Access Control
+
+| Layer            | Can Disable? | Notes                      |
+| ---------------- | ------------ | -------------------------- |
+| Domain (Layer 1) | Yes          | Dev/staging                |
+| JWT (Layer 2)    | **NO**       | Always required (RFC 9068) |
+| Header (Layer 3) | Yes          | Internal tools             |
+
+### Security Levels
+
+| Level    | Domain | JWT | Header | Use Case    |
+| -------- | ------ | --- | ------ | ----------- |
+| STRICT   | ✅     | ✅  | ✅     | Production  |
+| STANDARD | ❌     | ✅  | ✅     | Staging     |
+| RELAXED  | ❌     | ✅  | ❌     | Development |
+
+### Test Mode Constraints
+
+| Constraint   | Value     | Reason                  |
+| ------------ | --------- | ----------------------- |
+| Max Duration | 7 days    | Prevent forgotten tests |
+| IP Whitelist | Required  | No public test access   |
+| JWT          | Always ON | Security baseline       |
+
+---
 
 ## API Endpoints
+
+### Public (No Auth)
+
+```
+GET /v1/apps/:appSlug/check    # App launch check
+```
 
 ### Identity Module
 
 ```
-POST   /v1/identity/register          # New account
-POST   /v1/identity/login             # Login
-POST   /v1/identity/logout            # Logout
-POST   /v1/identity/refresh           # Refresh token
-GET    /v1/identity/me                # Current account
-PATCH  /v1/identity/me                # Update profile
-DELETE /v1/identity/me                # Delete account
-
-# Passkeys (WebAuthn)
-POST   /v1/identity/passkeys/register/options
-POST   /v1/identity/passkeys/register/verify
-POST   /v1/identity/passkeys/login/options
-POST   /v1/identity/passkeys/login/verify
-
-# OAuth
-GET    /v1/identity/oauth/:provider   # OAuth redirect
-GET    /v1/identity/oauth/:provider/callback
+POST   /v1/identity/register
+POST   /v1/identity/login
+POST   /v1/identity/logout
+POST   /v1/identity/refresh
+GET    /v1/identity/me
 ```
 
 ### Auth Module
 
 ```
-# Roles & Permissions
 GET    /v1/auth/roles
 POST   /v1/auth/roles
-GET    /v1/auth/permissions
-
-# Operators
 GET    /v1/auth/operators
-POST   /v1/auth/operators
-PATCH  /v1/auth/operators/:id
-DELETE /v1/auth/operators/:id
-
-# Admin
 POST   /v1/admin/login
-GET    /v1/admin/me
 ```
 
 ### Legal Module
 
 ```
-# Consent
-GET    /v1/legal/consents/required    # Required consents for country
-POST   /v1/legal/consents             # Submit consents
-GET    /v1/legal/consents/me          # My consents
-
-# Documents
-GET    /v1/legal/documents            # Legal documents
-GET    /v1/legal/documents/:type      # Specific document
-
-# DSR (Data Subject Requests)
-POST   /v1/legal/dsr/export           # Data export request
-POST   /v1/legal/dsr/delete           # Deletion request
-GET    /v1/legal/dsr/status/:id       # Request status
+GET    /v1/legal/consents/required
+POST   /v1/legal/consents
+GET    /v1/legal/documents
 ```
 
-## Multi-App Support
-
-**Core Concept**: Single account, multiple apps (any TLD), per-app access control.
+### Admin App Management
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│              Identity Service (Single Instance)                  │
-├─────────────────────────────────────────────────────────────────┤
-│ accounts.girok.dev │ accounts.vero.net │ accounts.example.com  │
-│         │                   │                    │              │
-│         ▼                   ▼                    ▼              │
-│    ┌─────────┐        ┌─────────┐         ┌─────────┐          │
-│    │ my-girok│        │  vero   │         │ example │          │
-│    │  app_id │        │  app_id │         │ app_id  │          │
-│    └─────────┘        └─────────┘         └─────────┘          │
-└─────────────────────────────────────────────────────────────────┘
+GET    /v1/admin/apps/:appId/security
+PATCH  /v1/admin/apps/:appId/security
+POST   /v1/admin/apps/:appId/test-mode
+POST   /v1/admin/apps/:appId/maintenance
 ```
 
-**Supported TLDs**: .dev, .com, .net, .io, .co.kr, etc. (any domain)
+---
 
-### App Registry
+## Event Types
+
+> SSOT: `packages/types/src/events/`
 
 ```typescript
-interface AppRegistry {
-  id: string; // UUIDv7
-  slug: string; // 'my-girok', 'vero'
-  name: string;
-  domain: string; // 'girok.dev', 'vero.dev'
-  identityDomain: string; // 'accounts.girok.dev'
-  apiDomain: string; // 'api.girok.dev'
-  allowedOrigins: string[];
-  status: 'ACTIVE' | 'INACTIVE';
-}
+// Identity Events
+'identity.account.created';
+'identity.account.updated';
+'identity.account.deleted';
+'identity.session.created';
+
+// Auth Events
+'auth.sanction.created';
+'auth.role.assigned';
+
+// Legal Events
+'legal.consent.granted';
+'legal.consent.revoked';
+'legal.dsr.requested';
 ```
 
-### JWT Access Control (RFC 9068)
-
-```typescript
-// JWT Payload - Per-app access control
-interface JWTPayload {
-  sub: string; // Account ID
-  aud: string; // App ID (audience) - KEY for access control
-  iss: string; // 'accounts.girok.dev'
-  iat: number;
-  exp: number;
-
-  // App-specific claims
-  apps: {
-    [appId: string]: {
-      status: 'ACTIVE' | 'SUSPENDED';
-      countryCode: string;
-      permissions: string[];
-    };
-  };
-}
-
-// Access control: domain + JWT audience
-// api.girok.dev only accepts JWT with aud: 'my-girok'
-// api.vero.dev only accepts JWT with aud: 'vero'
-```
-
-### Account-App Relationship
-
-```typescript
-interface AccountApp {
-  accountId: string;
-  appId: string; // Matches JWT 'aud' claim
-  status: 'ACTIVE' | 'SUSPENDED';
-  joinedAt: Date;
-  countryCode: string; // Per-app country consent
-}
-```
-
-## Tech Stack
-
-| Category | Technology                |
-| -------- | ------------------------- |
-| Runtime  | Node.js 24, NestJS 11     |
-| Database | PostgreSQL 16, Prisma 6   |
-| Cache    | Valkey (Redis-compatible) |
-| Auth     | JWT RS256, Passkeys       |
+---
 
 ## Environment Variables
 
 ```env
-# Service
 PORT=3005
 NODE_ENV=development
 
-# Databases (3 separate connections)
+# DBs (Pre-Separated)
 IDENTITY_DATABASE_URL=postgresql://...identity_db
 AUTH_DATABASE_URL=postgresql://...auth_db
 LEGAL_DATABASE_URL=postgresql://...legal_db
 
+# Module Mode (Combined → Separated)
+IDENTITY_MODE=local    # local | remote
+AUTH_MODE=local
+LEGAL_MODE=local
+
+# Future: Redpanda (Kafka-compatible)
+REDPANDA_BROKERS=      # Empty = use polling
+REDPANDA_ENABLED=false
+
 # JWT
-JWT_SECRET=your-secret
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=14d
-
-# Valkey
-VALKEY_HOST=localhost
-VALKEY_PORT=6379
-VALKEY_PASSWORD=
+JWT_PRIVATE_KEY=...
+JWT_PUBLIC_KEY=...
 ```
 
-## Future Extraction Path
+---
 
-When scale requires service separation:
+## Migration Roadmap
 
-```
-Phase 1 (Current)
-└── Identity Service (combined)
-    ├── Identity Module → identity_db
-    ├── Auth Module → auth_db
-    └── Legal Module → legal_db
+| Phase       | Trigger        | Changes                          |
+| ----------- | -------------- | -------------------------------- |
+| 1 (Current) | -              | Combined service, polling outbox |
+| 2           | Hardware added | Extract services, enable gRPC    |
+| 3           | Scale needed   | Add Redpanda + Debezium CDC      |
+| 4           | Global scale   | Multi-region, read replicas      |
 
-Phase 2 (Future - if needed)
-├── Identity Service → identity_db
-├── Auth Service → auth_db
-└── Legal Service → legal_db
-```
+---
 
-**No database migration required** - DBs already separated.
+## Future Changes Plan
 
-## Relationship with auth-service
+### Phase 2: Service Separation
 
-| Current (auth-service) | Future (identity-service) |
-| ---------------------- | ------------------------- |
-| auth/                  | Identity Module           |
-| users/                 | Identity Module           |
-| oauth-config/          | Identity Module           |
-| admin/                 | Auth Module               |
-| operator/              | Auth Module               |
-| services/              | Auth Module               |
-| legal/                 | Legal Module              |
+**Trigger**: Hardware upgrade (128c/496GB)
 
-## Domain Management Strategy
+| Item          | Before     | After                              |
+| ------------- | ---------- | ---------------------------------- |
+| Services      | 1 combined | 3 separate (identity, auth, legal) |
+| Communication | In-Process | gRPC                               |
+| Deployment    | 1 Helm     | 3 Helm charts                      |
+| Scaling       | Vertical   | Horizontal per-service             |
 
-### URL Routing by Domain
-
-| Domain             | Service          | Purpose              |
-| ------------------ | ---------------- | -------------------- |
-| accounts.girok.dev | Identity Service | Login, register, SSO |
-| api.girok.dev      | Personal Service | Business API         |
-| my.girok.dev       | Web App          | Frontend             |
-| admin.girok.dev    | Web Admin        | Admin console        |
-
-### Multi-App Domain Pattern
-
-```
-App: my-girok
-├── accounts.girok.dev → Identity Service (auth)
-├── api.girok.dev      → Personal Service (business)
-└── my.girok.dev       → Web App (frontend)
-
-App: vero (future)
-├── accounts.vero.dev  → Identity Service (shared)
-├── api.vero.dev       → Vero Service (business)
-└── vero.dev           → Web App (frontend)
+```bash
+# Steps
+1. Copy module folder → new service
+2. Update Helm values (routing)
+3. Set MODULE_MODE=remote
+4. Deploy new service
 ```
 
-### Cilium Gateway Routing
+### Phase 3: Redpanda Introduction
+
+**Trigger**: Event-driven scale needed
+
+| Item            | Before        | After                     |
+| --------------- | ------------- | ------------------------- |
+| Event Relay     | Polling (5s)  | Debezium CDC              |
+| Message Broker  | None          | Redpanda                  |
+| Event Guarantee | At-least-once | Exactly-once (idempotent) |
+| Latency         | 5s max        | Real-time (~1ms)          |
 
 ```yaml
-# HTTPRoute for Identity Service
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: identity-route
-spec:
-  hostnames:
-    - 'accounts.girok.dev'
-    - 'accounts.vero.dev' # Multi-app support
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/identity
-      backendRefs:
-        - name: identity-service
-          port: 3005
+# New Infrastructure
+- Redpanda Cluster (1 → 3 nodes)
+- Kafka Connect + Debezium
+- Schema Registry (optional)
 ```
 
-### CORS Configuration by Domain
+### Phase 4: Global Scale
 
-```typescript
-// Per-app CORS origins
-const corsConfig = {
-  'my-girok': ['https://my.girok.dev', 'https://admin.girok.dev'],
-  vero: ['https://vero.dev', 'https://admin.vero.dev'],
-};
-```
+**Trigger**: Multi-region users
 
-### Cookie Domain Strategy
+| Item    | Before        | After                            |
+| ------- | ------------- | -------------------------------- |
+| DB      | Single region | Multi-region (Citus/CockroachDB) |
+| Read    | Primary only  | Read replicas per region         |
+| Session | Valkey single | Valkey cluster                   |
+| CDN     | Edge caching  | Edge + regional cache            |
 
-```typescript
-// Session cookie configuration
-const cookieConfig = {
-  domain: '.girok.dev', // Shared across subdomains
-  secure: true,
-  httpOnly: true,
-  sameSite: 'lax',
-};
+### Future Features (Backlog)
 
-// For cross-domain (girok.dev ↔ vero.dev)
-// Use token-based auth, not cookies
-```
+| Feature               | Priority | Phase | Notes                      |
+| --------------------- | -------- | ----- | -------------------------- |
+| DPoP Token (RFC 9449) | Medium   | 2+    | Prepared in JWT            |
+| Passkeys (WebAuthn)   | High     | 2     | Schema ready               |
+| Account Linking       | Medium   | 2     | SERVICE → UNIFIED mode     |
+| SSO Federation        | Low      | 3+    | Cross-app SSO              |
+| Audit Log Streaming   | Medium   | 3     | To ClickHouse via Redpanda |
+| ML Fraud Detection    | Low      | 4     | Anomaly detection          |
 
-### Database Isolation by Domain
+---
 
-| Domain    | identity_db | auth_db | legal_db |
-| --------- | ----------- | ------- | -------- |
-| App Data  | Shared      | Shared  | Shared   |
-| User Data | Per-app     | Per-app | Per-app  |
-| Consent   | Per-app     | -       | Per-app  |
+## 2025 Best Practices
 
-```sql
--- App-scoped queries
-SELECT * FROM accounts
-WHERE id IN (
-  SELECT account_id FROM account_apps
-  WHERE app_id = 'my-girok-uuid'
-);
-```
+| Standard             | Status | Implementation          |
+| -------------------- | ------ | ----------------------- |
+| RFC 9700 (OAuth 2.0) | ✅     | PKCE, no implicit       |
+| RFC 9068 (JWT)       | ✅     | `aud` claim, RS256      |
+| Transactional Outbox | ✅     | Redpanda-ready          |
+| Saga Pattern         | ✅     | In-process, extractable |
+| API Composition      | ✅     | No cross-DB JOIN        |
+| UUIDv7 (RFC 9562)    | ✅     | All IDs                 |
 
 ---
 

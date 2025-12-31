@@ -130,7 +130,7 @@ pnpm prisma db pull && pnpm prisma generate
 ```sql
 -- +goose Up
 CREATE TABLE features (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,  -- UUIDv7 from application (not gen_random_uuid)
     created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 );
 
@@ -144,8 +144,44 @@ DROP TABLE IF EXISTS features;
 | ------- | ------------------------------------------- |
 | Secrets | Sealed Secrets or ESO, never commit         |
 | Input   | class-validator DTOs, sanitize HTML         |
-| Auth    | JWT: Access (15min) + Refresh (7days)       |
+| Auth    | JWT: Access (15min) + Refresh (14days)      |
 | CORS    | iOS Safari: explicit headers + maxAge: 3600 |
+
+## Identity Platform
+
+> Policy: `docs/policies/IDENTITY_PLATFORM.md`
+
+### Triple-Layer Access Control
+
+| Layer  | Can Disable? | Notes                      |
+| ------ | ------------ | -------------------------- |
+| Domain | Yes          | Dev/staging environments   |
+| JWT    | **NO**       | Always required (RFC 9068) |
+| Header | Yes          | Internal tools, testing    |
+
+### Security Levels
+
+| Level    | Domain | JWT | Header | Use Case             |
+| -------- | ------ | --- | ------ | -------------------- |
+| STRICT   | ✅     | ✅  | ✅     | Production (default) |
+| STANDARD | ❌     | ✅  | ✅     | Staging, internal    |
+| RELAXED  | ❌     | ✅  | ❌     | Development          |
+
+### Test Mode Constraints
+
+| Constraint   | Value    | Reason                  |
+| ------------ | -------- | ----------------------- |
+| Max Duration | 7 days   | Prevent forgotten tests |
+| IP Whitelist | Required | No public test access   |
+| JWT          | Always   | Security baseline       |
+
+### App Version Policy
+
+| Version           | Action       | HTTP Status |
+| ----------------- | ------------ | ----------- |
+| < minVersion      | Force update | 426         |
+| < recommendedVer  | Soft update  | 200         |
+| in deprecatedList | Block        | 426         |
 
 ## Performance Targets (p95)
 
