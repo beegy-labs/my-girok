@@ -13,6 +13,9 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RoleScope } from '.prisma/identity-auth-client';
 
+// Re-export Prisma enum for external use
+export { RoleScope };
+
 /**
  * DTO for creating a new role
  */

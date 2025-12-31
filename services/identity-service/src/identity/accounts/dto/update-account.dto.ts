@@ -11,6 +11,9 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AccountStatus } from '.prisma/identity-client';
 
+// Re-export Prisma enum for external use
+export { AccountStatus };
+
 /**
  * DTO for updating an existing account
  */

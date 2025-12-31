@@ -26,7 +26,7 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
   private readonly logger = new Logger(ApiKeyGuard.name);
-  private apiKeyHashes: Map<string, string> = new Map(); // hash -> original key (for validation)
+  private apiKeyHashes: Set<string> = new Set(); // Store only hashes, never original keys
   private lastRefresh: number = 0;
   private readonly cacheTtlMs: number = 60000; // 1 minute cache
 
@@ -73,11 +73,11 @@ export class ApiKeyGuard implements CanActivate {
       .map((k) => k.trim())
       .filter((k) => k.length > 0);
 
-    // Store hashed keys
-    this.apiKeyHashes = new Map();
+    // Store only hashed keys (never store original keys in memory)
+    this.apiKeyHashes = new Set();
     for (const key of keys) {
       const hash = this.hashKey(key);
-      this.apiKeyHashes.set(hash, key);
+      this.apiKeyHashes.add(hash);
     }
     this.lastRefresh = Date.now();
 
@@ -114,7 +114,7 @@ export class ApiKeyGuard implements CanActivate {
     const inputHash = this.hashKey(apiKey);
 
     // Iterate through all stored hashes with timing-safe comparison
-    for (const [storedHash] of this.apiKeyHashes) {
+    for (const storedHash of this.apiKeyHashes) {
       if (this.timingSafeCompare(inputHash, storedHash)) {
         return true;
       }

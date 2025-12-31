@@ -17,6 +17,16 @@ import {
   NotificationChannel,
 } from '.prisma/identity-auth-client';
 
+// Re-export Prisma enums for external use
+export {
+  SanctionSubjectType,
+  SanctionType,
+  SanctionSeverity,
+  SanctionScope,
+  IssuerType,
+  NotificationChannel,
+};
+
 /**
  * DTO for creating a sanction
  */

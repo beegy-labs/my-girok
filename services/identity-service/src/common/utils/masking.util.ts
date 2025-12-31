@@ -69,16 +69,17 @@ export function maskToken(token: string): string {
 
 /**
  * Mask sensitive fields in an object for logging
+ * Returns a new object with sensitive fields replaced with '[REDACTED]'
  */
-export function maskSensitiveData<T extends Record<string, unknown>>(
-  data: T,
+export function maskSensitiveData(
+  data: Record<string, unknown>,
   sensitiveFields: string[] = ['password', 'token', 'secret', 'mfaSecret', 'refreshToken'],
-): T {
-  const masked = { ...data };
+): Record<string, unknown> {
+  const masked: Record<string, unknown> = { ...data };
 
   for (const field of sensitiveFields) {
-    if (field in masked && masked[field]) {
-      masked[field] = '[REDACTED]' as unknown as T[keyof T];
+    if (field in masked && masked[field] !== undefined && masked[field] !== null) {
+      masked[field] = '[REDACTED]';
     }
   }
 

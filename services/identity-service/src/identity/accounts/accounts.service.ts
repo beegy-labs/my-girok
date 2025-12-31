@@ -421,7 +421,7 @@ export class AccountsService {
    * MFA secret is encrypted before storage for security
    * Backup codes are hashed and stored in the database
    */
-  async enableMfa(id: string, _method: string = 'TOTP'): Promise<MfaSetupResponse> {
+  async enableMfa(id: string): Promise<MfaSetupResponse> {
     const account = await this.prisma.account.findUnique({
       where: { id },
     });

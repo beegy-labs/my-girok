@@ -266,8 +266,8 @@ export class AccountsController {
   @ApiResponse({ status: 404, description: 'Account not found' })
   @ApiResponse({ status: 409, description: 'MFA already enabled' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
-  async enableMfa(@Param('id', ParseUUIDPipe) id: string, @Body() dto: EnableMfaDto) {
-    return this.accountsService.enableMfa(id, dto.method);
+  async enableMfa(@Param('id', ParseUUIDPipe) id: string, @Body() _dto: EnableMfaDto) {
+    return this.accountsService.enableMfa(id);
   }
 
   @Post(':id/mfa/verify')

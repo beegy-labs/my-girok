@@ -10,6 +10,9 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AuthProvider, AccountMode } from '.prisma/identity-client';
 
+// Re-export Prisma enums for external use
+export { AuthProvider, AccountMode };
+
 /**
  * DTO for creating a new account
  */

@@ -51,104 +51,139 @@ type OutboxStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
 ### Core Entities
 
+| Entity    | Key Fields                                        | Note                       |
+| --------- | ------------------------------------------------- | -------------------------- |
+| `Account` | id, email, username, status, mode, mfaEnabled     | locale/timezone on Account |
+| `Session` | id, accountId, tokenHash, expiresAt, isActive     | boolean (not enum)         |
+| `Device`  | id, accountId, fingerprint, deviceType, isTrusted | boolean (not TrustLevel)   |
+| `Profile` | id, accountId, displayName, gender, birthDate     |                            |
+
+### Module Interfaces
+
+| Interface           | DB          | Key Methods                           |
+| ------------------- | ----------- | ------------------------------------- |
+| `IIdentityModule`   | identity_db | accounts, sessions, devices, profiles |
+| `IAuthModule`       | auth_db     | getActiveSanctions, hasPermission     |
+| `ILegalModule`      | legal_db    | getAccountConsents, recordConsent     |
+| `IIdentityPlatform` | -           | Aggregates all 3 modules              |
+
+**Full definitions**: `packages/types/src/identity/interfaces.ts`
+
+---
+
+## Auth Module Interfaces
+
+> SSOT: `packages/types/src/auth/interfaces.ts`
+
+### IRoleService
+
 ```typescript
-interface Account {
-  id: string;
-  externalId: string;
-  email: string;
-  username: string;
-  status: AccountStatus;
-  mode: AccountMode;
-  provider: AuthProvider;
-  emailVerified: boolean;
-  mfaEnabled: boolean;
-  locale: string | null; // On Account, not Profile
-  timezone: string | null; // On Account, not Profile
-  countryCode: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
-}
-
-interface Session {
-  id: string;
-  accountId: string;
-  tokenHash: string;
-  refreshToken: string | null;
-  deviceId: string | null;
-  ipAddress: string | null;
-  userAgent: string | null;
-  isActive: boolean; // boolean, not enum
-  expiresAt: Date;
-  lastActivityAt: Date | null;
-  createdAt: Date;
-}
-
-interface Device {
-  id: string;
-  accountId: string;
-  fingerprint: string;
-  name: string | null;
-  deviceType: DeviceType;
-  isTrusted: boolean; // boolean, not TrustLevel enum
-  trustedAt: Date | null;
-  pushToken: string | null;
-  pushPlatform: PushPlatform | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Profile {
-  id: string;
-  accountId: string;
-  displayName: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  avatar: string | null;
-  bio: string | null;
-  birthDate: Date | null;
-  gender: Gender | null;
-  countryCode: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+interface IRoleService {
+  findAll(query: RoleQueryDto): Promise<PaginatedResponse<Role>>;
+  findById(id: string): Promise<Role>;
+  create(dto: CreateRoleDto): Promise<Role>;
+  update(id: string, dto: UpdateRoleDto): Promise<Role>;
+  delete(id: string): Promise<void>;
+  assignPermissions(roleId: string, permissionIds: string[]): Promise<void>;
+  revokePermissions(roleId: string, permissionIds: string[]): Promise<void>;
 }
 ```
 
-### Module Interfaces (Zero Migration Architecture)
+### IPermissionService
 
 ```typescript
-// Identity Module (identity_db)
-interface IIdentityModule {
-  readonly accounts: IAccountService;
-  readonly sessions: ISessionService;
-  readonly devices: IDeviceService;
-  readonly profiles: IProfileService;
+interface IPermissionService {
+  findAll(query: PermissionQueryDto): Promise<PaginatedResponse<Permission>>;
+  findById(id: string): Promise<Permission>;
+  create(dto: CreatePermissionDto): Promise<Permission>;
+  update(id: string, dto: UpdatePermissionDto): Promise<Permission>;
+  delete(id: string): Promise<void>;
+  findByCategory(category: string): Promise<Permission[]>;
 }
+```
 
-// Auth Module (auth_db)
-interface IAuthModule {
-  getActiveSanctions(subjectId: string): Promise<Sanction[]>;
-  hasSanction(subjectId: string, sanctionType: string): Promise<boolean>;
-  getAccountRoles(accountId: string, serviceId?: string): Promise<Role[]>;
-  getRolePermissions(roleId: string): Promise<Permission[]>;
-  hasPermission(accountId: string, permissionCode: string, serviceId?: string): Promise<boolean>;
+### ISanctionService
+
+```typescript
+interface ISanctionService {
+  create(dto: CreateSanctionDto): Promise<Sanction>;
+  findById(id: string): Promise<Sanction>;
+  findAll(query: SanctionQueryDto): Promise<PaginatedResponse<Sanction>>;
+  update(id: string, dto: UpdateSanctionDto): Promise<Sanction>;
+  revoke(id: string, reason?: string): Promise<void>;
+  getActiveBySubject(subjectId: string): Promise<Sanction[]>;
+  createAppeal(sanctionId: string, dto: CreateAppealDto): Promise<Appeal>;
 }
+```
 
-// Legal Module (legal_db)
-interface ILegalModule {
-  getRequiredConsents(countryCode: string): Promise<ConsentRequirement[]>;
-  getAccountConsents(accountId: string): Promise<AccountConsent[]>;
-  recordConsent(dto: RecordConsentDto): Promise<AccountConsent>;
-  recordConsents(dtos: RecordConsentDto[]): Promise<AccountConsent[]>;
-  withdrawConsent(consentId: string, reason?: string): Promise<void>;
+### IOperatorService
+
+```typescript
+interface IOperatorService {
+  createInvitation(dto: CreateInvitationDto): Promise<Invitation>;
+  acceptInvitation(token: string, accountId: string): Promise<Operator>;
+  createDirect(dto: CreateOperatorDto): Promise<Operator>;
+  findById(id: string): Promise<Operator>;
+  update(id: string, dto: UpdateOperatorDto): Promise<Operator>;
+  deactivate(id: string): Promise<void>;
+  findAll(query: OperatorQueryDto): Promise<PaginatedResponse<Operator>>;
+}
+```
+
+---
+
+## Legal Module Interfaces
+
+> SSOT: `packages/types/src/legal/interfaces.ts`
+
+### IConsentService
+
+```typescript
+interface IConsentService {
+  grant(dto: GrantConsentDto): Promise<Consent>;
+  grantBulk(dto: GrantBulkConsentsDto): Promise<Consent[]>;
+  withdraw(id: string, reason?: string): Promise<void>;
+  findById(id: string): Promise<Consent>;
+  findByAccount(accountId: string): Promise<Consent[]>;
+  findAll(query: ConsentQueryDto): Promise<PaginatedResponse<Consent>>;
   hasRequiredConsents(accountId: string, countryCode: string): Promise<boolean>;
 }
+```
 
-// Full Platform Interface
-interface IIdentityPlatform {
-  readonly identity: IIdentityModule;
-  readonly auth: IAuthModule;
-  readonly legal: ILegalModule;
+### IDSRService
+
+```typescript
+interface IDSRService {
+  create(dto: CreateDsrRequestDto): Promise<DsrRequest>;
+  findById(id: string): Promise<DsrRequest>;
+  update(id: string, dto: UpdateDsrRequestDto): Promise<DsrRequest>;
+  complete(id: string, dto: CompleteDsrRequestDto): Promise<DsrRequest>;
+  findAll(query: DsrQueryDto): Promise<PaginatedResponse<DsrRequest>>;
+  getDeadline(requestId: string): Promise<Date>;
+}
+```
+
+### ILegalDocumentService
+
+```typescript
+interface ILegalDocumentService {
+  create(dto: CreateLegalDocumentDto): Promise<LegalDocument>;
+  findById(id: string): Promise<LegalDocument>;
+  findCurrent(type: string, countryCode?: string): Promise<LegalDocument>;
+  findAll(query: LegalDocumentQueryDto): Promise<PaginatedResponse<LegalDocument>>;
+}
+```
+
+### ILawService
+
+```typescript
+interface ILawService {
+  create(dto: CreateLawDto): Promise<Law>;
+  findById(id: string): Promise<Law>;
+  findByCode(code: string): Promise<Law>;
+  findByCountry(countryCode: string): Promise<Law[]>;
+  update(code: string, dto: UpdateLawDto): Promise<Law>;
+  findAll(query: LawQueryDto): Promise<PaginatedResponse<Law>>;
 }
 ```
 
@@ -157,63 +192,25 @@ interface IIdentityPlatform {
 ## Auth Types
 
 ```typescript
-enum Role {
-  GUEST,
-  USER,
-  MANAGER,
-  MASTER,
-}
-enum TokenType {
-  ACCESS,
-  REFRESH,
-  DOMAIN_ACCESS,
-}
+// Enums
+type Role = 'GUEST' | 'USER' | 'MANAGER' | 'MASTER';
+type TokenType = 'ACCESS' | 'REFRESH' | 'DOMAIN_ACCESS';
 
-interface AuthPayload {
-  user: UserPayload;
-  accessToken: string;
-  refreshToken: string;
-}
+// JWT Payloads (key fields only)
+// UserJwtPayload: sub, email, type, accountMode, countryCode, services
+// AdminJwtPayload: sub, email, type, scope, roleId, level, permissions
+// OperatorJwtPayload: sub, email, type, serviceId, countryCode, permissions
 
-// JWT Types
-interface UserJwtPayload {
-  sub: string;
-  email: string;
-  type: 'USER_ACCESS' | 'USER_REFRESH';
-  accountMode: 'SERVICE' | 'UNIFIED';
-  countryCode: string;
-  services: { [slug: string]: { status: string; countries: string[] } };
-}
+// Type Guards: isUserPayload(), isAdminPayload(), isOperatorPayload()
 
-interface AdminJwtPayload {
-  sub: string;
-  email: string;
-  name: string;
-  type: 'ADMIN_ACCESS' | 'ADMIN_REFRESH';
-  scope: 'SYSTEM' | 'TENANT';
-  tenantId?: string;
-  roleId: string;
-  roleName: string;
-  level: number;
-  permissions: string[];
-}
-
-interface OperatorJwtPayload {
-  sub: string;
-  email: string;
-  name: string;
-  type: 'OPERATOR_ACCESS' | 'OPERATOR_REFRESH';
-  adminId: string;
-  serviceId: string;
-  serviceSlug: string;
-  countryCode: string;
-  permissions: string[];
-}
-
-// Type Guards
-function isUserPayload(payload: JwtPayloadUnion): payload is UserJwtPayload;
-function isAdminPayload(payload: JwtPayloadUnion): payload is AdminJwtPayload;
-function isOperatorPayload(payload: JwtPayloadUnion): payload is OperatorJwtPayload;
+// Sanction Enums
+type SanctionSubjectType = 'ACCOUNT' | 'OPERATOR';
+type SanctionScope = 'PLATFORM' | 'SERVICE';
+type SanctionType = 'WARNING' | 'TEMPORARY_BAN' | 'PERMANENT_BAN' | 'FEATURE_RESTRICTION';
+type SanctionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+type SanctionSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+type IssuerType = 'ADMIN' | 'OPERATOR' | 'SYSTEM';
+type AppealStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'ESCALATED';
 ```
 
 ---
@@ -221,49 +218,25 @@ function isOperatorPayload(payload: JwtPayloadUnion): payload is OperatorJwtPayl
 ## Resume Types
 
 ```typescript
-enum SectionType {
-  SKILLS,
-  EXPERIENCE,
-  EDUCATION,
-  CERTIFICATE,
-  KEY_ACHIEVEMENTS,
-  APPLICATION_REASON,
-  ATTACHMENTS,
-  COVER_LETTER,
-}
-enum DegreeType {
-  HIGH_SCHOOL,
-  ASSOCIATE_2,
-  ASSOCIATE_3,
-  BACHELOR,
-  MASTER,
-  DOCTORATE,
-}
+// Enums
+type SectionType =
+  | 'SKILLS'
+  | 'EXPERIENCE'
+  | 'EDUCATION'
+  | 'CERTIFICATE'
+  | 'KEY_ACHIEVEMENTS'
+  | 'APPLICATION_REASON'
+  | 'ATTACHMENTS'
+  | 'COVER_LETTER';
+type DegreeType =
+  | 'HIGH_SCHOOL'
+  | 'ASSOCIATE_2'
+  | 'ASSOCIATE_3'
+  | 'BACHELOR'
+  | 'MASTER'
+  | 'DOCTORATE';
 
-interface Resume {
-  id: string;
-  userId: string;
-  title: string;
-  name: string;
-  email: string;
-  sections: ResumeSection[];
-  skills: Skill[];
-  experiences: Experience[];
-  educations: Education[];
-}
-
-interface Experience {
-  company: string;
-  startDate: string;
-  finalPosition: string;
-  jobTitle: string;
-  projects: ExperienceProject[];
-}
-
-interface Skill {
-  category: string;
-  items: SkillItem[];
-}
+// Entities: Resume, Experience, Skill, Education (see packages/types/src/resume/)
 ```
 
 ---
@@ -271,47 +244,41 @@ interface Skill {
 ## Legal Types
 
 ```typescript
-enum ConsentType {
-  TERMS_OF_SERVICE, // Required
-  PRIVACY_POLICY, // Required
-  MARKETING_EMAIL, // Optional
-  MARKETING_PUSH, // Optional
-  MARKETING_PUSH_NIGHT, // Korea PIPA
-  MARKETING_SMS, // Optional
-  PERSONALIZED_ADS, // Optional
-  THIRD_PARTY_SHARING, // Optional
-  CROSS_BORDER_TRANSFER, // Japan APPI
-  CROSS_SERVICE_SHARING, // UNIFIED mode
-}
+// Consent Types
+type ConsentType =
+  | 'TERMS_OF_SERVICE'
+  | 'PRIVACY_POLICY' // Required
+  | 'MARKETING_EMAIL'
+  | 'MARKETING_PUSH' // Optional
+  | 'MARKETING_PUSH_NIGHT'
+  | 'MARKETING_SMS' // Korea PIPA
+  | 'PERSONALIZED_ADS'
+  | 'THIRD_PARTY_SHARING' // Optional
+  | 'CROSS_BORDER_TRANSFER'
+  | 'CROSS_SERVICE_SHARING'; // APPI, UNIFIED
 
-interface AccountConsent {
-  id: string;
-  accountId: string;
-  consentType: ConsentType;
-  scope: 'PLATFORM' | 'SERVICE';
-  serviceId: string | null;
-  countryCode: string;
-  agreed: boolean;
-  agreedAt: Date;
-  withdrawnAt: Date | null;
-}
+type ConsentScope = 'SERVICE' | 'PLATFORM';
+type ConsentLogAction = 'GRANTED' | 'WITHDRAWN' | 'UPDATED' | 'EXPIRED' | 'MIGRATED';
 
+// DSR (Data Subject Request) Types
 type DsrRequestType =
   | 'ACCESS'
   | 'RECTIFICATION'
   | 'ERASURE'
   | 'PORTABILITY'
   | 'RESTRICTION'
-  | 'OBJECTION';
-
-interface DsrRequest {
-  id: string;
-  accountId: string;
-  requestType: DsrRequestType;
-  status: 'PENDING' | 'VERIFIED' | 'IN_PROGRESS' | 'AWAITING_INFO' | 'COMPLETED' | 'REJECTED';
-  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  deadline: Date;
-}
+  | 'OBJECTION'
+  | 'AUTOMATED_DECISION';
+type DsrStatus =
+  | 'PENDING'
+  | 'VERIFIED'
+  | 'IN_PROGRESS'
+  | 'AWAITING_INFO'
+  | 'COMPLETED'
+  | 'REJECTED'
+  | 'CANCELLED';
+type DsrPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+type DsrResponseType = 'FULFILLED' | 'PARTIALLY_FULFILLED' | 'DENIED' | 'EXTENDED';
 ```
 
 ---
@@ -319,12 +286,16 @@ interface DsrRequest {
 ## Common Types
 
 ```typescript
+// API Response
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: ApiError;
 }
-
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
 interface PaginationMeta {
   total: number;
   page: number;
@@ -332,9 +303,23 @@ interface PaginationMeta {
   totalPages: number;
 }
 
-interface PaginatedResponse<T> {
-  data: T[];
-  meta: PaginationMeta;
+// Outbox Pattern
+type OutboxStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+interface OutboxEventPayload {
+  aggregateType: string;
+  aggregateId: string;
+  eventType: string;
+  payload: Record<string, unknown>;
+}
+
+interface OutboxEvent extends OutboxEventPayload {
+  id: string;
+  status: OutboxStatus;
+  retryCount: number;
+  lastError: string | null;
+  processedAt: Date | null;
+  createdAt: Date;
 }
 ```
 
@@ -347,6 +332,7 @@ interface PaginatedResponse<T> {
 ```typescript
 // Identity Events (SCREAMING_SNAKE_CASE)
 type IdentityEventType =
+  | 'USER_REGISTERED' // Registration saga completed
   | 'ACCOUNT_CREATED'
   | 'ACCOUNT_UPDATED'
   | 'ACCOUNT_DELETED'
@@ -373,6 +359,47 @@ type LegalEventType =
   | 'CONSENT_WITHDRAWN'
   | 'DSR_REQUEST_SUBMITTED'
   | 'DSR_REQUEST_COMPLETED';
+```
+
+### Event Payloads
+
+| Event                   | Payload Fields                                                      |
+| ----------------------- | ------------------------------------------------------------------- |
+| `USER_REGISTERED`       | `accountId`, `email`, `displayName`, `countryCode`, `consents[]`    |
+| `ACCOUNT_CREATED`       | `accountId`, `email`, `username`, `status`, `provider`              |
+| `ACCOUNT_UPDATED`       | `accountId`, `changes: { field, old, new }[]`                       |
+| `ACCOUNT_DELETED`       | `accountId`, `deletedAt`, `reason`                                  |
+| `SESSION_STARTED`       | `sessionId`, `accountId`, `deviceId`, `ipAddress`                   |
+| `SESSION_ENDED`         | `sessionId`, `accountId`, `reason`                                  |
+| `DEVICE_REGISTERED`     | `deviceId`, `accountId`, `fingerprint`, `deviceType`                |
+| `DEVICE_TRUSTED`        | `deviceId`, `accountId`, `trustedAt`                                |
+| `MFA_ENABLED`           | `accountId`, `method` (TOTP/SMS/EMAIL)                              |
+| `MFA_DISABLED`          | `accountId`, `disabledAt`                                           |
+| `ROLE_ASSIGNED`         | `operatorId`, `roleId`, `assignedBy`                                |
+| `ROLE_REVOKED`          | `operatorId`, `roleId`, `revokedBy`                                 |
+| `SANCTION_APPLIED`      | `sanctionId`, `subjectId`, `type`, `severity`, `expiresAt`          |
+| `SANCTION_REVOKED`      | `sanctionId`, `subjectId`, `revokedBy`, `reason`                    |
+| `CONSENT_GRANTED`       | `consentId`, `accountId`, `consentType`, `scope`, `documentVersion` |
+| `CONSENT_WITHDRAWN`     | `consentId`, `accountId`, `consentType`, `reason`                   |
+| `DSR_REQUEST_SUBMITTED` | `requestId`, `accountId`, `requestType`, `deadline`                 |
+| `DSR_REQUEST_COMPLETED` | `requestId`, `accountId`, `responseType`, `completedAt`             |
+
+### Event Base Structure
+
+```typescript
+interface DomainEvent<T = unknown> {
+  id: string; // UUIDv7
+  eventType: string; // SCREAMING_SNAKE_CASE
+  aggregateType: string; // Account, Session, etc.
+  aggregateId: string; // UUIDv7
+  payload: T;
+  metadata: {
+    correlationId?: string; // For tracing across services
+    causationId?: string; // Parent event ID
+    timestamp: Date;
+    version: number;
+  };
+}
 ```
 
 ---

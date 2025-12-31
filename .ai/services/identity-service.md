@@ -84,153 +84,61 @@ Central identity platform for N apps with shared user management:
 
 > SSOT: `packages/types/src/identity/interfaces.ts`
 
-```typescript
-// === IDENTITY MODULE (identity_db) ===
-interface IIdentityModule {
-  readonly accounts: IAccountService;
-  readonly sessions: ISessionService;
-  readonly devices: IDeviceService;
-  readonly profiles: IProfileService;
-}
+| Interface           | DB          | Key Methods                                            |
+| ------------------- | ----------- | ------------------------------------------------------ |
+| `IIdentityModule`   | identity_db | accounts, sessions, devices, profiles                  |
+| `IAuthModule`       | auth_db     | getActiveSanctions, hasPermission, getAccountRoles     |
+| `ILegalModule`      | legal_db    | getAccountConsents, recordConsent, hasRequiredConsents |
+| `IIdentityPlatform` | -           | Aggregates all 3 modules                               |
 
-// === AUTH MODULE (auth_db) ===
-interface IAuthModule {
-  getActiveSanctions(subjectId: string): Promise<Sanction[]>;
-  hasSanction(subjectId: string, sanctionType: string): Promise<boolean>;
-  getAccountRoles(accountId: string, serviceId?: string): Promise<Role[]>;
-  getRolePermissions(roleId: string): Promise<Permission[]>;
-  hasPermission(accountId: string, permissionCode: string, serviceId?: string): Promise<boolean>;
-}
-
-// === LEGAL MODULE (legal_db) ===
-interface ILegalModule {
-  getRequiredConsents(countryCode: string): Promise<ConsentRequirement[]>;
-  getAccountConsents(accountId: string): Promise<AccountConsent[]>;
-  recordConsent(dto: RecordConsentDto): Promise<AccountConsent>;
-  recordConsents(dtos: RecordConsentDto[]): Promise<AccountConsent[]>;
-  withdrawConsent(consentId: string, reason?: string): Promise<void>;
-  hasRequiredConsents(accountId: string, countryCode: string): Promise<boolean>;
-}
-
-// === PLATFORM INTERFACE ===
-interface IIdentityPlatform {
-  readonly identity: IIdentityModule;
-  readonly auth: IAuthModule;
-  readonly legal: ILegalModule;
-}
-```
-
-### Implementation Swap (Zero Code Change)
-
-```typescript
-// Combined mode (current)
-@Module({
-  providers: [
-    { provide: 'IIdentityModule', useClass: IdentityModuleLocal },
-    { provide: 'IAuthModule', useClass: AuthModuleLocal },
-    { provide: 'ILegalModule', useClass: LegalModuleLocal },
-  ],
-})
-
-// Separated mode (future) - just change env
-@Module({
-  providers: [
-    {
-      provide: 'IIdentityModule',
-      useFactory: (config) => config.IDENTITY_MODE === 'remote'
-        ? new IdentityModuleGrpc(config.IDENTITY_GRPC_URL)
-        : new IdentityModuleLocal(),
-    },
-  ],
-})
-```
+**Implementation Swap**: `env.IDENTITY_MODE=remote` switches Local → gRPC (zero code change)
 
 ---
 
 ## Data Isolation Patterns
 
-### 1. Transactional Outbox (Redpanda-Ready)
+| Pattern              | Phase                              | Description                             |
+| -------------------- | ---------------------------------- | --------------------------------------- |
+| Transactional Outbox | Now: Polling, Future: Debezium CDC | Each DB has `outbox_events` table       |
+| Saga Orchestrator    | -                                  | Cross-DB transactions with compensation |
+| API Composition      | -                                  | No cross-DB JOIN, use interfaces        |
 
-```sql
--- Each DB has outbox_events table
-CREATE TABLE outbox_events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    aggregate_type VARCHAR(100) NOT NULL,
-    aggregate_id UUID NOT NULL,
-    event_type VARCHAR(100) NOT NULL,
-    payload JSONB NOT NULL,
-    status outbox_status DEFAULT 'PENDING',
-    retry_count INT DEFAULT 0,
-    created_at TIMESTAMPTZ(6) DEFAULT NOW()
-);
-```
+**Saga Steps (Registration)**: Account → Profile → Consents → PublishEvent
 
-| Phase  | Relay Method      | Infrastructure      |
-| ------ | ----------------- | ------------------- |
-| Now    | Polling (5s cron) | None                |
-| Future | Debezium CDC      | Redpanda + Debezium |
+---
 
-### 2. Saga Pattern (Cross-DB Transactions)
+## Outbox Pattern
+
+### Transactional Methods (Recommended)
 
 ```typescript
-// Registration Saga - orchestrates across 3 DBs
-class RegistrationSaga {
-  async execute(dto: RegistrationDto): Promise<RegistrationResult> {
-    const sagaId = ID.generate();
-
-    try {
-      // Step 1: Create account (identity_db)
-      const account = await this.identity.accounts.createAccount(dto);
-      await this.recordStep(sagaId, 'ACCOUNT_CREATED', account.id);
-
-      // Step 2: Create profile (identity_db)
-      const profile = await this.identity.profiles.createProfile({ accountId: account.id });
-      await this.recordStep(sagaId, 'PROFILE_CREATED', profile.id);
-
-      // Step 3: Record consents (legal_db)
-      await this.legal.recordConsents(
-        dto.consents.map((c) => ({
-          accountId: account.id,
-          ...c,
-        })),
-      );
-      await this.recordStep(sagaId, 'CONSENTS_RECORDED', account.id);
-
-      // Step 4: Create session (identity_db)
-      const session = await this.identity.sessions.createSession({
-        accountId: account.id,
-        ipAddress: dto.ipAddress,
-      });
-
-      // Step 5: Publish event (outbox)
-      await this.publishEvent('ACCOUNT_CREATED', { accountId: account.id });
-
-      return { account, session, profile };
-    } catch (error) {
-      await this.compensate(sagaId);
-      throw error;
-    }
-  }
-}
+// Use publishIn*Transaction for atomicity with business logic
+await prisma.$transaction(async (tx) => {
+  const account = await tx.account.create({ data });
+  await outbox.publishInIdentityTransaction(tx, {
+    aggregateType: 'Account',
+    aggregateId: account.id,
+    eventType: 'ACCOUNT_CREATED',
+    payload: { ... }
+  });
+});
 ```
 
-### 3. API Composition (No Cross-DB JOIN)
+| Method                                    | Transaction     | Use Case                                  |
+| ----------------------------------------- | --------------- | ----------------------------------------- |
+| `publishInIdentityTransaction(tx, event)` | Within existing | Atomic with identity_db ops               |
+| `publishInAuthTransaction(tx, event)`     | Within existing | Atomic with auth_db ops                   |
+| `publishInLegalTransaction(tx, event)`    | Within existing | Atomic with legal_db ops                  |
+| `publish(db, event)`                      | Standalone      | @deprecated - use in saga final step only |
 
-```typescript
-// Cross-module query via interfaces
-class ProfileComposer {
-  async getFullProfile(accountId: string): Promise<FullProfile> {
-    const [account, profile, consents, sanctions] = await Promise.all([
-      this.identity.accounts.getAccount(accountId), // identity_db
-      this.identity.profiles.getProfile(accountId), // identity_db
-      this.legal.getAccountConsents(accountId), // legal_db
-      this.auth.getActiveSanctions(accountId), // auth_db
-    ]);
+### Saga Integration
 
-    return { ...account, profile, consents, sanctions };
-  }
-}
-```
+Event publishing is the **final saga step** with retry and compensation:
+
+- Retry: 3 attempts with exponential backoff (1s → 2s → 4s)
+- Compensation: Events are NOT deleted (consumers handle gracefully)
+
+**Detailed implementation**: `docs/policies/IDENTITY_PLATFORM.md`
 
 ---
 
@@ -238,29 +146,27 @@ class ProfileComposer {
 
 ### Identity Module (identity_db)
 
-| Table           | Purpose             | Key Fields                                 |
-| --------------- | ------------------- | ------------------------------------------ |
-| `accounts`      | Core account + auth | id, email, username, status, mode          |
-| `sessions`      | Active sessions     | id, accountId, tokenHash, refreshTokenHash |
-| `devices`       | Registered devices  | id, accountId, fingerprint, deviceType     |
-| `profiles`      | User profiles       | id, accountId, displayName, gender         |
-| `outbox_events` | Event outbox        | id, eventType, payload, status             |
+| Table           | Purpose             | Key Fields                                                    |
+| --------------- | ------------------- | ------------------------------------------------------------- |
+| `accounts`      | Core account + auth | id, email, username, status, mode, mfaEnabled, lockedUntil    |
+| `sessions`      | Active sessions     | id, accountId, tokenHash, refreshTokenHash, expiresAt         |
+| `devices`       | Registered devices  | id, accountId, fingerprint, deviceType, osVersion, appVersion |
+| `profiles`      | User profiles       | id, accountId, displayName, gender, birthDate, address        |
+| `outbox_events` | Event outbox        | id, eventType, payload, status, retryCount                    |
 
 ### Auth Module (auth_db)
 
-| Table                    | Purpose                | Key Fields                      |
-| ------------------------ | ---------------------- | ------------------------------- |
-| `admins`                 | System/tenant admins   | id, email, roleId, scope        |
-| `roles`                  | Role definitions       | id, name, level, parentId       |
-| `role_hierarchy`         | Role inheritance       | ancestorId, descendantId, depth |
-| `permissions`            | Permission definitions | id, code, category              |
-| `role_permissions`       | Role-Permission join   | roleId, permissionId            |
-| `operators`              | Service operators      | id, adminId, serviceId          |
-| `operator_invitations`   | Invitation management  | id, token, expiresAt            |
-| `operator_permissions`   | Direct permissions     | operatorId, permissionId        |
-| `sanctions`              | Account sanctions      | id, subjectId, type, status     |
-| `sanction_notifications` | Sanction notices       | id, sanctionId, sentAt          |
-| `outbox_events`          | Event outbox           | id, eventType, payload          |
+| Table                    | Purpose                | Key Fields                            |
+| ------------------------ | ---------------------- | ------------------------------------- |
+| `roles`                  | Role definitions       | id, name, level, scope, parentId      |
+| `permissions`            | Permission definitions | id, resource, action, category, scope |
+| `role_permissions`       | Role-Permission join   | roleId, permissionId, conditions      |
+| `operators`              | Service operators      | id, accountId, serviceId, roleId      |
+| `operator_invitations`   | Invitation management  | id, email, token, expiresAt, status   |
+| `operator_permissions`   | Direct permissions     | operatorId, permissionId, grantedBy   |
+| `sanctions`              | Account sanctions      | id, subjectId, type, status, severity |
+| `sanction_notifications` | Sanction notices       | id, sanctionId, channel, sentAt       |
+| `outbox_events`          | Event outbox           | id, eventType, payload, status        |
 
 ### Legal Module (legal_db)
 
@@ -345,19 +251,31 @@ POST   /registration              # User registration (saga)
 ```
 # Accounts
 POST   /accounts                  # Create account
+GET    /accounts                  # List accounts (paginated)
 GET    /accounts/:id              # Get account by ID
+GET    /accounts/external/:externalId  # Get by external ID (e.g., ACC_abc123)
+GET    /accounts/by-email/:email  # Get account by email
+GET    /accounts/by-username/:username  # Get account by username
 PATCH  /accounts/:id              # Update account
 DELETE /accounts/:id              # Soft delete account
 POST   /accounts/:id/verify-email # Verify email
-POST   /accounts/:id/mfa/enable   # Enable MFA
+POST   /accounts/:id/change-password  # Change password (rate limited: 3/min)
+PATCH  /accounts/:id/status       # Update account status
+POST   /accounts/:id/mfa/enable   # Enable MFA (TOTP/SMS/EMAIL)
+POST   /accounts/:id/mfa/verify   # Verify and complete MFA setup
 POST   /accounts/:id/mfa/disable  # Disable MFA
 
 # Sessions
-POST   /sessions                  # Create session
+POST   /sessions                  # Create session (rate: 10/min)
+GET    /sessions                  # List sessions (paginated)
 GET    /sessions/:id              # Get session by ID
-GET    /sessions/account/:accountId # List account sessions
+POST   /sessions/refresh          # Refresh tokens (rate: 30/min)
+POST   /sessions/validate         # Validate token (rate: 100/min)
+POST   /sessions/:id/touch        # Update activity timestamp
 DELETE /sessions/:id              # Revoke session
 DELETE /sessions/account/:accountId # Revoke all sessions
+GET    /sessions/account/:accountId/count # Active session count
+POST   /sessions/cleanup          # Admin: cleanup expired (rate: 1/min)
 
 # Devices
 POST   /devices                   # Register device
@@ -519,6 +437,20 @@ REFRESH_TOKEN_EXPIRES_IN=14d
 
 ---
 
+## Rate Limiting
+
+| Endpoint                             | Limit | TTL | Reason                    |
+| ------------------------------------ | ----- | --- | ------------------------- |
+| `POST /sessions`                     | 10    | 60s | Prevent session flood     |
+| `POST /sessions/refresh`             | 30    | 60s | Allow reasonable refresh  |
+| `POST /sessions/validate`            | 100   | 60s | High-frequency validation |
+| `POST /sessions/cleanup`             | 1     | 60s | Admin operation           |
+| `POST /accounts/:id/change-password` | 3     | 60s | Prevent brute force       |
+
+Uses `@Throttle` decorator from `@nestjs/throttler`.
+
+---
+
 ## Security
 
 ### Triple-Layer Access Control
@@ -536,6 +468,12 @@ REFRESH_TOKEN_EXPIRES_IN=14d
 | STRICT   | ✅     | ✅  | ✅     | Production  |
 | STANDARD | ❌     | ✅  | ✅     | Staging     |
 | RELAXED  | ❌     | ✅  | ❌     | Development |
+
+### MFA & Account Security
+
+- **MFA Methods**: TOTP (RFC 6238), SMS, EMAIL
+- **Lockout**: 5 failed attempts → 15min lock
+- **Fields**: `mfaEnabled`, `failedLoginAttempts`, `lockedUntil`
 
 ---
 
@@ -555,6 +493,90 @@ REFRESH_TOKEN_EXPIRES_IN=14d
 | PII Masking          | ✅     | `masking.util.ts` for all logs      |
 | Error Sanitization   | ✅     | No IDs in error messages            |
 | DTO SSOT             | ✅     | Enums from Prisma generated clients |
+
+---
+
+## Constants Reference
+
+> **SSOT**: `src/common/constants/index.ts`
+> **Strategy**: [.ai/ssot.md](../ssot.md#backend-constants--utilities)
+
+| Category            | Purpose          | Key Constants                                     |
+| ------------------- | ---------------- | ------------------------------------------------- |
+| `SESSION`           | Token expiry     | `DEFAULT_EXPIRY_MINUTES`, `REFRESH_TOKEN_DAYS`    |
+| `RATE_LIMIT`        | Auth protection  | `LOGIN_LIMIT`, `REGISTRATION_LIMIT`               |
+| `MFA`               | TOTP/Backup      | `TOTP_WINDOW`, `BACKUP_CODES_COUNT`               |
+| `ACCOUNT_SECURITY`  | Lockout          | `MAX_FAILED_ATTEMPTS`, `LOCKOUT_DURATION_MINUTES` |
+| `DSR_DEADLINE_DAYS` | GDPR/CCPA/PIPA   | Per-law deadline days                             |
+| `OUTBOX`            | Event processing | `POLL_INTERVAL_MS`, `BATCH_SIZE`                  |
+| `SANCTION`          | User bans        | `DEFAULT_DURATION_DAYS`, `APPEAL_WINDOW_DAYS`     |
+
+**Detailed values**: See `src/common/constants/index.ts` or `docs/services/IDENTITY_SERVICE.md`
+
+---
+
+## Guards & Security
+
+### ApiKeyGuard
+
+> Location: `src/common/guards/api-key.guard.ts`
+
+Service-to-service authentication with timing-safe comparison:
+
+```typescript
+// Usage: @UseGuards(ApiKeyGuard)
+// Header: X-API-Key: <api-key>
+// Env: API_KEYS=key1,key2,key3
+```
+
+| Feature      | Implementation                   |
+| ------------ | -------------------------------- |
+| Hash Storage | SHA-256, keys never stored plain |
+| Comparison   | `crypto.timingSafeEqual()`       |
+| Cache        | 1 minute TTL, auto-refresh       |
+| Production   | Required - throws if empty       |
+
+### @Public Decorator
+
+```typescript
+@Public()  // Skip API key validation
+@Get('health')
+health() { return { status: 'ok' }; }
+```
+
+---
+
+## Crypto Service
+
+> Location: `src/common/crypto/crypto.service.ts`
+
+| Method                 | Algorithm          | Use Case         |
+| ---------------------- | ------------------ | ---------------- |
+| `encrypt(plaintext)`   | AES-256-GCM        | MFA secrets      |
+| `decrypt(ciphertext)`  | AES-256-GCM        | MFA verification |
+| `hash(data)`           | SHA-256            | Backup codes     |
+| `generateToken(bytes)` | crypto.randomBytes | API tokens       |
+| `generateTotpSecret()` | Base32 (OTPAuth)   | TOTP setup       |
+
+**Ciphertext format**: `iv:authTag:encryptedData` (Base64)
+
+**Env**: `ENCRYPTION_KEY` (32 bytes, Base64 encoded)
+
+---
+
+## PII Masking Utilities
+
+> Location: `src/common/utils/masking.util.ts`
+
+| Function                 | Input                                  | Output                                 |
+| ------------------------ | -------------------------------------- | -------------------------------------- |
+| `maskUuid(uuid)`         | `550e8400-e29b-41d4-a716-446655440000` | `550e8400-****-****-****-********0000` |
+| `maskEmail(email)`       | `user@example.com`                     | `us***@example.com`                    |
+| `maskIpAddress(ip)`      | `192.168.1.100`                        | `192.168.*.*`                          |
+| `maskToken(token)`       | `abc123...xyz789`                      | `abc123...`                            |
+| `maskSensitiveData(obj)` | `{ password: 'secret' }`               | `{ password: '[REDACTED]' }`           |
+
+**Default sensitive fields**: `password`, `token`, `secret`, `mfaSecret`, `refreshToken`
 
 ---
 

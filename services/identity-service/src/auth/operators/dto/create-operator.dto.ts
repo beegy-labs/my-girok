@@ -14,6 +14,9 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { InvitationType } from '.prisma/identity-auth-client';
 
+// Re-export Prisma enum for external use
+export { InvitationType };
+
 /**
  * DTO for creating an operator invitation
  */

@@ -266,9 +266,146 @@ curl -X POST http://localhost:3001/legal/dsr-requests \
   }'
 ```
 
+## Security Utilities
+
+### PII Masking
+
+All sensitive data is masked before logging to prevent PII exposure:
+
+```typescript
+import { maskUuid, maskEmail, maskIpAddress } from './common/utils/masking.util';
+
+// In services
+this.logger.log(`Account created: ${maskUuid(accountId)}`);
+// Output: Account created: 550e8400-****-****-****-********0000
+
+this.logger.log(`Processing request for: ${maskEmail(email)}`);
+// Output: Processing request for: us***@example.com
+```
+
+| Function          | Example Input                          | Example Output                         |
+| ----------------- | -------------------------------------- | -------------------------------------- |
+| `maskUuid()`      | `550e8400-e29b-41d4-a716-446655440000` | `550e8400-****-****-****-********0000` |
+| `maskEmail()`     | `user@example.com`                     | `us***@example.com`                    |
+| `maskIpAddress()` | `192.168.1.100`                        | `192.168.*.*`                          |
+| `maskToken()`     | `abc123...xyz789`                      | `abc123...`                            |
+
+### Crypto Service
+
+Encryption service for sensitive data storage:
+
+```typescript
+import { CryptoService } from './common/crypto';
+
+// Encrypt MFA secrets
+const encrypted = cryptoService.encrypt(totpSecret);
+// Format: iv:authTag:encryptedData (base64)
+
+// Decrypt for verification
+const decrypted = cryptoService.decrypt(encrypted);
+
+// Hash backup codes (one-way)
+const hash = cryptoService.hash(backupCode);
+```
+
+## Service-Specific Constants
+
+All service-specific constants are centralized in `src/common/constants/index.ts`. This file follows the SSOT (Single Source of Truth) strategy where shared utilities come from `@my-girok/nest-common` and service-specific values are defined locally.
+
+### Session & Token Management
+
+These constants control how user sessions and tokens are handled:
+
+| Constant                         | Value  | Description                                                 |
+| -------------------------------- | ------ | ----------------------------------------------------------- |
+| `SESSION.DEFAULT_EXPIRY_MINUTES` | 60     | Default session duration before requiring re-authentication |
+| `SESSION.MAX_EXPIRY_MINUTES`     | 1440   | Maximum allowed session duration (24 hours)                 |
+| `SESSION.REFRESH_TOKEN_DAYS`     | 14     | How long refresh tokens remain valid                        |
+| `SESSION.HASH_ALGORITHM`         | sha256 | Algorithm used for token hashing                            |
+
+**Why these values?** The 60-minute default balances security with user experience. The 14-day refresh token allows users to stay logged in on trusted devices while limiting exposure if a token is compromised.
+
+### Account Security
+
+These constants protect user accounts from brute force attacks:
+
+| Constant                                    | Value | Description                              |
+| ------------------------------------------- | ----- | ---------------------------------------- |
+| `ACCOUNT_SECURITY.MAX_FAILED_ATTEMPTS`      | 5     | Failed logins before account lockout     |
+| `ACCOUNT_SECURITY.LOCKOUT_DURATION_MINUTES` | 30    | How long account remains locked          |
+| `ACCOUNT_SECURITY.PASSWORD_HISTORY_COUNT`   | 5     | Previous passwords that cannot be reused |
+
+**Security rationale:** 5 attempts with 30-minute lockout follows OWASP recommendations. This prevents brute force while avoiding excessive user frustration from typos.
+
+### MFA (Multi-Factor Authentication)
+
+| Constant                 | Value | Description                               |
+| ------------------------ | ----- | ----------------------------------------- |
+| `MFA.TOTP_WINDOW`        | 1     | TOTP codes valid for ±30 seconds (1 step) |
+| `MFA.BACKUP_CODES_COUNT` | 10    | Number of one-time backup codes generated |
+| `MFA.BACKUP_CODE_LENGTH` | 8     | Character length of each backup code      |
+
+### Rate Limiting
+
+These protect authentication endpoints from abuse:
+
+| Constant                        | Value | Description                      |
+| ------------------------------- | ----- | -------------------------------- |
+| `RATE_LIMIT.LOGIN_LIMIT`        | 5     | Login attempts per minute        |
+| `RATE_LIMIT.REGISTRATION_LIMIT` | 10    | Registration attempts per minute |
+| `RATE_LIMIT.DEFAULT_LIMIT`      | 100   | Default for other endpoints      |
+
+### DSR (Data Subject Request) Deadlines
+
+Legal compliance deadlines vary by jurisdiction:
+
+| Constant                    | Value | Jurisdiction    | Legal Basis           |
+| --------------------------- | ----- | --------------- | --------------------- |
+| `DSR_DEADLINE_DAYS.GDPR`    | 30    | European Union  | GDPR Article 12(3)    |
+| `DSR_DEADLINE_DAYS.CCPA`    | 45    | California, USA | CCPA Section 1798.130 |
+| `DSR_DEADLINE_DAYS.PIPA`    | 10    | South Korea     | PIPA Article 35       |
+| `DSR_DEADLINE_DAYS.APPI`    | 14    | Japan           | APPI Article 32       |
+| `DSR_DEADLINE_DAYS.DEFAULT` | 30    | Other regions   | Conservative default  |
+
+**Important:** These are maximum response times. Aim to complete requests well before the deadline to account for weekends and holidays.
+
+## Zero Migration Architecture
+
+The Identity Service is designed for future microservice extraction without database migration:
+
+```
+Phase 1 (Current): Combined Service
+┌─────────────────────────────────────┐
+│       identity-service              │
+│  ┌─────────┬─────────┬─────────┐   │
+│  │Identity │  Auth   │  Legal  │   │
+│  └────┬────┴────┬────┴────┬────┘   │
+│       ▼         ▼         ▼        │
+│  identity_db  auth_db  legal_db    │
+└─────────────────────────────────────┘
+
+Phase 2 (Future): Separated Services
+┌───────────┐ ┌───────────┐ ┌───────────┐
+│identity-  │ │  auth-    │ │  legal-   │
+│  service  │ │  service  │ │  service  │
+└─────┬─────┘ └─────┬─────┘ └─────┬─────┘
+      ▼             ▼             ▼
+  identity_db   auth_db       legal_db
+      (Same databases, zero migration)
+```
+
+**Key Benefits:**
+
+- Pre-separated databases from day one
+- Interface-based module communication
+- Switch from in-process to gRPC with env variable change
+- No data migration required
+
 ## Related Documentation
 
 - [Architecture Overview](../../.ai/architecture.md)
 - [Identity Platform Policy](../policies/IDENTITY_PLATFORM.md)
+- [Identity Service API Reference](../../.ai/services/identity-service.md) (LLM-optimized)
 - [Legal Consent Policy](../policies/LEGAL_CONSENT.md)
 - [Database Guide](../DATABASE.md)
+- [Caching Strategy](../policies/CACHING.md)

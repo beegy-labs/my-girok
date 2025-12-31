@@ -5,7 +5,7 @@ import { ProfilesService } from '../../identity/profiles/profiles.service';
 import { ConsentsService } from '../../legal/consents/consents.service';
 import { LawRegistryService } from '../../legal/law-registry/law-registry.service';
 import { SagaOrchestratorService } from '../../common/saga/saga-orchestrator.service';
-import { OutboxService } from '../../common/outbox/outbox.service';
+import { OutboxService, OutboxEvent } from '../../common/outbox/outbox.service';
 import { SagaDefinition } from '../../common/saga/saga.types';
 import { RegisterUserDto, RegistrationResponseDto } from './dto/registration.dto';
 import { ConsentType } from '.prisma/identity-legal-client';
@@ -23,6 +23,7 @@ interface RegistrationContext {
   accountId?: string;
   profileId?: string;
   consentIds?: string[];
+  outboxEventId?: string;
 
   // Result
   account?: {
@@ -74,21 +75,6 @@ export class RegistrationService {
     }
 
     const ctx = result.context;
-
-    // Publish registration event
-    await this.outbox.publish('identity', {
-      aggregateType: 'Account',
-      aggregateId: ctx.accountId!,
-      eventType: 'USER_REGISTERED',
-      payload: {
-        accountId: ctx.accountId,
-        email: dto.email,
-        displayName: dto.displayName,
-        countryCode: dto.countryCode,
-        consents: dto.consents.map((c) => c.consentType),
-      },
-    });
-
     this.logger.log(`User registered: ${dto.email} [${ctx.accountId}]`);
 
     return {
@@ -229,6 +215,42 @@ export class RegistrationService {
             // Consents are not deleted for audit trail purposes
             // They will be cleaned up when the account is deleted
             this.logger.debug('Skipping consent compensation (audit trail preserved)');
+          },
+        },
+        {
+          name: 'PublishRegistrationEvent',
+          execute: async (ctx) => {
+            if (!ctx.accountId) {
+              throw new Error('Account ID is required');
+            }
+            this.logger.debug('Publishing registration event...');
+            // Publish to outbox for at-least-once delivery
+            // Using standalone publish() is acceptable here since this is the final saga step
+            // and the outbox pattern provides its own atomicity and retry mechanism
+            const outboxEvent: OutboxEvent = await this.outbox.publish('identity', {
+              aggregateType: 'Account',
+              aggregateId: ctx.accountId,
+              eventType: 'USER_REGISTERED',
+              payload: {
+                accountId: ctx.accountId,
+                email: ctx.dto.email,
+                displayName: ctx.dto.displayName,
+                countryCode: ctx.dto.countryCode,
+                consents: ctx.dto.consents.map((c) => c.consentType),
+              },
+            });
+            return { ...ctx, outboxEventId: outboxEvent.id };
+          },
+          compensate: async (_ctx) => {
+            // Outbox events are not deleted - they will be processed by the outbox processor
+            // If registration fails after this step, the event will be orphaned but harmless
+            // (consumer should handle USER_REGISTERED for non-existent accounts gracefully)
+            this.logger.debug('Skipping outbox event compensation (handled by event consumers)');
+          },
+          retryConfig: {
+            maxRetries: 3,
+            delayMs: 1000,
+            backoffMultiplier: 2,
           },
         },
       ],

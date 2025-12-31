@@ -8,10 +8,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Session } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
+import { CryptoService } from '../../common/crypto';
 import { PaginatedResponse } from '../../common/pagination';
 import { maskUuid } from '../../common/utils/masking.util';
 import { CreateSessionDto, RevokeSessionDto, SessionQueryDto } from './dto';
-import * as crypto from 'crypto';
 
 /**
  * Session response type
@@ -47,6 +47,7 @@ export class SessionsService {
   constructor(
     private readonly prisma: IdentityPrismaService,
     private readonly configService: ConfigService,
+    private readonly cryptoService: CryptoService,
   ) {
     this.defaultSessionDurationMs = this.configService.get<number>(
       'session.defaultDurationMs',
@@ -59,17 +60,17 @@ export class SessionsService {
   }
 
   /**
-   * Generate a secure random token
+   * Generate a secure random token using CryptoService (SSOT)
    */
   private generateToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return this.cryptoService.generateToken(32);
   }
 
   /**
-   * Hash a token for storage
+   * Hash a token for storage using CryptoService (SSOT)
    */
   private hashToken(token: string): string {
-    return crypto.createHash('sha256').update(token).digest('hex');
+    return this.cryptoService.hash(token);
   }
 
   /**

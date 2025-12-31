@@ -13,6 +13,9 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DeviceType, PushPlatform } from '.prisma/identity-client';
 
+// Re-export Prisma enums for external use
+export { DeviceType, PushPlatform };
+
 /**
  * DTO for registering a new device
  */

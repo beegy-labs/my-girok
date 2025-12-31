@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ID } from '@my-girok/nest-common';
 
-import { PAGINATION, RETRY } from '../common/constants/index.js';
+import { RETRY } from '../common/constants/index.js';
 
 /**
  * Prisma Extension for UUIDv7 auto-generation
@@ -92,17 +92,3 @@ export abstract class BasePrismaService implements OnModuleInit, OnModuleDestroy
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
-
-// Re-export constants for backward compatibility
-// Deprecated: Use PAGINATION and RETRY from common/constants directly
-export const PAGINATION_DEFAULTS = {
-  PAGE: PAGINATION.DEFAULT_PAGE,
-  LIMIT: PAGINATION.DEFAULT_LIMIT,
-  MAX_LIMIT: PAGINATION.MAX_LIMIT,
-} as const;
-
-export const RETRY_DEFAULTS = {
-  MAX_RETRIES: RETRY.MAX_RETRIES,
-  DELAY_MS: RETRY.DELAY_MS,
-  BACKOFF_MULTIPLIER: RETRY.BACKOFF_MULTIPLIER,
-} as const;
