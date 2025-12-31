@@ -137,6 +137,84 @@ CREATE TABLE account_apps (
     UNIQUE(account_id, app_id)
 );
 
+-- App Security Configurations (per-app security settings)
+CREATE TABLE app_security_configs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    app_id UUID NOT NULL REFERENCES app_registry(id) UNIQUE,
+    security_level VARCHAR(20) DEFAULT 'STRICT', -- STRICT, STANDARD, RELAXED
+
+    -- Layer 1: Domain validation
+    domain_validation_enabled BOOLEAN DEFAULT TRUE,
+    allowed_domains TEXT[] DEFAULT '{}',
+
+    -- Layer 2: JWT validation (always required, stored for consistency)
+    jwt_validation_enabled BOOLEAN DEFAULT TRUE, -- Cannot be FALSE
+    jwt_aud_validation BOOLEAN DEFAULT TRUE,
+
+    -- Layer 3: Header validation
+    header_validation_enabled BOOLEAN DEFAULT TRUE,
+    require_app_id BOOLEAN DEFAULT TRUE,
+    require_app_secret BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+
+    -- Constraint: JWT validation cannot be disabled
+    CONSTRAINT jwt_always_enabled CHECK (jwt_validation_enabled = TRUE)
+);
+
+-- App Test Mode (temporary security relaxation)
+CREATE TABLE app_test_modes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    app_id UUID NOT NULL REFERENCES app_registry(id) UNIQUE,
+    enabled BOOLEAN DEFAULT FALSE,
+    allowed_ips CIDR[] NOT NULL DEFAULT '{}', -- IP whitelist required
+    expires_at TIMESTAMPTZ(6), -- Max 7 days from now
+    disabled_layers TEXT[] DEFAULT '{}', -- Can only be: 'domain', 'header' (never 'jwt')
+    enabled_by UUID, -- Admin who enabled
+    enabled_at TIMESTAMPTZ(6),
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+
+    -- Constraint: Cannot disable JWT
+    CONSTRAINT no_jwt_disable CHECK (NOT ('jwt' = ANY(disabled_layers))),
+    -- Constraint: Max 7 days duration
+    CONSTRAINT max_duration CHECK (expires_at <= NOW() + INTERVAL '7 days')
+);
+
+-- App Service Status (maintenance, shutdown management)
+CREATE TABLE app_service_status (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    app_id UUID NOT NULL REFERENCES app_registry(id) UNIQUE,
+    status VARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, MAINTENANCE, SUSPENDED, TERMINATED
+
+    -- Maintenance mode
+    maintenance_enabled BOOLEAN DEFAULT FALSE,
+    maintenance_message TEXT,
+    maintenance_allowed_roles TEXT[] DEFAULT '{}',
+    maintenance_start_at TIMESTAMPTZ(6),
+    maintenance_end_at TIMESTAMPTZ(6),
+    maintenance_allow_read_only BOOLEAN DEFAULT FALSE,
+
+    -- Scheduled shutdown
+    shutdown_scheduled BOOLEAN DEFAULT FALSE,
+    shutdown_scheduled_at TIMESTAMPTZ(6),
+    shutdown_reason TEXT,
+    shutdown_notify_users BOOLEAN DEFAULT TRUE,
+    shutdown_data_retention_days INT DEFAULT 90,
+
+    -- Suspension
+    suspended_at TIMESTAMPTZ(6),
+    suspended_by UUID,
+    suspended_reason TEXT,
+
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+
+    -- Constraint: Valid status transitions
+    CONSTRAINT valid_status CHECK (status IN ('ACTIVE', 'MAINTENANCE', 'SUSPENDED', 'TERMINATED'))
+);
+
 -- Account Links (SERVICE → UNIFIED mode)
 CREATE TABLE account_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -581,6 +659,240 @@ Phase 2 → Phase 3 Extraction:
 5. Remove modules from identity-service
 
 Zero downtime, no data migration.
+```
+
+## Security Configuration
+
+### Triple-Layer Access Control
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    3-Layer Access Control                        │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 1: Domain        → Configurable per-app                  │
+│  Layer 2: JWT aud       → ALWAYS REQUIRED (cannot disable)      │
+│  Layer 3: Header        → Configurable per-app                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Security Levels
+
+| Level    | Domain | JWT | Header | Use Case              |
+| -------- | ------ | --- | ------ | --------------------- |
+| STRICT   | ✅     | ✅  | ✅     | Production (default)  |
+| STANDARD | ❌     | ✅  | ✅     | Staging, internal API |
+| RELAXED  | ❌     | ✅  | ❌     | Development, testing  |
+
+> **CRITICAL**: JWT validation (Layer 2) is ALWAYS required and cannot be disabled at any security level.
+
+### Per-App Security Configuration
+
+```typescript
+// AppSecurityConfig interface
+interface AppSecurityConfig {
+  appId: string;
+  securityLevel: 'STRICT' | 'STANDARD' | 'RELAXED';
+
+  domainValidation: {
+    enabled: boolean;
+    allowedDomains: string[];
+  };
+
+  jwtValidation: {
+    enabled: true; // Always true, readonly
+    validateAud: true;
+  };
+
+  headerValidation: {
+    enabled: boolean;
+    requireAppId: boolean;
+    requireAppSecret: boolean;
+  };
+}
+```
+
+### Test Mode
+
+Test mode allows temporary relaxation of security for development/QA while maintaining JWT authentication:
+
+```typescript
+interface TestModeConfig {
+  enabled: boolean;
+  allowedIPs: string[]; // Required IP whitelist
+  expiresAt: Date | null; // Maximum 7 days
+  disabledLayers: ('domain' | 'header')[]; // Cannot include 'jwt'
+}
+```
+
+**Test Mode Constraints**:
+
+| Constraint     | Value     | Reason                         |
+| -------------- | --------- | ------------------------------ |
+| Max Duration   | 7 days    | Prevent forgotten test configs |
+| IP Whitelist   | Required  | No public test access          |
+| JWT Validation | Always ON | Security baseline              |
+| Audit Logging  | Always ON | Compliance & debugging         |
+
+### Admin API for Security Management
+
+```
+# Get app security config
+GET /v1/admin/apps/:appId/security
+
+# Update security level
+PATCH /v1/admin/apps/:appId/security
+{
+  "securityLevel": "STANDARD",
+  "domainValidation": { "enabled": false },
+  "headerValidation": { "enabled": true }
+}
+
+# Enable test mode
+POST /v1/admin/apps/:appId/test-mode
+{
+  "enabled": true,
+  "allowedIPs": ["10.0.0.0/8", "192.168.0.0/16"],
+  "expiresAt": "2025-01-15T00:00:00Z",
+  "disabledLayers": ["domain", "header"]
+}
+
+# Disable test mode
+DELETE /v1/admin/apps/:appId/test-mode
+
+# List apps in test mode (audit)
+GET /v1/admin/apps/test-mode/active
+```
+
+## GitOps-based App Management
+
+### Overview
+
+Apps are managed via GitOps (Git as Single Source of Truth) with Admin UI for emergency operations:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    App Management Strategy                       │
+├─────────────────────────────────────────────────────────────────┤
+│  Normal Operations      │  Emergency Operations                 │
+│  ───────────────────────┼───────────────────────────────────    │
+│  • Create/Update App    │  • Block malicious app                │
+│  • Config changes       │  • Rotate compromised secret          │
+│  • Domain changes       │  • Enable/Disable test mode           │
+│  ───────────────────────┼───────────────────────────────────    │
+│  → GitOps (PR → Merge)  │  → Admin UI (immediate effect)        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### GitOps Configuration
+
+```yaml
+# apps/vero.yaml
+apiVersion: identity.girok.dev/v1
+kind: AppRegistration
+metadata:
+  name: vero
+  namespace: identity
+spec:
+  slug: vero
+  name: Vero Service
+  domain: vero.net
+  identityDomain: accounts.vero.net
+  apiDomain: api.vero.net
+  allowedOrigins:
+    - https://vero.net
+    - https://www.vero.net
+    - https://admin.vero.net
+  status: ACTIVE
+
+  securityConfig:
+    securityLevel: STRICT
+    domainValidation:
+      enabled: true
+      allowedDomains:
+        - api.vero.net
+        - staging-api.vero.net
+    headerValidation:
+      enabled: true
+      requireAppId: true
+      requireAppSecret: true
+
+  settings:
+    requireEmailVerification: true
+    allowedAuthMethods:
+      - password
+      - google
+      - kakao
+    defaultCountry: KR
+    supportedCountries:
+      - KR
+      - US
+      - JP
+```
+
+### Management Flow
+
+| Operation              | Method                  | Notes                       |
+| ---------------------- | ----------------------- | --------------------------- |
+| Create new app         | GitOps (PR → Review)    | Requires approval           |
+| Update app config      | GitOps (PR → Review)    | Auditable changes           |
+| Update security config | GitOps (PR → Review)    | Security team review        |
+| Emergency app block    | Admin UI                | Immediate, audit logged     |
+| Secret rotation        | Vault + Admin UI        | Automated or manual trigger |
+| Test mode toggle       | Admin UI                | Quick enable/disable        |
+| Delete app             | GitOps + Admin approval | Requires dual approval      |
+
+### ArgoCD Sync
+
+```yaml
+# ArgoCD Application for app registry sync
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: identity-apps
+  namespace: argocd
+spec:
+  project: identity
+  source:
+    repoURL: https://github.com/beegy-labs/identity-apps
+    targetRevision: main
+    path: apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: identity
+  syncPolicy:
+    automated:
+      prune: false # Don't auto-delete apps
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+```
+
+### Audit Trail
+
+All app management operations are logged:
+
+```typescript
+interface AppManagementAudit {
+  id: string;
+  appId: string;
+  action:
+    | 'CREATE'
+    | 'UPDATE'
+    | 'DELETE'
+    | 'BLOCK'
+    | 'UNBLOCK'
+    | 'TEST_MODE_ENABLE'
+    | 'TEST_MODE_DISABLE';
+  source: 'GITOPS' | 'ADMIN_UI';
+  actor: {
+    type: 'ADMIN' | 'SYSTEM';
+    id: string;
+    email: string;
+  };
+  changes: Record<string, { before: any; after: any }>;
+  gitCommit?: string; // For GitOps changes
+  timestamp: Date;
+}
 ```
 
 ## Domain Management Strategy

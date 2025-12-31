@@ -39,15 +39,18 @@ Central identity platform for creating N apps with shared user management:
 
 Account management and authentication.
 
-| Table              | Purpose                          |
-| ------------------ | -------------------------------- |
-| `accounts`         | Core account (email, status)     |
-| `account_profiles` | Profile data (name, avatar)      |
-| `credentials`      | Password, passkeys, OAuth tokens |
-| `sessions`         | Active sessions (Valkey backed)  |
-| `devices`          | Registered devices               |
-| `app_registry`     | Registered apps (my-girok, vero) |
-| `account_apps`     | Account-app relationships        |
+| Table                  | Purpose                          |
+| ---------------------- | -------------------------------- |
+| `accounts`             | Core account (email, status)     |
+| `account_profiles`     | Profile data (name, avatar)      |
+| `credentials`          | Password, passkeys, OAuth tokens |
+| `sessions`             | Active sessions (Valkey backed)  |
+| `devices`              | Registered devices               |
+| `app_registry`         | Registered apps (my-girok, vero) |
+| `app_security_configs` | Per-app security settings        |
+| `app_test_modes`       | Test mode configurations         |
+| `app_service_status`   | Maintenance, shutdown management |
+| `account_apps`         | Account-app relationships        |
 
 ### Auth Module (auth_db)
 
@@ -208,8 +211,76 @@ interface AppRegistry {
   apiDomain: string; // 'api.girok.dev'
   allowedOrigins: string[];
   status: 'ACTIVE' | 'INACTIVE';
+
+  // Security configuration (per-app)
+  securityConfig: AppSecurityConfig;
 }
 ```
+
+### GitOps-based App Management
+
+Apps are managed via GitOps (Git as SSOT) with Admin UI for emergency operations:
+
+```yaml
+# apps/vero.yaml (Git repository)
+apiVersion: identity.girok.dev/v1
+kind: AppRegistration
+metadata:
+  name: vero
+spec:
+  slug: vero
+  name: Vero Service
+  domain: vero.net
+  identityDomain: accounts.vero.net
+  apiDomain: api.vero.net
+  allowedOrigins:
+    - https://vero.net
+    - https://www.vero.net
+  securityConfig:
+    securityLevel: STRICT
+    domainValidation:
+      enabled: true
+    headerValidation:
+      enabled: true
+      requireAppId: true
+      requireAppSecret: true
+```
+
+**App Management Flow**:
+
+| Operation         | Method                    | Notes                 |
+| ----------------- | ------------------------- | --------------------- |
+| Create/Update App | GitOps (PR → ArgoCD sync) | Auditable, reviewable |
+| Emergency Block   | Admin UI                  | Immediate effect      |
+| Secret Rotation   | Vault + Admin UI          | Automated or manual   |
+| Test Mode Toggle  | Admin UI                  | Quick enable/disable  |
+
+**GitOps Benefits**:
+
+- **Audit Trail**: All changes via PR with review
+- **Rollback**: Git revert for quick rollback
+- **Consistency**: Single source of truth
+- **Security**: No direct DB access needed
+
+### Triple-Layer Access Control
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    3-Layer Access Control                        │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 1: Domain        → Configurable per-app                  │
+│  Layer 2: JWT aud       → ALWAYS REQUIRED (cannot disable)      │
+│  Layer 3: Header        → Configurable per-app                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Security Enforcement**:
+
+| Layer            | Can Disable? | Notes                           |
+| ---------------- | ------------ | ------------------------------- |
+| Domain (Layer 1) | Yes          | For dev/staging environments    |
+| JWT (Layer 2)    | **NO**       | Always required, non-negotiable |
+| Header (Layer 3) | Yes          | For internal tools, testing     |
 
 ### JWT Access Control (RFC 9068)
 
@@ -217,7 +288,7 @@ interface AppRegistry {
 // JWT Payload - Per-app access control
 interface JWTPayload {
   sub: string; // Account ID
-  aud: string; // App ID (audience) - KEY for access control
+  aud: string; // App ID (audience) - Layer 2
   iss: string; // 'accounts.girok.dev'
   iat: number;
   exp: number;
@@ -231,10 +302,207 @@ interface JWTPayload {
     };
   };
 }
+```
 
-// Access control: domain + JWT audience
-// api.girok.dev only accepts JWT with aud: 'my-girok'
-// api.vero.dev only accepts JWT with aud: 'vero'
+### Header-based App Authentication (Layer 3)
+
+```typescript
+// Required headers for API requests
+interface AppAuthHeaders {
+  'X-App-ID': string; // App identifier (e.g., 'my-girok')
+  'X-App-Secret': string; // App secret key (hashed, rotatable)
+  Authorization: string; // Bearer <JWT>
+}
+
+// Validation flow:
+// 1. Validate X-App-ID exists in app_registry
+// 2. Validate X-App-Secret matches app's secret_hash
+// 3. Validate JWT signature and expiry
+// 4. Validate JWT aud === X-App-ID
+// 5. Validate request domain matches app's apiDomain
+```
+
+### Access Control Flow
+
+```
+Request to api.girok.dev
+         │
+         ▼
+┌─────────────────────────────────────┐
+│ Layer 1: Domain Check (Configurable)│
+│ Skip if: testMode OR disabled       │
+└─────────────────┬───────────────────┘
+                  │ ✅ or SKIP
+                  ▼
+┌─────────────────────────────────────┐
+│ Layer 2: JWT Check (ALWAYS)         │
+│ JWT valid? aud === X-App-ID?        │
+│ ⚠️ CANNOT BE DISABLED               │
+└─────────────────┬───────────────────┘
+                  │ ✅
+                  ▼
+┌─────────────────────────────────────┐
+│ Layer 3: Header Check (Configurable)│
+│ Skip if: testMode OR disabled       │
+└─────────────────┬───────────────────┘
+                  │ ✅ or SKIP
+                  ▼
+            Access Granted
+```
+
+### Per-Service Security Configuration
+
+Each app can configure security levels via Admin UI or GitOps:
+
+```typescript
+interface AppSecurityConfig {
+  appId: string;
+  securityLevel: 'STRICT' | 'STANDARD' | 'RELAXED';
+
+  // Layer 1: Domain validation
+  domainValidation: {
+    enabled: boolean;
+    allowedDomains: string[]; // e.g., ['api.girok.dev', 'localhost:3000']
+  };
+
+  // Layer 2: JWT validation (ALWAYS REQUIRED)
+  jwtValidation: {
+    enabled: true; // readonly, cannot change
+    validateAud: true;
+  };
+
+  // Layer 3: Header validation
+  headerValidation: {
+    enabled: boolean;
+    requireAppId: boolean;
+    requireAppSecret: boolean;
+  };
+
+  // Test mode
+  testMode: TestModeConfig;
+}
+```
+
+**Security Level Presets**:
+
+| Level    | Domain | JWT | Header | Use Case              |
+| -------- | ------ | --- | ------ | --------------------- |
+| STRICT   | ✅     | ✅  | ✅     | Production (default)  |
+| STANDARD | ❌     | ✅  | ✅     | Staging, internal API |
+| RELAXED  | ❌     | ✅  | ❌     | Development, testing  |
+
+### Test Mode
+
+Temporarily relax security for development/QA (JWT still required):
+
+```typescript
+interface TestModeConfig {
+  enabled: boolean;
+  allowedIPs: string[]; // Required whitelist
+  expiresAt: Date | null; // Max 7 days
+  disabledLayers: ('domain' | 'header')[]; // Cannot include 'jwt'
+}
+```
+
+**Test Mode API**:
+
+```
+# Enable test mode
+POST /v1/admin/apps/:appId/test-mode
+{
+  "enabled": true,
+  "allowedIPs": ["10.0.0.0/8", "192.168.0.0/16"],
+  "expiresAt": "2025-01-15T00:00:00Z",
+  "disabledLayers": ["domain", "header"]
+}
+
+# Disable test mode
+DELETE /v1/admin/apps/:appId/test-mode
+```
+
+**Constraints**:
+
+| Setting        | Constraint     | Reason                  |
+| -------------- | -------------- | ----------------------- |
+| Max Duration   | 7 days         | Prevent forgotten tests |
+| IP Whitelist   | Required       | No public test access   |
+| JWT Validation | Cannot disable | Security baseline       |
+| Audit Logging  | Always enabled | Compliance requirement  |
+
+### Service Lifecycle Management
+
+Per-app maintenance and shutdown management:
+
+```typescript
+interface AppServiceStatus {
+  appId: string;
+
+  // Service status
+  status: 'ACTIVE' | 'MAINTENANCE' | 'SUSPENDED' | 'TERMINATED';
+
+  // Maintenance mode
+  maintenance: {
+    enabled: boolean;
+    message: string; // User-facing message
+    allowedRoles: string[]; // Roles that can bypass (admin, tester)
+    startAt: Date | null; // Scheduled start
+    endAt: Date | null; // Estimated end
+    allowReadOnly: boolean; // Allow read operations during maintenance
+  };
+
+  // Graceful shutdown
+  shutdown: {
+    scheduled: boolean;
+    scheduledAt: Date | null;
+    reason: string;
+    notifyUsers: boolean; // Send notification to users
+    dataRetentionDays: number; // Days to retain data after shutdown
+  };
+}
+```
+
+**Service Status Transitions**:
+
+```
+ACTIVE ──┬──▶ MAINTENANCE ──▶ ACTIVE
+         │
+         ├──▶ SUSPENDED ──┬──▶ ACTIVE
+         │                │
+         │                └──▶ TERMINATED
+         │
+         └──▶ TERMINATED (scheduled shutdown)
+```
+
+**Admin API for Service Management**:
+
+```
+# Set maintenance mode
+POST /v1/admin/apps/:appId/maintenance
+{
+  "enabled": true,
+  "message": "Scheduled maintenance. Service will be back at 10:00 KST.",
+  "allowedRoles": ["admin", "tester"],
+  "endAt": "2025-01-15T10:00:00+09:00",
+  "allowReadOnly": true
+}
+
+# Schedule shutdown
+POST /v1/admin/apps/:appId/shutdown
+{
+  "scheduledAt": "2025-03-01T00:00:00Z",
+  "reason": "Service end of life",
+  "notifyUsers": true,
+  "dataRetentionDays": 90
+}
+
+# Suspend app (immediate)
+POST /v1/admin/apps/:appId/suspend
+{
+  "reason": "Security incident detected"
+}
+
+# Reactivate app
+POST /v1/admin/apps/:appId/activate
 ```
 
 ### Account-App Relationship
