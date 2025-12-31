@@ -215,6 +215,37 @@ CREATE TABLE app_service_status (
     CONSTRAINT valid_status CHECK (status IN ('ACTIVE', 'MAINTENANCE', 'SUSPENDED', 'TERMINATED'))
 );
 
+-- App Version Policies (force update, soft update)
+CREATE TABLE app_version_policies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    app_id UUID NOT NULL REFERENCES app_registry(id),
+    platform VARCHAR(20) NOT NULL, -- IOS, ANDROID, WEB
+
+    -- Version requirements
+    min_version VARCHAR(20) NOT NULL,         -- Below → Force update
+    recommended_version VARCHAR(20) NOT NULL, -- Below → Soft update
+    current_version VARCHAR(20) NOT NULL,     -- Latest version
+
+    -- Force update config
+    force_update_enabled BOOLEAN DEFAULT TRUE,
+    force_update_message TEXT DEFAULT 'Please update to continue using the app',
+    force_update_store_url TEXT,
+
+    -- Soft update config
+    soft_update_enabled BOOLEAN DEFAULT TRUE,
+    soft_update_message TEXT DEFAULT 'A new version is available',
+    soft_update_dismissible BOOLEAN DEFAULT TRUE,
+    soft_update_remind_after_days INT DEFAULT 3,
+
+    -- Deprecated versions (blocked regardless of minVersion)
+    deprecated_versions TEXT[] DEFAULT '{}',
+
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+
+    UNIQUE(app_id, platform)
+);
+
 -- Account Links (SERVICE → UNIFIED mode)
 CREATE TABLE account_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

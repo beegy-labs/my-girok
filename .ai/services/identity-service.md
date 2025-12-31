@@ -12,6 +12,10 @@ Central identity platform for creating N apps with shared user management:
 
 ## Architecture Strategy
 
+### Core Principle
+
+**Services Combined, DBs Pre-Separated**: Single deployable service with 3 separate databases for future extraction without migration.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Identity Service (Combined)                   │
@@ -31,7 +35,97 @@ Central identity platform for creating N apps with shared user management:
     └────────────┘    └────────────┘    └────────────┘
 ```
 
-**Key Principle**: Services combined for operational simplicity, DBs pre-separated for future extraction.
+### Modular Code Structure (Easy Separation)
+
+```
+services/identity-service/
+├── src/
+│   ├── main.ts
+│   ├── app.module.ts           # Root module (imports all)
+│   │
+│   ├── identity/               # === IDENTITY MODULE ===
+│   │   ├── identity.module.ts  # Self-contained module
+│   │   ├── identity.prisma.ts  # identity_db connection ONLY
+│   │   ├── controllers/
+│   │   │   ├── account.controller.ts
+│   │   │   ├── session.controller.ts
+│   │   │   ├── oauth.controller.ts
+│   │   │   └── passkey.controller.ts
+│   │   ├── services/
+│   │   │   ├── account.service.ts
+│   │   │   ├── session.service.ts
+│   │   │   ├── credential.service.ts
+│   │   │   └── app-registry.service.ts
+│   │   ├── dto/
+│   │   └── entities/
+│   │
+│   ├── auth/                   # === AUTH MODULE ===
+│   │   ├── auth.module.ts      # Self-contained module
+│   │   ├── auth.prisma.ts      # auth_db connection ONLY
+│   │   ├── controllers/
+│   │   │   ├── role.controller.ts
+│   │   │   ├── admin.controller.ts
+│   │   │   └── operator.controller.ts
+│   │   ├── services/
+│   │   │   ├── role.service.ts
+│   │   │   ├── permission.service.ts
+│   │   │   └── sanction.service.ts
+│   │   ├── dto/
+│   │   └── entities/
+│   │
+│   ├── legal/                  # === LEGAL MODULE ===
+│   │   ├── legal.module.ts     # Self-contained module
+│   │   ├── legal.prisma.ts     # legal_db connection ONLY
+│   │   ├── controllers/
+│   │   │   ├── consent.controller.ts
+│   │   │   ├── document.controller.ts
+│   │   │   └── dsr.controller.ts
+│   │   ├── services/
+│   │   │   ├── consent.service.ts
+│   │   │   ├── law-registry.service.ts
+│   │   │   └── dsr.service.ts
+│   │   ├── dto/
+│   │   └── entities/
+│   │
+│   └── shared/                 # Shared utilities (minimal)
+│       ├── guards/
+│       ├── decorators/
+│       └── utils/
+│
+├── prisma/
+│   ├── identity/               # identity_db schema
+│   │   └── schema.prisma
+│   ├── auth/                   # auth_db schema
+│   │   └── schema.prisma
+│   └── legal/                  # legal_db schema
+│       └── schema.prisma
+```
+
+**Separation Rules**:
+
+1. Each module has its **own Prisma client** (no cross-DB queries)
+2. Modules communicate via **interfaces**, not direct imports
+3. Shared code is **minimal** (guards, decorators only)
+4. No circular dependencies between modules
+
+### Service Extraction (Future)
+
+```
+Phase 1 (Current): Combined Service
+└── identity-service
+    ├── Identity Module → identity_db
+    ├── Auth Module → auth_db
+    └── Legal Module → legal_db
+
+Phase 2 (Future): Extract services by copying module folders
+├── identity-service → identity/ folder → identity_db
+├── auth-service → auth/ folder → auth_db
+└── legal-service → legal/ folder → legal_db
+```
+
+**Zero Migration**: Just copy module folder + update routing.
+
+---
 
 ## Module Responsibilities
 
@@ -50,6 +144,7 @@ Account management and authentication.
 | `app_security_configs` | Per-app security settings        |
 | `app_test_modes`       | Test mode configurations         |
 | `app_service_status`   | Maintenance, shutdown management |
+| `app_version_policies` | App version requirements         |
 | `account_apps`         | Account-app relationships        |
 
 ### Auth Module (auth_db)
@@ -80,124 +175,9 @@ Global compliance and consent management.
 | `account_consents`      | User consent records         |
 | `data_subject_requests` | GDPR DSR tracking            |
 
-## Global Law Registry
+---
 
-| Code | Country | Name                                | Key Requirements            |
-| ---- | ------- | ----------------------------------- | --------------------------- |
-| PIPA | KR      | Personal Information Protection Act | Age 14+, night push consent |
-| GDPR | EU      | General Data Protection Regulation  | Age 16+, data portability   |
-| CCPA | US      | California Consumer Privacy Act     | Age 13+, opt-out rights     |
-| APPI | JP      | Act on Protection of Personal Info  | Cross-border transfer       |
-
-## Authentication Flow
-
-```
-Browser
-   │
-   ▼
-Cilium Gateway (TLS, Rate Limit)
-   │
-   ▼
-Identity Service
-   │
-   ├──▶ identity_db (account lookup)
-   │
-   ├──▶ Valkey (session create/validate)
-   │
-   └──▶ JWT Issue
-        ├── Access Token (RS256, 15min, memory)
-        └── Refresh Token (HttpOnly Cookie, 14d)
-```
-
-### Token Strategy
-
-| Token         | TTL | Storage         | Verification   |
-| ------------- | --- | --------------- | -------------- |
-| Access Token  | 15m | Client memory   | Local (JWKS)   |
-| Refresh Token | 14d | HttpOnly Cookie | Valkey session |
-
-**Hybrid Verification**: Local JWT validation + Valkey session check = Fast + Instant revocation
-
-## API Endpoints
-
-### Identity Module
-
-```
-POST   /v1/identity/register          # New account
-POST   /v1/identity/login             # Login
-POST   /v1/identity/logout            # Logout
-POST   /v1/identity/refresh           # Refresh token
-GET    /v1/identity/me                # Current account
-PATCH  /v1/identity/me                # Update profile
-DELETE /v1/identity/me                # Delete account
-
-# Passkeys (WebAuthn)
-POST   /v1/identity/passkeys/register/options
-POST   /v1/identity/passkeys/register/verify
-POST   /v1/identity/passkeys/login/options
-POST   /v1/identity/passkeys/login/verify
-
-# OAuth
-GET    /v1/identity/oauth/:provider   # OAuth redirect
-GET    /v1/identity/oauth/:provider/callback
-```
-
-### Auth Module
-
-```
-# Roles & Permissions
-GET    /v1/auth/roles
-POST   /v1/auth/roles
-GET    /v1/auth/permissions
-
-# Operators
-GET    /v1/auth/operators
-POST   /v1/auth/operators
-PATCH  /v1/auth/operators/:id
-DELETE /v1/auth/operators/:id
-
-# Admin
-POST   /v1/admin/login
-GET    /v1/admin/me
-```
-
-### Legal Module
-
-```
-# Consent
-GET    /v1/legal/consents/required    # Required consents for country
-POST   /v1/legal/consents             # Submit consents
-GET    /v1/legal/consents/me          # My consents
-
-# Documents
-GET    /v1/legal/documents            # Legal documents
-GET    /v1/legal/documents/:type      # Specific document
-
-# DSR (Data Subject Requests)
-POST   /v1/legal/dsr/export           # Data export request
-POST   /v1/legal/dsr/delete           # Deletion request
-GET    /v1/legal/dsr/status/:id       # Request status
-```
-
-## Multi-App Support
-
-**Core Concept**: Single account, multiple apps (any TLD), per-app access control.
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│              Identity Service (Single Instance)                  │
-├─────────────────────────────────────────────────────────────────┤
-│ accounts.girok.dev │ accounts.vero.net │ accounts.example.com  │
-│         │                   │                    │              │
-│         ▼                   ▼                    ▼              │
-│    ┌─────────┐        ┌─────────┐         ┌─────────┐          │
-│    │ my-girok│        │  vero   │         │ example │          │
-│    │  app_id │        │  app_id │         │ app_id  │          │
-│    └─────────┘        └─────────┘         └─────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**Supported TLDs**: .dev, .com, .net, .io, .co.kr, etc. (any domain)
+## App Management
 
 ### App Registry
 
@@ -206,14 +186,16 @@ interface AppRegistry {
   id: string; // UUIDv7
   slug: string; // 'my-girok', 'vero'
   name: string;
-  domain: string; // 'girok.dev', 'vero.dev'
+  domain: string; // 'girok.dev', 'vero.net'
   identityDomain: string; // 'accounts.girok.dev'
   apiDomain: string; // 'api.girok.dev'
   allowedOrigins: string[];
   status: 'ACTIVE' | 'INACTIVE';
 
-  // Security configuration (per-app)
+  // Related configurations
   securityConfig: AppSecurityConfig;
+  serviceStatus: AppServiceStatus;
+  versionPolicy: AppVersionPolicy;
 }
 ```
 
@@ -238,29 +220,28 @@ spec:
     - https://www.vero.net
   securityConfig:
     securityLevel: STRICT
-    domainValidation:
-      enabled: true
-    headerValidation:
-      enabled: true
-      requireAppId: true
-      requireAppSecret: true
+  versionPolicy:
+    ios:
+      minVersion: '2.0.0'
+      currentVersion: '2.5.0'
+    android:
+      minVersion: '2.0.0'
+      currentVersion: '2.5.0'
 ```
 
-**App Management Flow**:
+**Management Flow**:
 
-| Operation         | Method                    | Notes                 |
-| ----------------- | ------------------------- | --------------------- |
-| Create/Update App | GitOps (PR → ArgoCD sync) | Auditable, reviewable |
-| Emergency Block   | Admin UI                  | Immediate effect      |
-| Secret Rotation   | Vault + Admin UI          | Automated or manual   |
-| Test Mode Toggle  | Admin UI                  | Quick enable/disable  |
+| Operation           | Method                    | Notes                 |
+| ------------------- | ------------------------- | --------------------- |
+| Create/Update App   | GitOps (PR → ArgoCD sync) | Auditable, reviewable |
+| Emergency Block     | Admin UI                  | Immediate effect      |
+| Secret Rotation     | Vault + Admin UI          | Automated or manual   |
+| Test Mode Toggle    | Admin UI                  | Quick enable/disable  |
+| Force Update Config | Admin UI or GitOps        | Version requirements  |
 
-**GitOps Benefits**:
+---
 
-- **Audit Trail**: All changes via PR with review
-- **Rollback**: Git revert for quick rollback
-- **Consistency**: Single source of truth
-- **Security**: No direct DB access needed
+## Security
 
 ### Triple-Layer Access Control
 
@@ -274,85 +255,13 @@ spec:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Security Enforcement**:
-
 | Layer            | Can Disable? | Notes                           |
 | ---------------- | ------------ | ------------------------------- |
 | Domain (Layer 1) | Yes          | For dev/staging environments    |
 | JWT (Layer 2)    | **NO**       | Always required, non-negotiable |
 | Header (Layer 3) | Yes          | For internal tools, testing     |
 
-### JWT Access Control (RFC 9068)
-
-```typescript
-// JWT Payload - Per-app access control
-interface JWTPayload {
-  sub: string; // Account ID
-  aud: string; // App ID (audience) - Layer 2
-  iss: string; // 'accounts.girok.dev'
-  iat: number;
-  exp: number;
-
-  // App-specific claims
-  apps: {
-    [appId: string]: {
-      status: 'ACTIVE' | 'SUSPENDED';
-      countryCode: string;
-      permissions: string[];
-    };
-  };
-}
-```
-
-### Header-based App Authentication (Layer 3)
-
-```typescript
-// Required headers for API requests
-interface AppAuthHeaders {
-  'X-App-ID': string; // App identifier (e.g., 'my-girok')
-  'X-App-Secret': string; // App secret key (hashed, rotatable)
-  Authorization: string; // Bearer <JWT>
-}
-
-// Validation flow:
-// 1. Validate X-App-ID exists in app_registry
-// 2. Validate X-App-Secret matches app's secret_hash
-// 3. Validate JWT signature and expiry
-// 4. Validate JWT aud === X-App-ID
-// 5. Validate request domain matches app's apiDomain
-```
-
-### Access Control Flow
-
-```
-Request to api.girok.dev
-         │
-         ▼
-┌─────────────────────────────────────┐
-│ Layer 1: Domain Check (Configurable)│
-│ Skip if: testMode OR disabled       │
-└─────────────────┬───────────────────┘
-                  │ ✅ or SKIP
-                  ▼
-┌─────────────────────────────────────┐
-│ Layer 2: JWT Check (ALWAYS)         │
-│ JWT valid? aud === X-App-ID?        │
-│ ⚠️ CANNOT BE DISABLED               │
-└─────────────────┬───────────────────┘
-                  │ ✅
-                  ▼
-┌─────────────────────────────────────┐
-│ Layer 3: Header Check (Configurable)│
-│ Skip if: testMode OR disabled       │
-└─────────────────┬───────────────────┘
-                  │ ✅ or SKIP
-                  ▼
-            Access Granted
-```
-
-### Per-Service Security Configuration
-
-Each app can configure security levels via Admin UI or GitOps:
+### Per-App Security Configuration
 
 ```typescript
 interface AppSecurityConfig {
@@ -362,7 +271,7 @@ interface AppSecurityConfig {
   // Layer 1: Domain validation
   domainValidation: {
     enabled: boolean;
-    allowedDomains: string[]; // e.g., ['api.girok.dev', 'localhost:3000']
+    allowedDomains: string[];
   };
 
   // Layer 2: JWT validation (ALWAYS REQUIRED)
@@ -378,7 +287,6 @@ interface AppSecurityConfig {
     requireAppSecret: boolean;
   };
 
-  // Test mode
   testMode: TestModeConfig;
 }
 ```
@@ -390,6 +298,47 @@ interface AppSecurityConfig {
 | STRICT   | ✅     | ✅  | ✅     | Production (default)  |
 | STANDARD | ❌     | ✅  | ✅     | Staging, internal API |
 | RELAXED  | ❌     | ✅  | ❌     | Development, testing  |
+
+### Access Control Flow
+
+```
+Request to api.girok.dev
+         │
+         ▼
+┌─────────────────────────────────────┐
+│ 0. Version Check                    │
+│ X-App-Version >= minVersion?        │
+│ [Force update if below minimum]     │
+└─────────────────┬───────────────────┘
+                  │ ✅ or FORCE_UPDATE
+                  ▼
+┌─────────────────────────────────────┐
+│ 1. Service Status Check             │
+│ App status != MAINTENANCE/SUSPENDED?│
+└─────────────────┬───────────────────┘
+                  │ ✅ or SERVICE_UNAVAILABLE
+                  ▼
+┌─────────────────────────────────────┐
+│ 2. Domain Check (Configurable)      │
+│ Skip if: testMode OR disabled       │
+└─────────────────┬───────────────────┘
+                  │ ✅ or SKIP
+                  ▼
+┌─────────────────────────────────────┐
+│ 3. JWT Check (ALWAYS)               │
+│ JWT valid? aud === X-App-ID?        │
+│ ⚠️ CANNOT BE DISABLED               │
+└─────────────────┬───────────────────┘
+                  │ ✅
+                  ▼
+┌─────────────────────────────────────┐
+│ 4. Header Check (Configurable)      │
+│ Skip if: testMode OR disabled       │
+└─────────────────┬───────────────────┘
+                  │ ✅ or SKIP
+                  ▼
+            Access Granted
+```
 
 ### Test Mode
 
@@ -404,22 +353,6 @@ interface TestModeConfig {
 }
 ```
 
-**Test Mode API**:
-
-```
-# Enable test mode
-POST /v1/admin/apps/:appId/test-mode
-{
-  "enabled": true,
-  "allowedIPs": ["10.0.0.0/8", "192.168.0.0/16"],
-  "expiresAt": "2025-01-15T00:00:00Z",
-  "disabledLayers": ["domain", "header"]
-}
-
-# Disable test mode
-DELETE /v1/admin/apps/:appId/test-mode
-```
-
 **Constraints**:
 
 | Setting        | Constraint     | Reason                  |
@@ -429,39 +362,37 @@ DELETE /v1/admin/apps/:appId/test-mode
 | JWT Validation | Cannot disable | Security baseline       |
 | Audit Logging  | Always enabled | Compliance requirement  |
 
-### Service Lifecycle Management
+---
 
-Per-app maintenance and shutdown management:
+## Service Lifecycle Management
+
+### Service Status
 
 ```typescript
 interface AppServiceStatus {
   appId: string;
-
-  // Service status
   status: 'ACTIVE' | 'MAINTENANCE' | 'SUSPENDED' | 'TERMINATED';
 
-  // Maintenance mode
   maintenance: {
     enabled: boolean;
-    message: string; // User-facing message
-    allowedRoles: string[]; // Roles that can bypass (admin, tester)
-    startAt: Date | null; // Scheduled start
-    endAt: Date | null; // Estimated end
-    allowReadOnly: boolean; // Allow read operations during maintenance
+    message: string;
+    allowedRoles: string[]; // Bypass roles
+    startAt: Date | null;
+    endAt: Date | null;
+    allowReadOnly: boolean;
   };
 
-  // Graceful shutdown
   shutdown: {
     scheduled: boolean;
     scheduledAt: Date | null;
     reason: string;
-    notifyUsers: boolean; // Send notification to users
-    dataRetentionDays: number; // Days to retain data after shutdown
+    notifyUsers: boolean;
+    dataRetentionDays: number;
   };
 }
 ```
 
-**Service Status Transitions**:
+**Status Transitions**:
 
 ```
 ACTIVE ──┬──▶ MAINTENANCE ──▶ ACTIVE
@@ -473,58 +404,286 @@ ACTIVE ──┬──▶ MAINTENANCE ──▶ ACTIVE
          └──▶ TERMINATED (scheduled shutdown)
 ```
 
-**Admin API for Service Management**:
+### Admin API
 
 ```
-# Set maintenance mode
-POST /v1/admin/apps/:appId/maintenance
-{
-  "enabled": true,
-  "message": "Scheduled maintenance. Service will be back at 10:00 KST.",
-  "allowedRoles": ["admin", "tester"],
-  "endAt": "2025-01-15T10:00:00+09:00",
-  "allowReadOnly": true
-}
+# Maintenance
+POST   /v1/admin/apps/:appId/maintenance
+DELETE /v1/admin/apps/:appId/maintenance
 
-# Schedule shutdown
-POST /v1/admin/apps/:appId/shutdown
-{
-  "scheduledAt": "2025-03-01T00:00:00Z",
-  "reason": "Service end of life",
-  "notifyUsers": true,
-  "dataRetentionDays": 90
-}
+# Suspension
+POST   /v1/admin/apps/:appId/suspend
+POST   /v1/admin/apps/:appId/activate
 
-# Suspend app (immediate)
-POST /v1/admin/apps/:appId/suspend
-{
-  "reason": "Security incident detected"
-}
-
-# Reactivate app
-POST /v1/admin/apps/:appId/activate
+# Shutdown
+POST   /v1/admin/apps/:appId/shutdown
+DELETE /v1/admin/apps/:appId/shutdown
 ```
 
-### Account-App Relationship
+---
+
+## App Version Policy
+
+### Version Requirements
 
 ```typescript
-interface AccountApp {
-  accountId: string;
-  appId: string; // Matches JWT 'aud' claim
-  status: 'ACTIVE' | 'SUSPENDED';
-  joinedAt: Date;
-  countryCode: string; // Per-app country consent
+interface AppVersionPolicy {
+  appId: string;
+  platform: 'IOS' | 'ANDROID' | 'WEB';
+
+  // Version requirements
+  minVersion: string; // Below → Force update
+  recommendedVersion: string; // Below → Soft update
+  currentVersion: string; // Latest version
+
+  // Force update config
+  forceUpdate: {
+    enabled: boolean;
+    message: string; // "Security update required"
+    storeUrl: string; // App Store / Play Store URL
+  };
+
+  // Soft update config
+  softUpdate: {
+    enabled: boolean;
+    message: string; // "New features available"
+    dismissible: boolean;
+    remindAfterDays: number;
+  };
+
+  // Deprecated versions (specific block)
+  deprecatedVersions: string[]; // ['1.0.0', '1.0.1']
 }
 ```
 
-## Tech Stack
+### Version Check Flow
 
-| Category | Technology                |
-| -------- | ------------------------- |
-| Runtime  | Node.js 24, NestJS 11     |
-| Database | PostgreSQL 16, Prisma 6   |
-| Cache    | Valkey (Redis-compatible) |
-| Auth     | JWT RS256, Passkeys       |
+```
+Client Request
+    │
+    ├── Header: X-App-Version: 2.3.0
+    ├── Header: X-App-Platform: IOS
+    │
+    ▼
+┌────────────────────────────────────┐
+│ Version Policy Check               │
+├────────────────────────────────────┤
+│ if (version in deprecatedVersions) │
+│   → 426 UPGRADE_REQUIRED           │
+│                                    │
+│ if (version < minVersion)          │
+│   → 426 UPGRADE_REQUIRED           │
+│   → Body: { forceUpdate: true }    │
+│                                    │
+│ if (version < recommendedVersion)  │
+│   → 200 OK                         │
+│   → Header: X-Update-Available     │
+│                                    │
+│ else                               │
+│   → 200 OK                         │
+└────────────────────────────────────┘
+```
+
+### Version Response
+
+```typescript
+// 426 Upgrade Required
+interface ForceUpdateResponse {
+  error: 'UPGRADE_REQUIRED';
+  forceUpdate: true;
+  message: string;
+  storeUrl: string;
+  minVersion: string;
+  currentVersion: string;
+}
+
+// 200 OK with soft update header
+interface SoftUpdateHeaders {
+  'X-Update-Available': 'true';
+  'X-Current-Version': string;
+  'X-Update-Message': string;
+}
+```
+
+### Admin API
+
+```
+# Get version policy
+GET /v1/admin/apps/:appId/versions
+
+# Update version policy
+PATCH /v1/admin/apps/:appId/versions/:platform
+{
+  "minVersion": "2.0.0",
+  "recommendedVersion": "2.5.0",
+  "currentVersion": "2.5.1",
+  "forceUpdate": {
+    "enabled": true,
+    "message": "Critical security update"
+  }
+}
+
+# Deprecate specific version
+POST /v1/admin/apps/:appId/versions/:platform/deprecate
+{
+  "version": "1.9.0",
+  "reason": "Security vulnerability CVE-2025-XXXX"
+}
+```
+
+---
+
+## Authentication
+
+### Token Strategy
+
+| Token         | TTL | Storage         | Verification   |
+| ------------- | --- | --------------- | -------------- |
+| Access Token  | 15m | Client memory   | Local (JWKS)   |
+| Refresh Token | 14d | HttpOnly Cookie | Valkey session |
+
+### JWT Payload (RFC 9068)
+
+```typescript
+interface JWTPayload {
+  sub: string; // Account ID
+  aud: string; // App ID (audience)
+  iss: string; // 'accounts.girok.dev'
+  iat: number;
+  exp: number;
+
+  apps: {
+    [appId: string]: {
+      status: 'ACTIVE' | 'SUSPENDED';
+      countryCode: string;
+      permissions: string[];
+    };
+  };
+}
+```
+
+---
+
+## API Endpoints
+
+### Identity Module
+
+```
+POST   /v1/identity/register
+POST   /v1/identity/login
+POST   /v1/identity/logout
+POST   /v1/identity/refresh
+GET    /v1/identity/me
+PATCH  /v1/identity/me
+DELETE /v1/identity/me
+
+# Passkeys
+POST   /v1/identity/passkeys/register/options
+POST   /v1/identity/passkeys/register/verify
+POST   /v1/identity/passkeys/login/options
+POST   /v1/identity/passkeys/login/verify
+
+# OAuth
+GET    /v1/identity/oauth/:provider
+GET    /v1/identity/oauth/:provider/callback
+```
+
+### Auth Module
+
+```
+GET    /v1/auth/roles
+POST   /v1/auth/roles
+GET    /v1/auth/permissions
+
+GET    /v1/auth/operators
+POST   /v1/auth/operators
+PATCH  /v1/auth/operators/:id
+DELETE /v1/auth/operators/:id
+
+POST   /v1/admin/login
+GET    /v1/admin/me
+```
+
+### Legal Module
+
+```
+GET    /v1/legal/consents/required
+POST   /v1/legal/consents
+GET    /v1/legal/consents/me
+
+GET    /v1/legal/documents
+GET    /v1/legal/documents/:type
+
+POST   /v1/legal/dsr/export
+POST   /v1/legal/dsr/delete
+GET    /v1/legal/dsr/status/:id
+```
+
+### Admin App Management
+
+```
+# Security
+GET    /v1/admin/apps/:appId/security
+PATCH  /v1/admin/apps/:appId/security
+
+# Test Mode
+POST   /v1/admin/apps/:appId/test-mode
+DELETE /v1/admin/apps/:appId/test-mode
+
+# Service Status
+POST   /v1/admin/apps/:appId/maintenance
+DELETE /v1/admin/apps/:appId/maintenance
+POST   /v1/admin/apps/:appId/suspend
+POST   /v1/admin/apps/:appId/activate
+POST   /v1/admin/apps/:appId/shutdown
+
+# Version Policy
+GET    /v1/admin/apps/:appId/versions
+PATCH  /v1/admin/apps/:appId/versions/:platform
+POST   /v1/admin/apps/:appId/versions/:platform/deprecate
+```
+
+---
+
+## Global Law Registry
+
+| Code | Country | Name                                | Key Requirements            |
+| ---- | ------- | ----------------------------------- | --------------------------- |
+| PIPA | KR      | Personal Information Protection Act | Age 14+, night push consent |
+| GDPR | EU      | General Data Protection Regulation  | Age 16+, data portability   |
+| CCPA | US      | California Consumer Privacy Act     | Age 13+, opt-out rights     |
+| APPI | JP      | Act on Protection of Personal Info  | Cross-border transfer       |
+
+---
+
+## Multi-App Support
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              Identity Service (Single Instance)                  │
+├─────────────────────────────────────────────────────────────────┤
+│ accounts.girok.dev │ accounts.vero.net │ accounts.example.com  │
+│         │                   │                    │              │
+│         ▼                   ▼                    ▼              │
+│    ┌─────────┐        ┌─────────┐         ┌─────────┐          │
+│    │ my-girok│        │  vero   │         │ example │          │
+│    │  app_id │        │  app_id │         │ app_id  │          │
+│    └─────────┘        └─────────┘         └─────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Supported TLDs**: .dev, .com, .net, .io, .co.kr, etc. (any domain)
+
+### Domain Routing
+
+| Domain             | Service          | Purpose              |
+| ------------------ | ---------------- | -------------------- |
+| accounts.girok.dev | Identity Service | Login, register, SSO |
+| api.girok.dev      | Personal Service | Business API         |
+| my.girok.dev       | Web App          | Frontend             |
+| admin.girok.dev    | Web Admin        | Admin console        |
+
+---
 
 ## Environment Variables
 
@@ -539,9 +698,10 @@ AUTH_DATABASE_URL=postgresql://...auth_db
 LEGAL_DATABASE_URL=postgresql://...legal_db
 
 # JWT
-JWT_SECRET=your-secret
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=14d
+JWT_PRIVATE_KEY=...   # RS256 private key
+JWT_PUBLIC_KEY=...    # RS256 public key
+JWT_ACCESS_TTL=15m
+JWT_REFRESH_TTL=14d
 
 # Valkey
 VALKEY_HOST=localhost
@@ -549,125 +709,21 @@ VALKEY_PORT=6379
 VALKEY_PASSWORD=
 ```
 
-## Future Extraction Path
+---
 
-When scale requires service separation:
+## 2025 Best Practices Compliance
 
-```
-Phase 1 (Current)
-└── Identity Service (combined)
-    ├── Identity Module → identity_db
-    ├── Auth Module → auth_db
-    └── Legal Module → legal_db
-
-Phase 2 (Future - if needed)
-├── Identity Service → identity_db
-├── Auth Service → auth_db
-└── Legal Service → legal_db
-```
-
-**No database migration required** - DBs already separated.
-
-## Relationship with auth-service
-
-| Current (auth-service) | Future (identity-service) |
-| ---------------------- | ------------------------- |
-| auth/                  | Identity Module           |
-| users/                 | Identity Module           |
-| oauth-config/          | Identity Module           |
-| admin/                 | Auth Module               |
-| operator/              | Auth Module               |
-| services/              | Auth Module               |
-| legal/                 | Legal Module              |
-
-## Domain Management Strategy
-
-### URL Routing by Domain
-
-| Domain             | Service          | Purpose              |
-| ------------------ | ---------------- | -------------------- |
-| accounts.girok.dev | Identity Service | Login, register, SSO |
-| api.girok.dev      | Personal Service | Business API         |
-| my.girok.dev       | Web App          | Frontend             |
-| admin.girok.dev    | Web Admin        | Admin console        |
-
-### Multi-App Domain Pattern
-
-```
-App: my-girok
-├── accounts.girok.dev → Identity Service (auth)
-├── api.girok.dev      → Personal Service (business)
-└── my.girok.dev       → Web App (frontend)
-
-App: vero (future)
-├── accounts.vero.dev  → Identity Service (shared)
-├── api.vero.dev       → Vero Service (business)
-└── vero.dev           → Web App (frontend)
-```
-
-### Cilium Gateway Routing
-
-```yaml
-# HTTPRoute for Identity Service
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: identity-route
-spec:
-  hostnames:
-    - 'accounts.girok.dev'
-    - 'accounts.vero.dev' # Multi-app support
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /v1/identity
-      backendRefs:
-        - name: identity-service
-          port: 3005
-```
-
-### CORS Configuration by Domain
-
-```typescript
-// Per-app CORS origins
-const corsConfig = {
-  'my-girok': ['https://my.girok.dev', 'https://admin.girok.dev'],
-  vero: ['https://vero.dev', 'https://admin.vero.dev'],
-};
-```
-
-### Cookie Domain Strategy
-
-```typescript
-// Session cookie configuration
-const cookieConfig = {
-  domain: '.girok.dev', // Shared across subdomains
-  secure: true,
-  httpOnly: true,
-  sameSite: 'lax',
-};
-
-// For cross-domain (girok.dev ↔ vero.dev)
-// Use token-based auth, not cookies
-```
-
-### Database Isolation by Domain
-
-| Domain    | identity_db | auth_db | legal_db |
-| --------- | ----------- | ------- | -------- |
-| App Data  | Shared      | Shared  | Shared   |
-| User Data | Per-app     | Per-app | Per-app  |
-| Consent   | Per-app     | -       | Per-app  |
-
-```sql
--- App-scoped queries
-SELECT * FROM accounts
-WHERE id IN (
-  SELECT account_id FROM account_apps
-  WHERE app_id = 'my-girok-uuid'
-);
-```
+| Standard                      | Status | Implementation                   |
+| ----------------------------- | ------ | -------------------------------- |
+| RFC 9700 (OAuth 2.0 Security) | ✅     | PKCE, no implicit flow           |
+| RFC 9068 (JWT Access Token)   | ✅     | `aud` claim, RS256               |
+| RFC 9449 (DPoP)               | Ready  | Prepared for future              |
+| NIST 800-207 (Zero Trust)     | ✅     | 3-Layer verification, continuous |
+| OWASP API Security Top 10     | ✅     | Rate limit, input validation     |
+| GDPR/PIPA/CCPA                | ✅     | Consent management, DSR          |
+| Semantic Versioning (SemVer)  | ✅     | App version policy               |
+| GitOps (CNCF)                 | ✅     | Git as SSOT, ArgoCD              |
+| 12-Factor App                 | ✅     | Config via env, stateless        |
 
 ---
 
