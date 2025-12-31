@@ -130,7 +130,7 @@ pnpm prisma db pull && pnpm prisma generate
 ```sql
 -- +goose Up
 CREATE TABLE features (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,  -- UUIDv7 from application (not gen_random_uuid)
     created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 );
 
