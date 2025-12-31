@@ -1,6 +1,47 @@
 # Architecture (2025)
 
-> Hybrid: REST + gRPC + GraphQL | Event-Driven
+> Hybrid: REST + gRPC + GraphQL | Identity Platform | Event-Driven
+
+## Identity Platform Strategy
+
+**Purpose**: Multi-app user management platform for creating N apps quickly.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Identity Service (Combined)                   │
+│                                                                  │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
+│   │  Identity   │   │    Auth     │   │    Legal    │           │
+│   │   Module    │   │   Module    │   │   Module    │           │
+│   │ (Accounts)  │   │  (Authz)    │   │ (Consent)   │           │
+│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
+└──────────┼─────────────────┼─────────────────┼───────────────────┘
+           │                 │                 │
+           ▼                 ▼                 ▼
+    ┌────────────┐    ┌────────────┐    ┌────────────┐
+    │identity_db │    │  auth_db   │    │  legal_db  │
+    │   ~15 tbl  │    │   ~20 tbl  │    │   ~12 tbl  │
+    └────────────┘    └────────────┘    └────────────┘
+```
+
+**Key Principle**: Services combined (operational simplicity) + DBs pre-separated (future extraction).
+
+### Supported Apps
+
+| App       | Domain        | Status  |
+| --------- | ------------- | ------- |
+| my-girok  | api.girok.dev | Active  |
+| vero      | api.vero.dev  | Planned |
+| future... | api.\*.dev    | -       |
+
+### Global Law Coverage
+
+| Code | Country | Key Requirements          |
+| ---- | ------- | ------------------------- |
+| PIPA | KR      | Age 14+, night push       |
+| GDPR | EU      | Age 16+, data portability |
+| CCPA | US      | Age 13+, opt-out          |
+| APPI | JP      | Cross-border transfer     |
 
 ## Communication Strategy
 
@@ -22,10 +63,10 @@
                               │
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ GraphQL BFF  │     │ Auth Service │     │ WS Gateway   │
-│  (Session)   │     │ (REST+gRPC)  │     │ (Socket.io)  │
-└──────┬───────┘     └──────────────┘     └──────────────┘
+┌──────────────┐     ┌────────────────┐     ┌──────────────┐
+│ GraphQL BFF  │     │Identity Service│     │ WS Gateway   │
+│  (Session)   │     │  (REST+gRPC)   │     │ (Socket.io)  │
+└──────┬───────┘     └────────────────┘     └──────────────┘
        │ gRPC
        ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -128,69 +169,65 @@ import { AuthService } from '../auth-service'; // NEVER
 
 ## URL Mapping
 
-| URL                   | Service      | Status |
-| --------------------- | ------------ | ------ |
-| my.girok.dev          | web-main     | ✅     |
-| api.girok.dev/graphql | graphql-bff  | 🔲     |
-| auth.girok.dev        | auth-service | ✅     |
-| ws.girok.dev          | ws-gateway   | 🔲     |
+| URL                   | Service          | Status |
+| --------------------- | ---------------- | ------ |
+| my.girok.dev          | web-main         | ✅     |
+| api.girok.dev/graphql | graphql-bff      | 🔲     |
+| accounts.girok.dev    | identity-service | 🔲     |
+| auth.girok.dev        | auth-service     | ✅     |
+| ws.girok.dev          | ws-gateway       | 🔲     |
 
 ---
 
-## Central Auth Architecture
+## Service Evolution
 
-### Multi-Service Account System
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                    Auth Service                           │
-├──────────────────────────────────────────────────────────┤
-│  Users          Services        Law Registry             │
-│  ├─UserServices ├─ConsentReqs   ├─PIPA (KR)             │
-│  ├─Consents     └─Operators     ├─GDPR (EU)             │
-│  └─PersonalInfo                 ├─APPI (JP)             │
-│                                 └─CCPA (US)             │
-└──────────────────────────────────────────────────────────┘
-```
-
-### Account Flow
+### Current State (auth-service)
 
 ```
-User Registration
-       │
-       ▼
-┌─────────────────┐
-│ SERVICE Mode    │ (Default)
-│ - Per-service   │
-│ - Per-country   │
-└────────┬────────┘
-         │ Link Request + Accept
-         ▼
-┌─────────────────┐
-│ UNIFIED Mode    │
-│ - Cross-service │
-│ - Single token  │
-│ - Shared info   │
-└─────────────────┘
+auth-service (1 service, 1 DB)
+├── auth/           # Login, JWT
+├── users/          # User management
+├── oauth-config/   # OAuth providers
+├── admin/          # Admin management
+├── operator/       # Service operators
+├── services/       # Multi-service logic
+└── legal/          # Consent management
 ```
 
-### Guard Flow
+### Future State (identity-service)
 
 ```
-Request
-   │
-   ▼
-UnifiedAuthGuard (routes by token type)
-   │
-   ├─ USER_ACCESS ──▶ validateUser()
-   ├─ ADMIN_ACCESS ──▶ validateAdmin()
-   └─ OPERATOR_ACCESS ──▶ validateOperator()
-   │
-   ▼
-ServiceAccessGuard (optional)
-   │
-   ▼
-CountryConsentGuard (optional)
+identity-service (1 service, 3 DBs)
+├── Identity Module → identity_db
+│   ├── accounts, credentials, sessions
+│   ├── devices, app_registry
+│   └── OAuth, Passkeys
+├── Auth Module → auth_db
+│   ├── roles, permissions, admins
+│   ├── operators, sanctions
+│   └── api_keys
+└── Legal Module → legal_db
+    ├── laws, law_requirements
+    ├── consent_documents
+    └── account_consents, DSR
+```
+
+### Migration Path
+
+```
+Phase 1 (Current)
+└── auth-service: All-in-one (girok_auth_db)
+
+Phase 2 (Transition)
+└── identity-service: Combined service, 3 DBs
+    ├── identity_db
+    ├── auth_db
+    └── legal_db
+
+Phase 3 (If needed)
+├── identity-service → identity_db
+├── auth-service → auth_db
+└── legal-service → legal_db
 ```
 
 ### Token Types
@@ -201,6 +238,20 @@ CountryConsentGuard (optional)
 | ADMIN_ACCESS    | scope, permissions, level          | Admin API    |
 | OPERATOR_ACCESS | serviceSlug, countryCode           | Operator API |
 
+### Guard Flow
+
+```
+Request → UnifiedAuthGuard (routes by token type)
+   │
+   ├─ USER_ACCESS ──▶ validateUser()
+   ├─ ADMIN_ACCESS ──▶ validateAdmin()
+   └─ OPERATOR_ACCESS ──▶ validateOperator()
+   │
+   ▼
+ServiceAccessGuard / CountryConsentGuard (optional)
+```
+
 ---
 
+**Identity Platform details**: `.ai/services/identity-service.md`
 **Full roadmap**: `docs/ARCHITECTURE_ROADMAP.md`
