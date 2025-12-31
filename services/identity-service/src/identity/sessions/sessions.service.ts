@@ -5,28 +5,12 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma, Session } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
+import { PaginatedResponse } from '../../common/pagination';
 import { CreateSessionDto, RevokeSessionDto, SessionQueryDto } from './dto';
 import * as crypto from 'crypto';
-
-/**
- * Pagination meta information
- */
-export interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-/**
- * Paginated response wrapper
- */
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: PaginationMeta;
-}
 
 /**
  * Session response type
@@ -56,9 +40,17 @@ export interface CreatedSessionResponse extends SessionResponse {
 @Injectable()
 export class SessionsService {
   private readonly logger = new Logger(SessionsService.name);
-  private readonly DEFAULT_SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly defaultSessionDurationMs: number;
 
-  constructor(private readonly prisma: IdentityPrismaService) {}
+  constructor(
+    private readonly prisma: IdentityPrismaService,
+    private readonly configService: ConfigService,
+  ) {
+    this.defaultSessionDurationMs = this.configService.get<number>(
+      'session.defaultDurationMs',
+      24 * 60 * 60 * 1000, // 24 hours default
+    );
+  }
 
   /**
    * Generate a secure random token
@@ -108,7 +100,7 @@ export class SessionsService {
     const tokenHash = this.hashToken(accessToken);
 
     // Calculate expiration
-    const expiresInMs = dto.expiresInMs || this.DEFAULT_SESSION_DURATION_MS;
+    const expiresInMs = dto.expiresInMs || this.defaultSessionDurationMs;
     const expiresAt = new Date(Date.now() + expiresInMs);
 
     const session = await this.prisma.session.create({
@@ -224,7 +216,7 @@ export class SessionsService {
     const newRefreshTokenHash = this.hashToken(newRefreshToken);
 
     // Extend expiration
-    const newExpiresAt = new Date(Date.now() + this.DEFAULT_SESSION_DURATION_MS);
+    const newExpiresAt = new Date(Date.now() + this.defaultSessionDurationMs);
 
     const updatedSession = await this.prisma.session.update({
       where: { id: session.id },
@@ -322,15 +314,12 @@ export class SessionsService {
       this.prisma.session.count({ where }),
     ]);
 
-    return {
-      data: sessions.map((session) => this.toSessionResponse(session)),
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return PaginatedResponse.create(
+      sessions.map((session) => this.toSessionResponse(session)),
+      total,
+      page,
+      limit,
+    );
   }
 
   /**

@@ -56,16 +56,19 @@ export class CreateAccountDto {
   username!: string;
 
   @ApiPropertyOptional({
-    description: 'Password (minimum 8 characters, required for LOCAL provider)',
-    example: 'SecureP@ss123',
+    description:
+      'Password (8-72 characters, must contain uppercase, lowercase, number, and special character)',
+    example: 'SecureP@ss123!',
     minLength: 8,
+    maxLength: 72,
   })
   @IsOptional()
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+  @MaxLength(72, { message: 'Password must not exceed 72 characters (bcrypt limit)' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/, {
     message:
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
   })
   password?: string;
 

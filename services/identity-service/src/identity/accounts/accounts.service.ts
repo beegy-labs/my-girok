@@ -6,32 +6,17 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
+import { PaginatedResponse } from '../../common/pagination';
 import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-account.dto';
 import { UpdateAccountDto, AccountStatus, ChangePasswordDto } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-
-/**
- * Pagination meta information
- */
-export interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-/**
- * Paginated response wrapper
- */
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: PaginationMeta;
-}
+import * as OTPAuth from 'otpauth';
 
 /**
  * Account query parameters
@@ -60,24 +45,38 @@ export interface MfaSetupResponse {
 @Injectable()
 export class AccountsService {
   private readonly logger = new Logger(AccountsService.name);
-  private readonly BCRYPT_ROUNDS = 12;
-  private readonly EXTERNAL_ID_PREFIX = 'ACC_';
-  private readonly EXTERNAL_ID_LENGTH = 10;
+
+  // Config values with defaults
+  private readonly bcryptRounds: number;
+  private readonly externalIdPrefix: string;
+  private readonly externalIdLength: number;
+  private readonly lockThreshold: number;
+  private readonly lockDurationMinutes: number;
+  private readonly mfaBackupCodesCount: number;
 
   constructor(
     private readonly prisma: IdentityPrismaService,
     private readonly cryptoService: CryptoService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // Load config values
+    this.bcryptRounds = this.configService.get<number>('security.bcryptRounds', 12);
+    this.externalIdPrefix = this.configService.get<string>('account.externalIdPrefix', 'ACC_');
+    this.externalIdLength = this.configService.get<number>('account.externalIdLength', 10);
+    this.lockThreshold = this.configService.get<number>('security.accountLockThreshold', 5);
+    this.lockDurationMinutes = this.configService.get<number>(
+      'security.accountLockDurationMinutes',
+      15,
+    );
+    this.mfaBackupCodesCount = this.configService.get<number>('security.mfaBackupCodesCount', 10);
+  }
 
   /**
    * Generate a unique external ID for accounts
    */
   private generateExternalId(): string {
-    const randomPart = crypto
-      .randomBytes(5)
-      .toString('base64url')
-      .slice(0, this.EXTERNAL_ID_LENGTH);
-    return `${this.EXTERNAL_ID_PREFIX}${randomPart}`;
+    const randomPart = crypto.randomBytes(5).toString('base64url').slice(0, this.externalIdLength);
+    return `${this.externalIdPrefix}${randomPart}`;
   }
 
   /**
@@ -116,7 +115,7 @@ export class AccountsService {
     // Hash password if provided
     let hashedPassword: string | null = null;
     if (dto.password) {
-      hashedPassword = await bcrypt.hash(dto.password, this.BCRYPT_ROUNDS);
+      hashedPassword = await bcrypt.hash(dto.password, this.bcryptRounds);
     }
 
     // Generate unique external ID
@@ -260,15 +259,12 @@ export class AccountsService {
       this.prisma.account.count({ where }),
     ]);
 
-    return {
-      data: accounts.map((account) => AccountEntity.fromPrisma(account)),
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return PaginatedResponse.create(
+      accounts.map((account) => AccountEntity.fromPrisma(account)),
+      total,
+      page,
+      limit,
+    );
   }
 
   /**
@@ -338,7 +334,7 @@ export class AccountsService {
       }
     }
 
-    const hashedPassword = await bcrypt.hash(dto.newPassword, this.BCRYPT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(dto.newPassword, this.bcryptRounds);
 
     await this.prisma.account.update({
       where: { id },
@@ -401,6 +397,7 @@ export class AccountsService {
   /**
    * Enable MFA for account
    * MFA secret is encrypted before storage for security
+   * Backup codes are hashed and stored in the database
    */
   async enableMfa(id: string, _method: string = 'TOTP'): Promise<MfaSetupResponse> {
     const account = await this.prisma.account.findUnique({
@@ -422,14 +419,18 @@ export class AccountsService {
     const encryptedSecret = this.cryptoService.encrypt(secret);
 
     // Generate backup codes
-    const backupCodes = Array.from({ length: 10 }, () =>
+    const backupCodes = Array.from({ length: this.mfaBackupCodesCount }, () =>
       crypto.randomBytes(4).toString('hex').toUpperCase(),
     );
+
+    // Hash backup codes before storing (one-way hash for security)
+    const hashedBackupCodes = backupCodes.map((code) => this.cryptoService.hash(code));
 
     await this.prisma.account.update({
       where: { id },
       data: {
         mfaSecret: encryptedSecret,
+        mfaBackupCodes: hashedBackupCodes,
       },
     });
 
@@ -438,12 +439,117 @@ export class AccountsService {
     return {
       secret,
       qrCode: `otpauth://totp/MyGirok:${account.email}?secret=${secret}&issuer=MyGirok`,
-      backupCodes,
+      backupCodes, // Return plain backup codes only once during setup
     };
   }
 
   /**
-   * Complete MFA setup after verification
+   * Verify TOTP code and complete MFA setup
+   * Uses otpauth library for RFC 6238 compliant verification
+   */
+  async verifyAndCompleteMfaSetup(id: string, code: string): Promise<void> {
+    const account = await this.prisma.account.findUnique({
+      where: { id },
+    });
+
+    if (!account) {
+      throw new NotFoundException(`Account with ID ${id} not found`);
+    }
+
+    if (!account.mfaSecret) {
+      throw new BadRequestException('MFA setup not initiated');
+    }
+
+    if (account.mfaEnabled) {
+      throw new ConflictException('MFA is already enabled');
+    }
+
+    // Decrypt the secret
+    const secret = this.cryptoService.decrypt(account.mfaSecret);
+
+    // Create TOTP instance for verification
+    const totp = new OTPAuth.TOTP({
+      issuer: 'MyGirok',
+      label: account.email,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret: OTPAuth.Secret.fromBase32(secret),
+    });
+
+    // Verify the code with a window of 1 (allows ±30 seconds drift)
+    const delta = totp.validate({ token: code, window: 1 });
+
+    if (delta === null) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    await this.prisma.account.update({
+      where: { id },
+      data: {
+        mfaEnabled: true,
+      },
+    });
+
+    this.logger.log(`MFA enabled for account ${id}`);
+  }
+
+  /**
+   * Verify TOTP code for authentication
+   * Returns true if code is valid (either TOTP or backup code)
+   */
+  async verifyMfaCode(id: string, code: string): Promise<boolean> {
+    const account = await this.prisma.account.findUnique({
+      where: { id },
+      select: { mfaSecret: true, mfaEnabled: true, mfaBackupCodes: true },
+    });
+
+    if (!account || !account.mfaEnabled || !account.mfaSecret) {
+      return false;
+    }
+
+    // First, try TOTP verification
+    try {
+      const secret = this.cryptoService.decrypt(account.mfaSecret);
+      const totp = new OTPAuth.TOTP({
+        issuer: 'MyGirok',
+        algorithm: 'SHA1',
+        digits: 6,
+        period: 30,
+        secret: OTPAuth.Secret.fromBase32(secret),
+      });
+
+      const delta = totp.validate({ token: code, window: 1 });
+      if (delta !== null) {
+        return true;
+      }
+    } catch (error) {
+      this.logger.error(`Failed to verify TOTP for account ${id}`, error);
+    }
+
+    // If TOTP fails, try backup codes
+    const codeHash = this.cryptoService.hash(code.toUpperCase());
+    const backupCodeIndex = account.mfaBackupCodes.findIndex((hash) => hash === codeHash);
+
+    if (backupCodeIndex !== -1) {
+      // Remove used backup code
+      const updatedBackupCodes = [...account.mfaBackupCodes];
+      updatedBackupCodes.splice(backupCodeIndex, 1);
+
+      await this.prisma.account.update({
+        where: { id },
+        data: { mfaBackupCodes: updatedBackupCodes },
+      });
+
+      this.logger.log(`Backup code used for account ${id}, ${updatedBackupCodes.length} remaining`);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Complete MFA setup after verification (deprecated - use verifyAndCompleteMfaSetup)
    */
   async completeMfaSetup(id: string): Promise<void> {
     const account = await this.prisma.account.findUnique({
@@ -552,15 +658,13 @@ export class AccountsService {
     }
 
     const failedAttempts = account.failedLoginAttempts + 1;
-    const lockThreshold = 5;
-    const lockDurationMinutes = 15;
 
     await this.prisma.account.update({
       where: { id },
       data: {
         failedLoginAttempts: failedAttempts,
-        ...(failedAttempts >= lockThreshold
-          ? { lockedUntil: new Date(Date.now() + lockDurationMinutes * 60 * 1000) }
+        ...(failedAttempts >= this.lockThreshold
+          ? { lockedUntil: new Date(Date.now() + this.lockDurationMinutes * 60 * 1000) }
           : {}),
       },
     });

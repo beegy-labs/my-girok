@@ -18,12 +18,8 @@ import {
   ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import {
-  SessionsService,
-  PaginatedResponse,
-  SessionResponse,
-  CreatedSessionResponse,
-} from './sessions.service';
+import { PaginatedResponse } from '../../common/pagination';
+import { SessionsService, SessionResponse, CreatedSessionResponse } from './sessions.service';
 import { CreateSessionDto, RefreshSessionDto, RevokeSessionDto, SessionQueryDto } from './dto';
 
 @ApiTags('sessions')

@@ -11,6 +11,7 @@ import {
   HttpStatus,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -19,7 +20,8 @@ import {
   ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { AccountsService, AccountQueryParams, PaginatedResponse } from './accounts.service';
+import { PaginatedResponse } from '../../common/pagination';
+import { AccountsService, AccountQueryParams } from './accounts.service';
 import { CreateAccountDto, AuthProvider } from './dto/create-account.dto';
 import {
   UpdateAccountDto,
@@ -37,6 +39,7 @@ export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 
   @Post()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   @ApiOperation({ summary: 'Create a new account' })
   @ApiResponse({
     status: 201,
@@ -45,6 +48,7 @@ export class AccountsController {
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 409, description: 'Email or username already exists' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async create(@Body() dto: CreateAccountDto): Promise<AccountEntity> {
     return this.accountsService.create(dto);
   }
@@ -204,6 +208,7 @@ export class AccountsController {
   }
 
   @Post(':id/change-password')
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 requests per minute
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Change account password' })
   @ApiParam({ name: 'id', description: 'Account UUID' })
@@ -211,6 +216,7 @@ export class AccountsController {
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 401, description: 'Current password incorrect' })
   @ApiResponse({ status: 404, description: 'Account not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async changePassword(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ChangePasswordDto,
@@ -239,6 +245,7 @@ export class AccountsController {
   }
 
   @Post(':id/mfa/enable')
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 requests per minute
   @ApiOperation({ summary: 'Enable MFA for account' })
   @ApiParam({ name: 'id', description: 'Account UUID' })
   @ApiResponse({
@@ -248,28 +255,31 @@ export class AccountsController {
       properties: {
         secret: { type: 'string' },
         qrCode: { type: 'string' },
+        backupCodes: { type: 'array', items: { type: 'string' } },
       },
     },
   })
   @ApiResponse({ status: 404, description: 'Account not found' })
   @ApiResponse({ status: 409, description: 'MFA already enabled' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async enableMfa(@Param('id', ParseUUIDPipe) id: string, @Body() dto: EnableMfaDto) {
     return this.accountsService.enableMfa(id, dto.method);
   }
 
   @Post(':id/mfa/verify')
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Verify MFA setup and complete enrollment' })
   @ApiParam({ name: 'id', description: 'Account UUID' })
   @ApiResponse({ status: 204, description: 'MFA enabled successfully' })
   @ApiResponse({ status: 400, description: 'Invalid verification code' })
   @ApiResponse({ status: 404, description: 'Account not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async verifyMfa(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() _dto: VerifyMfaDto,
+    @Body() dto: VerifyMfaDto,
   ): Promise<void> {
-    // In production, verify the TOTP code here
-    return this.accountsService.completeMfaSetup(id);
+    return this.accountsService.verifyAndCompleteMfaSetup(id, dto.code);
   }
 
   @Post(':id/mfa/disable')

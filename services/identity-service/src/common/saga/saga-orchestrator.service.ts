@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { ID } from '@my-girok/nest-common';
 import {
   SagaDefinition,
   SagaState,
@@ -32,7 +32,7 @@ export class SagaOrchestratorService {
     definition: SagaDefinition<TContext>,
     initialContext: TContext,
   ): Promise<SagaResult<TContext>> {
-    const sagaId = randomUUID();
+    const sagaId = ID.generate();
     const saga = this.initializeSaga(sagaId, definition, initialContext);
 
     this.activeSagas.set(sagaId, saga as SagaState<unknown>);
