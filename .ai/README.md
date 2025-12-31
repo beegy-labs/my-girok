@@ -35,7 +35,8 @@
 
 ### Services (Implemented)
 
-- **[services/auth-service.md](services/auth-service.md)** - Authentication, authorization & Legal/Consent API (REST)
+- **[services/identity-service.md](services/identity-service.md)** - Multi-app user management platform (Future)
+- **[services/auth-service.md](services/auth-service.md)** - Authentication, authorization & Legal/Consent API (Current)
 - **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST)
 - **[services/audit-service.md](services/audit-service.md)** - Compliance logging (ClickHouse, 5yr retention)
 - **[services/analytics-service.md](services/analytics-service.md)** - Business analytics (ClickHouse, MVs)
@@ -56,6 +57,11 @@
 
 **"I need to add authentication..."**
 → Read: `rules.md` + `architecture.md` + `services/auth-service.md`
+→ Future: `services/identity-service.md`
+
+**"I need to work on Identity Platform..."**
+→ Read: `services/identity-service.md` + `architecture.md`
+→ Policy: `docs/policies/IDENTITY_PLATFORM.md`
 
 **"I need to work on resume..."**
 → Read: `rules.md` + `services/personal-service.md`
@@ -114,32 +120,40 @@
 → Read: `apps/web-main.md` (Advertisement section)
 → Full guide: `docs/guides/ADSENSE_GUIDE.md`
 
-## Global Account System
+## Identity Platform Strategy
 
-**Quick Reference:**
+**Key Principle**: Services combined (operational simplicity) + DBs pre-separated (future extraction)
 
-| Concept                        | Location                                   |
-| ------------------------------ | ------------------------------------------ |
-| Account Mode (SERVICE/UNIFIED) | `services/auth-service.md#account-mode`    |
-| Service Join API               | `services/auth-service.md#service-api`     |
-| Consent by Country             | `services/auth-service.md#consent-api`     |
-| Unified Guard System           | `services/auth-service.md#guards`          |
-| Operator Management            | `services/auth-service.md#operator-api`    |
-| Law Registry                   | `services/auth-service.md#law-registry`    |
-| Account Linking                | `services/auth-service.md#account-linking` |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Identity Service (Combined)                   │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
+│   │  Identity   │   │    Auth     │   │    Legal    │           │
+│   │   Module    │   │   Module    │   │   Module    │           │
+│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
+└──────────┼─────────────────┼─────────────────┼───────────────────┘
+           ▼                 ▼                 ▼
+    ┌────────────┐    ┌────────────┐    ┌────────────┐
+    │identity_db │    │  auth_db   │    │  legal_db  │
+    └────────────┘    └────────────┘    └────────────┘
+```
 
-**Token Types:**
+**Service Evolution:**
 
-- `USER_ACCESS` - User auth with services, countryCode
-- `ADMIN_ACCESS` - Admin auth with scope, permissions
-- `OPERATOR_ACCESS` - Operator auth with serviceSlug, countryCode
+| Phase   | State                           | DBs |
+| ------- | ------------------------------- | --- |
+| Current | auth-service (all-in-one)       | 1   |
+| Next    | identity-service (combined)     | 3   |
+| Future  | 3 separate services (if needed) | 3   |
+
+**Global Law Coverage:** PIPA (KR), GDPR (EU), CCPA (US), APPI (JP)
 
 ## Current Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                   Cilium Gateway API                        │
-│  api.girok.dev │ auth.girok.dev │ my.girok.dev             │
+│  api.girok.dev │ accounts.girok.dev │ my.girok.dev         │
 └──────────┬─────────────┬────────────────────────────────────┘
            │             │
     ┌──────▼──────┐  ┌───▼────────┐  ┌────────────┐  ┌────────────┐
@@ -158,6 +172,7 @@
 
 **Planned (Not Implemented):**
 
+- Identity Service (replaces auth-service)
 - GraphQL BFF (Federation Gateway)
 - WS Gateway (Socket.io)
 - Feed Service (MongoDB)

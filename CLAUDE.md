@@ -19,6 +19,11 @@
 
 **Working on authentication?**
 Read: `.ai/rules.md` + `.ai/services/auth-service.md`
+Future: `.ai/services/identity-service.md`
+
+**Working on Identity Platform (multi-app user management)?**
+Read: `.ai/services/identity-service.md` + `.ai/architecture.md`
+Policy: `docs/policies/IDENTITY_PLATFORM.md`
 
 **Working on resume/profile?**
 Read: `.ai/rules.md` + `.ai/services/personal-service.md`
@@ -91,6 +96,7 @@ my-girok/
 │   ├── user-preferences.md   # User preferences system
 │   ├── pull-requests.md      # PR guidelines
 │   ├── services/             # Backend service APIs
+│   │   ├── identity-service.md # Multi-app user platform (Future)
 │   │   ├── auth-service.md   # Authentication (REST + Legal API)
 │   │   ├── personal-service.md # Resume, Profile
 │   │   ├── audit-service.md  # Compliance logging (ClickHouse)
