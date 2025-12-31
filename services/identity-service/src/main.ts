@@ -21,7 +21,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = configService.get<number>('port');
+  const port = configService.get<number>('port') ?? 3000;
   await app.listen(port);
   console.log(`Identity Service running on port ${port}`);
 }
