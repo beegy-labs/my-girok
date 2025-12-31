@@ -11,8 +11,17 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   Headers,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { OperatorsService } from './operators.service';
 import {
   CreateOperatorInvitationDto,
@@ -34,6 +43,8 @@ import {
 
 @ApiTags('Operators')
 @Controller('operators')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class OperatorsController {
   constructor(private readonly operatorsService: OperatorsService) {}
 

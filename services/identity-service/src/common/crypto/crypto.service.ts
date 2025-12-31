@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
+import * as OTPAuth from 'otpauth';
 
 /**
  * Cryptographic service for encryption/decryption operations
@@ -94,34 +95,18 @@ export class CryptoService {
 
   /**
    * Generate TOTP-compatible secret (base32 encoded)
+   * Uses OTPAuth.Secret for RFC 4648 compliant Base32 encoding
    */
   generateTotpSecret(): string {
-    const secret = crypto.randomBytes(20);
-    return this.base32Encode(secret);
-  }
-
-  /**
-   * Base32 encode for TOTP compatibility
-   */
-  private base32Encode(buffer: Buffer): string {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let result = '';
-    let bits = 0;
-    let value = 0;
-
-    for (const byte of buffer) {
-      value = (value << 8) | byte;
-      bits += 8;
-      while (bits >= 5) {
-        result += alphabet[(value >>> (bits - 5)) & 31];
-        bits -= 5;
-      }
-    }
-
-    if (bits > 0) {
-      result += alphabet[(value << (5 - bits)) & 31];
-    }
-
-    return result;
+    // Generate 20 random bytes (160 bits) for TOTP secret
+    const randomBytes = crypto.randomBytes(20);
+    // Create a copy to avoid ArrayBuffer pool sharing risk in Node.js
+    // Node.js Buffer may share underlying ArrayBuffer pool, potentially leaking data
+    const bufferCopy = new ArrayBuffer(randomBytes.length);
+    const uint8Array = new Uint8Array(bufferCopy);
+    uint8Array.set(randomBytes);
+    // Use OTPAuth.Secret for standard-compliant Base32 encoding
+    const secret = new OTPAuth.Secret({ buffer: bufferCopy });
+    return secret.base32;
   }
 }

@@ -10,7 +10,9 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -19,23 +21,28 @@ import {
   ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { DevicesService, PaginatedResponse, DeviceResponse } from './devices.service';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
+import { DevicesService, DeviceResponse } from './devices.service';
+import { PaginatedResponse } from '../../common/pagination';
 import { RegisterDeviceDto, DeviceQueryDto, DeviceType } from './dto/register-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 
 @ApiTags('devices')
 @Controller('devices')
 @ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
 
   @Post()
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 device registrations per minute
   @ApiOperation({ summary: 'Register a new device' })
   @ApiResponse({
     status: 201,
     description: 'Device registered successfully',
   })
   @ApiResponse({ status: 404, description: 'Account not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async register(@Body() dto: RegisterDeviceDto): Promise<DeviceResponse> {
     return this.devicesService.register(dto);
   }
@@ -138,21 +145,25 @@ export class DevicesController {
   }
 
   @Post(':id/trust')
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 trust operations per minute
   @ApiOperation({ summary: 'Trust a device' })
   @ApiParam({ name: 'id', description: 'Device UUID' })
   @ApiResponse({ status: 200, description: 'Device trusted' })
   @ApiResponse({ status: 404, description: 'Device not found' })
   @ApiResponse({ status: 409, description: 'Device is already trusted' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async trust(@Param('id', ParseUUIDPipe) id: string): Promise<DeviceResponse> {
     return this.devicesService.trust(id);
   }
 
   @Post(':id/untrust')
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 untrust operations per minute
   @ApiOperation({ summary: 'Untrust a device' })
   @ApiParam({ name: 'id', description: 'Device UUID' })
   @ApiResponse({ status: 200, description: 'Device untrusted' })
   @ApiResponse({ status: 400, description: 'Device is not trusted' })
   @ApiResponse({ status: 404, description: 'Device not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async untrust(@Param('id', ParseUUIDPipe) id: string): Promise<DeviceResponse> {
     return this.devicesService.untrust(id);
   }

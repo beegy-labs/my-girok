@@ -6,6 +6,7 @@ import {
   IsBoolean,
   MaxLength,
   MinLength,
+  Matches,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -92,17 +93,26 @@ export class UpdateAccountDto {
 export class ChangePasswordDto {
   @ApiPropertyOptional({
     description: 'Current password (required when user has a password)',
+    maxLength: 72,
   })
   @IsOptional()
   @IsString()
+  @MaxLength(72, { message: 'Current password must not exceed 72 characters' })
   currentPassword?: string;
 
   @ApiPropertyOptional({
-    description: 'New password (minimum 8 characters)',
+    description:
+      'New password (8-72 characters, must contain uppercase, lowercase, number, and special character)',
     minLength: 8,
+    maxLength: 72,
   })
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
+  @MaxLength(72, { message: 'Password must not exceed 72 characters (bcrypt limit)' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/, {
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  })
   newPassword!: string;
 }
 
@@ -124,11 +134,12 @@ export class EnableMfaDto {
  */
 export class VerifyMfaDto {
   @ApiPropertyOptional({
-    description: 'MFA verification code',
+    description: 'MFA verification code (6 digits)',
     example: '123456',
   })
   @IsString()
   @MinLength(6)
   @MaxLength(6)
+  @Matches(/^\d{6}$/, { message: 'MFA code must be exactly 6 digits' })
   code!: string;
 }

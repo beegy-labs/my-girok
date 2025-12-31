@@ -1,12 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { Gender, Prisma } from '.prisma/identity-client';
 
 @Injectable()
 export class ProfilesService {
+  private readonly logger = new Logger(ProfilesService.name);
+
   constructor(private readonly prisma: IdentityPrismaService) {}
 
   async findByAccountId(accountId: string) {
+    this.logger.debug(`Finding profile for account: ${accountId}`);
     const profile = await this.prisma.profile.findUnique({
       where: { accountId },
     });
@@ -47,17 +50,32 @@ export class ProfilesService {
   }
 
   async create(accountId: string, displayName: string) {
-    return this.prisma.profile.create({
+    this.logger.log(`Creating profile for account: ${accountId}`);
+    const profile = await this.prisma.profile.create({
       data: {
         accountId,
         displayName,
       },
     });
+    this.logger.log(`Profile created for account: ${accountId}`);
+    return profile;
   }
 
   async delete(accountId: string) {
-    return this.prisma.profile.delete({
+    this.logger.log(`Deleting profile for account: ${accountId}`);
+
+    const profile = await this.prisma.profile.findUnique({
       where: { accountId },
     });
+
+    if (!profile) {
+      throw new NotFoundException(`Profile not found for account: ${accountId}`);
+    }
+
+    const result = await this.prisma.profile.delete({
+      where: { accountId },
+    });
+    this.logger.log(`Profile deleted for account: ${accountId}`);
+    return result;
   }
 }

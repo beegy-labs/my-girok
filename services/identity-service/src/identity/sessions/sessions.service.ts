@@ -41,6 +41,7 @@ export interface CreatedSessionResponse extends SessionResponse {
 export class SessionsService {
   private readonly logger = new Logger(SessionsService.name);
   private readonly defaultSessionDurationMs: number;
+  private readonly maxSessionsPerAccount: number;
 
   constructor(
     private readonly prisma: IdentityPrismaService,
@@ -49,6 +50,10 @@ export class SessionsService {
     this.defaultSessionDurationMs = this.configService.get<number>(
       'session.defaultDurationMs',
       24 * 60 * 60 * 1000, // 24 hours default
+    );
+    this.maxSessionsPerAccount = this.configService.get<number>(
+      'session.maxSessionsPerAccount',
+      10, // 10 sessions per account default
     );
   }
 
@@ -79,6 +84,14 @@ export class SessionsService {
 
     if (!account) {
       throw new NotFoundException(`Account with ID ${dto.accountId} not found`);
+    }
+
+    // Check maximum sessions per account limit
+    const activeSessionCount = await this.getActiveSessionCount(dto.accountId);
+    if (activeSessionCount >= this.maxSessionsPerAccount) {
+      throw new BadRequestException(
+        `Maximum sessions limit (${this.maxSessionsPerAccount}) reached for this account`,
+      );
     }
 
     // Verify device exists if provided

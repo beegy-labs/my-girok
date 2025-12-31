@@ -27,6 +27,15 @@ export interface OutboxEvent {
   createdAt: Date;
 }
 
+/**
+ * Outbox Service for transactional outbox pattern
+ *
+ * Manages event publishing across multiple databases (identity, auth, legal)
+ * with consistent retry and cleanup logic.
+ *
+ * Note: Switch-case pattern is required due to Prisma's strict typing
+ * where each client has incompatible method signatures.
+ */
 @Injectable()
 export class OutboxService {
   private readonly logger = new Logger(OutboxService.name);
@@ -78,6 +87,10 @@ export class OutboxService {
           data: { ...baseData, status: LegalOutboxStatus.PENDING },
         })) as unknown as OutboxEvent;
         break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
 
     this.logger.debug(
@@ -146,6 +159,10 @@ export class OutboxService {
           where: { id: { in: ids } },
         })) as unknown as OutboxEvent[];
       }
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
   }
 
@@ -183,6 +200,10 @@ export class OutboxService {
           orderBy,
           take: limit,
         })) as unknown as OutboxEvent[];
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
   }
 
@@ -209,6 +230,10 @@ export class OutboxService {
           data: { status: LegalOutboxStatus.PROCESSING },
         });
         break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
   }
 
@@ -237,6 +262,10 @@ export class OutboxService {
           data: { status: LegalOutboxStatus.COMPLETED, processedAt },
         });
         break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
 
     this.logger.debug(`Event ${eventId} marked as completed in ${database}`);
@@ -267,6 +296,10 @@ export class OutboxService {
           select: { retryCount: true },
         });
         break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
 
     if (!event) {
@@ -308,6 +341,10 @@ export class OutboxService {
           },
         });
         break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
 
     if (isFailed) {
@@ -362,6 +399,10 @@ export class OutboxService {
           })
         ).count;
         break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
 
     if (count > 0) {
@@ -416,6 +457,10 @@ export class OutboxService {
           this.legalPrisma.outboxEvent.count({ where: { status: LegalOutboxStatus.FAILED } }),
         ]);
         break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
     }
 
     return { pending, processing, completed, failed };

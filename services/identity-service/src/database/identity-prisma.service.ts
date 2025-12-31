@@ -28,43 +28,23 @@ export class IdentityPrismaService extends PrismaClient implements OnModuleInit,
   }
 
   /**
-   * Whitelist of tables that can be truncated in test environment
-   * This prevents SQL injection by only allowing known table names
-   */
-  private static readonly ALLOWED_TABLES = [
-    'accounts',
-    'sessions',
-    'devices',
-    'profiles',
-    'outbox_events',
-  ] as const;
-
-  /**
    * Clean database for testing purposes
    * WARNING: Only use in test environment
-   * Uses whitelist approach to prevent SQL injection
+   * Uses Prisma's typed methods to prevent SQL injection
    */
   async cleanDatabase(): Promise<void> {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('Cannot clean database in production environment');
     }
 
-    // Use whitelist approach instead of dynamic table names to prevent SQL injection
-    for (const table of IdentityPrismaService.ALLOWED_TABLES) {
-      await this.$executeRaw`TRUNCATE TABLE "public".${this.escapeIdentifier(table)} CASCADE`;
-    }
+    // Use Prisma's deleteMany for type-safe table cleanup
+    // Order matters due to foreign key constraints
+    await this.session.deleteMany();
+    await this.device.deleteMany();
+    await this.profile.deleteMany();
+    await this.outboxEvent.deleteMany();
+    await this.account.deleteMany();
 
     this.logger.log('Identity database cleaned (test mode)');
-  }
-
-  /**
-   * Escape SQL identifier using Prisma's raw query mechanism
-   */
-  private escapeIdentifier(name: string): string {
-    // Validate against whitelist - only allow alphanumeric and underscore
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
-      throw new Error(`Invalid identifier: ${name}`);
-    }
-    return `"${name}"`;
   }
 }

@@ -119,7 +119,7 @@ export class ConsentsController {
       consentType,
       scope,
       countryCode,
-      activeOnly: activeOnly === true || activeOnly === ('true' as unknown as boolean),
+      activeOnly: activeOnly === true || (activeOnly as unknown) === 'true',
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 20,
     };

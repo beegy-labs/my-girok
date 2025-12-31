@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, IsEnum, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsUUID, IsEnum, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -35,9 +35,11 @@ export class RegisterDeviceDto {
   @ApiProperty({
     description: 'Device fingerprint (unique identifier for the device)',
     example: 'abc123def456',
+    minLength: 8,
     maxLength: 64,
   })
   @IsString()
+  @MinLength(8)
   @MaxLength(64)
   fingerprint!: string;
 

@@ -478,4 +478,70 @@ export class ConsentsService {
 
     return consents as ConsentEntity[];
   }
+
+  /**
+   * Withdraw multiple consents by IDs (for saga compensation)
+   * Used to rollback consents if registration fails
+   */
+  async withdrawBulkConsents(
+    consentIds: string[],
+    reason: string = 'Registration rollback',
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<number> {
+    if (consentIds.length === 0) {
+      return 0;
+    }
+
+    const now = new Date();
+    let withdrawnCount = 0;
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const consentId of consentIds) {
+        const consent = await tx.consent.findUnique({
+          where: { id: consentId },
+        });
+
+        if (!consent || consent.withdrawnAt) {
+          continue; // Skip if not found or already withdrawn
+        }
+
+        // Don't check for required consent types during rollback
+        // This is a compensation action, not a user-initiated withdrawal
+
+        const previousState = {
+          agreed: consent.agreed,
+          agreedAt: consent.agreedAt,
+          documentVersion: consent.documentVersion,
+        };
+
+        await tx.consent.update({
+          where: { id: consentId },
+          data: { withdrawnAt: now },
+        });
+
+        await tx.consentLog.create({
+          data: {
+            consentId,
+            accountId: consent.accountId,
+            action: ConsentLogAction.WITHDRAWN,
+            previousState: previousState as Prisma.InputJsonValue,
+            newState: {
+              agreed: false,
+              withdrawnAt: now,
+              reason,
+            } as Prisma.InputJsonValue,
+            ipAddress,
+            userAgent,
+            metadata: { reason, isCompensation: true } as Prisma.InputJsonValue,
+          },
+        });
+
+        withdrawnCount++;
+      }
+    });
+
+    this.logger.log(`Bulk consents withdrawn: count=${withdrawnCount}, reason=${reason}`);
+    return withdrawnCount;
+  }
 }

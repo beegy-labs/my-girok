@@ -9,7 +9,10 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import {
   ApiTags,
   ApiOperation,
@@ -29,6 +32,7 @@ export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
   @Post()
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 sessions per minute
   @ApiOperation({ summary: 'Create a new session' })
   @ApiResponse({
     status: 201,
@@ -44,6 +48,7 @@ export class SessionsController {
     },
   })
   @ApiResponse({ status: 404, description: 'Account or device not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async create(@Body() dto: CreateSessionDto): Promise<CreatedSessionResponse> {
     return this.sessionsService.create(dto);
   }
@@ -106,6 +111,7 @@ export class SessionsController {
   }
 
   @Post('refresh')
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 refreshes per minute
   @ApiOperation({ summary: 'Refresh session tokens' })
   @ApiResponse({
     status: 200,
@@ -120,6 +126,7 @@ export class SessionsController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async refresh(@Body() dto: RefreshSessionDto): Promise<CreatedSessionResponse> {
     return this.sessionsService.refresh(dto.refreshToken);
   }
@@ -173,6 +180,7 @@ export class SessionsController {
   }
 
   @Post('validate')
+  @Throttle({ default: { limit: 100, ttl: 60000 } }) // 100 validations per minute
   @ApiOperation({ summary: 'Validate access token' })
   @ApiResponse({
     status: 200,
@@ -184,6 +192,7 @@ export class SessionsController {
       },
     },
   })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async validateToken(
     @Body('accessToken') accessToken: string,
   ): Promise<{ valid: boolean; session: SessionResponse | null }> {
@@ -214,7 +223,9 @@ export class SessionsController {
   }
 
   @Post('cleanup')
+  @UseGuards(ApiKeyGuard)
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 1, ttl: 60000 } }) // 1 cleanup per minute (admin operation)
   @ApiOperation({ summary: 'Cleanup expired sessions (admin operation)' })
   @ApiResponse({
     status: 200,
@@ -225,6 +236,7 @@ export class SessionsController {
       },
     },
   })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async cleanupExpired(): Promise<{ count: number }> {
     const count = await this.sessionsService.cleanupExpired();
     return { count };

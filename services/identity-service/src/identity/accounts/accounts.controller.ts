@@ -10,6 +10,8 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  ParseEnumPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
@@ -20,6 +22,7 @@ import {
   ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { PaginatedResponse } from '../../common/pagination';
 import { AccountsService, AccountQueryParams } from './accounts.service';
 import { CreateAccountDto, AuthProvider } from './dto/create-account.dto';
@@ -35,6 +38,7 @@ import { AccountEntity } from './entities/account.entity';
 @ApiTags('accounts')
 @Controller('accounts')
 @ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 
@@ -305,7 +309,7 @@ export class AccountsController {
   @ApiResponse({ status: 404, description: 'Account not found' })
   async updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
-    @Query('status') status: AccountStatus,
+    @Query('status', new ParseEnumPipe(AccountStatus)) status: AccountStatus,
   ): Promise<AccountEntity> {
     return this.accountsService.updateStatus(id, status);
   }

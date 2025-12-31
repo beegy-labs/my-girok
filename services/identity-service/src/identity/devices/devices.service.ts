@@ -7,50 +7,13 @@ import {
 } from '@nestjs/common';
 import { Prisma, Device } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
+import { PaginatedResponse } from '../../common/pagination';
 import { RegisterDeviceDto, DeviceQueryDto } from './dto/register-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
+import { DeviceResponse } from './entities/device-response.entity';
 
-/**
- * Pagination meta information
- */
-export interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-/**
- * Paginated response wrapper
- */
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: PaginationMeta;
-}
-
-/**
- * Device response type
- */
-export interface DeviceResponse {
-  id: string;
-  accountId: string;
-  fingerprint: string;
-  name: string | null;
-  deviceType: string;
-  platform: string | null;
-  osVersion: string | null;
-  appVersion: string | null;
-  browserName: string | null;
-  browserVersion: string | null;
-  pushToken: string | null;
-  pushPlatform: string | null;
-  isTrusted: boolean;
-  trustedAt: Date | null;
-  lastActiveAt: Date | null;
-  lastIpAddress: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Re-export for backward compatibility
+export { DeviceResponse } from './entities/device-response.entity';
 
 @Injectable()
 export class DevicesService {
@@ -73,42 +36,28 @@ export class DevicesService {
       throw new NotFoundException(`Account with ID ${dto.accountId} not found`);
     }
 
-    // Check if device with same fingerprint already exists for this account
-    const existingDevice = await this.prisma.device.findUnique({
+    // Use upsert to handle race conditions atomically
+    const device = await this.prisma.device.upsert({
       where: {
         accountId_fingerprint: {
           accountId: dto.accountId,
           fingerprint: dto.fingerprint,
         },
       },
-    });
-
-    if (existingDevice) {
-      // Update existing device and return it
-      const updated = await this.prisma.device.update({
-        where: { id: existingDevice.id },
-        data: {
-          name: dto.name || existingDevice.name,
-          deviceType: dto.deviceType,
-          platform: dto.platform,
-          osVersion: dto.osVersion,
-          appVersion: dto.appVersion,
-          browserName: dto.browserName,
-          browserVersion: dto.browserVersion,
-          pushToken: dto.pushToken,
-          pushPlatform: dto.pushPlatform,
-          lastActiveAt: new Date(),
-          lastIpAddress: dto.ipAddress,
-        },
-      });
-
-      this.logger.log(`Device ${updated.id} updated for account ${dto.accountId}`);
-      return this.toDeviceResponse(updated);
-    }
-
-    // Create new device
-    const device = await this.prisma.device.create({
-      data: {
+      update: {
+        name: dto.name,
+        deviceType: dto.deviceType,
+        platform: dto.platform,
+        osVersion: dto.osVersion,
+        appVersion: dto.appVersion,
+        browserName: dto.browserName,
+        browserVersion: dto.browserVersion,
+        pushToken: dto.pushToken,
+        pushPlatform: dto.pushPlatform,
+        lastActiveAt: new Date(),
+        lastIpAddress: dto.ipAddress,
+      },
+      create: {
         accountId: dto.accountId,
         fingerprint: dto.fingerprint,
         name: dto.name,
@@ -125,7 +74,7 @@ export class DevicesService {
       },
     });
 
-    this.logger.log(`Device ${device.id} registered for account ${dto.accountId}`);
+    this.logger.log(`Device ${device.id} registered/updated for account ${dto.accountId}`);
     return this.toDeviceResponse(device);
   }
 
@@ -194,15 +143,12 @@ export class DevicesService {
       this.prisma.device.count({ where }),
     ]);
 
-    return {
-      data: devices.map((device) => this.toDeviceResponse(device)),
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return PaginatedResponse.create(
+      devices.map((device) => this.toDeviceResponse(device)),
+      total,
+      page,
+      limit,
+    );
   }
 
   /**

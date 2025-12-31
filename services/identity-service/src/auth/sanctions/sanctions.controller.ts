@@ -8,8 +8,20 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  ParseUUIDPipe,
+  Headers,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+  ApiHeader,
+} from '@nestjs/swagger';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { SanctionsService } from './sanctions.service';
 import { CreateSanctionDto, SanctionSubjectType } from './dto/create-sanction.dto';
 import {
@@ -34,6 +46,8 @@ import {
  */
 @ApiTags('Sanctions')
 @Controller('sanctions')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class SanctionsController {
   constructor(private readonly sanctionsService: SanctionsService) {}
 
@@ -47,9 +61,15 @@ export class SanctionsController {
     description: 'Sanction created successfully',
     type: SanctionEntity,
   })
-  async create(@Body() dto: CreateSanctionDto): Promise<SanctionEntity> {
-    // TODO: Get issuer ID from auth context
-    const issuedBy = 'system';
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator/Issuer ID from auth context',
+    required: true,
+  })
+  async create(
+    @Body() dto: CreateSanctionDto,
+    @Headers('x-operator-id') issuedBy: string,
+  ): Promise<SanctionEntity> {
     return this.sanctionsService.create(dto, issuedBy);
   }
 
@@ -82,7 +102,7 @@ export class SanctionsController {
   })
   async getActiveSanctions(
     @Param('subjectType') subjectType: SanctionSubjectType,
-    @Param('subjectId') subjectId: string,
+    @Param('subjectId', ParseUUIDPipe) subjectId: string,
     @Query('serviceId') serviceId?: string,
   ): Promise<ActiveSanctionsResult> {
     return this.sanctionsService.getActiveSanctions(subjectId, subjectType, serviceId);
@@ -103,7 +123,7 @@ export class SanctionsController {
   })
   async checkSanctioned(
     @Param('subjectType') subjectType: SanctionSubjectType,
-    @Param('subjectId') subjectId: string,
+    @Param('subjectId', ParseUUIDPipe) subjectId: string,
     @Query('serviceId') serviceId?: string,
   ): Promise<{ isSanctioned: boolean }> {
     const isSanctioned = await this.sanctionsService.isSanctioned(
@@ -126,7 +146,7 @@ export class SanctionsController {
     type: SanctionEntity,
   })
   @ApiResponse({ status: 404, description: 'Sanction not found' })
-  async findById(@Param('id') id: string): Promise<SanctionEntity> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<SanctionEntity> {
     return this.sanctionsService.findById(id);
   }
 
@@ -141,9 +161,16 @@ export class SanctionsController {
     description: 'Sanction updated',
     type: SanctionEntity,
   })
-  async update(@Param('id') id: string, @Body() dto: UpdateSanctionDto): Promise<SanctionEntity> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSanctionDto,
+    @Headers('x-operator-id') operatorId: string,
+  ): Promise<SanctionEntity> {
     return this.sanctionsService.update(id, dto, operatorId);
   }
 
@@ -159,9 +186,16 @@ export class SanctionsController {
     description: 'Sanction revoked',
     type: SanctionEntity,
   })
-  async revoke(@Param('id') id: string, @Body() dto: RevokeSanctionDto): Promise<SanctionEntity> {
-    // TODO: Get operator ID from auth context
-    const revokedBy = 'system';
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
+  async revoke(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RevokeSanctionDto,
+    @Headers('x-operator-id') revokedBy: string,
+  ): Promise<SanctionEntity> {
     return this.sanctionsService.revoke(id, dto, revokedBy);
   }
 
@@ -177,9 +211,16 @@ export class SanctionsController {
     description: 'Sanction extended',
     type: SanctionEntity,
   })
-  async extend(@Param('id') id: string, @Body() dto: ExtendSanctionDto): Promise<SanctionEntity> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
+  async extend(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ExtendSanctionDto,
+    @Headers('x-operator-id') operatorId: string,
+  ): Promise<SanctionEntity> {
     return this.sanctionsService.extend(id, dto, operatorId);
   }
 
@@ -195,9 +236,16 @@ export class SanctionsController {
     description: 'Sanction reduced',
     type: SanctionEntity,
   })
-  async reduce(@Param('id') id: string, @Body() dto: ReduceSanctionDto): Promise<SanctionEntity> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
+  async reduce(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReduceSanctionDto,
+    @Headers('x-operator-id') operatorId: string,
+  ): Promise<SanctionEntity> {
     return this.sanctionsService.reduce(id, dto, operatorId);
   }
 
@@ -213,12 +261,12 @@ export class SanctionsController {
     description: 'Appeal submitted',
     type: SanctionEntity,
   })
+  @ApiHeader({ name: 'x-subject-id', description: 'Subject ID from auth context', required: true })
   async submitAppeal(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SubmitAppealDto,
+    @Headers('x-subject-id') subjectId: string,
   ): Promise<SanctionEntity> {
-    // TODO: Get subject ID from auth context
-    const subjectId = 'self';
     return this.sanctionsService.submitAppeal(id, dto, subjectId);
   }
 
@@ -234,12 +282,16 @@ export class SanctionsController {
     description: 'Appeal reviewed',
     type: SanctionEntity,
   })
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Reviewer ID from auth context',
+    required: true,
+  })
   async reviewAppeal(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewAppealDto,
+    @Headers('x-operator-id') reviewerId: string,
   ): Promise<SanctionEntity> {
-    // TODO: Get reviewer ID from auth context
-    const reviewerId = 'system';
     return this.sanctionsService.reviewAppeal(id, dto, reviewerId);
   }
 

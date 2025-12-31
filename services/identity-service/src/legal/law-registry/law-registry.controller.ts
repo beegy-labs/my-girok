@@ -9,8 +9,17 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { LawRegistryService } from './law-registry.service';
 import {
   CreateLawDto,
@@ -31,6 +40,8 @@ import {
  */
 @ApiTags('Law Registry')
 @Controller('legal/laws')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class LawRegistryController {
   constructor(private readonly lawRegistryService: LawRegistryService) {}
 

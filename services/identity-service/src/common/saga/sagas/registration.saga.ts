@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { SagaDefinition } from '../saga.types';
 import { SagaOrchestratorService } from '../saga-orchestrator.service';
 import { AccountsService } from '../../../identity/accounts/accounts.service';
@@ -146,8 +147,12 @@ export class RegistrationSaga {
           compensate: async (ctx) => {
             if (ctx.consentIds && ctx.consentIds.length > 0) {
               this.logger.debug(`Compensating: Withdrawing ${ctx.consentIds.length} consents`);
-              // Note: In production, you might want to mark consents as invalid
-              // rather than fully withdrawing them for audit purposes
+              await this.consentsService.withdrawBulkConsents(
+                ctx.consentIds,
+                'Registration rollback - saga compensation',
+                ctx.ipAddress,
+                ctx.userAgent,
+              );
             }
           },
         },
@@ -157,14 +162,18 @@ export class RegistrationSaga {
 
   /**
    * Generate a username from email address
-   * Takes the part before @ and appends random suffix for uniqueness
+   * Takes the part before @ and appends cryptographically secure random suffix
    */
   private generateUsername(email: string): string {
     const base = email.split('@')[0];
-    // Clean up and ensure valid username characters
-    const cleaned = base.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 20);
-    // Add random suffix for uniqueness
-    const suffix = Math.random().toString(36).slice(2, 6);
+    // Clean up and ensure valid username characters, remove consecutive underscores
+    const cleaned = base
+      .replace(/[^a-zA-Z0-9_]/g, '_')
+      .replace(/_+/g, '_')
+      .slice(0, 20);
+    // Add cryptographically secure random suffix for uniqueness
+    const randomBytes = crypto.randomBytes(3);
+    const suffix = randomBytes.toString('hex'); // 6 hex characters
     return `${cleaned}_${suffix}`;
   }
 }

@@ -11,8 +11,17 @@ import {
   ParseEnumPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { LegalDocumentsService } from './legal-documents.service';
 import {
   CreateLegalDocumentDto,
@@ -34,6 +43,8 @@ import { LegalDocumentType } from '.prisma/identity-legal-client';
  */
 @ApiTags('Legal Documents')
 @Controller('legal/documents')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class LegalDocumentsController {
   constructor(private readonly legalDocumentsService: LegalDocumentsService) {}
 

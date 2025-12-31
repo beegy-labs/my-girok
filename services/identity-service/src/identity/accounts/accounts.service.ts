@@ -83,7 +83,8 @@ export class AccountsService {
    * Create a new account
    */
   async create(dto: CreateAccountDto): Promise<AccountEntity> {
-    this.logger.log(`Creating account for email: ${dto.email}`);
+    const maskedEmail = dto.email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+    this.logger.log(`Creating account for email: ${maskedEmail}`);
 
     // Check if email already exists
     const existingEmail = await this.prisma.account.findUnique({
@@ -118,39 +119,59 @@ export class AccountsService {
       hashedPassword = await bcrypt.hash(dto.password, this.bcryptRounds);
     }
 
-    // Generate unique external ID
-    let externalId = this.generateExternalId();
+    // Generate unique external ID with retry on conflict
+    // Uses a transaction to handle race conditions properly
+    let account: Awaited<ReturnType<typeof this.prisma.account.create>>;
     let attempts = 0;
-    while (attempts < 5) {
-      const existing = await this.prisma.account.findUnique({
-        where: { externalId },
-      });
-      if (!existing) break;
-      externalId = this.generateExternalId();
-      attempts++;
+    const maxAttempts = 5;
+
+    while (attempts < maxAttempts) {
+      const externalId = this.generateExternalId();
+      try {
+        account = await this.prisma.account.create({
+          data: {
+            externalId,
+            email: dto.email,
+            username: dto.username,
+            password: hashedPassword,
+            provider,
+            providerId: dto.providerId || null,
+            mode: dto.mode || AccountMode.SERVICE,
+            status: provider === AuthProvider.LOCAL ? 'PENDING_VERIFICATION' : 'ACTIVE',
+            emailVerified: provider !== AuthProvider.LOCAL,
+            emailVerifiedAt: provider !== AuthProvider.LOCAL ? new Date() : null,
+            region: dto.region || null,
+            locale: dto.locale || null,
+            timezone: dto.timezone || null,
+            countryCode: dto.countryCode || null,
+          },
+        });
+
+        this.logger.log(`Account created with ID: ${account.id}`);
+        return AccountEntity.fromPrisma(account);
+      } catch (error) {
+        // Handle unique constraint violation (P2002)
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+          const target = error.meta?.target as string[];
+          if (target?.includes('externalId')) {
+            attempts++;
+            this.logger.warn(`External ID collision, retrying (${attempts}/${maxAttempts})`);
+            continue;
+          }
+          if (target?.includes('email')) {
+            throw new ConflictException('Email already registered');
+          }
+          if (target?.includes('username')) {
+            throw new ConflictException('Username already taken');
+          }
+        }
+        // Re-throw other errors
+        throw error;
+      }
     }
 
-    const account = await this.prisma.account.create({
-      data: {
-        externalId,
-        email: dto.email,
-        username: dto.username,
-        password: hashedPassword,
-        provider,
-        providerId: dto.providerId || null,
-        mode: dto.mode || AccountMode.SERVICE,
-        status: provider === AuthProvider.LOCAL ? 'PENDING_VERIFICATION' : 'ACTIVE',
-        emailVerified: provider !== AuthProvider.LOCAL,
-        emailVerifiedAt: provider !== AuthProvider.LOCAL ? new Date() : null,
-        region: dto.region || null,
-        locale: dto.locale || null,
-        timezone: dto.timezone || null,
-        countryCode: dto.countryCode || null,
-      },
-    });
-
-    this.logger.log(`Account created with ID: ${account.id}`);
-    return AccountEntity.fromPrisma(account);
+    // If we exhausted all attempts
+    throw new ConflictException('Failed to generate unique external ID after multiple attempts');
   }
 
   /**
@@ -242,8 +263,9 @@ export class AccountsService {
       where.emailVerified = params.emailVerified;
     }
 
-    // Build order by with proper typing
-    const sortField = params.sort || 'createdAt';
+    // Build order by with proper typing and whitelist validation
+    const allowedSortFields = ['createdAt', 'updatedAt', 'email', 'username', 'status'];
+    const sortField = allowedSortFields.includes(params.sort || '') ? params.sort! : 'createdAt';
     const sortOrder = params.order || 'desc';
     const orderBy: Prisma.AccountOrderByWithRelationInput = {
       [sortField]: sortOrder,
@@ -549,32 +571,6 @@ export class AccountsService {
   }
 
   /**
-   * Complete MFA setup after verification (deprecated - use verifyAndCompleteMfaSetup)
-   */
-  async completeMfaSetup(id: string): Promise<void> {
-    const account = await this.prisma.account.findUnique({
-      where: { id },
-    });
-
-    if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found`);
-    }
-
-    if (!account.mfaSecret) {
-      throw new BadRequestException('MFA setup not initiated');
-    }
-
-    await this.prisma.account.update({
-      where: { id },
-      data: {
-        mfaEnabled: true,
-      },
-    });
-
-    this.logger.log(`MFA enabled for account ${id}`);
-  }
-
-  /**
    * Disable MFA for account
    * Securely removes encrypted MFA secret
    */
@@ -596,32 +592,11 @@ export class AccountsService {
       data: {
         mfaEnabled: false,
         mfaSecret: null, // Encrypted secret is removed
+        mfaBackupCodes: [], // Clear backup codes for security
       },
     });
 
     this.logger.log(`MFA disabled for account ${id}`);
-  }
-
-  /**
-   * Get decrypted MFA secret for TOTP verification
-   * Only used internally for verifying TOTP codes
-   */
-  async getMfaSecret(id: string): Promise<string | null> {
-    const account = await this.prisma.account.findUnique({
-      where: { id },
-      select: { mfaSecret: true, mfaEnabled: true },
-    });
-
-    if (!account || !account.mfaEnabled || !account.mfaSecret) {
-      return null;
-    }
-
-    try {
-      return this.cryptoService.decrypt(account.mfaSecret);
-    } catch (error) {
-      this.logger.error(`Failed to decrypt MFA secret for account ${id}`, error);
-      return null;
-    }
   }
 
   /**

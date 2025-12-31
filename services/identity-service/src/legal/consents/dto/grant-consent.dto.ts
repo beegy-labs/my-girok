@@ -1,4 +1,14 @@
-import { IsString, IsEnum, IsOptional, IsUUID, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsUUID,
+  IsObject,
+  MinLength,
+  MaxLength,
+  ValidateNested,
+  IsArray,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ConsentType, ConsentScope } from '.prisma/identity-legal-client';
@@ -47,6 +57,8 @@ export class GrantConsentDto {
     maxLength: 2,
   })
   @IsString()
+  @MinLength(2)
+  @MaxLength(2)
   countryCode!: string;
 
   @ApiPropertyOptional({
@@ -131,12 +143,16 @@ export class GrantBulkConsentsDto {
     example: 'KR',
   })
   @IsString()
+  @MinLength(2)
+  @MaxLength(2)
   countryCode!: string;
 
   @ApiProperty({
     description: 'List of consents to grant',
     type: [GrantConsentItemDto],
   })
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => GrantConsentItemDto)
   consents!: GrantConsentItemDto[];
 

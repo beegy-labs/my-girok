@@ -187,35 +187,26 @@ export class AccountEntity {
 
   /**
    * Convert to safe response (exclude sensitive fields)
+   * Removes: providerId, failedLoginAttempts, lockedUntil, deletedAt
    */
-  toSafeResponse(): Omit<
-    AccountEntity,
-    'toSafeResponse' | 'isAccessible' | 'requiresEmailVerification' | 'fromPrisma'
-  > {
+  toSafeResponse() {
     return {
       id: this.id,
       externalId: this.externalId,
       email: this.email,
       username: this.username,
       provider: this.provider,
-      providerId: this.providerId,
       status: this.status,
       mode: this.mode,
       emailVerified: this.emailVerified,
-      emailVerifiedAt: this.emailVerifiedAt,
       phoneVerified: this.phoneVerified,
-      phoneVerifiedAt: this.phoneVerifiedAt,
       mfaEnabled: this.mfaEnabled,
-      lastPasswordChange: this.lastPasswordChange,
-      failedLoginAttempts: this.failedLoginAttempts,
-      lockedUntil: this.lockedUntil,
       region: this.region,
       locale: this.locale,
       timezone: this.timezone,
       countryCode: this.countryCode,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
-      deletedAt: this.deletedAt,
     };
   }
 }

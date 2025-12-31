@@ -8,8 +8,19 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  ParseUUIDPipe,
+  Headers,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiHeader,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { DsrRequestsService } from './dsr-requests.service';
 import {
   CreateDsrRequestDto,
@@ -32,6 +43,8 @@ import {
  */
 @ApiTags('DSR Requests')
 @Controller('dsr-requests')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class DsrRequestsController {
   constructor(private readonly dsrRequestsService: DsrRequestsService) {}
 
@@ -117,7 +130,9 @@ export class DsrRequestsController {
     description: 'List of requests for the account',
     type: [DsrRequestSummaryDto],
   })
-  async findByAccount(@Param('accountId') accountId: string): Promise<DsrRequestSummaryDto[]> {
+  async findByAccount(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+  ): Promise<DsrRequestSummaryDto[]> {
     return this.dsrRequestsService.findByAccount(accountId);
   }
 
@@ -133,7 +148,7 @@ export class DsrRequestsController {
     type: DsrRequestResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Request not found' })
-  async findById(@Param('id') id: string): Promise<DsrRequestResponseDto> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<DsrRequestResponseDto> {
     return this.dsrRequestsService.findById(id);
   }
 
@@ -148,7 +163,7 @@ export class DsrRequestsController {
     description: 'List of audit logs',
     type: [DsrRequestLogDto],
   })
-  async getLogs(@Param('id') id: string): Promise<DsrRequestLogDto[]> {
+  async getLogs(@Param('id', ParseUUIDPipe) id: string): Promise<DsrRequestLogDto[]> {
     return this.dsrRequestsService.getLogs(id);
   }
 
@@ -164,12 +179,16 @@ export class DsrRequestsController {
     description: 'Request verified',
     type: DsrRequestResponseDto,
   })
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
   async verify(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyDsrRequestDto,
+    @Headers('x-operator-id') operatorId: string,
   ): Promise<DsrRequestResponseDto> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
     return this.dsrRequestsService.verify(id, dto, operatorId);
   }
 
@@ -185,12 +204,16 @@ export class DsrRequestsController {
     description: 'Request processed',
     type: DsrRequestResponseDto,
   })
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
   async process(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ProcessDsrRequestDto,
+    @Headers('x-operator-id') operatorId: string,
   ): Promise<DsrRequestResponseDto> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
     return this.dsrRequestsService.process(id, dto, operatorId);
   }
 
@@ -206,12 +229,16 @@ export class DsrRequestsController {
     description: 'Deadline extended',
     type: DsrRequestResponseDto,
   })
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
   async extendDeadline(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ExtendDsrDeadlineDto,
+    @Headers('x-operator-id') operatorId: string,
   ): Promise<DsrRequestResponseDto> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
     return this.dsrRequestsService.extendDeadline(id, dto, operatorId);
   }
 
@@ -227,12 +254,16 @@ export class DsrRequestsController {
     description: 'Request assigned',
     type: DsrRequestResponseDto,
   })
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
   async assign(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body('assignedTo') assignedTo: string,
+    @Headers('x-operator-id') operatorId: string,
   ): Promise<DsrRequestResponseDto> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
     return this.dsrRequestsService.assign(id, assignedTo, operatorId);
   }
 
@@ -244,9 +275,16 @@ export class DsrRequestsController {
   @ApiOperation({ summary: 'Cancel a DSR request' })
   @ApiParam({ name: 'id', type: 'string' })
   @ApiResponse({ status: 204, description: 'Request cancelled' })
-  async cancel(@Param('id') id: string, @Body('reason') reason: string): Promise<void> {
-    // TODO: Get operator ID from auth context
-    const operatorId = 'system';
+  @ApiHeader({
+    name: 'x-operator-id',
+    description: 'Operator ID from auth context',
+    required: true,
+  })
+  async cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('reason') reason: string,
+    @Headers('x-operator-id') operatorId: string,
+  ): Promise<void> {
     await this.dsrRequestsService.cancel(id, reason, operatorId);
   }
 }
