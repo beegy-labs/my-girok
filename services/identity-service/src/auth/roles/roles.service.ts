@@ -22,6 +22,7 @@ import {
   RoleHierarchyNode,
 } from './entities/role.entity';
 import { Prisma, Role } from '.prisma/identity-auth-client';
+import { ROLE } from '../../common/constants/index.js';
 
 // Type for Role with children for hierarchy building
 type RoleWithChildren = Role & { children?: RoleWithChildren[]; parent?: Role | null };
@@ -67,8 +68,10 @@ export class RolesService {
 
       // Prevent circular hierarchy
       const ancestors = await this.getAncestors(dto.parentId);
-      if (ancestors.length > 10) {
-        throw new BadRequestException('Role hierarchy depth exceeds maximum limit');
+      if (ancestors.length > ROLE.MAX_HIERARCHY_DEPTH) {
+        throw new BadRequestException(
+          `Role hierarchy depth exceeds maximum limit (${ROLE.MAX_HIERARCHY_DEPTH})`,
+        );
       }
     }
 

@@ -103,7 +103,7 @@ export class SanctionsService {
       `Sanction created: id=${result.id}, subject=${dto.subjectId}, type=${dto.type}`,
     );
 
-    return result as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(result);
   }
 
   /**
@@ -119,7 +119,7 @@ export class SanctionsService {
       throw new NotFoundException(`Sanction not found: ${id}`);
     }
 
-    return sanction as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(sanction);
   }
 
   /**
@@ -146,7 +146,7 @@ export class SanctionsService {
 
     this.logger.log(`Sanction updated: id=${id} by ${operatorId}`);
 
-    return result as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(result);
   }
 
   /**
@@ -188,13 +188,13 @@ export class SanctionsService {
 
     this.logger.log(`Sanction revoked: id=${id} by ${revokedBy}`);
 
-    return result as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(result);
   }
 
   /**
    * Extend a sanction
    */
-  async extend(id: string, dto: ExtendSanctionDto, _operatorId: string): Promise<SanctionEntity> {
+  async extend(id: string, dto: ExtendSanctionDto, operatorId: string): Promise<SanctionEntity> {
     const sanction = await this.findById(id);
 
     if (sanction.status !== SanctionStatus.ACTIVE) {
@@ -211,36 +211,38 @@ export class SanctionsService {
         where: { id },
         data: {
           endAt: newEndAt,
-          internalNote: `${sanction.internalNote || ''}\n[Extension: ${dto.reason}]`.trim(),
+          internalNote:
+            `${sanction.internalNote || ''}\n[Extension by ${operatorId}: ${dto.reason}]`.trim(),
+        },
+      });
+
+      // Publish event atomically within the transaction
+      await this.outbox.publishInAuthTransaction(tx, {
+        aggregateType: 'Sanction',
+        aggregateId: id,
+        eventType: 'SANCTION_EXTENDED',
+        payload: {
+          sanctionId: id,
+          subjectId: sanction.subjectId,
+          previousEndAt: sanction.endAt,
+          newEndAt,
+          reason: dto.reason,
+          extendedBy: operatorId,
         },
       });
 
       return updated;
     });
 
-    // Publish event
-    await this.outbox.publish('auth', {
-      aggregateType: 'Sanction',
-      aggregateId: id,
-      eventType: 'SANCTION_EXTENDED',
-      payload: {
-        sanctionId: id,
-        subjectId: sanction.subjectId,
-        previousEndAt: sanction.endAt,
-        newEndAt,
-        reason: dto.reason,
-      },
-    });
+    this.logger.log(`Sanction extended: id=${id} to ${dto.newEndAt} by ${operatorId}`);
 
-    this.logger.log(`Sanction extended: id=${id} to ${dto.newEndAt}`);
-
-    return result as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(result);
   }
 
   /**
    * Reduce a sanction
    */
-  async reduce(id: string, dto: ReduceSanctionDto, _operatorId: string): Promise<SanctionEntity> {
+  async reduce(id: string, dto: ReduceSanctionDto, operatorId: string): Promise<SanctionEntity> {
     const sanction = await this.findById(id);
 
     if (sanction.status !== SanctionStatus.ACTIVE) {
@@ -249,17 +251,37 @@ export class SanctionsService {
 
     const newEndAt = new Date(dto.newEndAt);
 
-    const result = await this.prisma.sanction.update({
-      where: { id },
-      data: {
-        endAt: newEndAt,
-        internalNote: `${sanction.internalNote || ''}\n[Reduction: ${dto.reason}]`.trim(),
-      },
+    const result = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.sanction.update({
+        where: { id },
+        data: {
+          endAt: newEndAt,
+          internalNote:
+            `${sanction.internalNote || ''}\n[Reduction by ${operatorId}: ${dto.reason}]`.trim(),
+        },
+      });
+
+      // Publish event atomically within the transaction
+      await this.outbox.publishInAuthTransaction(tx, {
+        aggregateType: 'Sanction',
+        aggregateId: id,
+        eventType: 'SANCTION_REDUCED',
+        payload: {
+          sanctionId: id,
+          subjectId: sanction.subjectId,
+          previousEndAt: sanction.endAt,
+          newEndAt,
+          reason: dto.reason,
+          reducedBy: operatorId,
+        },
+      });
+
+      return updated;
     });
 
-    this.logger.log(`Sanction reduced: id=${id} to ${dto.newEndAt}`);
+    this.logger.log(`Sanction reduced: id=${id} to ${dto.newEndAt} by ${operatorId}`);
 
-    return result as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(result);
   }
 
   /**
@@ -291,24 +313,24 @@ export class SanctionsService {
         },
       });
 
-      return updated;
-    });
+      // Publish event atomically within the transaction
+      await this.outbox.publishInAuthTransaction(tx, {
+        aggregateType: 'Sanction',
+        aggregateId: id,
+        eventType: 'SANCTION_APPEAL_SUBMITTED',
+        payload: {
+          sanctionId: id,
+          subjectId: sanction.subjectId,
+          appealReason: dto.reason,
+        },
+      });
 
-    // Publish event
-    await this.outbox.publish('auth', {
-      aggregateType: 'Sanction',
-      aggregateId: id,
-      eventType: 'SANCTION_APPEAL_SUBMITTED',
-      payload: {
-        sanctionId: id,
-        subjectId: sanction.subjectId,
-        appealReason: dto.reason,
-      },
+      return updated;
     });
 
     this.logger.log(`Appeal submitted: sanctionId=${id}`);
 
-    return result as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(result);
   }
 
   /**
@@ -353,26 +375,26 @@ export class SanctionsService {
         data: updateData,
       });
 
-      return updated;
-    });
+      // Publish event atomically within the transaction
+      await this.outbox.publishInAuthTransaction(tx, {
+        aggregateType: 'Sanction',
+        aggregateId: id,
+        eventType: 'SANCTION_APPEAL_REVIEWED',
+        payload: {
+          sanctionId: id,
+          subjectId: sanction.subjectId,
+          reviewedBy: reviewerId,
+          decision: dto.status,
+          response: dto.response,
+        },
+      });
 
-    // Publish event
-    await this.outbox.publish('auth', {
-      aggregateType: 'Sanction',
-      aggregateId: id,
-      eventType: 'SANCTION_APPEAL_REVIEWED',
-      payload: {
-        sanctionId: id,
-        subjectId: sanction.subjectId,
-        reviewedBy: reviewerId,
-        decision: dto.status,
-        response: dto.response,
-      },
+      return updated;
     });
 
     this.logger.log(`Appeal reviewed: sanctionId=${id}, decision=${dto.status}`);
 
-    return result as unknown as SanctionEntity;
+    return SanctionEntity.fromPrisma(result);
   }
 
   /**
@@ -412,7 +434,7 @@ export class SanctionsService {
     ]);
 
     return {
-      data: sanctions as unknown as SanctionSummary[],
+      data: sanctions.map((s) => SanctionSummary.fromPrisma(s)),
       meta: {
         total,
         page,
@@ -465,7 +487,7 @@ export class SanctionsService {
 
     return {
       isSanctioned: sanctions.length > 0,
-      activeSanctions: sanctions as unknown as SanctionSummary[],
+      activeSanctions: sanctions.map((s) => SanctionSummary.fromPrisma(s)),
       restrictedFeatures: Array.from(restrictedFeatures),
       isPermanentlyBanned,
     };

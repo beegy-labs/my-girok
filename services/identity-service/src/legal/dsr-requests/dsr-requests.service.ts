@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { LegalPrismaService } from '../../database/legal-prisma.service';
 import { DsrStatus, DsrPriority, DsrResponseType, Prisma } from '.prisma/identity-legal-client';
+import { DSR_DEADLINE_DAYS } from '../../common/constants/index.js';
 import {
   CreateDsrRequestDto,
   VerifyDsrRequestDto,
@@ -13,17 +14,6 @@ import {
   DsrRequestLogDto,
   DsrStatisticsDto,
 } from './dto/dsr-request.dto';
-
-/**
- * Default deadline days based on regulation
- */
-const DEFAULT_DEADLINE_DAYS: Record<string, number> = {
-  GDPR: 30,
-  CCPA: 45,
-  PIPA: 10,
-  APPI: 14,
-  DEFAULT: 30,
-};
 
 /**
  * DSR Requests Service
@@ -44,7 +34,7 @@ export class DsrRequestsService {
    * Calculate deadline based on legal basis
    */
   private calculateDeadline(legalBasis?: string): Date {
-    const days = DEFAULT_DEADLINE_DAYS[legalBasis || 'DEFAULT'] || 30;
+    const days = DSR_DEADLINE_DAYS[legalBasis || 'DEFAULT'] || 30;
     const deadline = new Date();
     deadline.setDate(deadline.getDate() + days);
     return deadline;
@@ -94,7 +84,7 @@ export class DsrRequestsService {
       `DSR request submitted: id=${result.id}, type=${dto.requestType}, accountId=${dto.accountId}`,
     );
 
-    return result as unknown as DsrRequestResponseDto;
+    return DsrRequestResponseDto.fromPrisma(result);
   }
 
   /**
@@ -109,7 +99,7 @@ export class DsrRequestsService {
       throw new NotFoundException(`DSR request not found: ${id}`);
     }
 
-    return request as unknown as DsrRequestResponseDto;
+    return DsrRequestResponseDto.fromPrisma(request);
   }
 
   /**
@@ -155,7 +145,7 @@ export class DsrRequestsService {
 
     this.logger.log(`DSR request verified: id=${id}`);
 
-    return result as unknown as DsrRequestResponseDto;
+    return DsrRequestResponseDto.fromPrisma(result);
   }
 
   /**
@@ -232,7 +222,7 @@ export class DsrRequestsService {
 
     this.logger.log(`DSR request processed: id=${id}, status=${dto.status}`);
 
-    return result as unknown as DsrRequestResponseDto;
+    return DsrRequestResponseDto.fromPrisma(result);
   }
 
   /**
@@ -314,7 +304,7 @@ export class DsrRequestsService {
 
     this.logger.log(`DSR request deadline extended: id=${id}`);
 
-    return result as unknown as DsrRequestResponseDto;
+    return DsrRequestResponseDto.fromPrisma(result);
   }
 
   /**
@@ -346,7 +336,7 @@ export class DsrRequestsService {
 
     this.logger.log(`DSR request assigned: id=${id}, assignedTo=${assignedTo}`);
 
-    return result as unknown as DsrRequestResponseDto;
+    return DsrRequestResponseDto.fromPrisma(result);
   }
 
   /**

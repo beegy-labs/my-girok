@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Sanction, SanctionNotification } from '.prisma/identity-auth-client';
 import {
   SanctionSubjectType,
   SanctionType,
@@ -295,6 +296,57 @@ export class SanctionEntity {
     type: [SanctionNotificationEntity],
   })
   notifications?: SanctionNotificationEntity[];
+
+  /**
+   * Map Prisma Sanction to SanctionEntity
+   */
+  static fromPrisma(
+    sanction: Sanction & { notifications?: SanctionNotification[] },
+  ): SanctionEntity {
+    const entity = new SanctionEntity();
+    entity.id = sanction.id;
+    entity.subjectId = sanction.subjectId;
+    entity.subjectType = sanction.subjectType as SanctionSubjectType;
+    entity.serviceId = sanction.serviceId;
+    entity.scope = sanction.scope as SanctionScope;
+    entity.type = sanction.type as SanctionType;
+    entity.status = sanction.status as SanctionStatus;
+    entity.severity = sanction.severity as SanctionSeverity;
+    entity.restrictedFeatures = sanction.restrictedFeatures;
+    entity.reason = sanction.reason;
+    entity.internalNote = sanction.internalNote;
+    entity.evidenceUrls = sanction.evidenceUrls;
+    entity.relatedSanctionId = sanction.relatedSanctionId;
+    entity.issuedBy = sanction.issuedBy;
+    entity.issuedByType = sanction.issuedByType as IssuerType;
+    entity.startAt = sanction.startAt;
+    entity.endAt = sanction.endAt;
+    entity.revokedAt = sanction.revokedAt;
+    entity.revokedBy = sanction.revokedBy;
+    entity.revokeReason = sanction.revokeReason;
+    entity.appealStatus = sanction.appealStatus as AppealStatus | null;
+    entity.appealedAt = sanction.appealedAt;
+    entity.appealReason = sanction.appealReason;
+    entity.appealReviewedBy = sanction.appealReviewedBy;
+    entity.appealReviewedAt = sanction.appealReviewedAt;
+    entity.appealResponse = sanction.appealResponse;
+    entity.createdAt = sanction.createdAt;
+    entity.updatedAt = sanction.updatedAt;
+
+    if (sanction.notifications) {
+      entity.notifications = sanction.notifications.map((n) => ({
+        id: n.id,
+        sanctionId: n.sanctionId,
+        channel: n.channel as NotificationChannel,
+        status: n.status as NotificationStatus,
+        sentAt: n.sentAt,
+        readAt: n.readAt,
+        createdAt: n.createdAt,
+      }));
+    }
+
+    return entity;
+  }
 }
 
 /**
@@ -379,6 +431,25 @@ export class SanctionSummary {
     example: '2024-01-01T00:00:00Z',
   })
   createdAt!: Date;
+
+  /**
+   * Map Prisma Sanction to SanctionSummary
+   */
+  static fromPrisma(sanction: Sanction): SanctionSummary {
+    const summary = new SanctionSummary();
+    summary.id = sanction.id;
+    summary.subjectId = sanction.subjectId;
+    summary.subjectType = sanction.subjectType as SanctionSubjectType;
+    summary.type = sanction.type as SanctionType;
+    summary.status = sanction.status as SanctionStatus;
+    summary.severity = sanction.severity as SanctionSeverity;
+    summary.reason = sanction.reason;
+    summary.startAt = sanction.startAt;
+    summary.endAt = sanction.endAt;
+    summary.appealStatus = sanction.appealStatus as AppealStatus | null;
+    summary.createdAt = sanction.createdAt;
+    return summary;
+  }
 }
 
 /**

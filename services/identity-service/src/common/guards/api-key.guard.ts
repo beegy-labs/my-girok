@@ -62,11 +62,12 @@ export class ApiKeyGuard implements CanActivate {
    * Called automatically when cache expires or manually via invalidateCache()
    */
   private refreshKeys(): void {
-    const keysFromConfig = this.configService.get<string>('API_KEYS', '');
-    const keysFromEnv = process.env.API_KEYS || '';
+    const keysFromConfig = this.configService.get<string>('API_KEYS');
+    const keysFromEnv = process.env.API_KEYS;
+    const isProduction = process.env.NODE_ENV === 'production';
 
     // Prefer ConfigService, fallback to env
-    const keysString = keysFromConfig || keysFromEnv;
+    const keysString = keysFromConfig || keysFromEnv || '';
     const keys = keysString
       .split(',')
       .map((k) => k.trim())
@@ -81,9 +82,12 @@ export class ApiKeyGuard implements CanActivate {
     this.lastRefresh = Date.now();
 
     if (keys.length === 0) {
+      if (isProduction) {
+        throw new Error('API_KEYS is required in production. Set comma-separated API keys.');
+      }
       this.logger.warn('No API keys configured - all API key authenticated routes will fail');
     } else {
-      this.logger.debug(`Loaded API keys`);
+      this.logger.debug(`Loaded ${keys.length} API key(s)`);
     }
   }
 

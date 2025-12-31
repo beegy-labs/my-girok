@@ -117,7 +117,7 @@ export class ConsentsService {
 
     this.logger.log(`Consent granted: accountId=${dto.accountId}, type=${dto.consentType}`);
 
-    return result as ConsentEntity;
+    return ConsentEntity.fromPrisma(result);
   }
 
   /**
@@ -148,7 +148,7 @@ export class ConsentsService {
 
         if (existing) {
           // Skip if already exists
-          createdConsents.push(existing as ConsentEntity);
+          createdConsents.push(ConsentEntity.fromPrisma(existing));
           continue;
         }
 
@@ -183,7 +183,7 @@ export class ConsentsService {
           },
         });
 
-        createdConsents.push(consent as ConsentEntity);
+        createdConsents.push(ConsentEntity.fromPrisma(consent));
       }
 
       return createdConsents;
@@ -287,7 +287,7 @@ export class ConsentsService {
       throw new NotFoundException(`Consent not found: ${consentId}`);
     }
 
-    return consent as ConsentEntity;
+    return ConsentEntity.fromPrisma(consent);
   }
 
   /**
@@ -422,7 +422,7 @@ export class ConsentsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return logs as ConsentLogEntity[];
+    return logs.map((log) => ConsentLogEntity.fromPrisma(log));
   }
 
   /**
@@ -456,7 +456,7 @@ export class ConsentsService {
     ]);
 
     return {
-      data: logs as ConsentLogEntity[],
+      data: logs.map((log) => ConsentLogEntity.fromPrisma(log)),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 0 },
     };
   }
@@ -476,7 +476,7 @@ export class ConsentsService {
       orderBy: { agreedAt: 'desc' },
     });
 
-    return consents as ConsentEntity[];
+    return consents.map((c) => ConsentEntity.fromPrisma(c));
   }
 
   /**

@@ -15,6 +15,7 @@ export class ProfilesService {
     });
 
     if (!profile) {
+      this.logger.warn(`Profile not found for account: ${accountId}`);
       throw new NotFoundException(`Profile not found for account: ${accountId}`);
     }
 
@@ -40,13 +41,23 @@ export class ProfilesService {
       postalCode?: string;
     },
   ) {
+    this.logger.debug(`Updating profile for account: ${accountId}`);
+
     const updateData: Prisma.ProfileUpdateInput = {
       ...data,
     };
-    return this.prisma.profile.update({
-      where: { accountId },
-      data: updateData,
-    });
+
+    try {
+      const result = await this.prisma.profile.update({
+        where: { accountId },
+        data: updateData,
+      });
+      this.logger.log(`Profile updated for account: ${accountId}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to update profile for account: ${accountId}`, error);
+      throw error;
+    }
   }
 
   async create(accountId: string, displayName: string) {
@@ -69,13 +80,19 @@ export class ProfilesService {
     });
 
     if (!profile) {
+      this.logger.warn(`Profile not found for deletion, account: ${accountId}`);
       throw new NotFoundException(`Profile not found for account: ${accountId}`);
     }
 
-    const result = await this.prisma.profile.delete({
-      where: { accountId },
-    });
-    this.logger.log(`Profile deleted for account: ${accountId}`);
-    return result;
+    try {
+      const result = await this.prisma.profile.delete({
+        where: { accountId },
+      });
+      this.logger.log(`Profile deleted for account: ${accountId}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to delete profile for account: ${accountId}`, error);
+      throw error;
+    }
   }
 }

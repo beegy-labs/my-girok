@@ -148,3 +148,26 @@ export const ACCOUNT_SECURITY = {
   /** Password history count (prevent reuse) */
   PASSWORD_HISTORY_COUNT: 5,
 } as const;
+
+/**
+ * Role hierarchy constraints
+ * Auth module - role management
+ */
+export const ROLE = {
+  /** Maximum depth of role hierarchy */
+  MAX_HIERARCHY_DEPTH: 10,
+  /** Maximum roles per operator */
+  MAX_ROLES_PER_OPERATOR: 5,
+} as const;
+
+/**
+ * DSR (Data Subject Request) deadline defaults by legal basis
+ * Legal module - GDPR/CCPA compliance
+ */
+export const DSR_DEADLINE_DAYS: Record<string, number> = {
+  GDPR: 30,
+  CCPA: 45,
+  PIPA: 10,
+  APPI: 14,
+  DEFAULT: 30,
+} as const;

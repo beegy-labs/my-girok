@@ -6,6 +6,7 @@ import {
   DsrStatus,
   DsrPriority,
   DsrResponseType,
+  DsrRequest,
 } from '.prisma/identity-legal-client';
 import { PaginationDto } from '../../../common/pagination/pagination.dto.js';
 
@@ -305,6 +306,36 @@ export class DsrRequestResponseDto {
 
   @ApiProperty({ description: 'Updated at' })
   updatedAt!: Date;
+
+  /**
+   * Map Prisma DsrRequest to DsrRequestResponseDto
+   */
+  static fromPrisma(request: DsrRequest): DsrRequestResponseDto {
+    const dto = new DsrRequestResponseDto();
+    dto.id = request.id;
+    dto.accountId = request.accountId;
+    dto.requestType = request.requestType;
+    dto.status = request.status;
+    dto.priority = request.priority;
+    dto.description = request.description;
+    dto.scope = request.scope as Record<string, unknown> | null;
+    dto.legalBasis = request.legalBasis;
+    dto.verifiedAt = request.verifiedAt;
+    dto.verificationMethod = request.verificationMethod;
+    dto.assignedTo = request.assignedTo;
+    dto.processedBy = request.processedBy;
+    dto.processedAt = request.processedAt;
+    dto.completedAt = request.completedAt;
+    dto.responseType = request.responseType;
+    dto.responseData = request.responseData as Record<string, unknown> | null;
+    dto.responseNote = request.responseNote;
+    dto.deadline = request.deadline;
+    dto.extendedTo = request.extendedTo;
+    dto.extensionReason = request.extensionReason;
+    dto.createdAt = request.createdAt;
+    dto.updatedAt = request.updatedAt;
+    return dto;
+  }
 }
 
 /**

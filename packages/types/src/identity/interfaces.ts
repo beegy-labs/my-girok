@@ -24,15 +24,21 @@ import type {
   RegisterDeviceDto,
   UpdateDeviceDto,
   Profile,
-  ProfileSummary,
-  CreateProfileDto,
   UpdateProfileDto,
-  PaginationMeta,
 } from './types.js';
 
 // ============================================================================
 // Account Management Interface
 // ============================================================================
+
+/**
+ * MFA setup response
+ */
+export interface MfaSetupResponse {
+  secret: string;
+  qrCode?: string;
+  backupCodes?: string[];
+}
 
 /**
  * Account management operations
@@ -45,8 +51,9 @@ export interface IAccountService {
 
   /**
    * Get account by ID
+   * @throws NotFoundException if not found
    */
-  getAccount(accountId: string): Promise<Account | null>;
+  getAccount(accountId: string): Promise<Account>;
 
   /**
    * Get account by email
@@ -69,19 +76,25 @@ export interface IAccountService {
   deleteAccount(accountId: string): Promise<void>;
 
   /**
-   * Verify email address
+   * Verify email address (marks email as verified)
    */
-  verifyEmail(accountId: string, token: string): Promise<void>;
-
-  /**
-   * Verify phone number
-   */
-  verifyPhone(accountId: string, code: string): Promise<void>;
+  verifyEmail(accountId: string): Promise<void>;
 
   /**
    * Enable MFA for account
+   * Returns secret, QR code URI, and backup codes
    */
-  enableMfa(accountId: string, method: string): Promise<{ secret: string; qrCode?: string }>;
+  enableMfa(accountId: string, method?: string): Promise<MfaSetupResponse>;
+
+  /**
+   * Verify and complete MFA setup
+   */
+  verifyAndCompleteMfaSetup(accountId: string, code: string): Promise<void>;
+
+  /**
+   * Verify MFA code for authentication
+   */
+  verifyMfaCode(accountId: string, code: string): Promise<boolean>;
 
   /**
    * Disable MFA for account
@@ -92,6 +105,21 @@ export interface IAccountService {
    * List accounts with pagination and filtering
    */
   listAccounts(query: AccountQueryDto): Promise<AccountListResponse>;
+
+  /**
+   * Validate password for authentication
+   */
+  validatePassword(accountId: string, password: string): Promise<boolean>;
+
+  /**
+   * Record failed login attempt
+   */
+  recordFailedLogin(accountId: string): Promise<void>;
+
+  /**
+   * Reset failed login attempts
+   */
+  resetFailedLogins(accountId: string): Promise<void>;
 }
 
 // ============================================================================
@@ -99,23 +127,44 @@ export interface IAccountService {
 // ============================================================================
 
 /**
+ * Created session response with tokens
+ */
+export interface CreatedSessionResponse extends Session {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/**
  * Session management operations
  */
 export interface ISessionService {
   /**
    * Create a new session
+   * Returns session with access and refresh tokens
    */
-  createSession(dto: CreateSessionDto): Promise<Session>;
+  createSession(dto: CreateSessionDto): Promise<CreatedSessionResponse>;
 
   /**
    * Get session by ID
+   * @throws NotFoundException if not found
    */
-  getSession(sessionId: string): Promise<Session | null>;
+  getSession(sessionId: string): Promise<Session>;
+
+  /**
+   * Find session by token hash
+   */
+  findByTokenHash(tokenHash: string): Promise<Session | null>;
+
+  /**
+   * Validate and find session by access token
+   * Returns null if token invalid or session expired
+   */
+  validateAccessToken(accessToken: string): Promise<Session | null>;
 
   /**
    * Refresh session tokens
    */
-  refreshSession(refreshToken: string): Promise<Session>;
+  refreshSession(refreshToken: string): Promise<CreatedSessionResponse>;
 
   /**
    * Revoke a session
@@ -124,8 +173,9 @@ export interface ISessionService {
 
   /**
    * Revoke all sessions for an account
+   * @returns Number of sessions revoked
    */
-  revokeAllSessions(accountId: string, excludeSessionId?: string): Promise<void>;
+  revokeAllSessions(accountId: string, excludeSessionId?: string): Promise<number>;
 
   /**
    * List sessions for an account
@@ -138,9 +188,15 @@ export interface ISessionService {
   touchSession(sessionId: string): Promise<void>;
 
   /**
-   * Validate session (check if active and not expired)
+   * Get active session count for account
    */
-  validateSession(sessionId: string): Promise<boolean>;
+  getActiveSessionCount(accountId: string): Promise<number>;
+
+  /**
+   * Cleanup expired sessions
+   * @returns Number of sessions cleaned up
+   */
+  cleanupExpired(): Promise<number>;
 }
 
 // ============================================================================
@@ -152,14 +208,15 @@ export interface ISessionService {
  */
 export interface IDeviceService {
   /**
-   * Register a new device
+   * Register a new device (upserts by fingerprint)
    */
   registerDevice(dto: RegisterDeviceDto): Promise<Device>;
 
   /**
    * Get device by ID
+   * @throws NotFoundException if not found
    */
-  getDevice(deviceId: string): Promise<Device | null>;
+  getDevice(deviceId: string): Promise<Device>;
 
   /**
    * Get device by fingerprint
@@ -172,7 +229,7 @@ export interface IDeviceService {
   updateDevice(deviceId: string, dto: UpdateDeviceDto): Promise<Device>;
 
   /**
-   * Remove device
+   * Remove device (also revokes associated sessions)
    */
   removeDevice(deviceId: string): Promise<void>;
 
@@ -183,13 +240,36 @@ export interface IDeviceService {
 
   /**
    * Trust a device
+   * @returns Updated device
    */
-  trustDevice(deviceId: string): Promise<void>;
+  trustDevice(deviceId: string): Promise<Device>;
 
   /**
    * Untrust a device
+   * @returns Updated device
    */
-  untrustDevice(deviceId: string): Promise<void>;
+  untrustDevice(deviceId: string): Promise<Device>;
+
+  /**
+   * Update device activity timestamp
+   */
+  updateActivity(deviceId: string, ipAddress?: string): Promise<void>;
+
+  /**
+   * Get device count for account
+   */
+  getDeviceCount(accountId: string): Promise<number>;
+
+  /**
+   * Get trusted device count for account
+   */
+  getTrustedDeviceCount(accountId: string): Promise<number>;
+
+  /**
+   * Remove all devices for account
+   * @returns Number of devices removed
+   */
+  removeAllForAccount(accountId: string): Promise<number>;
 }
 
 // ============================================================================
@@ -203,27 +283,18 @@ export interface IProfileService {
   /**
    * Create profile for account
    */
-  createProfile(dto: CreateProfileDto): Promise<Profile>;
+  createProfile(accountId: string, displayName: string): Promise<Profile>;
 
   /**
    * Get profile by account ID
+   * @throws NotFoundException if not found
    */
-  getProfile(accountId: string): Promise<Profile | null>;
-
-  /**
-   * Get public profile summary
-   */
-  getPublicProfile(accountId: string): Promise<ProfileSummary | null>;
+  getProfile(accountId: string): Promise<Profile>;
 
   /**
    * Update profile
    */
   updateProfile(accountId: string, dto: UpdateProfileDto): Promise<Profile>;
-
-  /**
-   * Update profile avatar
-   */
-  updateAvatar(accountId: string, avatarUrl: string): Promise<Profile>;
 
   /**
    * Delete profile
