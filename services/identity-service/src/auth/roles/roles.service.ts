@@ -21,7 +21,21 @@ import {
   RoleWithPermissions,
   RoleHierarchyNode,
 } from './entities/role.entity';
-import { Prisma } from '../../../node_modules/.prisma/identity-auth-client';
+import { Prisma, Role } from '.prisma/identity-auth-client';
+
+// Type for Role with children for hierarchy building
+type RoleWithChildren = Role & { children?: RoleWithChildren[]; parent?: Role | null };
+
+// Partial role type for summary mapping
+type PartialRole = {
+  id: string;
+  name: string;
+  displayName: string | null;
+  scope: string;
+  level: number;
+  isSystem: boolean;
+  isActive: boolean;
+};
 
 @Injectable()
 export class RolesService {
@@ -507,7 +521,7 @@ export class RolesService {
   /**
    * Build hierarchy node recursively
    */
-  private buildHierarchyNode(role: any): RoleHierarchyNode {
+  private buildHierarchyNode(role: RoleWithChildren): RoleHierarchyNode {
     return {
       id: role.id,
       name: role.name,
@@ -516,14 +530,14 @@ export class RolesService {
       level: role.level,
       isSystem: role.isSystem,
       isActive: role.isActive,
-      children: (role.children || []).map((child: any) => this.buildHierarchyNode(child)),
+      children: (role.children || []).map((child) => this.buildHierarchyNode(child)),
     };
   }
 
   /**
    * Map database model to entity
    */
-  private mapToEntity(role: any): RoleEntity {
+  private mapToEntity(role: RoleWithChildren): RoleEntity {
     return {
       id: role.id,
       name: role.name,
@@ -538,15 +552,15 @@ export class RolesService {
       countryCode: role.countryCode,
       createdAt: role.createdAt,
       updatedAt: role.updatedAt,
-      parent: role.parent ? this.mapToEntity(role.parent) : undefined,
-      children: role.children?.map((child: any) => this.mapToEntity(child)),
+      parent: role.parent ? this.mapToEntity(role.parent as RoleWithChildren) : undefined,
+      children: role.children?.map((child) => this.mapToEntity(child)),
     };
   }
 
   /**
    * Map database model to summary
    */
-  private mapToSummary(role: any): RoleSummary {
+  private mapToSummary(role: PartialRole): RoleSummary {
     return {
       id: role.id,
       name: role.name,

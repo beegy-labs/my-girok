@@ -14,7 +14,7 @@ import {
   PermissionListResponse,
   PermissionsByCategory,
 } from './entities/permission.entity';
-import { Prisma } from '../../../node_modules/.prisma/identity-auth-client';
+import { Prisma, Permission } from '.prisma/identity-auth-client';
 
 @Injectable()
 export class PermissionsService {
@@ -379,7 +379,7 @@ export class PermissionsService {
   /**
    * Map database model to entity
    */
-  private mapToEntity(permission: any): PermissionEntity {
+  private mapToEntity(permission: Permission): PermissionEntity {
     return {
       id: permission.id,
       resource: permission.resource,
@@ -397,7 +397,7 @@ export class PermissionsService {
   /**
    * Map database model to summary
    */
-  private mapToSummary(permission: any): PermissionSummary {
+  private mapToSummary(permission: Permission): PermissionSummary {
     return {
       id: permission.id,
       resource: permission.resource,

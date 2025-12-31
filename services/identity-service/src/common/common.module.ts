@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import {
   PrismaClientExceptionFilter,
   PrismaValidationExceptionFilter,
@@ -7,11 +7,14 @@ import {
 } from './filters';
 import { RequestContextInterceptor } from './interceptors';
 import { OutboxModule } from './outbox';
+import { CryptoService } from './crypto';
+import { ApiKeyGuard } from './guards';
 
 @Global()
 @Module({
   imports: [OutboxModule],
   providers: [
+    CryptoService,
     {
       provide: APP_FILTER,
       useClass: PrismaClientExceptionFilter,
@@ -28,7 +31,11 @@ import { OutboxModule } from './outbox';
       provide: APP_INTERCEPTOR,
       useClass: RequestContextInterceptor,
     },
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
+    },
   ],
-  exports: [OutboxModule],
+  exports: [OutboxModule, CryptoService],
 })
 export class CommonModule {}

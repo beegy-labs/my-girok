@@ -27,7 +27,10 @@ import {
   InvitationListResponse,
   InvitationStatus,
 } from './entities/operator.entity';
-import { Prisma } from '.prisma/identity-auth-client';
+import { Prisma, Operator, OperatorInvitation, Role } from '.prisma/identity-auth-client';
+
+// Type for Operator with role relation
+type OperatorWithRole = Operator & { role?: Role };
 
 @Injectable()
 export class OperatorsService {
@@ -631,7 +634,7 @@ export class OperatorsService {
   /**
    * Map database model to entity
    */
-  private mapToEntity(operator: any): OperatorEntity {
+  private mapToEntity(operator: Operator): OperatorEntity {
     return {
       id: operator.id,
       accountId: operator.accountId,
@@ -655,7 +658,7 @@ export class OperatorsService {
   /**
    * Map database model to summary
    */
-  private mapToSummary(operator: any): OperatorSummary {
+  private mapToSummary(operator: OperatorWithRole): OperatorSummary {
     return {
       id: operator.id,
       email: operator.email,
@@ -672,7 +675,7 @@ export class OperatorsService {
   /**
    * Map database model to invitation entity
    */
-  private mapToInvitationEntity(invitation: any): OperatorInvitationEntity {
+  private mapToInvitationEntity(invitation: OperatorInvitation): OperatorInvitationEntity {
     return {
       id: invitation.id,
       email: invitation.email,

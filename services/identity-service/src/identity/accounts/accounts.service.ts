@@ -6,7 +6,9 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
+import { CryptoService } from '../../common/crypto';
 import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-account.dto';
 import { UpdateAccountDto, AccountStatus, ChangePasswordDto } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
@@ -62,7 +64,10 @@ export class AccountsService {
   private readonly EXTERNAL_ID_PREFIX = 'ACC_';
   private readonly EXTERNAL_ID_LENGTH = 10;
 
-  constructor(private readonly prisma: IdentityPrismaService) {}
+  constructor(
+    private readonly prisma: IdentityPrismaService,
+    private readonly cryptoService: CryptoService,
+  ) {}
 
   /**
    * Generate a unique external ID for accounts
@@ -217,8 +222,8 @@ export class AccountsService {
     const limit = Math.min(params.limit || 20, 100);
     const skip = (page - 1) * limit;
 
-    // Build where clause
-    const where: any = {
+    // Build where clause with proper typing
+    const where: Prisma.AccountWhereInput = {
       deletedAt: null,
     };
 
@@ -238,11 +243,12 @@ export class AccountsService {
       where.emailVerified = params.emailVerified;
     }
 
-    // Build order by
-    const orderBy: any = {};
+    // Build order by with proper typing
     const sortField = params.sort || 'createdAt';
     const sortOrder = params.order || 'desc';
-    orderBy[sortField] = sortOrder;
+    const orderBy: Prisma.AccountOrderByWithRelationInput = {
+      [sortField]: sortOrder,
+    };
 
     const [accounts, total] = await Promise.all([
       this.prisma.account.findMany({
@@ -394,6 +400,7 @@ export class AccountsService {
 
   /**
    * Enable MFA for account
+   * MFA secret is encrypted before storage for security
    */
   async enableMfa(id: string, _method: string = 'TOTP'): Promise<MfaSetupResponse> {
     const account = await this.prisma.account.findUnique({
@@ -408,13 +415,21 @@ export class AccountsService {
       throw new ConflictException('MFA is already enabled');
     }
 
-    // Generate MFA secret (in production, use proper TOTP library)
-    const secret = crypto.randomBytes(20).toString('hex');
+    // Generate TOTP-compatible secret (base32 encoded for authenticator apps)
+    const secret = this.cryptoService.generateTotpSecret();
+
+    // Encrypt secret before storing in database
+    const encryptedSecret = this.cryptoService.encrypt(secret);
+
+    // Generate backup codes
+    const backupCodes = Array.from({ length: 10 }, () =>
+      crypto.randomBytes(4).toString('hex').toUpperCase(),
+    );
 
     await this.prisma.account.update({
       where: { id },
       data: {
-        mfaSecret: secret,
+        mfaSecret: encryptedSecret,
       },
     });
 
@@ -423,6 +438,7 @@ export class AccountsService {
     return {
       secret,
       qrCode: `otpauth://totp/MyGirok:${account.email}?secret=${secret}&issuer=MyGirok`,
+      backupCodes,
     };
   }
 
@@ -454,6 +470,7 @@ export class AccountsService {
 
   /**
    * Disable MFA for account
+   * Securely removes encrypted MFA secret
    */
   async disableMfa(id: string): Promise<void> {
     const account = await this.prisma.account.findUnique({
@@ -472,11 +489,33 @@ export class AccountsService {
       where: { id },
       data: {
         mfaEnabled: false,
-        mfaSecret: null,
+        mfaSecret: null, // Encrypted secret is removed
       },
     });
 
     this.logger.log(`MFA disabled for account ${id}`);
+  }
+
+  /**
+   * Get decrypted MFA secret for TOTP verification
+   * Only used internally for verifying TOTP codes
+   */
+  async getMfaSecret(id: string): Promise<string | null> {
+    const account = await this.prisma.account.findUnique({
+      where: { id },
+      select: { mfaSecret: true, mfaEnabled: true },
+    });
+
+    if (!account || !account.mfaEnabled || !account.mfaSecret) {
+      return null;
+    }
+
+    try {
+      return this.cryptoService.decrypt(account.mfaSecret);
+    } catch (error) {
+      this.logger.error(`Failed to decrypt MFA secret for account ${id}`, error);
+      return null;
+    }
   }
 
   /**

@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { Prisma, Device } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { RegisterDeviceDto, DeviceQueryDto } from './dto/register-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
@@ -171,7 +172,7 @@ export class DevicesService {
     const limit = Math.min(params.limit || 20, 100);
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.DeviceWhereInput = {};
 
     if (params.accountId) {
       where.accountId = params.accountId;
@@ -386,7 +387,7 @@ export class DevicesService {
   /**
    * Convert Prisma device to response type
    */
-  private toDeviceResponse(device: any): DeviceResponse {
+  private toDeviceResponse(device: Device): DeviceResponse {
     return {
       id: device.id,
       accountId: device.accountId,

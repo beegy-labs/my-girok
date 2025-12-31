@@ -1,0 +1,124 @@
+import { Injectable, Logger } from '@nestjs/common';
+import * as crypto from 'crypto';
+
+/**
+ * Cryptographic service for encryption/decryption operations
+ * Used for sensitive data like MFA secrets
+ */
+@Injectable()
+export class CryptoService {
+  private readonly logger = new Logger(CryptoService.name);
+  private readonly algorithm = 'aes-256-gcm';
+  private readonly keyLength = 32; // 256 bits
+  private readonly ivLength = 16; // 128 bits
+  private readonly encryptionKey: Buffer;
+
+  constructor() {
+    const keyEnv = process.env.ENCRYPTION_KEY;
+    if (!keyEnv) {
+      this.logger.warn(
+        'ENCRYPTION_KEY not set - using derived key from NODE_ENV. Set ENCRYPTION_KEY in production!',
+      );
+      // Derive a key from environment for development
+      this.encryptionKey = crypto
+        .createHash('sha256')
+        .update(process.env.NODE_ENV || 'development')
+        .digest();
+    } else {
+      // Use base64 encoded key from environment
+      this.encryptionKey = Buffer.from(keyEnv, 'base64');
+      if (this.encryptionKey.length !== this.keyLength) {
+        throw new Error(
+          `ENCRYPTION_KEY must be ${this.keyLength} bytes (${this.keyLength * (4 / 3)} chars base64)`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Encrypt sensitive data
+   * Returns base64 encoded string: iv:authTag:encryptedData
+   */
+  encrypt(plaintext: string): string {
+    const iv = crypto.randomBytes(this.ivLength);
+    const cipher = crypto.createCipheriv(this.algorithm, this.encryptionKey, iv);
+
+    let encrypted = cipher.update(plaintext, 'utf8', 'base64');
+    encrypted += cipher.final('base64');
+
+    const authTag = cipher.getAuthTag();
+
+    // Combine iv + authTag + encrypted data
+    return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted}`;
+  }
+
+  /**
+   * Decrypt sensitive data
+   * Expects base64 encoded string: iv:authTag:encryptedData
+   */
+  decrypt(ciphertext: string): string {
+    const parts = ciphertext.split(':');
+    if (parts.length !== 3) {
+      throw new Error('Invalid ciphertext format');
+    }
+
+    const [ivBase64, authTagBase64, encrypted] = parts;
+    const iv = Buffer.from(ivBase64, 'base64');
+    const authTag = Buffer.from(authTagBase64, 'base64');
+
+    const decipher = crypto.createDecipheriv(this.algorithm, this.encryptionKey, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(encrypted, 'base64', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    return decrypted;
+  }
+
+  /**
+   * Hash data using SHA-256
+   */
+  hash(data: string): string {
+    return crypto.createHash('sha256').update(data).digest('hex');
+  }
+
+  /**
+   * Generate a random token
+   */
+  generateToken(bytes: number = 32): string {
+    return crypto.randomBytes(bytes).toString('base64url');
+  }
+
+  /**
+   * Generate TOTP-compatible secret (base32 encoded)
+   */
+  generateTotpSecret(): string {
+    const secret = crypto.randomBytes(20);
+    return this.base32Encode(secret);
+  }
+
+  /**
+   * Base32 encode for TOTP compatibility
+   */
+  private base32Encode(buffer: Buffer): string {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let result = '';
+    let bits = 0;
+    let value = 0;
+
+    for (const byte of buffer) {
+      value = (value << 8) | byte;
+      bits += 8;
+      while (bits >= 5) {
+        result += alphabet[(value >>> (bits - 5)) & 31];
+        bits -= 5;
+      }
+    }
+
+    if (bits > 0) {
+      result += alphabet[(value << (5 - bits)) & 31];
+    }
+
+    return result;
+  }
+}

@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { IdentityPrismaService, AuthPrismaService, LegalPrismaService } from '../../database';
+import { OutboxStatus as IdentityOutboxStatus } from '.prisma/identity-client';
+import { OutboxStatus as AuthOutboxStatus } from '.prisma/identity-auth-client';
+import { OutboxStatus as LegalOutboxStatus } from '.prisma/identity-legal-client';
 
 export type OutboxDatabase = 'identity' | 'auth' | 'legal';
 
@@ -47,27 +50,33 @@ export class OutboxService {
    * This ensures the event is only published if the transaction succeeds
    */
   async publishEvent(database: OutboxDatabase, event: OutboxEventPayload): Promise<OutboxEvent> {
-    const data = {
-      id: randomUUID() as string,
+    const id = randomUUID();
+    const baseData = {
+      id,
       aggregateType: event.aggregateType,
       aggregateId: event.aggregateId,
       eventType: event.eventType,
       payload: event.payload as object,
-      status: 'PENDING',
       retryCount: 0,
     };
 
-    let outboxEvent: unknown;
+    let outboxEvent: OutboxEvent;
 
     switch (database) {
       case 'identity':
-        outboxEvent = await this.identityPrisma.outboxEvent.create({ data });
+        outboxEvent = (await this.identityPrisma.outboxEvent.create({
+          data: { ...baseData, status: IdentityOutboxStatus.PENDING },
+        })) as unknown as OutboxEvent;
         break;
       case 'auth':
-        outboxEvent = await this.authPrisma.outboxEvent.create({ data });
+        outboxEvent = (await this.authPrisma.outboxEvent.create({
+          data: { ...baseData, status: AuthOutboxStatus.PENDING },
+        })) as unknown as OutboxEvent;
         break;
       case 'legal':
-        outboxEvent = await this.legalPrisma.outboxEvent.create({ data });
+        outboxEvent = (await this.legalPrisma.outboxEvent.create({
+          data: { ...baseData, status: LegalOutboxStatus.PENDING },
+        })) as unknown as OutboxEvent;
         break;
     }
 
@@ -75,7 +84,7 @@ export class OutboxService {
       `Published event to ${database} outbox: ${event.eventType} for ${event.aggregateType}:${event.aggregateId}`,
     );
 
-    return outboxEvent as OutboxEvent;
+    return outboxEvent;
   }
 
   /**
@@ -89,34 +98,54 @@ export class OutboxService {
       return [];
     }
 
-    const data = events.map((event) => ({
-      id: randomUUID() as string,
-      aggregateType: event.aggregateType,
-      aggregateId: event.aggregateId,
-      eventType: event.eventType,
-      payload: event.payload as object,
-      status: 'PENDING',
-      retryCount: 0,
-    }));
-
-    const ids = data.map((d) => d.id);
+    const ids = events.map(() => randomUUID());
 
     switch (database) {
-      case 'identity':
+      case 'identity': {
+        const data = events.map((event, i) => ({
+          id: ids[i],
+          aggregateType: event.aggregateType,
+          aggregateId: event.aggregateId,
+          eventType: event.eventType,
+          payload: event.payload as object,
+          retryCount: 0,
+          status: IdentityOutboxStatus.PENDING,
+        }));
         await this.identityPrisma.outboxEvent.createMany({ data });
         return (await this.identityPrisma.outboxEvent.findMany({
           where: { id: { in: ids } },
         })) as unknown as OutboxEvent[];
-      case 'auth':
+      }
+      case 'auth': {
+        const data = events.map((event, i) => ({
+          id: ids[i],
+          aggregateType: event.aggregateType,
+          aggregateId: event.aggregateId,
+          eventType: event.eventType,
+          payload: event.payload as object,
+          retryCount: 0,
+          status: AuthOutboxStatus.PENDING,
+        }));
         await this.authPrisma.outboxEvent.createMany({ data });
         return (await this.authPrisma.outboxEvent.findMany({
           where: { id: { in: ids } },
         })) as unknown as OutboxEvent[];
-      case 'legal':
+      }
+      case 'legal': {
+        const data = events.map((event, i) => ({
+          id: ids[i],
+          aggregateType: event.aggregateType,
+          aggregateId: event.aggregateId,
+          eventType: event.eventType,
+          payload: event.payload as object,
+          retryCount: 0,
+          status: LegalOutboxStatus.PENDING,
+        }));
         await this.legalPrisma.outboxEvent.createMany({ data });
         return (await this.legalPrisma.outboxEvent.findMany({
           where: { id: { in: ids } },
         })) as unknown as OutboxEvent[];
+      }
     }
   }
 
@@ -124,28 +153,33 @@ export class OutboxService {
    * Get pending events for processing
    */
   async getPendingEvents(database: OutboxDatabase, limit: number = 100): Promise<OutboxEvent[]> {
-    const where = {
-      status: 'PENDING',
-      retryCount: { lt: this.maxRetries },
-    };
     const orderBy = { createdAt: 'asc' as const };
 
     switch (database) {
       case 'identity':
         return (await this.identityPrisma.outboxEvent.findMany({
-          where,
+          where: {
+            status: IdentityOutboxStatus.PENDING,
+            retryCount: { lt: this.maxRetries },
+          },
           orderBy,
           take: limit,
         })) as unknown as OutboxEvent[];
       case 'auth':
         return (await this.authPrisma.outboxEvent.findMany({
-          where,
+          where: {
+            status: AuthOutboxStatus.PENDING,
+            retryCount: { lt: this.maxRetries },
+          },
           orderBy,
           take: limit,
         })) as unknown as OutboxEvent[];
       case 'legal':
         return (await this.legalPrisma.outboxEvent.findMany({
-          where,
+          where: {
+            status: LegalOutboxStatus.PENDING,
+            retryCount: { lt: this.maxRetries },
+          },
           orderBy,
           take: limit,
         })) as unknown as OutboxEvent[];
@@ -156,25 +190,23 @@ export class OutboxService {
    * Mark event as processing
    */
   async markAsProcessing(database: OutboxDatabase, eventId: string): Promise<void> {
-    const updateData = { status: 'PROCESSING' };
-
     switch (database) {
       case 'identity':
         await this.identityPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: { status: IdentityOutboxStatus.PROCESSING },
         });
         break;
       case 'auth':
         await this.authPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: { status: AuthOutboxStatus.PROCESSING },
         });
         break;
       case 'legal':
         await this.legalPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: { status: LegalOutboxStatus.PROCESSING },
         });
         break;
     }
@@ -184,28 +216,25 @@ export class OutboxService {
    * Mark event as completed
    */
   async markAsCompleted(database: OutboxDatabase, eventId: string): Promise<void> {
-    const updateData = {
-      status: 'COMPLETED',
-      processedAt: new Date(),
-    };
+    const processedAt = new Date();
 
     switch (database) {
       case 'identity':
         await this.identityPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: { status: IdentityOutboxStatus.COMPLETED, processedAt },
         });
         break;
       case 'auth':
         await this.authPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: { status: AuthOutboxStatus.COMPLETED, processedAt },
         });
         break;
       case 'legal':
         await this.legalPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: { status: LegalOutboxStatus.COMPLETED, processedAt },
         });
         break;
     }
@@ -246,36 +275,42 @@ export class OutboxService {
     }
 
     const newRetryCount = event.retryCount + 1;
-    const status = newRetryCount >= this.maxRetries ? 'FAILED' : 'PENDING';
-
-    const updateData = {
-      status,
-      retryCount: newRetryCount,
-      lastError: error,
-    };
+    const isFailed = newRetryCount >= this.maxRetries;
 
     switch (database) {
       case 'identity':
         await this.identityPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: {
+            status: isFailed ? IdentityOutboxStatus.FAILED : IdentityOutboxStatus.PENDING,
+            retryCount: newRetryCount,
+            lastError: error,
+          },
         });
         break;
       case 'auth':
         await this.authPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: {
+            status: isFailed ? AuthOutboxStatus.FAILED : AuthOutboxStatus.PENDING,
+            retryCount: newRetryCount,
+            lastError: error,
+          },
         });
         break;
       case 'legal':
         await this.legalPrisma.outboxEvent.update({
           where: { id: eventId },
-          data: updateData,
+          data: {
+            status: isFailed ? LegalOutboxStatus.FAILED : LegalOutboxStatus.PENDING,
+            retryCount: newRetryCount,
+            lastError: error,
+          },
         });
         break;
     }
 
-    if (status === 'FAILED') {
+    if (isFailed) {
       this.logger.error(`Event ${eventId} in ${database} exceeded max retries: ${error}`);
     } else {
       this.logger.warn(
@@ -294,22 +329,38 @@ export class OutboxService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
-    const where = {
-      status: 'COMPLETED',
-      processedAt: { lt: cutoffDate },
-    };
-
     let count = 0;
 
     switch (database) {
       case 'identity':
-        count = (await this.identityPrisma.outboxEvent.deleteMany({ where })).count;
+        count = (
+          await this.identityPrisma.outboxEvent.deleteMany({
+            where: {
+              status: IdentityOutboxStatus.COMPLETED,
+              processedAt: { lt: cutoffDate },
+            },
+          })
+        ).count;
         break;
       case 'auth':
-        count = (await this.authPrisma.outboxEvent.deleteMany({ where })).count;
+        count = (
+          await this.authPrisma.outboxEvent.deleteMany({
+            where: {
+              status: AuthOutboxStatus.COMPLETED,
+              processedAt: { lt: cutoffDate },
+            },
+          })
+        ).count;
         break;
       case 'legal':
-        count = (await this.legalPrisma.outboxEvent.deleteMany({ where })).count;
+        count = (
+          await this.legalPrisma.outboxEvent.deleteMany({
+            where: {
+              status: LegalOutboxStatus.COMPLETED,
+              processedAt: { lt: cutoffDate },
+            },
+          })
+        ).count;
         break;
     }
 
@@ -337,26 +388,32 @@ export class OutboxService {
     switch (database) {
       case 'identity':
         [pending, processing, completed, failed] = await Promise.all([
-          this.identityPrisma.outboxEvent.count({ where: { status: 'PENDING' } }),
-          this.identityPrisma.outboxEvent.count({ where: { status: 'PROCESSING' } }),
-          this.identityPrisma.outboxEvent.count({ where: { status: 'COMPLETED' } }),
-          this.identityPrisma.outboxEvent.count({ where: { status: 'FAILED' } }),
+          this.identityPrisma.outboxEvent.count({
+            where: { status: IdentityOutboxStatus.PENDING },
+          }),
+          this.identityPrisma.outboxEvent.count({
+            where: { status: IdentityOutboxStatus.PROCESSING },
+          }),
+          this.identityPrisma.outboxEvent.count({
+            where: { status: IdentityOutboxStatus.COMPLETED },
+          }),
+          this.identityPrisma.outboxEvent.count({ where: { status: IdentityOutboxStatus.FAILED } }),
         ]);
         break;
       case 'auth':
         [pending, processing, completed, failed] = await Promise.all([
-          this.authPrisma.outboxEvent.count({ where: { status: 'PENDING' } }),
-          this.authPrisma.outboxEvent.count({ where: { status: 'PROCESSING' } }),
-          this.authPrisma.outboxEvent.count({ where: { status: 'COMPLETED' } }),
-          this.authPrisma.outboxEvent.count({ where: { status: 'FAILED' } }),
+          this.authPrisma.outboxEvent.count({ where: { status: AuthOutboxStatus.PENDING } }),
+          this.authPrisma.outboxEvent.count({ where: { status: AuthOutboxStatus.PROCESSING } }),
+          this.authPrisma.outboxEvent.count({ where: { status: AuthOutboxStatus.COMPLETED } }),
+          this.authPrisma.outboxEvent.count({ where: { status: AuthOutboxStatus.FAILED } }),
         ]);
         break;
       case 'legal':
         [pending, processing, completed, failed] = await Promise.all([
-          this.legalPrisma.outboxEvent.count({ where: { status: 'PENDING' } }),
-          this.legalPrisma.outboxEvent.count({ where: { status: 'PROCESSING' } }),
-          this.legalPrisma.outboxEvent.count({ where: { status: 'COMPLETED' } }),
-          this.legalPrisma.outboxEvent.count({ where: { status: 'FAILED' } }),
+          this.legalPrisma.outboxEvent.count({ where: { status: LegalOutboxStatus.PENDING } }),
+          this.legalPrisma.outboxEvent.count({ where: { status: LegalOutboxStatus.PROCESSING } }),
+          this.legalPrisma.outboxEvent.count({ where: { status: LegalOutboxStatus.COMPLETED } }),
+          this.legalPrisma.outboxEvent.count({ where: { status: LegalOutboxStatus.FAILED } }),
         ]);
         break;
     }

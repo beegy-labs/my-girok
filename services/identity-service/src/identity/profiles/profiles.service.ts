@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
+import { Gender, Prisma } from '.prisma/identity-client';
 
 @Injectable()
 export class ProfilesService {
@@ -25,17 +26,23 @@ export class ProfilesService {
       lastName?: string;
       avatar?: string;
       bio?: string;
-      dateOfBirth?: Date;
-      gender?: string;
-      locale?: string;
-      timezone?: string;
+      birthDate?: Date;
+      gender?: Gender | null;
+      phoneCountryCode?: string;
+      phoneNumber?: string;
       countryCode?: string;
-      visibility?: string;
+      region?: string;
+      city?: string;
+      address?: string;
+      postalCode?: string;
     },
   ) {
+    const updateData: Prisma.ProfileUpdateInput = {
+      ...data,
+    };
     return this.prisma.profile.update({
       where: { accountId },
-      data,
+      data: updateData,
     });
   }
 

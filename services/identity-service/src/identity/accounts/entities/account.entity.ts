@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { Account } from '.prisma/identity-client';
 
 /**
  * Account entity representing a user account in the identity system
@@ -140,9 +141,31 @@ export class AccountEntity {
   /**
    * Create AccountEntity from Prisma Account model
    */
-  static fromPrisma(account: any): AccountEntity {
+  static fromPrisma(account: Account): AccountEntity {
     const entity = new AccountEntity();
-    Object.assign(entity, account);
+    entity.id = account.id;
+    entity.externalId = account.externalId;
+    entity.email = account.email;
+    entity.username = account.username;
+    entity.provider = account.provider;
+    entity.providerId = account.providerId;
+    entity.status = account.status;
+    entity.mode = account.mode;
+    entity.emailVerified = account.emailVerified;
+    entity.emailVerifiedAt = account.emailVerifiedAt;
+    entity.phoneVerified = account.phoneVerified;
+    entity.phoneVerifiedAt = account.phoneVerifiedAt;
+    entity.mfaEnabled = account.mfaEnabled;
+    entity.lastPasswordChange = account.lastPasswordChange;
+    entity.failedLoginAttempts = account.failedLoginAttempts;
+    entity.lockedUntil = account.lockedUntil;
+    entity.region = account.region;
+    entity.locale = account.locale;
+    entity.timezone = account.timezone;
+    entity.countryCode = account.countryCode;
+    entity.createdAt = account.createdAt;
+    entity.updatedAt = account.updatedAt;
+    entity.deletedAt = account.deletedAt;
     return entity;
   }
 

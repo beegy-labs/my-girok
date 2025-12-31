@@ -116,8 +116,9 @@ export class RoleSummary {
   @ApiProperty({
     description: 'Display name',
     example: 'Service Administrator',
+    nullable: true,
   })
-  displayName!: string;
+  displayName!: string | null;
 
   @ApiProperty({
     description: 'Role scope',

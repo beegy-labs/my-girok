@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { Prisma, Session } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CreateSessionDto, RevokeSessionDto, SessionQueryDto } from './dto';
 import * as crypto from 'crypto';
@@ -272,14 +273,11 @@ export class SessionsService {
    * Revoke all sessions for an account
    */
   async revokeAllForAccount(accountId: string, excludeSessionId?: string): Promise<number> {
-    const where: any = {
+    const where: Prisma.SessionWhereInput = {
       accountId,
       isActive: true,
+      ...(excludeSessionId && { id: { not: excludeSessionId } }),
     };
-
-    if (excludeSessionId) {
-      where.id = { not: excludeSessionId };
-    }
 
     const result = await this.prisma.session.updateMany({
       where,
@@ -302,7 +300,7 @@ export class SessionsService {
     const limit = Math.min(params.limit || 20, 100);
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.SessionWhereInput = {};
 
     if (params.accountId) {
       where.accountId = params.accountId;
@@ -391,7 +389,7 @@ export class SessionsService {
   /**
    * Convert Prisma session to response type
    */
-  private toSessionResponse(session: any): SessionResponse {
+  private toSessionResponse(session: Session): SessionResponse {
     return {
       id: session.id,
       accountId: session.accountId,
