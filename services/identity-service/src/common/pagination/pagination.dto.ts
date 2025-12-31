@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, Min, IsIn, Matches, MaxLength } from 'class-validator';
+import { PAGINATION } from '../constants';
 
 /**
  * Common sortable fields whitelist
@@ -28,27 +29,27 @@ export type AllowedSortField = (typeof ALLOWED_SORT_FIELDS)[number];
 export class PaginationDto {
   @ApiPropertyOptional({
     description: 'Page number (1-based)',
-    default: 1,
+    default: PAGINATION.DEFAULT_PAGE,
     minimum: 1,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = PAGINATION.DEFAULT_PAGE;
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
-    default: 20,
-    minimum: 1,
-    maximum: 100,
+    default: PAGINATION.DEFAULT_LIMIT,
+    minimum: PAGINATION.MIN_LIMIT,
+    maximum: PAGINATION.MAX_LIMIT,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
+  @Min(PAGINATION.MIN_LIMIT)
+  @Max(PAGINATION.MAX_LIMIT)
+  limit?: number = PAGINATION.DEFAULT_LIMIT;
 
   @ApiPropertyOptional({
     description: 'Field to sort by (must be alphanumeric/camelCase, max 50 chars)',
@@ -75,14 +76,14 @@ export class PaginationDto {
    * Get the skip value for Prisma pagination
    */
   get skip(): number {
-    return ((this.page ?? 1) - 1) * (this.limit ?? 20);
+    return ((this.page ?? PAGINATION.DEFAULT_PAGE) - 1) * (this.limit ?? PAGINATION.DEFAULT_LIMIT);
   }
 
   /**
    * Get the take value for Prisma pagination
    */
   get take(): number {
-    return this.limit ?? 20;
+    return this.limit ?? PAGINATION.DEFAULT_LIMIT;
   }
 
   /**

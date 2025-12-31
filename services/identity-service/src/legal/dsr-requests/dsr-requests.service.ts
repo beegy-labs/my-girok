@@ -353,9 +353,6 @@ export class DsrRequestsService {
    * List DSR requests with pagination and filters
    */
   async findAll(query: DsrRequestQueryDto): Promise<DsrRequestListResponseDto> {
-    const page = query.page || 1;
-    const limit = query.limit || 20;
-    const skip = (page - 1) * limit;
     const now = new Date();
 
     const where: Prisma.DsrRequestWhereInput = {};
@@ -388,19 +385,14 @@ export class DsrRequestsService {
       ];
     }
 
-    const orderBy: Prisma.DsrRequestOrderByWithRelationInput = {};
-    if (query.sort) {
-      orderBy[query.sort as keyof Prisma.DsrRequestOrderByWithRelationInput] =
-        query.order || 'desc';
-    } else {
-      orderBy.createdAt = 'desc';
-    }
+    // Use PaginationDto methods for standardized pagination
+    const orderBy = query.getDsrOrderBy();
 
     const [requests, total] = await Promise.all([
       this.prisma.dsrRequest.findMany({
         where,
-        skip,
-        take: limit,
+        skip: query.skip,
+        take: query.take,
         orderBy,
       }),
       this.prisma.dsrRequest.count({ where }),
@@ -425,9 +417,12 @@ export class DsrRequestsService {
       };
     });
 
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+
     return {
       data,
-      meta: { total, page, limit },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 0 },
     };
   }
 

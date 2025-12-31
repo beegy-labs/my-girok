@@ -46,9 +46,10 @@ export class LawRegistryService {
    * Find all laws with pagination and filters
    */
   async findAll(query: LawQueryDto): Promise<LawListResponseDto> {
+    // Use PaginationDto properties for standardized pagination
     const page = query.page ?? 1;
-    const limit = query.limit ?? 20;
-    const offset = (page - 1) * limit;
+    const limit = query.take;
+    const offset = query.skip;
 
     const countryCodeFilter = query.countryCode ?? null;
     const isActiveFilter = query.isActive ?? null;
@@ -79,7 +80,7 @@ export class LawRegistryService {
         ...row,
         requirements: row.requirements as LawRequirementsDto,
       })),
-      meta: { total, page, limit },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 0 },
     };
   }
 

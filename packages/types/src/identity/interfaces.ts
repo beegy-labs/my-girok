@@ -1,6 +1,10 @@
 /**
  * Identity Platform - Module Interfaces
- * IIdentityModule interface definition
+ * SSOT for cross-module communication
+ *
+ * Architecture: Combined service with pre-separated DBs for Zero Migration
+ * - Current: In-process calls via interfaces
+ * - Future: gRPC calls (same interface, different implementation)
  */
 
 import type {
@@ -8,8 +12,8 @@ import type {
   AccountListResponse,
   AccountQueryDto,
   CreateAccountDto,
-  IdentityUpdateAccountDto,
-  IdentitySession,
+  UpdateAccountDto,
+  Session,
   SessionListResponse,
   SessionQueryDto,
   CreateSessionDto,
@@ -22,7 +26,8 @@ import type {
   Profile,
   ProfileSummary,
   CreateProfileDto,
-  IdentityUpdateProfileDto,
+  UpdateProfileDto,
+  PaginationMeta,
 } from './types.js';
 
 // ============================================================================
@@ -35,71 +40,56 @@ import type {
 export interface IAccountService {
   /**
    * Create a new account
-   * @param dto Account creation data
-   * @returns Created account
    */
   createAccount(dto: CreateAccountDto): Promise<Account>;
 
   /**
    * Get account by ID
-   * @param accountId Account ID
-   * @returns Account or null if not found
    */
   getAccount(accountId: string): Promise<Account | null>;
 
   /**
    * Get account by email
-   * @param email Email address
-   * @returns Account or null if not found
    */
   getAccountByEmail(email: string): Promise<Account | null>;
 
   /**
-   * Update account
-   * @param accountId Account ID
-   * @param dto Update data
-   * @returns Updated account
+   * Get account by username
    */
-  updateAccount(accountId: string, dto: IdentityUpdateAccountDto): Promise<Account>;
+  getAccountByUsername(username: string): Promise<Account | null>;
+
+  /**
+   * Update account
+   */
+  updateAccount(accountId: string, dto: UpdateAccountDto): Promise<Account>;
 
   /**
    * Soft delete account
-   * @param accountId Account ID
    */
   deleteAccount(accountId: string): Promise<void>;
 
   /**
    * Verify email address
-   * @param accountId Account ID
-   * @param token Verification token
    */
   verifyEmail(accountId: string, token: string): Promise<void>;
 
   /**
    * Verify phone number
-   * @param accountId Account ID
-   * @param code Verification code
    */
   verifyPhone(accountId: string, code: string): Promise<void>;
 
   /**
    * Enable MFA for account
-   * @param accountId Account ID
-   * @param method MFA method (TOTP, SMS, etc.)
-   * @returns MFA setup data (secret, QR code, etc.)
    */
   enableMfa(accountId: string, method: string): Promise<{ secret: string; qrCode?: string }>;
 
   /**
    * Disable MFA for account
-   * @param accountId Account ID
    */
   disableMfa(accountId: string): Promise<void>;
 
   /**
    * List accounts with pagination and filtering
-   * @param query Query parameters
-   * @returns Paginated account list
    */
   listAccounts(query: AccountQueryDto): Promise<AccountListResponse>;
 }
@@ -114,56 +104,41 @@ export interface IAccountService {
 export interface ISessionService {
   /**
    * Create a new session
-   * @param dto Session creation data
-   * @returns Created session with tokens
    */
-  createSession(dto: CreateSessionDto): Promise<IdentitySession>;
+  createSession(dto: CreateSessionDto): Promise<Session>;
 
   /**
    * Get session by ID
-   * @param sessionId Session ID
-   * @returns Session or null if not found
    */
-  getSession(sessionId: string): Promise<IdentitySession | null>;
+  getSession(sessionId: string): Promise<Session | null>;
 
   /**
    * Refresh session tokens
-   * @param refreshToken Current refresh token
-   * @returns New session with refreshed tokens
    */
-  refreshSession(refreshToken: string): Promise<IdentitySession>;
+  refreshSession(refreshToken: string): Promise<Session>;
 
   /**
    * Revoke a session
-   * @param sessionId Session ID
-   * @param dto Revoke reason
    */
   revokeSession(sessionId: string, dto?: RevokeSessionDto): Promise<void>;
 
   /**
    * Revoke all sessions for an account
-   * @param accountId Account ID
-   * @param excludeSessionId Optional session to exclude from revocation
    */
   revokeAllSessions(accountId: string, excludeSessionId?: string): Promise<void>;
 
   /**
    * List sessions for an account
-   * @param query Query parameters
-   * @returns Paginated session list
    */
   listSessions(query: SessionQueryDto): Promise<SessionListResponse>;
 
   /**
    * Update session activity timestamp
-   * @param sessionId Session ID
    */
   touchSession(sessionId: string): Promise<void>;
 
   /**
-   * Validate session
-   * @param sessionId Session ID
-   * @returns True if session is valid and active
+   * Validate session (check if active and not expired)
    */
   validateSession(sessionId: string): Promise<boolean>;
 }
@@ -178,56 +153,41 @@ export interface ISessionService {
 export interface IDeviceService {
   /**
    * Register a new device
-   * @param dto Device registration data
-   * @returns Registered device
    */
   registerDevice(dto: RegisterDeviceDto): Promise<Device>;
 
   /**
    * Get device by ID
-   * @param deviceId Device ID
-   * @returns Device or null if not found
    */
   getDevice(deviceId: string): Promise<Device | null>;
 
   /**
    * Get device by fingerprint
-   * @param accountId Account ID
-   * @param fingerprint Device fingerprint
-   * @returns Device or null if not found
    */
   getDeviceByFingerprint(accountId: string, fingerprint: string): Promise<Device | null>;
 
   /**
    * Update device
-   * @param deviceId Device ID
-   * @param dto Update data
-   * @returns Updated device
    */
   updateDevice(deviceId: string, dto: UpdateDeviceDto): Promise<Device>;
 
   /**
    * Remove device
-   * @param deviceId Device ID
    */
   removeDevice(deviceId: string): Promise<void>;
 
   /**
    * List devices for an account
-   * @param query Query parameters
-   * @returns Paginated device list
    */
   listDevices(query: DeviceQueryDto): Promise<DeviceListResponse>;
 
   /**
    * Trust a device
-   * @param deviceId Device ID
    */
   trustDevice(deviceId: string): Promise<void>;
 
   /**
    * Untrust a device
-   * @param deviceId Device ID
    */
   untrustDevice(deviceId: string): Promise<void>;
 }
@@ -242,44 +202,31 @@ export interface IDeviceService {
 export interface IProfileService {
   /**
    * Create profile for account
-   * @param dto Profile creation data
-   * @returns Created profile
    */
   createProfile(dto: CreateProfileDto): Promise<Profile>;
 
   /**
    * Get profile by account ID
-   * @param accountId Account ID
-   * @returns Profile or null if not found
    */
   getProfile(accountId: string): Promise<Profile | null>;
 
   /**
    * Get public profile summary
-   * @param accountId Account ID
-   * @returns Public profile summary or null if not found/not public
    */
   getPublicProfile(accountId: string): Promise<ProfileSummary | null>;
 
   /**
    * Update profile
-   * @param accountId Account ID
-   * @param dto Update data
-   * @returns Updated profile
    */
-  updateProfile(accountId: string, dto: IdentityUpdateProfileDto): Promise<Profile>;
+  updateProfile(accountId: string, dto: UpdateProfileDto): Promise<Profile>;
 
   /**
    * Update profile avatar
-   * @param accountId Account ID
-   * @param avatarUrl New avatar URL
-   * @returns Updated profile
    */
   updateAvatar(accountId: string, avatarUrl: string): Promise<Profile>;
 
   /**
    * Delete profile
-   * @param accountId Account ID
    */
   deleteProfile(accountId: string): Promise<void>;
 }
@@ -289,27 +236,305 @@ export interface IProfileService {
 // ============================================================================
 
 /**
- * Identity Platform Module Interface
- * Aggregates all identity-related services
+ * Identity Module Interface
+ * Aggregates all identity-related services (identity_db)
+ *
+ * @example
+ * // Combined mode (in-process)
+ * class IdentityModuleLocal implements IIdentityModule { ... }
+ *
+ * // Separated mode (gRPC)
+ * class IdentityModuleRemote implements IIdentityModule { ... }
  */
 export interface IIdentityModule {
-  /**
-   * Account management service
-   */
   readonly accounts: IAccountService;
-
-  /**
-   * Session management service
-   */
   readonly sessions: ISessionService;
-
-  /**
-   * Device management service
-   */
   readonly devices: IDeviceService;
+  readonly profiles: IProfileService;
+}
+
+// ============================================================================
+// Auth Module Types (auth_db)
+// ============================================================================
+
+/**
+ * Role entity
+ */
+export interface Role {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string | null;
+  level: number;
+  isSystem: boolean;
+  parentId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Permission entity
+ */
+export interface Permission {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  category: string;
+  createdAt: Date;
+}
+
+/**
+ * Sanction entity
+ */
+export interface Sanction {
+  id: string;
+  subjectId: string;
+  subjectType: 'ACCOUNT' | 'OPERATOR' | 'ADMIN';
+  sanctionType: 'WARNING' | 'TEMPORARY_BAN' | 'PERMANENT_BAN' | 'FEATURE_RESTRICTION';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  status: 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+  reason: string;
+  restrictedFeatures: string[];
+  startAt: Date;
+  endAt: Date | null;
+  createdAt: Date;
+}
+
+/**
+ * Auth Module Interface
+ * Handles authorization, roles, permissions, sanctions (auth_db)
+ */
+export interface IAuthModule {
+  /**
+   * Get active sanctions for a subject
+   */
+  getActiveSanctions(subjectId: string): Promise<Sanction[]>;
 
   /**
-   * Profile management service
+   * Check if subject has active sanction of specific type
    */
-  readonly profiles: IProfileService;
+  hasSanction(subjectId: string, sanctionType: string): Promise<boolean>;
+
+  /**
+   * Get roles for an account (optionally filtered by service)
+   */
+  getAccountRoles(accountId: string, serviceId?: string): Promise<Role[]>;
+
+  /**
+   * Get permissions for a role
+   */
+  getRolePermissions(roleId: string): Promise<Permission[]>;
+
+  /**
+   * Check if account has specific permission
+   */
+  hasPermission(accountId: string, permissionCode: string, serviceId?: string): Promise<boolean>;
+}
+
+// ============================================================================
+// Legal Module Types (legal_db)
+// ============================================================================
+
+/**
+ * Consent type enumeration
+ */
+export type ConsentType =
+  | 'TERMS_OF_SERVICE'
+  | 'PRIVACY_POLICY'
+  | 'MARKETING_EMAIL'
+  | 'MARKETING_PUSH'
+  | 'MARKETING_PUSH_NIGHT'
+  | 'MARKETING_SMS'
+  | 'PERSONALIZED_ADS'
+  | 'THIRD_PARTY_SHARING'
+  | 'CROSS_BORDER_TRANSFER'
+  | 'CROSS_SERVICE_SHARING';
+
+/**
+ * Consent requirement entity
+ */
+export interface ConsentRequirement {
+  id: string;
+  consentType: ConsentType;
+  countryCode: string;
+  isRequired: boolean;
+  labelKey: string;
+  descriptionKey: string | null;
+  displayOrder: number;
+}
+
+/**
+ * Account consent entity
+ */
+export interface AccountConsent {
+  id: string;
+  accountId: string;
+  consentType: ConsentType;
+  scope: 'PLATFORM' | 'SERVICE';
+  serviceId: string | null;
+  countryCode: string;
+  documentId: string | null;
+  documentVersion: string | null;
+  agreed: boolean;
+  agreedAt: Date;
+  withdrawnAt: Date | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+}
+
+/**
+ * Record consent DTO
+ */
+export interface RecordConsentDto {
+  accountId: string;
+  consentType: ConsentType;
+  countryCode: string;
+  agreed: boolean;
+  documentId?: string;
+  documentVersion?: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * DSR Request type
+ */
+export type DsrRequestType =
+  | 'ACCESS'
+  | 'RECTIFICATION'
+  | 'ERASURE'
+  | 'PORTABILITY'
+  | 'RESTRICTION'
+  | 'OBJECTION';
+
+/**
+ * DSR Request entity
+ */
+export interface DsrRequest {
+  id: string;
+  accountId: string;
+  requestType: DsrRequestType;
+  status: 'PENDING' | 'VERIFIED' | 'IN_PROGRESS' | 'AWAITING_INFO' | 'COMPLETED' | 'REJECTED';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  deadline: Date;
+  createdAt: Date;
+}
+
+/**
+ * Legal Module Interface
+ * Handles consents, legal documents, law registry, DSR (legal_db)
+ */
+export interface ILegalModule {
+  /**
+   * Get required consents for a country
+   */
+  getRequiredConsents(countryCode: string): Promise<ConsentRequirement[]>;
+
+  /**
+   * Get consents for an account
+   */
+  getAccountConsents(accountId: string): Promise<AccountConsent[]>;
+
+  /**
+   * Record a consent decision
+   */
+  recordConsent(dto: RecordConsentDto): Promise<AccountConsent>;
+
+  /**
+   * Record multiple consents (bulk)
+   */
+  recordConsents(dtos: RecordConsentDto[]): Promise<AccountConsent[]>;
+
+  /**
+   * Withdraw a consent
+   */
+  withdrawConsent(consentId: string, reason?: string): Promise<void>;
+
+  /**
+   * Check if account has required consents for country
+   */
+  hasRequiredConsents(accountId: string, countryCode: string): Promise<boolean>;
+
+  /**
+   * Create DSR request
+   */
+  createDsrRequest(accountId: string, requestType: DsrRequestType): Promise<DsrRequest>;
+
+  /**
+   * Get DSR requests for account
+   */
+  getDsrRequests(accountId: string): Promise<DsrRequest[]>;
+}
+
+// ============================================================================
+// Composition Layer Types
+// ============================================================================
+
+/**
+ * Registration consent item
+ */
+export interface RegistrationConsentItem {
+  consentType: ConsentType;
+  agreed: boolean;
+}
+
+/**
+ * Registration DTO (used by Saga)
+ */
+export interface RegistrationDto {
+  email: string;
+  username: string;
+  password: string;
+  countryCode: string;
+  locale?: string;
+  consents: RegistrationConsentItem[];
+  ipAddress?: string;
+  userAgent?: string;
+  deviceFingerprint?: string;
+}
+
+/**
+ * Registration result
+ */
+export interface RegistrationResult {
+  account: Account;
+  session: Session;
+  profile: Profile;
+}
+
+/**
+ * Account deletion options
+ */
+export interface AccountDeletionOptions {
+  accountId: string;
+  reason?: string;
+  immediate?: boolean;
+  scheduledAt?: Date;
+}
+
+// ============================================================================
+// Full Identity Platform Interface
+// ============================================================================
+
+/**
+ * Identity Platform Interface
+ * Top-level interface for the entire identity platform
+ *
+ * Architecture:
+ * - Combined: All modules in single service, in-process calls
+ * - Separated: Each module as service, gRPC calls
+ *
+ * @example
+ * // Provider factory
+ * provide: 'IIdentityPlatform',
+ * useFactory: (config) => config.IDENTITY_MODE === 'remote'
+ *   ? new IdentityPlatformRemote()
+ *   : new IdentityPlatformLocal()
+ */
+export interface IIdentityPlatform {
+  readonly identity: IIdentityModule;
+  readonly auth: IAuthModule;
+  readonly legal: ILegalModule;
 }

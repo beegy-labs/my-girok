@@ -196,6 +196,7 @@ export class ConsentListResponse {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
   };
 }
 
@@ -216,5 +217,6 @@ export class ConsentLogListResponse {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
   };
 }

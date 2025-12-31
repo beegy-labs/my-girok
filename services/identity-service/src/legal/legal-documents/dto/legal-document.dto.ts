@@ -5,15 +5,27 @@ import {
   IsBoolean,
   IsUUID,
   IsDate,
-  IsNumber,
-  Min,
-  Max,
   MaxLength,
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
 import { LegalDocumentType } from '.prisma/identity-legal-client';
+import { PaginationDto } from '../../../common/pagination/pagination.dto.js';
+
+/**
+ * Allowed sort fields for legal documents
+ */
+export const LEGAL_DOCUMENT_ALLOWED_SORT_FIELDS = [
+  'createdAt',
+  'updatedAt',
+  'effectiveDate',
+  'type',
+  'version',
+  'title',
+] as const;
+
+export type LegalDocumentSortField = (typeof LEGAL_DOCUMENT_ALLOWED_SORT_FIELDS)[number];
 
 /**
  * DTO for creating a legal document
@@ -158,8 +170,9 @@ export class UpdateLegalDocumentDto {
 
 /**
  * Query parameters for listing legal documents
+ * Extends PaginationDto for standardized pagination (SSOT)
  */
-export class LegalDocumentQueryDto {
+export class LegalDocumentQueryDto extends PaginationDto {
   @ApiPropertyOptional({
     description: 'Filter by document type',
     enum: LegalDocumentType,
@@ -199,26 +212,13 @@ export class LegalDocumentQueryDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Page number',
-    default: 1,
-  })
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10) || 1)
-  @IsNumber()
-  @Min(1)
-  page?: number = 1;
-
-  @ApiPropertyOptional({
-    description: 'Items per page',
-    default: 20,
-  })
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10) || 20)
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
+  /**
+   * Get Prisma orderBy for legal documents
+   * Uses document-specific allowed sort fields
+   */
+  getDocumentOrderBy(): Record<string, 'asc' | 'desc'> {
+    return this.getOrderBy('createdAt', LEGAL_DOCUMENT_ALLOWED_SORT_FIELDS);
+  }
 }
 
 /**
@@ -314,5 +314,6 @@ export class LegalDocumentListResponseDto {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
   };
 }

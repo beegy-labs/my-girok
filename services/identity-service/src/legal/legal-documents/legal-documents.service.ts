@@ -207,10 +207,6 @@ export class LegalDocumentsService {
    * List documents with pagination and filters
    */
   async findAll(query: LegalDocumentQueryDto): Promise<LegalDocumentListResponseDto> {
-    const page = query.page || 1;
-    const limit = query.limit || 20;
-    const skip = (page - 1) * limit;
-
     const where: Prisma.LegalDocumentWhereInput = {};
 
     if (query.type) {
@@ -229,12 +225,15 @@ export class LegalDocumentsService {
       where.isActive = query.isActive;
     }
 
+    // Use PaginationDto methods for standardized pagination
+    const orderBy = query.getDocumentOrderBy();
+
     const [documents, total] = await Promise.all([
       this.prisma.legalDocument.findMany({
         where,
-        skip,
-        take: limit,
-        orderBy: [{ type: 'asc' }, { effectiveDate: 'desc' }],
+        skip: query.skip,
+        take: query.take,
+        orderBy: [{ type: 'asc' }, orderBy],
         select: {
           id: true,
           type: true,
@@ -249,9 +248,12 @@ export class LegalDocumentsService {
       this.prisma.legalDocument.count({ where }),
     ]);
 
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+
     return {
       data: documents as LegalDocumentSummaryDto[],
-      meta: { total, page, limit },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 0 },
     };
   }
 

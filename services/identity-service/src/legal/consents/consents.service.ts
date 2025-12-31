@@ -409,7 +409,7 @@ export class ConsentsService {
         withdrawnAt: c.withdrawnAt,
         documentVersion: c.documentVersion,
       })),
-      meta: { total, page, limit },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 0 },
     };
   }
 
@@ -457,7 +457,7 @@ export class ConsentsService {
 
     return {
       data: logs as ConsentLogEntity[],
-      meta: { total, page, limit },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 0 },
     };
   }
 

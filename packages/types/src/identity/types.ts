@@ -1,43 +1,65 @@
 /**
  * Identity Platform - Core Types
- * Account, Session, Device, Profile entities
+ * SSOT: Synced with Prisma schemas (identity_db, auth_db, legal_db)
+ *
+ * Architecture: Combined service with pre-separated DBs for Zero Migration
  */
 
-import type { AuthProvider } from '../auth/enums.js';
-
 // ============================================================================
-// Enums
+// Enums (SSOT: Prisma Schema)
 // ============================================================================
 
 /**
  * Account status enumeration
+ * @see services/identity-service/prisma/identity/schema.prisma
  */
 export type AccountStatus =
-  | 'ACTIVE'
-  | 'INACTIVE'
-  | 'SUSPENDED'
   | 'PENDING_VERIFICATION'
+  | 'ACTIVE'
+  | 'SUSPENDED'
+  | 'DEACTIVATED'
   | 'DELETED';
 
 /**
- * Session status enumeration
+ * Account mode enumeration
+ * SERVICE: Per-service independent accounts
+ * UNIFIED: Integrated across services (Global Account)
  */
-export type SessionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'LOGGED_OUT';
+export type AccountMode = 'SERVICE' | 'UNIFIED';
+
+/**
+ * Auth provider enumeration
+ */
+export type AuthProvider =
+  | 'LOCAL'
+  | 'GOOGLE'
+  | 'KAKAO'
+  | 'NAVER'
+  | 'APPLE'
+  | 'MICROSOFT'
+  | 'GITHUB';
 
 /**
  * Device type enumeration
+ * @see services/identity-service/prisma/identity/schema.prisma
  */
-export type DeviceType = 'WEB' | 'MOBILE_IOS' | 'MOBILE_ANDROID' | 'TABLET' | 'DESKTOP' | 'OTHER';
+export type DeviceType = 'WEB' | 'IOS' | 'ANDROID' | 'DESKTOP' | 'OTHER';
 
 /**
- * Device trust level enumeration
+ * Push notification platform
  */
-export type DeviceTrustLevel = 'UNKNOWN' | 'LOW' | 'MEDIUM' | 'HIGH' | 'TRUSTED';
+export type PushPlatform = 'FCM' | 'APNS' | 'WEB_PUSH';
 
 /**
- * Profile visibility enumeration
+ * Gender enumeration
+ * @see services/identity-service/prisma/identity/schema.prisma
  */
-export type ProfileVisibility = 'PUBLIC' | 'PRIVATE' | 'CONNECTIONS_ONLY';
+export type Gender = 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
+
+/**
+ * Outbox event status
+ */
+export type OutboxStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
 // ============================================================================
 // Account Types
@@ -46,23 +68,40 @@ export type ProfileVisibility = 'PUBLIC' | 'PRIVATE' | 'CONNECTIONS_ONLY';
 /**
  * Account entity
  * Core identity entity representing a user account
+ * @see services/identity-service/prisma/identity/schema.prisma
  */
 export interface Account {
   id: string;
+  externalId: string;
   email: string;
-  emailVerified: boolean;
-  phoneNumber: string | null;
-  phoneVerified: boolean;
-  status: AccountStatus;
+  username: string;
+  password: string | null;
   provider: AuthProvider;
   providerId: string | null;
-  passwordHash: string | null;
+  status: AccountStatus;
+  mode: AccountMode;
+
+  // Verification
+  emailVerified: boolean;
+  emailVerifiedAt: Date | null;
+  phoneVerified: boolean;
+  phoneVerifiedAt: Date | null;
+
+  // Security
   mfaEnabled: boolean;
-  mfaMethod: string | null;
-  lastLoginAt: Date | null;
-  lastLoginIp: string | null;
+  mfaSecret: string | null;
+  mfaBackupCodes: string[];
+  lastPasswordChange: Date | null;
   failedLoginAttempts: number;
   lockedUntil: Date | null;
+
+  // Preferences (on Account, not Profile)
+  region: string | null;
+  locale: string | null;
+  timezone: string | null;
+  countryCode: string | null;
+
+  // Timestamps
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -73,7 +112,9 @@ export interface Account {
  */
 export interface AccountSummary {
   id: string;
+  externalId: string;
   email: string;
+  username: string;
   emailVerified: boolean;
   status: AccountStatus;
   provider: AuthProvider;
@@ -86,19 +127,25 @@ export interface AccountSummary {
  */
 export interface CreateAccountDto {
   email: string;
+  username: string;
   password?: string;
   provider?: AuthProvider;
   providerId?: string;
-  phoneNumber?: string;
+  countryCode?: string;
+  locale?: string;
 }
 
 /**
- * Update account DTO (Identity Platform)
+ * Update account DTO
  */
-export interface IdentityUpdateAccountDto {
+export interface UpdateAccountDto {
   email?: string;
-  phoneNumber?: string;
+  username?: string;
   status?: AccountStatus;
+  region?: string;
+  locale?: string;
+  timezone?: string;
+  countryCode?: string;
 }
 
 // ============================================================================
@@ -106,24 +153,33 @@ export interface IdentityUpdateAccountDto {
 // ============================================================================
 
 /**
- * Session entity (Identity Platform)
+ * Session entity
  * Represents an active user session
+ * Note: Uses isActive boolean instead of status enum
+ * @see services/identity-service/prisma/identity/schema.prisma
  */
-export interface IdentitySession {
+export interface Session {
   id: string;
   accountId: string;
+  tokenHash: string;
+  refreshToken: string | null;
+
+  // Session metadata
   deviceId: string | null;
-  status: SessionStatus;
-  refreshToken: string;
-  accessTokenHash: string | null;
-  ipAddress: string;
-  userAgent: string;
-  location: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+
+  // Session state (boolean, not enum)
+  isActive: boolean;
   expiresAt: Date;
-  lastActivityAt: Date;
-  createdAt: Date;
   revokedAt: Date | null;
   revokedReason: string | null;
+
+  // Activity tracking
+  lastActivityAt: Date | null;
+
+  // Timestamps
+  createdAt: Date;
 }
 
 /**
@@ -132,11 +188,11 @@ export interface IdentitySession {
 export interface SessionSummary {
   id: string;
   deviceId: string | null;
-  status: SessionStatus;
-  ipAddress: string;
-  userAgent: string;
-  location: string | null;
-  lastActivityAt: Date;
+  isActive: boolean;
+  ipAddress: string | null;
+  userAgent: string | null;
+  lastActivityAt: Date | null;
+  expiresAt: Date;
   createdAt: Date;
 }
 
@@ -146,9 +202,8 @@ export interface SessionSummary {
 export interface CreateSessionDto {
   accountId: string;
   deviceId?: string;
-  ipAddress: string;
-  userAgent: string;
-  location?: string;
+  ipAddress?: string;
+  userAgent?: string;
   expiresInMs?: number;
 }
 
@@ -166,20 +221,38 @@ export interface RevokeSessionDto {
 /**
  * Device entity
  * Represents a registered device for an account
+ * Note: Uses isTrusted boolean instead of trustLevel enum
+ * @see services/identity-service/prisma/identity/schema.prisma
  */
 export interface Device {
   id: string;
   accountId: string;
+
+  // Device identification
+  fingerprint: string;
+  name: string | null;
   deviceType: DeviceType;
-  deviceName: string;
-  deviceFingerprint: string;
-  trustLevel: DeviceTrustLevel;
-  pushToken: string | null;
+
+  // Device info
   platform: string | null;
   osVersion: string | null;
   appVersion: string | null;
-  isActive: boolean;
-  lastUsedAt: Date;
+  browserName: string | null;
+  browserVersion: string | null;
+
+  // Push notification
+  pushToken: string | null;
+  pushPlatform: PushPlatform | null;
+
+  // Trust level (boolean, not enum)
+  isTrusted: boolean;
+  trustedAt: Date | null;
+
+  // Activity
+  lastActiveAt: Date | null;
+  lastIpAddress: string | null;
+
+  // Timestamps
   createdAt: Date;
   updatedAt: Date;
 }
@@ -190,10 +263,9 @@ export interface Device {
 export interface DeviceSummary {
   id: string;
   deviceType: DeviceType;
-  deviceName: string;
-  trustLevel: DeviceTrustLevel;
-  isActive: boolean;
-  lastUsedAt: Date;
+  name: string | null;
+  isTrusted: boolean;
+  lastActiveAt: Date | null;
   createdAt: Date;
 }
 
@@ -203,9 +275,10 @@ export interface DeviceSummary {
 export interface RegisterDeviceDto {
   accountId: string;
   deviceType: DeviceType;
-  deviceName: string;
-  deviceFingerprint: string;
+  fingerprint: string;
+  name?: string;
   pushToken?: string;
+  pushPlatform?: PushPlatform;
   platform?: string;
   osVersion?: string;
   appVersion?: string;
@@ -215,10 +288,9 @@ export interface RegisterDeviceDto {
  * Update device DTO
  */
 export interface UpdateDeviceDto {
-  deviceName?: string;
-  trustLevel?: DeviceTrustLevel;
+  name?: string;
   pushToken?: string;
-  isActive?: boolean;
+  pushPlatform?: PushPlatform;
 }
 
 // ============================================================================
@@ -228,22 +300,36 @@ export interface UpdateDeviceDto {
 /**
  * Profile entity
  * User profile information
+ * Note: locale/timezone are on Account, not Profile
+ * @see services/identity-service/prisma/identity/schema.prisma
  */
 export interface Profile {
   id: string;
   accountId: string;
-  displayName: string;
+
+  // Basic info
+  displayName: string | null;
   firstName: string | null;
   lastName: string | null;
   avatar: string | null;
   bio: string | null;
-  dateOfBirth: Date | null;
-  gender: string | null;
-  locale: string;
-  timezone: string;
+
+  // Personal info
+  birthDate: Date | null;
+  gender: Gender | null;
+
+  // Contact
+  phoneCountryCode: string | null;
+  phoneNumber: string | null;
+
+  // Address
   countryCode: string | null;
-  visibility: ProfileVisibility;
-  metadata: Record<string, unknown>;
+  region: string | null;
+  city: string | null;
+  address: string | null;
+  postalCode: string | null;
+
+  // Timestamps
   createdAt: Date;
   updatedAt: Date;
 }
@@ -253,10 +339,9 @@ export interface Profile {
  */
 export interface ProfileSummary {
   id: string;
-  displayName: string;
+  displayName: string | null;
   avatar: string | null;
   bio: string | null;
-  visibility: ProfileVisibility;
 }
 
 /**
@@ -264,35 +349,34 @@ export interface ProfileSummary {
  */
 export interface CreateProfileDto {
   accountId: string;
-  displayName: string;
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-  bio?: string;
-  dateOfBirth?: Date;
-  gender?: string;
-  locale?: string;
-  timezone?: string;
-  countryCode?: string;
-  visibility?: ProfileVisibility;
-}
-
-/**
- * Update profile DTO (Identity Platform)
- */
-export interface IdentityUpdateProfileDto {
   displayName?: string;
   firstName?: string;
   lastName?: string;
   avatar?: string;
   bio?: string;
-  dateOfBirth?: Date;
-  gender?: string;
-  locale?: string;
-  timezone?: string;
+  birthDate?: Date;
+  gender?: Gender;
   countryCode?: string;
-  visibility?: ProfileVisibility;
-  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Update profile DTO
+ */
+export interface UpdateProfileDto {
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  bio?: string;
+  birthDate?: Date;
+  gender?: Gender;
+  phoneCountryCode?: string;
+  phoneNumber?: string;
+  countryCode?: string;
+  region?: string;
+  city?: string;
+  address?: string;
+  postalCode?: string;
 }
 
 // ============================================================================
@@ -304,12 +388,15 @@ export interface IdentityUpdateProfileDto {
  */
 export interface AccountQueryDto {
   email?: string;
+  username?: string;
   status?: AccountStatus;
   provider?: AuthProvider;
   emailVerified?: boolean;
+  countryCode?: string;
   page?: number;
   limit?: number;
-  sort?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 /**
@@ -318,7 +405,7 @@ export interface AccountQueryDto {
 export interface SessionQueryDto {
   accountId?: string;
   deviceId?: string;
-  status?: SessionStatus;
+  isActive?: boolean;
   page?: number;
   limit?: number;
 }
@@ -329,8 +416,7 @@ export interface SessionQueryDto {
 export interface DeviceQueryDto {
   accountId?: string;
   deviceType?: DeviceType;
-  trustLevel?: DeviceTrustLevel;
-  isActive?: boolean;
+  isTrusted?: boolean;
   page?: number;
   limit?: number;
 }
@@ -340,15 +426,21 @@ export interface DeviceQueryDto {
 // ============================================================================
 
 /**
+ * Pagination metadata
+ */
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
  * Account list response
  */
 export interface AccountListResponse {
   data: AccountSummary[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-  };
+  meta: PaginationMeta;
 }
 
 /**
@@ -356,11 +448,7 @@ export interface AccountListResponse {
  */
 export interface SessionListResponse {
   data: SessionSummary[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-  };
+  meta: PaginationMeta;
 }
 
 /**
@@ -368,9 +456,26 @@ export interface SessionListResponse {
  */
 export interface DeviceListResponse {
   data: DeviceSummary[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-  };
+  meta: PaginationMeta;
+}
+
+// ============================================================================
+// Outbox Event Types (Transactional Outbox Pattern)
+// ============================================================================
+
+/**
+ * Outbox event entity
+ * Used for reliable event publishing across module boundaries
+ */
+export interface OutboxEvent {
+  id: string;
+  aggregateType: string;
+  aggregateId: string;
+  eventType: string;
+  payload: Record<string, unknown>;
+  status: OutboxStatus;
+  retryCount: number;
+  lastError: string | null;
+  processedAt: Date | null;
+  createdAt: Date;
 }

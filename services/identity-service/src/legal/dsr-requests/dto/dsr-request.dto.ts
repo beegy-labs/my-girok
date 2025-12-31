@@ -1,15 +1,4 @@
-import {
-  IsString,
-  IsEnum,
-  IsOptional,
-  IsUUID,
-  IsObject,
-  IsDate,
-  IsNumber,
-  IsIn,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsUUID, IsObject, IsDate } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
 import {
@@ -18,6 +7,7 @@ import {
   DsrPriority,
   DsrResponseType,
 } from '.prisma/identity-legal-client';
+import { PaginationDto } from '../../../common/pagination/pagination.dto.js';
 
 /**
  * Allowed sort fields for DSR requests
@@ -189,8 +179,9 @@ export class ExtendDsrDeadlineDto {
 
 /**
  * Query parameters for listing DSR requests
+ * Extends PaginationDto for standardized pagination (SSOT)
  */
-export class DsrRequestQueryDto {
+export class DsrRequestQueryDto extends PaginationDto {
   @ApiPropertyOptional({
     description: 'Filter by account ID',
   })
@@ -236,43 +227,13 @@ export class DsrRequestQueryDto {
   @Transform(({ value }) => value === 'true' || value === true)
   overdueOnly?: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Page number',
-    default: 1,
-  })
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10) || 1)
-  @IsNumber()
-  @Min(1)
-  page?: number = 1;
-
-  @ApiPropertyOptional({
-    description: 'Items per page',
-    default: 20,
-  })
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10) || 20)
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
-
-  @ApiPropertyOptional({
-    description: 'Sort field',
-    example: 'createdAt',
-    enum: DSR_ALLOWED_SORT_FIELDS,
-  })
-  @IsOptional()
-  @IsIn([...DSR_ALLOWED_SORT_FIELDS])
-  sort?: DsrSortField;
-
-  @ApiPropertyOptional({
-    description: 'Sort order (asc, desc)',
-    example: 'desc',
-  })
-  @IsOptional()
-  @IsString()
-  order?: 'asc' | 'desc';
+  /**
+   * Get Prisma orderBy for DSR requests
+   * Uses DSR-specific allowed sort fields
+   */
+  getDsrOrderBy(): Record<string, 'asc' | 'desc'> {
+    return this.getOrderBy('createdAt', DSR_ALLOWED_SORT_FIELDS);
+  }
 }
 
 /**
@@ -395,6 +356,7 @@ export class DsrRequestListResponseDto {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
   };
 }
 

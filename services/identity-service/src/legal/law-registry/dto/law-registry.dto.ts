@@ -15,6 +15,21 @@ import {
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ConsentType } from '.prisma/identity-legal-client';
+import { PaginationDto } from '../../../common/pagination/pagination.dto.js';
+
+/**
+ * Allowed sort fields for law registry
+ */
+export const LAW_ALLOWED_SORT_FIELDS = [
+  'createdAt',
+  'updatedAt',
+  'effectiveFrom',
+  'code',
+  'name',
+  'jurisdiction',
+] as const;
+
+export type LawSortField = (typeof LAW_ALLOWED_SORT_FIELDS)[number];
 
 /**
  * Night time push notification restrictions
@@ -285,8 +300,9 @@ export class UpdateLawDto {
 
 /**
  * Query parameters for listing laws
+ * Extends PaginationDto for standardized pagination (SSOT)
  */
-export class LawQueryDto {
+export class LawQueryDto extends PaginationDto {
   @ApiPropertyOptional({
     description: 'Filter by country code',
     example: 'KR',
@@ -304,26 +320,13 @@ export class LawQueryDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Page number',
-    default: 1,
-  })
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10) || 1)
-  @IsNumber()
-  @Min(1)
-  page?: number = 1;
-
-  @ApiPropertyOptional({
-    description: 'Items per page',
-    default: 20,
-  })
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10) || 20)
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
+  /**
+   * Get Prisma orderBy for law registry
+   * Uses law-specific allowed sort fields
+   */
+  getLawOrderBy(): Record<string, 'asc' | 'desc'> {
+    return this.getOrderBy('createdAt', LAW_ALLOWED_SORT_FIELDS);
+  }
 }
 
 /**
@@ -381,6 +384,7 @@ export class LawListResponseDto {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
   };
 }
 

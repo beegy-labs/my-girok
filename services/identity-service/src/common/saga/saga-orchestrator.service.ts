@@ -9,6 +9,7 @@ import {
   SagaStepState,
   SagaStepDefinition,
 } from './saga.types';
+import { RETRY } from '../constants';
 
 /**
  * Saga Orchestrator Service
@@ -109,9 +110,9 @@ export class SagaOrchestratorService {
     stepState: SagaStepState,
   ): Promise<TContext> {
     const retryConfig = step.retryConfig || {
-      maxRetries: 3,
-      delayMs: 1000,
-      backoffMultiplier: 2,
+      maxRetries: RETRY.MAX_RETRIES,
+      delayMs: RETRY.DELAY_MS,
+      backoffMultiplier: RETRY.BACKOFF_MULTIPLIER,
     };
 
     let lastError: Error | undefined;
