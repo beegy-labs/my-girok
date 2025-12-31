@@ -112,7 +112,7 @@ my-girok/
 │
 └── docs/                     # Human-readable docs
     ├── policies/             # Detailed policies
-    ├── guides/               # Tutorials (GraphQL, gRPC, NATS)
+    ├── guides/               # Tutorials (GraphQL, gRPC, Redpanda)
     └── api/                  # API specs
 ```
 
@@ -151,7 +151,7 @@ Full details: [.ai/git-flow.md](.ai/git-flow.md)
 - Full BFF Pattern (IETF recommended, session-based auth)
 - GraphQL Federation for API aggregation
 - gRPC for internal service communication
-- NATS JetStream for event-driven messaging
+- Redpanda for event-driven messaging (Kafka-compatible, no JVM)
 - Cilium Gateway API for edge routing
 
 ### Development
