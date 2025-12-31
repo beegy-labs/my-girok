@@ -502,6 +502,293 @@ CREATE INDEX idx_outbox_unpublished ON outbox_events (created_at)
 
 ---
 
+## Security Features
+
+### Multi-Factor Authentication (MFA)
+
+The identity platform supports multiple MFA methods for enhanced account security.
+
+#### Supported Methods
+
+| Method | RFC/Standard | Description                                                                               |
+| ------ | ------------ | ----------------------------------------------------------------------------------------- |
+| TOTP   | RFC 6238     | Time-based One-Time Password using authenticator apps (Google Authenticator, Authy, etc.) |
+| SMS    | -            | Verification code sent via SMS to registered phone number                                 |
+| EMAIL  | -            | Verification code sent to registered email address                                        |
+
+#### MFA Enrollment Flow
+
+```
+1. User requests MFA enrollment
+   POST /accounts/:id/mfa/enable
+   Body: { "method": "TOTP" }
+
+2. Server generates secret and returns setup data
+   Response: {
+     "secret": "JBSWY3DPEHPK3PXP",
+     "qrCode": "data:image/png;base64,...",
+     "backupCodes": ["12345678", "87654321", ...]
+   }
+
+3. User configures authenticator app and verifies
+   POST /accounts/:id/mfa/verify
+   Body: { "code": "123456" }
+
+4. MFA is now active for the account
+```
+
+#### Database Fields (accounts table)
+
+| Field              | Type        | Description                      |
+| ------------------ | ----------- | -------------------------------- |
+| `mfa_enabled`      | BOOLEAN     | Whether MFA is active            |
+| `mfa_secret`       | TEXT        | Encrypted TOTP secret (nullable) |
+| `mfa_backup_codes` | TEXT[]      | Hashed backup codes              |
+| `mfa_method`       | VARCHAR(20) | TOTP, SMS, or EMAIL              |
+
+### Account Locking
+
+Protects against brute-force attacks with automatic lockout.
+
+#### Lockout Configuration
+
+| Setting             | Value      | Description                                   |
+| ------------------- | ---------- | --------------------------------------------- |
+| Max Failed Attempts | 5          | Consecutive failed login attempts before lock |
+| Lock Duration       | 15 minutes | Time account remains locked                   |
+| Reset Window        | 30 minutes | Failed attempt counter reset time             |
+
+#### Database Fields (accounts table)
+
+| Field                   | Type        | Description               |
+| ----------------------- | ----------- | ------------------------- |
+| `failed_login_attempts` | INT         | Counter (0-5)             |
+| `locked_until`          | TIMESTAMPTZ | Account unlock timestamp  |
+| `last_password_change`  | TIMESTAMPTZ | Last password update time |
+
+#### Lockout Logic
+
+```typescript
+async validateLogin(accountId: string, password: string): Promise<boolean> {
+  const account = await this.getAccount(accountId);
+
+  // Check if locked
+  if (account.lockedUntil && account.lockedUntil > new Date()) {
+    throw new AccountLockedException(account.lockedUntil);
+  }
+
+  // Validate password
+  const isValid = await bcrypt.compare(password, account.passwordHash);
+
+  if (!isValid) {
+    const attempts = account.failedLoginAttempts + 1;
+    const updates: Partial<Account> = { failedLoginAttempts: attempts };
+
+    if (attempts >= 5) {
+      updates.lockedUntil = addMinutes(new Date(), 15);
+    }
+
+    await this.updateAccount(accountId, updates);
+    throw new InvalidCredentialsException();
+  }
+
+  // Reset on successful login
+  await this.updateAccount(accountId, { failedLoginAttempts: 0, lockedUntil: null });
+  return true;
+}
+```
+
+### Device Trust
+
+Manage trusted devices for secure account access.
+
+#### Database Fields (devices table)
+
+| Field             | Type        | Description                       |
+| ----------------- | ----------- | --------------------------------- |
+| `fingerprint`     | VARCHAR(64) | Device fingerprint hash           |
+| `device_type`     | ENUM        | WEB, IOS, ANDROID, DESKTOP, OTHER |
+| `is_trusted`      | BOOLEAN     | Whether device is trusted         |
+| `trusted_at`      | TIMESTAMPTZ | When trust was granted            |
+| `platform`        | VARCHAR(50) | OS platform                       |
+| `os_version`      | VARCHAR(50) | OS version                        |
+| `app_version`     | VARCHAR(20) | App version                       |
+| `browser_name`    | VARCHAR(50) | Browser name (web)                |
+| `browser_version` | VARCHAR(20) | Browser version (web)             |
+| `push_token`      | TEXT        | Push notification token           |
+| `push_platform`   | ENUM        | FCM, APNS, WEB_PUSH               |
+
+---
+
+## DSR (Data Subject Request) Processing
+
+### Overview
+
+GDPR Article 15-22 compliance for data subject rights. All DSR requests are tracked in `legal_db.dsr_requests`.
+
+### Request Types
+
+| Type                 | GDPR Article | Description                | SLA      |
+| -------------------- | ------------ | -------------------------- | -------- |
+| `ACCESS`             | Art. 15      | Export all personal data   | 30 days  |
+| `RECTIFICATION`      | Art. 16      | Correct inaccurate data    | 30 days  |
+| `ERASURE`            | Art. 17      | Right to be forgotten      | 30 days  |
+| `PORTABILITY`        | Art. 20      | Machine-readable export    | 30 days  |
+| `RESTRICTION`        | Art. 18      | Limit processing           | 72 hours |
+| `OBJECTION`          | Art. 21      | Object to processing       | 72 hours |
+| `AUTOMATED_DECISION` | Art. 22      | Review automated decisions | 30 days  |
+
+### Processing Workflow
+
+```
+1. User submits DSR request
+   POST /dsr-requests { type, reason }
+
+2. Identity verification (mandatory)
+   - Email OTP for online requests
+   - Document upload for mail requests
+
+3. Request assessment
+   - Validate scope (single service vs platform)
+   - Check for blocking conditions (legal hold, ongoing investigation)
+
+4. Execution
+   - ACCESS: Generate data export package
+   - ERASURE: Execute deletion saga across all DBs
+   - PORTABILITY: JSON/CSV export with schema
+
+5. Completion & notification
+   - Update status to COMPLETED
+   - Send confirmation email with download link (7 days)
+   - Log to consent_history for audit trail
+```
+
+### Status Flow
+
+```
+PENDING → VERIFIED → IN_PROGRESS → COMPLETED
+    ↓          ↓           ↓
+CANCELLED  REJECTED   AWAITING_INFO
+```
+
+---
+
+## Consent Withdrawal
+
+### Withdrawal Rules
+
+| Consent Type            | Withdrawable? | Effect on Account              |
+| ----------------------- | ------------- | ------------------------------ |
+| `TERMS_OF_SERVICE`      | ❌ No         | Cannot withdraw while active   |
+| `PRIVACY_POLICY`        | ❌ No         | Cannot withdraw while active   |
+| `MARKETING_EMAIL`       | ✅ Yes        | Stop marketing emails          |
+| `MARKETING_PUSH`        | ✅ Yes        | Stop push notifications        |
+| `MARKETING_PUSH_NIGHT`  | ✅ Yes        | Stop night-time push (KR PIPA) |
+| `MARKETING_SMS`         | ✅ Yes        | Stop SMS marketing             |
+| `PERSONALIZED_ADS`      | ✅ Yes        | Disable personalized ads       |
+| `THIRD_PARTY_SHARING`   | ✅ Yes        | Stop data sharing              |
+| `CROSS_BORDER_TRANSFER` | ✅ Yes        | Restrict to domestic only      |
+| `CROSS_SERVICE_SHARING` | ✅ Yes        | Stop cross-app data sharing    |
+
+### Withdrawal API
+
+```http
+DELETE /consents/{consentId}
+Content-Type: application/json
+
+{
+  "reason": "No longer interested in marketing",
+  "ipAddress": "1.2.3.4",
+  "userAgent": "Mozilla/5.0..."
+}
+```
+
+### Audit Trail
+
+Every withdrawal creates a `ConsentLog` entry:
+
+- `action`: `WITHDRAWN`
+- `previousState`: Original consent data
+- `newState`: Withdrawal timestamp and reason
+- `metadata`: IP, User-Agent, reason
+
+### Compensation (Saga Rollback)
+
+For saga rollback scenarios, bulk withdrawal is allowed even for required consents:
+
+- Method: `withdrawBulkConsents(consentIds, reason)`
+- Marks `metadata.isCompensation: true`
+- Used only during registration failure cleanup
+
+---
+
+## Sanction System
+
+### Sanction Types
+
+| Type                  | Severity    | Effect                             |
+| --------------------- | ----------- | ---------------------------------- |
+| `WARNING`             | LOW         | Notification only, no restriction  |
+| `TEMPORARY_BAN`       | MEDIUM-HIGH | Account access blocked temporarily |
+| `PERMANENT_BAN`       | CRITICAL    | Account permanently disabled       |
+| `FEATURE_RESTRICTION` | LOW-MEDIUM  | Specific features disabled         |
+
+### Sanction Workflow
+
+```
+1. Issue sanction
+   POST /sanctions {
+     subjectId, subjectType, sanctionType, reason, expiresAt
+   }
+
+2. Notification
+   - Email notification (immediate)
+   - In-app notification (next login)
+   - Push notification (if enabled)
+
+3. Enforcement
+   - Session revocation for bans
+   - Feature flags updated for restrictions
+   - Access guard checks on every request
+
+4. Expiration or revocation
+   - Auto-expire at expiresAt
+   - Manual revoke: POST /sanctions/{id}/revoke
+```
+
+### Appeal Process
+
+```
+1. User submits appeal
+   POST /sanctions/{sanctionId}/appeal {
+     reason, evidence (optional)
+   }
+
+2. Appeal status: PENDING
+
+3. Review by operator/admin
+   - UNDER_REVIEW: Being investigated
+   - ESCALATED: Sent to higher authority
+
+4. Resolution
+   - APPROVED: Sanction revoked, access restored
+   - REJECTED: Sanction remains, reason provided
+
+5. Notification
+   - Email with decision and explanation
+   - Appeal decision logged for audit
+```
+
+### Appeal Status Flow
+
+```
+PENDING → UNDER_REVIEW → APPROVED
+              ↓              ↓
+          ESCALATED      REJECTED
+```
+
+---
+
 ## Data Isolation Patterns
 
 ### Pattern 1: Transactional Outbox
