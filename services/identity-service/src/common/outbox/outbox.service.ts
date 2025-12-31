@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { ID } from '@my-girok/nest-common';
 import { IdentityPrismaService, AuthPrismaService, LegalPrismaService } from '../../database';
 import { OutboxStatus as IdentityOutboxStatus } from '.prisma/identity-client';
 import { OutboxStatus as AuthOutboxStatus } from '.prisma/identity-auth-client';
@@ -50,7 +50,7 @@ export class OutboxService {
    * This ensures the event is only published if the transaction succeeds
    */
   async publishEvent(database: OutboxDatabase, event: OutboxEventPayload): Promise<OutboxEvent> {
-    const id = randomUUID();
+    const id = ID.generate();
     const baseData = {
       id,
       aggregateType: event.aggregateType,
@@ -98,7 +98,7 @@ export class OutboxService {
       return [];
     }
 
-    const ids = events.map(() => randomUUID());
+    const ids = events.map(() => ID.generate());
 
     switch (database) {
       case 'identity': {

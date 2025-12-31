@@ -1,5 +1,13 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from './api-key.guard';
 
@@ -24,14 +32,22 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * JWT Authentication Guard
- * Validates JWT tokens from Authorization header
+ * Validates JWT tokens from Authorization header with proper signature verification
  *
- * Note: In production, this should verify tokens against the auth-service
- * or use a shared JWT secret/public key for verification
+ * Security:
+ * - Verifies JWT signature using RS256 or HS256 based on configuration
+ * - Validates token expiration
+ * - Validates issuer and audience claims
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  private readonly logger = new Logger(JwtAuthGuard.name);
+
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check if route is marked as public
@@ -72,35 +88,25 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   /**
-   * Verify JWT token
-   * In production, this should:
-   * 1. Verify signature using public key or shared secret
-   * 2. Check token expiration
-   * 3. Validate issuer and audience
-   * 4. Optionally check against token blacklist
+   * Verify JWT token with proper signature verification
+   * Uses JwtService to verify signature, expiration, issuer, and audience
    */
   private async verifyToken(token: string): Promise<JwtPayload> {
-    // Split JWT into parts
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      throw new Error('Invalid token structure');
+    const secret = this.configService.get<string>('JWT_SECRET');
+    const publicKey = this.configService.get<string>('JWT_PUBLIC_KEY');
+
+    if (!secret && !publicKey) {
+      this.logger.error('JWT_SECRET or JWT_PUBLIC_KEY must be configured');
+      throw new Error('JWT verification not configured');
     }
 
-    // Decode payload (middle part)
-    const payloadBase64 = parts[1];
-    const payloadJson = Buffer.from(payloadBase64, 'base64url').toString('utf8');
-    const payload = JSON.parse(payloadJson) as JwtPayload;
-
-    // Check expiration
-    if (payload.exp && Date.now() >= payload.exp * 1000) {
-      throw new Error('Token expired');
-    }
-
-    // In production, verify signature here
-    // For internal service communication, you might also:
-    // - Validate against auth-service
-    // - Check session validity
-    // - Verify token hasn't been revoked
+    // Verify token with signature validation
+    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+      secret: publicKey || secret,
+      // Validate issuer and audience if configured
+      issuer: this.configService.get<string>('JWT_ISSUER'),
+      audience: this.configService.get<string>('JWT_AUDIENCE'),
+    });
 
     return payload;
   }

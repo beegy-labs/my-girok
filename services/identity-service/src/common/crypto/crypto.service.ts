@@ -15,15 +15,18 @@ export class CryptoService {
 
   constructor() {
     const keyEnv = process.env.ENCRYPTION_KEY;
+    const isProduction = process.env.NODE_ENV === 'production';
+
     if (!keyEnv) {
-      this.logger.warn(
-        'ENCRYPTION_KEY not set - using derived key from NODE_ENV. Set ENCRYPTION_KEY in production!',
-      );
-      // Derive a key from environment for development
-      this.encryptionKey = crypto
-        .createHash('sha256')
-        .update(process.env.NODE_ENV || 'development')
-        .digest();
+      if (isProduction) {
+        throw new Error(
+          'ENCRYPTION_KEY is required in production. Generate with: openssl rand -base64 32',
+        );
+      }
+      this.logger.warn('ENCRYPTION_KEY not set - using development key. DO NOT use in production!');
+      // Fixed development key - NEVER use in production
+      // This ensures consistent encryption/decryption in development
+      this.encryptionKey = Buffer.from('dev-only-encryption-key-32bytes!', 'utf8');
     } else {
       // Use base64 encoded key from environment
       this.encryptionKey = Buffer.from(keyEnv, 'base64');
