@@ -5,6 +5,7 @@
 -- UUID v7 FUNCTION (Time-ordered UUIDs for better indexing)
 -- ============================================================
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION uuid_generate_v7()
 RETURNS uuid
 AS $$
@@ -19,6 +20,7 @@ BEGIN
   return encode(uuid_bytes, 'hex')::uuid;
 END
 $$ LANGUAGE plpgsql VOLATILE;
+-- +goose StatementEnd
 
 -- ============================================================
 -- ENUM TYPES
@@ -216,6 +218,7 @@ CREATE TABLE operator_invitations (
 
 CREATE INDEX idx_invitations_email ON operator_invitations(email);
 CREATE INDEX idx_invitations_service_id ON operator_invitations(service_id);
+CREATE INDEX idx_invitations_role_id ON operator_invitations(role_id);
 CREATE INDEX idx_invitations_token ON operator_invitations(token) WHERE token IS NOT NULL;
 CREATE INDEX idx_invitations_status ON operator_invitations(status);
 CREATE INDEX idx_invitations_expires ON operator_invitations(expires_at) WHERE status = 'PENDING';
@@ -393,6 +396,7 @@ CREATE INDEX idx_outbox_cleanup ON outbox_events(status, processed_at) WHERE sta
 -- UPDATED_AT TRIGGER
 -- ============================================================
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -400,6 +404,7 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER update_roles_updated_at
   BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

@@ -10,8 +10,16 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { RolesService } from './roles.service';
 import {
   CreateRoleDto,
@@ -27,8 +35,11 @@ import {
   RoleWithPermissions,
   RoleHierarchyNode,
 } from './entities/role.entity';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
 @ApiTags('Roles')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}

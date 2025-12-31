@@ -1,4 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { AccountsService } from '../../identity/accounts/accounts.service';
 import { ProfilesService } from '../../identity/profiles/profiles.service';
 import { ConsentsService } from '../../legal/consents/consents.service';
@@ -236,14 +237,15 @@ export class RegistrationService {
 
   /**
    * Generate a username from email address
-   * Takes the part before @ and appends random suffix for uniqueness
+   * Takes the part before @ and appends cryptographically secure random suffix for uniqueness
    */
   private generateUsername(email: string): string {
     const base = email.split('@')[0];
     // Clean up and ensure valid username characters
     const cleaned = base.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 20);
-    // Add random suffix for uniqueness
-    const suffix = Math.random().toString(36).slice(2, 6);
+    // Add cryptographically secure random suffix for uniqueness
+    // Using crypto.randomBytes instead of Math.random for security
+    const suffix = crypto.randomBytes(3).toString('hex'); // 6 hex chars
     return `${cleaned}_${suffix}`;
   }
 }

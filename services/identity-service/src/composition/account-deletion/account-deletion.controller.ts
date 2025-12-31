@@ -1,17 +1,21 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Req } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { AccountDeletionService } from './account-deletion.service';
 import { DeleteAccountDto, AccountDeletionResponseDto } from './dto/account-deletion.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('Account Deletion')
 @Controller('account-deletion')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 export class AccountDeletionController {
   constructor(private readonly deletionService: AccountDeletionService) {}
 
   @Post('immediate')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 request per day
   @ApiOperation({
     summary: 'Immediately delete an account',
     description: `
@@ -47,6 +51,7 @@ export class AccountDeletionController {
 
   @Post('schedule')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 requests per hour
   @ApiOperation({
     summary: 'Schedule account deletion with grace period',
     description: `

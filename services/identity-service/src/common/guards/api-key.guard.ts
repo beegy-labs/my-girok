@@ -9,6 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import * as crypto from 'crypto';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
@@ -17,15 +18,15 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
  * API Key Guard for service-to-service authentication
  * Validates X-API-Key header against configured keys
  *
- * Features:
+ * Security:
+ * - Uses timing-safe comparison to prevent timing attacks
+ * - Stores hashed keys in memory for comparison
  * - Supports runtime key reload via ConfigService
- * - Caches keys with TTL for performance
- * - Allows manual cache invalidation
  */
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
   private readonly logger = new Logger(ApiKeyGuard.name);
-  private validApiKeys: Set<string> = new Set();
+  private apiKeyHashes: Map<string, string> = new Map(); // hash -> original key (for validation)
   private lastRefresh: number = 0;
   private readonly cacheTtlMs: number = 60000; // 1 minute cache
 
@@ -34,6 +35,26 @@ export class ApiKeyGuard implements CanActivate {
     private readonly configService: ConfigService,
   ) {
     this.refreshKeys();
+  }
+
+  /**
+   * Hash an API key using SHA-256
+   */
+  private hashKey(key: string): string {
+    return crypto.createHash('sha256').update(key).digest('hex');
+  }
+
+  /**
+   * Timing-safe comparison of two strings
+   */
+  private timingSafeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      // Still do the comparison to maintain constant time
+      const dummy = Buffer.alloc(32);
+      crypto.timingSafeEqual(dummy, dummy);
+      return false;
+    }
+    return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
   }
 
   /**
@@ -51,13 +72,18 @@ export class ApiKeyGuard implements CanActivate {
       .map((k) => k.trim())
       .filter((k) => k.length > 0);
 
-    this.validApiKeys = new Set(keys);
+    // Store hashed keys
+    this.apiKeyHashes = new Map();
+    for (const key of keys) {
+      const hash = this.hashKey(key);
+      this.apiKeyHashes.set(hash, key);
+    }
     this.lastRefresh = Date.now();
 
     if (keys.length === 0) {
       this.logger.warn('No API keys configured - all API key authenticated routes will fail');
     } else {
-      this.logger.debug(`Loaded ${keys.length} API keys`);
+      this.logger.debug(`Loaded API keys`);
     }
   }
 
@@ -75,6 +101,21 @@ export class ApiKeyGuard implements CanActivate {
   invalidateCache(): void {
     this.lastRefresh = 0;
     this.logger.log('API key cache invalidated');
+  }
+
+  /**
+   * Validate API key using timing-safe comparison
+   */
+  private validateApiKey(apiKey: string): boolean {
+    const inputHash = this.hashKey(apiKey);
+
+    // Iterate through all stored hashes with timing-safe comparison
+    for (const [storedHash] of this.apiKeyHashes) {
+      if (this.timingSafeCompare(inputHash, storedHash)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   canActivate(context: ExecutionContext): boolean {
@@ -101,7 +142,7 @@ export class ApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('API key is required');
     }
 
-    if (!this.validApiKeys.has(apiKey)) {
+    if (!this.validateApiKey(apiKey)) {
       throw new UnauthorizedException('Invalid API key');
     }
 

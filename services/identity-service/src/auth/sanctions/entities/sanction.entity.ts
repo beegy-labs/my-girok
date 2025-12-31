@@ -8,6 +8,7 @@ import {
   NotificationChannel,
 } from '../dto/create-sanction.dto';
 import { SanctionStatus, AppealStatus } from '../dto/update-sanction.dto';
+import { PaginationMeta } from '../../../common/entities/pagination.entity';
 
 /**
  * Notification status enumeration
@@ -26,12 +27,14 @@ export enum NotificationStatus {
 export class SanctionNotificationEntity {
   @ApiProperty({
     description: 'Notification ID',
+    type: String,
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
   id!: string;
 
   @ApiProperty({
     description: 'Sanction ID',
+    type: String,
     example: '550e8400-e29b-41d4-a716-446655440001',
   })
   sanctionId!: string;
@@ -39,29 +42,36 @@ export class SanctionNotificationEntity {
   @ApiProperty({
     description: 'Notification channel',
     enum: NotificationChannel,
+    example: NotificationChannel.EMAIL,
   })
   channel!: NotificationChannel;
 
   @ApiProperty({
     description: 'Notification status',
     enum: NotificationStatus,
+    example: NotificationStatus.PENDING,
   })
   status!: NotificationStatus;
 
   @ApiPropertyOptional({
     description: 'When the notification was sent',
+    type: Date,
+    nullable: true,
     example: '2024-01-01T00:00:00Z',
   })
   sentAt!: Date | null;
 
   @ApiPropertyOptional({
     description: 'When the notification was read',
+    type: Date,
+    nullable: true,
     example: '2024-01-01T00:01:00Z',
   })
   readAt!: Date | null;
 
   @ApiProperty({
     description: 'Created at timestamp',
+    type: Date,
     example: '2024-01-01T00:00:00Z',
   })
   createdAt!: Date;
@@ -73,12 +83,14 @@ export class SanctionNotificationEntity {
 export class SanctionEntity {
   @ApiProperty({
     description: 'Sanction ID',
+    type: String,
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
   id!: string;
 
   @ApiProperty({
     description: 'Subject ID (account or operator ID)',
+    type: String,
     example: '550e8400-e29b-41d4-a716-446655440001',
   })
   subjectId!: string;
@@ -86,11 +98,14 @@ export class SanctionEntity {
   @ApiProperty({
     description: 'Subject type',
     enum: SanctionSubjectType,
+    example: SanctionSubjectType.ACCOUNT,
   })
   subjectType!: SanctionSubjectType;
 
   @ApiPropertyOptional({
     description: 'Service ID for service-scoped sanctions',
+    type: String,
+    nullable: true,
     example: '550e8400-e29b-41d4-a716-446655440002',
   })
   serviceId!: string | null;
@@ -98,24 +113,28 @@ export class SanctionEntity {
   @ApiProperty({
     description: 'Sanction scope',
     enum: SanctionScope,
+    example: SanctionScope.PLATFORM,
   })
   scope!: SanctionScope;
 
   @ApiProperty({
     description: 'Sanction type',
     enum: SanctionType,
+    example: SanctionType.TEMPORARY_BAN,
   })
   type!: SanctionType;
 
   @ApiProperty({
     description: 'Sanction status',
     enum: SanctionStatus,
+    example: SanctionStatus.ACTIVE,
   })
   status!: SanctionStatus;
 
   @ApiProperty({
     description: 'Sanction severity',
     enum: SanctionSeverity,
+    example: SanctionSeverity.MEDIUM,
   })
   severity!: SanctionSeverity;
 
@@ -128,12 +147,15 @@ export class SanctionEntity {
 
   @ApiProperty({
     description: 'Reason for the sanction',
+    type: String,
     example: 'Violation of community guidelines',
   })
   reason!: string;
 
   @ApiPropertyOptional({
     description: 'Internal note',
+    type: String,
+    nullable: true,
     example: 'Multiple reports from other users',
   })
   internalNote!: string | null;
@@ -141,17 +163,21 @@ export class SanctionEntity {
   @ApiProperty({
     description: 'Evidence URLs',
     type: [String],
+    example: ['https://storage.example.com/evidence/123.png'],
   })
   evidenceUrls!: string[];
 
   @ApiPropertyOptional({
     description: 'Related sanction ID',
+    type: String,
+    nullable: true,
     example: '550e8400-e29b-41d4-a716-446655440003',
   })
   relatedSanctionId!: string | null;
 
   @ApiProperty({
     description: 'ID of the issuer',
+    type: String,
     example: '550e8400-e29b-41d4-a716-446655440004',
   })
   issuedBy!: string;
@@ -159,35 +185,45 @@ export class SanctionEntity {
   @ApiProperty({
     description: 'Type of the issuer',
     enum: IssuerType,
+    example: IssuerType.OPERATOR,
   })
   issuedByType!: IssuerType;
 
   @ApiProperty({
     description: 'When the sanction starts',
+    type: Date,
     example: '2024-01-01T00:00:00Z',
   })
   startAt!: Date;
 
   @ApiPropertyOptional({
     description: 'When the sanction ends',
+    type: Date,
+    nullable: true,
     example: '2024-01-31T00:00:00Z',
   })
   endAt!: Date | null;
 
   @ApiPropertyOptional({
     description: 'When the sanction was revoked',
+    type: Date,
+    nullable: true,
     example: null,
   })
   revokedAt!: Date | null;
 
   @ApiPropertyOptional({
     description: 'Who revoked the sanction',
+    type: String,
+    nullable: true,
     example: null,
   })
   revokedBy!: string | null;
 
   @ApiPropertyOptional({
     description: 'Reason for revocation',
+    type: String,
+    nullable: true,
     example: null,
   })
   revokeReason!: string | null;
@@ -195,47 +231,61 @@ export class SanctionEntity {
   @ApiPropertyOptional({
     description: 'Appeal status',
     enum: AppealStatus,
+    nullable: true,
+    example: null,
   })
   appealStatus!: AppealStatus | null;
 
   @ApiPropertyOptional({
     description: 'When the appeal was submitted',
+    type: Date,
+    nullable: true,
     example: null,
   })
   appealedAt!: Date | null;
 
   @ApiPropertyOptional({
     description: 'Appeal reason',
+    type: String,
+    nullable: true,
     example: null,
   })
   appealReason!: string | null;
 
   @ApiPropertyOptional({
     description: 'Who reviewed the appeal',
+    type: String,
+    nullable: true,
     example: null,
   })
   appealReviewedBy!: string | null;
 
   @ApiPropertyOptional({
     description: 'When the appeal was reviewed',
+    type: Date,
+    nullable: true,
     example: null,
   })
   appealReviewedAt!: Date | null;
 
   @ApiPropertyOptional({
     description: 'Appeal response',
+    type: String,
+    nullable: true,
     example: null,
   })
   appealResponse!: string | null;
 
   @ApiProperty({
     description: 'Created at timestamp',
+    type: Date,
     example: '2024-01-01T00:00:00Z',
   })
   createdAt!: Date;
 
   @ApiProperty({
     description: 'Updated at timestamp',
+    type: Date,
     example: '2024-01-01T00:00:00Z',
   })
   updatedAt!: Date;
@@ -253,12 +303,14 @@ export class SanctionEntity {
 export class SanctionSummary {
   @ApiProperty({
     description: 'Sanction ID',
+    type: String,
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
   id!: string;
 
   @ApiProperty({
     description: 'Subject ID',
+    type: String,
     example: '550e8400-e29b-41d4-a716-446655440001',
   })
   subjectId!: string;
@@ -266,41 +318,49 @@ export class SanctionSummary {
   @ApiProperty({
     description: 'Subject type',
     enum: SanctionSubjectType,
+    example: SanctionSubjectType.ACCOUNT,
   })
   subjectType!: SanctionSubjectType;
 
   @ApiProperty({
     description: 'Sanction type',
     enum: SanctionType,
+    example: SanctionType.TEMPORARY_BAN,
   })
   type!: SanctionType;
 
   @ApiProperty({
     description: 'Sanction status',
     enum: SanctionStatus,
+    example: SanctionStatus.ACTIVE,
   })
   status!: SanctionStatus;
 
   @ApiProperty({
     description: 'Sanction severity',
     enum: SanctionSeverity,
+    example: SanctionSeverity.MEDIUM,
   })
   severity!: SanctionSeverity;
 
   @ApiProperty({
     description: 'Reason',
+    type: String,
     example: 'Violation of community guidelines',
   })
   reason!: string;
 
   @ApiProperty({
     description: 'Start date',
+    type: Date,
     example: '2024-01-01T00:00:00Z',
   })
   startAt!: Date;
 
   @ApiPropertyOptional({
     description: 'End date',
+    type: Date,
+    nullable: true,
     example: '2024-01-31T00:00:00Z',
   })
   endAt!: Date | null;
@@ -308,11 +368,14 @@ export class SanctionSummary {
   @ApiPropertyOptional({
     description: 'Appeal status',
     enum: AppealStatus,
+    nullable: true,
+    example: null,
   })
   appealStatus!: AppealStatus | null;
 
   @ApiProperty({
     description: 'Created at',
+    type: Date,
     example: '2024-01-01T00:00:00Z',
   })
   createdAt!: Date;
@@ -324,12 +387,15 @@ export class SanctionSummary {
 export class SanctionWithAppeal extends SanctionEntity {
   @ApiProperty({
     description: 'Whether appeal is possible',
+    type: Boolean,
     example: true,
   })
   canAppeal!: boolean;
 
   @ApiPropertyOptional({
     description: 'Days until appeal deadline',
+    type: Number,
+    nullable: true,
     example: 7,
   })
   daysUntilAppealDeadline?: number;
@@ -347,13 +413,9 @@ export class SanctionListResponse {
 
   @ApiProperty({
     description: 'Pagination metadata',
+    type: () => PaginationMeta,
   })
-  meta!: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  meta!: PaginationMeta;
 }
 
 /**
@@ -362,6 +424,7 @@ export class SanctionListResponse {
 export class ActiveSanctionsResult {
   @ApiProperty({
     description: 'Whether the subject is currently sanctioned',
+    type: Boolean,
     example: true,
   })
   isSanctioned!: boolean;
@@ -381,6 +444,7 @@ export class ActiveSanctionsResult {
 
   @ApiProperty({
     description: 'Whether permanently banned',
+    type: Boolean,
     example: false,
   })
   isPermanentlyBanned!: boolean;

@@ -1,4 +1,14 @@
-import { IsString, IsOptional, IsUUID, IsIP, IsNumber, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsUUID,
+  IsIP,
+  IsNumber,
+  Min,
+  Max,
+  IsBoolean,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -30,8 +40,10 @@ export class CreateSessionDto {
   @ApiProperty({
     description: 'User agent string',
     example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    maxLength: 500,
   })
   @IsString()
+  @MaxLength(500)
   userAgent!: string;
 
   @ApiPropertyOptional({
@@ -52,8 +64,10 @@ export class RefreshSessionDto {
   @ApiProperty({
     description: 'Refresh token',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    maxLength: 500,
   })
   @IsString()
+  @MaxLength(500)
   refreshToken!: string;
 }
 
@@ -64,9 +78,11 @@ export class RevokeSessionDto {
   @ApiPropertyOptional({
     description: 'Reason for revoking the session',
     example: 'User logged out',
+    maxLength: 255,
   })
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   reason?: string;
 }
 
@@ -90,8 +106,11 @@ export class SessionQueryDto {
 
   @ApiPropertyOptional({
     description: 'Filter by active status',
+    type: Boolean,
+    nullable: true,
   })
   @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 
   @ApiPropertyOptional({

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsUUID, IsNotEmpty } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -8,8 +8,10 @@ export class CreateProfileDto {
   @ApiProperty({
     description: 'Account ID to create profile for',
     example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
   })
-  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
   accountId!: string;
 
   @ApiProperty({

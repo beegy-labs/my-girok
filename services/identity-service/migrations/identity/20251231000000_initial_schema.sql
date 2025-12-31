@@ -5,6 +5,7 @@
 -- UUID v7 FUNCTION (Time-ordered UUIDs for better indexing)
 -- ============================================================
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION uuid_generate_v7()
 RETURNS uuid
 AS $$
@@ -19,6 +20,7 @@ BEGIN
   return encode(uuid_bytes, 'hex')::uuid;
 END
 $$ LANGUAGE plpgsql VOLATILE;
+-- +goose StatementEnd
 
 -- ============================================================
 -- ENUM TYPES
@@ -287,6 +289,7 @@ CREATE INDEX idx_outbox_cleanup ON outbox_events(status, processed_at) WHERE sta
 -- UPDATED_AT TRIGGER
 -- ============================================================
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -294,6 +297,7 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER update_accounts_updated_at
   BEFORE UPDATE ON accounts

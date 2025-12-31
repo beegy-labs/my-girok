@@ -7,8 +7,12 @@ import {
   IsUUID,
   MinLength,
   MaxLength,
-  Length,
   ValidateNested,
+  ArrayNotEmpty,
+  IsISO31661Alpha2,
+  IsLocale,
+  IsTimeZone,
+  Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -54,13 +58,20 @@ export class RegisterUserDto {
   email!: string;
 
   @ApiProperty({
-    description: 'User password',
+    description: 'User password (must contain uppercase, lowercase, number, and special character)',
     minLength: 8,
     maxLength: 128,
   })
   @IsString()
   @MinLength(8)
   @MaxLength(128)
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>\/\\`~])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{}|;:'",.<>\/\\`~]{8,}$/,
+    {
+      message:
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+    },
+  )
   password!: string;
 
   @ApiProperty({
@@ -80,8 +91,7 @@ export class RegisterUserDto {
     minLength: 2,
     maxLength: 2,
   })
-  @IsString()
-  @Length(2, 2)
+  @IsISO31661Alpha2()
   countryCode!: string;
 
   @ApiProperty({
@@ -89,24 +99,25 @@ export class RegisterUserDto {
     type: [RegistrationConsentDto],
   })
   @IsArray()
+  @ArrayNotEmpty({ message: 'At least one consent is required' })
   @ValidateNested({ each: true })
   @Type(() => RegistrationConsentDto)
   consents!: RegistrationConsentDto[];
 
   @ApiPropertyOptional({
-    description: 'User locale',
+    description: 'User locale (BCP 47 format)',
     example: 'ko-KR',
   })
   @IsOptional()
-  @IsString()
+  @IsLocale()
   locale?: string;
 
   @ApiPropertyOptional({
-    description: 'User timezone',
+    description: 'User timezone (IANA format)',
     example: 'Asia/Seoul',
   })
   @IsOptional()
-  @IsString()
+  @IsTimeZone()
   timezone?: string;
 }
 

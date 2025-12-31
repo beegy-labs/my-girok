@@ -10,8 +10,16 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
 import {
   CreatePermissionDto,
@@ -26,8 +34,11 @@ import {
   PermissionListResponse,
   PermissionsByCategory,
 } from './entities/permission.entity';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
 @ApiTags('Permissions')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 @Controller('permissions')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}

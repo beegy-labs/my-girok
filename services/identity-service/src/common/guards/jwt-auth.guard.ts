@@ -90,6 +90,10 @@ export class JwtAuthGuard implements CanActivate {
   /**
    * Verify JWT token with proper signature verification
    * Uses JwtService to verify signature, expiration, issuer, and audience
+   *
+   * Security:
+   * - Explicitly specifies allowed algorithms to prevent algorithm confusion attacks
+   * - Validates issuer and audience claims
    */
   private async verifyToken(token: string): Promise<JwtPayload> {
     const secret = this.configService.get<string>('JWT_SECRET');
@@ -100,12 +104,27 @@ export class JwtAuthGuard implements CanActivate {
       throw new Error('JWT verification not configured');
     }
 
-    // Verify token with signature validation
+    // Determine algorithm based on key type
+    const algorithms: ('HS256' | 'HS384' | 'HS512' | 'RS256' | 'RS384' | 'RS512')[] = publicKey
+      ? ['RS256', 'RS384', 'RS512']
+      : ['HS256', 'HS384', 'HS512'];
+
+    // Get issuer and audience - require them in production
+    const issuer = this.configService.get<string>('JWT_ISSUER');
+    const audience = this.configService.get<string>('JWT_AUDIENCE');
+    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+
+    if (nodeEnv === 'production' && (!issuer || !audience)) {
+      this.logger.error('JWT_ISSUER and JWT_AUDIENCE must be configured in production');
+      throw new Error('JWT issuer/audience not configured');
+    }
+
+    // Verify token with signature validation and algorithm restriction
     const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
       secret: publicKey || secret,
-      // Validate issuer and audience if configured
-      issuer: this.configService.get<string>('JWT_ISSUER'),
-      audience: this.configService.get<string>('JWT_AUDIENCE'),
+      algorithms, // Prevent algorithm confusion attacks
+      issuer,
+      audience,
     });
 
     return payload;

@@ -5,6 +5,7 @@
 -- UUID v7 FUNCTION (Time-ordered UUIDs for better indexing)
 -- ============================================================
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION uuid_generate_v7()
 RETURNS uuid
 AS $$
@@ -19,6 +20,7 @@ BEGIN
   return encode(uuid_bytes, 'hex')::uuid;
 END
 $$ LANGUAGE plpgsql VOLATILE;
+-- +goose StatementEnd
 
 -- ============================================================
 -- ENUM TYPES
@@ -164,6 +166,7 @@ CREATE INDEX idx_consents_account_id ON consents(account_id);
 CREATE INDEX idx_consents_service_id ON consents(service_id) WHERE service_id IS NOT NULL;
 CREATE INDEX idx_consents_country_code ON consents(country_code);
 CREATE INDEX idx_consents_consent_type ON consents(consent_type);
+CREATE INDEX idx_consents_document_id ON consents(document_id) WHERE document_id IS NOT NULL;
 -- Composite index for active consent lookup
 CREATE INDEX idx_consents_active ON consents(account_id, consent_type, agreed, withdrawn_at) WHERE agreed = true AND withdrawn_at IS NULL;
 CREATE INDEX idx_consents_expiring ON consents(expires_at) WHERE expires_at IS NOT NULL AND withdrawn_at IS NULL;
@@ -324,6 +327,7 @@ CREATE INDEX idx_outbox_cleanup ON outbox_events(status, processed_at) WHERE sta
 -- UPDATED_AT TRIGGER
 -- ============================================================
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -331,6 +335,7 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER update_legal_documents_updated_at
   BEFORE UPDATE ON legal_documents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

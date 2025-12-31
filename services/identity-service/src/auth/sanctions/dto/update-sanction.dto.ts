@@ -7,6 +7,10 @@ import {
   IsInt,
   Min,
   Max,
+  MaxLength,
+  IsNotEmpty,
+  IsUUID,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
@@ -63,6 +67,7 @@ export class UpdateSanctionDto {
     example: 'Additional violation discovered',
   })
   @IsString()
+  @MaxLength(2000)
   @IsOptional()
   reason?: string;
 
@@ -71,6 +76,7 @@ export class UpdateSanctionDto {
     example: 'Investigation completed',
   })
   @IsString()
+  @MaxLength(5000)
   @IsOptional()
   internalNote?: string;
 
@@ -96,6 +102,8 @@ export class UpdateSanctionDto {
     example: 'Extended due to repeat offense',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
   updateReason!: string;
 }
 
@@ -108,6 +116,8 @@ export class RevokeSanctionDto {
     example: 'Appeal approved - sanction was issued in error',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
   reason!: string;
 }
 
@@ -120,6 +130,7 @@ export class ExtendSanctionDto {
     example: '2024-03-31T00:00:00Z',
   })
   @IsDateString()
+  @IsNotEmpty()
   newEndAt!: string;
 
   @ApiProperty({
@@ -127,6 +138,8 @@ export class ExtendSanctionDto {
     example: 'Continued violation during sanction period',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
   reason!: string;
 }
 
@@ -139,6 +152,7 @@ export class ReduceSanctionDto {
     example: '2024-01-15T00:00:00Z',
   })
   @IsDateString()
+  @IsNotEmpty()
   newEndAt!: string;
 
   @ApiProperty({
@@ -146,6 +160,8 @@ export class ReduceSanctionDto {
     example: 'Good behavior during sanction period',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
   reason!: string;
 }
 
@@ -158,6 +174,8 @@ export class SubmitAppealDto {
     example: 'I believe this sanction was issued in error because...',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(5000)
   reason!: string;
 
   @ApiPropertyOptional({
@@ -179,7 +197,8 @@ export class ReviewAppealDto {
     enum: ['APPROVED', 'REJECTED', 'ESCALATED'],
     example: 'APPROVED',
   })
-  @IsEnum(AppealStatus)
+  @IsIn(['APPROVED', 'REJECTED', 'ESCALATED'])
+  @IsNotEmpty()
   status!: 'APPROVED' | 'REJECTED' | 'ESCALATED';
 
   @ApiProperty({
@@ -187,6 +206,8 @@ export class ReviewAppealDto {
     example: 'After review, we have determined the sanction was issued in error.',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(5000)
   response!: string;
 }
 
@@ -198,7 +219,7 @@ export class QuerySanctionDto {
     description: 'Filter by subject ID',
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @IsString()
+  @IsUUID()
   @IsOptional()
   subjectId?: string;
 
@@ -214,7 +235,7 @@ export class QuerySanctionDto {
     description: 'Filter by service ID',
     example: '550e8400-e29b-41d4-a716-446655440001',
   })
-  @IsString()
+  @IsUUID()
   @IsOptional()
   serviceId?: string;
 
@@ -290,9 +311,10 @@ export class QuerySanctionDto {
 
   @ApiPropertyOptional({
     description: 'Sort order',
+    enum: ['asc', 'desc'],
     example: 'desc',
   })
-  @IsString()
+  @IsIn(['asc', 'desc'])
   @IsOptional()
   order?: 'asc' | 'desc';
 }

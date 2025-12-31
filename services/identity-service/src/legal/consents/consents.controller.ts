@@ -11,8 +11,17 @@ import {
   HttpCode,
   HttpStatus,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { ConsentsService, ConsentQueryDto, ConsentLogQueryDto } from './consents.service';
 import { GrantConsentDto, GrantBulkConsentsDto } from './dto/grant-consent.dto';
@@ -25,6 +34,7 @@ import {
   ConsentLogListResponse,
 } from './entities/consent.entity';
 import { ConsentType, ConsentScope, ConsentLogAction } from '.prisma/identity-legal-client';
+import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
 /**
  * Extract audit information from request
@@ -42,6 +52,8 @@ const extractAuditInfo = (req: Request) => ({
  */
 @ApiTags('Consents')
 @Controller('legal/consents')
+@ApiBearerAuth()
+@UseGuards(ApiKeyGuard)
 export class ConsentsController {
   constructor(private readonly consentsService: ConsentsService) {}
 
@@ -50,6 +62,7 @@ export class ConsentsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 per minute
   @ApiOperation({
     summary: 'Grant a new consent',
     description: 'Records user consent with full audit trail',
@@ -70,6 +83,7 @@ export class ConsentsController {
    */
   @Post('bulk')
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 per minute
   @ApiOperation({
     summary: 'Grant multiple consents',
     description: 'Records multiple consents in a single transaction (used during registration)',
@@ -208,6 +222,7 @@ export class ConsentsController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 per minute
   @ApiOperation({
     summary: 'Withdraw consent',
     description: 'Withdraw a consent by ID. Required consents cannot be withdrawn.',
@@ -234,6 +249,7 @@ export class ConsentsController {
    */
   @Delete('account/:accountId/type/:type')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 per minute
   @ApiOperation({
     summary: 'Withdraw consent by type',
     description: 'Withdraw a consent by account ID and consent type',

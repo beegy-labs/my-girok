@@ -12,6 +12,7 @@ import {
   ParseUUIDPipe,
   Headers,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -52,6 +53,7 @@ export class DsrRequestsController {
    * Submit a new DSR request
    */
   @Post()
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 per hour
   @ApiOperation({ summary: 'Submit a new DSR request' })
   @ApiResponse({
     status: 201,

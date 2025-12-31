@@ -1,5 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { RegistrationService } from './registration.service';
 import { RegisterUserDto, RegistrationResponseDto } from './dto/registration.dto';
@@ -11,6 +12,7 @@ export class RegistrationController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 5, ttl: 86400000 } }) // 5 per day per IP
   @ApiOperation({
     summary: 'Register a new user',
     description: `

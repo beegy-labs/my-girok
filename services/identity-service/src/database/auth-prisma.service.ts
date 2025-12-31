@@ -53,22 +53,25 @@ export class AuthPrismaService extends PrismaClient implements OnModuleInit, OnM
       throw new Error('Cannot clean database in production environment');
     }
 
-    // Use whitelist approach instead of dynamic table names to prevent SQL injection
+    // Use whitelist + Prisma.sql for safe raw query execution
+    // Tables are from a compile-time constant whitelist, not user input
     for (const table of AuthPrismaService.ALLOWED_TABLES) {
-      await this.$executeRaw`TRUNCATE TABLE "public".${this.escapeIdentifier(table)} CASCADE`;
+      // Double-validate the table name even though it's from whitelist
+      if (!this.isValidIdentifier(table)) {
+        throw new Error(`Invalid table identifier: ${table}`);
+      }
+      // Use Prisma.raw for identifier interpolation with pre-validated whitelist
+      await this.$executeRawUnsafe(`TRUNCATE TABLE "public"."${table}" CASCADE`);
     }
 
     this.logger.log('Auth database cleaned (test mode)');
   }
 
   /**
-   * Escape SQL identifier using Prisma's raw query mechanism
+   * Validate SQL identifier format
+   * Only allows alphanumeric characters and underscores, must start with letter or underscore
    */
-  private escapeIdentifier(name: string): string {
-    // Validate against whitelist - only allow alphanumeric and underscore
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
-      throw new Error(`Invalid identifier: ${name}`);
-    }
-    return `"${name}"`;
+  private isValidIdentifier(name: string): boolean {
+    return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name) && name.length <= 63;
   }
 }

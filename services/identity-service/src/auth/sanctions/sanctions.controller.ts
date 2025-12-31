@@ -12,6 +12,7 @@ import {
   ParseUUIDPipe,
   Headers,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -300,6 +301,7 @@ export class SanctionsController {
    */
   @Post('maintenance/expire')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 1, ttl: 60000 } }) // 1 per minute (maintenance operation)
   @ApiOperation({ summary: 'Expire outdated sanctions' })
   @ApiResponse({
     status: 200,

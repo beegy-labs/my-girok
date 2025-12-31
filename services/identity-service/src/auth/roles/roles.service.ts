@@ -26,17 +26,6 @@ import { Prisma, Role } from '.prisma/identity-auth-client';
 // Type for Role with children for hierarchy building
 type RoleWithChildren = Role & { children?: RoleWithChildren[]; parent?: Role | null };
 
-// Partial role type for summary mapping
-type PartialRole = {
-  id: string;
-  name: string;
-  displayName: string | null;
-  scope: string;
-  level: number;
-  isSystem: boolean;
-  isActive: boolean;
-};
-
 @Injectable()
 export class RolesService {
   private readonly logger = new Logger(RolesService.name);
@@ -560,11 +549,19 @@ export class RolesService {
   /**
    * Map database model to summary
    */
-  private mapToSummary(role: PartialRole): RoleSummary {
+  private mapToSummary(role: {
+    id: string;
+    name: string;
+    displayName: string | null;
+    scope: string;
+    level: number;
+    isSystem: boolean;
+    isActive: boolean;
+  }): RoleSummary {
     return {
       id: role.id,
       name: role.name,
-      displayName: role.displayName,
+      displayName: role.displayName ?? role.name,
       scope: role.scope as RoleScope,
       level: role.level,
       isSystem: role.isSystem,

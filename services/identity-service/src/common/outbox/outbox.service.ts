@@ -1,11 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ID } from '@my-girok/nest-common';
+import { Prisma as IdentityPrisma } from '.prisma/identity-client';
+import { Prisma as AuthPrisma } from '.prisma/identity-auth-client';
+import { Prisma as LegalPrisma } from '.prisma/identity-legal-client';
 import { IdentityPrismaService, AuthPrismaService, LegalPrismaService } from '../../database';
 import { OutboxStatus as IdentityOutboxStatus } from '.prisma/identity-client';
 import { OutboxStatus as AuthOutboxStatus } from '.prisma/identity-auth-client';
 import { OutboxStatus as LegalOutboxStatus } from '.prisma/identity-legal-client';
 
 export type OutboxDatabase = 'identity' | 'auth' | 'legal';
+
+// Transaction client types for each database
+export type IdentityTransactionClient = Omit<
+  IdentityPrisma.TransactionClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
+export type AuthTransactionClient = Omit<
+  AuthPrisma.TransactionClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
+export type LegalTransactionClient = Omit<
+  LegalPrisma.TransactionClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>;
 
 export interface OutboxEventPayload {
   aggregateType: string;
@@ -33,6 +50,10 @@ export interface OutboxEvent {
  * Manages event publishing across multiple databases (identity, auth, legal)
  * with consistent retry and cleanup logic.
  *
+ * IMPORTANT: For transactional guarantees, use the `publishIn*Transaction` methods
+ * (publishInIdentityTransaction, publishInAuthTransaction, publishInLegalTransaction)
+ * which accept a transaction client and ensure atomicity with your business operations.
+ *
  * Note: Switch-case pattern is required due to Prisma's strict typing
  * where each client has incompatible method signatures.
  */
@@ -48,17 +69,46 @@ export class OutboxService {
   ) {}
 
   /**
-   * Alias for publishEvent - for backward compatibility
+   * Alias for publishEventStandalone - for backward compatibility
+   *
+   * @deprecated Use publishIn*Transaction methods for transactional guarantees.
+   * This method runs in its own transaction and does NOT guarantee atomicity
+   * with your business operations.
    */
   async publish(database: OutboxDatabase, event: OutboxEventPayload): Promise<OutboxEvent> {
-    return this.publishEvent(database, event);
+    this.logger.warn(
+      'Using standalone publish() - consider using publishIn*Transaction for transactional guarantees',
+    );
+    return this.publishEventStandalone(database, event);
   }
 
   /**
-   * Publish an event to the outbox table within a transaction
-   * This ensures the event is only published if the transaction succeeds
+   * Publish an event to the outbox table in a standalone transaction.
+   *
+   * WARNING: This method does NOT guarantee atomicity with your business operations.
+   * The event will be published even if your surrounding code fails after this call.
+   *
+   * For transactional guarantees, use:
+   * - publishInIdentityTransaction(tx, event)
+   * - publishInAuthTransaction(tx, event)
+   * - publishInLegalTransaction(tx, event)
+   *
+   * @deprecated Use publishIn*Transaction methods for transactional guarantees.
    */
   async publishEvent(database: OutboxDatabase, event: OutboxEventPayload): Promise<OutboxEvent> {
+    this.logger.warn(
+      `Using standalone publishEvent() for ${database} - consider using publishIn*Transaction for transactional guarantees`,
+    );
+    return this.publishEventStandalone(database, event);
+  }
+
+  /**
+   * Internal standalone publish - wrapped in its own transaction for at-least-once delivery
+   */
+  private async publishEventStandalone(
+    database: OutboxDatabase,
+    event: OutboxEventPayload,
+  ): Promise<OutboxEvent> {
     const id = ID.generate();
     const baseData = {
       id,
@@ -71,21 +121,28 @@ export class OutboxService {
 
     let outboxEvent: OutboxEvent;
 
+    // Wrap in transaction for at-least-once guarantee (event write is atomic)
     switch (database) {
       case 'identity':
-        outboxEvent = (await this.identityPrisma.outboxEvent.create({
-          data: { ...baseData, status: IdentityOutboxStatus.PENDING },
-        })) as unknown as OutboxEvent;
+        outboxEvent = await this.identityPrisma.$transaction(async (tx) => {
+          return (await tx.outboxEvent.create({
+            data: { ...baseData, status: IdentityOutboxStatus.PENDING },
+          })) as unknown as OutboxEvent;
+        });
         break;
       case 'auth':
-        outboxEvent = (await this.authPrisma.outboxEvent.create({
-          data: { ...baseData, status: AuthOutboxStatus.PENDING },
-        })) as unknown as OutboxEvent;
+        outboxEvent = await this.authPrisma.$transaction(async (tx) => {
+          return (await tx.outboxEvent.create({
+            data: { ...baseData, status: AuthOutboxStatus.PENDING },
+          })) as unknown as OutboxEvent;
+        });
         break;
       case 'legal':
-        outboxEvent = (await this.legalPrisma.outboxEvent.create({
-          data: { ...baseData, status: LegalOutboxStatus.PENDING },
-        })) as unknown as OutboxEvent;
+        outboxEvent = await this.legalPrisma.$transaction(async (tx) => {
+          return (await tx.outboxEvent.create({
+            data: { ...baseData, status: LegalOutboxStatus.PENDING },
+          })) as unknown as OutboxEvent;
+        });
         break;
       default: {
         const _exhaustive: never = database;
@@ -94,10 +151,92 @@ export class OutboxService {
     }
 
     this.logger.debug(
-      `Published event to ${database} outbox: ${event.eventType} for ${event.aggregateType}:${event.aggregateId}`,
+      `Published event to ${database} outbox (standalone): ${event.eventType} for ${event.aggregateType}:${event.aggregateId}`,
     );
 
     return outboxEvent;
+  }
+
+  /**
+   * Publish an event within an existing transaction (for atomicity)
+   * Use this method when you need the event publish to be part of a transaction
+   */
+  async publishInAuthTransaction(
+    tx: AuthTransactionClient,
+    event: OutboxEventPayload,
+  ): Promise<OutboxEvent> {
+    const id = ID.generate();
+    const outboxEvent = await tx.outboxEvent.create({
+      data: {
+        id,
+        aggregateType: event.aggregateType,
+        aggregateId: event.aggregateId,
+        eventType: event.eventType,
+        payload: event.payload as object,
+        retryCount: 0,
+        status: AuthOutboxStatus.PENDING,
+      },
+    });
+
+    this.logger.debug(
+      `Published event to auth outbox (in-tx): ${event.eventType} for ${event.aggregateType}:${event.aggregateId}`,
+    );
+
+    return outboxEvent as unknown as OutboxEvent;
+  }
+
+  /**
+   * Publish an event within an existing identity transaction
+   */
+  async publishInIdentityTransaction(
+    tx: IdentityTransactionClient,
+    event: OutboxEventPayload,
+  ): Promise<OutboxEvent> {
+    const id = ID.generate();
+    const outboxEvent = await tx.outboxEvent.create({
+      data: {
+        id,
+        aggregateType: event.aggregateType,
+        aggregateId: event.aggregateId,
+        eventType: event.eventType,
+        payload: event.payload as object,
+        retryCount: 0,
+        status: IdentityOutboxStatus.PENDING,
+      },
+    });
+
+    this.logger.debug(
+      `Published event to identity outbox (in-tx): ${event.eventType} for ${event.aggregateType}:${event.aggregateId}`,
+    );
+
+    return outboxEvent as unknown as OutboxEvent;
+  }
+
+  /**
+   * Publish an event within an existing legal transaction
+   */
+  async publishInLegalTransaction(
+    tx: LegalTransactionClient,
+    event: OutboxEventPayload,
+  ): Promise<OutboxEvent> {
+    const id = ID.generate();
+    const outboxEvent = await tx.outboxEvent.create({
+      data: {
+        id,
+        aggregateType: event.aggregateType,
+        aggregateId: event.aggregateId,
+        eventType: event.eventType,
+        payload: event.payload as object,
+        retryCount: 0,
+        status: LegalOutboxStatus.PENDING,
+      },
+    });
+
+    this.logger.debug(
+      `Published event to legal outbox (in-tx): ${event.eventType} for ${event.aggregateType}:${event.aggregateId}`,
+    );
+
+    return outboxEvent as unknown as OutboxEvent;
   }
 
   /**

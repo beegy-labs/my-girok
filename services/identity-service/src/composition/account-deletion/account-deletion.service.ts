@@ -104,7 +104,8 @@ export class AccountDeletionService {
           name: 'RevokeSessions',
           execute: async (ctx) => {
             this.logger.debug(`Revoking all sessions for account ${ctx.accountId}`);
-            await this.sessionsService.revokeAllForAccount(ctx.accountId, 'Account deleted');
+            // Revoke all sessions for the account (no session excluded)
+            await this.sessionsService.revokeAllForAccount(ctx.accountId);
             return { ...ctx, sessionsRevoked: true };
           },
           compensate: async () => {

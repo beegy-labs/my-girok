@@ -6,6 +6,9 @@ import {
   IsUUID,
   IsEmail,
   IsArray,
+  IsInt,
+  Min,
+  Max,
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -86,8 +89,13 @@ export class CreateOperatorInvitationDto {
   @ApiPropertyOptional({
     description: 'Invitation expiration in days',
     example: 7,
+    minimum: 1,
+    maximum: 30,
   })
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(30)
   expiresInDays?: number;
 }
 

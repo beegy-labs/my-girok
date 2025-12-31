@@ -197,40 +197,39 @@ class UserProfileComposer {
 
 ### Identity Module (identity_db)
 
-| Table                  | Purpose                   | ID     |
-| ---------------------- | ------------------------- | ------ |
-| `accounts`             | Core account              | UUIDv7 |
-| `credentials`          | Password, passkeys, OAuth | UUIDv7 |
-| `sessions`             | Active sessions           | UUIDv7 |
-| `devices`              | Registered devices        | UUIDv7 |
-| `app_registry`         | Registered apps           | UUIDv7 |
-| `app_security_configs` | Per-app security          | UUIDv7 |
-| `app_test_modes`       | Test mode config          | UUIDv7 |
-| `app_service_status`   | Maintenance/shutdown      | UUIDv7 |
-| `app_version_policies` | Version requirements      | UUIDv7 |
-| `outbox_events`        | Event outbox              | UUIDv7 |
+| Table           | Purpose             | ID     |
+| --------------- | ------------------- | ------ |
+| `accounts`      | Core account + auth | UUIDv7 |
+| `sessions`      | Active sessions     | UUIDv7 |
+| `devices`       | Registered devices  | UUIDv7 |
+| `profiles`      | User profiles       | UUIDv7 |
+| `outbox_events` | Event outbox        | UUIDv7 |
 
 ### Auth Module (auth_db)
 
-| Table           | Purpose                | ID     |
-| --------------- | ---------------------- | ------ |
-| `roles`         | Role definitions       | UUIDv7 |
-| `permissions`   | Permission definitions | UUIDv7 |
-| `admins`        | Admin accounts         | UUIDv7 |
-| `operators`     | Service operators      | UUIDv7 |
-| `sanctions`     | Account sanctions      | UUIDv7 |
-| `api_keys`      | API key management     | UUIDv7 |
-| `outbox_events` | Event outbox           | UUIDv7 |
+| Table                    | Purpose                | ID     |
+| ------------------------ | ---------------------- | ------ |
+| `roles`                  | Role definitions       | UUIDv7 |
+| `permissions`            | Permission definitions | UUIDv7 |
+| `role_permissions`       | Role-Permission join   | UUIDv7 |
+| `operators`              | Service operators      | UUIDv7 |
+| `operator_invitations`   | Invitation management  | UUIDv7 |
+| `operator_permissions`   | Direct permissions     | UUIDv7 |
+| `sanctions`              | Account sanctions      | UUIDv7 |
+| `sanction_notifications` | Sanction notices       | UUIDv7 |
+| `outbox_events`          | Event outbox           | UUIDv7 |
 
 ### Legal Module (legal_db)
 
-| Table                   | Purpose         | ID     |
-| ----------------------- | --------------- | ------ |
-| `laws`                  | Law registry    | UUIDv7 |
-| `consent_documents`     | Legal documents | UUIDv7 |
-| `account_consents`      | User consents   | UUIDv7 |
-| `data_subject_requests` | GDPR DSR        | UUIDv7 |
-| `outbox_events`         | Event outbox    | UUIDv7 |
+| Table              | Purpose           | ID     |
+| ------------------ | ----------------- | ------ |
+| `legal_documents`  | Legal documents   | UUIDv7 |
+| `consents`         | User consents     | UUIDv7 |
+| `consent_logs`     | Consent audit log | UUIDv7 |
+| `law_registry`     | Law/regulation DB | UUIDv7 |
+| `dsr_requests`     | GDPR DSR          | UUIDv7 |
+| `dsr_request_logs` | DSR audit log     | UUIDv7 |
+| `outbox_events`    | Event outbox      | UUIDv7 |
 
 ---
 

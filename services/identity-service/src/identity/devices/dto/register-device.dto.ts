@@ -1,4 +1,15 @@
-import { IsString, IsOptional, IsUUID, IsEnum, MaxLength, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsUUID,
+  IsEnum,
+  MaxLength,
+  MinLength,
+  IsBoolean,
+  IsNumber,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -113,9 +124,11 @@ export class RegisterDeviceDto {
 
   @ApiPropertyOptional({
     description: 'Push notification token',
+    maxLength: 500,
   })
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   pushToken?: string;
 
   @ApiPropertyOptional({
@@ -158,19 +171,34 @@ export class DeviceQueryDto {
 
   @ApiPropertyOptional({
     description: 'Filter by trusted status',
+    type: Boolean,
+    nullable: true,
   })
   @IsOptional()
+  @IsBoolean()
   isTrusted?: boolean;
 
   @ApiPropertyOptional({
     description: 'Page number (default: 1)',
+    type: Number,
+    minimum: 1,
+    nullable: true,
   })
   @IsOptional()
+  @IsNumber()
+  @Min(1)
   page?: number;
 
   @ApiPropertyOptional({
     description: 'Items per page (default: 20, max: 100)',
+    type: Number,
+    minimum: 1,
+    maximum: 100,
+    nullable: true,
   })
   @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
   limit?: number;
 }

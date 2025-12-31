@@ -5,11 +5,25 @@ import {
   IsUUID,
   IsArray,
   IsInt,
+  IsIn,
   Min,
   Max,
   MaxLength,
 } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+/**
+ * Allowed sort fields for operators
+ */
+export const OPERATOR_ALLOWED_SORT_FIELDS = [
+  'name',
+  'email',
+  'createdAt',
+  'updatedAt',
+  'lastLoginAt',
+] as const;
+
+export type OperatorSortField = (typeof OPERATOR_ALLOWED_SORT_FIELDS)[number];
 
 /**
  * DTO for updating an operator
@@ -112,10 +126,11 @@ export class QueryOperatorDto {
   @ApiPropertyOptional({
     description: 'Sort field',
     example: 'createdAt',
+    enum: OPERATOR_ALLOWED_SORT_FIELDS,
   })
-  @IsString()
   @IsOptional()
-  sort?: string;
+  @IsIn([...OPERATOR_ALLOWED_SORT_FIELDS])
+  sort?: OperatorSortField;
 
   @ApiPropertyOptional({
     description: 'Sort order',
@@ -130,8 +145,9 @@ export class QueryOperatorDto {
  * DTO for granting permissions to an operator
  */
 export class GrantPermissionsDto {
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'List of permission IDs to grant',
+    type: [String],
     example: ['550e8400-e29b-41d4-a716-446655440003'],
   })
   @IsArray()
@@ -143,8 +159,9 @@ export class GrantPermissionsDto {
  * DTO for revoking permissions from an operator
  */
 export class RevokeOperatorPermissionsDto {
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'List of permission IDs to revoke',
+    type: [String],
     example: ['550e8400-e29b-41d4-a716-446655440003'],
   })
   @IsArray()

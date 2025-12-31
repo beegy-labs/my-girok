@@ -5,11 +5,25 @@ import {
   IsBoolean,
   IsUUID,
   IsArray,
+  IsIn,
   MaxLength,
   Min,
   Max,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
+/**
+ * Allowed sort fields for roles
+ */
+export const ROLE_ALLOWED_SORT_FIELDS = [
+  'name',
+  'displayName',
+  'level',
+  'createdAt',
+  'updatedAt',
+] as const;
+
+export type RoleSortField = (typeof ROLE_ALLOWED_SORT_FIELDS)[number];
 
 /**
  * DTO for updating an existing role
@@ -132,10 +146,11 @@ export class QueryRoleDto {
   @ApiPropertyOptional({
     description: 'Sort field',
     example: 'createdAt',
+    enum: ROLE_ALLOWED_SORT_FIELDS,
   })
-  @IsString()
   @IsOptional()
-  sort?: string;
+  @IsIn([...ROLE_ALLOWED_SORT_FIELDS])
+  sort?: RoleSortField;
 
   @ApiPropertyOptional({
     description: 'Sort order',

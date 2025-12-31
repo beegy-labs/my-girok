@@ -6,6 +6,7 @@ import {
   IsObject,
   IsDate,
   IsNumber,
+  IsIn,
   Min,
   Max,
 } from 'class-validator';
@@ -17,6 +18,19 @@ import {
   DsrPriority,
   DsrResponseType,
 } from '.prisma/identity-legal-client';
+
+/**
+ * Allowed sort fields for DSR requests
+ */
+export const DSR_ALLOWED_SORT_FIELDS = [
+  'createdAt',
+  'updatedAt',
+  'deadline',
+  'priority',
+  'status',
+] as const;
+
+export type DsrSortField = (typeof DSR_ALLOWED_SORT_FIELDS)[number];
 
 /**
  * DTO for creating a DSR request
@@ -244,12 +258,13 @@ export class DsrRequestQueryDto {
   limit?: number = 20;
 
   @ApiPropertyOptional({
-    description: 'Sort field (createdAt, deadline, priority)',
+    description: 'Sort field',
     example: 'createdAt',
+    enum: DSR_ALLOWED_SORT_FIELDS,
   })
   @IsOptional()
-  @IsString()
-  sort?: string;
+  @IsIn([...DSR_ALLOWED_SORT_FIELDS])
+  sort?: DsrSortField;
 
   @ApiPropertyOptional({
     description: 'Sort order (asc, desc)',

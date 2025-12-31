@@ -8,7 +8,7 @@ import {
   MinLength,
   Matches,
 } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * Account status enum
@@ -94,17 +94,20 @@ export class ChangePasswordDto {
   @ApiPropertyOptional({
     description: 'Current password (required when user has a password)',
     maxLength: 72,
+    type: String,
+    nullable: true,
   })
   @IsOptional()
   @IsString()
   @MaxLength(72, { message: 'Current password must not exceed 72 characters' })
   currentPassword?: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description:
       'New password (8-72 characters, must contain uppercase, lowercase, number, and special character)',
     minLength: 8,
     maxLength: 72,
+    type: String,
   })
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
@@ -133,9 +136,12 @@ export class EnableMfaDto {
  * DTO for verifying MFA setup
  */
 export class VerifyMfaDto {
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'MFA verification code (6 digits)',
     example: '123456',
+    type: String,
+    minLength: 6,
+    maxLength: 6,
   })
   @IsString()
   @MinLength(6)

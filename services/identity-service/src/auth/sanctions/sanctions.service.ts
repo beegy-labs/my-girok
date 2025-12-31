@@ -81,22 +81,22 @@ export class SanctionsService {
         });
       }
 
-      return sanction;
-    });
+      // Publish event atomically within the transaction
+      await this.outbox.publishInAuthTransaction(tx, {
+        aggregateType: 'Sanction',
+        aggregateId: sanction.id,
+        eventType: 'SANCTION_APPLIED',
+        payload: {
+          sanctionId: sanction.id,
+          subjectId: dto.subjectId,
+          subjectType: dto.subjectType,
+          type: dto.type,
+          severity: dto.severity,
+          reason: dto.reason,
+        },
+      });
 
-    // Publish event (outside transaction for now)
-    await this.outbox.publish('auth', {
-      aggregateType: 'Sanction',
-      aggregateId: result.id,
-      eventType: 'SANCTION_APPLIED',
-      payload: {
-        sanctionId: result.id,
-        subjectId: dto.subjectId,
-        subjectType: dto.subjectType,
-        type: dto.type,
-        severity: dto.severity,
-        reason: dto.reason,
-      },
+      return sanction;
     });
 
     this.logger.log(
@@ -170,20 +170,20 @@ export class SanctionsService {
         },
       });
 
-      return updated;
-    });
+      // Publish event atomically within the transaction
+      await this.outbox.publishInAuthTransaction(tx, {
+        aggregateType: 'Sanction',
+        aggregateId: id,
+        eventType: 'SANCTION_REVOKED',
+        payload: {
+          sanctionId: id,
+          subjectId: sanction.subjectId,
+          revokedBy,
+          reason: dto.reason,
+        },
+      });
 
-    // Publish event
-    await this.outbox.publish('auth', {
-      aggregateType: 'Sanction',
-      aggregateId: id,
-      eventType: 'SANCTION_REVOKED',
-      payload: {
-        sanctionId: id,
-        subjectId: sanction.subjectId,
-        revokedBy,
-        reason: dto.reason,
-      },
+      return updated;
     });
 
     this.logger.log(`Sanction revoked: id=${id} by ${revokedBy}`);
