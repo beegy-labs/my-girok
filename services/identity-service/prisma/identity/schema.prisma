@@ -1,0 +1,294 @@
+// Identity Service - Identity DB Schema
+// Manages: accounts, sessions, devices, profiles
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../../node_modules/.prisma/identity-client"
+  previewFeatures = ["relationJoins", "typedSql"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("IDENTITY_DATABASE_URL")
+}
+
+// ============================================================
+// ACCOUNTS
+// ============================================================
+
+model Account {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  externalId  String        @unique @map("external_id") @db.VarChar(10)
+  email       String        @unique
+  password    String?
+  username    String        @unique
+  provider    AuthProvider  @default(LOCAL)
+  providerId  String?       @map("provider_id")
+  status      AccountStatus @default(ACTIVE)
+  mode        AccountMode   @default(SERVICE)
+
+  // Verification
+  emailVerified   Boolean   @default(false) @map("email_verified")
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(6)
+  phoneVerified   Boolean   @default(false) @map("phone_verified")
+  phoneVerifiedAt DateTime? @map("phone_verified_at") @db.Timestamptz(6)
+
+  // Security
+  mfaEnabled          Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret           String?   @map("mfa_secret")
+  lastPasswordChange  DateTime? @map("last_password_change") @db.Timestamptz(6)
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until") @db.Timestamptz(6)
+
+  // Preferences
+  region      String? @db.VarChar(50)
+  locale      String? @db.VarChar(10)
+  timezone    String? @db.VarChar(50)
+  countryCode String? @map("country_code") @db.VarChar(2)
+
+  // Timestamps
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  profile  Profile?
+  sessions Session[]
+  devices  Device[]
+
+  @@index([externalId])
+  @@index([email])
+  @@index([username])
+  @@index([provider, providerId])
+  @@index([status])
+  @@index([countryCode])
+  @@map("accounts")
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+  DELETED
+
+  @@map("account_status")
+}
+
+enum AccountMode {
+  SERVICE
+  UNIFIED
+
+  @@map("account_mode")
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  KAKAO
+  NAVER
+  APPLE
+  MICROSOFT
+  GITHUB
+
+  @@map("auth_provider")
+}
+
+// ============================================================
+// SESSIONS
+// ============================================================
+
+model Session {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId    String  @map("account_id") @db.Uuid
+  tokenHash    String  @unique @map("token_hash") @db.VarChar(64)
+  refreshToken String? @map("refresh_token") @db.VarChar(64)
+
+  // Session metadata
+  deviceId  String? @map("device_id") @db.Uuid
+  ipAddress String? @map("ip_address") @db.VarChar(45)
+  userAgent String? @map("user_agent")
+
+  // Session state
+  isActive      Boolean   @default(true) @map("is_active")
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz(6)
+  revokedReason String?   @map("revoked_reason") @db.VarChar(100)
+
+  // Activity tracking
+  lastActivityAt DateTime? @map("last_activity_at") @db.Timestamptz(6)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  device  Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([tokenHash])
+  @@index([deviceId])
+  @@index([expiresAt])
+  @@index([isActive])
+  @@map("sessions")
+}
+
+// ============================================================
+// DEVICES
+// ============================================================
+
+model Device {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId String @map("account_id") @db.Uuid
+
+  // Device identification
+  fingerprint String     @map("fingerprint") @db.VarChar(64)
+  name        String?    @db.VarChar(100)
+  deviceType  DeviceType @map("device_type")
+
+  // Device info
+  platform       String? @db.VarChar(50)
+  osVersion      String? @map("os_version") @db.VarChar(50)
+  appVersion     String? @map("app_version") @db.VarChar(20)
+  browserName    String? @map("browser_name") @db.VarChar(50)
+  browserVersion String? @map("browser_version") @db.VarChar(20)
+
+  // Push notification
+  pushToken    String?       @map("push_token")
+  pushPlatform PushPlatform? @map("push_platform")
+
+  // Trust level
+  isTrusted Boolean   @default(false) @map("is_trusted")
+  trustedAt DateTime? @map("trusted_at") @db.Timestamptz(6)
+
+  // Activity
+  lastActiveAt  DateTime? @map("last_active_at") @db.Timestamptz(6)
+  lastIpAddress String?   @map("last_ip_address") @db.VarChar(45)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  sessions Session[]
+
+  @@unique([accountId, fingerprint])
+  @@index([accountId])
+  @@index([fingerprint])
+  @@index([deviceType])
+  @@map("devices")
+}
+
+enum DeviceType {
+  WEB
+  IOS
+  ANDROID
+  DESKTOP
+  OTHER
+
+  @@map("device_type")
+}
+
+enum PushPlatform {
+  FCM
+  APNS
+  WEB_PUSH
+
+  @@map("push_platform")
+}
+
+// ============================================================
+// PROFILES
+// ============================================================
+
+model Profile {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId String @unique @map("account_id") @db.Uuid
+
+  // Basic info
+  displayName String?   @map("display_name") @db.VarChar(100)
+  firstName   String?   @map("first_name") @db.VarChar(50)
+  lastName    String?   @map("last_name") @db.VarChar(50)
+  avatar      String?
+  bio         String?   @db.VarChar(500)
+
+  // Personal info
+  birthDate DateTime? @map("birth_date") @db.Date
+  gender    Gender?
+
+  // Contact
+  phoneCountryCode String? @map("phone_country_code") @db.VarChar(5)
+  phoneNumber      String? @map("phone_number") @db.VarChar(20)
+
+  // Address
+  countryCode String? @map("country_code") @db.VarChar(2)
+  region      String? @db.VarChar(100)
+  city        String? @db.VarChar(100)
+  address     String? @db.VarChar(500)
+  postalCode  String? @map("postal_code") @db.VarChar(20)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("profiles")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+
+  @@map("gender")
+}
+
+// ============================================================
+// OUTBOX EVENTS (Transactional Outbox Pattern)
+// ============================================================
+
+model OutboxEvent {
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  aggregateType String @map("aggregate_type") @db.VarChar(100)
+  aggregateId   String @map("aggregate_id") @db.Uuid
+  eventType     String @map("event_type") @db.VarChar(100)
+  payload       Json
+
+  // Processing status
+  status      OutboxStatus @default(PENDING)
+  retryCount  Int          @default(0) @map("retry_count")
+  lastError   String?      @map("last_error")
+  processedAt DateTime?    @map("processed_at") @db.Timestamptz(6)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("outbox_status")
+}
+
+// ============================================================
+// GOOSE DB VERSION (for migration tracking)
+// ============================================================
+
+model goose_db_version {
+  id         Int      @id @default(autoincrement())
+  version_id BigInt
+  is_applied Boolean
+  tstamp     DateTime @default(now()) @db.Timestamp(6)
+}
