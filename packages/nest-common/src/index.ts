@@ -43,5 +43,11 @@ export * from './audit';
 // Rate Limiting
 export * from './rate-limit';
 
+// Utils (PII Masking, etc.)
+export * from './utils';
+
+// Events (Event Bus, Outbox pattern)
+export * from './events';
+
 // ClickHouse - Import separately: @my-girok/nest-common/clickhouse
 // Not exported from main barrel to prevent loading @clickhouse/client in services that don't use it

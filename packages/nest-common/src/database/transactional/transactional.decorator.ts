@@ -1009,10 +1009,11 @@ function isCircuitAvailable(methodName: string, useCircuitBreaker: boolean): boo
  * without throwing. This function is kept for explicit success recording
  * in edge cases where manual tracking is needed.
  *
+ * @internal Exported for testing purposes.
  * @param methodName - The method identifier
  * @param useCircuitBreaker - Whether circuit breaker is enabled
  */
-function recordCircuitSuccess(methodName: string, useCircuitBreaker: boolean): void {
+export function recordCircuitSuccess(methodName: string, useCircuitBreaker: boolean): void {
   if (!useCircuitBreaker) {
     return;
   }
@@ -1229,13 +1230,13 @@ async function executeNewTransaction<T>(
 
     const txStartTime = Date.now();
     const result = await prisma.$transaction(
-      async (tx) => {
+      async (tx: PrismaTransactionClient) => {
         // Type assertion is necessary here because Prisma's $transaction callback
         // returns an opaque transaction client type. We know it implements
         // PrismaTransactionClient (all model methods) but lacks lifecycle methods.
         // This is safe because we only use model methods within transactions.
         const context: TransactionContext = {
-          tx: tx as PrismaTransactionClient,
+          tx: tx,
           transactionId,
           depth,
           startTime: txStartTime,

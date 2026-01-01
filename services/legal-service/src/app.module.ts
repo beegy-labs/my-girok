@@ -11,6 +11,7 @@ import { ConsentsModule } from './consents/consents.module';
 import { DsrRequestsModule } from './dsr-requests/dsr-requests.module';
 import { LawRegistryModule } from './law-registry/law-registry.module';
 import { LegalDocumentsModule } from './legal-documents/legal-documents.module';
+import { GrpcModule } from './grpc/grpc.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -55,6 +56,9 @@ import { HealthController } from './health.controller';
     DsrRequestsModule,
     LawRegistryModule,
     LegalDocumentsModule,
+
+    // gRPC module
+    GrpcModule,
   ],
   controllers: [HealthController],
 })

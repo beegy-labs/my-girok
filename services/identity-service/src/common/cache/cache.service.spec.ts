@@ -1,14 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 import { CacheService } from './cache.service';
+
+// Define a custom type for the mocked cache manager
+interface MockCacheManager {
+  get: jest.Mock;
+  set: jest.Mock;
+  del: jest.Mock;
+  store: {
+    keys: jest.Mock;
+  };
+}
 
 describe('CacheService', () => {
   let service: CacheService;
-  let cacheManager: jest.Mocked<Cache>;
+  let cacheManager: MockCacheManager;
 
   beforeEach(async () => {
-    const mockCacheManager = {
+    const mockCacheManager: MockCacheManager = {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
@@ -70,7 +79,7 @@ describe('CacheService', () => {
 
   describe('del', () => {
     it('should delete value from cache', async () => {
-      cacheManager.del.mockResolvedValue(undefined);
+      cacheManager.del.mockResolvedValue(true);
 
       await service.del('test-key');
 
@@ -113,9 +122,8 @@ describe('CacheService', () => {
 
   describe('invalidatePattern', () => {
     it('should delete matching keys from cache', async () => {
-      const mockStore = cacheManager.store as { keys: jest.Mock };
-      mockStore.keys.mockResolvedValue(['identity:account:123', 'identity:account:456']);
-      cacheManager.del.mockResolvedValue(undefined);
+      cacheManager.store.keys.mockResolvedValue(['identity:account:123', 'identity:account:456']);
+      cacheManager.del.mockResolvedValue(true);
 
       const result = await service.invalidatePattern('account:*');
 
@@ -124,8 +132,7 @@ describe('CacheService', () => {
     });
 
     it('should return 0 if no matching keys', async () => {
-      const mockStore = cacheManager.store as { keys: jest.Mock };
-      mockStore.keys.mockResolvedValue([]);
+      cacheManager.store.keys.mockResolvedValue([]);
 
       const result = await service.invalidatePattern('nonexistent:*');
 
@@ -154,7 +161,7 @@ describe('CacheService', () => {
       });
 
       it('should invalidate account', async () => {
-        cacheManager.del.mockResolvedValue(undefined);
+        cacheManager.del.mockResolvedValue(true);
 
         await service.invalidateAccount('123');
 

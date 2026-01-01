@@ -6,6 +6,7 @@ export * from './operator.types.js';
 export * from './service-config.types.js';
 export * from './service-feature.types.js';
 export * from './service-tester.types.js';
+export * from './sanction.enums.js';
 export * from './sanction.types.js';
 export * from './global-settings.types.js';
 export * from './law.types.js';

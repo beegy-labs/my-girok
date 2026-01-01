@@ -243,10 +243,17 @@ export class CacheService {
   }
 
   /**
-   * Cache revoked token JTI
+   * Check if a token JTI has been revoked
+   *
+   * FAIL-SECURE: This method DOES NOT catch errors internally.
+   * Errors are propagated to the caller (JwtAuthGuard) which implements
+   * fail-secure behavior by treating cache errors as token revocation.
+   *
+   * @throws Error if cache lookup fails - caller must handle for fail-secure
    */
   async isTokenRevoked(jti: string): Promise<boolean> {
-    const cached = await this.get<boolean>(CACHE_KEYS.REVOKED_TOKEN(jti));
+    const prefixedKey = this.keyPrefix + CACHE_KEYS.REVOKED_TOKEN(jti);
+    const cached = await this.cacheManager.get<boolean>(prefixedKey);
     return cached === true;
   }
 

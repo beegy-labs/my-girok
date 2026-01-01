@@ -67,3 +67,39 @@ export enum TokenType {
   REFRESH = 'REFRESH',
   DOMAIN_ACCESS = 'DOMAIN_ACCESS',
 }
+
+/**
+ * Permission action enumeration
+ * Defines the types of actions that can be performed on resources
+ */
+export enum PermissionAction {
+  CREATE = 'CREATE',
+  READ = 'READ',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  LIST = 'LIST',
+  MANAGE = 'MANAGE',
+  EXECUTE = 'EXECUTE',
+  APPROVE = 'APPROVE',
+  REJECT = 'REJECT',
+}
+
+/**
+ * Role scope enumeration
+ * Defines the scope at which a role applies
+ */
+export enum RoleScope {
+  PLATFORM = 'PLATFORM',
+  SERVICE = 'SERVICE',
+  TENANT = 'TENANT',
+}
+
+/**
+ * Role status enumeration
+ * Defines the lifecycle status of a role
+ */
+export enum RoleStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DEPRECATED = 'DEPRECATED',
+}

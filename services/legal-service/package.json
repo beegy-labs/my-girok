@@ -16,6 +16,8 @@
     "prisma:studio": "prisma studio --schema=prisma/schema.prisma"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.12.6",
+    "@grpc/proto-loader": "^0.7.15",
     "@keyv/redis": "^5.1.5",
     "@my-girok/nest-common": "workspace:*",
     "@my-girok/types": "workspace:*",

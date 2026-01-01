@@ -1,0 +1,225 @@
+syntax = "proto3";
+
+package identity.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/identity/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// IdentityService provides account, session, and device management operations
+service IdentityService {
+  // Account operations
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
+  rpc ValidateAccount(ValidateAccountRequest) returns (ValidateAccountResponse);
+  rpc GetAccountByEmail(GetAccountByEmailRequest) returns (GetAccountByEmailResponse);
+  rpc GetAccountByUsername(GetAccountByUsernameRequest) returns (GetAccountByUsernameResponse);
+
+  // Session operations
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
+
+  // Device operations
+  rpc GetAccountDevices(GetAccountDevicesRequest) returns (GetAccountDevicesResponse);
+  rpc TrustDevice(TrustDeviceRequest) returns (TrustDeviceResponse);
+  rpc RevokeDevice(RevokeDeviceRequest) returns (RevokeDeviceResponse);
+
+  // Profile operations
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+}
+
+// Account represents a user account in the system
+message Account {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  AccountStatus status = 4;
+  AccountMode mode = 5;
+  bool mfa_enabled = 6;
+  bool email_verified = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// Profile represents user profile information
+message Profile {
+  string id = 1;
+  string account_id = 2;
+  string display_name = 3;
+  optional string avatar_url = 4;
+  optional string bio = 5;
+  optional string birth_date = 6;
+  optional string phone_number = 7;
+  string country_code = 8;
+  string language_code = 9;
+  string timezone = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+// AccountStatus represents the current state of an account
+enum AccountStatus {
+  ACCOUNT_STATUS_UNSPECIFIED = 0;
+  ACCOUNT_STATUS_PENDING = 1;
+  ACCOUNT_STATUS_ACTIVE = 2;
+  ACCOUNT_STATUS_SUSPENDED = 3;
+  ACCOUNT_STATUS_DELETED = 4;
+  ACCOUNT_STATUS_LOCKED = 5;
+}
+
+// AccountMode represents the type of account
+enum AccountMode {
+  ACCOUNT_MODE_UNSPECIFIED = 0;
+  ACCOUNT_MODE_USER = 1;
+  ACCOUNT_MODE_ADMIN = 2;
+  ACCOUNT_MODE_OPERATOR = 3;
+  ACCOUNT_MODE_SERVICE = 4;
+}
+
+// Device represents a registered device
+message Device {
+  string id = 1;
+  string account_id = 2;
+  string fingerprint = 3;
+  string device_type = 4;
+  string device_name = 5;
+  string os_name = 6;
+  string os_version = 7;
+  string browser_name = 8;
+  string browser_version = 9;
+  bool is_trusted = 10;
+  google.protobuf.Timestamp last_seen_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+// Session represents an active user session
+message Session {
+  string id = 1;
+  string account_id = 2;
+  string device_id = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  google.protobuf.Timestamp last_activity_at = 8;
+}
+
+// === Request/Response Messages ===
+
+// GetAccount
+message GetAccountRequest {
+  string id = 1;
+}
+
+message GetAccountResponse {
+  Account account = 1;
+}
+
+// GetAccountByEmail Response
+message GetAccountByEmailResponse {
+  Account account = 1;
+}
+
+// GetAccountByUsername Response
+message GetAccountByUsernameResponse {
+  Account account = 1;
+}
+
+// ValidateAccount
+message ValidateAccountRequest {
+  string id = 1;
+}
+
+message ValidateAccountResponse {
+  bool valid = 1;
+  AccountStatus status = 2;
+  string message = 3;
+}
+
+// GetAccountByEmail
+message GetAccountByEmailRequest {
+  string email = 1;
+}
+
+// GetAccountByUsername
+message GetAccountByUsernameRequest {
+  string username = 1;
+}
+
+// ValidateSession
+message ValidateSessionRequest {
+  string token_hash = 1;
+}
+
+message ValidateSessionResponse {
+  bool valid = 1;
+  string account_id = 2;
+  string session_id = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  string message = 5;
+}
+
+// RevokeSession
+message RevokeSessionRequest {
+  string session_id = 1;
+  string reason = 2;
+}
+
+message RevokeSessionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// RevokeAllSessions
+message RevokeAllSessionsRequest {
+  string account_id = 1;
+  optional string exclude_session_id = 2;
+  string reason = 3;
+}
+
+message RevokeAllSessionsResponse {
+  bool success = 1;
+  int32 revoked_count = 2;
+  string message = 3;
+}
+
+// GetAccountDevices
+message GetAccountDevicesRequest {
+  string account_id = 1;
+}
+
+message GetAccountDevicesResponse {
+  repeated Device devices = 1;
+}
+
+// TrustDevice
+message TrustDeviceRequest {
+  string device_id = 1;
+  string account_id = 2;
+}
+
+message TrustDeviceResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// RevokeDevice
+message RevokeDeviceRequest {
+  string device_id = 1;
+  string account_id = 2;
+  string reason = 3;
+}
+
+message RevokeDeviceResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetProfile
+message GetProfileRequest {
+  string account_id = 1;
+}
+
+message GetProfileResponse {
+  Profile profile = 1;
+}

@@ -24,7 +24,13 @@ import { getRequestContext } from '../logging/request-context.middleware';
  */
 @Injectable()
 export class TraceInterceptor implements NestInterceptor {
-  private readonly tracer = trace.getTracer('nest-common');
+  /**
+   * Tracer instance for creating manual child spans.
+   * @returns The OpenTelemetry tracer for nest-common
+   */
+  protected get tracer() {
+    return trace.getTracer('nest-common');
+  }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();

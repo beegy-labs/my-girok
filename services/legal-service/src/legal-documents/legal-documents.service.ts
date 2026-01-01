@@ -122,6 +122,19 @@ export class LegalDocumentsService {
     return result;
   }
 
+  async findOneWithContent(id: string): Promise<LegalDocumentResponseDto & { content: string }> {
+    const document = await this.prisma.legalDocument.findUnique({ where: { id } });
+
+    if (!document) {
+      throw new NotFoundException(`Legal document not found: ${id}`);
+    }
+
+    return {
+      ...this.toResponseDto(document),
+      content: document.content,
+    };
+  }
+
   async update(id: string, dto: UpdateLegalDocumentDto): Promise<LegalDocumentResponseDto> {
     const existing = await this.prisma.legalDocument.findUnique({ where: { id } });
 

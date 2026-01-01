@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { join } from 'path';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -12,7 +14,10 @@ import { AppModule } from './app.module';
  * - Helmet for security headers
  * - Structured logging
  * - Connection draining on shutdown
+ * - gRPC microservice for inter-service communication (port 50051)
  */
+
+const GRPC_PORT = 50051;
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, {
@@ -45,11 +50,33 @@ async function bootstrap() {
   // Enable graceful shutdown hooks
   app.enableShutdownHooks();
 
+  // Configure gRPC microservice
+  const grpcPort = configService.get<number>('grpc.port') ?? GRPC_PORT;
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'identity.v1',
+      protoPath: join(__dirname, '../../../packages/proto/identity/v1/identity.proto'),
+      url: `0.0.0.0:${grpcPort}`,
+      loader: {
+        keepCase: false,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true,
+      },
+    },
+  });
+
   const port = configService.get<number>('port') ?? 3000;
 
-  // Start server
+  // Start all microservices (including gRPC)
+  await app.startAllMicroservices();
+  logger.log(`Identity Service gRPC running on port ${grpcPort}`);
+
+  // Start HTTP server
   await app.listen(port);
-  logger.log(`Identity Service running on port ${port}`);
+  logger.log(`Identity Service HTTP running on port ${port}`);
   logger.log(`Health check available at: http://localhost:${port}/health`);
 
   // Graceful shutdown handlers

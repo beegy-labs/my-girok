@@ -14,6 +14,7 @@ import { ScheduledModule } from './common/scheduled';
 import { IdentityModule } from './identity/identity.module';
 import { CompositionModule } from './composition/composition.module';
 import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.filter';
+import { GrpcModule } from './grpc';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.f
     ScheduledModule,
     IdentityModule,
     CompositionModule,
+    GrpcModule,
   ],
   controllers: [],
   providers: [

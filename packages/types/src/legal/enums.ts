@@ -38,3 +38,59 @@ export enum ConsentType {
   /** Optional: Third-party data sharing consent */
   THIRD_PARTY_SHARING = 'THIRD_PARTY_SHARING',
 }
+
+/**
+ * Consent status enumeration
+ * Tracks the current state of a user's consent
+ */
+export enum ConsentStatus {
+  GRANTED = 'GRANTED',
+  WITHDRAWN = 'WITHDRAWN',
+  EXPIRED = 'EXPIRED',
+}
+
+/**
+ * Consent source enumeration
+ * Identifies where the consent was collected from
+ */
+export enum ConsentSource {
+  WEB = 'WEB',
+  MOBILE = 'MOBILE',
+  API = 'API',
+  ADMIN = 'ADMIN',
+}
+
+/**
+ * DSR (Data Subject Request) type enumeration
+ * GDPR/CCPA compliant request types
+ */
+export enum DSRRequestType {
+  ACCESS = 'ACCESS',
+  RECTIFICATION = 'RECTIFICATION',
+  ERASURE = 'ERASURE',
+  PORTABILITY = 'PORTABILITY',
+  RESTRICTION = 'RESTRICTION',
+  OBJECTION = 'OBJECTION',
+}
+
+/**
+ * DSR request status enumeration
+ * Tracks the lifecycle of a data subject request
+ */
+export enum DSRRequestStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+}
+
+/**
+ * Legal document status enumeration
+ * Tracks the publication status of legal documents
+ */
+export enum LegalDocumentStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}

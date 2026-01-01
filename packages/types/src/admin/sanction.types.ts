@@ -1,44 +1,27 @@
 // packages/types/src/admin/sanction.types.ts
 
-/**
- * Sanction subject types
- */
-export type SanctionSubjectType = 'USER' | 'ADMIN' | 'OPERATOR';
+import {
+  SanctionSubjectType,
+  SanctionType,
+  SanctionStatus,
+  SanctionScope,
+  SanctionSeverity,
+  AppealStatus,
+  NotificationChannel,
+  NotificationStatus,
+} from './sanction.enums.js';
 
-/**
- * Sanction types
- */
-export type SanctionType = 'WARNING' | 'TEMPORARY_BAN' | 'PERMANENT_BAN' | 'FEATURE_RESTRICTION';
-
-/**
- * Sanction status
- */
-export type SanctionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';
-
-/**
- * Sanction scope
- */
-export type SanctionScope = 'PLATFORM' | 'SERVICE';
-
-/**
- * Sanction severity levels
- */
-export type SanctionSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-
-/**
- * Appeal status for sanction appeals
- */
-export type AppealStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'ESCALATED';
-
-/**
- * Notification channels for sanction notifications
- */
-export type NotificationChannel = 'EMAIL' | 'PUSH' | 'SMS' | 'IN_APP';
-
-/**
- * Notification status
- */
-export type NotificationStatus = 'PENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+// Re-export enums for convenience
+export {
+  SanctionSubjectType,
+  SanctionType,
+  SanctionStatus,
+  SanctionScope,
+  SanctionSeverity,
+  AppealStatus,
+  NotificationChannel,
+  NotificationStatus,
+};
 
 /**
  * Sanction subject info

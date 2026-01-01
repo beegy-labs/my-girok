@@ -180,11 +180,25 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
     return obj;
   }
 
+  // Handle arrays separately to preserve array structure
+  if (Array.isArray(obj)) {
+    return obj.map((item) => {
+      if (typeof item === 'string') {
+        return escapeHtml(item);
+      } else if (typeof item === 'object' && item !== null) {
+        return sanitizeObject(item as Record<string, unknown>);
+      }
+      return item;
+    }) as unknown as T;
+  }
+
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string') {
       result[key] = escapeHtml(value);
+    } else if (Array.isArray(value)) {
+      result[key] = sanitizeObject(value as unknown as Record<string, unknown>);
     } else if (typeof value === 'object' && value !== null) {
       result[key] = sanitizeObject(value as Record<string, unknown>);
     } else {
@@ -207,6 +221,14 @@ export function stripHtml(input: string | null | undefined): string {
     return '';
   }
 
-  // Remove all HTML tags
-  return input.replace(/<[^>]*>/g, '').trim();
+  // Remove script tags and their content first
+  let result = input.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  // Remove style tags and their content
+  result = result.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+  // Remove all remaining HTML tags
+  result = result.replace(/<[^>]*>/g, '');
+
+  return result.trim();
 }

@@ -1,0 +1,16 @@
+{
+  "name": "@my-girok/proto",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Protocol Buffers definitions for my-girok services",
+  "scripts": {
+    "lint": "buf lint",
+    "format": "buf format -w",
+    "breaking": "buf breaking --against .git#branch=main",
+    "generate": "buf generate",
+    "clean": "rm -rf ../types/src/generated/proto"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "^1.28.0"
+  }
+}
