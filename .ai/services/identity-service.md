@@ -235,29 +235,107 @@ services/identity-service/
 
 ---
 
+## Helm Deployment
+
+### Chart Location
+
+```
+services/identity-service/helm/
+├── Chart.yaml
+├── values.yaml.example
+├── README.md
+└── templates/
+    ├── _helpers.tpl
+    ├── deployment.yaml
+    ├── service.yaml          # HTTP + gRPC
+    ├── ingress.yaml          # HTTP + optional gRPC
+    ├── hpa.yaml
+    ├── migration-job.yaml    # 3 DB migrations
+    ├── sealed-secret.yaml
+    └── serviceaccount.yaml
+```
+
+### CQRS Configuration (Read/Write Separation)
+
+Enable read replicas for read-heavy operations:
+
+```yaml
+app:
+  cqrs:
+    enabled: true
+    readReplica:
+      poolSize: 10 # Connection pool for read replica
+      idleTimeout: 30000 # 30 seconds
+```
+
+**Database URLs**:
+
+| Purpose | Env Variable                 | Helm Secret Key              |
+| ------- | ---------------------------- | ---------------------------- |
+| Write   | `IDENTITY_DATABASE_URL`      | `identity-database-url`      |
+| Write   | `AUTH_DATABASE_URL`          | `auth-database-url`          |
+| Write   | `LEGAL_DATABASE_URL`         | `legal-database-url`         |
+| Read    | `IDENTITY_READ_DATABASE_URL` | `identity-read-database-url` |
+| Read    | `AUTH_READ_DATABASE_URL`     | `auth-read-database-url`     |
+| Read    | `LEGAL_READ_DATABASE_URL`    | `legal-read-database-url`    |
+
+### Module Mode
+
+Configure module communication:
+
+```yaml
+app:
+  moduleMode:
+    identity: local # local | remote
+    auth: local # local | remote
+    legal: local # local | remote
+```
+
+### Migration Order (ArgoCD)
+
+| Phase | Database    | Sync Wave | Job Name         |
+| ----- | ----------- | --------- | ---------------- |
+| 1     | identity_db | -5        | migrate-identity |
+| 2     | auth_db     | -4        | migrate-auth     |
+| 3     | legal_db    | -3        | migrate-legal    |
+
+---
+
 ## Environment Variables
 
 ```env
-PORT=3000
+PORT=3005
+GRPC_PORT=50051
 NODE_ENV=development
 
-# Database
-DATABASE_URL=postgresql://...identity_db
+# Database URLs (3 Separate DBs)
+IDENTITY_DATABASE_URL=postgresql://...identity_db
+AUTH_DATABASE_URL=postgresql://...auth_db
+LEGAL_DATABASE_URL=postgresql://...legal_db
+
+# CQRS - Read Replicas (optional)
+CQRS_ENABLED=false
+# IDENTITY_READ_DATABASE_URL=postgresql://...
+# AUTH_READ_DATABASE_URL=postgresql://...
+# LEGAL_READ_DATABASE_URL=postgresql://...
+
+# Module Mode
+IDENTITY_MODE=local
+AUTH_MODE=local
+LEGAL_MODE=local
 
 # Cache (Valkey/Redis)
-REDIS_HOST=localhost
-REDIS_PORT=6379
+VALKEY_HOST=localhost
+VALKEY_PORT=6379
 
-# JWT
-JWT_SECRET=...
-JWT_EXPIRES_IN=1h
-REFRESH_TOKEN_EXPIRES_IN=14d
+# JWT (RS256)
+JWT_PRIVATE_KEY=...
+JWT_PUBLIC_KEY=...
+JWT_ACCESS_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
 
-# API Keys (service-to-service)
-API_KEYS=key1,key2
-
-# Encryption (MFA secrets)
-ENCRYPTION_KEY=<32-bytes-base64>
+# Outbox
+OUTBOX_POLLING_INTERVAL_MS=5000
 ```
 
 ---

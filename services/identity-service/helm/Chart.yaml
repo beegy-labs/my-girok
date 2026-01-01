@@ -1,21 +1,23 @@
 apiVersion: v2
 name: identity-service
-description: Identity Platform microservice for My-Girok (Multi-app User Management)
+description: Identity Platform microservice for My-Girok (Account, Auth, Legal modules)
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
 
 keywords:
   - identity
-  - accounts
-  - sessions
-  - devices
-  - profiles
+  - authentication
+  - authorization
+  - legal
+  - consent
+  - gdpr
+  - grpc
 
 maintainers:
-  - name: Beegy Team
-    email: dev@beegy.net
+  - name: My-Girok Team
+    email: your-team@example.com
 
-home: https://github.com/beegy-labs/my-girok
+home: https://github.com/your-org/my-girok
 sources:
-  - https://github.com/beegy-labs/my-girok
+  - https://github.com/your-org/my-girok

@@ -8,17 +8,15 @@
 # IMPORTANT:
 #   - values.yaml is gitignored - never commit your actual configuration
 #   - Customize for your environment (development, staging, production)
-#   - Use External Secrets Operator for sensitive data in production
+#   - Use Sealed Secrets for sensitive data in production
 
 # Number of replicas
 # Development: 1, Staging: 2, Production: 3+
 replicaCount: 2
 
 image:
-  repository: ghcr.io/beegy-labs/my-girok/identity-service
+  repository: your-registry.io/my-girok/identity-service
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion
-  # Development: "dev", Staging: "staging", Production: "latest" or version tag
   tag: ""
 
 imagePullSecrets: []
@@ -44,10 +42,18 @@ securityContext:
     - ALL
   readOnlyRootFilesystem: true
 
+# ============================================================================
+# Service Configuration (HTTP + gRPC)
+# ============================================================================
+
 service:
   type: ClusterIP
-  port: 3000
-  targetPort: 3000
+  # HTTP REST API
+  httpPort: 3005
+  httpTargetPort: 3005
+  # gRPC Server
+  grpcPort: 50051
+  grpcTargetPort: 50051
 
 ingress:
   enabled: true
@@ -55,10 +61,8 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # Rate limiting
     nginx.ingress.kubernetes.io/limit-rps: "100"
   hosts:
-    # CHANGE THIS: Update with your domain
     - host: identity-api.example.com
       paths:
         - path: /
@@ -68,8 +72,24 @@ ingress:
       hosts:
         - identity-api.example.com
 
+# gRPC Ingress (optional - for external gRPC access)
+grpcIngress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: identity-grpc.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: identity-grpc-tls
+      hosts:
+        - identity-grpc.example.com
+
 # Resource limits
-# Development: Lower limits, Staging: Medium, Production: Higher
 resources:
   limits:
     cpu: 1000m
@@ -79,7 +99,6 @@ resources:
     memory: 256Mi
 
 # Auto-scaling
-# Development: Disable, Staging/Production: Enable
 autoscaling:
   enabled: true
   minReplicas: 2
@@ -105,69 +124,118 @@ affinity:
           topologyKey: kubernetes.io/hostname
 
 # ============================================================================
-# Database Migration (goose)
+# Database Migration (goose) - 3 Databases
 # ============================================================================
 
 migration:
   enabled: true  # Enable ArgoCD PreSync migration hook
+  # Order: identity -> auth -> legal (dependency order)
 
 # ============================================================================
 # Application Configuration
 # ============================================================================
 
 app:
-  # Environment: development, staging, production
   nodeEnv: production
-  port: 3000
-
-  # Database Configuration (Single Database Architecture)
-  # CHANGE THESE VALUES
-  database:
-    host: your-database-host.example.com
-    port: 5432
-    name: identity_dev
-    username: identity_dev
-    # Password should be in External Secret
-
-  # JWT Configuration
-  jwt:
-    accessExpiration: "15m"
-    refreshExpiration: "14d"
+  httpPort: 3005
+  grpcPort: 50051
 
   # Frontend URL
-  # CHANGE THIS
   frontendUrl: "https://example.com"
 
-  # Auth Service URL (for backward compatibility)
-  authServiceUrl: "http://auth-service:3001"
+  # CORS Origins
+  corsOrigins: "https://example.com,https://admin.example.com"
+
+  # ============================================================================
+  # CQRS Configuration (Read/Write Separation)
+  # ============================================================================
+  # Enable CQRS for read replica support
+  # When enabled, read operations use read replicas, writes use primary
+  cqrs:
+    enabled: false
+    # Read replica configuration (only used when cqrs.enabled=true)
+    readReplica:
+      # Connection pool settings for read replicas
+      poolSize: 10
+      idleTimeout: 30000  # 30 seconds
+
+  # ============================================================================
+  # Module Mode Configuration
+  # ============================================================================
+  # local: In-process module communication (current)
+  # remote: gRPC-based service communication (future)
+  moduleMode:
+    identity: local
+    auth: local
+    legal: local
+
+  # ============================================================================
+  # Outbox Configuration
+  # ============================================================================
+  outbox:
+    # Polling interval for outbox events (when Redpanda is not enabled)
+    pollingIntervalMs: 5000
+    # Batch size for processing outbox events
+    batchSize: 100
+    # Max retry count before marking as failed
+    maxRetries: 5
+
+  # ============================================================================
+  # Redpanda Configuration (Future - Kafka-compatible)
+  # ============================================================================
+  redpanda:
+    enabled: false
+    brokers: ""
+    # When enabled, Debezium CDC replaces polling
+
+  # ============================================================================
+  # JWT Configuration
+  # ============================================================================
+  jwt:
+    accessExpiration: "15m"
+    refreshExpiration: "7d"
+    # Token rotation grace period (seconds)
+    rotationGracePeriod: 60
+
+  # ============================================================================
+  # Valkey (Redis-compatible) Configuration
+  # ============================================================================
+  valkey:
+    host: valkey.default.svc.cluster.local
+    port: 6379
+    db: 0
+
+  # ============================================================================
+  # OpenTelemetry Configuration
+  # ============================================================================
+  otel:
+    enabled: true
+    endpoint: "http://otel-collector.observability.svc.cluster.local:4318"
+    serviceName: "identity-service"
 
 # ============================================================================
-# Valkey (Redis-compatible) Configuration
+# Sealed Secrets Configuration
 # ============================================================================
-valkey:
-  enabled: true
-  host: "valkey.example.com"
-  port: 6379
-  db: 0
-  secretName: "identity-service-valkey"
-  secretKey: "password"
+# Use kubeseal to encrypt secrets before committing
+#
+# Example:
+#   kubectl create secret generic my-girok-identity-service-secret \
+#     --from-literal=identity-database-url="postgresql://user:pass@host:5432/identity_db" \
+#     --from-literal=auth-database-url="postgresql://user:pass@host:5432/auth_db" \
+#     --from-literal=legal-database-url="postgresql://user:pass@host:5432/legal_db" \
+#     --from-literal=identity-read-database-url="postgresql://user:pass@read-host:5432/identity_db" \
+#     --from-literal=auth-read-database-url="postgresql://user:pass@read-host:5432/auth_db" \
+#     --from-literal=legal-read-database-url="postgresql://user:pass@read-host:5432/legal_db" \
+#     --from-literal=jwt-private-key="..." \
+#     --from-literal=jwt-public-key="..." \
+#     --from-literal=valkey-password="..." \
+#     --dry-run=client -o yaml | \
+#   kubeseal --format yaml > sealed-secret.yaml
 
-# ============================================================================
-# Kafka/Redpanda Configuration (for Event Sourcing)
-# ============================================================================
-kafka:
+sealedSecrets:
   enabled: true
-  brokers: "redpanda.example.com:9092"
-  # Topics are auto-created by the service
-
-# ============================================================================
-# External Secrets Configuration
-# ============================================================================
-externalSecrets:
-  enabled: true
-  secretStoreRef:
-    name: vault-backend
-    kind: ClusterSecretStore
+  annotations:
+    sealedsecrets.bitnami.com/managed: "true"
 
 # Health checks
 livenessProbe:
@@ -197,32 +265,23 @@ readinessProbe:
 #   image.tag: "dev"
 #   autoscaling.enabled: false
 #   app.nodeEnv: development
-#   app.database.name: identity_dev
-#   resources.limits.cpu: 500m
-#   resources.limits.memory: 256Mi
+#   app.cqrs.enabled: false
 #   ingress.hosts[0].host: identity-api-dev.example.com
 #
 # STAGING:
 #   replicaCount: 2
 #   image.tag: "staging"
 #   autoscaling.enabled: true
-#   autoscaling.minReplicas: 2
-#   autoscaling.maxReplicas: 5
 #   app.nodeEnv: staging
-#   resources.limits.cpu: 750m
-#   resources.limits.memory: 384Mi
+#   app.cqrs.enabled: true  # Test CQRS in staging
 #   ingress.hosts[0].host: identity-api-staging.example.com
 #
 # PRODUCTION:
 #   replicaCount: 3
 #   image.tag: "latest" or "v1.0.0"
 #   autoscaling.enabled: true
-#   autoscaling.minReplicas: 3
-#   autoscaling.maxReplicas: 10
 #   app.nodeEnv: production
-#   resources.limits.cpu: 1000m
-#   resources.limits.memory: 512Mi
+#   app.cqrs.enabled: true  # Enable read replicas
 #   ingress.hosts[0].host: identity-api.example.com
-#   affinity.podAntiAffinity: requiredDuringSchedulingIgnoredDuringExecution
 #
 # ============================================================================

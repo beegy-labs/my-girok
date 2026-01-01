@@ -1,261 +1,129 @@
-# My-Girok Identity Service Helm Chart
+# Identity Service Helm Chart
 
-Kubernetes Helm Chart for My-Girok Identity Platform microservice (Multi-app User Management).
+Identity Platform microservice for My-Girok with Account, Auth, and Legal modules.
 
-## Overview
+## Features
 
-Identity Service is the core user management platform that handles:
-
-- **Accounts**: Global user accounts across all applications
-- **Sessions**: Session management with device tracking
-- **Devices**: Device registration and trust management
-- **Profiles**: User profile data management
+- **Multi-Database Support**: 3 separate databases (identity_db, auth_db, legal_db)
+- **gRPC + HTTP**: Dual protocol support (REST API + gRPC server)
+- **CQRS Support**: Read/Write separation with replica configuration
+- **ArgoCD Ready**: PreSync migration hooks for all 3 databases
+- **Sealed Secrets**: Secure secret management
 
 ## Prerequisites
 
-- Kubernetes 1.24+
-- Helm 3.12+
-- kubectl configured with cluster access
-- External Secrets Operator (ESO) installed for secret management
-- PostgreSQL 16+ (identity_db)
+- Kubernetes 1.25+
+- Helm 3.0+
+- ArgoCD (for GitOps deployment)
+- Sealed Secrets controller
 
-## Quick Start
-
-### 1. Install External Secrets Operator (if not already installed)
+## Installation
 
 ```bash
-helm repo add external-secrets https://charts.external-secrets.io
-helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace
+# Copy and configure values
+cp values.yaml.example values.yaml
+# Edit values.yaml with your settings
+
+# Install
+helm install my-girok-identity . -f values.yaml
 ```
-
-### 2. Configure Vault Secrets
-
-Ensure the following secrets exist in Vault:
-
-```bash
-# Path: secret/apps/my-girok/{env}/identity-service/postgres
-vault kv put secret/apps/my-girok/dev/identity-service/postgres \
-  username="identity_dev" \
-  password="your-secure-password" \
-  host="db-postgres-001.example.com" \
-  port="5432" \
-  database="identity_dev"
-
-# Path: secret/apps/my-girok/{env}/identity-service/valkey
-vault kv put secret/apps/my-girok/dev/identity-service/valkey \
-  host="valkey.example.com" \
-  port="6379" \
-  password="your-valkey-password"
-
-# Path: secret/apps/my-girok/{env}/identity-service/jwt
-vault kv put secret/apps/my-girok/dev/identity-service/jwt \
-  secret="your-jwt-secret-min-32-chars" \
-  refresh_secret="your-refresh-secret-min-32-chars"
-```
-
-### 3. Install the Chart
-
-```bash
-# Development
-helm install identity-service ./helm \
-  -f helm/values-development.yaml \
-  --namespace dev-my-girok \
-  --create-namespace
-
-# Release (Staging)
-helm install identity-service ./helm \
-  -f helm/values-release.yaml \
-  --namespace release-my-girok \
-  --create-namespace
-
-# Production
-helm install identity-service ./helm \
-  -f helm/values-production.yaml \
-  --namespace my-girok \
-  --create-namespace
-```
-
-## Architecture
-
-### Single Database Architecture
-
-Identity Service uses a single PostgreSQL database (`identity_db`) containing:
-
-| Table           | Description                     |
-| --------------- | ------------------------------- |
-| `accounts`      | Global user accounts            |
-| `sessions`      | Active sessions                 |
-| `devices`       | Registered devices              |
-| `profiles`      | User profile data               |
-| `outbox_events` | Transactional outbox for events |
-
-### Event-Driven Architecture
-
-Identity Service publishes events via Kafka/Redpanda:
-
-| Topic                     | Events                                         |
-| ------------------------- | ---------------------------------------------- |
-| `identity.account.events` | AccountCreated, AccountUpdated, AccountDeleted |
-| `identity.session.events` | SessionCreated, SessionRevoked                 |
-| `identity.device.events`  | DeviceRegistered, DeviceTrusted                |
-| `identity.profile.events` | ProfileUpdated                                 |
 
 ## Configuration
 
-### Key Configuration Options
+### Databases (3 Separate DBs)
 
-| Parameter           | Description              | Default                                        |
-| ------------------- | ------------------------ | ---------------------------------------------- |
-| `replicaCount`      | Number of replicas       | `2`                                            |
-| `image.repository`  | Image repository         | `ghcr.io/beegy-labs/my-girok/identity-service` |
-| `image.tag`         | Image tag                | Chart appVersion                               |
-| `service.port`      | Service port             | `3000`                                         |
-| `migration.enabled` | Enable goose migration   | `true`                                         |
-| `valkey.enabled`    | Enable Valkey connection | `true`                                         |
-| `kafka.enabled`     | Enable Kafka connection  | `true`                                         |
+| Database    | Purpose                       | Env Variable          |
+| ----------- | ----------------------------- | --------------------- |
+| identity_db | Accounts, Sessions, Devices   | IDENTITY_DATABASE_URL |
+| auth_db     | Roles, Permissions, Sanctions | AUTH_DATABASE_URL     |
+| legal_db    | Consents, Documents, DSR      | LEGAL_DATABASE_URL    |
 
-### Database Migration (goose)
+### CQRS (Read/Write Separation)
 
-Migrations run automatically via ArgoCD PreSync hook:
+Enable CQRS to use read replicas for read operations:
 
 ```yaml
-migration:
-  enabled: true
+app:
+  cqrs:
+    enabled: true
+    readReplica:
+      poolSize: 10
+      idleTimeout: 30000
 ```
 
-## API Endpoints
+Required secrets when CQRS is enabled:
 
-### Accounts
+- `identity-read-database-url`
+- `auth-read-database-url`
+- `legal-read-database-url`
 
-| Endpoint           | Method | Description         |
-| ------------------ | ------ | ------------------- |
-| `/v1/accounts`     | POST   | Create account      |
-| `/v1/accounts/:id` | GET    | Get account by ID   |
-| `/v1/accounts/:id` | PATCH  | Update account      |
-| `/v1/accounts/:id` | DELETE | Soft delete account |
+### gRPC Server
 
-### Sessions
+The service exposes gRPC on port 50051 with the following services:
 
-| Endpoint                          | Method | Description              |
-| --------------------------------- | ------ | ------------------------ |
-| `/v1/sessions`                    | POST   | Create session           |
-| `/v1/sessions/:id`                | GET    | Get session              |
-| `/v1/sessions/:id/revoke`         | POST   | Revoke session           |
-| `/v1/sessions/account/:accountId` | GET    | List sessions by account |
+- Identity Service (Account, Session, Device, Profile)
+- Auth Service (Permission, Role, Operator, Sanction)
+- Legal Service (Consent, Document, Law, DSR)
 
-### Devices
+### Module Modes
 
-| Endpoint                         | Method | Description             |
-| -------------------------------- | ------ | ----------------------- |
-| `/v1/devices`                    | POST   | Register device         |
-| `/v1/devices/:id`                | GET    | Get device              |
-| `/v1/devices/:id/trust`          | POST   | Trust device            |
-| `/v1/devices/account/:accountId` | GET    | List devices by account |
-
-### Profiles
-
-| Endpoint                  | Method | Description    |
-| ------------------------- | ------ | -------------- |
-| `/v1/profiles/:accountId` | GET    | Get profile    |
-| `/v1/profiles/:accountId` | PUT    | Update profile |
-
-## Upgrade
-
-```bash
-helm upgrade identity-service ./helm \
-  -f helm/values-production.yaml \
-  --namespace my-girok
-```
-
-## Rollback
-
-```bash
-helm rollback identity-service -n my-girok
-```
-
-## Security
-
-### Best Practices
-
-1. **JWT Secrets**: Rotate every 90 days
-2. **Database**: Use SSL connections
-3. **Network Policies**: Restrict ingress/egress
-4. **Pod Security**: Non-root, read-only filesystem
-
-### Network Policy Example
+Configure module communication mode:
 
 ```yaml
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: identity-service-netpol
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: identity-service
-  policyTypes:
-    - Ingress
-    - Egress
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              name: ingress-nginx
-      ports:
-        - protocol: TCP
-          port: 3000
-  egress:
-    - to:
-        - namespaceSelector: {}
-      ports:
-        - protocol: TCP
-          port: 5432 # PostgreSQL
-        - protocol: TCP
-          port: 6379 # Valkey
-        - protocol: TCP
-          port: 9092 # Kafka
+app:
+  moduleMode:
+    identity: local # local | remote
+    auth: local # local | remote
+    legal: local # local | remote
 ```
 
-## Monitoring
+- **local**: In-process module calls (current)
+- **remote**: gRPC-based service calls (future, for service separation)
 
-### Health Checks
+## Migration Order
 
-- Liveness: `GET /health`
-- Readiness: `GET /health`
+Migrations run in ArgoCD PreSync hooks with sync-wave ordering:
 
-### Key Metrics
+1. **identity_db** (sync-wave: -5)
+2. **auth_db** (sync-wave: -4)
+3. **legal_db** (sync-wave: -3)
 
-- `identity_accounts_total` - Total accounts
-- `identity_sessions_active` - Active sessions
-- `identity_devices_registered` - Registered devices
+## Sealed Secrets
 
-## Troubleshooting
-
-### Check Pod Status
+Generate sealed secrets:
 
 ```bash
-kubectl get pods -n my-girok -l app.kubernetes.io/name=identity-service
+kubectl create secret generic my-girok-identity-service-secret \
+  --from-literal=identity-database-url="postgresql://user:pass@host:5432/identity_db" \
+  --from-literal=auth-database-url="postgresql://user:pass@host:5432/auth_db" \
+  --from-literal=legal-database-url="postgresql://user:pass@host:5432/legal_db" \
+  --from-literal=jwt-private-key="..." \
+  --from-literal=jwt-public-key="..." \
+  --dry-run=client -o yaml | \
+kubeseal --format yaml > sealed-secret.yaml
 ```
 
-### View Logs
+## Environment-Specific Values
+
+Create separate values files:
+
+- `values-dev.yaml` - Development
+- `values-staging.yaml` - Staging (enable CQRS for testing)
+- `values-prod.yaml` - Production (CQRS enabled)
 
 ```bash
-kubectl logs -f deployment/identity-service -n my-girok
+helm install my-girok-identity . -f values.yaml -f values-prod.yaml
 ```
 
-### Migration Issues
+## Values Reference
 
-```bash
-kubectl logs job/identity-service-migrate -n my-girok
-```
-
-## GitOps Integration
-
-Deployed via ArgoCD:
-
-- `platform-gitops/apps/my-girok/identity-service/`
-- `platform-gitops/clusters/home/values/my-girok-identity-service-{env}.yaml`
-
-## Support
-
-GitHub Issues: https://github.com/beegy-labs/my-girok/issues
+| Key                            | Description               | Default |
+| ------------------------------ | ------------------------- | ------- |
+| `replicaCount`                 | Number of replicas        | `2`     |
+| `service.httpPort`             | HTTP REST API port        | `3005`  |
+| `service.grpcPort`             | gRPC server port          | `50051` |
+| `app.cqrs.enabled`             | Enable CQRS read replicas | `false` |
+| `app.moduleMode.*`             | Module communication mode | `local` |
+| `app.outbox.pollingIntervalMs` | Outbox polling interval   | `5000`  |
+| `app.redpanda.enabled`         | Enable Redpanda (Kafka)   | `false` |
+| `migration.enabled`            | Enable DB migrations      | `true`  |
