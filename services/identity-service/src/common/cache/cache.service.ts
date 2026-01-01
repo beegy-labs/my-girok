@@ -121,19 +121,50 @@ export class CacheService {
 
   /**
    * Invalidate cache entries matching a pattern
-   * Note: Pattern invalidation is limited in in-memory cache.
-   * For production with Redis, use @keyv/redis which supports SCAN.
+   *
+   * Uses Redis SCAN in production for efficient pattern matching.
+   * Falls back to logging in development with in-memory cache.
+   *
+   * @param pattern - Glob pattern to match (e.g., "account:*")
+   * @returns Number of keys deleted
    */
   async invalidatePattern(pattern: string): Promise<number> {
     try {
-      // For cache-manager v7+, we need to access the underlying store differently
-      // In-memory cache doesn't support pattern-based deletion,
-      // so we log a warning and return 0
-      // When using Redis/Keyv in production, this should work via store.clear() or scan
-      this.logger.warn(
-        `Pattern invalidation requested for "${pattern}" - ` +
-          'not supported with in-memory cache. Consider using Redis for production.',
-      );
+      const prefixedPattern = this.keyPrefix + pattern;
+
+      // Check if cache manager has a store with keys() method (Redis/Keyv)
+      const store = (
+        this.cacheManager as unknown as {
+          store?: { keys?: (p: string) => Promise<string[]>; del?: (k: string) => Promise<void> };
+        }
+      ).store;
+
+      if (store?.keys && typeof store.keys === 'function') {
+        // Production: Use Redis SCAN via keys method
+        const keys = await store.keys(prefixedPattern);
+
+        if (keys.length === 0) {
+          return 0;
+        }
+
+        // Delete all matching keys
+        let deleted = 0;
+        for (const key of keys) {
+          try {
+            await this.cacheManager.del(key);
+            deleted++;
+          } catch {
+            // Continue on individual key errors
+          }
+        }
+
+        this.logger.debug(`Invalidated ${deleted} keys matching pattern: ${pattern}`);
+        return deleted;
+      }
+
+      // Development: In-memory cache doesn't support pattern operations
+      // Log warning but don't fail
+      this.logger.debug(`Pattern invalidation for "${pattern}" - in-memory cache, skipping`);
       return 0;
     } catch (error) {
       this.logger.warn(`Pattern invalidation failed for ${pattern}: ${error}`);

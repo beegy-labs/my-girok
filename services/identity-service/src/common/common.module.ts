@@ -10,18 +10,26 @@ import { OutboxModule } from './outbox';
 import { CacheModule } from './cache';
 import { CryptoService } from './crypto';
 import { ApiKeyGuard } from './guards';
+import { AuditModule } from './audit';
+import { ResilienceModule } from './resilience';
+import { TelemetryModule } from './telemetry';
 
 /**
  * Common Module
- * Global module providing cross-cutting concerns:
+ *
+ * Global module providing cross-cutting concerns.
+ *
+ * 2026 Best Practices:
  * - Exception filters (Prisma, validation)
  * - Interceptors (request context, idempotency)
  * - Guards (API key)
- * - Services (crypto, cache, outbox)
+ * - Services (crypto, cache, outbox, audit)
+ * - Resilience patterns (circuit breaker)
+ * - Observability (OpenTelemetry)
  */
 @Global()
 @Module({
-  imports: [OutboxModule, CacheModule],
+  imports: [OutboxModule, CacheModule, AuditModule, ResilienceModule, TelemetryModule],
   providers: [
     CryptoService,
     // Global exception filters
@@ -52,6 +60,13 @@ import { ApiKeyGuard } from './guards';
       useClass: ApiKeyGuard,
     },
   ],
-  exports: [OutboxModule, CacheModule, CryptoService],
+  exports: [
+    OutboxModule,
+    CacheModule,
+    AuditModule,
+    ResilienceModule,
+    TelemetryModule,
+    CryptoService,
+  ],
 })
 export class CommonModule {}

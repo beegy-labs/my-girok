@@ -6,6 +6,7 @@ import {
   Logger,
   ConflictException,
   SetMetadata,
+  Optional,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, of } from 'rxjs';
@@ -14,6 +15,7 @@ import { Request, Response } from 'express';
 import * as crypto from 'crypto';
 import { CacheService } from '../cache';
 import { CACHE_KEYS } from '../cache/cache-ttl.constants';
+import { IdentityPrismaService } from '../../database/identity-prisma.service';
 
 /**
  * Idempotency key header (IETF draft-ietf-httpapi-idempotency-key-header)
@@ -75,6 +77,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
   constructor(
     private readonly reflector: Reflector,
     private readonly cacheService: CacheService,
+    @Optional() private readonly prisma?: IdentityPrismaService,
   ) {}
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
@@ -110,9 +113,28 @@ export class IdempotencyInterceptor implements NestInterceptor {
     // Generate cache key with request context for additional safety
     const cacheKey = this.generateCacheKey(request, idempotencyKey);
     const lockKey = `lock:${cacheKey}`;
+    const fingerprint = this.generateFingerprint(request);
 
-    // Check for existing cached response
-    const cached = await this.cacheService.get<CachedResponse>(cacheKey);
+    // Get custom TTL if set (moved up to be available earlier)
+    const customTtlSeconds = this.reflector.getAllAndOverride<number>(IDEMPOTENT_TTL_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    const ttlMs = customTtlSeconds ? customTtlSeconds * 1000 : this.defaultTtlMs;
+
+    // Check for existing cached response (cache first, then database fallback)
+    let cached = await this.cacheService.get<CachedResponse>(cacheKey);
+
+    // If not in cache, check database
+    if (!cached && this.prisma) {
+      cached = await this.findInDatabase(idempotencyKey, fingerprint);
+
+      // Re-populate cache if found in database
+      if (cached) {
+        await this.cacheService.set(cacheKey, cached, ttlMs);
+      }
+    }
+
     if (cached) {
       this.logger.debug(`Returning cached response for idempotency key: ${idempotencyKey}`);
 
@@ -139,13 +161,6 @@ export class IdempotencyInterceptor implements NestInterceptor {
     // Acquire lock for this idempotency key
     await this.cacheService.set(lockKey, true, this.lockTtlMs);
 
-    // Get custom TTL if set
-    const customTtlSeconds = this.reflector.getAllAndOverride<number>(IDEMPOTENT_TTL_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    const ttlMs = customTtlSeconds ? customTtlSeconds * 1000 : this.defaultTtlMs;
-
     return next.handle().pipe(
       tap({
         next: async (data) => {
@@ -158,7 +173,12 @@ export class IdempotencyInterceptor implements NestInterceptor {
               createdAt: Date.now(),
             };
 
+            // Save to cache
             await this.cacheService.set(cacheKey, cachedResponse, ttlMs);
+
+            // Persist to database for reliability
+            await this.saveToDatabase(idempotencyKey, fingerprint, cachedResponse, ttlMs);
+
             this.logger.debug(`Cached response for idempotency key: ${idempotencyKey}`);
           } catch (error) {
             this.logger.warn(`Failed to cache idempotent response: ${error}`);
@@ -236,5 +256,98 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     return headers;
+  }
+
+  /**
+   * Generate request fingerprint for database lookup
+   */
+  private generateFingerprint(request: Request): string {
+    const bodyHash = this.hashBody(request.body);
+    return crypto
+      .createHash('sha256')
+      .update(`${request.method}:${request.path}:${bodyHash}`)
+      .digest('hex')
+      .substring(0, 128);
+  }
+
+  /**
+   * Find idempotency record in database
+   */
+  private async findInDatabase(
+    idempotencyKey: string,
+    fingerprint: string,
+  ): Promise<CachedResponse | null> {
+    if (!this.prisma) {
+      return null;
+    }
+
+    try {
+      const record = await this.prisma.idempotencyRecord.findUnique({
+        where: {
+          idempotencyKey_requestFingerprint: {
+            idempotencyKey,
+            requestFingerprint: fingerprint,
+          },
+        },
+      });
+
+      if (!record || record.expiresAt < new Date()) {
+        return null;
+      }
+
+      return {
+        statusCode: record.responseStatus,
+        body: record.responseBody,
+        headers: record.responseHeaders as Record<string, string>,
+        createdAt: record.createdAt.getTime(),
+      };
+    } catch (error) {
+      this.logger.warn(`Failed to find idempotency record in database: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * Save idempotency record to database
+   */
+  private async saveToDatabase(
+    idempotencyKey: string,
+    fingerprint: string,
+    response: CachedResponse,
+    ttlMs: number,
+  ): Promise<void> {
+    if (!this.prisma) {
+      return;
+    }
+
+    try {
+      const expiresAt = new Date(Date.now() + ttlMs);
+
+      await this.prisma.idempotencyRecord.upsert({
+        where: {
+          idempotencyKey_requestFingerprint: {
+            idempotencyKey,
+            requestFingerprint: fingerprint,
+          },
+        },
+        update: {
+          responseStatus: response.statusCode,
+          responseBody: response.body as object,
+          responseHeaders: response.headers,
+          expiresAt,
+        },
+        create: {
+          idempotencyKey,
+          requestFingerprint: fingerprint,
+          responseStatus: response.statusCode,
+          responseBody: response.body as object,
+          responseHeaders: response.headers,
+          expiresAt,
+        },
+      });
+    } catch (error) {
+      // Database persistence is best-effort, don't fail the request
+      this.logger.warn(`Failed to persist idempotency record to database: ${error}`);
+    }
   }
 }

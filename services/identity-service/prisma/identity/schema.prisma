@@ -242,14 +242,19 @@ model Profile {
   address     String? @db.VarChar(500)
   postalCode  String? @map("postal_code") @db.VarChar(20)
 
+  // Extensible metadata (JSONB)
+  metadata Json? @db.JsonB
+
   // Timestamps
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@index([accountId])
+  @@index([deletedAt])
   @@map("profiles")
 }
 
@@ -363,6 +368,64 @@ model PasswordHistory {
   @@unique([accountId, passwordHash])
   @@index([accountId])
   @@map("password_history")
+}
+
+// ============================================================
+// IDEMPOTENCY RECORDS (IETF draft-ietf-httpapi-idempotency-key-header)
+// ============================================================
+
+model IdempotencyRecord {
+  id                 String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  idempotencyKey     String   @map("idempotency_key") @db.VarChar(64)
+  requestFingerprint String   @map("request_fingerprint") @db.VarChar(128)
+  responseStatus     Int      @map("response_status")
+  responseBody       Json     @map("response_body")
+  responseHeaders    Json     @map("response_headers")
+  expiresAt          DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([idempotencyKey, requestFingerprint])
+  @@index([idempotencyKey])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
+// ============================================================
+// SAGA STATE (Distributed transaction orchestration)
+// ============================================================
+
+model SagaState {
+  id             String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  sagaName       String     @map("saga_name") @db.VarChar(100)
+  correlationId  String     @unique @map("correlation_id") @db.VarChar(64)
+  status         SagaStatus @default(PENDING)
+  currentStep    Int        @default(0) @map("current_step")
+  totalSteps     Int        @map("total_steps")
+  context        Json
+  completedSteps String[]   @default([]) @map("completed_steps")
+  error          String?
+  startedAt      DateTime   @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt    DateTime?  @map("completed_at") @db.Timestamptz(6)
+  timeoutAt      DateTime   @map("timeout_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([sagaName])
+  @@index([status])
+  @@index([correlationId])
+  @@index([timeoutAt])
+  @@map("saga_states")
+}
+
+enum SagaStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  COMPENSATING
+  COMPENSATED
+  TIMED_OUT
+
+  @@map("saga_status")
 }
 
 // ============================================================

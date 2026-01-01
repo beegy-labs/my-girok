@@ -5,14 +5,17 @@ import {
   ForbiddenException,
   SetMetadata,
   Logger,
+  applyDecorators,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { CacheService } from '../cache';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
+import { maskUuid } from '../utils/masking.util';
 
 export const PERMISSIONS_KEY = 'permissions';
 export const REQUIRE_ANY_KEY = 'requireAny';
+export const ROLES_KEY = 'roles';
 
 /**
  * Permission decorator - require ALL specified permissions
@@ -23,21 +26,43 @@ export const Permissions = (...permissions: string[]) => SetMetadata(PERMISSIONS
  * RequireAnyPermission decorator - require ANY of the specified permissions
  */
 export const RequireAnyPermission = (...permissions: string[]) => {
-  return (target: object, key?: string | symbol, descriptor?: PropertyDescriptor) => {
-    SetMetadata(PERMISSIONS_KEY, permissions)(target, key!, descriptor!);
-    SetMetadata(REQUIRE_ANY_KEY, true)(target, key!, descriptor!);
-  };
+  return applyDecorators(
+    SetMetadata(PERMISSIONS_KEY, permissions),
+    SetMetadata(REQUIRE_ANY_KEY, true),
+  );
 };
+
+/**
+ * Roles decorator - require specific roles
+ */
+export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
+
+/**
+ * JWT user payload expected structure
+ */
+interface JwtUser {
+  sub: string;
+  permissions?: string[];
+  roles?: string[];
+  accountMode?: string;
+}
 
 /**
  * Permission Guard
  *
  * Validates user permissions against required permissions.
+ *
+ * 2026 Best Practices:
+ * - Reads permissions from JWT payload (set by auth-service)
+ * - Falls back to cache/database lookup if JWT doesn't contain permissions
+ * - Supports hierarchical permission matching
+ *
  * Supports:
  * - AND logic (all permissions required) - default
  * - OR logic (any permission sufficient) - with @RequireAnyPermission
  * - Wildcard permissions (e.g., 'accounts:*')
  * - Resource-action-scope pattern (e.g., 'accounts:read:own')
+ * - Role-based access control with @Roles decorator
  *
  * Cache:
  * - Permissions are cached for 5 minutes per account
@@ -60,8 +85,17 @@ export class PermissionGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // No permissions required - allow access
-    if (!requiredPermissions || requiredPermissions.length === 0) {
+    // Get required roles from decorator
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // No permissions or roles required - allow access
+    if (
+      (!requiredPermissions || requiredPermissions.length === 0) &&
+      (!requiredRoles || requiredRoles.length === 0)
+    ) {
       return true;
     }
 
@@ -73,39 +107,55 @@ export class PermissionGuard implements CanActivate {
 
     // Get user from request
     const request = context.switchToHttp().getRequest<Request>();
-    const user = (request as unknown as { user?: { sub?: string; permissions?: string[] } }).user;
+    const user = (request as unknown as { user?: JwtUser }).user;
 
     if (!user?.sub) {
       throw new ForbiddenException('Authentication required');
     }
 
-    // Get user permissions (from cache or database)
-    const userPermissions = await this.getUserPermissions(user.sub);
+    // Get user permissions (from JWT, cache, or database)
+    const userPermissions = await this.getUserPermissions(user);
+    const userRoles = user.roles || [];
 
     // Check for superadmin wildcard
-    if (userPermissions.includes('*')) {
+    if (userPermissions.includes('*') || userRoles.includes('system_super')) {
       return true;
     }
 
-    // Validate permissions
-    if (requireAny) {
-      // OR logic: any permission is sufficient
-      const hasAny = requiredPermissions.some((required) =>
-        this.matchesPermission(userPermissions, required),
-      );
-
-      if (!hasAny) {
+    // Check role requirements first (if any)
+    if (requiredRoles && requiredRoles.length > 0) {
+      const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role));
+      if (!hasRequiredRole) {
         this.logger.warn(
-          `Access denied for user ${user.sub}: requires any of [${requiredPermissions.join(', ')}]`,
+          `Access denied for user ${maskUuid(user.sub)}: requires role [${requiredRoles.join(', ')}]`,
         );
-        throw new ForbiddenException('Insufficient permissions');
+        throw new ForbiddenException('Insufficient role');
       }
-    } else {
-      // AND logic: all permissions required
-      for (const required of requiredPermissions) {
-        if (!this.matchesPermission(userPermissions, required)) {
-          this.logger.warn(`Access denied for user ${user.sub}: missing permission '${required}'`);
+    }
+
+    // Check permission requirements (if any)
+    if (requiredPermissions && requiredPermissions.length > 0) {
+      if (requireAny) {
+        // OR logic: any permission is sufficient
+        const hasAny = requiredPermissions.some((required) =>
+          this.matchesPermission(userPermissions, required),
+        );
+
+        if (!hasAny) {
+          this.logger.warn(
+            `Access denied for user ${maskUuid(user.sub)}: requires any of [${requiredPermissions.join(', ')}]`,
+          );
           throw new ForbiddenException('Insufficient permissions');
+        }
+      } else {
+        // AND logic: all permissions required
+        for (const required of requiredPermissions) {
+          if (!this.matchesPermission(userPermissions, required)) {
+            this.logger.warn(
+              `Access denied for user ${maskUuid(user.sub)}: missing permission '${required}'`,
+            );
+            throw new ForbiddenException('Insufficient permissions');
+          }
         }
       }
     }
@@ -114,20 +164,29 @@ export class PermissionGuard implements CanActivate {
   }
 
   /**
-   * Get user permissions from cache or database
+   * Get user permissions from JWT, cache, or database
+   *
+   * Priority:
+   * 1. JWT payload (permissions set by auth-service)
+   * 2. Cache (if JWT doesn't contain permissions)
+   * 3. Database (if cache miss)
    */
-  private async getUserPermissions(accountId: string): Promise<string[]> {
-    // Try cache first
-    const cached = await this.cacheService.getUserPermissions(accountId);
-    if (cached) {
+  private async getUserPermissions(user: JwtUser): Promise<string[]> {
+    // First, check if permissions are in JWT payload (recommended approach)
+    if (user.permissions && user.permissions.length > 0) {
+      return user.permissions;
+    }
+
+    // Try cache
+    const cached = await this.cacheService.getUserPermissions(user.sub);
+    if (cached && cached.length > 0) {
       return cached;
     }
 
-    // Query database for permissions
-    // This queries through account -> roles -> permissions
+    // Query database - check if account is valid
     try {
       const account = await this.prisma.account.findUnique({
-        where: { id: accountId },
+        where: { id: user.sub },
         select: {
           id: true,
           status: true,
@@ -135,27 +194,33 @@ export class PermissionGuard implements CanActivate {
       });
 
       if (!account || account.status === 'DELETED' || account.status === 'SUSPENDED') {
+        this.logger.warn(`Account ${maskUuid(user.sub)} is not active or doesn't exist`);
         return [];
       }
 
-      // For now, return empty array since RBAC is in auth-service
-      // In the future, this could query auth-service via gRPC
-      // or store permissions locally
+      // For now, we rely on JWT containing permissions from auth-service
+      // This is a fallback that returns empty permissions if JWT didn't include them
+      // In production, auth-service should always include permissions in JWT
       const permissions: string[] = [];
 
-      // Cache the result
-      await this.cacheService.setUserPermissions(accountId, permissions);
+      // Cache the result (even if empty, to prevent repeated DB queries)
+      await this.cacheService.setUserPermissions(user.sub, permissions);
 
       return permissions;
     } catch (error) {
-      this.logger.error(`Failed to get permissions for account ${accountId}: ${error}`);
+      this.logger.error(`Failed to get permissions for account ${maskUuid(user.sub)}: ${error}`);
       return [];
     }
   }
 
   /**
    * Check if user permissions match a required permission
-   * Supports wildcards (e.g., 'accounts:*' matches 'accounts:read')
+   *
+   * Supports:
+   * - Exact match (e.g., 'accounts:read' matches 'accounts:read')
+   * - Wildcard match (e.g., 'accounts:*' matches 'accounts:read')
+   * - Hierarchical match (e.g., 'accounts:*:own' matches 'accounts:read:own')
+   * - Global wildcard (e.g., '*' matches everything)
    */
   private matchesPermission(userPermissions: string[], required: string): boolean {
     for (const userPerm of userPermissions) {
@@ -164,17 +229,37 @@ export class PermissionGuard implements CanActivate {
         return true;
       }
 
-      // Wildcard match (e.g., 'accounts:*' matches 'accounts:read')
-      if (userPerm.endsWith(':*')) {
-        const prefix = userPerm.slice(0, -1); // Remove '*'
-        if (required.startsWith(prefix)) {
-          return true;
-        }
-      }
-
       // Global wildcard
       if (userPerm === '*') {
         return true;
+      }
+
+      // Wildcard match at any level
+      if (userPerm.includes('*')) {
+        const userParts = userPerm.split(':');
+        const requiredParts = required.split(':');
+
+        // Check each segment
+        let matches = true;
+        for (let i = 0; i < Math.max(userParts.length, requiredParts.length); i++) {
+          const userPart = userParts[i];
+          const requiredPart = requiredParts[i];
+
+          // If user has wildcard at this position, it matches
+          if (userPart === '*') {
+            continue;
+          }
+
+          // If parts don't match, no match
+          if (userPart !== requiredPart) {
+            matches = false;
+            break;
+          }
+        }
+
+        if (matches) {
+          return true;
+        }
       }
     }
 
