@@ -1,0 +1,190 @@
+# My-Girok Legal Service Helm Values Example
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install my-girok-legal . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit your actual configuration
+#   - Customize for your environment (development, staging, production)
+#   - Use External Secrets Operator for sensitive data in production
+
+# Number of replicas
+# Development: 1, Staging: 2, Production: 3+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/beegy-labs/my-girok/legal-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 3005
+  targetPort: 3005
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+  hosts:
+    - host: legal-api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: legal-api-tls
+      hosts:
+        - legal-api.example.com
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Auto-scaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - legal-service
+          topologyKey: kubernetes.io/hostname
+
+# ============================================================================
+# Database Migration (goose)
+# ============================================================================
+
+migration:
+  enabled: true
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+app:
+  nodeEnv: production
+  port: 3005
+
+  # Database Configuration
+  database:
+    host: your-database-host.example.com
+    port: 5432
+    name: legal_dev
+    username: legal_dev
+
+  # JWT Configuration (for validation)
+  jwt:
+    accessExpiration: "15m"
+
+  # Identity Service URL
+  identityServiceUrl: "http://identity-service:3000"
+
+# ============================================================================
+# Valkey (Redis-compatible) Configuration
+# ============================================================================
+valkey:
+  enabled: true
+  host: "valkey.example.com"
+  port: 6379
+  db: 2
+  secretName: "legal-service-valkey"
+  secretKey: "password"
+
+# ============================================================================
+# External Secrets Configuration
+# ============================================================================
+externalSecrets:
+  enabled: true
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# ============================================================================
+# ENVIRONMENT-SPECIFIC CONFIGURATIONS
+# ============================================================================
+#
+# DEVELOPMENT:
+#   replicaCount: 1
+#   autoscaling.enabled: false
+#   app.database.name: legal_dev
+#
+# STAGING:
+#   replicaCount: 2
+#   autoscaling.minReplicas: 2
+#   app.database.name: legal_release
+#
+# PRODUCTION:
+#   replicaCount: 2
+#   autoscaling.minReplicas: 2
+#   autoscaling.maxReplicas: 5
+#   app.database.name: legal_prod
+#
+# ============================================================================
