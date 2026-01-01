@@ -157,15 +157,30 @@ export class SessionsService {
   }
 
   /**
-   * Check if two IPs are in the same /24 subnet (IPv4)
+   * Check if two IPs are in the same subnet
+   * IPv4: /24 subnet (first 3 octets)
+   * IPv6: /64 subnet (first 4 groups - RFC 4291 standard)
    */
   private isSameSubnet(ip1: string, ip2: string): boolean {
-    // Handle IPv6 by comparing first 64 bits conceptually
+    // Handle IPv6 by comparing first 64 bits (/64 prefix - RFC 4291)
     if (ip1.includes(':') || ip2.includes(':')) {
-      // For IPv6, compare /48 prefix
-      const prefix1 = ip1.split(':').slice(0, 3).join(':');
-      const prefix2 = ip2.split(':').slice(0, 3).join(':');
-      return prefix1.toLowerCase() === prefix2.toLowerCase();
+      // Normalize IPv6 addresses (handle compressed format)
+      const normalize = (ip: string): string[] => {
+        // Expand :: to full form
+        if (ip.includes('::')) {
+          const parts = ip.split('::');
+          const left = parts[0] ? parts[0].split(':') : [];
+          const right = parts[1] ? parts[1].split(':') : [];
+          const missing = 8 - left.length - right.length;
+          const middle = Array(missing).fill('0000');
+          return [...left, ...middle, ...right].map((g) => g.padStart(4, '0'));
+        }
+        return ip.split(':').map((g) => g.padStart(4, '0'));
+      };
+
+      const groups1 = normalize(ip1).slice(0, 4); // First 64 bits
+      const groups2 = normalize(ip2).slice(0, 4);
+      return groups1.join(':').toLowerCase() === groups2.join(':').toLowerCase();
     }
 
     // IPv4: compare /24 subnet

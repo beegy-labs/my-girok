@@ -32,6 +32,7 @@ import {
   AccountStatus,
   EnableMfaDto,
   VerifyMfaDto,
+  DisableMfaDto,
 } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
 
@@ -169,7 +170,11 @@ export class AccountsController {
   }
 
   @Get('by-email/:email')
-  @ApiOperation({ summary: 'Get account by email' })
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // Rate limit to prevent enumeration
+  @ApiOperation({
+    summary: 'Get account by email',
+    description: 'Rate limited to prevent user enumeration attacks',
+  })
   @ApiParam({ name: 'email', description: 'Email address' })
   @ApiResponse({
     status: 200,
@@ -177,12 +182,17 @@ export class AccountsController {
     type: AccountEntity,
   })
   @ApiResponse({ status: 404, description: 'Account not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async findByEmail(@Param('email') email: string): Promise<AccountEntity | null> {
     return this.accountsService.findByEmail(email);
   }
 
   @Get('by-username/:username')
-  @ApiOperation({ summary: 'Get account by username' })
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // Rate limit to prevent enumeration
+  @ApiOperation({
+    summary: 'Get account by username',
+    description: 'Rate limited to prevent user enumeration attacks',
+  })
   @ApiParam({ name: 'username', description: 'Username' })
   @ApiResponse({
     status: 200,
@@ -190,6 +200,7 @@ export class AccountsController {
     type: AccountEntity,
   })
   @ApiResponse({ status: 404, description: 'Account not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async findByUsername(@Param('username') username: string): Promise<AccountEntity | null> {
     return this.accountsService.findByUsername(username);
   }
@@ -287,14 +298,23 @@ export class AccountsController {
   }
 
   @Post(':id/mfa/disable')
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // Security: limit attempts
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Disable MFA for account' })
+  @ApiOperation({
+    summary: 'Disable MFA for account',
+    description: 'Requires current password verification for security',
+  })
   @ApiParam({ name: 'id', description: 'Account UUID' })
   @ApiResponse({ status: 204, description: 'MFA disabled successfully' })
   @ApiResponse({ status: 400, description: 'MFA not enabled' })
+  @ApiResponse({ status: 401, description: 'Invalid password' })
   @ApiResponse({ status: 404, description: 'Account not found' })
-  async disableMfa(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.accountsService.disableMfa(id);
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  async disableMfa(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: DisableMfaDto,
+  ): Promise<void> {
+    return this.accountsService.disableMfa(id, dto.currentPassword);
   }
 
   @Patch(':id/status')

@@ -690,8 +690,9 @@ export class AccountsService {
   /**
    * Disable MFA for account
    * Securely removes encrypted MFA secret
+   * Requires password verification for security
    */
-  async disableMfa(id: string): Promise<void> {
+  async disableMfa(id: string, currentPassword?: string): Promise<void> {
     const account = await this.prisma.account.findUnique({
       where: { id },
     });
@@ -704,12 +705,39 @@ export class AccountsService {
       throw new BadRequestException('MFA is not enabled');
     }
 
+    // Security: Verify current password before disabling MFA
+    if (account.password) {
+      if (!currentPassword) {
+        throw new UnauthorizedException('Current password is required to disable MFA');
+      }
+
+      const isPasswordValid = await this.verifyPassword(currentPassword, account.password);
+      if (!isPasswordValid) {
+        this.logger.warn(
+          `Failed MFA disable attempt (invalid password) for account ${maskUuid(id)}`,
+        );
+        throw new UnauthorizedException('Invalid password');
+      }
+    }
+
     await this.prisma.account.update({
       where: { id },
       data: {
         mfaEnabled: false,
         mfaSecret: null, // Encrypted secret is removed
         mfaBackupCodes: [], // Clear backup codes for security
+        mfaRecoveryCodes: [], // Clear recovery codes for security
+      },
+    });
+
+    // Publish event for audit trail
+    await this.outboxService.publish({
+      aggregateType: 'Account',
+      aggregateId: id,
+      eventType: 'MFA_DISABLED',
+      payload: {
+        accountId: id,
+        disabledAt: new Date().toISOString(),
       },
     });
 

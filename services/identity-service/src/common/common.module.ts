@@ -8,7 +8,7 @@ import {
 import { RequestContextInterceptor } from './interceptors';
 import { OutboxModule } from './outbox';
 import { CryptoService } from './crypto';
-import { ApiKeyGuard } from './guards';
+import { ApiKeyGuard, JwtAuthGuard, PermissionGuard } from './guards';
 import { CacheConfigModule, CacheService } from './cache';
 
 @Global()
@@ -16,6 +16,8 @@ import { CacheConfigModule, CacheService } from './cache';
   imports: [OutboxModule, CacheConfigModule],
   providers: [
     CryptoService,
+    JwtAuthGuard,
+    PermissionGuard,
     {
       provide: APP_FILTER,
       useClass: PrismaClientExceptionFilter,
@@ -37,6 +39,13 @@ import { CacheConfigModule, CacheService } from './cache';
       useClass: ApiKeyGuard,
     },
   ],
-  exports: [OutboxModule, CryptoService, CacheConfigModule, CacheService],
+  exports: [
+    OutboxModule,
+    CryptoService,
+    CacheConfigModule,
+    CacheService,
+    JwtAuthGuard,
+    PermissionGuard,
+  ],
 })
 export class CommonModule {}

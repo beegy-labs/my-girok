@@ -142,3 +142,20 @@ export class VerifyMfaDto {
   @Matches(/^\d{6}$/, { message: 'MFA code must be exactly 6 digits' })
   code!: string;
 }
+
+/**
+ * DTO for disabling MFA
+ * Requires current password for security verification
+ */
+export class DisableMfaDto {
+  @ApiProperty({
+    description: 'Current password for verification',
+    type: String,
+    minLength: 1,
+    maxLength: 72,
+  })
+  @IsString()
+  @MinLength(1, { message: 'Current password is required' })
+  @MaxLength(72)
+  currentPassword!: string;
+}

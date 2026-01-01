@@ -165,21 +165,26 @@ model Device {
   browserName    String? @map("browser_name") @db.VarChar(50)
   browserVersion String? @map("browser_version") @db.VarChar(20)
 
-  // Push notification
-  pushToken    String?       @map("push_token")
-  pushPlatform PushPlatform? @map("push_platform")
+  // Push notification (encrypted)
+  pushToken         String?       @map("push_token")
+  pushTokenHash     String?       @map("push_token_hash") @db.VarChar(64)
+  pushPlatform      PushPlatform? @map("push_platform")
 
   // Trust level
   isTrusted Boolean   @default(false) @map("is_trusted")
   trustedAt DateTime? @map("trusted_at") @db.Timestamptz(6)
+
+  // Device state
+  isActive Boolean @default(true) @map("is_active")
 
   // Activity
   lastActiveAt  DateTime? @map("last_active_at") @db.Timestamptz(6)
   lastIpAddress String?   @map("last_ip_address") @db.VarChar(45)
 
   // Timestamps
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
   account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -189,6 +194,8 @@ model Device {
   @@index([accountId])
   @@index([fingerprint])
   @@index([deviceType])
+  @@index([accountId, isActive])
+  @@index([isTrusted])
   @@map("devices")
 }
 
@@ -240,9 +247,17 @@ model Profile {
   address     String? @db.VarChar(500)
   postalCode  String? @map("postal_code") @db.VarChar(20)
 
+  // Locale settings
+  locale   String? @db.VarChar(10)
+  timezone String? @db.VarChar(50)
+
+  // Extensible metadata
+  metadata Json @default("{}")
+
   // Timestamps
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -298,6 +313,94 @@ enum OutboxStatus {
   FAILED
 
   @@map("outbox_status")
+}
+
+// ============================================================
+// DEAD LETTER QUEUE (Failed Events)
+// ============================================================
+
+model DeadLetterEvent {
+  id              String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  originalEventId String   @map("original_event_id") @db.Uuid
+  aggregateType   String   @map("aggregate_type") @db.VarChar(100)
+  aggregateId     String   @map("aggregate_id") @db.Uuid
+  eventType       String   @map("event_type") @db.VarChar(100)
+  payload         Json
+  failureReason   String   @map("failure_reason")
+  retryCount      Int      @map("retry_count")
+  originalTopic   String   @map("original_topic") @db.VarChar(100)
+
+  // Processing
+  status        DlqStatus @default(PENDING)
+  processedAt   DateTime? @map("processed_at") @db.Timestamptz(6)
+  processedBy   String?   @map("processed_by") @db.VarChar(100)
+  resolution    String?   @db.VarChar(500)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@index([originalEventId])
+  @@map("dead_letter_events")
+}
+
+enum DlqStatus {
+  PENDING
+  RETRIED
+  RESOLVED
+  IGNORED
+
+  @@map("dlq_status")
+}
+
+// ============================================================
+// TOKEN REVOCATION (Blacklist)
+// ============================================================
+
+model RevokedToken {
+  id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  jti        String   @unique @db.VarChar(64)
+  accountId  String   @map("account_id") @db.Uuid
+  reason     String   @db.VarChar(100)
+  revokedAt  DateTime @default(now()) @map("revoked_at") @db.Timestamptz(6)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@index([jti])
+  @@index([accountId])
+  @@index([expiresAt])
+  @@map("revoked_tokens")
+}
+
+// ============================================================
+// MFA BACKUP CODES (Hashed, with usage tracking)
+// ============================================================
+
+model MfaBackupCode {
+  id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  accountId String    @map("account_id") @db.Uuid
+  codeHash  String    @map("code_hash") @db.VarChar(64)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([accountId, codeHash])
+  @@index([accountId])
+  @@map("mfa_backup_codes")
+}
+
+// ============================================================
+// PASSWORD HISTORY (Separate table for better management)
+// ============================================================
+
+model PasswordHistory {
+  id           String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  accountId    String   @map("account_id") @db.Uuid
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  changedAt    DateTime @default(now()) @map("changed_at") @db.Timestamptz(6)
+
+  @@unique([accountId, passwordHash])
+  @@index([accountId, changedAt])
+  @@map("password_history")
 }
 
 // ============================================================
