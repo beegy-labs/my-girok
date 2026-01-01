@@ -5,16 +5,34 @@ import {
   PrismaValidationExceptionFilter,
   PrismaInitializationExceptionFilter,
 } from './filters';
-import { RequestContextInterceptor } from './interceptors';
+import { RequestContextInterceptor, IdempotencyInterceptor } from './interceptors';
 import { OutboxModule } from './outbox';
+import { CacheModule } from './cache';
 import { CryptoService } from './crypto';
 import { ApiKeyGuard } from './guards';
+import { AuditModule } from './audit';
+import { ResilienceModule } from './resilience';
+import { TelemetryModule } from './telemetry';
 
+/**
+ * Common Module
+ *
+ * Global module providing cross-cutting concerns.
+ *
+ * 2026 Best Practices:
+ * - Exception filters (Prisma, validation)
+ * - Interceptors (request context, idempotency)
+ * - Guards (API key)
+ * - Services (crypto, cache, outbox, audit)
+ * - Resilience patterns (circuit breaker)
+ * - Observability (OpenTelemetry)
+ */
 @Global()
 @Module({
-  imports: [OutboxModule],
+  imports: [OutboxModule, CacheModule, AuditModule, ResilienceModule, TelemetryModule],
   providers: [
     CryptoService,
+    // Global exception filters
     {
       provide: APP_FILTER,
       useClass: PrismaClientExceptionFilter,
@@ -27,15 +45,28 @@ import { ApiKeyGuard } from './guards';
       provide: APP_FILTER,
       useClass: PrismaInitializationExceptionFilter,
     },
+    // Global interceptors (order matters: RequestContext first, then Idempotency)
     {
       provide: APP_INTERCEPTOR,
       useClass: RequestContextInterceptor,
     },
     {
+      provide: APP_INTERCEPTOR,
+      useClass: IdempotencyInterceptor,
+    },
+    // Global guards
+    {
       provide: APP_GUARD,
       useClass: ApiKeyGuard,
     },
   ],
-  exports: [OutboxModule, CryptoService],
+  exports: [
+    OutboxModule,
+    CacheModule,
+    AuditModule,
+    ResilienceModule,
+    TelemetryModule,
+    CryptoService,
+  ],
 })
 export class CommonModule {}

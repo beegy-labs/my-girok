@@ -1,117 +1,187 @@
 # Identity Service
 
-> Multi-app user identity platform for my-girok ecosystem
+> Core identity management: accounts, sessions, devices, profiles (Port 3000)
 
 ## Overview
 
-The Identity Service is a comprehensive identity platform that manages user accounts, authentication, authorization, and legal compliance across multiple applications. It follows a multi-database architecture for separation of concerns and regulatory compliance.
+The Identity Service manages core user identity data for the my-girok Identity Platform. It is one of three separated services in the platform.
 
 ## Architecture
 
-### Multi-Database Design
+### Identity Platform (3 Services)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Identity Service                          │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│   identity_db   │     auth_db     │       legal_db          │
-├─────────────────┼─────────────────┼─────────────────────────┤
-│ • accounts      │ • roles         │ • consents              │
-│ • sessions      │ • permissions   │ • consent_logs          │
-│ • devices       │ • operators     │ • legal_documents       │
-│ • profiles      │ • sanctions     │ • law_registry          │
-│ • outbox_events │ • outbox_events │ • dsr_requests          │
-│                 │                 │ • outbox_events         │
-└─────────────────┴─────────────────┴─────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Identity Platform (Phase 3)                        │
+│                                                                       │
+│  ┌─────────────┐       ┌─────────────┐       ┌─────────────┐        │
+│  │  Identity   │       │    Auth     │       │    Legal    │        │
+│  │  Service    │◄─────►│   Service   │◄─────►│   Service   │        │
+│  │ (Port 3000) │ gRPC  │ (Port 3001) │ gRPC  │ (Port 3005) │        │
+│  └──────┬──────┘       └──────┬──────┘       └──────┬──────┘        │
+│         │                     │                     │                │
+│         ▼                     ▼                     ▼                │
+│   identity_db             auth_db              legal_db              │
+│   (PostgreSQL)           (PostgreSQL)         (PostgreSQL)           │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Key Features
+### This Service's Scope
 
-- **UUIDv7 Primary Keys**: Time-ordered UUIDs for better B-tree index performance
+| Domain   | Tables          | Purpose                          |
+| -------- | --------------- | -------------------------------- |
+| Accounts | `accounts`      | User identity, status, MFA       |
+| Sessions | `sessions`      | Login sessions, token management |
+| Devices  | `devices`       | Device registration, trust       |
+| Profiles | `profiles`      | User profile data                |
+| Events   | `outbox_events` | Transactional outbox             |
+
+## Key Features
+
+- **UUIDv7 Primary Keys**: Time-ordered UUIDs (RFC 9562) for better B-tree performance
 - **Transactional Outbox Pattern**: Reliable event publishing with retry logic
-- **Saga Orchestration**: Multi-service transaction coordination with compensation
-- **GDPR/CCPA/PIPA Compliance**: Built-in consent management and DSR handling
+- **gRPC Inter-Service**: Communicates with auth-service and legal-service
+- **MFA Support**: TOTP (RFC 6238), SMS, EMAIL methods
 
-## Modules
+## API Endpoints
 
-### Identity Module (`/identity`)
+### Accounts
 
-Manages core user identity data.
+| Method | Endpoint                          | Description               |
+| ------ | --------------------------------- | ------------------------- |
+| POST   | `/accounts`                       | Create account            |
+| GET    | `/accounts`                       | List accounts (paginated) |
+| GET    | `/accounts/:id`                   | Get account by ID         |
+| GET    | `/accounts/by-email/:email`       | Get by email              |
+| GET    | `/accounts/by-username/:username` | Get by username           |
+| PATCH  | `/accounts/:id`                   | Update account            |
+| DELETE | `/accounts/:id`                   | Soft delete account       |
+| POST   | `/accounts/:id/verify-email`      | Verify email              |
+| POST   | `/accounts/:id/change-password`   | Change password (3/min)   |
+| PATCH  | `/accounts/:id/status`            | Update status             |
+| POST   | `/accounts/:id/mfa/enable`        | Enable MFA                |
+| POST   | `/accounts/:id/mfa/verify`        | Verify MFA setup          |
+| POST   | `/accounts/:id/mfa/disable`       | Disable MFA               |
 
-| Resource | Endpoints   | Description                           |
-| -------- | ----------- | ------------------------------------- |
-| Accounts | `/accounts` | User account CRUD, verification, MFA  |
-| Sessions | `/sessions` | Session management, token validation  |
-| Devices  | `/devices`  | Device registration, trust management |
-| Profiles | `/profiles` | User profile data                     |
+### Sessions
 
-### Auth Module (`/auth`)
+| Method | Endpoint                             | Description               |
+| ------ | ------------------------------------ | ------------------------- |
+| POST   | `/sessions`                          | Create session (10/min)   |
+| GET    | `/sessions`                          | List sessions (paginated) |
+| GET    | `/sessions/:id`                      | Get session by ID         |
+| POST   | `/sessions/refresh`                  | Refresh tokens (30/min)   |
+| POST   | `/sessions/validate`                 | Validate token (100/min)  |
+| POST   | `/sessions/:id/touch`                | Update activity timestamp |
+| DELETE | `/sessions/:id`                      | Revoke session            |
+| DELETE | `/sessions/account/:accountId`       | Revoke all sessions       |
+| GET    | `/sessions/account/:accountId/count` | Active session count      |
+| POST   | `/sessions/cleanup`                  | Admin: cleanup (1/min)    |
 
-Manages authorization and access control.
+### Devices
 
-| Resource    | Endpoints      | Description                      |
-| ----------- | -------------- | -------------------------------- |
-| Roles       | `/roles`       | Role hierarchy, RBAC             |
-| Permissions | `/permissions` | Permission definitions, ABAC     |
-| Operators   | `/operators`   | Admin/operator management        |
-| Sanctions   | `/sanctions`   | User restrictions, bans, appeals |
+| Method | Endpoint                      | Description          |
+| ------ | ----------------------------- | -------------------- |
+| POST   | `/devices`                    | Register device      |
+| GET    | `/devices/:id`                | Get device by ID     |
+| GET    | `/devices/account/:accountId` | List account devices |
+| PATCH  | `/devices/:id`                | Update device        |
+| DELETE | `/devices/:id`                | Remove device        |
+| POST   | `/devices/:id/trust`          | Trust device         |
 
-### Legal Module (`/legal`)
+### Profiles
 
-Manages legal compliance.
+| Method | Endpoint               | Description    |
+| ------ | ---------------------- | -------------- |
+| GET    | `/profiles/:accountId` | Get profile    |
+| PATCH  | `/profiles/:accountId` | Update profile |
 
-| Resource  | Endpoints          | Description                             |
-| --------- | ------------------ | --------------------------------------- |
-| Consents  | `/consents`        | Consent recording, withdrawal           |
-| Documents | `/legal-documents` | Terms, policies, versions               |
-| DSR       | `/dsr-requests`    | Data subject requests (GDPR Art. 15-22) |
-| Laws      | `/law-registry`    | Jurisdiction-specific requirements      |
+## Database Schema
 
-### Composition Layer (`/composition`)
-
-Service composition for complex workflows.
-
-| Resource         | Endpoints           | Description                     |
-| ---------------- | ------------------- | ------------------------------- |
-| Registration     | `/registration`     | Complete user registration flow |
-| Account Deletion | `/account-deletion` | GDPR-compliant account erasure  |
-
-## Database Schemas
-
-### UUIDv7 Implementation
-
-All tables use time-ordered UUIDv7 for primary keys:
+### identity_db Tables
 
 ```sql
-CREATE OR REPLACE FUNCTION uuid_generate_v7()
-RETURNS uuid AS $$
-DECLARE
-  unix_ts_ms bytea;
-  uuid_bytes bytea;
-BEGIN
-  unix_ts_ms = substring(int8send(floor(extract(epoch from clock_timestamp()) * 1000)::bigint) from 3);
-  uuid_bytes = unix_ts_ms || gen_random_bytes(10);
-  uuid_bytes = set_byte(uuid_bytes, 6, (b'0111' || get_byte(uuid_bytes, 6)::bit(4))::bit(8)::int);
-  uuid_bytes = set_byte(uuid_bytes, 8, (b'10' || get_byte(uuid_bytes, 8)::bit(6))::bit(8)::int);
-  return encode(uuid_bytes, 'hex')::uuid;
-END
-$$ LANGUAGE plpgsql VOLATILE;
-```
+-- Accounts (core identity)
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY,  -- UUIDv7
+    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(50) UNIQUE,
+    password_hash TEXT,
+    email_verified BOOLEAN DEFAULT FALSE,
+    status VARCHAR(20) DEFAULT 'ACTIVE',
+    account_mode VARCHAR(20) DEFAULT 'SERVICE',
+    mfa_enabled BOOLEAN DEFAULT FALSE,
+    mfa_secret TEXT,  -- Encrypted
+    mfa_method VARCHAR(20),
+    mfa_backup_codes TEXT[],
+    failed_login_attempts INT DEFAULT 0,
+    locked_until TIMESTAMPTZ(6),
+    last_password_change TIMESTAMPTZ(6),
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+);
 
-### Migrations
+-- Sessions
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY,
+    account_id UUID NOT NULL REFERENCES accounts(id),
+    device_id UUID REFERENCES devices(id),
+    token_hash VARCHAR(64) NOT NULL,
+    refresh_token_hash VARCHAR(64),
+    ip_address INET,
+    user_agent TEXT,
+    expires_at TIMESTAMPTZ(6) NOT NULL,
+    last_activity_at TIMESTAMPTZ(6),
+    revoked_at TIMESTAMPTZ(6),
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+);
 
-Located in `services/identity-service/migrations/`:
+-- Devices
+CREATE TABLE devices (
+    id UUID PRIMARY KEY,
+    account_id UUID NOT NULL REFERENCES accounts(id),
+    fingerprint VARCHAR(64) NOT NULL,
+    device_name VARCHAR(100),
+    device_type VARCHAR(20),
+    platform VARCHAR(50),
+    os_version VARCHAR(50),
+    app_version VARCHAR(20),
+    browser_name VARCHAR(50),
+    browser_version VARCHAR(20),
+    is_trusted BOOLEAN DEFAULT FALSE,
+    trusted_at TIMESTAMPTZ(6),
+    push_token TEXT,
+    push_platform VARCHAR(20),
+    last_seen_at TIMESTAMPTZ(6),
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+);
 
-- `identity/` - Account, session, device, profile schemas
-- `auth/` - Role, permission, operator, sanction schemas
-- `legal/` - Consent, document, DSR, law registry schemas
+-- Profiles
+CREATE TABLE profiles (
+    id UUID PRIMARY KEY,
+    account_id UUID NOT NULL REFERENCES accounts(id) UNIQUE,
+    display_name VARCHAR(100),
+    avatar_url TEXT,
+    phone VARCHAR(20),
+    birth_date DATE,
+    gender VARCHAR(20),
+    address JSONB,
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+);
 
-Run with [goose](https://github.com/pressly/goose):
-
-```bash
-goose -dir migrations/identity postgres "$IDENTITY_DATABASE_URL" up
-goose -dir migrations/auth postgres "$IDENTITY_AUTH_DATABASE_URL" up
-goose -dir migrations/legal postgres "$IDENTITY_LEGAL_DATABASE_URL" up
+-- Outbox Events
+CREATE TABLE outbox_events (
+    id UUID PRIMARY KEY,
+    aggregate_type VARCHAR(50) NOT NULL,
+    aggregate_id UUID NOT NULL,
+    event_type VARCHAR(100) NOT NULL,
+    payload JSONB NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    retry_count INT DEFAULT 0,
+    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
+    published_at TIMESTAMPTZ(6)
+);
 ```
 
 ## Security
@@ -127,54 +197,48 @@ const encryptedSecret = cryptoService.encrypt(totpSecret);
 
 Set `ENCRYPTION_KEY` environment variable (32 bytes, base64 encoded).
 
-### Authentication Guards
+### Account Security
 
-The service uses API Key authentication for service-to-service communication:
+| Feature          | Implementation                 |
+| ---------------- | ------------------------------ |
+| Password Hashing | bcrypt (cost factor 12)        |
+| Token Storage    | SHA-256 hash (never plaintext) |
+| Lockout Policy   | 5 failed attempts → 30min lock |
+| Password History | Last 5 passwords blocked       |
 
-```typescript
-// Set API_KEYS environment variable (comma-separated)
-((API_KEYS = key1), key2, key3);
-```
+### Guards
 
-Use `@Public()` decorator for unauthenticated endpoints.
+| Guard          | Purpose             | Header          |
+| -------------- | ------------------- | --------------- |
+| `JwtAuthGuard` | User authentication | `Authorization` |
+| `ApiKeyGuard`  | Service-to-service  | `X-API-Key`     |
 
-### SQL Injection Prevention
-
-Database cleanup uses whitelist approach:
-
-```typescript
-private static readonly ALLOWED_TABLES = [
-  'accounts', 'sessions', 'devices', 'profiles', 'outbox_events'
-] as const;
-```
-
-## Event-Driven Architecture
-
-### Kafka Topics (Redpanda)
-
-| Topic                        | Description              |
-| ---------------------------- | ------------------------ |
-| `identity.account.created`   | New account registration |
-| `identity.account.updated`   | Account data changes     |
-| `identity.account.deleted`   | Account deletion         |
-| `identity.session.created`   | New session              |
-| `identity.session.revoked`   | Session termination      |
-| `identity.consent.granted`   | Consent recorded         |
-| `identity.consent.withdrawn` | Consent revoked          |
-| `identity.dsr.created`       | DSR request submitted    |
-| `identity.dsr.completed`     | DSR request fulfilled    |
-| `auth.sanction.issued`       | Sanction applied         |
-| `auth.sanction.revoked`      | Sanction lifted          |
-
-### Outbox Pattern
-
-Events are stored in `outbox_events` table and processed by cron job:
+## Event Types
 
 ```typescript
-@Cron('*/10 * * * * *') // Every 10 seconds
-async processOutbox() {
-  // Process pending events with retry logic
-}
+// Account Events
+'ACCOUNT_CREATED';
+'ACCOUNT_UPDATED';
+'ACCOUNT_DELETED';
+'ACCOUNT_STATUS_CHANGED';
+'EMAIL_VERIFIED';
+'PASSWORD_CHANGED';
+
+// Session Events
+'SESSION_STARTED';
+'SESSION_REFRESHED';
+'SESSION_ENDED';
+'ALL_SESSIONS_REVOKED';
+
+// Device Events
+'DEVICE_REGISTERED';
+'DEVICE_TRUSTED';
+'DEVICE_REMOVED';
+
+// MFA Events
+'MFA_ENABLED';
+'MFA_DISABLED';
+'MFA_VERIFIED';
 ```
 
 ## Configuration
@@ -182,39 +246,61 @@ async processOutbox() {
 ### Environment Variables
 
 ```env
-# Database URLs
-IDENTITY_DATABASE_URL=postgresql://user:pass@host:5432/identity
-IDENTITY_AUTH_DATABASE_URL=postgresql://user:pass@host:5432/identity_auth
-IDENTITY_LEGAL_DATABASE_URL=postgresql://user:pass@host:5432/identity_legal
+PORT=3000
+NODE_ENV=development
 
-# Security
+# Database
+DATABASE_URL=postgresql://user:pass@host:5432/identity_db
+
+# Cache (Valkey/Redis)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT
+JWT_SECRET=...
+JWT_EXPIRES_IN=1h
+REFRESH_TOKEN_EXPIRES_IN=14d
+
+# API Keys (service-to-service)
+API_KEYS=key1,key2
+
+# Encryption (MFA secrets)
 ENCRYPTION_KEY=<32-bytes-base64>
-API_KEYS=service1-key,service2-key
-
-# Kafka/Redpanda
-KAFKA_BROKERS=localhost:9092
-KAFKA_CLIENT_ID=identity-service
-
-# Service
-NODE_ENV=production
-PORT=3001
 ```
+
+### Rate Limiting
+
+| Endpoint                             | Limit | TTL | Reason                    |
+| ------------------------------------ | ----- | --- | ------------------------- |
+| `POST /sessions`                     | 10    | 60s | Prevent session flood     |
+| `POST /sessions/refresh`             | 30    | 60s | Allow reasonable refresh  |
+| `POST /sessions/validate`            | 100   | 60s | High-frequency validation |
+| `POST /sessions/cleanup`             | 1     | 60s | Admin operation           |
+| `POST /accounts/:id/change-password` | 3     | 60s | Prevent brute force       |
+
+## Caching Strategy
+
+| Cache Key Pattern          | TTL     | Purpose               |
+| -------------------------- | ------- | --------------------- |
+| `account:id:{id}`          | 5 min   | Account by ID         |
+| `account:email:{email}`    | 5 min   | Account by email      |
+| `account:username:{uname}` | 5 min   | Account by username   |
+| `session:token:{hash}`     | 1 hour  | Session by token hash |
+| `revoked:jti:{jti}`        | 14 days | Revoked token JTIs    |
 
 ## Development
-
-### Generate Prisma Clients
-
-```bash
-pnpm prisma:generate:identity
-pnpm prisma:generate:auth
-pnpm prisma:generate:legal
-```
 
 ### Run Migrations
 
 ```bash
 # Using goose
-goose -dir migrations/identity postgres "$IDENTITY_DATABASE_URL" up
+goose -dir migrations/identity postgres "$DATABASE_URL" up
+```
+
+### Generate Prisma Client
+
+```bash
+pnpm prisma:generate:identity
 ```
 
 ### Run Service
@@ -223,189 +309,10 @@ goose -dir migrations/identity postgres "$IDENTITY_DATABASE_URL" up
 pnpm dev
 ```
 
-## API Examples
-
-### Create Account
-
-```bash
-curl -X POST http://localhost:3001/accounts \
-  -H "X-API-Key: your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "username": "johndoe",
-    "password": "SecureP@ss123",
-    "countryCode": "US"
-  }'
-```
-
-### Grant Consent
-
-```bash
-curl -X POST http://localhost:3001/legal/consents \
-  -H "X-API-Key: your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "accountId": "uuid",
-    "consentType": "PRIVACY_POLICY",
-    "countryCode": "US",
-    "documentVersion": "1.0"
-  }'
-```
-
-### Submit DSR Request
-
-```bash
-curl -X POST http://localhost:3001/legal/dsr-requests \
-  -H "X-API-Key: your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "accountId": "uuid",
-    "requestType": "ACCESS",
-    "description": "Request all personal data"
-  }'
-```
-
-## Security Utilities
-
-### PII Masking
-
-All sensitive data is masked before logging to prevent PII exposure:
-
-```typescript
-import { maskUuid, maskEmail, maskIpAddress } from './common/utils/masking.util';
-
-// In services
-this.logger.log(`Account created: ${maskUuid(accountId)}`);
-// Output: Account created: 550e8400-****-****-****-********0000
-
-this.logger.log(`Processing request for: ${maskEmail(email)}`);
-// Output: Processing request for: us***@example.com
-```
-
-| Function          | Example Input                          | Example Output                         |
-| ----------------- | -------------------------------------- | -------------------------------------- |
-| `maskUuid()`      | `550e8400-e29b-41d4-a716-446655440000` | `550e8400-****-****-****-********0000` |
-| `maskEmail()`     | `user@example.com`                     | `us***@example.com`                    |
-| `maskIpAddress()` | `192.168.1.100`                        | `192.168.*.*`                          |
-| `maskToken()`     | `abc123...xyz789`                      | `abc123...`                            |
-
-### Crypto Service
-
-Encryption service for sensitive data storage:
-
-```typescript
-import { CryptoService } from './common/crypto';
-
-// Encrypt MFA secrets
-const encrypted = cryptoService.encrypt(totpSecret);
-// Format: iv:authTag:encryptedData (base64)
-
-// Decrypt for verification
-const decrypted = cryptoService.decrypt(encrypted);
-
-// Hash backup codes (one-way)
-const hash = cryptoService.hash(backupCode);
-```
-
-## Service-Specific Constants
-
-All service-specific constants are centralized in `src/common/constants/index.ts`. This file follows the SSOT (Single Source of Truth) strategy where shared utilities come from `@my-girok/nest-common` and service-specific values are defined locally.
-
-### Session & Token Management
-
-These constants control how user sessions and tokens are handled:
-
-| Constant                         | Value  | Description                                                 |
-| -------------------------------- | ------ | ----------------------------------------------------------- |
-| `SESSION.DEFAULT_EXPIRY_MINUTES` | 60     | Default session duration before requiring re-authentication |
-| `SESSION.MAX_EXPIRY_MINUTES`     | 1440   | Maximum allowed session duration (24 hours)                 |
-| `SESSION.REFRESH_TOKEN_DAYS`     | 14     | How long refresh tokens remain valid                        |
-| `SESSION.HASH_ALGORITHM`         | sha256 | Algorithm used for token hashing                            |
-
-**Why these values?** The 60-minute default balances security with user experience. The 14-day refresh token allows users to stay logged in on trusted devices while limiting exposure if a token is compromised.
-
-### Account Security
-
-These constants protect user accounts from brute force attacks:
-
-| Constant                                    | Value | Description                              |
-| ------------------------------------------- | ----- | ---------------------------------------- |
-| `ACCOUNT_SECURITY.MAX_FAILED_ATTEMPTS`      | 5     | Failed logins before account lockout     |
-| `ACCOUNT_SECURITY.LOCKOUT_DURATION_MINUTES` | 30    | How long account remains locked          |
-| `ACCOUNT_SECURITY.PASSWORD_HISTORY_COUNT`   | 5     | Previous passwords that cannot be reused |
-
-**Security rationale:** 5 attempts with 30-minute lockout follows OWASP recommendations. This prevents brute force while avoiding excessive user frustration from typos.
-
-### MFA (Multi-Factor Authentication)
-
-| Constant                 | Value | Description                               |
-| ------------------------ | ----- | ----------------------------------------- |
-| `MFA.TOTP_WINDOW`        | 1     | TOTP codes valid for ±30 seconds (1 step) |
-| `MFA.BACKUP_CODES_COUNT` | 10    | Number of one-time backup codes generated |
-| `MFA.BACKUP_CODE_LENGTH` | 8     | Character length of each backup code      |
-
-### Rate Limiting
-
-These protect authentication endpoints from abuse:
-
-| Constant                        | Value | Description                      |
-| ------------------------------- | ----- | -------------------------------- |
-| `RATE_LIMIT.LOGIN_LIMIT`        | 5     | Login attempts per minute        |
-| `RATE_LIMIT.REGISTRATION_LIMIT` | 10    | Registration attempts per minute |
-| `RATE_LIMIT.DEFAULT_LIMIT`      | 100   | Default for other endpoints      |
-
-### DSR (Data Subject Request) Deadlines
-
-Legal compliance deadlines vary by jurisdiction:
-
-| Constant                    | Value | Jurisdiction    | Legal Basis           |
-| --------------------------- | ----- | --------------- | --------------------- |
-| `DSR_DEADLINE_DAYS.GDPR`    | 30    | European Union  | GDPR Article 12(3)    |
-| `DSR_DEADLINE_DAYS.CCPA`    | 45    | California, USA | CCPA Section 1798.130 |
-| `DSR_DEADLINE_DAYS.PIPA`    | 10    | South Korea     | PIPA Article 35       |
-| `DSR_DEADLINE_DAYS.APPI`    | 14    | Japan           | APPI Article 32       |
-| `DSR_DEADLINE_DAYS.DEFAULT` | 30    | Other regions   | Conservative default  |
-
-**Important:** These are maximum response times. Aim to complete requests well before the deadline to account for weekends and holidays.
-
-## Zero Migration Architecture
-
-The Identity Service is designed for future microservice extraction without database migration:
-
-```
-Phase 1 (Current): Combined Service
-┌─────────────────────────────────────┐
-│       identity-service              │
-│  ┌─────────┬─────────┬─────────┐   │
-│  │Identity │  Auth   │  Legal  │   │
-│  └────┬────┴────┬────┴────┬────┘   │
-│       ▼         ▼         ▼        │
-│  identity_db  auth_db  legal_db    │
-└─────────────────────────────────────┘
-
-Phase 2 (Future): Separated Services
-┌───────────┐ ┌───────────┐ ┌───────────┐
-│identity-  │ │  auth-    │ │  legal-   │
-│  service  │ │  service  │ │  service  │
-└─────┬─────┘ └─────┬─────┘ └─────┬─────┘
-      ▼             ▼             ▼
-  identity_db   auth_db       legal_db
-      (Same databases, zero migration)
-```
-
-**Key Benefits:**
-
-- Pre-separated databases from day one
-- Interface-based module communication
-- Switch from in-process to gRPC with env variable change
-- No data migration required
-
 ## Related Documentation
 
 - [Architecture Overview](../../.ai/architecture.md)
 - [Identity Platform Policy](../policies/IDENTITY_PLATFORM.md)
-- [Identity Service API Reference](../../.ai/services/identity-service.md) (LLM-optimized)
-- [Legal Consent Policy](../policies/LEGAL_CONSENT.md)
-- [Database Guide](../DATABASE.md)
-- [Caching Strategy](../policies/CACHING.md)
+- [Identity Service LLM Reference](../../.ai/services/identity-service.md)
+- [Auth Service](../../.ai/services/auth-service.md)
+- [Legal Service](../../.ai/services/legal-service.md)

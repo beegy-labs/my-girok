@@ -183,6 +183,7 @@ export class DevicesService {
 
   /**
    * Remove a device
+   * Uses transaction for atomicity (session revocation + device deletion)
    */
   async remove(id: string): Promise<void> {
     const device = await this.prisma.device.findUnique({
@@ -193,18 +194,22 @@ export class DevicesService {
       throw new NotFoundException(`Device with ID ${id} not found`);
     }
 
-    // Also revoke all sessions associated with this device
-    await this.prisma.session.updateMany({
-      where: { deviceId: id, isActive: true },
-      data: {
-        isActive: false,
-        revokedAt: new Date(),
-        revokedReason: 'Device removed',
-      },
-    });
+    // Use transaction to ensure atomicity of session revocation and device deletion
+    await this.prisma.$transaction(async (tx) => {
+      // Revoke all sessions associated with this device
+      await tx.session.updateMany({
+        where: { deviceId: id, isActive: true },
+        data: {
+          isActive: false,
+          revokedAt: new Date(),
+          revokedReason: 'Device removed',
+        },
+      });
 
-    await this.prisma.device.delete({
-      where: { id },
+      // Delete the device
+      await tx.device.delete({
+        where: { id },
+      });
     });
 
     this.logger.log(`Device ${id} removed`);
@@ -307,23 +312,28 @@ export class DevicesService {
 
   /**
    * Remove all devices for account
+   * Uses transaction for atomicity (session revocation + device deletion)
    */
   async removeAllForAccount(accountId: string): Promise<number> {
-    // First revoke all sessions
-    await this.prisma.session.updateMany({
-      where: {
-        accountId,
-        isActive: true,
-      },
-      data: {
-        isActive: false,
-        revokedAt: new Date(),
-        revokedReason: 'All devices removed',
-      },
-    });
+    // Use transaction to ensure atomicity
+    const result = await this.prisma.$transaction(async (tx) => {
+      // First revoke all sessions
+      await tx.session.updateMany({
+        where: {
+          accountId,
+          isActive: true,
+        },
+        data: {
+          isActive: false,
+          revokedAt: new Date(),
+          revokedReason: 'All devices removed',
+        },
+      });
 
-    const result = await this.prisma.device.deleteMany({
-      where: { accountId },
+      // Then delete all devices
+      return tx.device.deleteMany({
+        where: { accountId },
+      });
     });
 
     this.logger.log(`Removed ${result.count} devices for account ${accountId}`);

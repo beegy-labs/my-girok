@@ -2,52 +2,20 @@ import {
   IsString,
   IsEmail,
   IsOptional,
-  IsArray,
-  IsEnum,
-  IsUUID,
   MinLength,
   MaxLength,
-  ValidateNested,
-  ArrayNotEmpty,
   IsISO31661Alpha2,
   IsLocale,
   IsTimeZone,
   Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { ConsentType } from '.prisma/identity-legal-client';
-
-/**
- * Consent item for registration
- */
-export class RegistrationConsentDto {
-  @ApiProperty({
-    description: 'Type of consent',
-    enum: ConsentType,
-    example: 'TERMS_OF_SERVICE',
-  })
-  @IsEnum(ConsentType)
-  consentType!: ConsentType;
-
-  @ApiPropertyOptional({
-    description: 'Legal document ID',
-  })
-  @IsOptional()
-  @IsUUID()
-  documentId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Document version',
-    example: '1.0.0',
-  })
-  @IsOptional()
-  @IsString()
-  documentVersion?: string;
-}
 
 /**
  * Registration request DTO
+ *
+ * Note: Consents are handled by legal-service separately.
+ * Frontend should call legal-service after registration.
  */
 export class RegisterUserDto {
   @ApiProperty({
@@ -93,16 +61,6 @@ export class RegisterUserDto {
   })
   @IsISO31661Alpha2()
   countryCode!: string;
-
-  @ApiProperty({
-    description: 'Consents being granted',
-    type: [RegistrationConsentDto],
-  })
-  @IsArray()
-  @ArrayNotEmpty({ message: 'At least one consent is required' })
-  @ValidateNested({ each: true })
-  @Type(() => RegistrationConsentDto)
-  consents!: RegistrationConsentDto[];
 
   @ApiPropertyOptional({
     description: 'User locale (BCP 47 format)',
