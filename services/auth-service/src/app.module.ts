@@ -11,6 +11,7 @@ import {
   HealthModule,
   PinoLoggerModule,
   OtelModule,
+  IdentityGrpcClientModule,
 } from '@my-girok/nest-common';
 import { UnifiedAuthGuard } from './auth/guards';
 import { DatabaseModule } from './database/database.module';
@@ -73,6 +74,7 @@ import configuration from './config/configuration';
     OperatorModule,
     HealthModule,
     GrpcModule,
+    IdentityGrpcClientModule.forRoot(),
   ],
   providers: [
     {

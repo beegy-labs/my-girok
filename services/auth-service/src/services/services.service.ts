@@ -4,10 +4,12 @@ import {
   BadRequestException,
   ConflictException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { ID, CacheKey, CacheTTL } from '@my-girok/nest-common';
+import { ID, CacheKey, CacheTTL, IdentityGrpcClient, isGrpcError } from '@my-girok/nest-common';
+import { status as GrpcStatus } from '@grpc/grpc-js';
 import { PrismaService } from '../database/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { ConsentType } from '@my-girok/types';
@@ -67,9 +69,12 @@ interface UserConsentRow {
  */
 @Injectable()
 export class ServicesService {
+  private readonly logger = new Logger(ServicesService.name);
+
   constructor(
     private prisma: PrismaService,
     private authService: AuthService,
+    private identityClient: IdentityGrpcClient,
     @Inject(CACHE_MANAGER) private cache: Cache,
   ) {}
 
@@ -188,22 +193,40 @@ export class ServicesService {
     // Get updated user services for new token
     const userServices = await this.getUserServices(userId);
 
-    // Get user info for token generation
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, accountMode: true, countryCode: true },
-    });
+    // Get user info for token generation via gRPC
+    let email = '';
+    let accountMode: 'SERVICE' | 'UNIFIED' = 'SERVICE';
+    let userCountryCode = 'KR';
 
-    if (!user) {
-      throw new NotFoundException(`User ${userId} not found`);
+    try {
+      const accountResponse = await this.identityClient.getAccount({ id: userId });
+      if (!accountResponse.account) {
+        throw new NotFoundException(`User ${userId} not found`);
+      }
+      email = accountResponse.account.email;
+      // Get profile for additional info if needed
+      try {
+        const profileResponse = await this.identityClient.getProfile({ account_id: userId });
+        if (profileResponse.profile) {
+          userCountryCode = profileResponse.profile.country_code || 'KR';
+        }
+      } catch {
+        // Profile not found is OK
+      }
+    } catch (error) {
+      if (isGrpcError(error) && error.code === GrpcStatus.NOT_FOUND) {
+        throw new NotFoundException(`User ${userId} not found`);
+      }
+      this.logger.error('Failed to get account info for token generation', error);
+      throw error;
     }
 
     // Generate new tokens with updated services
     const tokens = await this.authService.generateTokensWithServices(
       userId,
-      user.email,
-      (user.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
-      user.countryCode || 'KR',
+      email,
+      accountMode,
+      userCountryCode,
       userServices,
     );
 
@@ -280,22 +303,39 @@ export class ServicesService {
     // Get updated user services for new token
     const userServices = await this.getUserServices(userId);
 
-    // Get user info for token generation
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, accountMode: true, countryCode: true },
-    });
+    // Get user info for token generation via gRPC
+    let email = '';
+    let accountMode: 'SERVICE' | 'UNIFIED' = 'SERVICE';
+    let userCountryCode = 'KR';
 
-    if (!user) {
-      throw new NotFoundException(`User ${userId} not found`);
+    try {
+      const accountResponse = await this.identityClient.getAccount({ id: userId });
+      if (!accountResponse.account) {
+        throw new NotFoundException(`User ${userId} not found`);
+      }
+      email = accountResponse.account.email;
+      // Get profile for additional info if needed
+      try {
+        const profileResponse = await this.identityClient.getProfile({ account_id: userId });
+        if (profileResponse.profile) {
+          userCountryCode = profileResponse.profile.country_code || 'KR';
+        }
+      } catch {
+        // Profile not found is OK
+      }
+    } catch (error) {
+      if (isGrpcError(error) && error.code === GrpcStatus.NOT_FOUND) {
+        throw new NotFoundException(`User ${userId} not found`);
+      }
+      throw error;
     }
 
     // Generate new tokens with updated services
     const tokens = await this.authService.generateTokensWithServices(
       userId,
-      user.email,
-      (user.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
-      user.countryCode || 'KR',
+      email,
+      accountMode,
+      userCountryCode,
       userServices,
     );
 
