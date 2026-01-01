@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import { FileText, Users, Building2, TrendingUp, AlertCircle } from 'lucide-react';
 import { legalApi, ConsentStats } from '../api/legal';
 import { useAdminAuthStore } from '../stores/adminAuthStore';

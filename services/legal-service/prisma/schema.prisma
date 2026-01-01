@@ -1,0 +1,190 @@
+// Legal Service Prisma Schema
+// Database: legal_db (legal_dev, legal_release, legal)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/legal-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum ConsentStatus {
+  GRANTED
+  WITHDRAWN
+  EXPIRED
+}
+
+enum DsrRequestType {
+  ACCESS      // GDPR Article 15 - Right of Access
+  RECTIFICATION // GDPR Article 16 - Right to Rectification
+  ERASURE     // GDPR Article 17 - Right to Erasure
+  RESTRICTION // GDPR Article 18 - Right to Restriction
+  PORTABILITY // GDPR Article 20 - Right to Data Portability
+  OBJECTION   // GDPR Article 21 - Right to Object
+}
+
+enum DsrRequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum LegalDocumentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  COOKIE_POLICY
+  DATA_PROCESSING_AGREEMENT
+  CONSENT_FORM
+}
+
+enum LegalDocumentStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ============================================================================
+// CORE MODELS
+// ============================================================================
+
+/// Law Registry - Tracks applicable laws and regulations
+model LawRegistry {
+  id          String   @id @db.Uuid
+  code        String   @unique @db.VarChar(50)  // e.g., "GDPR", "CCPA", "PIPA"
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  countryCode String   @map("country_code") @db.VarChar(2)  // ISO 3166-1 alpha-2
+  effectiveDate DateTime @map("effective_date") @db.Date
+  isActive    Boolean  @default(true) @map("is_active")
+  metadata    Json?    @db.JsonB
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  consents        Consent[]
+  legalDocuments  LegalDocument[]
+
+  @@index([countryCode])
+  @@index([isActive])
+  @@map("law_registries")
+}
+
+/// Legal Documents - Terms, Privacy Policy, etc.
+model LegalDocument {
+  id            String              @id @db.Uuid
+  type          LegalDocumentType
+  version       String              @db.VarChar(20)  // Semantic versioning
+  title         String              @db.VarChar(200)
+  content       String              @db.Text
+  contentHash   String              @map("content_hash") @db.VarChar(64)  // SHA-256
+  countryCode   String              @map("country_code") @db.VarChar(2)
+  locale        String              @db.VarChar(10)  // e.g., "en-US", "ko-KR"
+  lawRegistryId String?             @map("law_registry_id") @db.Uuid
+  status        LegalDocumentStatus @default(DRAFT)
+  effectiveFrom DateTime?           @map("effective_from") @db.Timestamptz
+  effectiveTo   DateTime?           @map("effective_to") @db.Timestamptz
+  metadata      Json?               @db.JsonB
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  lawRegistry LawRegistry? @relation(fields: [lawRegistryId], references: [id])
+  consents    Consent[]
+
+  @@unique([type, version, countryCode, locale])
+  @@index([type, status])
+  @@index([countryCode])
+  @@map("legal_documents")
+}
+
+/// User Consents - GDPR compliant consent records
+model Consent {
+  id              String        @id @db.Uuid
+  accountId       String        @map("account_id") @db.Uuid  // Reference to identity-service
+  documentId      String        @map("document_id") @db.Uuid
+  lawRegistryId   String?       @map("law_registry_id") @db.Uuid
+  status          ConsentStatus @default(GRANTED)
+  consentedAt     DateTime      @map("consented_at") @db.Timestamptz
+  withdrawnAt     DateTime?     @map("withdrawn_at") @db.Timestamptz
+  expiresAt       DateTime?     @map("expires_at") @db.Timestamptz
+  ipAddress       String?       @map("ip_address") @db.VarChar(45)  // IPv6 compatible
+  userAgent       String?       @map("user_agent") @db.VarChar(500)
+  consentMethod   String        @map("consent_method") @db.VarChar(50)  // e.g., "checkbox", "explicit_button"
+  metadata        Json?         @db.JsonB
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  document    LegalDocument @relation(fields: [documentId], references: [id])
+  lawRegistry LawRegistry?  @relation(fields: [lawRegistryId], references: [id])
+
+  @@index([accountId])
+  @@index([documentId])
+  @@index([status])
+  @@index([accountId, status])
+  @@map("consents")
+}
+
+/// DSR Requests - Data Subject Rights requests (GDPR Article 15-22)
+model DsrRequest {
+  id              String           @id @db.Uuid
+  accountId       String           @map("account_id") @db.Uuid  // Reference to identity-service
+  requestType     DsrRequestType   @map("request_type")
+  status          DsrRequestStatus @default(PENDING)
+  description     String?          @db.Text
+  requestedAt     DateTime         @default(now()) @map("requested_at") @db.Timestamptz
+  acknowledgedAt  DateTime?        @map("acknowledged_at") @db.Timestamptz
+  completedAt     DateTime?        @map("completed_at") @db.Timestamptz
+  dueDate         DateTime         @map("due_date") @db.Timestamptz  // GDPR: 30 days
+  assignedTo      String?          @map("assigned_to") @db.Uuid  // Operator ID
+  resolution      String?          @db.Text
+  rejectionReason String?          @map("rejection_reason") @db.Text
+  ipAddress       String?          @map("ip_address") @db.VarChar(45)
+  metadata        Json?            @db.JsonB
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([accountId])
+  @@index([status])
+  @@index([requestType])
+  @@index([dueDate])
+  @@map("dsr_requests")
+}
+
+// ============================================================================
+// OUTBOX PATTERN
+// ============================================================================
+
+/// Outbox Events - Transactional outbox for event publishing
+model OutboxEvent {
+  id            String       @id @db.Uuid
+  aggregateType String       @map("aggregate_type") @db.VarChar(50)
+  aggregateId   String       @map("aggregate_id") @db.Uuid
+  eventType     String       @map("event_type") @db.VarChar(100)
+  payload       Json         @db.JsonB
+  status        OutboxStatus @default(PENDING)
+  retryCount    Int          @default(0) @map("retry_count")
+  lastError     String?      @map("last_error") @db.Text
+  processedAt   DateTime?    @map("processed_at") @db.Timestamptz
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([status, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}

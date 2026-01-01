@@ -74,10 +74,17 @@ $$ LANGUAGE plpgsql;
 
 ## Databases
 
-| Service          | Database                            |
+| Service          | Database (dev / prod)               |
 | ---------------- | ----------------------------------- |
 | auth-service     | girok_auth_dev / girok_auth         |
 | personal-service | girok_personal_dev / girok_personal |
+| identity-service | identity_dev / identity             |
+|                  | auth_dev / auth                     |
+|                  | legal_dev / legal                   |
+
+> **Note**: identity-service uses 3 pre-separated databases for Zero Migration architecture.
+> User: `identity_dev` has access to all 3 databases.
+> See `.ai/services/identity-service.md` for details.
 
 ---
 
