@@ -9,9 +9,8 @@
 import { Injectable, OnModuleInit, Logger, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom, timeout, catchError, throwError } from 'rxjs';
-import { status as GrpcStatus } from '@grpc/grpc-js';
-import { GRPC_SERVICES } from './grpc.options';
-import { GrpcError, isGrpcError } from './identity-grpc.client';
+import { GRPC_SERVICES, DEFAULT_GRPC_TIMEOUT } from './grpc.options';
+import { normalizeGrpcError } from './grpc-error.util';
 import {
   ILegalService,
   CheckConsentsRequest,
@@ -44,11 +43,6 @@ import {
 } from './grpc.types';
 
 /**
- * Default timeout for gRPC calls (5 seconds)
- */
-const DEFAULT_TIMEOUT = 5000;
-
-/**
  * Legal Service gRPC Client
  *
  * Usage:
@@ -76,7 +70,7 @@ const DEFAULT_TIMEOUT = 5000;
 export class LegalGrpcClient implements OnModuleInit {
   private readonly logger = new Logger(LegalGrpcClient.name);
   private legalService!: ILegalService;
-  private timeoutMs = DEFAULT_TIMEOUT;
+  private timeoutMs = DEFAULT_GRPC_TIMEOUT;
 
   constructor(
     @Inject(GRPC_SERVICES.LEGAL)
@@ -305,49 +299,12 @@ export class LegalGrpcClient implements OnModuleInit {
           timeout(this.timeoutMs),
           catchError((error) => {
             this.logger.error(`LegalService.${methodName} error: ${error.message}`);
-            return throwError(() => this.normalizeError(error));
+            return throwError(() => normalizeGrpcError(error));
           }),
         ),
       );
     } catch (error) {
-      throw this.normalizeError(error);
+      throw normalizeGrpcError(error);
     }
-  }
-
-  /**
-   * Normalize error to consistent format
-   */
-  private normalizeError(error: unknown): GrpcError {
-    if (isGrpcError(error)) {
-      return error;
-    }
-
-    if (error instanceof Error) {
-      if (error.name === 'TimeoutError') {
-        return {
-          code: GrpcStatus.DEADLINE_EXCEEDED,
-          message: 'Request timeout',
-          details: error.message,
-        };
-      }
-
-      if (error.message.includes('UNAVAILABLE') || error.message.includes('ECONNREFUSED')) {
-        return {
-          code: GrpcStatus.UNAVAILABLE,
-          message: 'Service unavailable',
-          details: error.message,
-        };
-      }
-
-      return {
-        code: GrpcStatus.UNKNOWN,
-        message: error.message,
-      };
-    }
-
-    return {
-      code: GrpcStatus.UNKNOWN,
-      message: 'Unknown error occurred',
-    };
   }
 }

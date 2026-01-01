@@ -8,6 +8,11 @@ import { ClientOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 
 /**
+ * Default timeout for gRPC calls (5 seconds)
+ */
+export const DEFAULT_GRPC_TIMEOUT = 5000;
+
+/**
  * Default gRPC ports for each service
  */
 export const GRPC_PORTS = {

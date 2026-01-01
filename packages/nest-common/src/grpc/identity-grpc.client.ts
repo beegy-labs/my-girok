@@ -9,8 +9,8 @@
 import { Injectable, OnModuleInit, Logger, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom, timeout, catchError, throwError } from 'rxjs';
-import { status as GrpcStatus } from '@grpc/grpc-js';
-import { GRPC_SERVICES } from './grpc.options';
+import { GRPC_SERVICES, DEFAULT_GRPC_TIMEOUT } from './grpc.options';
+import { normalizeGrpcError } from './grpc-error.util';
 import {
   IIdentityService,
   GetAccountRequest,
@@ -48,32 +48,6 @@ import {
 } from './grpc.types';
 
 /**
- * gRPC error structure
- */
-export interface GrpcError {
-  code: GrpcStatus;
-  message: string;
-  details?: string;
-}
-
-/**
- * Check if error is a gRPC error
- */
-export function isGrpcError(error: unknown): error is GrpcError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof (error as GrpcError).code === 'number'
-  );
-}
-
-/**
- * Default timeout for gRPC calls (5 seconds)
- */
-const DEFAULT_TIMEOUT = 5000;
-
-/**
  * Identity Service gRPC Client
  *
  * Usage:
@@ -98,7 +72,7 @@ const DEFAULT_TIMEOUT = 5000;
 export class IdentityGrpcClient implements OnModuleInit {
   private readonly logger = new Logger(IdentityGrpcClient.name);
   private identityService!: IIdentityService;
-  private timeoutMs = DEFAULT_TIMEOUT;
+  private timeoutMs = DEFAULT_GRPC_TIMEOUT;
 
   constructor(
     @Inject(GRPC_SERVICES.IDENTITY)
@@ -266,51 +240,12 @@ export class IdentityGrpcClient implements OnModuleInit {
           timeout(this.timeoutMs),
           catchError((error) => {
             this.logger.error(`IdentityService.${methodName} error: ${error.message}`);
-            return throwError(() => this.normalizeError(error));
+            return throwError(() => normalizeGrpcError(error));
           }),
         ),
       );
     } catch (error) {
-      throw this.normalizeError(error);
+      throw normalizeGrpcError(error);
     }
-  }
-
-  /**
-   * Normalize error to consistent format
-   */
-  private normalizeError(error: unknown): GrpcError {
-    if (isGrpcError(error)) {
-      return error;
-    }
-
-    if (error instanceof Error) {
-      // Check for timeout
-      if (error.name === 'TimeoutError') {
-        return {
-          code: GrpcStatus.DEADLINE_EXCEEDED,
-          message: 'Request timeout',
-          details: error.message,
-        };
-      }
-
-      // Check for connection errors
-      if (error.message.includes('UNAVAILABLE') || error.message.includes('ECONNREFUSED')) {
-        return {
-          code: GrpcStatus.UNAVAILABLE,
-          message: 'Service unavailable',
-          details: error.message,
-        };
-      }
-
-      return {
-        code: GrpcStatus.UNKNOWN,
-        message: error.message,
-      };
-    }
-
-    return {
-      code: GrpcStatus.UNKNOWN,
-      message: 'Unknown error occurred',
-    };
   }
 }

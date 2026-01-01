@@ -7,6 +7,8 @@
  * - LegalService (legal.v1)
  */
 
+import { status as GrpcStatus } from '@grpc/grpc-js';
+
 // ============================================================================
 // Common Types
 // ============================================================================
@@ -17,6 +19,27 @@
 export interface ProtoTimestamp {
   seconds: number;
   nanos: number;
+}
+
+/**
+ * gRPC error structure
+ */
+export interface GrpcError {
+  code: GrpcStatus;
+  message: string;
+  details?: string;
+}
+
+/**
+ * Check if error is a gRPC error
+ */
+export function isGrpcError(error: unknown): error is GrpcError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as GrpcError).code === 'number'
+  );
 }
 
 // ============================================================================

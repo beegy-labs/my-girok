@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { of, throwError } from 'rxjs';
 import { status as GrpcStatus } from '@grpc/grpc-js';
-import { IdentityGrpcClient, isGrpcError } from '../identity-grpc.client';
+import { IdentityGrpcClient } from '../identity-grpc.client';
+import { isGrpcError } from '../grpc-error.util';
 import { GRPC_SERVICES } from '../grpc.options';
 import { AuthProvider, AccountMode, AccountStatus } from '../grpc.types';
 

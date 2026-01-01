@@ -39,12 +39,16 @@ export {
 } from './grpc-clients.module';
 
 // Clients
-export { IdentityGrpcClient, GrpcError, isGrpcError } from './identity-grpc.client';
+export { IdentityGrpcClient } from './identity-grpc.client';
 export { AuthGrpcClient } from './auth-grpc.client';
 export { LegalGrpcClient } from './legal-grpc.client';
 
+// Error Utilities
+export { GrpcError, isGrpcError, normalizeGrpcError } from './grpc-error.util';
+
 // Options & Configuration
 export {
+  DEFAULT_GRPC_TIMEOUT,
   GRPC_PORTS,
   GRPC_SERVICES,
   GRPC_PACKAGES,
