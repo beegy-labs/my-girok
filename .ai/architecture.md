@@ -7,36 +7,23 @@
 **Purpose**: Multi-app user management platform for creating N apps quickly.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Identity Service (Combined)                   │
-│                                                                  │
-│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
-│   │  Identity   │   │    Auth     │   │    Legal    │           │
-│   │   Module    │   │   Module    │   │   Module    │           │
-│   │ (Accounts)  │   │  (Authz)    │   │ (Consent)   │           │
-│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
-└──────────┼─────────────────┼─────────────────┼───────────────────┘
-           │                 │                 │
-           ▼                 ▼                 ▼
-    ┌────────────┐    ┌────────────┐    ┌────────────┐
-    │identity_db │    │  auth_db   │    │  legal_db  │
-    │   ~15 tbl  │    │   ~20 tbl  │    │   ~12 tbl  │
-    └────────────┘    └────────────┘    └────────────┘
+┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+│identity-service │   │  auth-service   │   │  legal-service  │
+│  (Accounts)     │   │    (Authz)      │   │   (Consent)     │
+│                 │   │                 │   │                 │
+│ • accounts      │   │ • roles         │   │ • consents      │
+│ • sessions      │   │ • permissions   │   │ • legal_docs    │
+│ • devices       │   │ • operators     │   │ • dsr_requests  │
+│ • profiles      │   │ • sanctions     │   │ • law_registry  │
+└────────┬────────┘   └────────┬────────┘   └────────┬────────┘
+         │                     │                     │
+         ▼                     ▼                     ▼
+  ┌────────────┐       ┌────────────┐        ┌────────────┐
+  │identity_db │       │  auth_db   │        │  legal_db  │
+  └────────────┘       └────────────┘        └────────────┘
 ```
 
-**Key Principle**: Services combined (operational simplicity) + DBs pre-separated (future extraction).
-
-### 3-DB SSOT: Intentional Duplication
-
-Each database contains **intentionally duplicated** functions for Zero Migration:
-
-| Function                     | identity_db | auth_db | legal_db | Reason                    |
-| ---------------------------- | ----------- | ------- | -------- | ------------------------- |
-| `uuid_generate_v7()`         | ✅          | ✅      | ✅       | No cross-DB dependency    |
-| `update_updated_at_column()` | ✅          | ✅      | ✅       | Self-contained triggers   |
-| `outbox_events` table        | ✅          | ✅      | ✅       | Independent event streams |
-
-**Why duplicate?** When services are extracted (Phase 2), each DB must be self-sufficient. Cross-DB functions would create migration dependencies.
+**Key Principle**: Each service owns its domain + database (microservice architecture).
 
 ### Supported Apps
 
@@ -111,8 +98,12 @@ ctx.res.cookie('session_id', sessionId, {
 my-girok/
 ├── apps/web-main/           # React 19.2 + Vite ✅
 ├── services/
-│   ├── auth-service/        # REST ✅ | gRPC 🔲
+│   ├── identity-service/    # REST ✅ (accounts, sessions, devices)
+│   ├── auth-service/        # REST ✅ (roles, permissions, operators)
+│   ├── legal-service/       # REST ✅ (consents, DSR)
 │   ├── personal-service/    # REST ✅ | gRPC 🔲
+│   ├── audit-service/       # REST ✅ (ClickHouse)
+│   ├── analytics-service/   # REST ✅ (ClickHouse)
 │   ├── graphql-bff/         # 🔲 Federation
 │   └── ws-gateway/          # 🔲 Socket.io
 └── packages/
@@ -124,7 +115,9 @@ my-girok/
 
 | Service           | Database   | Reason                     |
 | ----------------- | ---------- | -------------------------- |
+| identity-service  | PostgreSQL | Core identity, ACID        |
 | auth-service      | PostgreSQL | ACID, relations            |
+| legal-service     | PostgreSQL | Compliance, audit trail    |
 | personal-service  | PostgreSQL | Complex queries            |
 | feed-service      | MongoDB    | Flexible schema            |
 | chat-service      | MongoDB    | High write throughput      |
@@ -190,62 +183,47 @@ import { AuthService } from '../auth-service'; // NEVER
 | --------------------- | ---------------- | ------ |
 | my.girok.dev          | web-main         | ✅     |
 | api.girok.dev/graphql | graphql-bff      | 🔲     |
-| accounts.girok.dev    | identity-service | 🔲     |
+| accounts.girok.dev    | identity-service | ✅     |
 | auth.girok.dev        | auth-service     | ✅     |
+| legal.girok.dev       | legal-service    | ✅     |
 | ws.girok.dev          | ws-gateway       | 🔲     |
 
 ---
 
-## Service Evolution
+## Service Architecture
 
-### Current State (auth-service)
-
-```
-auth-service (1 service, 1 DB)
-├── auth/           # Login, JWT
-├── users/          # User management
-├── oauth-config/   # OAuth providers
-├── admin/          # Admin management
-├── operator/       # Service operators
-├── services/       # Multi-service logic
-└── legal/          # Consent management
-```
-
-### Future State (identity-service)
+### Identity Platform (3 Services, 3 DBs)
 
 ```
-identity-service (1 service, 3 DBs)
-├── Identity Module → identity_db
-│   ├── accounts, credentials, sessions
-│   ├── devices, app_registry
-│   └── OAuth, Passkeys
-├── Auth Module → auth_db
-│   ├── roles, permissions, admins
-│   ├── operators, sanctions
-│   └── api_keys
-└── Legal Module → legal_db
-    ├── laws, law_requirements
-    ├── consent_documents
-    └── account_consents, DSR
+identity-service → identity_db
+├── accounts       # Core account lifecycle
+├── sessions       # JWT token management
+├── devices        # Device registration, trust
+└── profiles       # User profile data
+
+auth-service → auth_db
+├── roles          # Role hierarchy, RBAC
+├── permissions    # Permission definitions
+├── operators      # Admin/operator management
+├── sanctions      # User restrictions, bans
+├── users          # Legacy user management
+├── oauth-config   # OAuth providers
+└── services       # Multi-service logic
+
+legal-service → legal_db
+├── consents       # Consent recording
+├── legal_docs     # Terms, policies
+├── dsr_requests   # Data subject requests
+└── law_registry   # Jurisdiction requirements
 ```
 
-### Migration Path
+### Service Responsibilities
 
-```
-Phase 1 (Current)
-└── auth-service: All-in-one (girok_auth_db)
-
-Phase 2 (Transition)
-└── identity-service: Combined service, 3 DBs
-    ├── identity_db
-    ├── auth_db
-    └── legal_db
-
-Phase 3 (If needed)
-├── identity-service → identity_db
-├── auth-service → auth_db
-└── legal-service → legal_db
-```
+| Service          | Domain                             | Communication |
+| ---------------- | ---------------------------------- | ------------- |
+| identity-service | Accounts, sessions, devices        | REST + gRPC   |
+| auth-service     | Roles, permissions, operators      | REST + gRPC   |
+| legal-service    | Consents, legal docs, DSR requests | REST + gRPC   |
 
 ### Token Types
 
@@ -270,5 +248,5 @@ ServiceAccessGuard / CountryConsentGuard (optional)
 
 ---
 
-**Identity Platform details**: `.ai/services/identity-service.md`
+**Service docs**: `.ai/services/identity-service.md`, `.ai/services/auth-service.md`, `.ai/services/legal-service.md`
 **Full roadmap**: `docs/ARCHITECTURE_ROADMAP.md`

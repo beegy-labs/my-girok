@@ -9,10 +9,11 @@ import { RequestContextInterceptor } from './interceptors';
 import { OutboxModule } from './outbox';
 import { CryptoService } from './crypto';
 import { ApiKeyGuard } from './guards';
+import { CacheConfigModule, CacheService } from './cache';
 
 @Global()
 @Module({
-  imports: [OutboxModule],
+  imports: [OutboxModule, CacheConfigModule],
   providers: [
     CryptoService,
     {
@@ -36,6 +37,6 @@ import { ApiKeyGuard } from './guards';
       useClass: ApiKeyGuard,
     },
   ],
-  exports: [OutboxModule, CryptoService],
+  exports: [OutboxModule, CryptoService, CacheConfigModule, CacheService],
 })
 export class CommonModule {}

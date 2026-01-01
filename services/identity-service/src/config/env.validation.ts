@@ -9,11 +9,11 @@ export const envValidationSchema = Joi.object({
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
   PORT: Joi.number().port().default(3005),
 
-  // Database URLs (at least one required)
-  DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }),
-  IDENTITY_DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }),
-  AUTH_DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }),
-  LEGAL_DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }),
+  // Database URL - Single database for identity domain
+  DATABASE_URL: Joi.string()
+    .uri({ scheme: ['postgresql', 'postgres'] })
+    .required()
+    .description('Identity DB: accounts, sessions, devices, profiles'),
 
   // JWT Configuration
   JWT_SECRET: Joi.string().min(32).when('JWT_PUBLIC_KEY', {

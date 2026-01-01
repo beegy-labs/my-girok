@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
+import { CacheService } from '../../common/cache';
 import { PaginatedResponse } from '../../common/pagination';
 import { maskUuid, maskEmail } from '../../common/utils/masking.util';
 import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-account.dto';
@@ -59,6 +60,7 @@ export class AccountsService {
     private readonly prisma: IdentityPrismaService,
     private readonly cryptoService: CryptoService,
     private readonly configService: ConfigService,
+    private readonly cacheService: CacheService,
   ) {
     // Load config values
     this.bcryptRounds = this.configService.get<number>('security.bcryptRounds', 12);
@@ -175,9 +177,15 @@ export class AccountsService {
   }
 
   /**
-   * Find account by ID
+   * Find account by ID (with caching)
    */
   async findById(id: string): Promise<AccountEntity> {
+    // Check cache first
+    const cached = await this.cacheService.getAccount<AccountEntity>(id);
+    if (cached) {
+      return cached;
+    }
+
     const account = await this.prisma.account.findUnique({
       where: { id },
     });
@@ -186,7 +194,12 @@ export class AccountsService {
       throw new NotFoundException('Account not found');
     }
 
-    return AccountEntity.fromPrisma(account);
+    const entity = AccountEntity.fromPrisma(account);
+
+    // Cache the result
+    await this.cacheService.setAccount(id, entity);
+
+    return entity;
   }
 
   /**
@@ -205,9 +218,15 @@ export class AccountsService {
   }
 
   /**
-   * Find account by email
+   * Find account by email (with caching)
    */
   async findByEmail(email: string): Promise<AccountEntity | null> {
+    // Check cache first
+    const cached = await this.cacheService.getAccountByEmail<AccountEntity>(email);
+    if (cached) {
+      return cached;
+    }
+
     const account = await this.prisma.account.findUnique({
       where: { email },
     });
@@ -216,7 +235,12 @@ export class AccountsService {
       return null;
     }
 
-    return AccountEntity.fromPrisma(account);
+    const entity = AccountEntity.fromPrisma(account);
+
+    // Cache the result
+    await this.cacheService.setAccountByEmail(email, entity);
+
+    return entity;
   }
 
   /**
@@ -329,6 +353,9 @@ export class AccountsService {
       },
     });
 
+    // Invalidate cache
+    await this.cacheService.invalidateAccount(id, existing.email, existing.username);
+
     this.logger.log(`Account ${maskUuid(id)} updated`);
     return AccountEntity.fromPrisma(account);
   }
@@ -388,6 +415,9 @@ export class AccountsService {
         deletedAt: new Date(),
       },
     });
+
+    // Invalidate cache
+    await this.cacheService.invalidateAccount(id, account.email, account.username);
 
     this.logger.log(`Account ${maskUuid(id)} soft deleted`);
   }
