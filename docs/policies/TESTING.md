@@ -1,5 +1,13 @@
 # Testing Standards
 
+## Pre-Work Checklist
+
+**Before starting any development work:**
+
+1. Read `docs/TEST_COVERAGE.md` for current coverage status
+2. Check pending tests list for the service you're working on
+3. Plan test coverage for new code
+
 ## TDD Cycle (MANDATORY)
 
 ```
@@ -9,6 +17,17 @@ RED → GREEN → REFACTOR
 1. Write failing test
 2. Write minimal code to pass
 3. Improve code quality
+
+## Test Requirements for Code Changes
+
+| Change Type             | Test Requirement           |
+| ----------------------- | -------------------------- |
+| New service method      | Unit test required         |
+| New controller endpoint | Controller test + E2E test |
+| Bug fix                 | Regression test required   |
+| Refactoring             | Existing tests must pass   |
+
+**Code without tests will NOT be merged.**
 
 ## Coverage Requirements
 

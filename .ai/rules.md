@@ -51,20 +51,22 @@
 
 ### ALWAYS
 
-| Category | Rule                                     |
-| -------- | ---------------------------------------- |
-| Types    | Define first in `packages/types`         |
-| Backend  | Use `@my-girok/nest-common`              |
-| Frontend | Use `@my-girok/ui-components`            |
-| DB       | Use goose for migrations                 |
-| DB       | Use `TIMESTAMPTZ(6)` for timestamps      |
-| DB       | Include `-- +goose Down`                 |
-| Code     | Use `@Transactional()` for multi-step DB |
-| Code     | Use Guards for protected endpoints       |
-| Code     | Prevent N+1 queries                      |
-| React    | Use React.memo for list item components  |
-| React    | Use useMemo for expensive calculations   |
-| Testing  | 80% coverage minimum                     |
+| Category | Rule                                      |
+| -------- | ----------------------------------------- |
+| Types    | Define first in `packages/types`          |
+| Backend  | Use `@my-girok/nest-common`               |
+| Frontend | Use `@my-girok/ui-components`             |
+| DB       | Use goose for migrations                  |
+| DB       | Use `TIMESTAMPTZ(6)` for timestamps       |
+| DB       | Include `-- +goose Down`                  |
+| Code     | Use `@Transactional()` for multi-step DB  |
+| Code     | Use Guards for protected endpoints        |
+| Code     | Prevent N+1 queries                       |
+| React    | Use React.memo for list item components   |
+| React    | Use useMemo for expensive calculations    |
+| Testing  | 80% coverage minimum                      |
+| Testing  | Check `docs/TEST_COVERAGE.md` before work |
+| Testing  | Include tests with code changes           |
 
 ## Key Patterns
 
