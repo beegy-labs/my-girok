@@ -38,6 +38,13 @@ enum DsrRequestStatus {
   CANCELLED
 }
 
+enum DsrEscalationLevel {
+  NONE        // No escalation needed
+  WARNING     // 7 days or less remaining
+  CRITICAL    // 2 days or less remaining
+  OVERDUE     // Past due date
+}
+
 enum LegalDocumentType {
   TERMS_OF_SERVICE
   PRIVACY_POLICY
@@ -143,27 +150,30 @@ model Consent {
 
 /// DSR Requests - Data Subject Rights requests (GDPR Article 15-22)
 model DsrRequest {
-  id              String           @id @db.Uuid
-  accountId       String           @map("account_id") @db.Uuid  // Reference to identity-service
-  requestType     DsrRequestType   @map("request_type")
-  status          DsrRequestStatus @default(PENDING)
-  description     String?          @db.Text
-  requestedAt     DateTime         @default(now()) @map("requested_at") @db.Timestamptz
-  acknowledgedAt  DateTime?        @map("acknowledged_at") @db.Timestamptz
-  completedAt     DateTime?        @map("completed_at") @db.Timestamptz
-  dueDate         DateTime         @map("due_date") @db.Timestamptz  // GDPR: 30 days
-  assignedTo      String?          @map("assigned_to") @db.Uuid  // Operator ID
-  resolution      String?          @db.Text
-  rejectionReason String?          @map("rejection_reason") @db.Text
-  ipAddress       String?          @map("ip_address") @db.VarChar(45)
-  metadata        Json?            @db.JsonB
-  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+  id              String              @id @db.Uuid
+  accountId       String              @map("account_id") @db.Uuid  // Reference to identity-service
+  requestType     DsrRequestType      @map("request_type")
+  status          DsrRequestStatus    @default(PENDING)
+  escalationLevel DsrEscalationLevel  @default(NONE) @map("escalation_level")
+  escalatedAt     DateTime?           @map("escalated_at") @db.Timestamptz
+  description     String?             @db.Text
+  requestedAt     DateTime            @default(now()) @map("requested_at") @db.Timestamptz
+  acknowledgedAt  DateTime?           @map("acknowledged_at") @db.Timestamptz
+  completedAt     DateTime?           @map("completed_at") @db.Timestamptz
+  dueDate         DateTime            @map("due_date") @db.Timestamptz  // GDPR: 30 days
+  assignedTo      String?             @map("assigned_to") @db.Uuid  // Operator ID
+  resolution      String?             @db.Text
+  rejectionReason String?             @map("rejection_reason") @db.Text
+  ipAddress       String?             @map("ip_address") @db.VarChar(45)
+  metadata        Json?               @db.JsonB
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
   @@index([accountId])
   @@index([status])
   @@index([requestType])
   @@index([dueDate])
+  @@index([escalationLevel])
   @@map("dsr_requests")
 }
 

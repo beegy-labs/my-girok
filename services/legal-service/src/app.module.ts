@@ -6,6 +6,7 @@ import { TerminusModule } from '@nestjs/terminus';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
+import { CommonModule } from './common/common.module';
 import { ConsentsModule } from './consents/consents.module';
 import { DsrRequestsModule } from './dsr-requests/dsr-requests.module';
 import { LawRegistryModule } from './law-registry/law-registry.module';
@@ -45,6 +46,9 @@ import { HealthController } from './health.controller';
 
     // Database
     DatabaseModule,
+
+    // Common infrastructure (cache, outbox, jobs)
+    CommonModule,
 
     // Feature modules
     ConsentsModule,

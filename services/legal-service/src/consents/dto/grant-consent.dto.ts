@@ -1,5 +1,6 @@
-import { IsUUID, IsOptional, IsString, MaxLength, IsObject } from 'class-validator';
+import { IsUUID, IsOptional, IsString, MaxLength, IsObject, IsDate } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class GrantConsentDto {
   @ApiProperty({ description: 'Account UUID' })
@@ -14,6 +15,12 @@ export class GrantConsentDto {
   @IsOptional()
   @IsUUID()
   lawRegistryId?: string;
+
+  @ApiPropertyOptional({ description: 'Consent expiration date' })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  expiresAt?: Date;
 
   @ApiPropertyOptional({ description: 'IP address of the user' })
   @IsOptional()
