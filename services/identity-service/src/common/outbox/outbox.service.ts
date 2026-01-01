@@ -347,9 +347,73 @@ export class OutboxService {
   }
 
   /**
+   * Atomically claim an event for processing (prevents race conditions)
+   *
+   * Uses atomic updateMany with status=PENDING condition to ensure
+   * only one worker can claim the event. Returns true if successfully claimed.
+   *
+   * @param database - Target database
+   * @param eventId - Event ID to claim
+   * @returns true if successfully claimed, false if already claimed by another worker
+   */
+  async claimEvent(database: OutboxDatabase, eventId: string): Promise<boolean> {
+    let claimedCount = 0;
+
+    switch (database) {
+      case 'identity':
+        claimedCount = (
+          await this.identityPrisma.outboxEvent.updateMany({
+            where: {
+              id: eventId,
+              status: IdentityOutboxStatus.PENDING, // Only claim if still pending
+            },
+            data: { status: IdentityOutboxStatus.PROCESSING },
+          })
+        ).count;
+        break;
+      case 'auth':
+        claimedCount = (
+          await this.authPrisma.outboxEvent.updateMany({
+            where: {
+              id: eventId,
+              status: AuthOutboxStatus.PENDING,
+            },
+            data: { status: AuthOutboxStatus.PROCESSING },
+          })
+        ).count;
+        break;
+      case 'legal':
+        claimedCount = (
+          await this.legalPrisma.outboxEvent.updateMany({
+            where: {
+              id: eventId,
+              status: LegalOutboxStatus.PENDING,
+            },
+            data: { status: LegalOutboxStatus.PROCESSING },
+          })
+        ).count;
+        break;
+      default: {
+        const _exhaustive: never = database;
+        throw new Error(`Unknown database: ${_exhaustive}`);
+      }
+    }
+
+    if (claimedCount === 0) {
+      this.logger.debug(`Event ${eventId} already claimed by another worker`);
+    }
+
+    return claimedCount > 0;
+  }
+
+  /**
    * Mark event as processing
+   * @deprecated Use claimEvent() instead for race-safe processing
    */
   async markAsProcessing(database: OutboxDatabase, eventId: string): Promise<void> {
+    this.logger.warn(
+      'markAsProcessing() is deprecated - use claimEvent() for race-safe processing',
+    );
     switch (database) {
       case 'identity':
         await this.identityPrisma.outboxEvent.update({

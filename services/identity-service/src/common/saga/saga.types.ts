@@ -87,3 +87,66 @@ export interface SagaDefinition<TContext> {
   name: string;
   steps: SagaStepDefinition<TContext>[];
 }
+
+/**
+ * Saga state store interface
+ * Allows pluggable persistence backends (memory, Redis, database)
+ *
+ * Default implementation: InMemorySagaStateStore (for short-lived sagas)
+ * Production recommendation: RedisSagaStateStore or DatabaseSagaStateStore
+ */
+export interface SagaStateStore {
+  /**
+   * Save or update saga state
+   */
+  save<TContext>(saga: SagaState<TContext>): Promise<void>;
+
+  /**
+   * Get saga state by ID
+   */
+  get<TContext>(sagaId: string): Promise<SagaState<TContext> | undefined>;
+
+  /**
+   * Delete saga state
+   */
+  delete(sagaId: string): Promise<void>;
+
+  /**
+   * Get all active sagas (optional, for monitoring)
+   */
+  getAll?(): Promise<SagaState<unknown>[]>;
+
+  /**
+   * Get sagas by status (optional, for recovery)
+   */
+  getByStatus?(status: SagaStatus): Promise<SagaState<unknown>[]>;
+}
+
+/**
+ * In-memory saga state store (default)
+ * Suitable for short-lived sagas within a single request
+ * NOT suitable for long-running sagas or multi-instance deployments
+ */
+export class InMemorySagaStateStore implements SagaStateStore {
+  private readonly store = new Map<string, SagaState<unknown>>();
+
+  async save<TContext>(saga: SagaState<TContext>): Promise<void> {
+    this.store.set(saga.id, saga as SagaState<unknown>);
+  }
+
+  async get<TContext>(sagaId: string): Promise<SagaState<TContext> | undefined> {
+    return this.store.get(sagaId) as SagaState<TContext> | undefined;
+  }
+
+  async delete(sagaId: string): Promise<void> {
+    this.store.delete(sagaId);
+  }
+
+  async getAll(): Promise<SagaState<unknown>[]> {
+    return Array.from(this.store.values());
+  }
+
+  async getByStatus(status: SagaStatus): Promise<SagaState<unknown>[]> {
+    return Array.from(this.store.values()).filter((s) => s.status === status);
+  }
+}

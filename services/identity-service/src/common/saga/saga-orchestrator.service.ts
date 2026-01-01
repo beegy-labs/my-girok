@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, Optional } from '@nestjs/common';
 import { ID } from '@my-girok/nest-common';
 import {
   SagaDefinition,
@@ -8,8 +8,16 @@ import {
   SagaStepStatus,
   SagaStepState,
   SagaStepDefinition,
+  SagaStateStore,
+  InMemorySagaStateStore,
 } from './saga.types';
 import { RETRY } from '../constants';
+
+/**
+ * Injection token for saga state store
+ * Use this to provide a custom persistence backend (Redis, database, etc.)
+ */
+export const SAGA_STATE_STORE = 'SAGA_STATE_STORE';
 
 /**
  * Saga Orchestrator Service
@@ -20,11 +28,24 @@ import { RETRY } from '../constants';
  * - Retry support with exponential backoff
  * - Step-level and saga-level state tracking
  * - Compensation (rollback) for all completed steps on failure
+ * - Pluggable state store for persistence (memory, Redis, database)
+ *
+ * Default: InMemorySagaStateStore (suitable for short-lived sagas)
+ * Production: Inject a RedisSagaStateStore or DatabaseSagaStateStore via SAGA_STATE_STORE
  */
 @Injectable()
 export class SagaOrchestratorService {
   private readonly logger = new Logger(SagaOrchestratorService.name);
-  private readonly activeSagas = new Map<string, SagaState<unknown>>();
+  private readonly stateStore: SagaStateStore;
+
+  constructor(
+    @Optional()
+    @Inject(SAGA_STATE_STORE)
+    stateStore?: SagaStateStore,
+  ) {
+    this.stateStore = stateStore ?? new InMemorySagaStateStore();
+    this.logger.log(`Using saga state store: ${this.stateStore.constructor.name}`);
+  }
 
   /**
    * Execute a saga with the given definition and initial context
@@ -36,7 +57,7 @@ export class SagaOrchestratorService {
     const sagaId = ID.generate();
     const saga = this.initializeSaga(sagaId, definition, initialContext);
 
-    this.activeSagas.set(sagaId, saga as SagaState<unknown>);
+    await this.stateStore.save(saga);
     this.logger.log(`Saga started: ${definition.name} [${sagaId}]`);
 
     try {
@@ -50,12 +71,14 @@ export class SagaOrchestratorService {
           saga.context = await this.executeStep(step, saga.context, stepState);
           stepState.status = SagaStepStatus.COMPLETED;
           stepState.completedAt = new Date();
+          await this.stateStore.save(saga); // Persist after each step
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           stepState.status = SagaStepStatus.FAILED;
           stepState.error = errorMessage;
           saga.error = `Step "${step.name}" failed: ${errorMessage}`;
           saga.status = SagaStatus.FAILED;
+          await this.stateStore.save(saga);
 
           this.logger.error(`Saga step failed: ${step.name} [${sagaId}]`, error);
 
@@ -69,10 +92,12 @@ export class SagaOrchestratorService {
       if (saga.status !== SagaStatus.FAILED && saga.status !== SagaStatus.COMPENSATED) {
         saga.status = SagaStatus.COMPLETED;
         saga.completedAt = new Date();
+        await this.stateStore.save(saga);
         this.logger.log(`Saga completed: ${definition.name} [${sagaId}]`);
       }
     } finally {
-      this.activeSagas.delete(sagaId);
+      // Clean up completed/compensated sagas from store
+      await this.stateStore.delete(sagaId);
     }
 
     return this.buildResult(saga);
@@ -149,6 +174,7 @@ export class SagaOrchestratorService {
     fromStep: number,
   ): Promise<void> {
     saga.status = SagaStatus.COMPENSATING;
+    await this.stateStore.save(saga);
     this.logger.log(`Starting compensation for saga [${saga.id}]`);
 
     // Compensate in reverse order
@@ -162,13 +188,16 @@ export class SagaOrchestratorService {
 
       try {
         stepState.status = SagaStepStatus.COMPENSATING;
+        await this.stateStore.save(saga);
         await step.compensate(saga.context);
         stepState.status = SagaStepStatus.COMPENSATED;
+        await this.stateStore.save(saga);
         this.logger.debug(`Compensated step: ${step.name} [${saga.id}]`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         stepState.status = SagaStepStatus.COMPENSATION_FAILED;
         stepState.error = `Compensation failed: ${errorMessage}`;
+        await this.stateStore.save(saga);
         this.logger.error(`Compensation failed for step: ${step.name} [${saga.id}]`, error);
         // Continue compensating other steps even if one fails
       }
@@ -176,6 +205,7 @@ export class SagaOrchestratorService {
 
     saga.status = SagaStatus.COMPENSATED;
     saga.completedAt = new Date();
+    await this.stateStore.save(saga);
     this.logger.log(`Saga compensated: ${saga.name} [${saga.id}]`);
   }
 
@@ -196,15 +226,32 @@ export class SagaOrchestratorService {
   /**
    * Get active saga by ID
    */
-  getActiveSaga(sagaId: string): SagaState<unknown> | undefined {
-    return this.activeSagas.get(sagaId);
+  async getActiveSaga(sagaId: string): Promise<SagaState<unknown> | undefined> {
+    return this.stateStore.get(sagaId);
   }
 
   /**
    * Get all active sagas
+   * Note: Only available if the state store supports getAll()
    */
-  getActiveSagas(): SagaState<unknown>[] {
-    return Array.from(this.activeSagas.values());
+  async getActiveSagas(): Promise<SagaState<unknown>[]> {
+    if (this.stateStore.getAll) {
+      return this.stateStore.getAll();
+    }
+    this.logger.warn('getActiveSagas() not supported by current state store');
+    return [];
+  }
+
+  /**
+   * Get sagas by status (for recovery/monitoring)
+   * Note: Only available if the state store supports getByStatus()
+   */
+  async getSagasByStatus(status: SagaStatus): Promise<SagaState<unknown>[]> {
+    if (this.stateStore.getByStatus) {
+      return this.stateStore.getByStatus(status);
+    }
+    this.logger.warn('getSagasByStatus() not supported by current state store');
+    return [];
   }
 
   /**
