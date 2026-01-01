@@ -9,9 +9,12 @@ import {
   IsNumber,
   Min,
   Max,
+  IsIP,
+  Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DeviceType, PushPlatform } from '.prisma/identity-client';
+import { Transform } from 'class-transformer';
 
 // Re-export Prisma enums for external use
 export { DeviceType, PushPlatform };
@@ -28,14 +31,17 @@ export class RegisterDeviceDto {
   accountId!: string;
 
   @ApiProperty({
-    description: 'Device fingerprint (unique identifier for the device)',
-    example: 'abc123def456',
+    description: 'Device fingerprint (unique identifier for the device, alphanumeric only)',
+    example: 'abc123def456ghi789',
     minLength: 8,
     maxLength: 64,
   })
   @IsString()
-  @MinLength(8)
-  @MaxLength(64)
+  @MinLength(8, { message: 'Device fingerprint must be at least 8 characters' })
+  @MaxLength(64, { message: 'Device fingerprint must not exceed 64 characters' })
+  @Matches(/^[a-zA-Z0-9]+$/, {
+    message: 'Device fingerprint must contain only alphanumeric characters',
+  })
   fingerprint!: string;
 
   @ApiProperty({
@@ -107,12 +113,16 @@ export class RegisterDeviceDto {
   browserVersion?: string;
 
   @ApiPropertyOptional({
-    description: 'Push notification token',
+    description: 'Push notification token (FCM, APNs, or Web Push)',
     maxLength: 500,
   })
   @IsOptional()
   @IsString()
-  @MaxLength(500)
+  @MinLength(10, { message: 'Push token must be at least 10 characters' })
+  @MaxLength(500, { message: 'Push token must not exceed 500 characters' })
+  @Matches(/^[a-zA-Z0-9:_\-]+$/, {
+    message: 'Push token contains invalid characters',
+  })
   pushToken?: string;
 
   @ApiPropertyOptional({
@@ -124,13 +134,12 @@ export class RegisterDeviceDto {
   pushPlatform?: PushPlatform;
 
   @ApiPropertyOptional({
-    description: 'Client IP address',
+    description: 'Client IP address (IPv4 or IPv6)',
     example: '192.168.1.1',
-    maxLength: 45,
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(45)
+  @IsIP(undefined, { message: 'IP address must be a valid IPv4 or IPv6 address' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   ipAddress?: string;
 }
 

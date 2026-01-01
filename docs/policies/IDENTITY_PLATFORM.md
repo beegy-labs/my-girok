@@ -1,13 +1,13 @@
 # Identity Platform Policy
 
-> Multi-app user management platform with Zero Migration architecture (2025)
+> Multi-app user management platform with Domain-Driven separation (2025)
 
 ## Executive Summary
 
 The Identity Platform enables rapid creation of multiple apps (N apps) with shared user management. Key design principles:
 
-- **Services Combined, DBs Pre-Separated**: Single deployable unit with 3 separate databases
-- **Zero Migration**: Extract services by copying module folders (no DB migration)
+- **Domain-Driven Separation**: 3 services, 3 databases (identity, auth, legal)
+- **Independent Deployment**: Each service scales and deploys independently
 - **Redpanda-Ready**: Outbox pattern prepared for Debezium CDC (Kafka-compatible, no JVM)
 - **UUIDv7**: All IDs use RFC 9562 UUIDv7 (time-sortable)
 
@@ -15,38 +15,36 @@ The Identity Platform enables rapid creation of multiple apps (N apps) with shar
 
 ## Architecture Overview
 
-### Current State (Limited Hardware)
+### Current State (Phase 3 - Separated Services)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                    Identity Service (Single Pod)                      │
-│  ┌────────────────────────────────────────────────────────────────┐  │
-│  │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐          │  │
-│  │  │  Identity   │◄─►│    Auth     │◄─►│    Legal    │          │  │
-│  │  │   Module    │   │   Module    │   │   Module    │          │  │
-│  │  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘          │  │
-│  │         │                 │                 │                  │  │
-│  │    In-Process        In-Process        In-Process              │  │
-│  └─────────┼─────────────────┼─────────────────┼──────────────────┘  │
-│            │                 │                 │                     │
-│            ▼                 ▼                 ▼                     │
-│      identity_db         auth_db          legal_db                   │
-│      (PostgreSQL)       (PostgreSQL)     (PostgreSQL)                │
-│            │                 │                 │                     │
-│            └─────────────────┼─────────────────┘                     │
-│                              ▼                                       │
-│                       outbox_events (per DB)                         │
-│                              │                                       │
-│                              ▼                                       │
+│                  Identity Platform (3 Services, 3 DBs)                │
+│                                                                       │
+│  ┌─────────────┐       ┌─────────────┐       ┌─────────────┐        │
+│  │  Identity   │       │    Auth     │       │    Legal    │        │
+│  │  Service    │◄─────►│   Service   │◄─────►│   Service   │        │
+│  │ (Port 3000) │ gRPC  │ (Port 3001) │ gRPC  │ (Port 3005) │        │
+│  └──────┬──────┘       └──────┬──────┘       └──────┬──────┘        │
+│         │                     │                     │                │
+│         ▼                     ▼                     ▼                │
+│   identity_db             auth_db              legal_db              │
+│   (PostgreSQL)           (PostgreSQL)         (PostgreSQL)           │
+│         │                     │                     │                │
+│         ▼                     ▼                     ▼                │
+│   outbox_events          outbox_events         outbox_events         │
+│         │                     │                     │                │
+│         └─────────────────────┼─────────────────────┘                │
+│                               ▼                                      │
 │                    Polling Publisher (5s cron)                       │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Future State (128 cores, 496GB RAM)
+### Future State (With Redpanda CDC)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                    Separated Services (Zero Migration)                │
+│                    Separated Services (+ Real-time Events)            │
 │                                                                       │
 │  ┌─────────────┐       ┌─────────────┐       ┌─────────────┐        │
 │  │  Identity   │       │    Auth     │       │    Legal    │        │
@@ -72,32 +70,39 @@ The Identity Platform enables rapid creation of multiple apps (N apps) with shar
 
 ## Zero Migration Guarantee
 
-### What Changes Between Phases
+### Service Separation Achieved
 
-| Component            | Phase 1 (Now) | Phase 2 (Future)    | Migration      |
-| -------------------- | ------------- | ------------------- | -------------- |
-| Services             | 1 combined    | 3 separate          | Copy folder    |
-| Databases            | 3 separate    | 3 separate (same)   | **None**       |
-| Module Communication | In-Process    | gRPC                | Interface swap |
-| Event Broker         | Polling       | Redpanda + Debezium | Config change  |
-| Code Changes         | -             | -                   | **None**       |
+Services are now fully separated with dedicated databases. Future evolution (Redpanda CDC) requires no code or data migration.
 
-### Service Extraction Steps
+| Component             | Phase 3 (Current) | Phase 4 (Future)    | Migration     |
+| --------------------- | ----------------- | ------------------- | ------------- |
+| Services              | 3 separate        | 3 separate          | **None**      |
+| Databases             | 3 separate        | 3 separate          | **None**      |
+| Service Communication | gRPC              | gRPC                | **None**      |
+| Event Broker          | Polling (5s cron) | Redpanda + Debezium | Config change |
+| Code Changes          | -                 | -                   | **None**      |
 
-```bash
-# Step 1: Copy module folder
-cp -r services/identity-service/src/auth services/auth-service/src/
+### Service Architecture
 
-# Step 2: Copy Prisma schema
-cp -r services/identity-service/prisma/auth services/auth-service/prisma/
-
-# Step 3: Update Helm values (routing)
-# services/auth-service routes to auth-service pod
-
-# Step 4: Change module mode
-AUTH_MODE=remote  # Switch from local to gRPC
-
-# No database migration required!
+```
+services/
+├── identity-service/    # Port 3000 → identity_db
+│   ├── accounts/        # User accounts (UUIDv7)
+│   ├── sessions/        # Login sessions
+│   ├── devices/         # Device management
+│   └── profiles/        # User profiles
+│
+├── auth-service/        # Port 3001 → auth_db
+│   ├── roles/           # RBAC roles
+│   ├── permissions/     # Fine-grained permissions
+│   ├── operators/       # Service operators
+│   └── sanctions/       # User/operator sanctions
+│
+└── legal-service/       # Port 3005 → legal_db
+    ├── consents/        # User consent records
+    ├── documents/       # Legal documents (ToS, Privacy)
+    ├── law_registry/    # Country-specific laws
+    └── dsr_requests/    # Data Subject Requests (GDPR/PIPA)
 ```
 
 ---
@@ -1276,25 +1281,24 @@ interface AppCheckResponse {
 
 ---
 
-## Migration Roadmap
+## Evolution Roadmap
 
-| Phase | Trigger  | Services  | Communication | Events       | Infra      |
-| ----- | -------- | --------- | ------------- | ------------ | ---------- |
-| 1     | Initial  | Combined  | In-Process    | Polling      | Minimal    |
-| 2     | Hardware | Separated | gRPC          | Polling      | + gRPC     |
-| 3     | Scale    | Separated | gRPC          | Redpanda CDC | + Redpanda |
+| Phase | Status     | Services  | Communication | Events       | Infra      |
+| ----- | ---------- | --------- | ------------- | ------------ | ---------- |
+| 1     | ✅ Done    | Combined  | In-Process    | Polling      | Minimal    |
+| 2     | ✅ Done    | Combined  | In-Process    | Polling      | + 3 DBs    |
+| 3     | ✅ Current | Separated | gRPC          | Polling      | + gRPC     |
+| 4     | 🔲 Future  | Separated | gRPC          | Redpanda CDC | + Redpanda |
 
-### Phase 1 → Phase 2 (Service Separation)
+### Phase 3 (Current) - Separated Services
 
-```bash
-# No code changes required, only:
-1. Copy module folder to new service
-2. Deploy new service
-3. Update Gateway routing
-4. Set MODULE_MODE=remote
+```
+identity-service (Port 3000) → identity_db
+auth-service     (Port 3001) → auth_db
+legal-service    (Port 3005) → legal_db
 ```
 
-### Phase 2 → Phase 3 (Redpanda Introduction)
+### Phase 3 → Phase 4 (Redpanda Introduction)
 
 ```bash
 # No code changes required, only:
@@ -1327,62 +1331,46 @@ interface AppCheckResponse {
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │  Phase 1          Phase 2           Phase 3           Phase 4            │
-│  (Current)        (Hardware)        (Scale)           (Global)           │
+│  (Done)           (Done)            (Current)         (Future)           │
 │  ────────         ──────────        ───────           ────────           │
 │                                                                          │
-│  Combined     →   Separated     →   + Redpanda    →   Multi-Region       │
-│  Service          Services          + Debezium        + Read Replicas    │
+│  Combined     →   Combined      →   Separated     →   + Redpanda         │
+│  Service          + 3 DBs           Services          + Debezium         │
 │                                                                          │
-│  In-Process   →   gRPC          →   Event-Driven →   Geo-Distributed     │
+│  In-Process   →   In-Process    →   gRPC          →   Event-Driven       │
 │                                                                          │
-│  Polling      →   Polling       →   CDC Real-time→   Global CDC          │
-│  Outbox           Outbox            Outbox           Outbox              │
+│  N/A          →   Polling       →   Polling       →   CDC Real-time      │
+│                    Outbox           Outbox            Outbox             │
 │                                                                          │
 │  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │  Constant: 3 Pre-Separated DBs (identity_db, auth_db, legal_db)  │   │
+│  │  Constant: 3 Separated DBs (identity_db, auth_db, legal_db)       │   │
 │  │  Never requires DB migration                                      │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Phase 2: Service Separation
+### Phase 3 (Current): Separated Services
 
-**Trigger**: Hardware upgrade to 128 cores, 496GB RAM
+**Status**: ✅ Complete
 
-#### Changes
+#### Current Architecture
 
-| Component          | Before                    | After                  |
-| ------------------ | ------------------------- | ---------------------- |
-| Services           | 1 combined pod            | 3 separate pods        |
-| Communication      | In-Process function calls | gRPC (proto3)          |
-| Deployment         | 1 Helm chart              | 3 Helm charts          |
-| Scaling            | Vertical only             | Horizontal per-service |
-| Resource Isolation | Shared                    | Dedicated per-service  |
+| Component          | Value                  |
+| ------------------ | ---------------------- |
+| Services           | 3 separate pods        |
+| Communication      | gRPC (proto3)          |
+| Deployment         | 3 Helm charts          |
+| Scaling            | Horizontal per-service |
+| Resource Isolation | Dedicated per-service  |
 
-#### Implementation Steps
+#### Service Ports
 
-```bash
-# Step 1: Prepare new service (no code changes)
-cp -r services/identity-service/src/auth services/auth-service/src/
-cp -r services/identity-service/prisma/auth services/auth-service/prisma/
-
-# Step 2: Create Helm chart
-cp -r helm/identity-service helm/auth-service
-# Update values.yaml with auth-service specific config
-
-# Step 3: Generate gRPC stubs (if not already)
-protoc --ts_out=. --grpc_out=. proto/auth.proto
-
-# Step 4: Update environment
-AUTH_MODE=remote  # Switch from local to gRPC client
-
-# Step 5: Deploy
-helm upgrade auth-service ./helm/auth-service
-
-# Step 6: Update Gateway routing
-# /v1/auth/* → auth-service:3006
-```
+| Service          | Port | Database    |
+| ---------------- | ---- | ----------- |
+| identity-service | 3000 | identity_db |
+| auth-service     | 3001 | auth_db     |
+| legal-service    | 3005 | legal_db    |
 
 #### New gRPC Services
 
@@ -1407,7 +1395,7 @@ service LegalService {
 }
 ```
 
-### Phase 3: Redpanda Introduction
+### Phase 4: Redpanda Introduction
 
 **Trigger**: Need for real-time event streaming and better event guarantees
 
@@ -1496,7 +1484,7 @@ spec:
        │                  │                  │                  ├────────►
 ```
 
-### Phase 4: Global Scale
+### Phase 5: Global Scale
 
 **Trigger**: Multi-region user base, latency requirements
 
@@ -1561,15 +1549,16 @@ spec:
 
 ### Technology Evolution
 
-| Area              | Current    | Phase 2    | Phase 3      | Phase 4                 |
-| ----------------- | ---------- | ---------- | ------------ | ----------------------- |
-| **Service Mesh**  | None       | None       | Cilium       | Cilium + mTLS           |
-| **Observability** | OTEL       | OTEL       | OTEL + Tempo | Full stack              |
-| **Secrets**       | Vault      | Vault      | Vault        | Vault + HSM             |
-| **Auth**          | JWT RS256  | JWT RS256  | + DPoP       | + Hardware keys         |
-| **DB**            | PostgreSQL | PostgreSQL | PostgreSQL   | Citus/CockroachDB       |
-| **Cache**         | Valkey     | Valkey     | Valkey       | Valkey Cluster          |
-| **Events**        | Polling    | Polling    | Redpanda     | Redpanda (multi-region) |
+| Area              | Phase 3 (Current) | Phase 4        | Phase 5                 |
+| ----------------- | ----------------- | -------------- | ----------------------- |
+| **Services**      | 3 Separated       | 3 Separated    | 3 Separated             |
+| **Service Mesh**  | None              | Cilium         | Cilium + mTLS           |
+| **Observability** | OTEL              | OTEL + Tempo   | Full stack              |
+| **Secrets**       | Vault             | Vault          | Vault + HSM             |
+| **Auth**          | JWT RS256         | + DPoP         | + Hardware keys         |
+| **DB**            | PostgreSQL × 3    | PostgreSQL × 3 | Citus/CockroachDB       |
+| **Cache**         | Valkey            | Valkey         | Valkey Cluster          |
+| **Events**        | Polling           | Redpanda       | Redpanda (multi-region) |
 
 ---
 
@@ -1589,4 +1578,8 @@ spec:
 
 ---
 
-**LLM Reference**: `.ai/services/identity-service.md`
+**LLM Reference**:
+
+- Identity Service: `.ai/services/identity-service.md`
+- Auth Service: `.ai/services/auth-service.md`
+- Legal Service: `.ai/services/legal-service.md`

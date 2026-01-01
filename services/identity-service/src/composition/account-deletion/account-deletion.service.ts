@@ -70,7 +70,7 @@ export class AccountDeletionService {
     }
 
     // Publish deletion event
-    await this.outbox.publish('identity', {
+    await this.outbox.publishEvent({
       aggregateType: 'Account',
       aggregateId: dto.accountId,
       eventType: 'ACCOUNT_DELETED',
@@ -176,7 +176,7 @@ export class AccountDeletionService {
     // In a full implementation, this would store the scheduled deletion
     // and a background job would process it after the grace period
 
-    await this.outbox.publish('identity', {
+    await this.outbox.publishEvent({
       aggregateType: 'Account',
       aggregateId: dto.accountId,
       eventType: 'ACCOUNT_DELETION_SCHEDULED',

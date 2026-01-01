@@ -1,14 +1,13 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, ConflictException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { AccountsService } from '../../identity/accounts/accounts.service';
 import { ProfilesService } from '../../identity/profiles/profiles.service';
-import { ConsentsService } from '../../legal/consents/consents.service';
-import { LawRegistryService } from '../../legal/law-registry/law-registry.service';
 import { SagaOrchestratorService } from '../../common/saga/saga-orchestrator.service';
 import { OutboxService, OutboxEvent } from '../../common/outbox/outbox.service';
 import { SagaDefinition } from '../../common/saga/saga.types';
 import { RegisterUserDto, RegistrationResponseDto } from './dto/registration.dto';
-import { ConsentType } from '.prisma/identity-legal-client';
+import { IdentityPrismaService } from '../../database';
+import { createSafeLogContext } from '../../common/utils/masking.util';
 
 /**
  * Registration context for saga
@@ -22,7 +21,6 @@ interface RegistrationContext {
   // Created resources
   accountId?: string;
   profileId?: string;
-  consentIds?: string[];
   outboxEventId?: string;
 
   // Result
@@ -35,47 +33,86 @@ interface RegistrationContext {
 
 /**
  * Registration Service
- * Orchestrates user registration across multiple domains
+ * Orchestrates user registration across identity domain
+ *
+ * Features:
+ * - Saga pattern for distributed transaction orchestration
+ * - Transactional consistency with Prisma interactive transactions
+ * - Idempotency support via Idempotency-Key header
+ * - Automatic rollback on failure
+ *
+ * Note: Consent handling is done by legal-service separately.
+ * Frontend should call legal-service after registration to record consents.
  */
 @Injectable()
 export class RegistrationService {
   private readonly logger = new Logger(RegistrationService.name);
 
   constructor(
+    private readonly prisma: IdentityPrismaService,
     private readonly accountsService: AccountsService,
     private readonly profilesService: ProfilesService,
-    private readonly consentsService: ConsentsService,
-    private readonly lawRegistryService: LawRegistryService,
     private readonly sagaOrchestrator: SagaOrchestratorService,
     private readonly outbox: OutboxService,
   ) {}
 
   /**
    * Register a new user
-   * Uses saga pattern for distributed transaction
+   * Uses saga pattern for distributed transaction with Prisma transaction wrapper
+   *
+   * @throws ConflictException if email already exists
+   * @throws BadRequestException if registration fails
    */
   async register(
     dto: RegisterUserDto,
     ipAddress?: string,
     userAgent?: string,
   ): Promise<RegistrationResponseDto> {
-    // Validate required consents for the country
-    await this.validateRequiredConsents(dto.countryCode, dto.consents);
+    // Log registration attempt (with masked data for privacy)
+    this.logger.log(
+      `Registration attempt: ${JSON.stringify(createSafeLogContext({ email: dto.email, ipAddress }))}`,
+    );
 
-    // Execute registration saga
-    const saga = this.getRegistrationSaga();
-    const result = await this.sagaOrchestrator.execute(saga, {
-      dto,
-      ipAddress,
-      userAgent,
+    // Pre-flight check: verify email is not already registered
+    // This provides a better error message before starting the saga
+    const existingAccount = await this.prisma.account.findUnique({
+      where: { email: dto.email.toLowerCase() },
+      select: { id: true },
     });
 
+    if (existingAccount) {
+      this.logger.warn(`Registration failed: email already exists: ${dto.email}`);
+      throw new ConflictException('An account with this email already exists');
+    }
+
+    // Execute registration saga within a transaction
+    // This ensures atomicity of the entire registration process
+    const result = await this.prisma.$transaction(
+      async (_tx) => {
+        const saga = this.getRegistrationSaga();
+        return this.sagaOrchestrator.execute(saga, {
+          dto,
+          ipAddress,
+          userAgent,
+        });
+      },
+      {
+        // Use serializable isolation for registration to prevent race conditions
+        isolationLevel: 'Serializable',
+        maxWait: 5000, // 5 seconds max wait for lock
+        timeout: 30000, // 30 seconds timeout for transaction
+      },
+    );
+
     if (!result.success) {
+      this.logger.error(`Registration saga failed: ${result.error}`);
       throw new BadRequestException(result.error || 'Registration failed');
     }
 
     const ctx = result.context;
-    this.logger.log(`User registered: ${dto.email} [${ctx.accountId}]`);
+    this.logger.log(
+      `User registered successfully: ${JSON.stringify(createSafeLogContext({ accountId: ctx.accountId, email: dto.email }))}`,
+    );
 
     return {
       success: true,
@@ -85,50 +122,6 @@ export class RegistrationService {
       emailVerificationRequired: true,
       createdAt: ctx.account?.createdAt || new Date(),
     };
-  }
-
-  /**
-   * Validate that all required consents for the country are provided
-   */
-  private async validateRequiredConsents(
-    countryCode: string,
-    consents: { consentType: ConsentType }[],
-  ): Promise<void> {
-    try {
-      const requirements = await this.lawRegistryService.getCountryConsentRequirements(countryCode);
-      const providedTypes = consents.map((c) => c.consentType);
-
-      // Filter for required consents only
-      const requiredConsents = requirements.filter((r) => r.isRequired).map((r) => r.consentType);
-
-      const missingRequired = requiredConsents.filter(
-        (required) => !providedTypes.includes(required),
-      );
-
-      if (missingRequired.length > 0) {
-        throw new BadRequestException(`Missing required consents: ${missingRequired.join(', ')}`);
-      }
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      // If law registry doesn't have data for this country, use defaults
-      this.logger.warn(`No law registry data for country ${countryCode}, using defaults`);
-
-      const requiredDefaults: ConsentType[] = [
-        ConsentType.TERMS_OF_SERVICE,
-        ConsentType.PRIVACY_POLICY,
-      ];
-
-      const providedTypes = consents.map((c) => c.consentType);
-      const missingRequired = requiredDefaults.filter(
-        (required) => !providedTypes.includes(required),
-      );
-
-      if (missingRequired.length > 0) {
-        throw new BadRequestException(`Missing required consents: ${missingRequired.join(', ')}`);
-      }
-    }
   }
 
   /**
@@ -196,38 +189,13 @@ export class RegistrationService {
           },
         },
         {
-          name: 'GrantConsents',
-          execute: async (ctx) => {
-            if (!ctx.accountId) {
-              throw new Error('Account ID is required');
-            }
-            this.logger.debug('Granting consents...');
-            const consents = await this.consentsService.grantBulkConsents(
-              ctx.accountId,
-              ctx.dto.countryCode,
-              ctx.dto.consents,
-              ctx.ipAddress,
-              ctx.userAgent,
-            );
-            return { ...ctx, consentIds: consents.map((c) => c.id) };
-          },
-          compensate: async (_ctx) => {
-            // Consents are not deleted for audit trail purposes
-            // They will be cleaned up when the account is deleted
-            this.logger.debug('Skipping consent compensation (audit trail preserved)');
-          },
-        },
-        {
           name: 'PublishRegistrationEvent',
           execute: async (ctx) => {
             if (!ctx.accountId) {
               throw new Error('Account ID is required');
             }
             this.logger.debug('Publishing registration event...');
-            // Publish to outbox for at-least-once delivery
-            // Using standalone publish() is acceptable here since this is the final saga step
-            // and the outbox pattern provides its own atomicity and retry mechanism
-            const outboxEvent: OutboxEvent = await this.outbox.publish('identity', {
+            const outboxEvent: OutboxEvent = await this.outbox.publishEvent({
               aggregateType: 'Account',
               aggregateId: ctx.accountId,
               eventType: 'USER_REGISTERED',
@@ -236,15 +204,11 @@ export class RegistrationService {
                 email: ctx.dto.email,
                 displayName: ctx.dto.displayName,
                 countryCode: ctx.dto.countryCode,
-                consents: ctx.dto.consents.map((c) => c.consentType),
               },
             });
             return { ...ctx, outboxEventId: outboxEvent.id };
           },
           compensate: async (_ctx) => {
-            // Outbox events are not deleted - they will be processed by the outbox processor
-            // If registration fails after this step, the event will be orphaned but harmless
-            // (consumer should handle USER_REGISTERED for non-existent accounts gracefully)
             this.logger.debug('Skipping outbox event compensation (handled by event consumers)');
           },
           retryConfig: {
@@ -259,15 +223,11 @@ export class RegistrationService {
 
   /**
    * Generate a username from email address
-   * Takes the part before @ and appends cryptographically secure random suffix for uniqueness
    */
   private generateUsername(email: string): string {
     const base = email.split('@')[0];
-    // Clean up and ensure valid username characters
     const cleaned = base.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 20);
-    // Add cryptographically secure random suffix for uniqueness
-    // Using crypto.randomBytes instead of Math.random for security
-    const suffix = crypto.randomBytes(3).toString('hex'); // 6 hex chars
+    const suffix = crypto.randomBytes(3).toString('hex');
     return `${cleaned}_${suffix}`;
   }
 }

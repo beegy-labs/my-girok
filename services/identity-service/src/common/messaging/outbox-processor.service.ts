@@ -1,11 +1,12 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { OutboxService, OutboxDatabase, OutboxEvent } from '../outbox/outbox.service';
+import { OutboxService, OutboxEvent } from '../outbox/outbox.service';
 import { KafkaProducerService, EventMessage } from './kafka-producer.service';
 import { KAFKA_TOPICS, KafkaTopic } from './kafka.config';
 
 /**
  * Aggregate type to topic mapping
+ * Identity-service only handles identity aggregates
  */
 const AGGREGATE_TOPIC_MAP: Record<string, KafkaTopic> = {
   // Identity aggregates
@@ -13,22 +14,11 @@ const AGGREGATE_TOPIC_MAP: Record<string, KafkaTopic> = {
   Session: KAFKA_TOPICS.SESSION_EVENTS,
   Device: KAFKA_TOPICS.DEVICE_EVENTS,
   Profile: KAFKA_TOPICS.PROFILE_EVENTS,
-
-  // Auth aggregates
-  Role: KAFKA_TOPICS.ROLE_EVENTS,
-  Permission: KAFKA_TOPICS.PERMISSION_EVENTS,
-  Operator: KAFKA_TOPICS.OPERATOR_EVENTS,
-  Sanction: KAFKA_TOPICS.SANCTION_EVENTS,
-
-  // Legal aggregates
-  Consent: KAFKA_TOPICS.CONSENT_EVENTS,
-  DsrRequest: KAFKA_TOPICS.DSR_EVENTS,
-  LawRegistry: KAFKA_TOPICS.LAW_REGISTRY_EVENTS,
 };
 
 /**
  * Outbox Processor Service
- * Polls outbox tables and publishes events to Kafka/Redpanda
+ * Polls outbox table and publishes events to Kafka/Redpanda
  * Implements the Transactional Outbox Pattern
  */
 @Injectable()
@@ -64,12 +54,7 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
     this.isProcessing = true;
 
     try {
-      // Process each database's outbox
-      await Promise.all([
-        this.processDatabase('identity'),
-        this.processDatabase('auth'),
-        this.processDatabase('legal'),
-      ]);
+      await this.processEvents();
     } catch (error) {
       this.logger.error('Error processing outbox', error);
     } finally {
@@ -78,29 +63,29 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Process outbox for a specific database
+   * Process pending outbox events
    */
-  private async processDatabase(database: OutboxDatabase): Promise<void> {
-    const events = await this.outbox.getPendingEvents(database, this.batchSize);
+  private async processEvents(): Promise<void> {
+    const events = await this.outbox.getPendingEvents(this.batchSize);
 
     if (events.length === 0) {
       return;
     }
 
-    this.logger.debug(`Processing ${events.length} events from ${database} outbox`);
+    this.logger.debug(`Processing ${events.length} events from outbox`);
 
     for (const event of events) {
-      await this.processEvent(database, event);
+      await this.processEvent(event);
     }
   }
 
   /**
    * Process a single outbox event
    */
-  private async processEvent(database: OutboxDatabase, event: OutboxEvent): Promise<void> {
+  private async processEvent(event: OutboxEvent): Promise<void> {
     try {
       // Mark as processing
-      await this.outbox.markAsProcessing(database, event.id);
+      await this.outbox.markAsProcessing(event.id);
 
       // Get the target topic
       const topic = this.getTopicForAggregate(event.aggregateType);
@@ -114,7 +99,6 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
         payload: event.payload,
         timestamp: event.createdAt.toISOString(),
         metadata: {
-          database,
           source: 'identity-service',
         },
       };
@@ -123,12 +107,12 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
       await this.producer.publish(topic, message);
 
       // Mark as completed
-      await this.outbox.markAsCompleted(database, event.id);
+      await this.outbox.markAsCompleted(event.id);
 
       this.logger.debug(`Event processed: ${event.eventType} -> ${topic} [${event.id}]`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      await this.outbox.markAsFailed(database, event.id, errorMessage);
+      await this.outbox.markAsFailed(event.id, errorMessage);
       this.logger.error(`Failed to process event ${event.id}`, error);
     }
   }
@@ -164,22 +148,14 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
    * Get processing statistics
    */
   async getStats(): Promise<{
-    identity: { pending: number; processing: number; completed: number; failed: number };
-    auth: { pending: number; processing: number; completed: number; failed: number };
-    legal: { pending: number; processing: number; completed: number; failed: number };
+    stats: { pending: number; processing: number; completed: number; failed: number };
     isProcessing: boolean;
     processingEnabled: boolean;
   }> {
-    const [identity, auth, legal] = await Promise.all([
-      this.outbox.getStats('identity'),
-      this.outbox.getStats('auth'),
-      this.outbox.getStats('legal'),
-    ]);
+    const stats = await this.outbox.getStats();
 
     return {
-      identity,
-      auth,
-      legal,
+      stats,
       isProcessing: this.isProcessing,
       processingEnabled: this.processingEnabled,
     };
@@ -191,18 +167,10 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
   @Cron(CronExpression.EVERY_DAY_AT_3AM, { name: 'outbox-cleanup' })
   async cleanupOldEvents(): Promise<void> {
     const retentionDays = 7;
+    const count = await this.outbox.cleanupCompletedEvents(retentionDays);
 
-    const [identity, auth, legal] = await Promise.all([
-      this.outbox.cleanupCompletedEvents('identity', retentionDays),
-      this.outbox.cleanupCompletedEvents('auth', retentionDays),
-      this.outbox.cleanupCompletedEvents('legal', retentionDays),
-    ]);
-
-    const total = identity + auth + legal;
-    if (total > 0) {
-      this.logger.log(
-        `Cleaned up ${total} old events (identity: ${identity}, auth: ${auth}, legal: ${legal})`,
-      );
+    if (count > 0) {
+      this.logger.log(`Cleaned up ${count} old events`);
     }
   }
 

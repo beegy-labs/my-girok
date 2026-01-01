@@ -4,20 +4,27 @@ import {
   ExecutionContext,
   UnauthorizedException,
   Logger,
+  Inject,
+  Optional,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from './api-key.guard';
+import { CacheService } from '../cache';
 
 /**
- * JWT payload interface
+ * JWT payload interface (extended for 2026 standards)
  */
 export interface JwtPayload {
   sub: string; // account ID
+  jti?: string; // JWT ID for revocation tracking
   email: string;
-  username: string;
+  username?: string;
+  permissions?: string[]; // Permissions from auth-service
+  roles?: string[]; // Roles from auth-service
+  accountMode?: string;
   iat: number;
   exp: number;
 }
@@ -32,12 +39,15 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * JWT Authentication Guard
- * Validates JWT tokens from Authorization header with proper signature verification
  *
- * Security:
+ * Validates JWT tokens from Authorization header with proper signature verification.
+ *
+ * 2026 Best Practices:
  * - Verifies JWT signature using RS256 or HS256 based on configuration
  * - Validates token expiration
  * - Validates issuer and audience claims
+ * - Checks token revocation via JTI (JWT ID)
+ * - Prevents algorithm confusion attacks
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -47,6 +57,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Optional() @Inject(CacheService) private readonly cacheService?: CacheService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -68,16 +79,27 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      // In production, verify the token properly
-      // For now, we'll do a basic structure check and decode
+      // Verify the token
       const payload = await this.verifyToken(token);
+
+      // Check if token has been revoked (if JTI exists)
+      if (payload.jti && this.cacheService) {
+        const isRevoked = await this.cacheService.isTokenRevoked(payload.jti);
+        if (isRevoked) {
+          this.logger.warn(`Revoked token used: ${payload.jti.substring(0, 8)}...`);
+          throw new UnauthorizedException('Token has been revoked');
+        }
+      }
 
       // Attach user to request
       (request as AuthenticatedRequest).user = payload;
       (request as AuthenticatedRequest).accountId = payload.sub;
 
       return true;
-    } catch {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

@@ -2,12 +2,15 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './database';
 import { CommonModule } from './common/common.module';
 import { MessagingModule } from './common/messaging/messaging.module';
 import { SagaModule } from './common/saga/saga.module';
+import { HealthModule } from './common/health';
+import { ScheduledModule } from './common/scheduled';
 import { IdentityModule } from './identity/identity.module';
 import { AuthModule } from './auth/auth.module';
 import { LegalModule } from './legal/legal.module';
@@ -44,10 +47,14 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.f
         limit: 1000,
       },
     ]),
+    // Cron jobs (for sanction expiration, saga cleanup, etc.)
+    ScheduleModule.forRoot(),
     DatabaseModule,
     CommonModule,
     MessagingModule,
     SagaModule,
+    HealthModule,
+    ScheduledModule,
     IdentityModule,
     AuthModule,
     LegalModule,
@@ -55,7 +62,7 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.f
   ],
   controllers: [],
   providers: [
-    // Global rate limiting guard
+    // Global rate limiting guard (ThrottlerModule requires explicit guard registration)
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

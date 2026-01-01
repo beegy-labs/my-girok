@@ -52,10 +52,17 @@ model Account {
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
+  // Audit tracking
+  lastFailedLoginAt  DateTime? @map("last_failed_login_at") @db.Timestamptz(6)
+  lastSuccessLoginAt DateTime? @map("last_success_login_at") @db.Timestamptz(6)
+
   // Relations
-  profile  Profile?
-  sessions Session[]
-  devices  Device[]
+  profile         Profile?
+  sessions        Session[]
+  devices         Device[]
+  revokedTokens   RevokedToken[]
+  mfaBackupCodes  MfaBackupCode[]
+  passwordHistory PasswordHistory[]
 
   @@index([externalId])
   @@index([email])
@@ -100,10 +107,11 @@ enum AuthProvider {
 // ============================================================
 
 model Session {
-  id               String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  accountId        String  @map("account_id") @db.Uuid
-  tokenHash        String  @unique @map("token_hash") @db.VarChar(64)
-  refreshTokenHash String? @unique @map("refresh_token_hash") @db.VarChar(64)
+  id                       String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  accountId                String  @map("account_id") @db.Uuid
+  tokenHash                String  @unique @map("token_hash") @db.VarChar(64)
+  refreshTokenHash         String? @unique @map("refresh_token_hash") @db.VarChar(128)
+  previousRefreshTokenHash String? @map("previous_refresh_token_hash") @db.VarChar(128)
 
   // Session metadata
   deviceId  String? @map("device_id") @db.Uuid
@@ -128,9 +136,12 @@ model Session {
 
   @@index([accountId])
   @@index([tokenHash])
+  @@index([refreshTokenHash])
+  @@index([previousRefreshTokenHash])
   @@index([deviceId])
   @@index([expiresAt])
   @@index([isActive])
+  @@index([accountId, isActive, expiresAt])
   @@map("sessions")
 }
 
@@ -155,8 +166,9 @@ model Device {
   browserVersion String? @map("browser_version") @db.VarChar(20)
 
   // Push notification
-  pushToken    String?       @map("push_token")
-  pushPlatform PushPlatform? @map("push_platform")
+  pushToken     String?       @map("push_token")
+  pushTokenHash String?       @map("push_token_hash") @db.VarChar(64)
+  pushPlatform  PushPlatform? @map("push_platform")
 
   // Trust level
   isTrusted Boolean   @default(false) @map("is_trusted")
@@ -167,8 +179,9 @@ model Device {
   lastIpAddress String?   @map("last_ip_address") @db.VarChar(45)
 
   // Timestamps
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
   account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -229,14 +242,19 @@ model Profile {
   address     String? @db.VarChar(500)
   postalCode  String? @map("postal_code") @db.VarChar(20)
 
+  // Extensible metadata (JSONB)
+  metadata Json? @db.JsonB
+
   // Timestamps
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@index([accountId])
+  @@index([deletedAt])
   @@map("profiles")
 }
 
@@ -261,16 +279,20 @@ model OutboxEvent {
   payload       Json
 
   // Processing status
-  status      OutboxStatus @default(PENDING)
-  retryCount  Int          @default(0) @map("retry_count")
-  lastError   String?      @map("last_error")
-  processedAt DateTime?    @map("processed_at") @db.Timestamptz(6)
+  status         OutboxStatus @default(PENDING)
+  retryCount     Int          @default(0) @map("retry_count")
+  lastError      String?      @map("last_error")
+  processedAt    DateTime?    @map("processed_at") @db.Timestamptz(6)
+  nextRetryAt    DateTime?    @map("next_retry_at") @db.Timestamptz(6)
+  idempotencyKey String?      @map("idempotency_key") @db.VarChar(255)
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([status, createdAt])
+  @@index([status, nextRetryAt])
   @@index([aggregateType, aggregateId])
+  @@index([idempotencyKey])
   @@map("outbox_events")
 }
 
@@ -281,6 +303,155 @@ enum OutboxStatus {
   FAILED
 
   @@map("outbox_status")
+}
+
+enum DlqStatus {
+  PENDING
+  RETRIED
+  RESOLVED
+  IGNORED
+
+  @@map("dlq_status")
+}
+
+// ============================================================
+// REVOKED TOKENS (JWT Blacklist - RFC 9068)
+// ============================================================
+
+model RevokedToken {
+  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  jti       String   @unique @db.VarChar(64)
+  accountId String   @map("account_id") @db.Uuid
+  reason    String   @db.VarChar(100)
+  revokedAt DateTime @default(now()) @map("revoked_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([jti])
+  @@index([accountId])
+  @@index([expiresAt])
+  @@map("revoked_tokens")
+}
+
+// ============================================================
+// MFA BACKUP CODES (Separate table for security)
+// ============================================================
+
+model MfaBackupCode {
+  id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  accountId String    @map("account_id") @db.Uuid
+  codeHash  String    @map("code_hash") @db.VarChar(128)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, codeHash])
+  @@index([accountId])
+  @@map("mfa_backup_codes")
+}
+
+// ============================================================
+// PASSWORD HISTORY (Prevent reuse - OWASP 2024)
+// ============================================================
+
+model PasswordHistory {
+  id           String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  accountId    String   @map("account_id") @db.Uuid
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  changedAt    DateTime @default(now()) @map("changed_at") @db.Timestamptz(6)
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, passwordHash])
+  @@index([accountId])
+  @@map("password_history")
+}
+
+// ============================================================
+// IDEMPOTENCY RECORDS (IETF draft-ietf-httpapi-idempotency-key-header)
+// ============================================================
+
+model IdempotencyRecord {
+  id                 String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  idempotencyKey     String   @map("idempotency_key") @db.VarChar(64)
+  requestFingerprint String   @map("request_fingerprint") @db.VarChar(128)
+  responseStatus     Int      @map("response_status")
+  responseBody       Json     @map("response_body")
+  responseHeaders    Json     @map("response_headers")
+  expiresAt          DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([idempotencyKey, requestFingerprint])
+  @@index([idempotencyKey])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
+// ============================================================
+// SAGA STATE (Distributed transaction orchestration)
+// ============================================================
+
+model SagaState {
+  id             String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  sagaName       String     @map("saga_name") @db.VarChar(100)
+  correlationId  String     @unique @map("correlation_id") @db.VarChar(64)
+  status         SagaStatus @default(PENDING)
+  currentStep    Int        @default(0) @map("current_step")
+  totalSteps     Int        @map("total_steps")
+  context        Json
+  completedSteps String[]   @default([]) @map("completed_steps")
+  error          String?
+  startedAt      DateTime   @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt    DateTime?  @map("completed_at") @db.Timestamptz(6)
+  timeoutAt      DateTime   @map("timeout_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([sagaName])
+  @@index([status])
+  @@index([correlationId])
+  @@index([timeoutAt])
+  @@map("saga_states")
+}
+
+enum SagaStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  COMPENSATING
+  COMPENSATED
+  TIMED_OUT
+
+  @@map("saga_status")
+}
+
+// ============================================================
+// DEAD LETTER EVENTS (Failed event handling)
+// ============================================================
+
+model DeadLetterEvent {
+  id              String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  originalEventId String    @map("original_event_id") @db.Uuid
+  aggregateType   String    @map("aggregate_type") @db.VarChar(100)
+  aggregateId     String    @map("aggregate_id") @db.Uuid
+  eventType       String    @map("event_type") @db.VarChar(100)
+  payload         Json
+  failureReason   String    @map("failure_reason")
+  retryCount      Int       @default(0) @map("retry_count")
+  originalTopic   String    @map("original_topic") @db.VarChar(255)
+  status          DlqStatus @default(PENDING)
+  processedAt     DateTime? @map("processed_at") @db.Timestamptz(6)
+  processedBy     String?   @map("processed_by") @db.VarChar(255)
+  resolution      String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@map("dead_letter_events")
 }
 
 // ============================================================

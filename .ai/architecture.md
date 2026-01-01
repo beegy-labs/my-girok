@@ -7,24 +7,41 @@
 **Purpose**: Multi-app user management platform for creating N apps quickly.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Identity Service (Combined)                   │
-│                                                                  │
-│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
-│   │  Identity   │   │    Auth     │   │    Legal    │           │
-│   │   Module    │   │   Module    │   │   Module    │           │
-│   │ (Accounts)  │   │  (Authz)    │   │ (Consent)   │           │
-│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
-└──────────┼─────────────────┼─────────────────┼───────────────────┘
-           │                 │                 │
-           ▼                 ▼                 ▼
-    ┌────────────┐    ┌────────────┐    ┌────────────┐
-    │identity_db │    │  auth_db   │    │  legal_db  │
-    │   ~15 tbl  │    │   ~20 tbl  │    │   ~12 tbl  │
-    └────────────┘    └────────────┘    └────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                   Identity Platform (Separated Services)                 │
+│                                                                          │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       │
+│  │ identity-service │  │  auth-service    │  │  legal-service   │       │
+│  │    (Accounts)    │  │   (Authz/RBAC)   │  │   (Consent/DSR)  │       │
+│  │                  │  │                  │  │                  │       │
+│  │ • Accounts       │  │ • Roles          │  │ • Consents       │       │
+│  │ • Sessions       │  │ • Permissions    │  │ • Documents      │       │
+│  │ • Devices        │  │ • Operators      │  │ • Law Registry   │       │
+│  │ • Profiles       │  │ • Sanctions      │  │ • DSR Requests   │       │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘       │
+│           │                     │                     │                  │
+└───────────┼─────────────────────┼─────────────────────┼──────────────────┘
+            │                     │                     │
+            ▼                     ▼                     ▼
+     ┌────────────┐        ┌────────────┐        ┌────────────┐
+     │identity_db │        │  auth_db   │        │  legal_db  │
+     │   ~8 tbl   │        │   ~12 tbl  │        │   ~10 tbl  │
+     └────────────┘        └────────────┘        └────────────┘
 ```
 
-**Key Principle**: Services combined (operational simplicity) + DBs pre-separated (future extraction).
+**Key Principle**: Domain-driven service separation with dedicated databases per domain.
+
+### 3-DB SSOT: Shared Patterns
+
+Each database contains **identical** infrastructure for service independence:
+
+| Function                     | identity_db | auth_db | legal_db | Reason                    |
+| ---------------------------- | ----------- | ------- | -------- | ------------------------- |
+| `uuid_generate_v7()`         | ✅          | ✅      | ✅       | RFC 9562 time-sortable ID |
+| `update_updated_at_column()` | ✅          | ✅      | ✅       | Self-contained triggers   |
+| `outbox_events` table        | ✅          | ✅      | ✅       | Independent event streams |
+
+**Why replicate?** Each service is independently deployable. No cross-DB dependencies ensures clean service boundaries.
 
 ### 3-DB SSOT: Intentional Duplication
 
@@ -68,29 +85,38 @@ Each database contains **intentionally duplicated** functions for Zero Migration
 ## Architecture Layers
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                   Cilium Gateway API                         │
-│         (TLS, L7 routing, rate limiting, autoscaling)        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-┌──────────────┐     ┌────────────────┐     ┌──────────────┐
-│ GraphQL BFF  │     │Identity Service│     │ WS Gateway   │
-│  (Session)   │     │  (REST+gRPC)   │     │ (Socket.io)  │
-└──────┬───────┘     └────────────────┘     └──────────────┘
-       │ gRPC
-       ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Domain Services (gRPC + Database)               │
-│  Personal(PG)  Feed(Mongo)  Chat(Mongo)  Matching(Valkey)   │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-               ┌─────────────────────────┐
-               │       Redpanda          │
-               │  (Kafka API, no JVM)    │
-               └─────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│                          Cilium Gateway API                                │
+│            (TLS, L7 routing, rate limiting, autoscaling)                   │
+└───────────────────────────────────────────────────────────────────────────┘
+                                     │
+     ┌───────────────────────────────┼───────────────────────────────┐
+     ▼                               ▼                               ▼
+┌──────────────┐            ┌──────────────┐                ┌──────────────┐
+│ GraphQL BFF  │            │ REST Gateway │                │ WS Gateway   │
+│  (Session)   │            │ (API routes) │                │ (Socket.io)  │
+└──────┬───────┘            └──────┬───────┘                └──────────────┘
+       │ gRPC                      │
+       ▼                           ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                   Identity Platform (Separated Services)                   │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐            │
+│  │identity-service │  │  auth-service   │  │  legal-service  │            │
+│  │   (identity_db) │  │   (auth_db)     │  │   (legal_db)    │            │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘            │
+└───────────────────────────────────────────────────────────────────────────┘
+                                     │ gRPC
+                                     ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                    Domain Services (gRPC + Database)                       │
+│   Personal(PG)   Feed(Mongo)   Chat(Mongo)   Matching(Valkey)             │
+└───────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+                      ┌─────────────────────────┐
+                      │        Redpanda         │
+                      │   (Kafka API, no JVM)   │
+                      └─────────────────────────┘
 ```
 
 ## Full BFF Pattern (IETF)
@@ -109,28 +135,36 @@ ctx.res.cookie('session_id', sessionId, {
 
 ```
 my-girok/
-├── apps/web-main/           # React 19.2 + Vite ✅
+├── apps/
+│   ├── web-main/            # React 19.2 + Vite ✅
+│   └── web-admin/           # Admin dashboard ✅
 ├── services/
-│   ├── auth-service/        # REST ✅ | gRPC 🔲
+│   ├── identity-service/    # REST ✅ (identity_db) Port 3000
+│   ├── auth-service/        # REST ✅ (auth_db) Port 3001
+│   ├── legal-service/       # REST ✅ (legal_db) Port 3005
 │   ├── personal-service/    # REST ✅ | gRPC 🔲
+│   ├── audit-service/       # REST ✅ (ClickHouse)
+│   ├── analytics-service/   # REST ✅ (ClickHouse)
 │   ├── graphql-bff/         # 🔲 Federation
 │   └── ws-gateway/          # 🔲 Socket.io
 └── packages/
-    ├── types/               # ✅ Shared types
-    └── nest-common/         # ✅ NestJS utilities
+    ├── types/               # ✅ Shared types (identity/, auth/, legal/)
+    └── nest-common/         # ✅ NestJS utilities (UUIDv7, cache, etc.)
 ```
 
 ## Polyglot Persistence
 
-| Service           | Database   | Reason                     |
-| ----------------- | ---------- | -------------------------- |
-| auth-service      | PostgreSQL | ACID, relations            |
-| personal-service  | PostgreSQL | Complex queries            |
-| feed-service      | MongoDB    | Flexible schema            |
-| chat-service      | MongoDB    | High write throughput      |
-| matching-service  | Valkey     | In-memory, real-time       |
-| audit-service     | ClickHouse | Time-series, 5yr retention |
-| analytics-service | ClickHouse | High-volume analytics      |
+| Service           | Database   | Schema/DB    | Reason                      |
+| ----------------- | ---------- | ------------ | --------------------------- |
+| identity-service  | PostgreSQL | identity_db  | Accounts, sessions, devices |
+| auth-service      | PostgreSQL | auth_db      | RBAC, operators, sanctions  |
+| legal-service     | PostgreSQL | legal_db     | Consents, documents, DSR    |
+| personal-service  | PostgreSQL | personal_db  | Resume, profile data        |
+| feed-service      | MongoDB    | -            | Flexible schema             |
+| chat-service      | MongoDB    | -            | High write throughput       |
+| matching-service  | Valkey     | -            | In-memory, real-time        |
+| audit-service     | ClickHouse | audit_db     | Compliance, 5yr retention   |
+| analytics-service | ClickHouse | analytics_db | Business analytics          |
 
 ## Observability Platform
 
@@ -186,65 +220,64 @@ import { AuthService } from '../auth-service'; // NEVER
 
 ## URL Mapping
 
-| URL                   | Service          | Status |
-| --------------------- | ---------------- | ------ |
-| my.girok.dev          | web-main         | ✅     |
-| api.girok.dev/graphql | graphql-bff      | 🔲     |
-| accounts.girok.dev    | identity-service | 🔲     |
-| auth.girok.dev        | auth-service     | ✅     |
-| ws.girok.dev          | ws-gateway       | 🔲     |
+| URL                       | Service          | Status |
+| ------------------------- | ---------------- | ------ |
+| my.girok.dev              | web-main         | ✅     |
+| admin.girok.dev           | web-admin        | ✅     |
+| my-api.girok.dev/identity | identity-service | ✅     |
+| my-api.girok.dev/auth     | auth-service     | ✅     |
+| my-api.girok.dev/legal    | legal-service    | ✅     |
+| api.girok.dev/graphql     | graphql-bff      | 🔲     |
+| ws.girok.dev              | ws-gateway       | 🔲     |
 
 ---
 
 ## Service Evolution
 
-### Current State (auth-service)
+### Current State (Phase 3 - Separated Services)
 
 ```
-auth-service (1 service, 1 DB)
-├── auth/           # Login, JWT
-├── users/          # User management
-├── oauth-config/   # OAuth providers
-├── admin/          # Admin management
-├── operator/       # Service operators
-├── services/       # Multi-service logic
-└── legal/          # Consent management
+Identity Platform (3 services, 3 DBs)
+├── identity-service → identity_db
+│   ├── accounts        # User accounts (UUIDv7)
+│   ├── sessions        # Login sessions
+│   ├── devices         # Device management
+│   └── profiles        # User profiles
+│
+├── auth-service → auth_db
+│   ├── roles           # RBAC roles
+│   ├── permissions     # Fine-grained permissions
+│   ├── operators       # Service operators
+│   └── sanctions       # User/operator sanctions
+│
+└── legal-service → legal_db
+    ├── consents        # User consent records
+    ├── documents       # Legal documents (ToS, Privacy)
+    ├── law_registry    # Country-specific laws
+    └── dsr_requests    # Data Subject Requests (GDPR/PIPA)
 ```
 
-### Future State (identity-service)
+### Evolution History
 
 ```
-identity-service (1 service, 3 DBs)
-├── Identity Module → identity_db
-│   ├── accounts, credentials, sessions
-│   ├── devices, app_registry
-│   └── OAuth, Passkeys
-├── Auth Module → auth_db
-│   ├── roles, permissions, admins
-│   ├── operators, sanctions
-│   └── api_keys
-└── Legal Module → legal_db
-    ├── laws, law_requirements
-    ├── consent_documents
-    └── account_consents, DSR
-```
-
-### Migration Path
-
-```
-Phase 1 (Current)
+Phase 1 (Legacy)
 └── auth-service: All-in-one (girok_auth_db)
 
 Phase 2 (Transition)
 └── identity-service: Combined service, 3 DBs
-    ├── identity_db
-    ├── auth_db
-    └── legal_db
 
-Phase 3 (If needed)
-├── identity-service → identity_db
-├── auth-service → auth_db
-└── legal-service → legal_db
+Phase 3 (Current) ✅
+├── identity-service → identity_db (Port 3000)
+├── auth-service → auth_db (Port 3001)
+└── legal-service → legal_db (Port 3005)
+```
+
+### Inter-Service Communication
+
+```
+identity-service ←→ auth-service     # gRPC (permission checks)
+identity-service ←→ legal-service    # gRPC (consent validation)
+auth-service ←→ legal-service        # Events (Redpanda)
 ```
 
 ### Token Types
@@ -270,5 +303,11 @@ ServiceAccessGuard / CountryConsentGuard (optional)
 
 ---
 
-**Identity Platform details**: `.ai/services/identity-service.md`
+**Service Documentation:**
+
+- Identity Service: `.ai/services/identity-service.md`
+- Auth Service: `.ai/services/auth-service.md`
+- Legal Service: `.ai/services/legal-service.md`
+
 **Full roadmap**: `docs/ARCHITECTURE_ROADMAP.md`
+**Platform policy**: `docs/policies/IDENTITY_PLATFORM.md`

@@ -1,13 +1,59 @@
 # Auth Service
 
-> Authentication & authorization microservice
+> Authorization, RBAC, operators, and sanctions management
+
+## Purpose
+
+Authorization platform for the Identity Platform:
+
+- **RBAC**: Roles, permissions, hierarchical access control
+- **Operators**: Service operator management and invitations
+- **Sanctions**: User/operator sanctions, appeals, notifications
 
 ## Tech Stack
 
 - **Framework**: NestJS 11 + TypeScript 5.9
-- **Database**: PostgreSQL 16 + Prisma 6
-- **Auth**: Passport.js + JWT
+- **Database**: PostgreSQL 16 (auth_db) + Prisma 6
 - **Port**: 3001
+
+---
+
+## Architecture
+
+```
+auth-service (Port 3001)
+├── roles/          # RBAC role definitions
+├── permissions/    # Fine-grained permissions
+├── operators/      # Service operators
+└── sanctions/      # User/operator sanctions
+        │
+        ▼
+    auth_db (PostgreSQL)
+```
+
+**Inter-Service Communication**:
+
+- `identity-service`: Account validation (gRPC)
+- `legal-service`: Consent checks (gRPC)
+- Events: `auth.*` topics (Redpanda)
+
+---
+
+## Database Schema (auth_db)
+
+| Table                    | Purpose                | Key Fields                            |
+| ------------------------ | ---------------------- | ------------------------------------- |
+| `roles`                  | Role definitions       | id, name, level, scope, parentId      |
+| `permissions`            | Permission definitions | id, resource, action, category, scope |
+| `role_permissions`       | Role-Permission join   | roleId, permissionId, conditions      |
+| `operators`              | Service operators      | id, accountId, serviceId, roleId      |
+| `operator_invitations`   | Invitation management  | id, email, token, expiresAt, status   |
+| `operator_permissions`   | Direct permissions     | operatorId, permissionId, grantedBy   |
+| `sanctions`              | Account sanctions      | id, subjectId, type, status, severity |
+| `sanction_notifications` | Sanction notices       | id, sanctionId, channel, sentAt       |
+| `outbox_events`          | Event outbox           | id, eventType, payload, status        |
+
+---
 
 ## API Endpoints
 
