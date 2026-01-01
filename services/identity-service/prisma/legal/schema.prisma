@@ -1,0 +1,355 @@
+// Identity Service - Legal DB Schema
+// Manages: consents, consent_logs, laws, dsr_requests
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../../node_modules/.prisma/identity-legal-client"
+  previewFeatures = ["relationJoins", "typedSql"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("IDENTITY_LEGAL_DATABASE_URL")
+}
+
+// ============================================================
+// CONSENTS
+// ============================================================
+
+model Consent {
+  id              String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  accountId       String       @map("account_id") @db.Uuid
+  consentType     ConsentType  @map("consent_type")
+  scope           ConsentScope @default(SERVICE)
+  serviceId       String?      @map("service_id") @db.Uuid
+  countryCode     String       @map("country_code") @db.VarChar(2)
+  documentId      String?      @map("document_id") @db.Uuid
+  documentVersion String?      @map("document_version") @db.VarChar(50)
+  agreed          Boolean      @default(true)
+  agreedAt        DateTime     @map("agreed_at") @db.Timestamptz(6)
+  expiresAt       DateTime?    @map("expires_at") @db.Timestamptz(6) // For time-limited consents
+  withdrawnAt     DateTime?    @map("withdrawn_at") @db.Timestamptz(6)
+  ipAddress       String?      @map("ip_address") @db.VarChar(45)
+  userAgent       String?      @map("user_agent")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  document LegalDocument? @relation(fields: [documentId], references: [id])
+  logs     ConsentLog[]
+
+  @@index([accountId])
+  @@index([serviceId])
+  @@index([countryCode])
+  @@index([consentType])
+  @@index([scope])
+  @@index([agreedAt])
+  @@map("consents")
+}
+
+enum ConsentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_EMAIL
+  MARKETING_PUSH
+  MARKETING_PUSH_NIGHT
+  MARKETING_SMS
+  PERSONALIZED_ADS
+  THIRD_PARTY_SHARING
+  CROSS_BORDER_TRANSFER
+  CROSS_SERVICE_SHARING
+
+  @@map("consent_type")
+}
+
+enum ConsentScope {
+  SERVICE
+  PLATFORM
+
+  @@map("consent_scope")
+}
+
+// ============================================================
+// CONSENT LOGS (Audit Trail)
+// ============================================================
+
+model ConsentLog {
+  id            String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  consentId     String           @map("consent_id") @db.Uuid
+  accountId     String           @map("account_id") @db.Uuid
+  action        ConsentLogAction
+  previousState Json?            @map("previous_state")
+  newState      Json?            @map("new_state")
+  details       Json             @default("{}") // Additional action details
+  ipAddress     String?          @map("ip_address") @db.VarChar(45)
+  userAgent     String?          @map("user_agent")
+  metadata      Json?
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  consent Consent @relation(fields: [consentId], references: [id], onDelete: Cascade)
+
+  @@index([consentId])
+  @@index([accountId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("consent_logs")
+}
+
+enum ConsentLogAction {
+  GRANTED
+  WITHDRAWN
+  UPDATED
+  EXPIRED
+  MIGRATED
+
+  @@map("consent_log_action")
+}
+
+// ============================================================
+// LEGAL DOCUMENTS
+// ============================================================
+
+model LegalDocument {
+  id            String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  type          LegalDocumentType
+  version       String            @db.VarChar(50)
+  locale        String            @default("en") @db.VarChar(10)
+  title         String            @db.VarChar(255)
+  content       String
+  summary       String?
+  effectiveDate DateTime          @map("effective_date") @db.Timestamptz(6)
+  expiresAt     DateTime?         @map("expires_at") @db.Timestamptz(6)
+  isActive      Boolean           @default(true) @map("is_active")
+
+  // Scope
+  serviceId   String? @map("service_id") @db.Uuid
+  countryCode String? @map("country_code") @db.VarChar(2)
+
+  // Audit
+  createdBy String? @map("created_by") @db.Uuid
+  updatedBy String? @map("updated_by") @db.Uuid
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  consents Consent[]
+
+  @@unique([type, version, locale, serviceId, countryCode])
+  @@index([type, locale, isActive])
+  @@index([serviceId])
+  @@index([countryCode])
+  @@index([effectiveDate])
+  @@map("legal_documents")
+}
+
+enum LegalDocumentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_POLICY
+  PERSONALIZED_ADS
+  COOKIE_POLICY
+  DATA_PROCESSING_AGREEMENT
+
+  @@map("legal_document_type")
+}
+
+// ============================================================
+// LAW REGISTRY
+// ============================================================
+
+model LawRegistry {
+  id            String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  code          String   @unique @db.VarChar(20)
+  jurisdiction  String   @db.VarChar(20) // e.g., "EU", "US", "KR"
+  countryCode   String?  @map("country_code") @db.VarChar(2)
+  effectiveFrom DateTime @map("effective_from") @db.Timestamptz(6)
+  name          String   @db.VarChar(100)
+  description   String?
+  requirements  Json
+  isActive      Boolean  @default(true) @map("is_active")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([countryCode])
+  @@index([code])
+  @@index([isActive])
+  @@map("law_registry")
+}
+
+// ============================================================
+// DSR REQUESTS (Data Subject Requests - GDPR, CCPA, etc.)
+// ============================================================
+
+model DsrRequest {
+  id          String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  accountId   String        @map("account_id") @db.Uuid
+  requestType DsrRequestType @map("request_type")
+  status      DsrStatus     @default(PENDING)
+  priority    DsrPriority   @default(NORMAL)
+
+  // Request Details
+  description String?
+  scope       Json?     // Which data/services are affected
+  legalBasis  String?   @map("legal_basis") @db.VarChar(50)
+
+  // Verification
+  verifiedAt       DateTime? @map("verified_at") @db.Timestamptz(6)
+  verificationMethod String? @map("verification_method") @db.VarChar(50)
+
+  // Processing
+  assignedTo   String?   @map("assigned_to") @db.Uuid
+  processedBy  String?   @map("processed_by") @db.Uuid
+  processedAt  DateTime? @map("processed_at") @db.Timestamptz(6)
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz(6)
+
+  // Response
+  responseType DsrResponseType? @map("response_type")
+  responseData Json?            @map("response_data")
+  responseNote String?          @map("response_note")
+
+  // Deadlines (based on regulation)
+  deadline     DateTime @db.Timestamptz(6)
+  extendedTo   DateTime? @map("extended_to") @db.Timestamptz(6)
+  extensionReason String? @map("extension_reason")
+
+  // Metadata
+  ipAddress String? @map("ip_address") @db.VarChar(45)
+  userAgent String? @map("user_agent")
+  metadata  Json?
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  logs DsrRequestLog[]
+
+  @@index([accountId])
+  @@index([requestType])
+  @@index([status])
+  @@index([priority])
+  @@index([deadline])
+  @@index([createdAt])
+  @@map("dsr_requests")
+}
+
+enum DsrRequestType {
+  ACCESS           // Right to access
+  RECTIFICATION    // Right to rectification
+  ERASURE          // Right to erasure (Right to be forgotten)
+  RESTRICTION      // Right to restriction of processing
+  PORTABILITY      // Right to data portability
+  OBJECTION        // Right to object
+  AUTOMATED_DECISION // Right not to be subject to automated decision-making
+
+  @@map("dsr_request_type")
+}
+
+enum DsrStatus {
+  PENDING
+  VERIFIED
+  IN_PROGRESS
+  AWAITING_INFO
+  COMPLETED
+  REJECTED
+  CANCELLED
+
+  @@map("dsr_status")
+}
+
+enum DsrPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+
+  @@map("dsr_priority")
+}
+
+enum DsrResponseType {
+  FULFILLED
+  PARTIALLY_FULFILLED
+  DENIED
+  EXTENDED
+
+  @@map("dsr_response_type")
+}
+
+// ============================================================
+// DSR REQUEST LOGS (Audit Trail)
+// ============================================================
+
+model DsrRequestLog {
+  id           String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  dsrRequestId String @map("dsr_request_id") @db.Uuid
+  action       String @db.VarChar(50)
+  performedBy  String @map("performed_by") @db.Uuid
+  details      Json?
+  ipAddress    String? @map("ip_address") @db.VarChar(45)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  dsrRequest DsrRequest @relation(fields: [dsrRequestId], references: [id], onDelete: Cascade)
+
+  @@index([dsrRequestId])
+  @@index([performedBy])
+  @@index([createdAt])
+  @@map("dsr_request_logs")
+}
+
+// ============================================================
+// OUTBOX EVENTS (Transactional Outbox Pattern)
+// ============================================================
+
+model OutboxEvent {
+  id            String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  aggregateType String @map("aggregate_type") @db.VarChar(100)
+  aggregateId   String @map("aggregate_id") @db.Uuid
+  eventType     String @map("event_type") @db.VarChar(100)
+  payload       Json
+
+  // Processing status
+  status      OutboxStatus @default(PENDING)
+  retryCount  Int          @default(0) @map("retry_count")
+  maxRetries  Int          @default(5) @map("max_retries")
+  lastError   String?      @map("last_error")
+  processedAt DateTime?    @map("processed_at") @db.Timestamptz(6)
+  retryAfter  DateTime?    @map("retry_after") @db.Timestamptz(6)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("outbox_status")
+}
+
+// ============================================================
+// GOOSE DB VERSION (for migration tracking)
+// ============================================================
+
+model goose_db_version {
+  id         Int      @id @default(autoincrement())
+  version_id BigInt
+  is_applied Boolean
+  tstamp     DateTime @default(now()) @db.Timestamp(6)
+}

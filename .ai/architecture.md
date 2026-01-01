@@ -43,6 +43,18 @@ Each database contains **identical** infrastructure for service independence:
 
 **Why replicate?** Each service is independently deployable. No cross-DB dependencies ensures clean service boundaries.
 
+### 3-DB SSOT: Intentional Duplication
+
+Each database contains **intentionally duplicated** functions for Zero Migration:
+
+| Function                     | identity_db | auth_db | legal_db | Reason                    |
+| ---------------------------- | ----------- | ------- | -------- | ------------------------- |
+| `uuid_generate_v7()`         | ✅          | ✅      | ✅       | No cross-DB dependency    |
+| `update_updated_at_column()` | ✅          | ✅      | ✅       | Self-contained triggers   |
+| `outbox_events` table        | ✅          | ✅      | ✅       | Independent event streams |
+
+**Why duplicate?** When services are extracted (Phase 2), each DB must be self-sufficient. Cross-DB functions would create migration dependencies.
+
 ### Supported Apps
 
 | App       | Domain        | Status  |
