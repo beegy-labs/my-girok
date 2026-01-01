@@ -84,8 +84,12 @@ export interface SagaResult<TContext> {
  * Saga definition
  */
 export interface SagaDefinition<TContext> {
+  /** Saga name (for logging and monitoring) */
   name: string;
+  /** Steps to execute in order */
   steps: SagaStepDefinition<TContext>[];
+  /** Total saga timeout in milliseconds (default: 300000 = 5 minutes) */
+  timeoutMs?: number;
 }
 
 /**

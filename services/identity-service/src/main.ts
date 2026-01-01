@@ -1,9 +1,61 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
+import {
+  ValidationPipe,
+  VersioningType,
+  Logger,
+  BadRequestException,
+  INestApplication,
+} from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+
+/**
+ * Graceful shutdown timeout in milliseconds
+ * Allows time for in-flight requests to complete
+ */
+const SHUTDOWN_TIMEOUT_MS = 30_000;
+
+/**
+ * Track shutdown state to prevent double-shutdown
+ */
+let isShuttingDown = false;
+
+/**
+ * Handle graceful shutdown with proper cleanup
+ */
+async function handleShutdown(
+  signal: string,
+  app: INestApplication,
+  logger: Logger,
+): Promise<void> {
+  if (isShuttingDown) {
+    logger.warn(`Shutdown already in progress, ignoring ${signal}`);
+    return;
+  }
+
+  isShuttingDown = true;
+  logger.log(`Received ${signal}, starting graceful shutdown...`);
+
+  // Set a hard timeout for shutdown
+  const shutdownTimer = setTimeout(() => {
+    logger.error('Graceful shutdown timed out, forcing exit');
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+
+  try {
+    // Close the NestJS application (triggers onApplicationShutdown hooks)
+    await app.close();
+    logger.log('Application closed successfully');
+    clearTimeout(shutdownTimer);
+    process.exit(0);
+  } catch (error) {
+    logger.error('Error during graceful shutdown:', error);
+    clearTimeout(shutdownTimer);
+    process.exit(1);
+  }
+}
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -30,7 +82,7 @@ async function bootstrap() {
     prefix: 'v',
   });
 
-  // Global validation pipe
+  // Global validation pipe with proper exception factory
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -39,17 +91,22 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
-      // Return detailed validation errors
+      // Return detailed validation errors as proper BadRequestException
       exceptionFactory: (errors) => {
         const messages = errors.map((error) => ({
           field: error.property,
           constraints: error.constraints,
+          // Include nested errors if present
+          children: error.children?.map((child) => ({
+            field: child.property,
+            constraints: child.constraints,
+          })),
         }));
-        return {
+        return new BadRequestException({
           statusCode: 400,
           error: 'Validation Error',
           message: messages,
-        };
+        });
       },
     }),
   );
@@ -153,18 +210,36 @@ except for public endpoints marked with @Public decorator.
     logger.log('Swagger documentation available at /docs');
   }
 
-  // Graceful shutdown
+  // Enable NestJS shutdown hooks for proper cleanup
   app.enableShutdownHooks();
 
   const port = configService.get<number>('port') ?? 3005;
   await app.listen(port);
 
+  // Register signal handlers for graceful shutdown
+  const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2'];
+  signals.forEach((signal) => {
+    process.on(signal, () => handleShutdown(signal, app, logger));
+  });
+
+  // Handle uncaught exceptions gracefully
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    handleShutdown('uncaughtException', app, logger);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+
   logger.log(`Identity Service running on port ${port}`);
   logger.log(`Environment: ${environment}`);
   logger.log(`API Version: v1`);
+  logger.log(`Graceful shutdown timeout: ${SHUTDOWN_TIMEOUT_MS}ms`);
 }
 
 bootstrap().catch((error) => {
-  console.error('Failed to start Identity Service:', error);
+  const logger = new Logger('Bootstrap');
+  logger.error('Failed to start Identity Service:', error);
   process.exit(1);
 });

@@ -49,44 +49,30 @@ export class SagaOrchestratorService {
 
   /**
    * Execute a saga with the given definition and initial context
+   * Includes configurable timeout support for the entire saga
    */
   async execute<TContext>(
     definition: SagaDefinition<TContext>,
     initialContext: TContext,
+    options?: { timeoutMs?: number },
   ): Promise<SagaResult<TContext>> {
     const sagaId = ID.generate();
     const saga = this.initializeSaga(sagaId, definition, initialContext);
+    const timeoutMs = options?.timeoutMs ?? definition.timeoutMs ?? 300_000; // Default 5 minutes
 
     await this.stateStore.save(saga);
-    this.logger.log(`Saga started: ${definition.name} [${sagaId}]`);
+    this.logger.log(`Saga started: ${definition.name} [${sagaId}] (timeout: ${timeoutMs}ms)`);
+
+    // Create timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Saga timeout: ${definition.name} exceeded ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
 
     try {
-      // Execute steps sequentially
-      for (let i = 0; i < definition.steps.length; i++) {
-        saga.currentStep = i;
-        const step = definition.steps[i];
-        const stepState = saga.steps[i];
-
-        try {
-          saga.context = await this.executeStep(step, saga.context, stepState);
-          stepState.status = SagaStepStatus.COMPLETED;
-          stepState.completedAt = new Date();
-          await this.stateStore.save(saga); // Persist after each step
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          stepState.status = SagaStepStatus.FAILED;
-          stepState.error = errorMessage;
-          saga.error = `Step "${step.name}" failed: ${errorMessage}`;
-          saga.status = SagaStatus.FAILED;
-          await this.stateStore.save(saga);
-
-          this.logger.error(`Saga step failed: ${step.name} [${sagaId}]`, error);
-
-          // Start compensation
-          await this.compensate(saga, definition, i - 1);
-          break;
-        }
-      }
+      // Race saga execution against timeout
+      await Promise.race([this.executeSagaSteps(saga, definition), timeoutPromise]);
 
       // All steps completed successfully
       if (saga.status !== SagaStatus.FAILED && saga.status !== SagaStatus.COMPENSATED) {
@@ -95,12 +81,63 @@ export class SagaOrchestratorService {
         await this.stateStore.save(saga);
         this.logger.log(`Saga completed: ${definition.name} [${sagaId}]`);
       }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isTimeout = errorMessage.includes('Saga timeout');
+
+      if (isTimeout) {
+        this.logger.error(`Saga timeout: ${definition.name} [${sagaId}]`);
+        saga.error = errorMessage;
+        saga.status = SagaStatus.FAILED;
+        await this.stateStore.save(saga);
+
+        // Compensate any completed steps on timeout
+        const completedSteps = saga.steps.filter((s) => s.status === SagaStepStatus.COMPLETED);
+        if (completedSteps.length > 0) {
+          await this.compensate(saga, definition, saga.currentStep - 1);
+        }
+      }
+      // Other errors are already handled in executeSagaSteps
     } finally {
       // Clean up completed/compensated sagas from store
       await this.stateStore.delete(sagaId);
     }
 
     return this.buildResult(saga);
+  }
+
+  /**
+   * Execute saga steps sequentially
+   */
+  private async executeSagaSteps<TContext>(
+    saga: SagaState<TContext>,
+    definition: SagaDefinition<TContext>,
+  ): Promise<void> {
+    for (let i = 0; i < definition.steps.length; i++) {
+      saga.currentStep = i;
+      const step = definition.steps[i];
+      const stepState = saga.steps[i];
+
+      try {
+        saga.context = await this.executeStep(step, saga.context, stepState);
+        stepState.status = SagaStepStatus.COMPLETED;
+        stepState.completedAt = new Date();
+        await this.stateStore.save(saga); // Persist after each step
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        stepState.status = SagaStepStatus.FAILED;
+        stepState.error = errorMessage;
+        saga.error = `Step "${step.name}" failed: ${errorMessage}`;
+        saga.status = SagaStatus.FAILED;
+        await this.stateStore.save(saga);
+
+        this.logger.error(`Saga step failed: ${step.name} [${saga.id}]`, error);
+
+        // Start compensation
+        await this.compensate(saga, definition, i - 1);
+        break;
+      }
+    }
   }
 
   /**

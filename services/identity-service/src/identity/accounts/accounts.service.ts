@@ -11,12 +11,13 @@ import { Prisma } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
 import { CacheService } from '../../common/cache';
+import { OutboxService } from '../../common/outbox';
 import { PaginatedResponse } from '../../common/pagination';
 import { maskUuid, maskEmail } from '../../common/utils/masking.util';
 import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-account.dto';
 import { UpdateAccountDto, AccountStatus, ChangePasswordDto } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import * as OTPAuth from 'otpauth';
 
@@ -44,26 +45,44 @@ export interface MfaSetupResponse {
   backupCodes?: string[];
 }
 
+/**
+ * Argon2id configuration (OWASP 2024 recommended)
+ * https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+ */
+interface Argon2Config {
+  type: typeof argon2.argon2id;
+  memoryCost: number; // in KiB
+  timeCost: number;
+  parallelism: number;
+}
+
 @Injectable()
 export class AccountsService {
   private readonly logger = new Logger(AccountsService.name);
 
-  // Config values with defaults
-  private readonly bcryptRounds: number;
+  // Argon2id configuration (OWASP 2024 recommended)
+  private readonly argon2Config: Argon2Config;
   private readonly externalIdPrefix: string;
   private readonly externalIdLength: number;
   private readonly lockThreshold: number;
   private readonly lockDurationMinutes: number;
   private readonly mfaBackupCodesCount: number;
+  private readonly passwordHistoryCount: number;
 
   constructor(
     private readonly prisma: IdentityPrismaService,
     private readonly cryptoService: CryptoService,
     private readonly configService: ConfigService,
     private readonly cacheService: CacheService,
+    private readonly outboxService: OutboxService,
   ) {
-    // Load config values
-    this.bcryptRounds = this.configService.get<number>('security.bcryptRounds', 12);
+    // Argon2id config (OWASP 2024: memoryCost=47104 KiB, timeCost=1, parallelism=1)
+    this.argon2Config = {
+      type: argon2.argon2id,
+      memoryCost: this.configService.get<number>('security.argon2MemoryCost', 47104),
+      timeCost: this.configService.get<number>('security.argon2TimeCost', 1),
+      parallelism: this.configService.get<number>('security.argon2Parallelism', 1),
+    };
     this.externalIdPrefix = this.configService.get<string>('account.externalIdPrefix', 'ACC_');
     this.externalIdLength = this.configService.get<number>('account.externalIdLength', 10);
     this.lockThreshold = this.configService.get<number>('security.accountLockThreshold', 5);
@@ -72,6 +91,37 @@ export class AccountsService {
       15,
     );
     this.mfaBackupCodesCount = this.configService.get<number>('security.mfaBackupCodesCount', 10);
+    this.passwordHistoryCount = this.configService.get<number>('security.passwordHistoryCount', 5);
+  }
+
+  /**
+   * Hash password using Argon2id (OWASP 2024 recommended)
+   */
+  private async hashPassword(password: string): Promise<string> {
+    return argon2.hash(password, this.argon2Config);
+  }
+
+  /**
+   * Verify password against Argon2id hash
+   */
+  private async verifyPassword(password: string, hash: string): Promise<boolean> {
+    try {
+      return await argon2.verify(hash, password);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if password exists in password history
+   */
+  private async isPasswordInHistory(password: string, history: string[]): Promise<boolean> {
+    for (const oldHash of history) {
+      if (await this.verifyPassword(password, oldHash)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -115,10 +165,10 @@ export class AccountsService {
       throw new BadRequestException('Provider ID is required for OAuth accounts');
     }
 
-    // Hash password if provided
+    // Hash password using Argon2id if provided
     let hashedPassword: string | null = null;
     if (dto.password) {
-      hashedPassword = await bcrypt.hash(dto.password, this.bcryptRounds);
+      hashedPassword = await this.hashPassword(dto.password);
     }
 
     // Generate unique external ID with retry on conflict
@@ -361,11 +411,16 @@ export class AccountsService {
   }
 
   /**
-   * Change account password
+   * Change account password with password history validation
    */
   async changePassword(id: string, dto: ChangePasswordDto): Promise<void> {
     const account = await this.prisma.account.findUnique({
       where: { id },
+      select: {
+        id: true,
+        password: true,
+        passwordHistory: true,
+      },
     });
 
     if (!account) {
@@ -377,23 +432,53 @@ export class AccountsService {
       if (!dto.currentPassword) {
         throw new BadRequestException('Current password is required');
       }
-      const isValid = await bcrypt.compare(dto.currentPassword, account.password);
+      const isValid = await this.verifyPassword(dto.currentPassword, account.password);
       if (!isValid) {
         throw new UnauthorizedException('Current password is incorrect');
       }
     }
 
-    const hashedPassword = await bcrypt.hash(dto.newPassword, this.bcryptRounds);
+    // Check if new password is in history (prevents password reuse)
+    const passwordHistory = account.passwordHistory || [];
+    if (await this.isPasswordInHistory(dto.newPassword, passwordHistory)) {
+      throw new BadRequestException(
+        `Cannot reuse any of the last ${this.passwordHistoryCount} passwords`,
+      );
+    }
+
+    // Also check against current password
+    if (account.password && (await this.verifyPassword(dto.newPassword, account.password))) {
+      throw new BadRequestException('New password must be different from current password');
+    }
+
+    const hashedPassword = await this.hashPassword(dto.newPassword);
+
+    // Update password history (keep last N passwords)
+    const newHistory = account.password
+      ? [account.password, ...passwordHistory].slice(0, this.passwordHistoryCount)
+      : passwordHistory;
 
     await this.prisma.account.update({
       where: { id },
       data: {
         password: hashedPassword,
+        passwordHistory: newHistory,
         lastPasswordChange: new Date(),
       },
     });
 
     this.logger.log(`Password changed for account ${maskUuid(id)}`);
+
+    // Publish audit event
+    await this.outboxService.publish({
+      aggregateType: 'Account',
+      aggregateId: id,
+      eventType: 'PASSWORD_CHANGED',
+      payload: {
+        accountId: id,
+        changedAt: new Date().toISOString(),
+      },
+    });
   }
 
   /**
@@ -696,12 +781,40 @@ export class AccountsService {
   async validatePassword(id: string, password: string): Promise<boolean> {
     const account = await this.prisma.account.findUnique({
       where: { id },
+      select: { password: true },
     });
 
     if (!account || !account.password) {
       return false;
     }
 
-    return bcrypt.compare(password, account.password);
+    return this.verifyPassword(password, account.password);
+  }
+
+  /**
+   * Record successful login (for analytics and security)
+   */
+  async recordSuccessfulLogin(id: string, ipAddress?: string): Promise<void> {
+    await this.prisma.account.update({
+      where: { id },
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+        lastSuccessLoginAt: new Date(),
+        lastLoginIp: ipAddress,
+      },
+    });
+
+    // Publish audit event
+    await this.outboxService.publish({
+      aggregateType: 'Account',
+      aggregateId: id,
+      eventType: 'LOGIN_SUCCESS',
+      payload: {
+        accountId: id,
+        ipAddress: ipAddress ? this.cryptoService.hash(ipAddress).slice(0, 16) : null,
+        timestamp: new Date().toISOString(),
+      },
+    });
   }
 }
