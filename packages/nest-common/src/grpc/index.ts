@@ -40,11 +40,80 @@ export {
 
 // Clients
 export { IdentityGrpcClient } from './identity-grpc.client';
-export { AuthGrpcClient } from './auth-grpc.client';
+export { AuthGrpcClient, AUTH_GRPC_CACHE_CONFIG } from './auth-grpc.client';
 export { LegalGrpcClient } from './legal-grpc.client';
 
 // Error Utilities
 export { GrpcError, isGrpcError, normalizeGrpcError } from './grpc-error.util';
+
+// Validation Utilities
+export {
+  GrpcValidationInterceptor,
+  GrpcValidationPipe,
+  GrpcValidationOptions,
+  ValidationErrorDetail,
+  createTypedValidationInterceptor,
+  ValidateGrpcRequest,
+  GRPC_VALIDATION_RULES,
+  isValidUuid,
+  isValidEmail,
+  isValidCountryCode,
+} from './grpc-validation.interceptor';
+
+// Rate Limiting
+export {
+  GrpcRateLimitGuard,
+  GrpcRateLimit,
+  RateLimitConfig,
+  RateLimitStore,
+  InMemoryRateLimitStore,
+  RateLimitModuleOptions,
+  RATE_LIMIT_STORE,
+  GRPC_RATE_LIMIT_KEY,
+  DEFAULT_RATE_LIMIT,
+  RATE_LIMIT_PRESETS,
+  createRateLimitProviders,
+} from './grpc-rate-limit.guard';
+
+// Caching
+export {
+  GrpcResponseCache,
+  GrpcCacheConfig,
+  CacheStats,
+  DEFAULT_CACHE_CONFIG,
+  PermissionCache,
+  PermissionCacheEntry,
+  PermissionCacheConfig,
+  CacheDecoratorOptions,
+  withCache,
+} from './grpc-cache.util';
+
+// Resilience Utilities (Retry, Circuit Breaker)
+export {
+  // Types
+  RetryConfig,
+  CircuitBreakerConfig,
+  ResilienceConfig,
+  ResilientCallOptions,
+  CircuitState,
+  CircuitBreakerMetrics,
+  GrpcHealthStatus,
+  GrpcResilience,
+  // Defaults
+  DEFAULT_RETRY_CONFIG,
+  DEFAULT_CIRCUIT_BREAKER_CONFIG,
+  DEFAULT_RESILIENCE_CONFIG,
+  // Functions
+  createGrpcResilience,
+  calculateBackoffDelay,
+  isRetryableError,
+  retryWithBackoff,
+  // Classes
+  CircuitBreaker,
+  GrpcHealthAggregator,
+  // Global instances
+  grpcHealthAggregator,
+} from './grpc-resilience.util';
 
 // Options & Configuration
 export {
@@ -58,6 +127,12 @@ export {
   createAuthGrpcOptions,
   createLegalGrpcOptions,
   loadGrpcConfigFromEnv,
+  // Channel Options
+  DEFAULT_CHANNEL_OPTIONS,
+  K8S_CHANNEL_OPTIONS,
+  DEV_CHANNEL_OPTIONS,
+  getEnvironment,
+  getChannelOptionsForEnv,
 } from './grpc.options';
 
 // Types (re-export all types for consumer convenience)

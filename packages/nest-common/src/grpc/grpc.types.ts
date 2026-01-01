@@ -5,9 +5,83 @@
  * - IdentityService (identity.v1)
  * - AuthService (auth.v1)
  * - LegalService (legal.v1)
+ *
+ * IMPORTANT: Proto Wire Types vs Application Types
+ * ================================================
+ *
+ * This file contains Proto wire format types (numeric enums matching protobuf).
+ * For application-layer types with string enums, use @my-girok/types:
+ *
+ * Proto Wire Types (this file):
+ * - AccountStatus.ACCOUNT_STATUS_ACTIVE = 2
+ * - ConsentType.CONSENT_TYPE_MARKETING = 3
+ *
+ * Application Types (@my-girok/types):
+ * - AccountStatus.ACTIVE = 'ACTIVE'
+ * - ConsentType.MARKETING = 'MARKETING'
+ *
+ * Use the mapping functions in @my-girok/types to convert:
+ * - protoToAccountStatus, accountStatusToProto
+ * - protoToConsentType, consentTypeToProto
+ * - etc.
+ *
+ * @see packages/types/src/identity/types.ts
+ * @see packages/types/src/legal/enums.ts
+ * @see packages/types/src/auth/enums.ts
  */
 
 import { status as GrpcStatus } from '@grpc/grpc-js';
+
+// Re-export Proto mapping utilities from @my-girok/types for convenience
+// These can be used to convert between Proto wire format and application types
+export {
+  // Identity mappings
+  AccountStatusProto,
+  AccountModeProto,
+  protoToAccountStatus,
+  protoToAccountMode,
+  accountStatusToProto,
+  accountModeToProto,
+} from '@my-girok/types';
+
+export {
+  // Auth mappings
+  RoleScopeProto,
+  protoToRoleScope,
+  roleScopeToProto,
+} from '@my-girok/types';
+
+export {
+  // Legal mappings
+  ConsentTypeProto,
+  ConsentStatusProto,
+  DocumentTypeProto,
+  DsrTypeProto,
+  DsrStatusProto,
+  protoToConsentType,
+  protoToConsentStatus,
+  protoToDocumentType,
+  protoToDsrType,
+  protoToDsrStatus,
+  consentTypeToProto,
+  consentStatusToProto,
+  documentTypeToProto,
+  dsrTypeToProto,
+  dsrStatusToProto,
+} from '@my-girok/types';
+
+export {
+  // Sanction mappings
+  SubjectTypeProto,
+  SanctionTypeProto,
+  SanctionStatusProto,
+  protoToSubjectType,
+  protoToSanctionType,
+  protoToSanctionStatus,
+  subjectTypeToProto,
+  sanctionTypeToProto,
+  sanctionStatusToProto,
+} from '@my-girok/types';
 
 // ============================================================================
 // Common Types

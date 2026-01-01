@@ -2,15 +2,24 @@
  * Identity Service gRPC Client
  *
  * Provides a typed client for calling the IdentityService via gRPC.
+ * Includes enterprise-grade resilience patterns:
+ * - Exponential backoff with jitter
+ * - Circuit breaker
+ * - Request timeout
  *
  * @see packages/proto/identity/v1/identity.proto
  */
 
-import { Injectable, OnModuleInit, Logger, Inject } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { firstValueFrom, timeout, catchError, throwError } from 'rxjs';
 import { GRPC_SERVICES, DEFAULT_GRPC_TIMEOUT } from './grpc.options';
-import { normalizeGrpcError } from './grpc-error.util';
+import {
+  createGrpcResilience,
+  GrpcResilience,
+  ResilientCallOptions,
+  grpcHealthAggregator,
+  CircuitBreakerMetrics,
+} from './grpc-resilience.util';
 import {
   IIdentityService,
   GetAccountRequest,
@@ -69,9 +78,10 @@ import {
  * ```
  */
 @Injectable()
-export class IdentityGrpcClient implements OnModuleInit {
+export class IdentityGrpcClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(IdentityGrpcClient.name);
   private identityService!: IIdentityService;
+  private resilience!: GrpcResilience;
   private timeoutMs = DEFAULT_GRPC_TIMEOUT;
 
   constructor(
@@ -81,7 +91,15 @@ export class IdentityGrpcClient implements OnModuleInit {
 
   onModuleInit() {
     this.identityService = this.client.getService<IIdentityService>('IdentityService');
-    this.logger.log('IdentityGrpcClient initialized');
+    this.resilience = createGrpcResilience('IdentityService', {
+      timeoutMs: this.timeoutMs,
+    });
+    grpcHealthAggregator.register('IdentityService', this.resilience);
+    this.logger.log('IdentityGrpcClient initialized with resilience patterns');
+  }
+
+  onModuleDestroy() {
+    grpcHealthAggregator.unregister('IdentityService');
   }
 
   /**
@@ -90,6 +108,21 @@ export class IdentityGrpcClient implements OnModuleInit {
   setTimeout(ms: number): this {
     this.timeoutMs = ms;
     return this;
+  }
+
+  /**
+   * Get circuit breaker metrics for monitoring
+   */
+  getCircuitBreakerMetrics(): CircuitBreakerMetrics {
+    return this.resilience.getMetrics();
+  }
+
+  /**
+   * Reset circuit breaker (use for manual recovery)
+   */
+  resetCircuitBreaker(): void {
+    this.resilience.reset();
+    this.logger.log('IdentityGrpcClient circuit breaker reset');
   }
 
   // ============================================================================
@@ -229,23 +262,26 @@ export class IdentityGrpcClient implements OnModuleInit {
   // ============================================================================
 
   /**
-   * Execute a gRPC call with timeout and error handling
+   * Execute a gRPC call with resilience patterns (retry, circuit breaker, timeout)
    */
-  private async call<T>(methodName: string, fn: () => import('rxjs').Observable<T>): Promise<T> {
+  private async call<T>(
+    methodName: string,
+    fn: () => import('rxjs').Observable<T>,
+    options?: ResilientCallOptions,
+  ): Promise<T> {
     this.logger.debug(`Calling IdentityService.${methodName}`);
 
     try {
-      return await firstValueFrom(
-        fn().pipe(
-          timeout(this.timeoutMs),
-          catchError((error) => {
-            this.logger.error(`IdentityService.${methodName} error: ${error.message}`);
-            return throwError(() => normalizeGrpcError(error));
-          }),
-        ),
-      );
+      return await this.resilience.execute(fn, {
+        timeoutMs: this.timeoutMs,
+        ...options,
+      });
     } catch (error) {
-      throw normalizeGrpcError(error);
+      this.logger.error(`IdentityService.${methodName} failed`, {
+        error: error instanceof Error ? error.message : String(error),
+        circuitState: this.resilience.getMetrics().state,
+      });
+      throw error;
     }
   }
 }

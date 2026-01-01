@@ -86,13 +86,38 @@ export enum PermissionAction {
 
 /**
  * Role scope enumeration
+ * SSOT: Aligned with packages/proto/auth/v1/auth.proto
  * Defines the scope at which a role applies
  */
 export enum RoleScope {
+  /** Platform-wide scope (Proto: GLOBAL) */
   PLATFORM = 'PLATFORM',
   SERVICE = 'SERVICE',
   TENANT = 'TENANT',
 }
+
+/** Proto enum numeric values for RoleScope */
+export const RoleScopeProto = {
+  UNSPECIFIED: 0,
+  GLOBAL: 1,
+  SERVICE: 2,
+  TENANT: 3,
+} as const;
+
+/** Map Proto numeric to TypeScript enum */
+export const protoToRoleScope: Record<number, RoleScope> = {
+  0: RoleScope.PLATFORM,
+  1: RoleScope.PLATFORM, // GLOBAL -> PLATFORM
+  2: RoleScope.SERVICE,
+  3: RoleScope.TENANT,
+};
+
+/** Map TypeScript enum to Proto numeric */
+export const roleScopeToProto: Record<RoleScope, number> = {
+  [RoleScope.PLATFORM]: RoleScopeProto.GLOBAL,
+  [RoleScope.SERVICE]: RoleScopeProto.SERVICE,
+  [RoleScope.TENANT]: RoleScopeProto.TENANT,
+};
 
 /**
  * Role status enumeration

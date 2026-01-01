@@ -2,15 +2,24 @@
  * Legal Service gRPC Client
  *
  * Provides a typed client for calling the LegalService via gRPC.
+ * Includes enterprise-grade resilience patterns:
+ * - Exponential backoff with jitter
+ * - Circuit breaker
+ * - Request timeout
  *
  * @see packages/proto/legal/v1/legal.proto
  */
 
-import { Injectable, OnModuleInit, Logger, Inject } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger, Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { firstValueFrom, timeout, catchError, throwError } from 'rxjs';
 import { GRPC_SERVICES, DEFAULT_GRPC_TIMEOUT } from './grpc.options';
-import { normalizeGrpcError } from './grpc-error.util';
+import {
+  createGrpcResilience,
+  GrpcResilience,
+  ResilientCallOptions,
+  grpcHealthAggregator,
+  CircuitBreakerMetrics,
+} from './grpc-resilience.util';
 import {
   ILegalService,
   CheckConsentsRequest,
@@ -67,9 +76,10 @@ import {
  * ```
  */
 @Injectable()
-export class LegalGrpcClient implements OnModuleInit {
+export class LegalGrpcClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(LegalGrpcClient.name);
   private legalService!: ILegalService;
+  private resilience!: GrpcResilience;
   private timeoutMs = DEFAULT_GRPC_TIMEOUT;
 
   constructor(
@@ -79,7 +89,15 @@ export class LegalGrpcClient implements OnModuleInit {
 
   onModuleInit() {
     this.legalService = this.client.getService<ILegalService>('LegalService');
-    this.logger.log('LegalGrpcClient initialized');
+    this.resilience = createGrpcResilience('LegalService', {
+      timeoutMs: this.timeoutMs,
+    });
+    grpcHealthAggregator.register('LegalService', this.resilience);
+    this.logger.log('LegalGrpcClient initialized with resilience patterns');
+  }
+
+  onModuleDestroy() {
+    grpcHealthAggregator.unregister('LegalService');
   }
 
   /**
@@ -88,6 +106,21 @@ export class LegalGrpcClient implements OnModuleInit {
   setTimeout(ms: number): this {
     this.timeoutMs = ms;
     return this;
+  }
+
+  /**
+   * Get circuit breaker metrics for monitoring
+   */
+  getCircuitBreakerMetrics(): CircuitBreakerMetrics {
+    return this.resilience.getMetrics();
+  }
+
+  /**
+   * Reset circuit breaker (use for manual recovery)
+   */
+  resetCircuitBreaker(): void {
+    this.resilience.reset();
+    this.logger.log('LegalGrpcClient circuit breaker reset');
   }
 
   // ============================================================================
@@ -288,23 +321,26 @@ export class LegalGrpcClient implements OnModuleInit {
   // ============================================================================
 
   /**
-   * Execute a gRPC call with timeout and error handling
+   * Execute a gRPC call with resilience patterns (retry, circuit breaker, timeout)
    */
-  private async call<T>(methodName: string, fn: () => import('rxjs').Observable<T>): Promise<T> {
+  private async call<T>(
+    methodName: string,
+    fn: () => import('rxjs').Observable<T>,
+    options?: ResilientCallOptions,
+  ): Promise<T> {
     this.logger.debug(`Calling LegalService.${methodName}`);
 
     try {
-      return await firstValueFrom(
-        fn().pipe(
-          timeout(this.timeoutMs),
-          catchError((error) => {
-            this.logger.error(`LegalService.${methodName} error: ${error.message}`);
-            return throwError(() => normalizeGrpcError(error));
-          }),
-        ),
-      );
+      return await this.resilience.execute(fn, {
+        timeoutMs: this.timeoutMs,
+        ...options,
+      });
     } catch (error) {
-      throw normalizeGrpcError(error);
+      this.logger.error(`LegalService.${methodName} failed`, {
+        error: error instanceof Error ? error.message : String(error),
+        circuitState: this.resilience.getMetrics().state,
+      });
+      throw error;
     }
   }
 }

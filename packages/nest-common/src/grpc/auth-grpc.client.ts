@@ -2,15 +2,32 @@
  * Auth Service gRPC Client
  *
  * Provides a typed client for calling the AuthService via gRPC.
+ * Includes enterprise-grade resilience patterns:
+ * - Exponential backoff with jitter
+ * - Circuit breaker
+ * - Request timeout
  *
  * @see packages/proto/auth/v1/auth.proto
  */
 
-import { Injectable, OnModuleInit, Logger, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+  Inject,
+  Optional,
+} from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { firstValueFrom, timeout, catchError, throwError } from 'rxjs';
 import { GRPC_SERVICES, DEFAULT_GRPC_TIMEOUT } from './grpc.options';
-import { normalizeGrpcError } from './grpc-error.util';
+import {
+  createGrpcResilience,
+  GrpcResilience,
+  ResilientCallOptions,
+  grpcHealthAggregator,
+  CircuitBreakerMetrics,
+} from './grpc-resilience.util';
+import { PermissionCache, PermissionCacheConfig, CacheStats } from './grpc-cache.util';
 import {
   IAuthService,
   CheckPermissionRequest,
@@ -60,20 +77,41 @@ import {
  * }
  * ```
  */
+/**
+ * Injection token for permission cache configuration
+ */
+export const AUTH_GRPC_CACHE_CONFIG = 'AUTH_GRPC_CACHE_CONFIG';
+
 @Injectable()
-export class AuthGrpcClient implements OnModuleInit {
+export class AuthGrpcClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthGrpcClient.name);
   private authService!: IAuthService;
+  private resilience!: GrpcResilience;
+  private permissionCache!: PermissionCache;
   private timeoutMs = DEFAULT_GRPC_TIMEOUT;
+  private cacheEnabled = true;
 
   constructor(
     @Inject(GRPC_SERVICES.AUTH)
     private readonly client: ClientGrpc,
+    @Optional()
+    @Inject(AUTH_GRPC_CACHE_CONFIG)
+    private readonly cacheConfig?: Partial<PermissionCacheConfig>,
   ) {}
 
   onModuleInit() {
     this.authService = this.client.getService<IAuthService>('AuthService');
-    this.logger.log('AuthGrpcClient initialized');
+    this.resilience = createGrpcResilience('AuthService', {
+      timeoutMs: this.timeoutMs,
+    });
+    this.permissionCache = new PermissionCache(this.cacheConfig);
+    grpcHealthAggregator.register('AuthService', this.resilience);
+    this.logger.log('AuthGrpcClient initialized with resilience patterns and permission caching');
+  }
+
+  onModuleDestroy() {
+    grpcHealthAggregator.unregister('AuthService');
+    this.permissionCache.clear();
   }
 
   /**
@@ -82,6 +120,57 @@ export class AuthGrpcClient implements OnModuleInit {
   setTimeout(ms: number): this {
     this.timeoutMs = ms;
     return this;
+  }
+
+  /**
+   * Enable or disable permission caching
+   */
+  setCacheEnabled(enabled: boolean): this {
+    this.cacheEnabled = enabled;
+    return this;
+  }
+
+  /**
+   * Get circuit breaker metrics for monitoring
+   */
+  getCircuitBreakerMetrics(): CircuitBreakerMetrics {
+    return this.resilience.getMetrics();
+  }
+
+  /**
+   * Get permission cache statistics
+   */
+  getCacheStats(): CacheStats & { permissionChecks: number } {
+    return this.permissionCache.getStats();
+  }
+
+  /**
+   * Invalidate cached permissions for an operator
+   */
+  invalidateOperatorCache(operatorId: string): void {
+    this.permissionCache.invalidateOperator(operatorId);
+  }
+
+  /**
+   * Invalidate cached permissions for a role (affects all operators with that role)
+   */
+  invalidateRoleCache(roleId: string): void {
+    this.permissionCache.invalidateRole(roleId);
+  }
+
+  /**
+   * Clear all permission caches
+   */
+  clearCache(): void {
+    this.permissionCache.clear();
+  }
+
+  /**
+   * Reset circuit breaker (use for manual recovery)
+   */
+  resetCircuitBreaker(): void {
+    this.resilience.reset();
+    this.logger.log('AuthGrpcClient circuit breaker reset');
   }
 
   // ============================================================================
@@ -189,14 +278,63 @@ export class AuthGrpcClient implements OnModuleInit {
 
   /**
    * Check if an operator has access to a resource
+   * Uses cached permissions when available
    */
   async hasPermission(operatorId: string, resource: string, action: string): Promise<boolean> {
+    // Check cache first if enabled
+    if (this.cacheEnabled) {
+      const cachedResult = this.permissionCache.hasPermission(operatorId, resource, action);
+      if (cachedResult !== undefined) {
+        this.logger.debug(
+          `Permission check (cached): ${operatorId} ${resource}:${action} = ${cachedResult}`,
+        );
+        return cachedResult;
+      }
+    }
+
+    // Cache miss - fetch from service
     const response = await this.checkPermission({
       operator_id: operatorId,
       resource,
       action,
     });
+
     return response.allowed;
+  }
+
+  /**
+   * Preload permissions for an operator into cache
+   * Call this after login to warm the cache
+   */
+  async preloadOperatorPermissions(operatorId: string): Promise<void> {
+    if (!this.cacheEnabled) {
+      return;
+    }
+
+    try {
+      const response = await this.getOperatorPermissions({
+        operator_id: operatorId,
+        include_role_permissions: true,
+      });
+
+      const permissions = [
+        ...response.permissions,
+        ...response.direct_permissions,
+        ...response.role_permissions,
+      ].map((p) => `${p.resource}:${p.action}`);
+
+      this.permissionCache.setOperatorPermissions({
+        operatorId,
+        permissions: [...new Set(permissions)], // Deduplicate
+        updatedAt: Date.now(),
+      });
+
+      this.logger.debug(`Preloaded ${permissions.length} permissions for operator: ${operatorId}`);
+    } catch (error) {
+      this.logger.warn(`Failed to preload permissions for operator ${operatorId}`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   // ============================================================================
@@ -204,23 +342,26 @@ export class AuthGrpcClient implements OnModuleInit {
   // ============================================================================
 
   /**
-   * Execute a gRPC call with timeout and error handling
+   * Execute a gRPC call with resilience patterns (retry, circuit breaker, timeout)
    */
-  private async call<T>(methodName: string, fn: () => import('rxjs').Observable<T>): Promise<T> {
+  private async call<T>(
+    methodName: string,
+    fn: () => import('rxjs').Observable<T>,
+    options?: ResilientCallOptions,
+  ): Promise<T> {
     this.logger.debug(`Calling AuthService.${methodName}`);
 
     try {
-      return await firstValueFrom(
-        fn().pipe(
-          timeout(this.timeoutMs),
-          catchError((error) => {
-            this.logger.error(`AuthService.${methodName} error: ${error.message}`);
-            return throwError(() => normalizeGrpcError(error));
-          }),
-        ),
-      );
+      return await this.resilience.execute(fn, {
+        timeoutMs: this.timeoutMs,
+        ...options,
+      });
     } catch (error) {
-      throw normalizeGrpcError(error);
+      this.logger.error(`AuthService.${methodName} failed`, {
+        error: error instanceof Error ? error.message : String(error),
+        circuitState: this.resilience.getMetrics().state,
+      });
+      throw error;
     }
   }
 }

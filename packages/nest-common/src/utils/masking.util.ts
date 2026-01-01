@@ -396,6 +396,7 @@ export function maskText(text: string, options?: MaskingOptions): string {
 /**
  * Recursively mask PII fields in an object
  * Traverses nested objects and arrays
+ * Handles circular references safely
  *
  * @param obj - Object to mask
  * @param options - Masking options
@@ -404,6 +405,11 @@ export function maskText(text: string, options?: MaskingOptions): string {
  * @example
  * const user = { email: 'user@example.com', name: 'John Doe' };
  * maskObject(user) // { email: 'u***@example.com', name: 'J*** D***' }
+ *
+ * // Handles circular references:
+ * const circular: any = { name: 'Test' };
+ * circular.self = circular;
+ * maskObject(circular) // { name: 'T***', self: '[Circular Reference]' }
  */
 export function maskObject<T extends Record<string, unknown>>(
   obj: T,
@@ -420,11 +426,27 @@ export function maskObject<T extends Record<string, unknown>>(
     maxDepth = 10,
   } = options || {};
 
-  return maskObjectRecursive(obj, fieldsToMask, customMaskers, maskAllStrings, maxDepth, 0) as T;
+  // Use WeakSet to track visited objects for circular reference detection
+  const visited = new WeakSet<object>();
+
+  return maskObjectRecursive(
+    obj,
+    fieldsToMask,
+    customMaskers,
+    maskAllStrings,
+    maxDepth,
+    0,
+    visited,
+  ) as T;
 }
 
 /**
- * Internal recursive object masking
+ * Circular reference placeholder
+ */
+const CIRCULAR_REF_PLACEHOLDER = '[Circular Reference]';
+
+/**
+ * Internal recursive object masking with circular reference detection
  */
 function maskObjectRecursive(
   value: unknown,
@@ -433,9 +455,13 @@ function maskObjectRecursive(
   maskAllStrings: boolean,
   maxDepth: number,
   currentDepth: number,
+  visited: WeakSet<object>,
 ): unknown {
-  // Prevent infinite recursion
+  // Prevent infinite recursion by depth
   if (currentDepth >= maxDepth) {
+    if (typeof value === 'object' && value !== null) {
+      return '[Max Depth Exceeded]';
+    }
     return value;
   }
 
@@ -444,35 +470,76 @@ function maskObjectRecursive(
     return value;
   }
 
-  // Handle arrays
-  if (Array.isArray(value)) {
-    return value.map((item) =>
-      maskObjectRecursive(
-        item,
-        fieldsToMask,
-        customMaskers,
-        maskAllStrings,
-        maxDepth,
-        currentDepth + 1,
-      ),
-    );
-  }
-
-  // Handle Date objects
-  if (value instanceof Date) {
+  // Handle primitive types
+  if (typeof value !== 'object') {
     return value;
   }
 
-  // Handle objects
-  if (typeof value === 'object') {
+  // Handle Date objects (before circular reference check)
+  if (value instanceof Date) {
+    return new Date(value.getTime());
+  }
+
+  // Handle Buffer, Map, Set, and other built-in objects
+  if (
+    value instanceof Map ||
+    value instanceof Set ||
+    value instanceof WeakMap ||
+    value instanceof WeakSet
+  ) {
+    return '[Complex Object]';
+  }
+
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) {
+    return '[Buffer]';
+  }
+
+  // Check for circular references
+  if (visited.has(value)) {
+    return CIRCULAR_REF_PLACEHOLDER;
+  }
+
+  // Mark as visited
+  visited.add(value);
+
+  try {
+    // Handle arrays
+    if (Array.isArray(value)) {
+      return value.map((item) =>
+        maskObjectRecursive(
+          item,
+          fieldsToMask,
+          customMaskers,
+          maskAllStrings,
+          maxDepth,
+          currentDepth + 1,
+          visited,
+        ),
+      );
+    }
+
+    // Handle regular objects
     const result: Record<string, unknown> = {};
 
-    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    // Get all enumerable own properties including symbols
+    const keys = Object.keys(value as Record<string, unknown>);
+
+    for (const key of keys) {
+      const val = (value as Record<string, unknown>)[key];
       const lowerKey = key.toLowerCase();
+
+      // Skip functions
+      if (typeof val === 'function') {
+        continue;
+      }
 
       // Check for custom masker
       if (customMaskers[key]) {
-        result[key] = customMaskers[key](val);
+        try {
+          result[key] = customMaskers[key](val);
+        } catch {
+          result[key] = '[Masking Error]';
+        }
         continue;
       }
 
@@ -489,6 +556,7 @@ function maskObjectRecursive(
           maskAllStrings,
           maxDepth,
           currentDepth + 1,
+          visited,
         );
       } else if (maskAllStrings && typeof val === 'string') {
         result[key] = maskText(val);
@@ -498,9 +566,10 @@ function maskObjectRecursive(
     }
 
     return result;
+  } finally {
+    // Note: We don't remove from visited to prevent issues with objects
+    // referenced multiple times (which would be masked the same way anyway)
   }
-
-  return value;
 }
 
 /**
