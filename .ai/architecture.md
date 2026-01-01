@@ -53,7 +53,7 @@ Each database contains **intentionally duplicated** functions for Zero Migration
 | `update_updated_at_column()` | ✅          | ✅      | ✅       | Self-contained triggers   |
 | `outbox_events` table        | ✅          | ✅      | ✅       | Independent event streams |
 
-**Why duplicate?** When services are extracted (Phase 2), each DB must be self-sufficient. Cross-DB functions would create migration dependencies.
+**Why duplicate?** Services are now fully separated (Phase 3). Each DB is self-sufficient with no cross-DB dependencies.
 
 ### Supported Apps
 
