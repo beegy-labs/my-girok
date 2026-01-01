@@ -8,13 +8,22 @@ import "google/protobuf/timestamp.proto";
 
 // IdentityService provides account, session, and device management operations
 service IdentityService {
-  // Account operations
+  // Account operations - Read
   rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
   rpc ValidateAccount(ValidateAccountRequest) returns (ValidateAccountResponse);
   rpc GetAccountByEmail(GetAccountByEmailRequest) returns (GetAccountByEmailResponse);
   rpc GetAccountByUsername(GetAccountByUsernameRequest) returns (GetAccountByUsernameResponse);
 
+  // Account operations - Write
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+
+  // Authentication
+  rpc ValidatePassword(ValidatePasswordRequest) returns (ValidatePasswordResponse);
+
   // Session operations
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
   rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
   rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
   rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
@@ -222,4 +231,88 @@ message GetProfileRequest {
 
 message GetProfileResponse {
   Profile profile = 1;
+}
+
+// === Account CRUD Messages ===
+
+// CreateAccount
+message CreateAccountRequest {
+  string email = 1;
+  string username = 2;
+  optional string password = 3;
+  AuthProvider provider = 4;
+  optional string provider_id = 5;
+  AccountMode mode = 6;
+  optional string region = 7;
+  optional string locale = 8;
+  optional string timezone = 9;
+  optional string country_code = 10;
+}
+
+message CreateAccountResponse {
+  Account account = 1;
+}
+
+// UpdateAccount
+message UpdateAccountRequest {
+  string id = 1;
+  optional string email = 2;
+  optional AccountStatus status = 3;
+  optional bool mfa_enabled = 4;
+  optional string region = 5;
+  optional string locale = 6;
+  optional string timezone = 7;
+  optional string country_code = 8;
+}
+
+message UpdateAccountResponse {
+  Account account = 1;
+}
+
+// DeleteAccount
+message DeleteAccountRequest {
+  string id = 1;
+}
+
+message DeleteAccountResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ValidatePassword
+message ValidatePasswordRequest {
+  string account_id = 1;
+  string password = 2;
+}
+
+message ValidatePasswordResponse {
+  bool valid = 1;
+  string message = 2;
+}
+
+// CreateSession
+message CreateSessionRequest {
+  string account_id = 1;
+  optional string device_id = 2;
+  optional string ip_address = 3;
+  optional string user_agent = 4;
+  optional int64 expires_in_ms = 5;
+}
+
+message CreateSessionResponse {
+  Session session = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+// === Enums for Account CRUD ===
+
+// AuthProvider represents authentication method
+enum AuthProvider {
+  AUTH_PROVIDER_UNSPECIFIED = 0;
+  AUTH_PROVIDER_LOCAL = 1;
+  AUTH_PROVIDER_GOOGLE = 2;
+  AUTH_PROVIDER_APPLE = 3;
+  AUTH_PROVIDER_KAKAO = 4;
+  AUTH_PROVIDER_NAVER = 5;
 }

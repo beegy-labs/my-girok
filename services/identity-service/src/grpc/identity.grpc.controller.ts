@@ -1,4 +1,4 @@
-import { Controller, Logger, NotFoundException } from '@nestjs/common';
+import { Controller, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status as GrpcStatus } from '@grpc/grpc-js';
 import { AccountsService } from '../identity/accounts/accounts.service';
@@ -6,6 +6,8 @@ import { SessionsService } from '../identity/sessions/sessions.service';
 import { DevicesService } from '../identity/devices/devices.service';
 import { ProfilesService } from '../identity/profiles/profiles.service';
 import { CryptoService } from '../common/crypto';
+import { AuthProvider, AccountMode } from '../identity/accounts/dto/create-account.dto';
+import { AccountStatus } from '../identity/accounts/dto/update-account.dto';
 
 /**
  * Proto enum mappings for AccountStatus
@@ -27,6 +29,47 @@ const AccountModeMap: Record<string, number> = {
   OPERATOR: 3,
   SERVICE: 4,
   UNIFIED: 1, // Map UNIFIED to USER for proto compatibility
+};
+
+/**
+ * Proto enum mappings for AuthProvider
+ * Proto: UNSPECIFIED=0, LOCAL=1, GOOGLE=2, APPLE=3, KAKAO=4, NAVER=5
+ * Prisma: LOCAL, GOOGLE, KAKAO, NAVER, APPLE, MICROSOFT, GITHUB
+ */
+const AuthProviderMap: Record<number, AuthProvider> = {
+  0: AuthProvider.LOCAL,
+  1: AuthProvider.LOCAL,
+  2: AuthProvider.GOOGLE,
+  3: AuthProvider.APPLE,
+  4: AuthProvider.KAKAO,
+  5: AuthProvider.NAVER,
+};
+
+/**
+ * Proto to AccountMode mapping
+ * Proto: UNSPECIFIED=0, USER=1, ADMIN=2, OPERATOR=3, SERVICE=4
+ * Prisma: SERVICE, UNIFIED
+ * Note: Proto modes map to UNIFIED (general user) or SERVICE (service account)
+ */
+const ProtoToAccountModeMap: Record<number, AccountMode> = {
+  0: AccountMode.UNIFIED, // UNSPECIFIED -> UNIFIED
+  1: AccountMode.UNIFIED, // USER -> UNIFIED
+  2: AccountMode.UNIFIED, // ADMIN -> UNIFIED (no admin mode in Prisma)
+  3: AccountMode.UNIFIED, // OPERATOR -> UNIFIED (no operator mode in Prisma)
+  4: AccountMode.SERVICE, // SERVICE -> SERVICE
+};
+
+/**
+ * Proto to AccountStatus mapping
+ * Proto: UNSPECIFIED=0, PENDING=1, ACTIVE=2, SUSPENDED=3, DELETED=4, LOCKED=5
+ * Prisma: PENDING_VERIFICATION, ACTIVE, SUSPENDED, DEACTIVATED, DELETED
+ */
+const ProtoToAccountStatusMap: Record<number, AccountStatus> = {
+  1: AccountStatus.PENDING_VERIFICATION,
+  2: AccountStatus.ACTIVE,
+  3: AccountStatus.SUSPENDED,
+  4: AccountStatus.DELETED,
+  5: AccountStatus.SUSPENDED, // LOCKED -> SUSPENDED (no LOCKED in Prisma)
 };
 
 /**
@@ -92,6 +135,47 @@ interface RevokeDeviceRequest {
 
 interface GetProfileRequest {
   account_id: string;
+}
+
+interface CreateAccountRequest {
+  email: string;
+  username: string;
+  password?: string;
+  provider: number;
+  provider_id?: string;
+  mode: number;
+  region?: string;
+  locale?: string;
+  timezone?: string;
+  country_code?: string;
+}
+
+interface UpdateAccountRequest {
+  id: string;
+  email?: string;
+  status?: number;
+  mfa_enabled?: boolean;
+  region?: string;
+  locale?: string;
+  timezone?: string;
+  country_code?: string;
+}
+
+interface DeleteAccountRequest {
+  id: string;
+}
+
+interface ValidatePasswordRequest {
+  account_id: string;
+  password: string;
+}
+
+interface CreateSessionRequest {
+  account_id: string;
+  device_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  expires_in_ms?: number;
 }
 
 /**
@@ -562,6 +646,230 @@ export class IdentityGrpcController {
         });
       }
       this.logger.error(`GetProfile error: ${error}`);
+      throw new RpcException({
+        code: GrpcStatus.INTERNAL,
+        message: 'Internal server error',
+      });
+    }
+  }
+
+  // ============================================================================
+  // Account CRUD Operations
+  // ============================================================================
+
+  /**
+   * Create a new account
+   */
+  @GrpcMethod('IdentityService', 'CreateAccount')
+  async createAccount(request: CreateAccountRequest) {
+    this.logger.debug(`CreateAccount request for email: ${request.email}`);
+
+    try {
+      const account = await this.accountsService.create({
+        email: request.email,
+        username: request.username,
+        password: request.password,
+        provider: AuthProviderMap[request.provider] || AuthProvider.LOCAL,
+        providerId: request.provider_id,
+        mode: ProtoToAccountModeMap[request.mode] || AccountMode.UNIFIED,
+        region: request.region,
+        locale: request.locale,
+        timezone: request.timezone,
+        countryCode: request.country_code,
+      });
+
+      return {
+        account: {
+          id: account.id,
+          email: account.email,
+          username: account.username,
+          status: AccountStatusMap[account.status] || 0,
+          mode: AccountModeMap[account.mode] || 0,
+          mfa_enabled: account.mfaEnabled,
+          email_verified: account.emailVerified,
+          created_at: toTimestamp(account.createdAt),
+          updated_at: toTimestamp(account.updatedAt),
+        },
+      };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw new RpcException({
+          code: GrpcStatus.ALREADY_EXISTS,
+          message: error.message,
+        });
+      }
+      this.logger.error(`CreateAccount error: ${error}`);
+      throw new RpcException({
+        code: GrpcStatus.INTERNAL,
+        message: 'Internal server error',
+      });
+    }
+  }
+
+  /**
+   * Update an existing account
+   */
+  @GrpcMethod('IdentityService', 'UpdateAccount')
+  async updateAccount(request: UpdateAccountRequest) {
+    this.logger.debug(`UpdateAccount request for id: ${request.id}`);
+
+    try {
+      const updateDto: {
+        email?: string;
+        status?: AccountStatus;
+        mfaEnabled?: boolean;
+        region?: string;
+        locale?: string;
+        timezone?: string;
+        countryCode?: string;
+      } = {};
+
+      if (request.email !== undefined) updateDto.email = request.email;
+      if (request.status !== undefined) updateDto.status = ProtoToAccountStatusMap[request.status];
+      if (request.mfa_enabled !== undefined) updateDto.mfaEnabled = request.mfa_enabled;
+      if (request.region !== undefined) updateDto.region = request.region;
+      if (request.locale !== undefined) updateDto.locale = request.locale;
+      if (request.timezone !== undefined) updateDto.timezone = request.timezone;
+      if (request.country_code !== undefined) updateDto.countryCode = request.country_code;
+
+      const account = await this.accountsService.update(request.id, updateDto);
+
+      return {
+        account: {
+          id: account.id,
+          email: account.email,
+          username: account.username,
+          status: AccountStatusMap[account.status] || 0,
+          mode: AccountModeMap[account.mode] || 0,
+          mfa_enabled: account.mfaEnabled,
+          email_verified: account.emailVerified,
+          created_at: toTimestamp(account.createdAt),
+          updated_at: toTimestamp(account.updatedAt),
+        },
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new RpcException({
+          code: GrpcStatus.NOT_FOUND,
+          message: 'Account not found',
+        });
+      }
+      if (error instanceof ConflictException) {
+        throw new RpcException({
+          code: GrpcStatus.ALREADY_EXISTS,
+          message: error.message,
+        });
+      }
+      this.logger.error(`UpdateAccount error: ${error}`);
+      throw new RpcException({
+        code: GrpcStatus.INTERNAL,
+        message: 'Internal server error',
+      });
+    }
+  }
+
+  /**
+   * Delete an account (soft delete)
+   */
+  @GrpcMethod('IdentityService', 'DeleteAccount')
+  async deleteAccount(request: DeleteAccountRequest) {
+    this.logger.debug(`DeleteAccount request for id: ${request.id}`);
+
+    try {
+      await this.accountsService.delete(request.id);
+
+      return {
+        success: true,
+        message: 'Account deleted successfully',
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new RpcException({
+          code: GrpcStatus.NOT_FOUND,
+          message: 'Account not found',
+        });
+      }
+      this.logger.error(`DeleteAccount error: ${error}`);
+      throw new RpcException({
+        code: GrpcStatus.INTERNAL,
+        message: 'Internal server error',
+      });
+    }
+  }
+
+  /**
+   * Validate password for authentication
+   */
+  @GrpcMethod('IdentityService', 'ValidatePassword')
+  async validatePassword(request: ValidatePasswordRequest) {
+    this.logger.debug(`ValidatePassword request for account: ${request.account_id}`);
+
+    try {
+      const isValid = await this.accountsService.validatePassword(
+        request.account_id,
+        request.password,
+      );
+
+      if (!isValid) {
+        // Record failed login attempt
+        await this.accountsService.recordFailedLogin(request.account_id);
+      } else {
+        // Reset failed login attempts on successful validation
+        await this.accountsService.resetFailedLogins(request.account_id);
+      }
+
+      return {
+        valid: isValid,
+        message: isValid ? 'Password is valid' : 'Invalid password',
+      };
+    } catch (error) {
+      this.logger.error(`ValidatePassword error: ${error}`);
+      // Return invalid for any errors (prevents user enumeration)
+      return {
+        valid: false,
+        message: 'Invalid password',
+      };
+    }
+  }
+
+  /**
+   * Create a new session
+   */
+  @GrpcMethod('IdentityService', 'CreateSession')
+  async createSession(request: CreateSessionRequest) {
+    this.logger.debug(`CreateSession request for account: ${request.account_id}`);
+
+    try {
+      const session = await this.sessionsService.create({
+        accountId: request.account_id,
+        deviceId: request.device_id || undefined,
+        ipAddress: request.ip_address || '0.0.0.0', // Default for gRPC internal calls
+        userAgent: request.user_agent || 'gRPC-Internal', // Default for gRPC internal calls
+        expiresInMs: request.expires_in_ms ? Number(request.expires_in_ms) : undefined,
+      });
+
+      return {
+        session: {
+          id: session.id,
+          account_id: session.accountId,
+          device_id: session.deviceId || '',
+          ip_address: session.ipAddress || '',
+          user_agent: session.userAgent || '',
+          created_at: toTimestamp(session.createdAt),
+          expires_at: toTimestamp(session.expiresAt),
+          last_activity_at: toTimestamp(session.lastActivityAt),
+        },
+        access_token: session.accessToken,
+        refresh_token: session.refreshToken,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new RpcException({
+          code: GrpcStatus.NOT_FOUND,
+          message: error.message,
+        });
+      }
+      this.logger.error(`CreateSession error: ${error}`);
       throw new RpcException({
         code: GrpcStatus.INTERNAL,
         message: 'Internal server error',

@@ -35,6 +35,16 @@ import {
   RevokeDeviceResponse,
   GetProfileRequest,
   GetProfileResponse,
+  CreateAccountRequest,
+  CreateAccountResponse,
+  UpdateAccountRequest,
+  UpdateAccountResponse,
+  DeleteAccountRequest,
+  DeleteAccountResponse,
+  ValidatePasswordRequest,
+  ValidatePasswordResponse,
+  CreateSessionRequest,
+  CreateSessionResponse,
 } from './grpc.types';
 
 /**
@@ -144,9 +154,44 @@ export class IdentityGrpcClient implements OnModuleInit {
     );
   }
 
+  /**
+   * Create a new account
+   */
+  async createAccount(request: CreateAccountRequest): Promise<CreateAccountResponse> {
+    return this.call('CreateAccount', () => this.identityService.createAccount(request));
+  }
+
+  /**
+   * Update an existing account
+   */
+  async updateAccount(request: UpdateAccountRequest): Promise<UpdateAccountResponse> {
+    return this.call('UpdateAccount', () => this.identityService.updateAccount(request));
+  }
+
+  /**
+   * Delete an account (soft delete)
+   */
+  async deleteAccount(request: DeleteAccountRequest): Promise<DeleteAccountResponse> {
+    return this.call('DeleteAccount', () => this.identityService.deleteAccount(request));
+  }
+
+  /**
+   * Validate password for authentication
+   */
+  async validatePassword(request: ValidatePasswordRequest): Promise<ValidatePasswordResponse> {
+    return this.call('ValidatePassword', () => this.identityService.validatePassword(request));
+  }
+
   // ============================================================================
   // Session Operations
   // ============================================================================
+
+  /**
+   * Create a new session
+   */
+  async createSession(request: CreateSessionRequest): Promise<CreateSessionResponse> {
+    return this.call('CreateSession', () => this.identityService.createSession(request));
+  }
 
   /**
    * Validate session by token hash

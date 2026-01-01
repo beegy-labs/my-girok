@@ -199,6 +199,81 @@ export interface GetProfileResponse {
   profile?: Profile;
 }
 
+// Account CRUD Types
+export enum AuthProvider {
+  AUTH_PROVIDER_UNSPECIFIED = 0,
+  AUTH_PROVIDER_LOCAL = 1,
+  AUTH_PROVIDER_GOOGLE = 2,
+  AUTH_PROVIDER_APPLE = 3,
+  AUTH_PROVIDER_KAKAO = 4,
+  AUTH_PROVIDER_NAVER = 5,
+}
+
+export interface CreateAccountRequest {
+  email: string;
+  username: string;
+  password?: string;
+  provider: AuthProvider;
+  provider_id?: string;
+  mode: AccountMode;
+  region?: string;
+  locale?: string;
+  timezone?: string;
+  country_code?: string;
+}
+
+export interface CreateAccountResponse {
+  account?: Account;
+}
+
+export interface UpdateAccountRequest {
+  id: string;
+  email?: string;
+  status?: AccountStatus;
+  mfa_enabled?: boolean;
+  region?: string;
+  locale?: string;
+  timezone?: string;
+  country_code?: string;
+}
+
+export interface UpdateAccountResponse {
+  account?: Account;
+}
+
+export interface DeleteAccountRequest {
+  id: string;
+}
+
+export interface DeleteAccountResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ValidatePasswordRequest {
+  account_id: string;
+  password: string;
+}
+
+export interface ValidatePasswordResponse {
+  valid: boolean;
+  message: string;
+}
+
+export interface CreateSessionRequest {
+  account_id: string;
+  device_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  expires_in_ms?: number;
+}
+
+export interface CreateSessionResponse {
+  session?: Session;
+  access_token: string;
+  refresh_token: string;
+}
+
 // ============================================================================
 // Auth Service Types (auth.v1)
 // ============================================================================
@@ -655,18 +730,29 @@ import { Observable } from 'rxjs';
  * IdentityService gRPC service interface
  */
 export interface IIdentityService {
+  // Account Read operations
   getAccount(request: GetAccountRequest): Observable<GetAccountResponse>;
   validateAccount(request: ValidateAccountRequest): Observable<ValidateAccountResponse>;
   getAccountByEmail(request: GetAccountByEmailRequest): Observable<GetAccountByEmailResponse>;
   getAccountByUsername(
     request: GetAccountByUsernameRequest,
   ): Observable<GetAccountByUsernameResponse>;
+  // Account Write operations
+  createAccount(request: CreateAccountRequest): Observable<CreateAccountResponse>;
+  updateAccount(request: UpdateAccountRequest): Observable<UpdateAccountResponse>;
+  deleteAccount(request: DeleteAccountRequest): Observable<DeleteAccountResponse>;
+  // Authentication
+  validatePassword(request: ValidatePasswordRequest): Observable<ValidatePasswordResponse>;
+  // Session operations
+  createSession(request: CreateSessionRequest): Observable<CreateSessionResponse>;
   validateSession(request: ValidateSessionRequest): Observable<ValidateSessionResponse>;
   revokeSession(request: RevokeSessionRequest): Observable<RevokeSessionResponse>;
   revokeAllSessions(request: RevokeAllSessionsRequest): Observable<RevokeAllSessionsResponse>;
+  // Device operations
   getAccountDevices(request: GetAccountDevicesRequest): Observable<GetAccountDevicesResponse>;
   trustDevice(request: TrustDeviceRequest): Observable<TrustDeviceResponse>;
   revokeDevice(request: RevokeDeviceRequest): Observable<RevokeDeviceResponse>;
+  // Profile operations
   getProfile(request: GetProfileRequest): Observable<GetProfileResponse>;
 }
 
