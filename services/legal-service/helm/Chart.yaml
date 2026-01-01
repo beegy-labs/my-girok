@@ -1,0 +1,21 @@
+apiVersion: v2
+name: legal-service
+description: Legal and Compliance microservice for My-Girok (GDPR, Consent, DSR)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - legal
+  - gdpr
+  - consent
+  - dsr
+  - compliance
+
+maintainers:
+  - name: Beegy Team
+    email: dev@beegy.net
+
+home: https://github.com/beegy-labs/my-girok
+sources:
+  - https://github.com/beegy-labs/my-girok

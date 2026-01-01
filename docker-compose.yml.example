@@ -80,7 +80,41 @@ services:
     networks:
       - my-girok-network
 
-  # Auth Service
+  # Identity Service - Core user management platform
+  identity-service:
+    build:
+      context: .
+      dockerfile: services/identity-service/Dockerfile
+    container_name: my-girok-identity-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_IDENTITY_NAME:-identity_dev}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-secure-secret-min-32-chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-this-to-secure-refresh-secret}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-15m}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-14d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
+
+  # Auth Service - Authentication and authorization
   auth-service:
     build:
       context: .
@@ -92,51 +126,69 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      identity-service:
+        condition: service_healthy
     environment:
-      # CHANGE THESE VALUES
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
-      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_NAME:-your_db_name}?schema=public
-
-      # JWT Configuration - GENERATE SECURE SECRETS
+      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_AUTH_NAME:-auth_dev}?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-this-to-secure-secret-min-32-chars}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-this-to-secure-refresh-secret}
       JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-15m}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
-
-      # URLs
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-
-      # Redis
+      IDENTITY_SERVICE_URL: http://identity-service:3000
       REDIS_HOST: redis
       REDIS_PORT: 6379
-
       # OAuth Credentials (Optional)
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3001/api/v1/auth/google/callback}
-
       KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-}
       KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
       KAKAO_CALLBACK_URL: ${KAKAO_CALLBACK_URL:-http://localhost:3001/api/v1/auth/kakao/callback}
-
       NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
       NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
       NAVER_CALLBACK_URL: ${NAVER_CALLBACK_URL:-http://localhost:3001/api/v1/auth/naver/callback}
     ports:
       - "3001:3001"
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/v1/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     networks:
       - my-girok-network
-    # Development: Uncomment to enable hot reload
-    # volumes:
-    #   - ./services/auth-service/src:/app/services/auth-service/src:ro
-    # command: ["pnpm", "dev"]
+
+  # Legal Service - GDPR, Consent, DSR management
+  legal-service:
+    build:
+      context: .
+      dockerfile: services/legal-service/Dockerfile
+    container_name: my-girok-legal-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3005
+      DATABASE_URL: postgresql://${DB_USER:-your_db_user}:${DB_PASSWORD:-change-this-password}@postgres:5432/${DB_LEGAL_NAME:-legal_dev}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-secure-secret-min-32-chars}
+      IDENTITY_SERVICE_URL: http://identity-service:3000
+    ports:
+      - "3005:3005"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - my-girok-network
 
   # Personal Service
   personal-service:
