@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/env.validation';
@@ -10,7 +10,6 @@ import { MessagingModule } from './common/messaging/messaging.module';
 import { SagaModule } from './common/saga/saga.module';
 import { IdentityModule } from './identity/identity.module';
 import { CompositionModule } from './composition/composition.module';
-import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.filter';
 
 @Module({
   imports: [
@@ -51,16 +50,12 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.f
   ],
   controllers: [],
   providers: [
-    // Global rate limiting guard
+    // Global rate limiting guard (ThrottlerModule requires explicit guard registration)
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    // Global exception filter for Prisma errors
-    {
-      provide: APP_FILTER,
-      useClass: PrismaClientExceptionFilter,
-    },
+    // Note: Exception filters, interceptors, and other guards are registered in CommonModule
   ],
 })
 export class AppModule {}

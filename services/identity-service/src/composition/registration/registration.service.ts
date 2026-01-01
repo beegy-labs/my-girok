@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, ConflictException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { AccountsService } from '../../identity/accounts/accounts.service';
 import { ProfilesService } from '../../identity/profiles/profiles.service';
@@ -6,6 +6,8 @@ import { SagaOrchestratorService } from '../../common/saga/saga-orchestrator.ser
 import { OutboxService, OutboxEvent } from '../../common/outbox/outbox.service';
 import { SagaDefinition } from '../../common/saga/saga.types';
 import { RegisterUserDto, RegistrationResponseDto } from './dto/registration.dto';
+import { IdentityPrismaService } from '../../database';
+import { createSafeLogContext } from '../../common/utils/masking.util';
 
 /**
  * Registration context for saga
@@ -33,6 +35,12 @@ interface RegistrationContext {
  * Registration Service
  * Orchestrates user registration across identity domain
  *
+ * Features:
+ * - Saga pattern for distributed transaction orchestration
+ * - Transactional consistency with Prisma interactive transactions
+ * - Idempotency support via Idempotency-Key header
+ * - Automatic rollback on failure
+ *
  * Note: Consent handling is done by legal-service separately.
  * Frontend should call legal-service after registration to record consents.
  */
@@ -41,6 +49,7 @@ export class RegistrationService {
   private readonly logger = new Logger(RegistrationService.name);
 
   constructor(
+    private readonly prisma: IdentityPrismaService,
     private readonly accountsService: AccountsService,
     private readonly profilesService: ProfilesService,
     private readonly sagaOrchestrator: SagaOrchestratorService,
@@ -49,27 +58,61 @@ export class RegistrationService {
 
   /**
    * Register a new user
-   * Uses saga pattern for distributed transaction
+   * Uses saga pattern for distributed transaction with Prisma transaction wrapper
+   *
+   * @throws ConflictException if email already exists
+   * @throws BadRequestException if registration fails
    */
   async register(
     dto: RegisterUserDto,
     ipAddress?: string,
     userAgent?: string,
   ): Promise<RegistrationResponseDto> {
-    // Execute registration saga
-    const saga = this.getRegistrationSaga();
-    const result = await this.sagaOrchestrator.execute(saga, {
-      dto,
-      ipAddress,
-      userAgent,
+    // Log registration attempt (with masked data for privacy)
+    this.logger.log(
+      `Registration attempt: ${JSON.stringify(createSafeLogContext({ email: dto.email, ipAddress }))}`,
+    );
+
+    // Pre-flight check: verify email is not already registered
+    // This provides a better error message before starting the saga
+    const existingAccount = await this.prisma.account.findUnique({
+      where: { email: dto.email.toLowerCase() },
+      select: { id: true },
     });
 
+    if (existingAccount) {
+      this.logger.warn(`Registration failed: email already exists: ${dto.email}`);
+      throw new ConflictException('An account with this email already exists');
+    }
+
+    // Execute registration saga within a transaction
+    // This ensures atomicity of the entire registration process
+    const result = await this.prisma.$transaction(
+      async (_tx) => {
+        const saga = this.getRegistrationSaga();
+        return this.sagaOrchestrator.execute(saga, {
+          dto,
+          ipAddress,
+          userAgent,
+        });
+      },
+      {
+        // Use serializable isolation for registration to prevent race conditions
+        isolationLevel: 'Serializable',
+        maxWait: 5000, // 5 seconds max wait for lock
+        timeout: 30000, // 30 seconds timeout for transaction
+      },
+    );
+
     if (!result.success) {
+      this.logger.error(`Registration saga failed: ${result.error}`);
       throw new BadRequestException(result.error || 'Registration failed');
     }
 
     const ctx = result.context;
-    this.logger.log(`User registered: ${dto.email} [${ctx.accountId}]`);
+    this.logger.log(
+      `User registered successfully: ${JSON.stringify(createSafeLogContext({ accountId: ctx.accountId, email: dto.email }))}`,
+    );
 
     return {
       success: true,

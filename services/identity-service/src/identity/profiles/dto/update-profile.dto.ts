@@ -1,6 +1,17 @@
-import { IsString, IsOptional, IsEnum, IsDateString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  MaxLength,
+  MinLength,
+  IsUrl,
+  Matches,
+  IsISO31661Alpha2,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Gender } from '.prisma/identity-client';
+import { Transform } from 'class-transformer';
 
 /**
  * Profile visibility enum
@@ -46,13 +57,20 @@ export class UpdateProfileDto {
   lastName?: string;
 
   @ApiPropertyOptional({
-    description: 'Profile avatar URL',
-    example: 'https://example.com/avatar.jpg',
+    description: 'Profile avatar URL (HTTPS only)',
+    example: 'https://cdn.example.com/avatars/user123.jpg',
     maxLength: 500,
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(500)
+  @IsUrl(
+    {
+      protocols: ['https'],
+      require_protocol: true,
+      require_valid_protocol: true,
+    },
+    { message: 'Avatar must be a valid HTTPS URL' },
+  )
+  @MaxLength(500, { message: 'Avatar URL must not exceed 500 characters' })
   avatar?: string;
 
   @ApiPropertyOptional({
@@ -82,35 +100,38 @@ export class UpdateProfileDto {
   gender?: Gender;
 
   @ApiPropertyOptional({
-    description: 'Phone country code',
+    description: 'Phone country code (E.164 format with +)',
     example: '+82',
     maxLength: 5,
   })
   @IsOptional()
   @IsString()
-  @MaxLength(5)
+  @Matches(/^\+[1-9]\d{0,3}$/, {
+    message: 'Phone country code must be in E.164 format (e.g., +1, +82, +852)',
+  })
   phoneCountryCode?: string;
 
   @ApiPropertyOptional({
-    description: 'Phone number (without country code)',
+    description: 'Phone number (digits only, without country code)',
     example: '1012345678',
     maxLength: 20,
   })
   @IsOptional()
   @IsString()
-  @MaxLength(20)
+  @MinLength(4, { message: 'Phone number must be at least 4 digits' })
+  @MaxLength(20, { message: 'Phone number must not exceed 20 digits' })
+  @Matches(/^\d+$/, { message: 'Phone number must contain only digits' })
   phoneNumber?: string;
 
   @ApiPropertyOptional({
     description: 'Country code (ISO 3166-1 alpha-2)',
     example: 'KR',
-    minLength: 2,
-    maxLength: 2,
   })
   @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(2)
+  @IsISO31661Alpha2({
+    message: 'Country code must be a valid ISO 3166-1 alpha-2 code (e.g., US, KR, JP)',
+  })
+  @Transform(({ value }) => (typeof value === 'string' ? value.toUpperCase() : value))
   countryCode?: string;
 
   @ApiPropertyOptional({

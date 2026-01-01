@@ -7,12 +7,29 @@ import {
   MaxLength,
   MinLength,
   Matches,
+  IsISO31661Alpha2,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AccountStatus } from '.prisma/identity-client';
+import { Transform } from 'class-transformer';
 
 // Re-export Prisma enum for external use
 export { AccountStatus };
+
+/**
+ * MFA Method enum for validation
+ * RFC 6238 (TOTP), RFC 4226 (HOTP), or SMS/Email fallback
+ */
+export enum MfaMethod {
+  /** Time-based One-Time Password (RFC 6238) */
+  TOTP = 'TOTP',
+  /** SMS-based verification */
+  SMS = 'SMS',
+  /** Email-based verification */
+  EMAIL = 'EMAIL',
+  /** Hardware security key (WebAuthn/FIDO2) */
+  WEBAUTHN = 'WEBAUTHN',
+}
 
 /**
  * DTO for updating an existing account
@@ -52,21 +69,28 @@ export class UpdateAccountDto {
   region?: string;
 
   @ApiPropertyOptional({
-    description: 'User locale',
+    description: 'User locale (BCP 47 language tag)',
     example: 'de-DE',
   })
   @IsOptional()
   @IsString()
   @MaxLength(10)
+  @Matches(/^[a-z]{2}(-[A-Z]{2})?$/, {
+    message: 'Locale must be a valid BCP 47 language tag (e.g., en, en-US, de-DE)',
+  })
   locale?: string;
 
   @ApiPropertyOptional({
-    description: 'User timezone',
+    description: 'User timezone (IANA timezone name)',
     example: 'Europe/Berlin',
   })
   @IsOptional()
   @IsString()
   @MaxLength(50)
+  @Matches(/^[A-Za-z_]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)?$|^UTC$|^GMT$/, {
+    message:
+      'Timezone must be a valid IANA timezone name (e.g., Europe/Berlin, America/New_York, UTC)',
+  })
   timezone?: string;
 
   @ApiPropertyOptional({
@@ -74,9 +98,10 @@ export class UpdateAccountDto {
     example: 'DE',
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(2)
-  @MinLength(2)
+  @IsISO31661Alpha2({
+    message: 'Country code must be a valid ISO 3166-1 alpha-2 code (e.g., US, DE, KR)',
+  })
+  @Transform(({ value }) => (typeof value === 'string' ? value.toUpperCase() : value))
   countryCode?: string;
 }
 
@@ -117,12 +142,16 @@ export class ChangePasswordDto {
  */
 export class EnableMfaDto {
   @ApiPropertyOptional({
-    description: 'MFA method (TOTP, SMS)',
-    example: 'TOTP',
+    description: 'MFA method (TOTP recommended, SMS/EMAIL for fallback)',
+    enum: MfaMethod,
+    default: MfaMethod.TOTP,
+    example: MfaMethod.TOTP,
   })
   @IsOptional()
-  @IsString()
-  method?: string;
+  @IsEnum(MfaMethod, {
+    message: `MFA method must be one of: ${Object.values(MfaMethod).join(', ')}`,
+  })
+  method?: MfaMethod;
 }
 
 /**

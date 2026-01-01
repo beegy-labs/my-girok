@@ -6,9 +6,11 @@ import {
   MaxLength,
   Matches,
   IsEnum,
+  IsISO31661Alpha2,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AuthProvider, AccountMode } from '.prisma/identity-client';
+import { Transform } from 'class-transformer';
 
 // Re-export Prisma enums for external use
 export { AuthProvider, AccountMode };
@@ -66,9 +68,15 @@ export class CreateAccountDto {
 
   @ApiPropertyOptional({
     description: 'Provider-specific user ID (required for OAuth providers)',
+    maxLength: 255,
   })
   @IsOptional()
   @IsString()
+  @MaxLength(255, { message: 'Provider ID must not exceed 255 characters' })
+  @Matches(/^[a-zA-Z0-9_\-.:]+$/, {
+    message:
+      'Provider ID can only contain alphanumeric characters, underscores, hyphens, periods, and colons',
+  })
   providerId?: string;
 
   @ApiPropertyOptional({
@@ -90,21 +98,27 @@ export class CreateAccountDto {
   region?: string;
 
   @ApiPropertyOptional({
-    description: 'User locale',
+    description: 'User locale (BCP 47 language tag)',
     example: 'en-US',
   })
   @IsOptional()
   @IsString()
   @MaxLength(10)
+  @Matches(/^[a-z]{2}(-[A-Z]{2})?$/, {
+    message: 'Locale must be a valid BCP 47 language tag (e.g., en, en-US, ko-KR)',
+  })
   locale?: string;
 
   @ApiPropertyOptional({
-    description: 'User timezone',
+    description: 'User timezone (IANA timezone name)',
     example: 'America/New_York',
   })
   @IsOptional()
   @IsString()
   @MaxLength(50)
+  @Matches(/^[A-Za-z_]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)?$|^UTC$|^GMT$/, {
+    message: 'Timezone must be a valid IANA timezone name (e.g., America/New_York, UTC)',
+  })
   timezone?: string;
 
   @ApiPropertyOptional({
@@ -112,8 +126,9 @@ export class CreateAccountDto {
     example: 'US',
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(2)
-  @MinLength(2)
+  @IsISO31661Alpha2({
+    message: 'Country code must be a valid ISO 3166-1 alpha-2 code (e.g., US, KR, JP)',
+  })
+  @Transform(({ value }) => (typeof value === 'string' ? value.toUpperCase() : value))
   countryCode?: string;
 }
