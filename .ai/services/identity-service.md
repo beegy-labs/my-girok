@@ -55,13 +55,29 @@ Central identity platform for account management across apps:
 
 > Single database: `identity_db`
 
-| Table           | Purpose             | Key Fields                                                    |
-| --------------- | ------------------- | ------------------------------------------------------------- |
-| `accounts`      | Core account + auth | id, email, username, status, mode, mfaEnabled, lockedUntil    |
-| `sessions`      | Active sessions     | id, accountId, tokenHash, refreshTokenHash, expiresAt         |
-| `devices`       | Registered devices  | id, accountId, fingerprint, deviceType, osVersion, appVersion |
-| `profiles`      | User profiles       | id, accountId, displayName, gender, birthDate, address        |
-| `outbox_events` | Event outbox        | id, eventType, payload, status, retryCount                    |
+### Core Tables
+
+| Table      | Purpose             | Key Fields                                                 |
+| ---------- | ------------------- | ---------------------------------------------------------- |
+| `accounts` | Core account + auth | id, email, username, status, mode, mfaEnabled, lockedUntil |
+| `sessions` | Active sessions     | id, accountId, tokenHash, refreshTokenHash, expiresAt      |
+| `devices`  | Registered devices  | id, accountId, fingerprint, isActive, pushTokenHash        |
+| `profiles` | User profiles       | id, accountId, displayName, locale, timezone, metadata     |
+
+### Security Tables
+
+| Table              | Purpose                  | Key Fields                                   |
+| ------------------ | ------------------------ | -------------------------------------------- |
+| `revoked_tokens`   | JWT blacklist (RFC 9068) | jti, accountId, reason, revokedAt, expiresAt |
+| `mfa_backup_codes` | Hashed backup codes      | id, accountId, codeHash, usedAt              |
+| `password_history` | Password reuse prevent   | id, accountId, passwordHash, changedAt       |
+
+### Event Infrastructure
+
+| Table                | Purpose              | Key Fields                                 |
+| -------------------- | -------------------- | ------------------------------------------ |
+| `outbox_events`      | Transactional outbox | id, eventType, payload, status, retryCount |
+| `dead_letter_events` | Failed event DLQ     | id, originalEventId, failureReason, status |
 
 ---
 
@@ -83,14 +99,15 @@ services/identity-service/
     ├── common/
     │   ├── constants/             # Service-specific constants
     │   ├── pagination/            # PaginationDto, PaginatedResponse
-    │   ├── saga/                  # Saga orchestrator
-    │   ├── outbox/                # Transactional outbox
+    │   ├── saga/                  # Saga orchestrator + RedisSagaStateStore
+    │   ├── outbox/                # Transactional outbox + DlqService
     │   ├── messaging/             # Kafka producer/consumer
     │   ├── cache/                 # Valkey/Redis caching
+    │   ├── crypto/                # CryptoService (Argon2id, AES-256-GCM)
     │   ├── metrics/               # Prometheus metrics
-    │   ├── guards/                # JWT, API key guards
+    │   ├── guards/                # JWT, API key, Permission guards
     │   ├── filters/               # Exception filters
-    │   ├── decorators/            # @Public, etc.
+    │   ├── decorators/            # @Public, @Permissions, @CurrentUser
     │   └── utils/                 # Masking, etc.
     │
     ├── identity/
@@ -226,28 +243,63 @@ REDPANDA_ENABLED=false
 
 ## Rate Limiting
 
-| Endpoint                             | Limit | TTL | Reason                |
-| ------------------------------------ | ----- | --- | --------------------- |
-| `POST /sessions`                     | 10    | 60s | Prevent session flood |
-| `POST /sessions/refresh`             | 30    | 60s | Reasonable refresh    |
-| `POST /sessions/validate`            | 100   | 60s | High-frequency        |
-| `POST /accounts/:id/change-password` | 3     | 60s | Prevent brute force   |
+| Endpoint                              | Limit | TTL | Reason                   |
+| ------------------------------------- | ----- | --- | ------------------------ |
+| `GET /accounts/by-email/:email`       | 5     | 60s | Prevent user enumeration |
+| `GET /accounts/by-username/:username` | 5     | 60s | Prevent user enumeration |
+| `POST /sessions`                      | 10    | 60s | Prevent session flood    |
+| `POST /sessions/refresh`              | 30    | 60s | Reasonable refresh       |
+| `POST /sessions/validate`             | 100   | 60s | High-frequency           |
+| `POST /accounts/:id/change-password`  | 3     | 60s | Prevent brute force      |
+| `POST /accounts/:id/mfa/disable`      | 3     | 60s | Prevent MFA bypass       |
+| `POST /devices`                       | 10    | 60s | Prevent device flood     |
 
 ---
 
 ## Security
 
+### Password Hashing (OWASP 2024)
+
+- **Algorithm**: Argon2id (not bcrypt)
+- **Parameters**: memoryCost=47104 KiB, timeCost=1, parallelism=1
+- **Password History**: Separate table prevents reuse
+
 ### MFA & Account Security
 
 - **MFA Methods**: TOTP (RFC 6238), SMS, EMAIL
+- **Backup Codes**: Separate table, bcrypt hashed, single-use tracking
 - **Lockout**: 5 failed attempts → 15min lock
-- **Fields**: `mfaEnabled`, `failedLoginAttempts`, `lockedUntil`
+- **Disable MFA**: Requires password verification
 
-### Token Security
+### Token Security (RFC 9068)
 
-- Access tokens: Short-lived (1h)
-- Refresh tokens: SHA-256 hashed before storage
-- Session binding: IP + User-Agent validation
+- **Access tokens**: Short-lived (1h), includes `jti` claim
+- **Refresh tokens**: SHA-256 hashed, rotation detection
+- **Token Revocation**: JTI blacklist with cache-aside pattern
+- **Session binding**: IP subnet (/24 IPv4, /64 IPv6) + User-Agent
+
+### Token Revocation
+
+```typescript
+// Check revocation (cache → DB fallback)
+const isRevoked = await jwtGuard.isTokenRevoked(jti);
+
+// Revoke token (logout, security event)
+await jwtGuard.revokeToken(jti, accountId, 'logout');
+```
+
+### Permission Guard
+
+```typescript
+// Require specific permission
+@Permissions('accounts:read')
+
+// Require any of multiple permissions
+@RequireAnyPermission('accounts:read', 'accounts:admin')
+
+// Wildcard support
+@Permissions('accounts:*')  // Any action on accounts
+```
 
 ### PII Masking
 
@@ -255,7 +307,7 @@ All logs use `masking.util.ts` for:
 
 - UUID masking: `550e8400-****-****-****-********0000`
 - Email masking: `us***@example.com`
-- IP masking: `192.168.*.*`
+- IP masking: `192.168.*.*` (IPv4), `2001:db8:****:****` (IPv6)
 
 ---
 
@@ -285,6 +337,87 @@ await prisma.$transaction(async (tx) => {
     payload: { ... }
   });
 });
+```
+
+### Dead Letter Queue (DLQ)
+
+Failed events after max retries (5) are moved to DLQ:
+
+```typescript
+// Move to DLQ
+await dlqService.moveToDlq({
+  originalEventId: event.id,
+  aggregateType: 'Account',
+  eventType: 'ACCOUNT_CREATED',
+  failureReason: 'Kafka broker unavailable',
+  retryCount: 5,
+});
+
+// Manage DLQ events
+await dlqService.retryEvent(id, 'operator@email.com');
+await dlqService.resolveEvent(id, 'operator', 'Fixed manually');
+await dlqService.ignoreEvent(id, 'operator', 'Obsolete data');
+
+// Cleanup: Auto-deletes resolved/ignored events after 30 days
+```
+
+---
+
+## Saga Pattern (Distributed Transactions)
+
+Redis-backed state persistence for multi-step operations:
+
+```typescript
+const saga = await sagaOrchestrator.execute<AccountRegistrationContext>({
+  sagaId: `registration-${accountId}`,
+  steps: [
+    {
+      name: 'createAccount',
+      execute: async (ctx) => {
+        /* create account */
+      },
+      compensate: async (ctx) => {
+        /* rollback */
+      },
+    },
+    {
+      name: 'createProfile',
+      execute: async (ctx) => {
+        /* create profile */
+      },
+      compensate: async (ctx) => {
+        /* rollback */
+      },
+    },
+  ],
+});
+```
+
+### Saga State Store
+
+- **Storage**: Redis/Valkey with TTL
+- **Running sagas**: 24-hour TTL
+- **Completed sagas**: 1-hour TTL
+- **Recovery**: Query by status for stale saga detection
+
+---
+
+## Entity Classes
+
+Domain entities with sensitive field masking:
+
+```typescript
+// Session entity - masks token hashes
+const session = SessionEntity.fromPrisma(prismaSession);
+session.toSafeJSON(); // tokenHash: '****'
+
+// Profile entity - calculates age
+const profile = ProfileEntity.fromPrisma(prismaProfile);
+profile.calculateAge(); // 25
+
+// Device entity - trust level computation
+const device = DeviceEntity.fromPrisma(prismaDevice);
+device.getTrustLevel(); // 'high' | 'medium' | 'low'
 ```
 
 ---

@@ -248,5 +248,75 @@ ServiceAccessGuard / CountryConsentGuard (optional)
 
 ---
 
+## Security Patterns (2025)
+
+### Token Revocation (RFC 9068)
+
+JWT tokens can be revoked before expiry via JTI blacklist:
+
+```typescript
+// identity-service JwtAuthGuard
+await jwtAuthGuard.revokeToken(jti, accountId, 'logout');
+// Uses cache-aside: Redis (1h TTL) → DB fallback
+```
+
+### Password Hashing (OWASP 2024)
+
+```typescript
+// Argon2id (not bcrypt)
+{
+  memoryCost: 47104,  // 46 MiB
+  timeCost: 1,
+  parallelism: 1
+}
+```
+
+### Permission Guard
+
+```typescript
+@Permissions('accounts:read')        // Specific permission
+@RequireAnyPermission('*:read')      // Wildcard support
+```
+
+---
+
+## Event Infrastructure
+
+### Transactional Outbox + DLQ
+
+```
+Event Created → Outbox (5s polling) → Redpanda
+                   │
+         ┌─────────┴─────────┐
+         ▼                   ▼
+      Success            Failed (5x)
+         │                   │
+         ▼                   ▼
+    COMPLETED         Dead Letter Queue
+                           │
+               ┌───────────┼───────────┐
+               ▼           ▼           ▼
+            RETRIED    RESOLVED     IGNORED
+               │           │           │
+               ▼           │           │
+            Reprocess   External    Obsolete
+                          Fix        Data
+```
+
+### Saga Pattern (Distributed Transactions)
+
+```typescript
+const saga = await sagaOrchestrator.execute({
+  sagaId: `registration-${accountId}`,
+  steps: [
+    { name: 'createAccount', execute, compensate },
+    { name: 'createProfile', execute, compensate },
+  ],
+});
+// Redis state store: 24h TTL (running), 1h TTL (completed)
+```
+
+---
+
 **Service docs**: `.ai/services/identity-service.md`, `.ai/services/auth-service.md`, `.ai/services/legal-service.md`
 **Full roadmap**: `docs/ARCHITECTURE_ROADMAP.md`
