@@ -67,9 +67,14 @@ Kubernetes deployment guide:
 - [Main README](../README.md) - Project overview
 - [Architecture Roadmap](ARCHITECTURE_ROADMAP.md) - System architecture overview
 
-### Services
+### Identity Platform Services (Phase 3)
 
-- [Auth Service](services/AUTH_SERVICE.md) - Authentication, sessions, legal consent
+- [Identity Service](services/IDENTITY_SERVICE.md) - Accounts, sessions, devices, profiles (Port 3000/50051)
+- [Auth Service](services/AUTH_SERVICE.md) - RBAC, operators, sanctions (Port 3001/50052)
+- [Legal Service](services/LEGAL_SERVICE.md) - Consents, documents, DSR (Port 3005/50053)
+
+### Other Services
+
 - [Personal Service](services/PERSONAL_SERVICE.md) - Resume management, file storage
 - [Audit Service](services/AUDIT_SERVICE.md) - Compliance logging (ClickHouse, 5yr retention)
 - [Analytics Service](services/ANALYTICS_SERVICE.md) - Business analytics (ClickHouse, MVs)
@@ -87,8 +92,9 @@ Kubernetes deployment guide:
 
 - [ClickHouse](infrastructure/CLICKHOUSE.md) - Analytics database (MVs, schema, queries)
 
-### Features
+### Guides
 
+- [gRPC Guide](guides/GRPC.md) - Inter-service gRPC communication
 - [Resume Guide](guides/RESUME.md) - Resume feature documentation
 - [SEO Guide](guides/SEO_GUIDE.md) - Search engine optimization
 - [AdSense Guide](guides/ADSENSE_GUIDE.md) - Google AdSense integration

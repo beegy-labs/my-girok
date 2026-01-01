@@ -17,12 +17,13 @@ Core identity management: accounts, sessions, devices, profiles
 
 ## Service Info
 
-| Property | Value                          |
-| -------- | ------------------------------ |
-| Port     | 3000                           |
-| Database | identity_db (PostgreSQL)       |
-| Codebase | `services/identity-service/`   |
-| Events   | `identity.*` topics (Redpanda) |
+| Property  | Value                          |
+| --------- | ------------------------------ |
+| REST Port | 3000                           |
+| gRPC Port | 50051                          |
+| Database  | identity_db (PostgreSQL)       |
+| Codebase  | `services/identity-service/`   |
+| Events    | `identity.*` topics (Redpanda) |
 
 ---
 
@@ -43,6 +44,54 @@ identity-service (Port 3000)
 
 - `auth-service`: Permission checks, sanctions (gRPC)
 - `legal-service`: Consent validation (gRPC)
+
+---
+
+## gRPC Server (Port 50051)
+
+This service exposes a gRPC server for other services to call.
+
+### Available Methods
+
+| Method            | Request                | Response            | Description            |
+| ----------------- | ---------------------- | ------------------- | ---------------------- |
+| GetAccount        | `{id}`                 | `{account}`         | Get account by ID      |
+| GetAccountByEmail | `{email}`              | `{account}`         | Get account by email   |
+| ValidateAccount   | `{id}`                 | `{valid, status}`   | Check account exists   |
+| CreateAccount     | `{email, password...}` | `{account}`         | Create new account     |
+| UpdateAccount     | `{id, fields...}`      | `{account}`         | Update account         |
+| DeleteAccount     | `{id}`                 | `{success}`         | Soft delete account    |
+| ValidatePassword  | `{account_id, pwd}`    | `{valid}`           | Verify password        |
+| CreateSession     | `{account_id, ip...}`  | `{session, tokens}` | Create login session   |
+| ValidateSession   | `{token_hash}`         | `{valid, session}`  | Validate session token |
+| RevokeSession     | `{id}`                 | `{success}`         | Revoke single session  |
+| RevokeAllSessions | `{account_id}`         | `{revoked_count}`   | Revoke all sessions    |
+| GetAccountDevices | `{account_id}`         | `{devices[]}`       | List account devices   |
+| TrustDevice       | `{device_id}`          | `{device}`          | Mark device as trusted |
+| RevokeDevice      | `{device_id}`          | `{success}`         | Remove device          |
+| GetProfile        | `{account_id}`         | `{profile}`         | Get user profile       |
+
+### Proto Definition
+
+```
+packages/proto/identity/v1/identity.proto
+```
+
+### Client Usage (from other services)
+
+```typescript
+import { IdentityGrpcClient } from '@my-girok/nest-common';
+
+@Injectable()
+export class AuthService {
+  constructor(private readonly identityClient: IdentityGrpcClient) {}
+
+  async validateUser(accountId: string) {
+    const { valid, status } = await this.identityClient.validateAccount({ id: accountId });
+    return valid && status === 'ACTIVE';
+  }
+}
+```
 
 ---
 

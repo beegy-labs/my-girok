@@ -444,6 +444,82 @@ await this.prisma.outboxEvents.create({
 
 ---
 
+## gRPC Server
+
+The identity-service exposes a gRPC server on port **50051** for inter-service communication.
+
+### Starting the gRPC Server
+
+The gRPC server starts alongside the REST API:
+
+```bash
+# In main.ts
+const grpcApp = await NestFactory.createMicroservice<MicroserviceOptions>(
+  AppModule,
+  createIdentityGrpcOptions({ port: 50051 }),
+);
+await grpcApp.listen();
+```
+
+### Proto Definition
+
+```protobuf
+// packages/proto/identity/v1/identity.proto
+syntax = "proto3";
+package identity.v1;
+
+service IdentityService {
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
+  rpc GetAccountByEmail(GetAccountByEmailRequest) returns (GetAccountByEmailResponse);
+  rpc GetAccountByUsername(GetAccountByUsernameRequest) returns (GetAccountByUsernameResponse);
+  rpc ValidateAccount(ValidateAccountRequest) returns (ValidateAccountResponse);
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  rpc ValidatePassword(ValidatePasswordRequest) returns (ValidatePasswordResponse);
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
+  rpc GetAccountDevices(GetAccountDevicesRequest) returns (GetAccountDevicesResponse);
+  rpc TrustDevice(TrustDeviceRequest) returns (TrustDeviceResponse);
+  rpc RevokeDevice(RevokeDeviceRequest) returns (RevokeDeviceResponse);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+}
+```
+
+### gRPC Environment Variables
+
+| Variable             | Default | Description       |
+| -------------------- | ------- | ----------------- |
+| `IDENTITY_GRPC_PORT` | 50051   | gRPC server port  |
+| `IDENTITY_GRPC_HOST` | 0.0.0.0 | gRPC bind address |
+
+### Client Usage (from other services)
+
+Other services can call identity-service via the `IdentityGrpcClient`:
+
+```typescript
+import { GrpcClientsModule, IdentityGrpcClient } from '@my-girok/nest-common';
+
+@Module({
+  imports: [GrpcClientsModule.forRoot({ identity: true })],
+})
+export class AppModule {}
+
+@Injectable()
+export class SomeService {
+  constructor(private readonly identityClient: IdentityGrpcClient) {}
+
+  async getUser(id: string) {
+    const { account } = await this.identityClient.getAccount({ id });
+    return account;
+  }
+}
+```
+
+---
+
 ## Related Documentation
 
 - [Architecture Overview](../../.ai/architecture.md)
@@ -451,3 +527,4 @@ await this.prisma.outboxEvents.create({
 - [Identity Service LLM Reference](../../.ai/services/identity-service.md)
 - [Auth Service](../../.ai/services/auth-service.md)
 - [Legal Service](../../.ai/services/legal-service.md)
+- [gRPC Clients Guide](../packages/nest-common.md#grpc-clients)

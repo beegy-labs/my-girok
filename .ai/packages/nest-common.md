@@ -719,4 +719,76 @@ db.transaction.propagation: required
 
 ---
 
+## gRPC Clients
+
+Inter-service communication via typed gRPC clients.
+
+### Module Setup
+
+```typescript
+import { GrpcClientsModule, IdentityGrpcClient } from '@my-girok/nest-common';
+
+@Module({
+  imports: [
+    GrpcClientsModule.forRoot({
+      identity: true, // Enable identity-service client
+      auth: true, // Enable auth-service client
+      legal: true, // Enable legal-service client
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Clients
+
+| Client               | Service          | gRPC Port | Methods                                             |
+| -------------------- | ---------------- | --------- | --------------------------------------------------- |
+| `IdentityGrpcClient` | identity-service | 50051     | getAccount, validateSession, createAccount, etc.    |
+| `AuthGrpcClient`     | auth-service     | 50052     | checkPermission, getOperator, checkSanction, etc.   |
+| `LegalGrpcClient`    | legal-service    | 50053     | checkConsents, grantConsent, createDsrRequest, etc. |
+
+### Usage
+
+```typescript
+@Injectable()
+export class SomeService {
+  constructor(private readonly identityClient: IdentityGrpcClient) {}
+
+  async getUser(id: string) {
+    const { account } = await this.identityClient.getAccount({ id });
+    return account;
+  }
+}
+```
+
+### Error Handling
+
+```typescript
+import { isGrpcError, GrpcError } from '@my-girok/nest-common';
+import { status as GrpcStatus } from '@grpc/grpc-js';
+
+try {
+  await this.identityClient.getAccount({ id });
+} catch (error) {
+  if (isGrpcError(error) && error.code === GrpcStatus.NOT_FOUND) {
+    throw new NotFoundException('Account not found');
+  }
+  throw error;
+}
+```
+
+### Configuration
+
+| Env Variable         | Default   | Description           |
+| -------------------- | --------- | --------------------- |
+| `IDENTITY_GRPC_HOST` | localhost | Identity service host |
+| `IDENTITY_GRPC_PORT` | 50051     | Identity gRPC port    |
+| `AUTH_GRPC_HOST`     | localhost | Auth service host     |
+| `AUTH_GRPC_PORT`     | 50052     | Auth gRPC port        |
+| `LEGAL_GRPC_HOST`    | localhost | Legal service host    |
+| `LEGAL_GRPC_PORT`    | 50053     | Legal gRPC port       |
+
+---
+
 **Detailed docs**: `docs/packages/nest-common.md`
