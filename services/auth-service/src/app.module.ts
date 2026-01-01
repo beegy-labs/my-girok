@@ -17,7 +17,6 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OAuthConfigModule } from './oauth-config/oauth-config.module';
-import { LegalModule } from './legal/legal.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicesModule } from './services/services.module';
 import { OperatorModule } from './operator/operator.module';
@@ -68,7 +67,6 @@ import configuration from './config/configuration';
     AuthModule,
     UsersModule,
     OAuthConfigModule,
-    LegalModule,
     AdminModule,
     ServicesModule,
     OperatorModule,

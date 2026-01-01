@@ -1,15 +1,28 @@
 # Legal Service
 
-> Consent management, legal documents, law registry, DSR handling
+> **WARNING: This is an INDEPENDENT service. Do NOT add identity/auth code here.**
 
-## Purpose
+Consent management, legal documents, law registry, DSR handling
 
-Legal compliance platform for the Identity Platform:
+## Domain Boundaries
 
-- **Consent Management**: GDPR, PIPA, CCPA consent collection and tracking
-- **Legal Documents**: Terms of Service, Privacy Policy versioning
-- **Law Registry**: Country-specific legal requirements
-- **DSR Handling**: Data Subject Requests (access, deletion, portability)
+| This Service (legal)      | NOT This Service                      |
+| ------------------------- | ------------------------------------- |
+| Consents, Consent Logs    | Accounts, Sessions (identity-service) |
+| Legal Documents, Versions | Devices, Profiles (identity-service)  |
+| Law Registry              | Roles, Permissions (auth-service)     |
+| DSR Requests, DSR Logs    | Operators, Sanctions (auth-service)   |
+
+---
+
+## Service Info
+
+| Property | Value                       |
+| -------- | --------------------------- |
+| Port     | 3005                        |
+| Database | legal_db (PostgreSQL)       |
+| Codebase | `services/legal-service/`   |
+| Events   | `legal.*` topics (Redpanda) |
 
 ---
 
@@ -30,7 +43,6 @@ legal-service (Port 3005)
 
 - `identity-service`: Account validation (gRPC)
 - `auth-service`: Operator permissions (gRPC)
-- Events: `legal.*` topics (Redpanda)
 
 ---
 
@@ -82,6 +94,7 @@ GET    /law-registry/code/:code   # Get law by code (e.g., GDPR, PIPA)
 GET    /law-registry/country/:code # Get laws by country
 GET    /law-registry              # List laws (paginated)
 PATCH  /law-registry/:id          # Update law
+POST   /law-registry/seed         # Seed default laws
 ```
 
 ### DSR Requests
@@ -234,6 +247,20 @@ API_KEYS=key1,key2
 
 3. Completion
    └── Send response → Archive request → Publish event
+```
+
+---
+
+## Guards
+
+```typescript
+@UseGuards(JwtAuthGuard)
+@Get('consents')
+getConsents(@CurrentUser() user: User) { }
+
+@UseGuards(ApiKeyGuard)  // Service-to-service
+@Post('consents/check')
+checkConsents(@Body() dto: CheckConsentsDto) { }
 ```
 
 ---

@@ -1,15 +1,28 @@
 # Identity Service
 
-> Core identity management: accounts, sessions, devices, profiles
+> **WARNING: This is an INDEPENDENT service. Do NOT add auth/legal code here.**
 
-## Purpose
+Core identity management: accounts, sessions, devices, profiles
 
-Central identity repository for the Identity Platform:
+## Domain Boundaries
 
-- **Account lifecycle**: Registration, activation, deactivation, deletion
-- **Session management**: Token issuance, validation, refresh, revocation
-- **Device management**: Registration, trust, fingerprinting
-- **Profile data**: User profiles, preferences
+| This Service (identity) | NOT This Service                    |
+| ----------------------- | ----------------------------------- |
+| Accounts, Sessions      | Roles, Permissions (auth-service)   |
+| Devices, Profiles       | Operators, Sanctions (auth-service) |
+| Account lifecycle       | Consents, Documents (legal-service) |
+| MFA enablement          | DSR Requests (legal-service)        |
+
+---
+
+## Service Info
+
+| Property | Value                          |
+| -------- | ------------------------------ |
+| Port     | 3000                           |
+| Database | identity_db (PostgreSQL)       |
+| Codebase | `services/identity-service/`   |
+| Events   | `identity.*` topics (Redpanda) |
 
 ---
 
@@ -30,7 +43,6 @@ identity-service (Port 3000)
 
 - `auth-service`: Permission checks, sanctions (gRPC)
 - `legal-service`: Consent validation (gRPC)
-- Events: `identity.*` topics (Redpanda)
 
 ---
 
@@ -231,14 +243,6 @@ ENCRYPTION_KEY=<32-bytes-base64>
 | -------------- | ------------------- | --------------- |
 | `JwtAuthGuard` | User authentication | `Authorization` |
 | `ApiKeyGuard`  | Service-to-service  | `X-API-Key`     |
-
-### @Public Decorator
-
-```typescript
-@Public()  // Skip auth guards
-@Get('health')
-health() { return { status: 'ok' }; }
-```
 
 ---
 

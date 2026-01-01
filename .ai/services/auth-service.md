@@ -1,20 +1,28 @@
 # Auth Service
 
-> Authorization, RBAC, operators, and sanctions management
+> **WARNING: This is an INDEPENDENT service. Do NOT add identity/legal code here.**
 
-## Purpose
+Authorization, RBAC, operators, and sanctions management
 
-Authorization platform for the Identity Platform:
+## Domain Boundaries
 
-- **RBAC**: Roles, permissions, hierarchical access control
-- **Operators**: Service operator management and invitations
-- **Sanctions**: User/operator sanctions, appeals, notifications
+| This Service (auth)       | NOT This Service                      |
+| ------------------------- | ------------------------------------- |
+| Roles, Permissions        | Accounts, Sessions (identity-service) |
+| Operators, Invitations    | Devices, Profiles (identity-service)  |
+| Sanctions, Appeals        | Consents, Documents (legal-service)   |
+| Service Features, Testers | DSR Requests (legal-service)          |
 
-## Tech Stack
+---
 
-- **Framework**: NestJS 11 + TypeScript 5.9
-- **Database**: PostgreSQL 16 (auth_db) + Prisma 6
-- **Port**: 3001
+## Service Info
+
+| Property | Value                      |
+| -------- | -------------------------- |
+| Port     | 3001                       |
+| Database | auth_db (PostgreSQL)       |
+| Codebase | `services/auth-service/`   |
+| Events   | `auth.*` topics (Redpanda) |
 
 ---
 
@@ -25,7 +33,9 @@ auth-service (Port 3001)
 ├── roles/          # RBAC role definitions
 ├── permissions/    # Fine-grained permissions
 ├── operators/      # Service operators
-└── sanctions/      # User/operator sanctions
+├── sanctions/      # User/operator sanctions
+├── services/       # Service config, features, testers
+└── settings/       # Countries, locales
         │
         ▼
     auth_db (PostgreSQL)
@@ -35,7 +45,6 @@ auth-service (Port 3001)
 
 - `identity-service`: Account validation (gRPC)
 - `legal-service`: Consent checks (gRPC)
-- Events: `auth.*` topics (Redpanda)
 
 ---
 
@@ -51,116 +60,226 @@ auth-service (Port 3001)
 | `operator_permissions`   | Direct permissions     | operatorId, permissionId, grantedBy   |
 | `sanctions`              | Account sanctions      | id, subjectId, type, status, severity |
 | `sanction_notifications` | Sanction notices       | id, sanctionId, channel, sentAt       |
+| `services`               | Registered services    | id, slug, name, status                |
+| `service_configs`        | Service configuration  | id, serviceId, jwtValidation, etc.    |
+| `service_features`       | Feature definitions    | id, serviceId, code, category, path   |
+| `service_testers`        | Tester management      | id, serviceId, userId, bypassOptions  |
+| `countries`              | Supported countries    | code, name, isActive                  |
+| `locales`                | Supported locales      | code, name, isActive                  |
 | `outbox_events`          | Event outbox           | id, eventType, payload, status        |
 
 ---
 
 ## API Endpoints
 
-### Authentication
+### Roles
 
 ```
-POST /v1/auth/register       # { email, password, name, consents[] }
-POST /v1/auth/login          # { email, password }
-POST /v1/auth/refresh        # { refreshToken }
-POST /v1/auth/logout         # (auth required)
-GET  /v1/auth/google         # OAuth redirect
-GET  /v1/auth/google/callback
-POST /v1/auth/domain-access  # Time-limited token
+POST   /roles                     # Create role
+GET    /roles                     # List roles (paginated)
+GET    /roles/:id                 # Get role by ID
+PATCH  /roles/:id                 # Update role
+DELETE /roles/:id                 # Delete role
+POST   /roles/:id/permissions     # Assign permissions
+DELETE /roles/:id/permissions/:permissionId  # Remove permission
 ```
 
-### Users
+### Permissions
 
 ```
-GET   /v1/users/me                    # Profile (auth)
-PATCH /v1/users/me                    # Update (auth)
-POST  /v1/users/me/change-password    # (auth)
-GET   /v1/users/by-username/:username # Public profile
+POST   /permissions               # Create permission
+GET    /permissions               # List permissions (paginated)
+GET    /permissions/:id           # Get permission by ID
+PATCH  /permissions/:id           # Update permission
+DELETE /permissions/:id           # Delete permission
+GET    /permissions/categories    # List categories
 ```
 
-### Legal & Consent
+### Operators
 
 ```
-GET  /v1/legal/consent-requirements   # Public
-GET  /v1/legal/documents/:type        # Public
-GET  /v1/legal/consents               # User consents (auth)
-POST /v1/legal/consents               # Create (auth)
-PUT  /v1/legal/consents/:type         # Update (auth)
-```
-
-### Admin (H-RBAC)
-
-```
-POST /v1/admin/auth/login|refresh|logout
-GET  /v1/admin/auth/me
-
-GET|POST        /v1/admin/tenants           # tenant:read|create
-GET|PUT         /v1/admin/tenants/:id       # tenant:read|update
-PATCH           /v1/admin/tenants/:id/status # tenant:approve
-
-GET|POST|PUT|DELETE /v1/admin/legal/documents     # legal:*
-GET             /v1/admin/legal/consents[/stats]  # legal:read
-
-GET             /v1/admin/audit/logs[/export]     # audit:read
-```
-
-### Service Management
-
-```
-GET|POST        /v1/admin/services              # service:read|create
-GET|PUT         /v1/admin/services/:id          # service:read|update
-GET|POST|PUT|DELETE /v1/admin/services/:id/features  # service:update
-GET|POST|DELETE /v1/admin/services/:id/testers/users  # service:update
-GET|POST|DELETE /v1/admin/services/:id/testers/admins # service:update
-GET|PUT         /v1/admin/services/:id/config   # service:update
+POST   /operators                 # Create operator
+GET    /operators                 # List operators (paginated)
+GET    /operators/:id             # Get operator by ID
+PATCH  /operators/:id             # Update operator
+DELETE /operators/:id             # Delete operator
+POST   /operators/invite          # Invite operator
+POST   /operators/accept-invite   # Accept invitation
+POST   /operators/:id/permissions # Grant direct permission
+DELETE /operators/:id/permissions/:permissionId  # Revoke permission
 ```
 
 ### Sanctions
 
 ```
-GET|POST        /v1/admin/services/:serviceId/sanctions     # sanction:read|create
-GET|PUT|DELETE  /v1/admin/services/:serviceId/sanctions/:id # sanction:*
-POST            /v1/admin/services/:serviceId/sanctions/:id/revoke  # sanction:revoke
-POST            /v1/admin/services/:serviceId/sanctions/:id/extend  # sanction:update
-POST            /v1/admin/services/:serviceId/sanctions/:id/reduce  # sanction:update
-GET|PUT         /v1/admin/services/:serviceId/sanctions/:id/appeal  # sanction:appeal
-GET|POST        /v1/admin/services/:serviceId/sanctions/:id/notifications # sanction:notify
+POST   /sanctions                 # Create sanction
+GET    /sanctions                 # List sanctions (paginated)
+GET    /sanctions/:id             # Get sanction by ID
+PATCH  /sanctions/:id             # Update sanction
+POST   /sanctions/:id/revoke      # Revoke sanction
+POST   /sanctions/:id/extend      # Extend duration
+POST   /sanctions/:id/reduce      # Reduce duration
+GET    /sanctions/:id/appeal      # Get appeal
+POST   /sanctions/:id/appeal      # Submit appeal
+POST   /sanctions/:id/appeal/review  # Review appeal (admin)
+GET    /sanctions/:id/notifications  # List notifications
+POST   /sanctions/:id/notifications/resend  # Resend notification
 ```
 
-#### Sanction Types
+### Services
 
-| Type                  | Description                     |
-| --------------------- | ------------------------------- |
-| `WARNING`             | Warning notice, no restrictions |
-| `TEMPORARY_BAN`       | Time-limited access restriction |
-| `PERMANENT_BAN`       | Indefinite access restriction   |
-| `FEATURE_RESTRICTION` | Specific feature access blocked |
+```
+POST   /services                  # Create service
+GET    /services                  # List services (paginated)
+GET    /services/:id              # Get service by ID
+PATCH  /services/:id              # Update service
+GET    /services/:id/config       # Get service config
+PATCH  /services/:id/config       # Update service config
+```
 
-#### Appeal Flow
+### Service Features
 
-1. User submits appeal → `appealStatus: PENDING`
-2. Admin reviews → `UNDER_REVIEW`
-3. Decision: `APPROVED` (revokes sanction) | `REJECTED` | `ESCALATED`
+```
+GET    /services/:id/features     # List features (hierarchical)
+POST   /services/:id/features     # Create feature
+GET    /services/:id/features/:featureId  # Get feature
+PATCH  /services/:id/features/:featureId  # Update feature
+DELETE /services/:id/features/:featureId  # Delete feature
+POST   /services/:id/features/bulk  # Bulk operations
+```
 
-## Key Flows
+### Service Testers
 
-### Registration
+```
+GET    /services/:id/testers/users   # List user testers
+POST   /services/:id/testers/users   # Add user tester
+DELETE /services/:id/testers/users/:userId  # Remove user tester
+GET    /services/:id/testers/admins  # List admin testers
+POST   /services/:id/testers/admins  # Add admin tester
+DELETE /services/:id/testers/admins/:adminId  # Remove admin tester
+```
 
-1. Validate DTO → Check email → Hash password (bcrypt 12)
-2. Create user + consents in transaction
-3. Return { user, accessToken, refreshToken }
+### Settings (Global)
 
-### Login
+```
+GET    /settings/countries        # List countries
+POST   /settings/countries        # Create country
+PATCH  /settings/countries/:code  # Update country
+DELETE /settings/countries/:code  # Delete country
+GET    /settings/locales          # List locales
+POST   /settings/locales          # Create locale
+PATCH  /settings/locales/:code    # Update locale
+DELETE /settings/locales/:code    # Delete locale
+```
 
-1. Find user → Verify password → Generate tokens
-2. Create session → Return tokens
+---
 
-## JWT Configuration
+## Event Types
 
-| Token   | Expiration | Storage         |
-| ------- | ---------- | --------------- |
-| Access  | 15 min     | localStorage    |
-| Refresh | 14 days    | HttpOnly cookie |
+```typescript
+// Role Events
+'ROLE_CREATED';
+'ROLE_UPDATED';
+'ROLE_DELETED';
+'ROLE_PERMISSION_ASSIGNED';
+'ROLE_PERMISSION_REMOVED';
+
+// Operator Events
+'OPERATOR_CREATED';
+'OPERATOR_INVITED';
+'OPERATOR_ACCEPTED';
+'OPERATOR_UPDATED';
+'OPERATOR_DELETED';
+
+// Sanction Events
+'SANCTION_CREATED';
+'SANCTION_REVOKED';
+'SANCTION_EXTENDED';
+'SANCTION_REDUCED';
+'SANCTION_APPEALED';
+'SANCTION_APPEAL_RESOLVED';
+
+// Service Events
+'SERVICE_CREATED';
+'SERVICE_UPDATED';
+'SERVICE_CONFIG_UPDATED';
+'SERVICE_FEATURE_UPDATED';
+```
+
+---
+
+## Code Structure
+
+```
+services/auth-service/
+├── prisma/
+│   └── schema.prisma           # auth_db schema
+├── migrations/
+│   └── auth/                   # goose migrations
+└── src/
+    ├── database/
+    │   └── prisma.service.ts   # Prisma client + UUIDv7
+    ├── common/
+    │   ├── cache/              # CacheService
+    │   ├── guards/             # JWT, API key, Permission guards
+    │   └── decorators/         # @Permissions, @CurrentUser
+    ├── roles/
+    │   ├── roles.module.ts
+    │   ├── roles.controller.ts
+    │   ├── roles.service.ts
+    │   └── dto/
+    ├── permissions/
+    │   ├── permissions.module.ts
+    │   ├── permissions.controller.ts
+    │   ├── permissions.service.ts
+    │   └── dto/
+    ├── operators/
+    │   ├── operators.module.ts
+    │   ├── operators.controller.ts
+    │   ├── operators.service.ts
+    │   └── dto/
+    ├── sanctions/
+    │   ├── sanctions.module.ts
+    │   ├── sanctions.controller.ts
+    │   ├── sanctions.service.ts
+    │   └── dto/
+    ├── services/
+    │   ├── services.module.ts
+    │   ├── services.controller.ts
+    │   ├── services.service.ts
+    │   ├── features/
+    │   ├── testers/
+    │   └── dto/
+    └── settings/
+        ├── settings.module.ts
+        ├── settings.controller.ts
+        ├── settings.service.ts
+        └── dto/
+```
+
+---
+
+## Environment Variables
+
+```env
+PORT=3001
+NODE_ENV=development
+
+# Database
+DATABASE_URL=postgresql://...auth_db
+
+# Cache (Valkey/Redis)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT
+JWT_SECRET=...
+
+# API Keys (service-to-service)
+API_KEYS=key1,key2
+```
+
+---
 
 ## H-RBAC Hierarchy
 
@@ -176,229 +295,25 @@ TENANT LEVEL
 └── partner_editor (level 50)  - View only
 ```
 
-### Permissions
+### Permission Format
 
 ```typescript
-@Permissions('legal:read')    // resource:action
-@Permissions('tenant:approve')
-@Permissions('*')             // Wildcard
-```
-
-## Guards
-
-```typescript
-@UseGuards(JwtAuthGuard)
-@Get('profile')
-getProfile(@CurrentUser() user: User) { }
-
-@UseGuards(AdminAuthGuard, PermissionGuard)
-@Permissions('legal:create')
-createDocument(@CurrentAdmin() admin: AdminPayload) { }
-```
-
-## Security
-
-- Password: bcrypt 12 rounds
-- Rate limiting: 5 req/min (login/register)
-- Account lockout: 5 failed attempts (30 min)
-
-## Caching (Valkey)
-
-| Data             | Key Pattern                 | TTL | Invalidation   |
-| ---------------- | --------------------------- | --- | -------------- |
-| Role Permissions | `auth:permissions:{roleId}` | 24h | role update    |
-| Service Config   | `auth:service:{slug}`       | 24h | service update |
-
-```typescript
-import { CacheKey } from '@my-girok/nest-common';
-
-const key = CacheKey.make('auth', 'permissions', roleId);
-// → "dev:auth:permissions:550e8400..."
-```
-
-**Policy**: `docs/policies/CACHING.md` | `.ai/caching.md`
-
----
-
-## Global Account System
-
-> For detailed policy and architecture: `docs/policies/GLOBAL_ACCOUNT.md`
-
-### Quick Reference
-
-| Mode    | Description                               |
-| ------- | ----------------------------------------- |
-| SERVICE | Per-service independent account (default) |
-| UNIFIED | Integrated account across services        |
-
-### API Endpoints
-
-| Category      | Endpoints                                                |
-| ------------- | -------------------------------------------------------- |
-| Service       | `POST /v1/services/:slug/join`, `DELETE .../withdraw`    |
-| Linking       | `POST /v1/users/me/link-account`, `POST .../accept-link` |
-| Operator      | `POST /v1/admin/operators`, `POST .../invite`            |
-| Law Registry  | `GET /v1/admin/laws`, `POST /v1/admin/laws/seed`         |
-| Personal Info | `GET/PATCH/DELETE /v1/users/me/personal-info`            |
-
-### Guards
-
-```typescript
-@UseGuards(UnifiedAuthGuard)                    // Token type routing
-@UseGuards(UnifiedAuthGuard, AccountTypeGuard)  // USER/ADMIN/OPERATOR
-@UseGuards(UnifiedAuthGuard, ServiceAccessGuard) // Service membership
-@UseGuards(UnifiedAuthGuard, CountryConsentGuard) // Country consent
-```
-
-### Decorators
-
-| Decorator                   | Purpose                    |
-| --------------------------- | -------------------------- |
-| `@CurrentUser()`            | Get user/admin/operator    |
-| `@RequireAccountType(type)` | Restrict by account type   |
-| `@RequireService(slug)`     | Require service membership |
-| `@Permissions(perm)`        | Admin permission check     |
-
----
-
-## Service Configuration (#399)
-
-Per-service validation and audit settings.
-
-```prisma
-model ServiceConfig {
-  id                 String     @id @db.Uuid
-  serviceId          String     @unique
-  jwtValidation      Boolean    @default(true)
-  domainValidation   Boolean    @default(true)
-  ipWhitelistEnabled Boolean    @default(false)
-  ipWhitelist        String[]   @default([])
-  rateLimitEnabled   Boolean    @default(true)
-  rateLimitRequests  Int        @default(1000)
-  rateLimitWindow    Int        @default(60)
-  maintenanceMode    Boolean    @default(false)
-  maintenanceMessage String?
-  auditLevel         AuditLevel @default(STANDARD)
-}
-
-enum AuditLevel { MINIMAL, STANDARD, VERBOSE, DEBUG }
+@Permissions('role:read')         // resource:action
+@Permissions('operator:create')
+@Permissions('sanction:revoke')
+@Permissions('*')                 // Wildcard
 ```
 
 ---
 
-## Service Features (#400)
+## Sanction Types
 
-Hierarchical feature definitions with granular permissions.
-
-```prisma
-model ServiceFeature {
-  id           String   @id
-  serviceId    String
-  code         String   // e.g., "POST_CREATE"
-  category     String   // CONTENT, SOCIAL, COMMERCE
-  parentId     String?  // For hierarchy
-  path         String   // Materialized path: /content/post_create
-  depth        Int      @default(1)
-  isActive     Boolean  @default(true)
-  isDefault    Boolean  @default(true)
-}
-
-model ServiceFeaturePermission {
-  featureId  String
-  targetType PermissionTargetType // ALL_USERS, USER, TIER, COUNTRY, ROLE
-  targetId   String?              // null = all
-  action     FeatureAction        // USE, CREATE, READ, UPDATE, DELETE, ADMIN
-  isAllowed  Boolean  @default(true)
-  conditions Json?                // { "tier": "premium", "country": ["KR"] }
-  validFrom  DateTime?
-  validUntil DateTime?
-}
-```
-
-### Feature Categories
-
-| Category | Features                                         |
-| -------- | ------------------------------------------------ |
-| CONTENT  | POST_CREATE, POST_EDIT, POST_DELETE, FILE_UPLOAD |
-| SOCIAL   | COMMENT, CHAT, FOLLOW, LIKE, SHARE               |
-| COMMERCE | PURCHASE, REVIEW, REFUND, COUPON                 |
-| ACCOUNT  | PROFILE_EDIT, SETTINGS, WITHDRAW                 |
-
----
-
-## Service Testers (#401)
-
-Per-service tester management with bypass options.
-
-```prisma
-model ServiceTesterUser {
-  serviceId    String
-  userId       String
-  bypassAll    Boolean   @default(false)
-  bypassDomain Boolean   @default(true)
-  bypassIP     Boolean   @default(true)
-  bypassRate   Boolean   @default(false)
-  expiresAt    DateTime?
-}
-
-model ServiceTesterAdmin {
-  serviceId    String
-  adminId      String
-  bypassAll    Boolean   @default(false)
-  bypassDomain Boolean   @default(true)
-  expiresAt    DateTime?
-}
-```
-
-### Bypass Options
-
-| Option       | Description             | Default |
-| ------------ | ----------------------- | ------- |
-| bypassAll    | Skip ALL validations    | false   |
-| bypassDomain | Skip domain validation  | true    |
-| bypassIP     | Skip IP whitelist check | true    |
-| bypassRate   | Skip rate limiting      | false   |
-
----
-
-## Sanction Extensions (#402)
-
-Extended sanction system with appeal workflow and notifications.
-
-```prisma
-model Sanction {
-  // Scope
-  scope              SanctionScope    @default(SERVICE) // PLATFORM, SERVICE
-  severity           SanctionSeverity @default(MEDIUM)  // LOW, MEDIUM, HIGH, CRITICAL
-
-  // Feature Restrictions
-  restrictedFeatures String[]   @default([]) // ["POST_CREATE", "COMMENT"]
-
-  // Details
-  internalNote       String?
-  evidenceUrls       String[]   @default([])
-  relatedSanctionId  String?    // For follow-up sanctions
-
-  // Issuer
-  issuedByType       IssuerType @default(ADMIN) // ADMIN, OPERATOR, SYSTEM
-
-  // Appeal
-  appealStatus       AppealStatus? // PENDING, UNDER_REVIEW, APPROVED, REJECTED, ESCALATED
-  appealedAt         DateTime?
-  appealReason       String?
-  appealReviewedBy   String?
-  appealReviewedAt   DateTime?
-  appealResponse     String?
-}
-
-model SanctionNotification {
-  sanctionId String
-  channel    NotificationChannel // EMAIL, PUSH, SMS, IN_APP
-  status     NotificationStatus  // PENDING, SENT, DELIVERED, READ, FAILED
-  sentAt     DateTime?
-  readAt     DateTime?
-}
-```
+| Type                  | Description                     | Severity |
+| --------------------- | ------------------------------- | -------- |
+| `WARNING`             | Warning notice, no restrictions | LOW      |
+| `TEMPORARY_BAN`       | Time-limited access restriction | MEDIUM   |
+| `PERMANENT_BAN`       | Indefinite access restriction   | HIGH     |
+| `FEATURE_RESTRICTION` | Specific feature access blocked | MEDIUM   |
 
 ### Appeal Workflow
 
@@ -412,220 +327,70 @@ User submits appeal → appealStatus: PENDING
 Admin reviews → appealStatus: UNDER_REVIEW
      │
      ├─► APPROVED → status: REVOKED
-     │
      ├─► REJECTED → appeal_response explains why
-     │
      └─► ESCALATED → higher-level admin review
 ```
 
 ---
 
-## Admin Service APIs (#407-#411)
-
-### Service Configuration API (#407)
-
-```
-GET    /v1/admin/services/:serviceId/domains        # List domains
-POST   /v1/admin/services/:serviceId/domains        # Add domain
-DELETE /v1/admin/services/:serviceId/domains/:domain # Remove domain
-GET    /v1/admin/services/:serviceId/config         # Get config
-PATCH  /v1/admin/services/:serviceId/config         # Update config
-```
-
-### Service Feature API (#408)
-
-```
-GET    /v1/admin/services/:serviceId/features       # List features (hierarchical)
-POST   /v1/admin/services/:serviceId/features       # Create feature
-GET    /v1/admin/services/:serviceId/features/:id   # Get feature
-PATCH  /v1/admin/services/:serviceId/features/:id   # Update feature
-DELETE /v1/admin/services/:serviceId/features/:id   # Delete feature
-POST   /v1/admin/services/:serviceId/features/bulk  # Bulk operations
-
-# Feature Permissions
-GET    /v1/admin/services/:serviceId/features/:id/permissions      # List
-POST   /v1/admin/services/:serviceId/features/:id/permissions      # Create
-DELETE /v1/admin/services/:serviceId/features/:id/permissions/:pid # Delete
-```
-
-### Service Tester API (#409)
-
-```
-# User Testers
-GET    /v1/admin/services/:serviceId/testers/users       # List
-POST   /v1/admin/services/:serviceId/testers/users       # Create
-GET    /v1/admin/services/:serviceId/testers/users/:id   # Get
-PATCH  /v1/admin/services/:serviceId/testers/users/:id   # Update
-DELETE /v1/admin/services/:serviceId/testers/users/:id   # Delete
-
-# Admin Testers
-GET    /v1/admin/services/:serviceId/testers/admins      # List
-POST   /v1/admin/services/:serviceId/testers/admins      # Create
-DELETE /v1/admin/services/:serviceId/testers/admins/:id  # Delete
-```
-
-### Sanction API (#410)
-
-```
-# CRUD
-GET    /v1/admin/services/:serviceId/sanctions           # List (paginated)
-POST   /v1/admin/services/:serviceId/sanctions           # Create
-GET    /v1/admin/services/:serviceId/sanctions/:id       # Get
-PATCH  /v1/admin/services/:serviceId/sanctions/:id       # Update
-
-# Actions
-POST   /v1/admin/services/:serviceId/sanctions/:id/revoke    # Revoke
-POST   /v1/admin/services/:serviceId/sanctions/:id/extend    # Extend duration
-POST   /v1/admin/services/:serviceId/sanctions/:id/reduce    # Reduce duration
-
-# Appeal
-GET    /v1/admin/services/:serviceId/sanctions/:id/appeal    # Get appeal
-POST   /v1/admin/services/:serviceId/sanctions/:id/appeal/review # Review
-
-# Notifications
-GET    /v1/admin/services/:serviceId/sanctions/:id/notifications     # List
-POST   /v1/admin/services/:serviceId/sanctions/:id/notifications/resend # Resend
-```
-
-### Guards & Interceptors (#411)
-
-#### AdminServiceAccessGuard
+## Guards
 
 ```typescript
-@UseGuards(AdminServiceAccessGuard)
-@Get('config')
-getConfig(@Param('serviceId') serviceId: string) {}
-```
+@UseGuards(JwtAuthGuard)
+@Get('roles')
+getRoles() { }
 
-**Validation Order:**
+@UseGuards(JwtAuthGuard, PermissionGuard)
+@Permissions('role:create')
+createRole(@Body() dto: CreateRoleDto) { }
 
-1. Check tester status (bypasses if tester)
-2. Domain validation (if enabled)
-3. IP whitelist validation (if enabled)
-4. Maintenance mode check
-
-#### AuditInterceptor
-
-Global interceptor for API logging with:
-
-- Request/response body sanitization (passwords, tokens, etc.)
-- Correlation headers (x-request-id, x-session-id, x-ui-event-id)
-- OTEL-compatible structured logging
-
-```typescript
-// Sensitive keys automatically redacted:
-[
-  'password',
-  'token',
-  'secret',
-  'apiKey',
-  'authorization',
-  'refreshToken',
-  'accessToken',
-  'creditCard',
-  'ssn',
-];
+@UseGuards(ApiKeyGuard)  // Service-to-service
+@Get('internal/permissions/:roleId')
+getPermissions(@Param('roleId') roleId: string) { }
 ```
 
 ---
 
-## Law Registry API
+## Caching Strategy
 
-Per-country legal requirements management.
-
-```
-GET    /v1/admin/laws                          # List laws (paginated)
-GET    /v1/admin/laws/:code                    # Get law by code
-POST   /v1/admin/laws                          # Create law
-PATCH  /v1/admin/laws/:code                    # Update law
-DELETE /v1/admin/laws/:code                    # Delete law
-GET    /v1/admin/laws/:code/consent-requirements # Get consent requirements
-POST   /v1/admin/laws/seed                     # Seed default laws
-```
-
-### Permissions
-
-| Endpoint   | Permission   |
-| ---------- | ------------ |
-| GET laws   | `law:read`   |
-| POST law   | `law:create` |
-| PATCH law  | `law:update` |
-| DELETE law | `law:delete` |
-
-### Law Requirements Structure
-
-```typescript
-interface LawRequirements {
-  requiredConsents: ConsentType[];
-  optionalConsents: ConsentType[];
-  specialRequirements?: {
-    nightTimePush?: { start: number; end: number };
-    dataRetention?: { maxDays: number };
-    minAge?: number;
-    parentalConsent?: { ageThreshold: number };
-    crossBorderTransfer?: { requireExplicit: boolean };
-  };
-}
-```
+| Cache Key Pattern           | TTL  | Purpose          |
+| --------------------------- | ---- | ---------------- |
+| `auth:role:{id}`            | 24h  | Role by ID       |
+| `auth:permissions:{roleId}` | 24h  | Role permissions |
+| `auth:operator:{id}`        | 1h   | Operator by ID   |
+| `auth:service:{slug}`       | 24h  | Service config   |
+| `auth:sanction:active:{id}` | 5min | Active sanctions |
 
 ---
 
-## Global Settings API
+## 2025 Best Practices
 
-System-wide country and locale configuration.
-
-### Supported Countries
-
-```
-GET    /v1/admin/settings/countries            # List countries
-GET    /v1/admin/settings/countries/:code      # Get country
-POST   /v1/admin/settings/countries            # Create country
-PATCH  /v1/admin/settings/countries/:code      # Update country
-DELETE /v1/admin/settings/countries/:code      # Delete country
-```
-
-### Supported Locales
-
-```
-GET    /v1/admin/settings/locales              # List locales
-GET    /v1/admin/settings/locales/:code        # Get locale
-POST   /v1/admin/settings/locales              # Create locale
-PATCH  /v1/admin/settings/locales/:code        # Update locale
-DELETE /v1/admin/settings/locales/:code        # Delete locale
-```
-
-### Permissions
-
-| Endpoint       | Permission        |
-| -------------- | ----------------- |
-| GET countries  | `settings:read`   |
-| GET locales    | `settings:read`   |
-| POST/PATCH/DEL | `settings:update` |
-
-### Country Code Format
-
-ISO 3166-1 alpha-2 (e.g., KR, US, JP)
-
-### Locale Code Format
-
-IETF BCP 47 (e.g., ko, en, ja, ko-KR)
+| Standard             | Status | Implementation                  |
+| -------------------- | ------ | ------------------------------- |
+| RFC 9562 (UUIDv7)    | ✅     | All IDs via `ID.generate()`     |
+| Transactional Outbox | ✅     | Atomic with business operations |
+| PII Masking          | ✅     | `masking.util.ts` for all logs  |
+| Audit Trail          | ✅     | All RBAC changes logged         |
 
 ---
 
-## User Personal Info API (Admin)
+## Type Definitions
 
-Admin access to user personal information.
+> SSOT: `packages/types/src/auth/`
 
-```
-GET    /v1/admin/users/:id/personal-info       # Get user's personal info
-```
-
-### Permissions
-
-| Endpoint          | Permission           |
-| ----------------- | -------------------- |
-| GET personal-info | `personal_info:read` |
+| File            | Contents                             |
+| --------------- | ------------------------------------ |
+| `types.ts`      | Role, Permission, Operator, Sanction |
+| `interfaces.ts` | IRoleService, IOperatorService, etc. |
+| `enums.ts`      | SanctionType, AppealStatus, etc.     |
 
 ---
 
-**Guides**: `docs/guides/OPERATOR_MANAGEMENT.md`, `docs/guides/ACCOUNT_LINKING.md`
+## Related Services
+
+- **identity-service**: Accounts, sessions, devices → `.ai/services/identity-service.md`
+- **legal-service**: Consents, DSR, law registry → `.ai/services/legal-service.md`
+
+---
+
+**Full policy**: `docs/policies/IDENTITY_PLATFORM.md`

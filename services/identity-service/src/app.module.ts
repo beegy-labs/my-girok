@@ -12,8 +12,6 @@ import { SagaModule } from './common/saga/saga.module';
 import { HealthModule } from './common/health';
 import { ScheduledModule } from './common/scheduled';
 import { IdentityModule } from './identity/identity.module';
-import { AuthModule } from './auth/auth.module';
-import { LegalModule } from './legal/legal.module';
 import { CompositionModule } from './composition/composition.module';
 import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.filter';
 
@@ -56,8 +54,6 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.f
     HealthModule,
     ScheduledModule,
     IdentityModule,
-    AuthModule,
-    LegalModule,
     CompositionModule,
   ],
   controllers: [],
