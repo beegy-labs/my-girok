@@ -4,37 +4,102 @@
 
 ## Overview
 
-The Identity Service manages core user identity data for the my-girok Identity Platform. It is one of three separated services in the platform.
+The Identity Service manages core user identity data for the my-girok Identity Platform. It is one of three separated services in Phase 3 architecture.
+
+---
+
+## Domain Boundaries (CRITICAL)
+
+> **WARNING**: This service has a strict domain boundary. It handles ONLY identity-related data.
+
+### What Belongs HERE (identity-service)
+
+```
++------------------------------------------------------------------+
+|                    IDENTITY-SERVICE SCOPE                         |
+|                        (Port 3000)                                |
++------------------------------------------------------------------+
+|                                                                   |
+|  [OK] accounts        - User core identity, status, MFA          |
+|  [OK] sessions        - Login sessions, token management         |
+|  [OK] devices         - Device registration, trust               |
+|  [OK] profiles        - User profile data (name, avatar, etc)    |
+|  [OK] credentials     - Password, OAuth, passkeys                |
+|  [OK] app-registry    - Multi-app configuration                  |
+|  [OK] outbox_events   - Transactional outbox for this service    |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### What Does NOT Belong Here
+
+```
++------------------------------------------------------------------+
+|                    DO NOT ADD TO THIS SERVICE                     |
++------------------------------------------------------------------+
+|                                                                   |
+|  [X] roles/permissions    --> belongs to auth-service             |
+|  [X] operators/admins     --> belongs to auth-service             |
+|  [X] sanctions            --> belongs to auth-service             |
+|  [X] api-keys             --> belongs to auth-service             |
+|  [X] consents             --> belongs to legal-service            |
+|  [X] legal documents      --> belongs to legal-service            |
+|  [X] law-registry         --> belongs to legal-service            |
+|  [X] dsr-requests         --> belongs to legal-service            |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Service Boundary Summary
+
+| Service          | Database    | Port | Scope                                    |
+| ---------------- | ----------- | ---- | ---------------------------------------- |
+| identity-service | identity_db | 3000 | accounts, sessions, devices, profiles    |
+| auth-service     | auth_db     | 3001 | roles, permissions, operators, sanctions |
+| legal-service    | legal_db    | 3005 | consents, documents, law-registry, dsr   |
+
+---
 
 ## Architecture
 
-### Identity Platform (3 Services)
+### Identity Platform (Phase 3 - 3 Separate Services)
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                    Identity Platform (Phase 3)                        │
-│                                                                       │
-│  ┌─────────────┐       ┌─────────────┐       ┌─────────────┐        │
-│  │  Identity   │       │    Auth     │       │    Legal    │        │
-│  │  Service    │◄─────►│   Service   │◄─────►│   Service   │        │
-│  │ (Port 3000) │ gRPC  │ (Port 3001) │ gRPC  │ (Port 3005) │        │
-│  └──────┬──────┘       └──────┬──────┘       └──────┬──────┘        │
-│         │                     │                     │                │
-│         ▼                     ▼                     ▼                │
-│   identity_db             auth_db              legal_db              │
-│   (PostgreSQL)           (PostgreSQL)         (PostgreSQL)           │
-└──────────────────────────────────────────────────────────────────────┘
++==================================================================================+
+|                          IDENTITY PLATFORM (Phase 3)                              |
+|                                                                                   |
+|   +------------------------+  +------------------------+  +---------------------+ |
+|   |   IDENTITY-SERVICE     |  |     AUTH-SERVICE       |  |    LEGAL-SERVICE    | |
+|   |      (Port 3000)       |  |      (Port 3001)       |  |     (Port 3005)     | |
+|   +------------------------+  +------------------------+  +---------------------+ |
+|   |                        |  |                        |  |                     | |
+|   |  * accounts            |  |  * roles               |  |  * consents         | |
+|   |  * sessions            |  |  * permissions         |  |  * legal-documents  | |
+|   |  * devices             |  |  * operators           |  |  * law-registry     | |
+|   |  * profiles            |  |  * sanctions           |  |  * dsr-requests     | |
+|   |  * credentials         |  |  * api-keys            |  |                     | |
+|   |  * app-registry        |  |  * admins              |  |                     | |
+|   +------------------------+  +------------------------+  +---------------------+ |
+|              |                         |                          |               |
+|              v                         v                          v               |
+|        identity_db                 auth_db                   legal_db             |
+|       (PostgreSQL)               (PostgreSQL)              (PostgreSQL)           |
++==================================================================================+
+
+Communication: gRPC between services (no direct DB access across services)
 ```
 
 ### This Service's Scope
 
-| Domain   | Tables          | Purpose                          |
-| -------- | --------------- | -------------------------------- |
-| Accounts | `accounts`      | User identity, status, MFA       |
-| Sessions | `sessions`      | Login sessions, token management |
-| Devices  | `devices`       | Device registration, trust       |
-| Profiles | `profiles`      | User profile data                |
-| Events   | `outbox_events` | Transactional outbox             |
+| Domain      | Tables          | Purpose                          |
+| ----------- | --------------- | -------------------------------- |
+| Accounts    | `accounts`      | User identity, status, MFA       |
+| Sessions    | `sessions`      | Login sessions, token management |
+| Devices     | `devices`       | Device registration, trust       |
+| Profiles    | `profiles`      | User profile data                |
+| Credentials | `credentials`   | Password, OAuth, passkeys        |
+| Apps        | `app_registry`  | Multi-app configuration          |
+| Events      | `outbox_events` | Transactional outbox             |
 
 ## Key Features
 
@@ -309,10 +374,80 @@ pnpm prisma:generate:identity
 pnpm dev
 ```
 
+## Inter-Service Communication
+
+### Accessing Data from Other Services
+
+When identity-service needs data from other domains, use gRPC calls - NEVER direct database access.
+
+```
++------------------------------------------------------------------+
+|                    CORRECT: Use gRPC                              |
++------------------------------------------------------------------+
+|                                                                   |
+|  // Check if user is sanctioned before creating session          |
+|  const sanctions = await authServiceClient.getSanctions({        |
+|    accountId: account.id                                         |
+|  });                                                              |
+|                                                                   |
+|  // Get user consents for registration flow                      |
+|  const consents = await legalServiceClient.getConsents({         |
+|    accountId: account.id,                                        |
+|    appId: app.id                                                 |
+|  });                                                              |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+```
++------------------------------------------------------------------+
+|                    WRONG: Direct DB Access                        |
++------------------------------------------------------------------+
+|                                                                   |
+|  // DO NOT DO THIS - accessing auth_db from identity-service     |
+|  const sanctions = await authPrisma.sanctions.findMany({         |
+|    where: { accountId }                                          |
+|  });                                                              |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Cross-Service References
+
+When storing references to entities in other services, use UUIDs without foreign key constraints:
+
+```sql
+-- In identity_db: NO cross-DB foreign keys
+-- This account_id references auth_db.sanctions, but NO FK constraint
+CREATE TABLE example_table (
+    id UUID PRIMARY KEY,
+    account_id UUID NOT NULL,  -- References identity_db.accounts (same DB, FK OK)
+    -- No FK constraint to other databases
+);
+```
+
+### Event Publishing
+
+Each service publishes events only to its own `outbox_events` table:
+
+```typescript
+// In identity-service: only write to identity_db.outbox_events
+await this.prisma.outboxEvents.create({
+  data: {
+    aggregateType: 'ACCOUNT',
+    aggregateId: account.id,
+    eventType: 'ACCOUNT_CREATED',
+    payload: { accountId: account.id, email: account.email },
+  },
+});
+```
+
+---
+
 ## Related Documentation
 
 - [Architecture Overview](../../.ai/architecture.md)
-- [Identity Platform Policy](../policies/IDENTITY_PLATFORM.md)
+- [Identity Platform Policy](../policies/IDENTITY_PLATFORM.md) (includes Domain Boundaries)
 - [Identity Service LLM Reference](../../.ai/services/identity-service.md)
 - [Auth Service](../../.ai/services/auth-service.md)
 - [Legal Service](../../.ai/services/legal-service.md)

@@ -13,6 +13,123 @@ The Identity Platform enables rapid creation of multiple apps (N apps) with shar
 
 ---
 
+## Domain Boundaries (CRITICAL)
+
+> **WARNING**: Each service has a strict domain boundary. DO NOT mix domains.
+
+### The Three Services
+
+```
++==================================================================================+
+|                          IDENTITY PLATFORM (Phase 3)                              |
+|                                                                                   |
+|   +------------------------+  +------------------------+  +---------------------+ |
+|   |   IDENTITY-SERVICE     |  |     AUTH-SERVICE       |  |    LEGAL-SERVICE    | |
+|   |      (Port 3000)       |  |      (Port 3001)       |  |     (Port 3005)     | |
+|   +------------------------+  +------------------------+  +---------------------+ |
+|   |                        |  |                        |  |                     | |
+|   |  * accounts            |  |  * roles               |  |  * consents         | |
+|   |  * sessions            |  |  * permissions         |  |  * legal-documents  | |
+|   |  * devices             |  |  * operators           |  |  * law-registry     | |
+|   |  * profiles            |  |  * sanctions           |  |  * dsr-requests     | |
+|   |  * credentials         |  |  * api-keys            |  |                     | |
+|   |  * app-registry        |  |  * admins              |  |                     | |
+|   |                        |  |                        |  |                     | |
+|   +------------------------+  +------------------------+  +---------------------+ |
+|              |                         |                          |               |
+|              v                         v                          v               |
+|        identity_db                 auth_db                   legal_db             |
+|       (PostgreSQL)               (PostgreSQL)              (PostgreSQL)           |
+|                                                                                   |
++==================================================================================+
+```
+
+### Domain Ownership Table
+
+| Domain        | Service          | Database    | Port | Owner                    |
+| ------------- | ---------------- | ----------- | ---- | ------------------------ |
+| **Accounts**  | identity-service | identity_db | 3000 | User core identity       |
+| **Sessions**  | identity-service | identity_db | 3000 | Login sessions           |
+| **Devices**   | identity-service | identity_db | 3000 | Device management        |
+| **Profiles**  | identity-service | identity_db | 3000 | User profile data        |
+| **Roles**     | auth-service     | auth_db     | 3001 | RBAC role definitions    |
+| **Perms**     | auth-service     | auth_db     | 3001 | Permission management    |
+| **Operators** | auth-service     | auth_db     | 3001 | Admin/operator accounts  |
+| **Sanctions** | auth-service     | auth_db     | 3001 | User/operator penalties  |
+| **Consents**  | legal-service    | legal_db    | 3005 | User consent records     |
+| **Documents** | legal-service    | legal_db    | 3005 | ToS, Privacy Policy, etc |
+| **Laws**      | legal-service    | legal_db    | 3005 | Country-specific laws    |
+| **DSR**       | legal-service    | legal_db    | 3005 | GDPR data requests       |
+
+### Anti-Patterns (DO NOT DO)
+
+```
++------------------------------------------------------------------+
+|                        ANTI-PATTERNS                              |
++------------------------------------------------------------------+
+|                                                                   |
+|  [X] DO NOT add roles/permissions tables to identity-service      |
+|                                                                   |
+|  [X] DO NOT add consent logic to identity-service                 |
+|                                                                   |
+|  [X] DO NOT add account/session tables to auth-service            |
+|                                                                   |
+|  [X] DO NOT create cross-database JOINs                           |
+|                                                                   |
+|  [X] DO NOT add legal document management to auth-service         |
+|                                                                   |
+|  [X] DO NOT put law-registry in identity-service                  |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Correct Patterns
+
+```
++------------------------------------------------------------------+
+|                        CORRECT PATTERNS                           |
++------------------------------------------------------------------+
+|                                                                   |
+|  [OK] identity-service calls auth-service via gRPC to check       |
+|       sanctions before allowing login                             |
+|                                                                   |
+|  [OK] Registration saga coordinates identity + legal via          |
+|       API composition (not cross-DB transactions)                 |
+|                                                                   |
+|  [OK] BFF aggregates data from all 3 services for UI              |
+|                                                                   |
+|  [OK] Each service publishes events to its own outbox_events      |
+|       table within its database                                   |
+|                                                                   |
+|  [OK] Cross-service references use UUID (no foreign keys)         |
+|       Example: legal_db.account_consents.account_id               |
+|       references identity_db.accounts.id (no FK constraint)       |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Inter-Service Communication
+
+```
+                          gRPC Calls
+    +------------------+            +------------------+
+    | identity-service | <--------> |   auth-service   |
+    +------------------+            +------------------+
+            |                               |
+            |          gRPC Calls           |
+            v                               v
+    +------------------+            +------------------+
+    |  legal-service   | <--------> |   auth-service   |
+    +------------------+            +------------------+
+
+    Communication Rules:
+    - Synchronous: gRPC for real-time queries
+    - Asynchronous: Outbox events for eventual consistency
+    - NO direct database access across services
+```
+
+---
+
 ## Architecture Overview
 
 ### Current State (Phase 3 - Separated Services)
