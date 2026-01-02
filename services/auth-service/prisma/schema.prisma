@@ -9,69 +9,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email               String              @unique
-  password            String?
-  name                String?
-  avatar              String?
-  role                Role                @default(USER)
-  provider            AuthProvider        @default(LOCAL)
-  username            String              @unique
-  createdAt           DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt           DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
-  emailVerified       Boolean             @default(false) @map("email_verified")
-  providerId          String?             @map("provider_id")
-  externalId          String?             @unique @map("external_id") @db.VarChar(10)
-  region              String?             @db.VarChar(50)
-  locale              String?             @db.VarChar(10)
-  timezone            String?             @db.VarChar(50)
-  accountMode         AccountMode         @default(SERVICE) @map("account_mode")
-  countryCode         String?             @map("country_code") @db.VarChar(2)
-  deletedAt           DateTime?           @map("deleted_at") @db.Timestamptz(6)
-  domainAccess        DomainAccessToken[]
-  consents            Consent[]
-  userServices        UserService[]
-  personalInfo        PersonalInfo?
-  primaryAccountLinks AccountLink[]       @relation("PrimaryUser")
-  linkedAccountLinks  AccountLink[]       @relation("LinkedUser")
-  operatorUserLinks   OperatorUserLink[]
-  testerServices      ServiceTesterUser[]
-
-  @@index([externalId])
-  @@index([email])
-  @@index([username])
-  @@index([provider, providerId])
-  @@index([accountMode])
-  @@index([countryCode])
-  @@map("users")
-}
-
-model Session {
-  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  subjectId    String             @map("subject_id") @db.Uuid
-  subjectType  SessionSubjectType @map("subject_type")
-  tokenHash    String             @unique @map("token_hash") @db.VarChar(64)
-  refreshToken String?            @map("refresh_token") // Deprecated: will be removed in future
-  expiresAt    DateTime           @map("expires_at") @db.Timestamptz(6)
-  revokedAt    DateTime?          @map("revoked_at") @db.Timestamptz(6)
-  ipAddress    String?            @map("ip_address") @db.VarChar(45)
-  userAgent    String?            @map("user_agent")
-  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  @@index([subjectId, subjectType])
-  @@index([tokenHash])
-  @@index([expiresAt])
-  @@map("sessions")
-}
-
-enum SessionSubjectType {
-  USER
-  ADMIN
-  OPERATOR
-
-  @@map("session_subject_type")
-}
+// ==============================================================================
+// User and Session models REMOVED - Issue #462
+// These models are now managed by identity-service.
+// All userId references are kept as external UUIDs (no FK constraint).
+// ==============================================================================
 
 model DomainAccessToken {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -79,8 +21,7 @@ model DomainAccessToken {
   token     String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
-  userId    String   @map("user_id") @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id") @db.Uuid // External ref to identity-service.accounts
 
   @@index([userId])
   @@index([domain])
@@ -134,7 +75,7 @@ model LegalDocument {
 
 model Consent {
   id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String       @map("user_id") @db.Uuid
+  userId          String       @map("user_id") @db.Uuid // External ref to identity-service.accounts
   consentType     ConsentType  @map("consent_type")
   scope           ConsentScope @default(SERVICE)
   serviceId       String?      @map("service_id") @db.Uuid
@@ -148,7 +89,6 @@ model Consent {
   userAgent       String?      @map("user_agent")
   createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   document LegalDocument? @relation(fields: [documentId], references: [id])
   service  Service?       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
@@ -438,7 +378,7 @@ model LawRegistry {
 
 model UserService {
   id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String            @map("user_id") @db.Uuid
+  userId      String            @map("user_id") @db.Uuid // External ref to identity-service.accounts
   serviceId   String            @map("service_id") @db.Uuid
   status      UserServiceStatus @default(ACTIVE)
   tierId      String?           @map("tier_id") @db.Uuid
@@ -447,7 +387,6 @@ model UserService {
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   tier    Tier?   @relation(fields: [tierId], references: [id], onDelete: SetNull)
 
@@ -462,7 +401,7 @@ model UserService {
 
 model PersonalInfo {
   id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId           String    @unique @map("user_id") @db.Uuid
+  userId           String    @unique @map("user_id") @db.Uuid // External ref to identity-service.accounts
   name             String?   @db.VarChar(100)
   birthDate        DateTime? @map("birth_date") @db.Date
   gender           Gender?
@@ -476,7 +415,6 @@ model PersonalInfo {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessLogs PersonalInfoAccessLog[]
 
   @@index([userId])
@@ -601,15 +539,13 @@ model AdminService {
 
 model AccountLink {
   id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  primaryUserId   String            @map("primary_user_id") @db.Uuid
-  linkedUserId    String            @map("linked_user_id") @db.Uuid
+  primaryUserId   String            @map("primary_user_id") @db.Uuid // External ref to identity-service.accounts
+  linkedUserId    String            @map("linked_user_id") @db.Uuid // External ref to identity-service.accounts
   linkedServiceId String            @map("linked_service_id") @db.Uuid
   status          AccountLinkStatus @default(PENDING)
   linkedAt        DateTime?         @map("linked_at") @db.Timestamptz(6)
   createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  primaryUser   User    @relation("PrimaryUser", fields: [primaryUserId], references: [id], onDelete: Cascade)
-  linkedUser    User    @relation("LinkedUser", fields: [linkedUserId], references: [id], onDelete: Cascade)
   linkedService Service @relation(fields: [linkedServiceId], references: [id], onDelete: Cascade)
 
   @@unique([primaryUserId, linkedUserId])
@@ -733,7 +669,7 @@ model ServiceFeaturePermission {
 model ServiceTesterUser {
   id        String @id @db.Uuid
   serviceId String @map("service_id") @db.Uuid
-  userId    String @map("user_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid // External ref to identity-service.accounts
 
   // Bypass Settings
   bypassAll    Boolean @default(false) @map("bypass_all")
@@ -750,7 +686,6 @@ model ServiceTesterUser {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([serviceId, userId])
   @@index([serviceId])
@@ -906,7 +841,7 @@ enum SanctionSubjectType {
 model OperatorUserLink {
   id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   operatorId String           @map("operator_id") @db.Uuid
-  userId     String           @map("user_id") @db.Uuid
+  userId     String           @map("user_id") @db.Uuid // External ref to identity-service.accounts
   type       OperatorLinkType
   assignedBy String?          @map("assigned_by") @db.Uuid
   note       String?
@@ -915,7 +850,6 @@ model OperatorUserLink {
   updatedAt  DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   operator Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([operatorId, userId])
   @@index([operatorId])
@@ -1153,4 +1087,32 @@ enum tenant_status {
 
 enum tenant_type {
   INTERNAL
+}
+
+// ============================================================
+// TRANSACTIONAL OUTBOX (#461)
+// ============================================================
+
+model OutboxEvent {
+  id           String             @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  eventType    String             @map("event_type") @db.VarChar(100)
+  aggregateId  String             @map("aggregate_id") @db.Uuid
+  payload      Json
+  status       OutboxEventStatus  @default(PENDING)
+  retryCount   Int                @default(0) @map("retry_count")
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  publishedAt  DateTime?          @map("published_at") @db.Timestamptz(6)
+  errorMessage String?            @map("error_message")
+
+  @@index([status, createdAt])
+  @@index([aggregateId])
+  @@map("outbox_events")
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+
+  @@map("outbox_event_status")
 }

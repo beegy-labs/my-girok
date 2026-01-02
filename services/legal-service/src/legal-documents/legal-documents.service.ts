@@ -2,13 +2,19 @@ import { Injectable, Logger, NotFoundException, ConflictException } from '@nestj
 import * as crypto from 'crypto';
 import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../database/prisma.service';
+import { CacheService } from '../common/cache';
+import { OutboxService } from '../common/outbox';
 import { CreateLegalDocumentDto, UpdateLegalDocumentDto, LegalDocumentResponseDto } from './dto';
 
 @Injectable()
 export class LegalDocumentsService {
   private readonly logger = new Logger(LegalDocumentsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cacheService: CacheService,
+    private readonly outboxService: OutboxService,
+  ) {}
 
   async create(dto: CreateLegalDocumentDto): Promise<LegalDocumentResponseDto> {
     // Check if document with same type, version, country, locale exists
@@ -47,6 +53,9 @@ export class LegalDocumentsService {
         metadata: dto.metadata as object | undefined,
       },
     });
+
+    // Invalidate related caches
+    await this.cacheService.invalidateDocument(id, dto.type, dto.locale);
 
     this.logger.log(`Legal document created: ${dto.type} v${dto.version} (${id})`);
 
@@ -95,13 +104,35 @@ export class LegalDocumentsService {
   }
 
   async findOne(id: string): Promise<LegalDocumentResponseDto> {
+    // Check cache first
+    const cached = await this.cacheService.getDocumentById<LegalDocumentResponseDto>(id);
+    if (cached) {
+      return cached;
+    }
+
     const document = await this.prisma.legalDocument.findUnique({ where: { id } });
 
     if (!document) {
       throw new NotFoundException(`Legal document not found: ${id}`);
     }
 
-    return this.toResponseDto(document);
+    const result = this.toResponseDto(document);
+    await this.cacheService.setDocumentById(id, result);
+
+    return result;
+  }
+
+  async findOneWithContent(id: string): Promise<LegalDocumentResponseDto & { content: string }> {
+    const document = await this.prisma.legalDocument.findUnique({ where: { id } });
+
+    if (!document) {
+      throw new NotFoundException(`Legal document not found: ${id}`);
+    }
+
+    return {
+      ...this.toResponseDto(document),
+      content: document.content,
+    };
   }
 
   async update(id: string, dto: UpdateLegalDocumentDto): Promise<LegalDocumentResponseDto> {
@@ -127,6 +158,9 @@ export class LegalDocumentsService {
       data: updateData,
     });
 
+    // Invalidate cache
+    await this.cacheService.invalidateDocument(id, existing.type, existing.locale);
+
     this.logger.log(`Legal document updated: ${id}`);
 
     return this.toResponseDto(updated);
@@ -139,13 +173,41 @@ export class LegalDocumentsService {
       throw new NotFoundException(`Legal document not found: ${id}`);
     }
 
-    const updated = await this.prisma.legalDocument.update({
-      where: { id },
-      data: {
-        status: 'ACTIVE',
-        effectiveFrom: existing.effectiveFrom || new Date(),
-      },
+    const effectiveFrom = existing.effectiveFrom || new Date();
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const doc = await tx.legalDocument.update({
+        where: { id },
+        data: {
+          status: 'ACTIVE',
+          effectiveFrom,
+        },
+      });
+
+      // Add DOCUMENT_PUBLISHED event to outbox
+      await this.outboxService.addEvent(
+        {
+          aggregateType: 'LegalDocument',
+          aggregateId: id,
+          eventType: 'DOCUMENT_PUBLISHED',
+          payload: {
+            documentId: id,
+            documentType: existing.type,
+            version: existing.version,
+            locale: existing.locale,
+            countryCode: existing.countryCode,
+            effectiveFrom: effectiveFrom.toISOString(),
+            title: existing.title,
+          },
+        },
+        tx,
+      );
+
+      return doc;
     });
+
+    // Invalidate cache
+    await this.cacheService.invalidateDocument(id, existing.type, existing.locale);
 
     this.logger.log(`Legal document activated: ${id}`);
 
@@ -166,6 +228,9 @@ export class LegalDocumentsService {
         effectiveTo: new Date(),
       },
     });
+
+    // Invalidate cache
+    await this.cacheService.invalidateDocument(id, existing.type, existing.locale);
 
     this.logger.log(`Legal document archived: ${id}`);
 

@@ -31,8 +31,12 @@ import { getConsentRequirements, type ConsentRequirementsWithRegionResponse } fr
 const DOCUMENT_TYPE_TO_PATH: Record<LegalDocumentType, string> = {
   [LegalDocumentType.TERMS_OF_SERVICE]: '/terms',
   [LegalDocumentType.PRIVACY_POLICY]: '/privacy',
+  [LegalDocumentType.COOKIE_POLICY]: '/privacy',
+  [LegalDocumentType.DATA_PROCESSING_AGREEMENT]: '/terms',
+  [LegalDocumentType.ACCEPTABLE_USE_POLICY]: '/terms',
   [LegalDocumentType.MARKETING_POLICY]: '/privacy',
   [LegalDocumentType.PERSONALIZED_ADS]: '/privacy',
+  [LegalDocumentType.CONSENT_FORM]: '/terms',
 } as const;
 
 /**

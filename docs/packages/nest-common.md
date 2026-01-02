@@ -1001,4 +1001,222 @@ export class AuditService {
 
 ---
 
+## gRPC Clients
+
+The `GrpcClientsModule` provides typed gRPC clients for inter-service communication within the Identity Platform.
+
+### Overview
+
+After Phase 3 service separation, the three core services (identity, auth, legal) communicate via gRPC:
+
+| Client               | Target Service   | gRPC Port | Use Case                              |
+| -------------------- | ---------------- | --------- | ------------------------------------- |
+| `IdentityGrpcClient` | identity-service | 50051     | Account/Session/Device/Profile ops    |
+| `AuthGrpcClient`     | auth-service     | 50052     | Permission/Role/Operator/Sanction ops |
+| `LegalGrpcClient`    | legal-service    | 50053     | Consent/Document/DSR/Law Registry ops |
+
+### Module Setup
+
+```typescript
+import { GrpcClientsModule } from '@my-girok/nest-common';
+
+@Module({
+  imports: [
+    GrpcClientsModule.forRoot({
+      identity: true, // Enable IdentityGrpcClient
+      auth: true, // Enable AuthGrpcClient
+      legal: true, // Enable LegalGrpcClient
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Selective Import (Single Client)
+
+```typescript
+import { IdentityGrpcClientModule, IdentityGrpcClient } from '@my-girok/nest-common';
+
+@Module({
+  imports: [IdentityGrpcClientModule],
+})
+export class SomeModule {}
+```
+
+### Usage Example
+
+```typescript
+import { IdentityGrpcClient, AuthGrpcClient, LegalGrpcClient } from '@my-girok/nest-common';
+
+@Injectable()
+export class MyService {
+  constructor(
+    private readonly identityClient: IdentityGrpcClient,
+    private readonly authClient: AuthGrpcClient,
+    private readonly legalClient: LegalGrpcClient,
+  ) {}
+
+  async checkUserAccess(accountId: string, resource: string) {
+    // Validate account exists
+    const { valid, status } = await this.identityClient.validateAccount({ id: accountId });
+    if (!valid || status !== 'ACTIVE') {
+      throw new UnauthorizedException('Account not active');
+    }
+
+    // Check sanctions
+    const { is_sanctioned } = await this.authClient.checkSanction({
+      subject_id: accountId,
+      subject_type: 'ACCOUNT',
+    });
+    if (is_sanctioned) {
+      throw new ForbiddenException('Account is sanctioned');
+    }
+
+    // Check required consents
+    const { all_required_granted } = await this.legalClient.checkConsents({
+      account_id: accountId,
+      country_code: 'KR',
+      required_types: ['TERMS_OF_SERVICE', 'PRIVACY_POLICY'],
+    });
+    if (!all_required_granted) {
+      throw new ForbiddenException('Missing required consents');
+    }
+
+    return true;
+  }
+}
+```
+
+### IdentityGrpcClient Methods
+
+| Method                 | Description             | Returns               |
+| ---------------------- | ----------------------- | --------------------- |
+| `getAccount`           | Get account by ID       | `{ account }`         |
+| `getAccountByEmail`    | Get account by email    | `{ account }`         |
+| `getAccountByUsername` | Get account by username | `{ account }`         |
+| `validateAccount`      | Check account validity  | `{ valid, status }`   |
+| `createAccount`        | Create new account      | `{ account }`         |
+| `updateAccount`        | Update account          | `{ account }`         |
+| `deleteAccount`        | Soft delete account     | `{ success }`         |
+| `validatePassword`     | Verify password         | `{ valid }`           |
+| `createSession`        | Create login session    | `{ session, tokens }` |
+| `validateSession`      | Validate session token  | `{ valid, session }`  |
+| `revokeSession`        | Revoke single session   | `{ success }`         |
+| `revokeAllSessions`    | Revoke all sessions     | `{ revoked_count }`   |
+| `getAccountDevices`    | List account devices    | `{ devices[] }`       |
+| `trustDevice`          | Trust a device          | `{ device }`          |
+| `revokeDevice`         | Remove a device         | `{ success }`         |
+| `getProfile`           | Get user profile        | `{ profile }`         |
+
+### AuthGrpcClient Methods
+
+| Method                   | Description                | Returns                          |
+| ------------------------ | -------------------------- | -------------------------------- |
+| `checkPermission`        | Check single permission    | `{ allowed, reason }`            |
+| `checkPermissions`       | Check multiple permissions | `{ results[] }`                  |
+| `getOperatorPermissions` | Get operator's permissions | `{ permissions[] }`              |
+| `getRole`                | Get role by ID             | `{ role }`                       |
+| `getRolesByOperator`     | Get operator's roles       | `{ roles[] }`                    |
+| `getOperator`            | Get operator by ID         | `{ operator }`                   |
+| `validateOperator`       | Check operator validity    | `{ valid, status }`              |
+| `checkSanction`          | Check active sanctions     | `{ is_sanctioned, sanctions[] }` |
+| `getActiveSanctions`     | Get all active sanctions   | `{ sanctions[] }`                |
+
+### LegalGrpcClient Methods
+
+| Method                 | Description             | Returns                      |
+| ---------------------- | ----------------------- | ---------------------------- |
+| `checkConsents`        | Check required consents | `{ all_granted, missing[] }` |
+| `getAccountConsents`   | Get all consents        | `{ consents[] }`             |
+| `grantConsent`         | Grant new consent       | `{ consent }`                |
+| `revokeConsent`        | Withdraw consent        | `{ success }`                |
+| `getCurrentDocument`   | Get current legal doc   | `{ document }`               |
+| `getDocumentVersion`   | Get specific version    | `{ document }`               |
+| `listDocuments`        | List legal documents    | `{ documents[], total }`     |
+| `getLawRequirements`   | Get country law reqs    | `{ requirements[] }`         |
+| `getCountryCompliance` | Get compliance info     | `{ compliance_info }`        |
+| `createDsrRequest`     | Create GDPR/PIPA DSR    | `{ dsr_request }`            |
+| `getDsrRequest`        | Get DSR by ID           | `{ dsr_request }`            |
+| `getDsrDeadline`       | Get DSR deadline info   | `{ deadline, days_left }`    |
+
+### Convenience Methods
+
+```typescript
+// LegalGrpcClient convenience methods
+await legalClient.hasAcceptedTerms(accountId, countryCode);       // Returns boolean
+await legalClient.hasAcceptedPrivacyPolicy(accountId, countryCode);
+await legalClient.getTermsOfService(languageCode, countryCode);
+await legalClient.getPrivacyPolicy(languageCode, countryCode);
+await legalClient.submitErasureRequest(accountId, reason);        // GDPR Art. 17
+await legalClient.submitAccessRequest(accountId, reason);         // GDPR Art. 15
+await legalClient.submitPortabilityRequest(accountId, reason);    // GDPR Art. 20
+
+// AuthGrpcClient convenience methods
+await authClient.isUserSanctioned(userId, sanctionType?);         // Returns boolean
+await authClient.hasPermission(operatorId, resource, action);     // Returns boolean
+```
+
+### Error Handling
+
+All gRPC clients normalize errors to a consistent `GrpcError` format:
+
+```typescript
+import { isGrpcError, GrpcError, normalizeGrpcError } from '@my-girok/nest-common';
+import { status as GrpcStatus } from '@grpc/grpc-js';
+
+try {
+  await this.identityClient.getAccount({ id: 'non-existent' });
+} catch (error) {
+  if (isGrpcError(error)) {
+    switch (error.code) {
+      case GrpcStatus.NOT_FOUND:
+        throw new NotFoundException('Account not found');
+      case GrpcStatus.ALREADY_EXISTS:
+        throw new ConflictException('Account already exists');
+      case GrpcStatus.DEADLINE_EXCEEDED:
+        throw new RequestTimeoutException('Service timeout');
+      case GrpcStatus.UNAVAILABLE:
+        throw new ServiceUnavailableException('Service unavailable');
+      default:
+        throw new InternalServerErrorException(error.message);
+    }
+  }
+  throw error;
+}
+```
+
+### Timeout Configuration
+
+```typescript
+// Set custom timeout per request (default: 5000ms)
+const response = await this.identityClient
+  .setTimeout(10000) // 10 seconds
+  .getAccount({ id: accountId });
+```
+
+### Environment Variables
+
+| Variable             | Default   | Description             |
+| -------------------- | --------- | ----------------------- |
+| `IDENTITY_GRPC_HOST` | localhost | Identity service host   |
+| `IDENTITY_GRPC_PORT` | 50051     | Identity gRPC port      |
+| `AUTH_GRPC_HOST`     | localhost | Auth service host       |
+| `AUTH_GRPC_PORT`     | 50052     | Auth gRPC port          |
+| `LEGAL_GRPC_HOST`    | localhost | Legal service host      |
+| `LEGAL_GRPC_PORT`    | 50053     | Legal gRPC port         |
+| `GRPC_PROTO_PATH`    | auto      | Custom proto files path |
+
+### Proto Files Location
+
+Proto files are located at:
+
+```
+packages/proto/
+├── identity/v1/identity.proto
+├── auth/v1/auth.proto
+└── legal/v1/legal.proto
+```
+
+---
+
 **Quick reference**: `.ai/packages/nest-common.md`

@@ -1,0 +1,295 @@
+syntax = "proto3";
+
+package legal.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/legal/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// LegalService provides consent, document, and compliance operations
+service LegalService {
+  // Consent operations
+  rpc CheckConsents(CheckConsentsRequest) returns (CheckConsentsResponse);
+  rpc GetAccountConsents(GetAccountConsentsRequest) returns (GetAccountConsentsResponse);
+  rpc GrantConsent(GrantConsentRequest) returns (GrantConsentResponse);
+  rpc RevokeConsent(RevokeConsentRequest) returns (RevokeConsentResponse);
+
+  // Document operations
+  rpc GetCurrentDocument(GetCurrentDocumentRequest) returns (GetCurrentDocumentResponse);
+  rpc GetDocumentVersion(GetDocumentVersionRequest) returns (GetDocumentVersionResponse);
+  rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
+
+  // Law registry operations
+  rpc GetLawRequirements(GetLawRequirementsRequest) returns (GetLawRequirementsResponse);
+  rpc GetCountryCompliance(GetCountryComplianceRequest) returns (GetCountryComplianceResponse);
+
+  // DSR (Data Subject Request) operations
+  rpc CreateDsrRequest(CreateDsrRequestRequest) returns (CreateDsrRequestResponse);
+  rpc GetDsrRequest(GetDsrRequestRequest) returns (GetDsrRequestResponse);
+  rpc GetDsrDeadline(GetDsrDeadlineRequest) returns (GetDsrDeadlineResponse);
+}
+
+// Consent represents a user's consent to a legal document
+message Consent {
+  string id = 1;
+  string account_id = 2;
+  ConsentType consent_type = 3;
+  string document_id = 4;
+  string document_version = 5;
+  ConsentStatus status = 6;
+  string ip_address = 7;
+  string user_agent = 8;
+  google.protobuf.Timestamp agreed_at = 9;
+  google.protobuf.Timestamp expires_at = 10;
+  google.protobuf.Timestamp revoked_at = 11;
+}
+
+// ConsentType categorizes the consent
+enum ConsentType {
+  CONSENT_TYPE_UNSPECIFIED = 0;
+  CONSENT_TYPE_TERMS_OF_SERVICE = 1;
+  CONSENT_TYPE_PRIVACY_POLICY = 2;
+  CONSENT_TYPE_MARKETING = 3;
+  CONSENT_TYPE_ANALYTICS = 4;
+  CONSENT_TYPE_THIRD_PARTY_SHARING = 5;
+  CONSENT_TYPE_AGE_VERIFICATION = 6;
+  CONSENT_TYPE_PARENTAL_CONSENT = 7;
+}
+
+// ConsentStatus represents the state of a consent
+enum ConsentStatus {
+  CONSENT_STATUS_UNSPECIFIED = 0;
+  CONSENT_STATUS_ACTIVE = 1;
+  CONSENT_STATUS_EXPIRED = 2;
+  CONSENT_STATUS_REVOKED = 3;
+  CONSENT_STATUS_SUPERSEDED = 4;
+}
+
+// LegalDocument represents a legal document (terms, privacy policy, etc.)
+message LegalDocument {
+  string id = 1;
+  DocumentType type = 2;
+  string version = 3;
+  string title = 4;
+  string content = 5;
+  string content_hash = 6;
+  string language_code = 7;
+  string country_code = 8;
+  bool is_mandatory = 9;
+  google.protobuf.Timestamp effective_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+// DocumentType categorizes legal documents
+enum DocumentType {
+  DOCUMENT_TYPE_UNSPECIFIED = 0;
+  DOCUMENT_TYPE_TERMS_OF_SERVICE = 1;
+  DOCUMENT_TYPE_PRIVACY_POLICY = 2;
+  DOCUMENT_TYPE_COOKIE_POLICY = 3;
+  DOCUMENT_TYPE_DATA_PROCESSING_AGREEMENT = 4;
+  DOCUMENT_TYPE_ACCEPTABLE_USE_POLICY = 5;
+}
+
+// LawRequirements represents legal requirements for a jurisdiction
+message LawRequirements {
+  string law_code = 1;
+  string country_code = 2;
+  string law_name = 3;
+  int32 minimum_age = 4;
+  int32 parental_consent_age = 5;
+  repeated ConsentType required_consents = 6;
+  int32 dsr_deadline_days = 7;
+  int32 data_retention_days = 8;
+  bool requires_explicit_consent = 9;
+  bool allows_soft_opt_out = 10;
+}
+
+// CountryCompliance provides compliance status for a country
+message CountryCompliance {
+  string country_code = 1;
+  repeated string applicable_laws = 2;
+  LawRequirements strictest_requirements = 3;
+  bool gdpr_applicable = 4;
+  bool ccpa_applicable = 5;
+}
+
+// DsrRequest represents a Data Subject Request
+message DsrRequest {
+  string id = 1;
+  string account_id = 2;
+  DsrType type = 3;
+  DsrStatus status = 4;
+  string reason = 5;
+  google.protobuf.Timestamp submitted_at = 6;
+  google.protobuf.Timestamp deadline_at = 7;
+  google.protobuf.Timestamp completed_at = 8;
+  string processed_by = 9;
+}
+
+// DsrType categorizes DSR requests
+enum DsrType {
+  DSR_TYPE_UNSPECIFIED = 0;
+  DSR_TYPE_ACCESS = 1;
+  DSR_TYPE_RECTIFICATION = 2;
+  DSR_TYPE_ERASURE = 3;
+  DSR_TYPE_PORTABILITY = 4;
+  DSR_TYPE_RESTRICTION = 5;
+  DSR_TYPE_OBJECTION = 6;
+}
+
+// DsrStatus represents the state of a DSR
+enum DsrStatus {
+  DSR_STATUS_UNSPECIFIED = 0;
+  DSR_STATUS_PENDING = 1;
+  DSR_STATUS_IN_PROGRESS = 2;
+  DSR_STATUS_COMPLETED = 3;
+  DSR_STATUS_REJECTED = 4;
+  DSR_STATUS_EXPIRED = 5;
+}
+
+// DsrDeadline provides deadline information for a DSR
+message DsrDeadline {
+  google.protobuf.Timestamp deadline = 1;
+  int32 days_remaining = 2;
+  bool is_overdue = 3;
+}
+
+// === Request/Response Messages ===
+
+// CheckConsents
+message CheckConsentsRequest {
+  string account_id = 1;
+  string country_code = 2;
+  repeated ConsentType required_types = 3;
+}
+
+message CheckConsentsResponse {
+  bool all_required_granted = 1;
+  repeated ConsentType missing_consents = 2;
+  repeated ConsentType expired_consents = 3;
+  repeated Consent active_consents = 4;
+}
+
+// GetAccountConsents
+message GetAccountConsentsRequest {
+  string account_id = 1;
+  bool include_revoked = 2;
+  bool include_expired = 3;
+}
+
+message GetAccountConsentsResponse {
+  repeated Consent consents = 1;
+  int32 total_count = 2;
+}
+
+// GrantConsent
+message GrantConsentRequest {
+  string account_id = 1;
+  ConsentType consent_type = 2;
+  string document_id = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+}
+
+message GrantConsentResponse {
+  bool success = 1;
+  Consent consent = 2;
+  string message = 3;
+}
+
+// RevokeConsent
+message RevokeConsentRequest {
+  string account_id = 1;
+  string consent_id = 2;
+  string reason = 3;
+}
+
+message RevokeConsentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetCurrentDocument
+message GetCurrentDocumentRequest {
+  DocumentType document_type = 1;
+  string language_code = 2;
+  string country_code = 3;
+}
+
+message GetCurrentDocumentResponse {
+  LegalDocument document = 1;
+}
+
+// GetDocumentVersion
+message GetDocumentVersionRequest {
+  string document_id = 1;
+  string version = 2;
+}
+
+message GetDocumentVersionResponse {
+  LegalDocument document = 1;
+}
+
+// ListDocuments
+message ListDocumentsRequest {
+  DocumentType type = 1;
+  string language_code = 2;
+  bool include_expired = 3;
+  int32 page_size = 4;
+  string page_token = 5;
+}
+
+message ListDocumentsResponse {
+  repeated LegalDocument documents = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+// GetLawRequirements
+message GetLawRequirementsRequest {
+  string country_code = 1;
+}
+
+message GetLawRequirementsResponse {
+  LawRequirements requirements = 1;
+}
+
+// GetCountryCompliance
+message GetCountryComplianceRequest {
+  string country_code = 1;
+}
+
+message GetCountryComplianceResponse {
+  CountryCompliance compliance = 1;
+}
+
+// CreateDsrRequest
+message CreateDsrRequestRequest {
+  string account_id = 1;
+  DsrType type = 2;
+  string reason = 3;
+}
+
+message CreateDsrRequestResponse {
+  DsrRequest dsr_request = 1;
+}
+
+// GetDsrRequest
+message GetDsrRequestRequest {
+  string id = 1;
+}
+
+message GetDsrRequestResponse {
+  DsrRequest dsr_request = 1;
+}
+
+// GetDsrDeadline
+message GetDsrDeadlineRequest {
+  string dsr_id = 1;
+  string country_code = 2;
+}
+
+message GetDsrDeadlineResponse {
+  DsrDeadline deadline = 1;
+}

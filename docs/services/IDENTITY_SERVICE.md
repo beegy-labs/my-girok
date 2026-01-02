@@ -444,6 +444,157 @@ await this.prisma.outboxEvents.create({
 
 ---
 
+## gRPC Server
+
+The identity-service exposes a gRPC server on port **50051** for inter-service communication.
+
+### Starting the gRPC Server
+
+The gRPC server starts alongside the REST API:
+
+```bash
+# In main.ts
+const grpcApp = await NestFactory.createMicroservice<MicroserviceOptions>(
+  AppModule,
+  createIdentityGrpcOptions({ port: 50051 }),
+);
+await grpcApp.listen();
+```
+
+### Proto Definition
+
+```protobuf
+// packages/proto/identity/v1/identity.proto
+syntax = "proto3";
+package identity.v1;
+
+service IdentityService {
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
+  rpc GetAccountByEmail(GetAccountByEmailRequest) returns (GetAccountByEmailResponse);
+  rpc GetAccountByUsername(GetAccountByUsernameRequest) returns (GetAccountByUsernameResponse);
+  rpc ValidateAccount(ValidateAccountRequest) returns (ValidateAccountResponse);
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  rpc ValidatePassword(ValidatePasswordRequest) returns (ValidatePasswordResponse);
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
+  rpc GetAccountDevices(GetAccountDevicesRequest) returns (GetAccountDevicesResponse);
+  rpc TrustDevice(TrustDeviceRequest) returns (TrustDeviceResponse);
+  rpc RevokeDevice(RevokeDeviceRequest) returns (RevokeDeviceResponse);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+}
+```
+
+### gRPC Environment Variables
+
+| Variable             | Default | Description       |
+| -------------------- | ------- | ----------------- |
+| `IDENTITY_GRPC_PORT` | 50051   | gRPC server port  |
+| `IDENTITY_GRPC_HOST` | 0.0.0.0 | gRPC bind address |
+
+### Client Usage (from other services)
+
+Other services can call identity-service via the `IdentityGrpcClient`:
+
+```typescript
+import { GrpcClientsModule, IdentityGrpcClient } from '@my-girok/nest-common';
+
+@Module({
+  imports: [GrpcClientsModule.forRoot({ identity: true })],
+})
+export class AppModule {}
+
+@Injectable()
+export class SomeService {
+  constructor(private readonly identityClient: IdentityGrpcClient) {}
+
+  async getUser(id: string) {
+    const { account } = await this.identityClient.getAccount({ id });
+    return account;
+  }
+}
+```
+
+---
+
+## Helm Deployment
+
+### Chart Location
+
+The identity-service Helm chart is located at `services/identity-service/helm/`.
+
+### Quick Start
+
+```bash
+cd services/identity-service/helm
+cp values.yaml.example values.yaml
+# Edit values.yaml
+helm install my-girok-identity . -f values.yaml
+```
+
+### CQRS Configuration (Read/Write Separation)
+
+Enable read replicas for improved read performance:
+
+```yaml
+app:
+  cqrs:
+    enabled: true
+    readReplica:
+      poolSize: 10 # Connection pool for read replica
+      idleTimeout: 30000 # 30 seconds idle timeout
+```
+
+### Database URLs (6 URLs with CQRS)
+
+| Purpose | Environment Variable         | Description         |
+| ------- | ---------------------------- | ------------------- |
+| Write   | `IDENTITY_DATABASE_URL`      | Primary identity_db |
+| Write   | `AUTH_DATABASE_URL`          | Primary auth_db     |
+| Write   | `LEGAL_DATABASE_URL`         | Primary legal_db    |
+| Read    | `IDENTITY_READ_DATABASE_URL` | Replica identity_db |
+| Read    | `AUTH_READ_DATABASE_URL`     | Replica auth_db     |
+| Read    | `LEGAL_READ_DATABASE_URL`    | Replica legal_db    |
+
+### Migration Jobs (3 Databases)
+
+ArgoCD PreSync hooks run migrations in order:
+
+| Phase | Database    | Sync Wave | Description               |
+| ----- | ----------- | --------- | ------------------------- |
+| 1     | identity_db | -5        | Accounts, sessions, etc.  |
+| 2     | auth_db     | -4        | Roles, permissions, etc.  |
+| 3     | legal_db    | -3        | Consents, documents, etc. |
+
+### Sealed Secrets
+
+```bash
+kubectl create secret generic my-girok-identity-service-secret \
+  --from-literal=identity-database-url="postgresql://user:pass@host:5432/identity_db" \
+  --from-literal=auth-database-url="postgresql://user:pass@host:5432/auth_db" \
+  --from-literal=legal-database-url="postgresql://user:pass@host:5432/legal_db" \
+  --from-literal=identity-read-database-url="postgresql://user:pass@read-host:5432/identity_db" \
+  --from-literal=auth-read-database-url="postgresql://user:pass@read-host:5432/auth_db" \
+  --from-literal=legal-read-database-url="postgresql://user:pass@read-host:5432/legal_db" \
+  --from-literal=jwt-private-key="..." \
+  --from-literal=jwt-public-key="..." \
+  --from-literal=valkey-password="..." \
+  --dry-run=client -o yaml | \
+kubeseal --format yaml > sealed-secret.yaml
+```
+
+### Service Ports
+
+| Port  | Protocol | Name | Purpose       |
+| ----- | -------- | ---- | ------------- |
+| 3005  | HTTP     | http | REST API      |
+| 50051 | gRPC     | grpc | gRPC services |
+
+---
+
 ## Related Documentation
 
 - [Architecture Overview](../../.ai/architecture.md)
@@ -451,3 +602,4 @@ await this.prisma.outboxEvents.create({
 - [Identity Service LLM Reference](../../.ai/services/identity-service.md)
 - [Auth Service](../../.ai/services/auth-service.md)
 - [Legal Service](../../.ai/services/legal-service.md)
+- [gRPC Clients Guide](../packages/nest-common.md#grpc-clients)

@@ -749,10 +749,8 @@ export function createPinoHttpConfig(options?: PinoConfigOptions) {
       },
 
       // Generate request ID (validated UUID format)
-      genReqId: (req): string =>
-        validateRequestId(
-          (req.headers as Record<string, string | string[] | undefined>)['x-request-id'],
-        ),
+      genReqId: (req: { headers: Record<string, string | string[] | undefined> }): string =>
+        validateRequestId(req.headers['x-request-id']),
 
       // Customize log level based on status code
       customLogLevel: (

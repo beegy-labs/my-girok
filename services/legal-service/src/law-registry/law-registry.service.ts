@@ -1,13 +1,17 @@
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../database/prisma.service';
+import { CacheService } from '../common/cache';
 import { CreateLawRegistryDto, UpdateLawRegistryDto, LawRegistryResponseDto } from './dto';
 
 @Injectable()
 export class LawRegistryService {
   private readonly logger = new Logger(LawRegistryService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cacheService: CacheService,
+  ) {}
 
   async create(dto: CreateLawRegistryDto): Promise<LawRegistryResponseDto> {
     // Check if code already exists
@@ -34,6 +38,9 @@ export class LawRegistryService {
       },
     });
 
+    // Invalidate related caches
+    await this.cacheService.invalidateLaw(id, dto.code);
+
     this.logger.log(`Law registry created: ${dto.code} (${id})`);
 
     return this.toResponseDto(lawRegistry);
@@ -57,23 +64,41 @@ export class LawRegistryService {
   }
 
   async findOne(id: string): Promise<LawRegistryResponseDto> {
+    // Check cache first
+    const cached = await this.cacheService.getLawById<LawRegistryResponseDto>(id);
+    if (cached) {
+      return cached;
+    }
+
     const lawRegistry = await this.prisma.lawRegistry.findUnique({ where: { id } });
 
     if (!lawRegistry) {
       throw new NotFoundException(`Law registry not found: ${id}`);
     }
 
-    return this.toResponseDto(lawRegistry);
+    const result = this.toResponseDto(lawRegistry);
+    await this.cacheService.setLawById(id, result);
+
+    return result;
   }
 
   async findByCode(code: string): Promise<LawRegistryResponseDto> {
+    // Check cache first
+    const cached = await this.cacheService.getLawByCode<LawRegistryResponseDto>(code);
+    if (cached) {
+      return cached;
+    }
+
     const lawRegistry = await this.prisma.lawRegistry.findUnique({ where: { code } });
 
     if (!lawRegistry) {
       throw new NotFoundException(`Law registry not found: ${code}`);
     }
 
-    return this.toResponseDto(lawRegistry);
+    const result = this.toResponseDto(lawRegistry);
+    await this.cacheService.setLawByCode(code, result);
+
+    return result;
   }
 
   async update(id: string, dto: UpdateLawRegistryDto): Promise<LawRegistryResponseDto> {
@@ -94,6 +119,9 @@ export class LawRegistryService {
       },
     });
 
+    // Invalidate cache
+    await this.cacheService.invalidateLaw(id, existing.code);
+
     this.logger.log(`Law registry updated: ${id}`);
 
     return this.toResponseDto(updated);
@@ -111,6 +139,9 @@ export class LawRegistryService {
       where: { id },
       data: { isActive: false },
     });
+
+    // Invalidate cache
+    await this.cacheService.invalidateLaw(id, existing.code);
 
     this.logger.log(`Law registry deactivated: ${id}`);
   }

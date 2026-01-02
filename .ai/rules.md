@@ -51,20 +51,23 @@
 
 ### ALWAYS
 
-| Category | Rule                                     |
-| -------- | ---------------------------------------- |
-| Types    | Define first in `packages/types`         |
-| Backend  | Use `@my-girok/nest-common`              |
-| Frontend | Use `@my-girok/ui-components`            |
-| DB       | Use goose for migrations                 |
-| DB       | Use `TIMESTAMPTZ(6)` for timestamps      |
-| DB       | Include `-- +goose Down`                 |
-| Code     | Use `@Transactional()` for multi-step DB |
-| Code     | Use Guards for protected endpoints       |
-| Code     | Prevent N+1 queries                      |
-| React    | Use React.memo for list item components  |
-| React    | Use useMemo for expensive calculations   |
-| Testing  | 80% coverage minimum                     |
+| Category | Rule                                      |
+| -------- | ----------------------------------------- |
+| Types    | Define first in `packages/types`          |
+| Backend  | Use `@my-girok/nest-common`               |
+| Frontend | Use `@my-girok/ui-components`             |
+| DB       | Use goose for migrations                  |
+| DB       | Use `TIMESTAMPTZ(6)` for timestamps       |
+| DB       | Include `-- +goose Down`                  |
+| Code     | Use `@Transactional()` for multi-step DB  |
+| Code     | Use Guards for protected endpoints        |
+| Code     | Prevent N+1 queries                       |
+| React    | Use React.memo for list item components   |
+| React    | Use useMemo for expensive calculations    |
+| Testing  | **80% coverage minimum (CI blocks)**      |
+| Testing  | Check `docs/TEST_COVERAGE.md` before work |
+| Testing  | Include tests with code changes           |
+| Testing  | Mock gRPC clients in consumer services    |
 
 ## Key Patterns
 
@@ -113,6 +116,26 @@ navigate('/path');  // Not useState + useEffect
 
 > **Note**: React 19 Compiler automatically memoizes most cases.
 > Manual useCallback/useMemo only needed for expensive operations.
+
+### gRPC Client Mocking
+
+```typescript
+// Consumer service test setup
+let mockIdentityClient: { getAccount: jest.Mock; getProfile: jest.Mock };
+
+beforeEach(async () => {
+  mockIdentityClient = { getAccount: jest.fn(), getProfile: jest.fn() };
+
+  const module = await Test.createTestingModule({
+    providers: [MyService, { provide: IdentityGrpcClient, useValue: mockIdentityClient }],
+  }).compile();
+});
+
+// Mock gRPC response
+mockIdentityClient.getAccount.mockResolvedValue({
+  account: { id: 'user-123', email: 'test@example.com' },
+});
+```
 
 ## Database Migrations
 

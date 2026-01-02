@@ -5,9 +5,32 @@ import { SessionsService } from './sessions.service';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
 
+// Type for mocked Prisma service with jest.fn() methods
+type MockPrismaSession = {
+  findUnique: jest.Mock;
+  findFirst: jest.Mock;
+  findMany: jest.Mock;
+  create: jest.Mock;
+  update: jest.Mock;
+  updateMany: jest.Mock;
+  count: jest.Mock;
+};
+
+type MockPrismaAccount = {
+  findUnique: jest.Mock;
+};
+
+type MockPrismaDevice = {
+  findUnique: jest.Mock;
+};
+
 describe('SessionsService', () => {
   let service: SessionsService;
-  let prisma: jest.Mocked<IdentityPrismaService>;
+  let prisma: {
+    account: MockPrismaAccount;
+    session: MockPrismaSession;
+    device: MockPrismaDevice;
+  };
   let cryptoService: jest.Mocked<CryptoService>;
 
   const mockAccount = {
@@ -57,7 +80,7 @@ describe('SessionsService', () => {
     };
 
     const mockConfigService = {
-      get: jest.fn((key: string, defaultValue: unknown) => defaultValue),
+      get: jest.fn((_key: string, defaultValue: unknown) => defaultValue),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -99,6 +122,7 @@ describe('SessionsService', () => {
         service.create({
           accountId: 'nonexistent-id',
           ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -111,6 +135,7 @@ describe('SessionsService', () => {
         service.create({
           accountId: mockAccount.id,
           ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -125,6 +150,7 @@ describe('SessionsService', () => {
           accountId: mockAccount.id,
           deviceId: 'nonexistent-device',
           ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
         }),
       ).rejects.toThrow(NotFoundException);
     });
@@ -301,6 +327,349 @@ describe('SessionsService', () => {
           isActive: false,
         }),
       });
+    });
+
+    it('should return 0 when no sessions to cleanup', async () => {
+      prisma.session.updateMany.mockResolvedValue({ count: 0 });
+
+      const result = await service.cleanupExpired();
+
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('concurrent session handling', () => {
+    it('should enforce max sessions per account', async () => {
+      prisma.account.findUnique.mockResolvedValue(mockAccount as never);
+      prisma.session.count.mockResolvedValue(10); // Already at limit
+
+      await expect(
+        service.create({
+          accountId: mockAccount.id,
+          ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow session when below limit', async () => {
+      prisma.account.findUnique.mockResolvedValue(mockAccount as never);
+      prisma.session.count.mockResolvedValue(5); // Below limit
+      prisma.session.create.mockResolvedValue(mockSession as never);
+
+      const result = await service.create({
+        accountId: mockAccount.id,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+      });
+
+      expect(result).toBeDefined();
+      expect(result.accessToken).toBeDefined();
+    });
+
+    it('should handle multiple concurrent session creations', async () => {
+      prisma.account.findUnique.mockResolvedValue(mockAccount as never);
+      prisma.session.count.mockResolvedValue(3);
+      prisma.session.create.mockResolvedValue(mockSession as never);
+
+      const promises = [
+        service.create({
+          accountId: mockAccount.id,
+          ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+        }),
+        service.create({
+          accountId: mockAccount.id,
+          ipAddress: '127.0.0.2',
+          userAgent: 'Mozilla/5.0',
+        }),
+        service.create({
+          accountId: mockAccount.id,
+          ipAddress: '127.0.0.3',
+          userAgent: 'Mozilla/5.0',
+        }),
+      ];
+
+      const results = await Promise.all(promises);
+
+      expect(results).toHaveLength(3);
+      results.forEach((result) => {
+        expect(result.accessToken).toBeDefined();
+        expect(result.refreshToken).toBeDefined();
+      });
+    });
+  });
+
+  describe('session with device', () => {
+    it('should create session with device association', async () => {
+      const mockDevice = {
+        id: 'device-123',
+        accountId: mockAccount.id,
+      };
+      prisma.account.findUnique.mockResolvedValue(mockAccount as never);
+      prisma.session.count.mockResolvedValue(0);
+      prisma.device.findUnique.mockResolvedValue(mockDevice as never);
+      prisma.session.create.mockResolvedValue({
+        ...mockSession,
+        deviceId: mockDevice.id,
+      } as never);
+
+      const result = await service.create({
+        accountId: mockAccount.id,
+        deviceId: mockDevice.id,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+      });
+
+      expect(result.deviceId).toBe(mockDevice.id);
+    });
+
+    it('should throw BadRequestException if device does not belong to account', async () => {
+      const mockDevice = {
+        id: 'device-123',
+        accountId: 'different-account-id',
+      };
+      prisma.account.findUnique.mockResolvedValue(mockAccount as never);
+      prisma.session.count.mockResolvedValue(0);
+      prisma.device.findUnique.mockResolvedValue(mockDevice as never);
+
+      await expect(
+        service.create({
+          accountId: mockAccount.id,
+          deviceId: mockDevice.id,
+          ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return paginated sessions', async () => {
+      const mockSessions = [mockSession, { ...mockSession, id: 'session-2' }];
+      prisma.session.findMany.mockResolvedValue(mockSessions as never);
+      prisma.session.count.mockResolvedValue(2);
+
+      const result = await service.findAll({ page: 1, limit: 10 });
+
+      expect(result.data).toHaveLength(2);
+      expect(result.meta.total).toBe(2);
+    });
+
+    it('should filter by accountId', async () => {
+      prisma.session.findMany.mockResolvedValue([mockSession] as never);
+      prisma.session.count.mockResolvedValue(1);
+
+      await service.findAll({ accountId: mockAccount.id });
+
+      expect(prisma.session.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ accountId: mockAccount.id }),
+        }),
+      );
+    });
+
+    it('should filter by deviceId', async () => {
+      prisma.session.findMany.mockResolvedValue([mockSession] as never);
+      prisma.session.count.mockResolvedValue(1);
+
+      await service.findAll({ deviceId: 'device-123' });
+
+      expect(prisma.session.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deviceId: 'device-123' }),
+        }),
+      );
+    });
+
+    it('should filter by isActive status', async () => {
+      prisma.session.findMany.mockResolvedValue([mockSession] as never);
+      prisma.session.count.mockResolvedValue(1);
+
+      await service.findAll({ isActive: true });
+
+      expect(prisma.session.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
+    });
+
+    it('should respect maximum limit of 100', async () => {
+      prisma.session.findMany.mockResolvedValue([mockSession] as never);
+      prisma.session.count.mockResolvedValue(1);
+
+      await service.findAll({ page: 1, limit: 200 });
+
+      expect(prisma.session.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 100,
+        }),
+      );
+    });
+  });
+
+  describe('touch', () => {
+    it('should update session activity timestamp', async () => {
+      prisma.session.findUnique.mockResolvedValue(mockSession as never);
+      prisma.session.update.mockResolvedValue({
+        ...mockSession,
+        lastActivityAt: new Date(),
+      } as never);
+
+      await service.touch(mockSession.id);
+
+      expect(prisma.session.update).toHaveBeenCalledWith({
+        where: { id: mockSession.id },
+        data: { lastActivityAt: expect.any(Date) },
+      });
+    });
+
+    it('should silently fail for non-existent session', async () => {
+      prisma.session.findUnique.mockResolvedValue(null);
+
+      await expect(service.touch('nonexistent-id')).resolves.not.toThrow();
+      expect(prisma.session.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getActiveSessionCount', () => {
+    it('should return count of active sessions for account', async () => {
+      prisma.session.count.mockResolvedValue(5);
+
+      const result = await service.getActiveSessionCount(mockAccount.id);
+
+      expect(result).toBe(5);
+      expect(prisma.session.count).toHaveBeenCalledWith({
+        where: {
+          accountId: mockAccount.id,
+          isActive: true,
+          expiresAt: { gt: expect.any(Date) },
+        },
+      });
+    });
+  });
+
+  describe('findByTokenHash', () => {
+    it('should return session when found by token hash', async () => {
+      prisma.session.findUnique.mockResolvedValue(mockSession as never);
+
+      const result = await service.findByTokenHash('hashed_token');
+
+      expect(result).toBeDefined();
+      expect(result?.id).toBe(mockSession.id);
+    });
+
+    it('should return null when session not found', async () => {
+      prisma.session.findUnique.mockResolvedValue(null);
+
+      const result = await service.findByTokenHash('unknown_hash');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('session revocation with reason', () => {
+    it('should revoke session with custom reason', async () => {
+      prisma.session.findUnique.mockResolvedValue(mockSession as never);
+      prisma.session.update.mockResolvedValue({
+        ...mockSession,
+        isActive: false,
+        revokedReason: 'Security concern',
+      } as never);
+
+      await service.revoke(mockSession.id, { reason: 'Security concern' });
+
+      expect(prisma.session.update).toHaveBeenCalledWith({
+        where: { id: mockSession.id },
+        data: expect.objectContaining({
+          revokedReason: 'Security concern',
+        }),
+      });
+    });
+
+    it('should use default reason when not provided', async () => {
+      prisma.session.findUnique.mockResolvedValue(mockSession as never);
+      prisma.session.update.mockResolvedValue({
+        ...mockSession,
+        isActive: false,
+        revokedReason: 'User initiated logout',
+      } as never);
+
+      await service.revoke(mockSession.id);
+
+      expect(prisma.session.update).toHaveBeenCalledWith({
+        where: { id: mockSession.id },
+        data: expect.objectContaining({
+          revokedReason: 'User initiated logout',
+        }),
+      });
+    });
+  });
+
+  describe('refresh token rotation', () => {
+    it('should rotate both access and refresh tokens on refresh', async () => {
+      prisma.session.findFirst.mockResolvedValue(mockSession as never);
+      prisma.session.update.mockResolvedValue({
+        ...mockSession,
+        tokenHash: 'new_hashed_access',
+        refreshTokenHash: 'new_hashed_refresh',
+      } as never);
+
+      const result = await service.refresh('valid_refresh_token');
+
+      expect(result.accessToken).toBeDefined();
+      expect(result.refreshToken).toBeDefined();
+      expect(cryptoService.generateToken).toHaveBeenCalledTimes(2);
+    });
+
+    it('should extend session expiration on refresh', async () => {
+      prisma.session.findFirst.mockResolvedValue(mockSession as never);
+      prisma.session.update.mockResolvedValue(mockSession as never);
+
+      await service.refresh('valid_refresh_token');
+
+      expect(prisma.session.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            expiresAt: expect.any(Date),
+            lastActivityAt: expect.any(Date),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('token generation', () => {
+    it('should generate unique tokens for each session', async () => {
+      const tokens = new Set<string>();
+      cryptoService.generateToken
+        .mockReturnValueOnce('token1')
+        .mockReturnValueOnce('refresh1')
+        .mockReturnValueOnce('token2')
+        .mockReturnValueOnce('refresh2');
+
+      prisma.account.findUnique.mockResolvedValue(mockAccount as never);
+      prisma.session.count.mockResolvedValue(0);
+      prisma.session.create.mockResolvedValue(mockSession as never);
+
+      const result1 = await service.create({
+        accountId: mockAccount.id,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+      });
+      tokens.add(result1.accessToken);
+      tokens.add(result1.refreshToken);
+
+      const result2 = await service.create({
+        accountId: mockAccount.id,
+        ipAddress: '127.0.0.2',
+        userAgent: 'Mozilla/5.0',
+      });
+      tokens.add(result2.accessToken);
+      tokens.add(result2.refreshToken);
+
+      expect(tokens.size).toBe(4); // All tokens should be unique
     });
   });
 });

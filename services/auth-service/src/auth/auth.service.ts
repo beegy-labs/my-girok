@@ -1,8 +1,7 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../database/prisma.service';
-import * as bcrypt from 'bcrypt';
 import { RegisterDto, LoginDto, GrantDomainAccessDto } from './dto';
 import {
   AuthPayload,
@@ -15,113 +14,167 @@ import {
   UserServicePayload,
   LegacyUserJwtPayload,
 } from '@my-girok/types';
-import { generateUniqueExternalId } from '../common/utils/id-generator';
-import { hashToken, getSessionExpiresAt } from '../common/utils/session.utils';
+import {
+  IdentityGrpcClient,
+  AccountMode as GrpcAccountMode,
+  AuthProvider as GrpcAuthProvider,
+  isGrpcError,
+} from '@my-girok/nest-common';
+import { status as GrpcStatus } from '@grpc/grpc-js';
+import { hashToken } from '../common/utils/session.utils';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private identityClient: IdentityGrpcClient,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthPayload> {
-    // Check email uniqueness
-    const existingEmail = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-
-    if (existingEmail) {
-      throw new ConflictException('Email already registered');
-    }
-
-    // Check username uniqueness
-    const existingUsername = await this.prisma.user.findUnique({
-      where: { username: dto.username },
-    });
-
-    if (existingUsername) {
-      throw new ConflictException('Username already taken');
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.password, 12);
-
-    // Generate unique external_id with collision checking
-    const externalId = await generateUniqueExternalId(async (id) => {
-      const existing = await this.prisma.user.findUnique({
-        where: { externalId: id },
-      });
-      return !existing; // Return true if unique (not existing)
-    });
-
-    const user = await this.prisma.user.create({
-      data: {
+    try {
+      // Create account via gRPC (handles email/username uniqueness checks)
+      const response = await this.identityClient.createAccount({
         email: dto.email,
         username: dto.username,
-        externalId,
-        password: hashedPassword,
-        name: dto.name,
-        role: Role.USER,
-        provider: AuthProvider.LOCAL,
-      },
-    });
+        password: dto.password,
+        provider: GrpcAuthProvider.AUTH_PROVIDER_LOCAL,
+        mode: GrpcAccountMode.ACCOUNT_MODE_USER,
+      });
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
+      if (!response.account) {
+        throw new ConflictException('Failed to create account');
+      }
 
-    await this.saveRefreshToken(user.id, tokens.refreshToken);
+      const account = response.account;
+      const tokens = await this.generateTokens(account.id, account.email, Role.USER);
 
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        name: user.name,
-        avatar: user.avatar,
-        role: user.role as Role,
-        provider: user.provider as AuthProvider,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt,
-      },
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    };
+      await this.saveRefreshToken(account.id, tokens.refreshToken);
+
+      return {
+        user: {
+          id: account.id,
+          email: account.email,
+          username: account.username,
+          name: dto.name || null,
+          avatar: null,
+          role: Role.USER,
+          provider: AuthProvider.LOCAL,
+          emailVerified: account.email_verified,
+          createdAt: account.created_at ? new Date(account.created_at.seconds * 1000) : new Date(),
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
+    } catch (error) {
+      if (isGrpcError(error)) {
+        if (error.code === GrpcStatus.ALREADY_EXISTS) {
+          // Parse error message to determine which field is duplicate
+          if (error.message.includes('email')) {
+            throw new ConflictException('Email already registered');
+          }
+          if (error.message.includes('username')) {
+            throw new ConflictException('Username already taken');
+          }
+          throw new ConflictException('Account already exists');
+        }
+      }
+      this.logger.error('Failed to create account', error);
+      throw error;
+    }
   }
 
   async login(dto: LoginDto): Promise<AuthPayload> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    try {
+      // Get account by email via gRPC
+      const accountResponse = await this.identityClient.getAccountByEmail({
+        email: dto.email,
+      });
 
-    if (!user || !user.password) {
+      if (!accountResponse.account) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const account = accountResponse.account;
+
+      // Validate password via gRPC
+      const passwordResponse = await this.identityClient.validatePassword({
+        account_id: account.id,
+        password: dto.password,
+      });
+
+      if (!passwordResponse.valid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const tokens = await this.generateTokens(account.id, account.email, Role.USER);
+
+      await this.saveRefreshToken(account.id, tokens.refreshToken);
+
+      return {
+        user: {
+          id: account.id,
+          email: account.email,
+          username: account.username,
+          name: null, // Profile data should be fetched separately if needed
+          avatar: null,
+          role: Role.USER,
+          provider: this.mapGrpcProviderToLocal(GrpcAuthProvider.AUTH_PROVIDER_LOCAL),
+          emailVerified: account.email_verified,
+          createdAt: account.created_at ? new Date(account.created_at.seconds * 1000) : new Date(),
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
+    } catch (error) {
+      if (isGrpcError(error)) {
+        if (error.code === GrpcStatus.NOT_FOUND) {
+          throw new UnauthorizedException('Invalid credentials');
+        }
+      }
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      this.logger.error('Login failed', error);
       throw new UnauthorizedException('Invalid credentials');
     }
+  }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+  private mapGrpcProviderToLocal(grpcProvider: GrpcAuthProvider): AuthProvider {
+    switch (grpcProvider) {
+      case GrpcAuthProvider.AUTH_PROVIDER_LOCAL:
+        return AuthProvider.LOCAL;
+      case GrpcAuthProvider.AUTH_PROVIDER_GOOGLE:
+        return AuthProvider.GOOGLE;
+      case GrpcAuthProvider.AUTH_PROVIDER_KAKAO:
+        return AuthProvider.KAKAO;
+      case GrpcAuthProvider.AUTH_PROVIDER_NAVER:
+        return AuthProvider.NAVER;
+      case GrpcAuthProvider.AUTH_PROVIDER_APPLE:
+        return AuthProvider.APPLE;
+      default:
+        return AuthProvider.LOCAL;
     }
+  }
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
-
-    await this.saveRefreshToken(user.id, tokens.refreshToken);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        name: user.name,
-        avatar: user.avatar,
-        role: user.role as Role,
-        provider: user.provider as AuthProvider,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt,
-      },
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    };
+  private mapLocalProviderToGrpc(provider: AuthProvider): GrpcAuthProvider {
+    switch (provider) {
+      case AuthProvider.LOCAL:
+        return GrpcAuthProvider.AUTH_PROVIDER_LOCAL;
+      case AuthProvider.GOOGLE:
+        return GrpcAuthProvider.AUTH_PROVIDER_GOOGLE;
+      case AuthProvider.KAKAO:
+        return GrpcAuthProvider.AUTH_PROVIDER_KAKAO;
+      case AuthProvider.NAVER:
+        return GrpcAuthProvider.AUTH_PROVIDER_NAVER;
+      case AuthProvider.APPLE:
+        return GrpcAuthProvider.AUTH_PROVIDER_APPLE;
+      default:
+        return GrpcAuthProvider.AUTH_PROVIDER_LOCAL;
+    }
   }
 
   async refreshToken(refreshToken: string): Promise<TokenResponse> {
@@ -129,58 +182,66 @@ export class AuthService {
       this.jwtService.verify(refreshToken);
 
       const tokenHash = hashToken(refreshToken);
-      const session = await this.prisma.session.findUnique({
-        where: { tokenHash },
+
+      // Validate session via gRPC
+      const sessionResponse = await this.identityClient.validateSession({
+        token_hash: tokenHash,
       });
 
-      if (!session || session.expiresAt < new Date() || session.revokedAt) {
+      if (!sessionResponse.valid) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      if (session.subjectType !== 'USER') {
-        throw new UnauthorizedException('Invalid session type');
-      }
-
-      // Fetch user
-      const user = await this.prisma.user.findUnique({
-        where: { id: session.subjectId },
+      // Get account via gRPC
+      const accountResponse = await this.identityClient.getAccount({
+        id: sessionResponse.account_id,
       });
 
-      if (!user) {
+      if (!accountResponse.account) {
         throw new UnauthorizedException('User not found');
       }
 
-      const tokens = await this.generateTokens(user.id, user.email, user.role);
+      const account = accountResponse.account;
+      const tokens = await this.generateTokens(account.id, account.email, Role.USER);
 
-      // Update session with new token hash
-      await this.prisma.session.update({
-        where: { id: session.id },
-        data: {
-          tokenHash: hashToken(tokens.refreshToken),
-          // Security: Only store hash, never plaintext refresh token
-          expiresAt: getSessionExpiresAt(),
-        },
+      // Revoke old session and create new one
+      await this.identityClient.revokeSession({
+        session_id: sessionResponse.session_id,
+        reason: 'Token refresh',
       });
 
+      await this.saveRefreshToken(account.id, tokens.refreshToken);
+
       return tokens;
-    } catch (_error) {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      this.logger.error('Token refresh failed', error);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
-  async logout(userId: string, refreshToken: string): Promise<void> {
-    const tokenHash = hashToken(refreshToken);
-    // Soft delete: mark session as revoked instead of deleting
-    await this.prisma.session.updateMany({
-      where: {
-        subjectId: userId,
-        subjectType: 'USER',
-        tokenHash,
-      },
-      data: {
-        revokedAt: new Date(),
-      },
-    });
+  async logout(_userId: string, refreshToken: string): Promise<void> {
+    try {
+      const tokenHash = hashToken(refreshToken);
+
+      // Validate session first to get session ID
+      const sessionResponse = await this.identityClient.validateSession({
+        token_hash: tokenHash,
+      });
+
+      if (sessionResponse.valid && sessionResponse.session_id) {
+        // Revoke the session via gRPC
+        await this.identityClient.revokeSession({
+          session_id: sessionResponse.session_id,
+          reason: 'User logout',
+        });
+      }
+    } catch (error) {
+      // Log but don't throw - logout should be idempotent
+      this.logger.warn('Session revocation during logout failed', error);
+    }
   }
 
   async grantDomainAccess(userId: string, dto: GrantDomainAccessDto): Promise<DomainAccessPayload> {
@@ -218,18 +279,25 @@ export class AuthService {
   }
 
   async generateTokens(userId: string, email: string, role: string): Promise<TokenResponse> {
-    // Fetch user's services for new JWT structure
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        accountMode: true,
-        countryCode: true,
-      },
-    });
+    // Fetch account info via gRPC for accountMode and countryCode
+    let accountMode: 'SERVICE' | 'UNIFIED' = 'SERVICE';
+    let countryCode = 'KR';
 
-    // Fetch user services using raw query (Prisma schema may not be updated yet)
+    try {
+      const accountResponse = await this.identityClient.getAccount({ id: userId });
+      if (accountResponse.account) {
+        // Map gRPC AccountMode to local types
+        accountMode =
+          accountResponse.account.mode === GrpcAccountMode.ACCOUNT_MODE_SERVICE
+            ? 'SERVICE'
+            : 'UNIFIED';
+        // Get countryCode from profile if needed
+      }
+    } catch (error) {
+      this.logger.debug(`Failed to fetch account info for token generation: ${error}`);
+    }
+
+    // Fetch user services from local database (stays in auth-service)
     let userServices: Array<{
       status: string;
       countryCode: string;
@@ -247,8 +315,8 @@ export class AuthService {
       `;
     } catch (error) {
       // Table might not exist yet in dev, continue with empty services
-      console.debug(
-        `[AuthService] user_services query skipped: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      this.logger.debug(
+        `user_services query skipped: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
 
@@ -258,8 +326,8 @@ export class AuthService {
       sub: userId,
       email,
       type: 'USER_ACCESS',
-      accountMode: (user?.accountMode as 'SERVICE' | 'UNIFIED') || 'SERVICE',
-      countryCode: user?.countryCode || 'KR',
+      accountMode,
+      countryCode,
       services,
     };
 
@@ -342,75 +410,107 @@ export class AuthService {
 
   async saveRefreshToken(
     userId: string,
-    refreshToken: string,
+    _refreshToken: string, // Token hash is generated by identity-service
     ipAddress?: string,
     userAgent?: string,
   ): Promise<void> {
-    await this.prisma.session.create({
-      data: {
-        subjectId: userId,
-        subjectType: 'USER',
-        tokenHash: hashToken(refreshToken),
-        // Security: Only store hash, never plaintext refresh token
-        expiresAt: getSessionExpiresAt(),
-        ipAddress,
-        userAgent,
-      },
-    });
+    try {
+      // Create session via gRPC - identity-service will handle token hashing
+      await this.identityClient.createSession({
+        account_id: userId,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        expires_in_ms: 14 * 24 * 60 * 60 * 1000, // 14 days
+      });
+    } catch (error) {
+      this.logger.error('Failed to save refresh token', error);
+      throw error;
+    }
   }
 
   async validateUser(userId: string) {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-    });
+    try {
+      const response = await this.identityClient.getAccount({ id: userId });
+      if (!response.account) {
+        return null;
+      }
+
+      // Map gRPC Account to expected format
+      return {
+        id: response.account.id,
+        email: response.account.email,
+        username: response.account.username,
+        emailVerified: response.account.email_verified,
+        createdAt: response.account.created_at
+          ? new Date(response.account.created_at.seconds * 1000)
+          : new Date(),
+      };
+    } catch (error) {
+      if (isGrpcError(error) && error.code === GrpcStatus.NOT_FOUND) {
+        return null;
+      }
+      this.logger.error('Failed to validate user', error);
+      throw error;
+    }
   }
 
   async findOrCreateOAuthUser(
     email: string,
     provider: AuthProvider,
     providerId: string,
-    name?: string,
-    avatar?: string,
+    _name?: string,
+    _avatar?: string,
   ) {
-    let user = await this.prisma.user.findFirst({
-      where: {
-        provider,
-        providerId,
-      },
-    });
+    try {
+      // Try to find existing account by email first
+      const existingResponse = await this.identityClient.getAccountByEmail({ email });
 
-    if (!user) {
-      // Generate unique username from email prefix + random suffix
-      const emailPrefix = email
-        .split('@')[0]
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '');
-      const randomSuffix = Math.random().toString(36).substring(2, 8);
-      const username = `${emailPrefix}${randomSuffix}`;
-
-      // Generate unique external_id with collision checking
-      const externalId = await generateUniqueExternalId(async (id) => {
-        const existing = await this.prisma.user.findUnique({
-          where: { externalId: id },
-        });
-        return !existing; // Return true if unique (not existing)
-      });
-
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          username,
-          externalId,
-          name,
-          avatar,
-          provider,
-          providerId,
-          role: Role.USER,
-          emailVerified: true,
-        },
-      });
+      if (existingResponse.account) {
+        return {
+          id: existingResponse.account.id,
+          email: existingResponse.account.email,
+          username: existingResponse.account.username,
+          emailVerified: existingResponse.account.email_verified,
+          createdAt: existingResponse.account.created_at
+            ? new Date(existingResponse.account.created_at.seconds * 1000)
+            : new Date(),
+        };
+      }
+    } catch (error) {
+      if (!isGrpcError(error) || error.code !== GrpcStatus.NOT_FOUND) {
+        this.logger.error('Error checking existing OAuth account', error);
+        throw error;
+      }
     }
 
-    return user;
+    // Create new account via gRPC
+    const emailPrefix = email
+      .split('@')[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const username = `${emailPrefix}${randomSuffix}`;
+
+    const response = await this.identityClient.createAccount({
+      email,
+      username,
+      provider: this.mapLocalProviderToGrpc(provider),
+      provider_id: providerId,
+      mode: GrpcAccountMode.ACCOUNT_MODE_USER,
+    });
+
+    if (!response.account) {
+      throw new ConflictException('Failed to create OAuth account');
+    }
+
+    return {
+      id: response.account.id,
+      email: response.account.email,
+      username: response.account.username,
+      emailVerified: response.account.email_verified,
+      createdAt: response.account.created_at
+        ? new Date(response.account.created_at.seconds * 1000)
+        : new Date(),
+    };
   }
 }

@@ -1,0 +1,13 @@
+version: v1
+managed:
+  enabled: true
+plugins:
+  # protobuf-ts generates TypeScript types and gRPC service interfaces
+  - plugin: buf.build/community/timostamm-protobuf-ts
+    out: ../types/src/generated/proto
+    opt:
+      - long_type_string
+      - generate_dependencies
+      - ts_nocheck
+      - add_pb_suffix
+      - output_javascript

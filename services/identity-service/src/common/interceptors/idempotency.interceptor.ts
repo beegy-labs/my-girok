@@ -127,10 +127,10 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
     // If not in cache, check database
     if (!cached && this.prisma) {
-      cached = await this.findInDatabase(idempotencyKey, fingerprint);
-
-      // Re-populate cache if found in database
-      if (cached) {
+      const dbRecord = await this.findInDatabase(idempotencyKey, fingerprint);
+      if (dbRecord) {
+        cached = dbRecord;
+        // Re-populate cache if found in database
         await this.cacheService.set(cacheKey, cached, ttlMs);
       }
     }
@@ -272,6 +272,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
   /**
    * Find idempotency record in database
+   * Note: Requires IdempotencyRecord model in Prisma schema
    */
   private async findInDatabase(
     idempotencyKey: string,
@@ -282,7 +283,23 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     try {
-      const record = await this.prisma.idempotencyRecord.findUnique({
+      // Check if idempotencyRecord model exists in Prisma client
+      const prismaAny = this.prisma as unknown as Record<string, unknown>;
+      if (!prismaAny.idempotencyRecord) {
+        return null;
+      }
+
+      const record = await (
+        prismaAny.idempotencyRecord as {
+          findUnique: (args: unknown) => Promise<{
+            responseStatus: number;
+            responseBody: unknown;
+            responseHeaders: Record<string, string>;
+            createdAt: Date;
+            expiresAt: Date;
+          } | null>;
+        }
+      ).findUnique({
         where: {
           idempotencyKey_requestFingerprint: {
             idempotencyKey,
@@ -309,6 +326,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
   /**
    * Save idempotency record to database
+   * Note: Requires IdempotencyRecord model in Prisma schema
    */
   private async saveToDatabase(
     idempotencyKey: string,
@@ -321,9 +339,19 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     try {
+      // Check if idempotencyRecord model exists in Prisma client
+      const prismaAny = this.prisma as unknown as Record<string, unknown>;
+      if (!prismaAny.idempotencyRecord) {
+        return;
+      }
+
       const expiresAt = new Date(Date.now() + ttlMs);
 
-      await this.prisma.idempotencyRecord.upsert({
+      await (
+        prismaAny.idempotencyRecord as {
+          upsert: (args: unknown) => Promise<unknown>;
+        }
+      ).upsert({
         where: {
           idempotencyKey_requestFingerprint: {
             idempotencyKey,

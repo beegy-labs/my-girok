@@ -27,6 +27,28 @@ import type {
   UpdateProfileDto,
 } from './types.js';
 
+// Import Permission and Role from auth/types.ts (SSOT)
+import type {
+  Permission as AuthPermission,
+  PermissionSummary,
+  RoleEntity,
+  RoleSummary,
+} from '../auth/types.js';
+
+// Import sanction enums from admin/sanction.enums.ts
+import type { SanctionType, SanctionSeverity, SanctionStatus } from '../admin/sanction.enums.js';
+
+// Local type aliases for internal use in this file
+type Permission = AuthPermission;
+type Role = RoleEntity;
+
+// Re-export for backwards compatibility
+// The full types from auth/types.ts are the SSOT for Permission and Role
+export type { AuthPermission as Permission, RoleEntity as Role };
+
+// Also export summary types for module interface use
+export type { PermissionSummary, RoleSummary };
+
 // ============================================================================
 // Account Management Interface
 // ============================================================================
@@ -328,43 +350,20 @@ export interface IIdentityModule {
 // Auth Module Types (auth_db)
 // ============================================================================
 
-/**
- * Role entity
- */
-export interface Role {
-  id: string;
-  name: string;
-  displayName: string;
-  description: string | null;
-  level: number;
-  isSystem: boolean;
-  parentId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Note: Role and Permission types are imported from auth/types.ts (SSOT)
+// and re-exported at the top of this file for backwards compatibility.
 
 /**
- * Permission entity
- */
-export interface Permission {
-  id: string;
-  code: string;
-  name: string;
-  description: string | null;
-  category: string;
-  createdAt: Date;
-}
-
-/**
- * Sanction entity
+ * Sanction entity (simplified for module interface)
+ * Full sanction types are in admin/sanction.types.ts
  */
 export interface Sanction {
   id: string;
   subjectId: string;
   subjectType: 'ACCOUNT' | 'OPERATOR' | 'ADMIN';
-  sanctionType: 'WARNING' | 'TEMPORARY_BAN' | 'PERMANENT_BAN' | 'FEATURE_RESTRICTION';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  status: 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+  sanctionType: SanctionType;
+  severity: SanctionSeverity;
+  status: SanctionStatus;
   reason: string;
   restrictedFeatures: string[];
   startAt: Date;

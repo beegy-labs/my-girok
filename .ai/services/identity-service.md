@@ -17,12 +17,13 @@ Core identity management: accounts, sessions, devices, profiles
 
 ## Service Info
 
-| Property | Value                          |
-| -------- | ------------------------------ |
-| Port     | 3000                           |
-| Database | identity_db (PostgreSQL)       |
-| Codebase | `services/identity-service/`   |
-| Events   | `identity.*` topics (Redpanda) |
+| Property  | Value                          |
+| --------- | ------------------------------ |
+| REST Port | 3000                           |
+| gRPC Port | 50051                          |
+| Database  | identity_db (PostgreSQL)       |
+| Codebase  | `services/identity-service/`   |
+| Events    | `identity.*` topics (Redpanda) |
 
 ---
 
@@ -43,6 +44,54 @@ identity-service (Port 3000)
 
 - `auth-service`: Permission checks, sanctions (gRPC)
 - `legal-service`: Consent validation (gRPC)
+
+---
+
+## gRPC Server (Port 50051)
+
+This service exposes a gRPC server for other services to call.
+
+### Available Methods
+
+| Method            | Request                | Response            | Description            |
+| ----------------- | ---------------------- | ------------------- | ---------------------- |
+| GetAccount        | `{id}`                 | `{account}`         | Get account by ID      |
+| GetAccountByEmail | `{email}`              | `{account}`         | Get account by email   |
+| ValidateAccount   | `{id}`                 | `{valid, status}`   | Check account exists   |
+| CreateAccount     | `{email, password...}` | `{account}`         | Create new account     |
+| UpdateAccount     | `{id, fields...}`      | `{account}`         | Update account         |
+| DeleteAccount     | `{id}`                 | `{success}`         | Soft delete account    |
+| ValidatePassword  | `{account_id, pwd}`    | `{valid}`           | Verify password        |
+| CreateSession     | `{account_id, ip...}`  | `{session, tokens}` | Create login session   |
+| ValidateSession   | `{token_hash}`         | `{valid, session}`  | Validate session token |
+| RevokeSession     | `{id}`                 | `{success}`         | Revoke single session  |
+| RevokeAllSessions | `{account_id}`         | `{revoked_count}`   | Revoke all sessions    |
+| GetAccountDevices | `{account_id}`         | `{devices[]}`       | List account devices   |
+| TrustDevice       | `{device_id}`          | `{device}`          | Mark device as trusted |
+| RevokeDevice      | `{device_id}`          | `{success}`         | Remove device          |
+| GetProfile        | `{account_id}`         | `{profile}`         | Get user profile       |
+
+### Proto Definition
+
+```
+packages/proto/identity/v1/identity.proto
+```
+
+### Client Usage (from other services)
+
+```typescript
+import { IdentityGrpcClient } from '@my-girok/nest-common';
+
+@Injectable()
+export class AuthService {
+  constructor(private readonly identityClient: IdentityGrpcClient) {}
+
+  async validateUser(accountId: string) {
+    const { valid, status } = await this.identityClient.validateAccount({ id: accountId });
+    return valid && status === 'ACTIVE';
+  }
+}
+```
 
 ---
 
@@ -186,29 +235,107 @@ services/identity-service/
 
 ---
 
+## Helm Deployment
+
+### Chart Location
+
+```
+services/identity-service/helm/
+├── Chart.yaml
+├── values.yaml.example
+├── README.md
+└── templates/
+    ├── _helpers.tpl
+    ├── deployment.yaml
+    ├── service.yaml          # HTTP + gRPC
+    ├── ingress.yaml          # HTTP + optional gRPC
+    ├── hpa.yaml
+    ├── migration-job.yaml    # 3 DB migrations
+    ├── sealed-secret.yaml
+    └── serviceaccount.yaml
+```
+
+### CQRS Configuration (Read/Write Separation)
+
+Enable read replicas for read-heavy operations:
+
+```yaml
+app:
+  cqrs:
+    enabled: true
+    readReplica:
+      poolSize: 10 # Connection pool for read replica
+      idleTimeout: 30000 # 30 seconds
+```
+
+**Database URLs**:
+
+| Purpose | Env Variable                 | Helm Secret Key              |
+| ------- | ---------------------------- | ---------------------------- |
+| Write   | `IDENTITY_DATABASE_URL`      | `identity-database-url`      |
+| Write   | `AUTH_DATABASE_URL`          | `auth-database-url`          |
+| Write   | `LEGAL_DATABASE_URL`         | `legal-database-url`         |
+| Read    | `IDENTITY_READ_DATABASE_URL` | `identity-read-database-url` |
+| Read    | `AUTH_READ_DATABASE_URL`     | `auth-read-database-url`     |
+| Read    | `LEGAL_READ_DATABASE_URL`    | `legal-read-database-url`    |
+
+### Module Mode
+
+Configure module communication:
+
+```yaml
+app:
+  moduleMode:
+    identity: local # local | remote
+    auth: local # local | remote
+    legal: local # local | remote
+```
+
+### Migration Order (ArgoCD)
+
+| Phase | Database    | Sync Wave | Job Name         |
+| ----- | ----------- | --------- | ---------------- |
+| 1     | identity_db | -5        | migrate-identity |
+| 2     | auth_db     | -4        | migrate-auth     |
+| 3     | legal_db    | -3        | migrate-legal    |
+
+---
+
 ## Environment Variables
 
 ```env
-PORT=3000
+PORT=3005
+GRPC_PORT=50051
 NODE_ENV=development
 
-# Database
-DATABASE_URL=postgresql://...identity_db
+# Database URLs (3 Separate DBs)
+IDENTITY_DATABASE_URL=postgresql://...identity_db
+AUTH_DATABASE_URL=postgresql://...auth_db
+LEGAL_DATABASE_URL=postgresql://...legal_db
+
+# CQRS - Read Replicas (optional)
+CQRS_ENABLED=false
+# IDENTITY_READ_DATABASE_URL=postgresql://...
+# AUTH_READ_DATABASE_URL=postgresql://...
+# LEGAL_READ_DATABASE_URL=postgresql://...
+
+# Module Mode
+IDENTITY_MODE=local
+AUTH_MODE=local
+LEGAL_MODE=local
 
 # Cache (Valkey/Redis)
-REDIS_HOST=localhost
-REDIS_PORT=6379
+VALKEY_HOST=localhost
+VALKEY_PORT=6379
 
-# JWT
-JWT_SECRET=...
-JWT_EXPIRES_IN=1h
-REFRESH_TOKEN_EXPIRES_IN=14d
+# JWT (RS256)
+JWT_PRIVATE_KEY=...
+JWT_PUBLIC_KEY=...
+JWT_ACCESS_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
 
-# API Keys (service-to-service)
-API_KEYS=key1,key2
-
-# Encryption (MFA secrets)
-ENCRYPTION_KEY=<32-bytes-base64>
+# Outbox
+OUTBOX_POLLING_INTERVAL_MS=5000
 ```
 
 ---

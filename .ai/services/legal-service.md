@@ -17,12 +17,13 @@ Consent management, legal documents, law registry, DSR handling
 
 ## Service Info
 
-| Property | Value                       |
-| -------- | --------------------------- |
-| Port     | 3005                        |
-| Database | legal_db (PostgreSQL)       |
-| Codebase | `services/legal-service/`   |
-| Events   | `legal.*` topics (Redpanda) |
+| Property  | Value                       |
+| --------- | --------------------------- |
+| REST Port | 3005                        |
+| gRPC Port | 50053                       |
+| Database  | legal_db (PostgreSQL)       |
+| Codebase  | `services/legal-service/`   |
+| Events    | `legal.*` topics (Redpanda) |
 
 ---
 
@@ -43,6 +44,55 @@ legal-service (Port 3005)
 
 - `identity-service`: Account validation (gRPC)
 - `auth-service`: Operator permissions (gRPC)
+
+---
+
+## gRPC Server (Port 50053)
+
+This service exposes a gRPC server for consent and legal compliance checks.
+
+### Available Methods
+
+| Method               | Request                          | Response                   | Description             |
+| -------------------- | -------------------------------- | -------------------------- | ----------------------- |
+| CheckConsents        | `{account_id, country, types[]}` | `{all_granted, missing[]}` | Check required consents |
+| GetAccountConsents   | `{account_id}`                   | `{consents[]}`             | Get all consents        |
+| GrantConsent         | `{account_id, type, doc_id}`     | `{consent}`                | Grant new consent       |
+| RevokeConsent        | `{consent_id, reason}`           | `{success}`                | Withdraw consent        |
+| GetCurrentDocument   | `{type, lang, country}`          | `{document}`               | Get current legal doc   |
+| GetDocumentVersion   | `{doc_id, version}`              | `{document}`               | Get specific version    |
+| ListDocuments        | `{type, page, limit}`            | `{documents[], total}`     | List documents          |
+| GetLawRequirements   | `{country_code}`                 | `{requirements[]}`         | Get country law reqs    |
+| GetCountryCompliance | `{country_code}`                 | `{compliance_info}`        | Get compliance info     |
+| CreateDsrRequest     | `{account_id, type, reason}`     | `{dsr_request}`            | Create GDPR/PIPA DSR    |
+| GetDsrRequest        | `{id}`                           | `{dsr_request}`            | Get DSR by ID           |
+| GetDsrDeadline       | `{id}`                           | `{deadline, days_left}`    | Get DSR deadline info   |
+
+### Proto Definition
+
+```
+packages/proto/legal/v1/legal.proto
+```
+
+### Client Usage (from other services)
+
+```typescript
+import { LegalGrpcClient } from '@my-girok/nest-common';
+
+@Injectable()
+export class IdentityService {
+  constructor(private readonly legalClient: LegalGrpcClient) {}
+
+  async checkRequiredConsents(accountId: string, countryCode: string) {
+    const { all_required_granted } = await this.legalClient.checkConsents({
+      account_id: accountId,
+      country_code: countryCode,
+      required_types: ['TERMS_OF_SERVICE', 'PRIVACY_POLICY'],
+    });
+    return all_required_granted;
+  }
+}
+```
 
 ---
 
