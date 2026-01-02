@@ -115,6 +115,7 @@ Kubernetes deployment guide:
 
 ### Policies
 
+- [2026 Best Practices](policies/BEST_PRACTICES_2026.md) - Monthly review checklist
 - [Database](policies/DATABASE.md) - goose migrations (SSOT) + ClickHouse
 - [Security](policies/SECURITY.md) - Security best practices
 - [Testing](policies/TESTING.md) - Testing standards

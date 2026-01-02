@@ -11,8 +11,9 @@
 **For ANY task, read these first:**
 
 1. **[.ai/rules.md](.ai/rules.md)** - Core DO/DON'T rules (CRITICAL)
-2. **[.ai/architecture.md](.ai/architecture.md)** - Architecture patterns and routing
-3. **[docs/TEST_COVERAGE.md](docs/TEST_COVERAGE.md)** - Test coverage status & pending tests
+2. **[.ai/best-practices.md](.ai/best-practices.md)** - 2026 Best Practices (monthly review)
+3. **[.ai/architecture.md](.ai/architecture.md)** - Architecture patterns and routing
+4. **[docs/TEST_COVERAGE.md](docs/TEST_COVERAGE.md)** - Test coverage status & pending tests
 
 ### Testing Requirements
 
@@ -181,6 +182,7 @@ Full details: [.ai/git-flow.md](.ai/git-flow.md)
 
 ## Need More Detail?
 
+**2026 Best Practices** -> `docs/policies/BEST_PRACTICES_2026.md`
 **Database migrations** -> `docs/policies/DATABASE.md`
 **Security policies** -> `docs/policies/SECURITY.md`
 **Testing standards** -> `docs/policies/TESTING.md`
