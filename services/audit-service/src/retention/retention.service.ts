@@ -138,7 +138,7 @@ export class RetentionService {
       // Validate table name against whitelist before any operations
       try {
         this.validateTableName(policy.databaseName, policy.tableName);
-      } catch (error) {
+      } catch (_error) {
         this.logger.error(`Skipping invalid table: ${policy.databaseName}.${policy.tableName}`);
         continue;
       }
@@ -186,15 +186,15 @@ export class RetentionService {
             this.logger.log(
               `Dropped partition ${partition} from ${policy.databaseName}.${policy.tableName}`,
             );
-          } catch (error) {
+          } catch (_error) {
             this.logger.error(
               `Failed to drop partition ${partition} from ${policy.tableName}`,
-              error,
+              _error,
             );
           }
         }
-      } catch (error) {
-        this.logger.error(`Failed to process retention for ${policy.tableName}`, error);
+      } catch (_error) {
+        this.logger.error(`Failed to process retention for ${policy.tableName}`, _error);
       }
     }
 

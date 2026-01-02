@@ -1,7 +1,12 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { maskEmail, maskPhone, maskIpAddress, maskPiiFields } from '../utils/pii-masking.util';
+import {
+  maskEmail,
+  maskPhone,
+  maskIpAddress,
+  maskObject as maskPiiFields,
+} from '@my-girok/nest-common';
 
 /**
  * PiiLoggingInterceptor masks PII in request/response logs.

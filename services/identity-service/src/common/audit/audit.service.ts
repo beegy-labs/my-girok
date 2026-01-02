@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OutboxService } from '../outbox';
-import { maskUuid, maskEmail } from '../utils/masking.util';
+import { maskUuid, maskEmail } from '@my-girok/nest-common';
 
 /**
  * Audit action types

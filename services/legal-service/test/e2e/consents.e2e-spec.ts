@@ -9,7 +9,7 @@ import { OutboxService } from '../../src/common/outbox/outbox.service';
 import { createMockPrisma } from '../utils/mock-prisma';
 import { createMockCacheService } from '../utils/mock-cache';
 import {
-  createMockConsent,
+  _createMockConsent,
   createConsentWithDocument,
   createGrantConsentDto,
   createWithdrawConsentDto,

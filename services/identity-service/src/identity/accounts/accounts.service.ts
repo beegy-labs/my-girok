@@ -11,7 +11,7 @@ import { Prisma } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
 import { PaginatedResponse } from '../../common/pagination';
-import { maskUuid, maskEmail } from '../../common/utils/masking.util';
+import { maskUuid, maskEmail } from '@my-girok/nest-common';
 import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-account.dto';
 import { UpdateAccountDto, AccountStatus, ChangePasswordDto } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
