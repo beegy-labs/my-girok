@@ -412,12 +412,12 @@ getPermissions(@Param('roleId') roleId: string) { }
 
 ## 2025 Best Practices
 
-| Standard             | Status | Implementation                  |
-| -------------------- | ------ | ------------------------------- |
-| RFC 9562 (UUIDv7)    | ✅     | All IDs via `ID.generate()`     |
-| Transactional Outbox | ✅     | Atomic with business operations |
-| PII Masking          | ✅     | `masking.util.ts` for all logs  |
-| Audit Trail          | ✅     | All RBAC changes logged         |
+| Standard             | Status | Implementation                   |
+| -------------------- | ------ | -------------------------------- |
+| RFC 9562 (UUIDv7)    | ✅     | All IDs via `ID.generate()`      |
+| Transactional Outbox | ✅     | Atomic with business operations  |
+| PII Masking          | ✅     | `@my-girok/nest-common` for logs |
+| Audit Trail          | ✅     | All RBAC changes logged          |
 
 ---
 
