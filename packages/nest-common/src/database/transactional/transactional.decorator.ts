@@ -16,6 +16,8 @@ import {
   CircuitBreakerError,
   CircuitState,
 } from '../../resilience/circuit-breaker';
+import { RETRYABLE_DB_ERROR_CODES, NON_RETRYABLE_DB_ERROR_CODES } from '../db-error-codes';
+import * as T from './transactional.constants';
 
 /**
  * Logger instance for transaction-related messages.
@@ -458,27 +460,6 @@ function validateOptions(options: TransactionalOptions): Required<TransactionalO
 
   return opts;
 }
-
-import { Logger } from '@nestjs/common';
-import type { PrismaClient } from '@prisma/client';
-import { trace, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api';
-import {
-  getTransactionContext,
-  getTransaction,
-  generateTransactionId,
-  runInTransaction,
-  clearTransactionContext,
-  suspendAndRunInTransaction,
-  TransactionContext,
-  PrismaTransactionClient,
-} from './transaction-context';
-import {
-  CircuitBreaker,
-  CircuitBreakerError,
-  CircuitState,
-} from '../../resilience/circuit-breaker';
-import { RETRYABLE_DB_ERROR_CODES, NON_RETRYABLE_DB_ERROR_CODES } from '../db-error-codes';
-import * as T from './transactional.constants';
 
 // ============================================================================
 // Transaction Metrics
