@@ -15,6 +15,7 @@
 ### Core Documentation
 
 - **[rules.md](rules.md)** - Essential DO/DON'T rules (READ FIRST)
+- **[best-practices.md](best-practices.md)** - 2026 Best Practices checklist (monthly review)
 - **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
 - **[caching.md](caching.md)** - Valkey/Redis caching patterns (Cache-Aside)
 - **[ssot.md](ssot.md)** - Single Source of Truth strategy (Tailwind CSS 4)

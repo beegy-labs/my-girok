@@ -1,3 +1,5 @@
+-- +goose Up
+-- +goose StatementBegin
 -- ============================================================
 -- analytics_db: Business Analytics Database
 -- Retention: 90 days ~ 1 year (configurable)
@@ -6,14 +8,16 @@
 
 -- Database
 CREATE DATABASE IF NOT EXISTS analytics_db ON CLUSTER 'my_cluster';
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 -- ============================================================
 -- Sessions
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.sessions_local ON CLUSTER 'my_cluster' (
-    session_id UUID DEFAULT generateUUIDv7(), -- UUIDv7 (RFC 9562)
-    user_id Nullable(UUID),             -- UUIDv7 (null for anonymous)
-    anonymous_id UUID,                  -- UUIDv7 (generated client-side)
+    session_id UUID DEFAULT generateUUIDv7(),
+    user_id Nullable(UUID),
+    anonymous_id UUID,
 
     started_at DateTime64(3),
     ended_at Nullable(DateTime64(3)),
@@ -33,7 +37,7 @@ CREATE TABLE IF NOT EXISTS analytics_db.sessions_local ON CLUSTER 'my_cluster' (
     page_view_count UInt16 DEFAULT 0,
     event_count UInt16 DEFAULT 0,
 
-    device_type LowCardinality(String), -- 'desktop', 'mobile', 'tablet'
+    device_type LowCardinality(String),
     browser LowCardinality(String),
     browser_version String,
     os LowCardinality(String),
@@ -52,23 +56,26 @@ CREATE TABLE IF NOT EXISTS analytics_db.sessions_local ON CLUSTER 'my_cluster' (
 PARTITION BY toYYYYMM(started_at)
 ORDER BY (toDate(started_at), session_id)
 TTL started_at + INTERVAL 1 YEAR;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS analytics_db.sessions ON CLUSTER 'my_cluster' AS analytics_db.sessions_local
 ENGINE = Distributed('my_cluster', 'analytics_db', 'sessions_local', xxHash64(toString(session_id)));
+-- +goose StatementEnd
 
-
+-- +goose StatementBegin
 -- ============================================================
 -- Events
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.events_local ON CLUSTER 'my_cluster' (
-    id UUID DEFAULT generateUUIDv7(),   -- UUIDv7 (RFC 9562)
+    id UUID DEFAULT generateUUIDv7(),
     timestamp DateTime64(3),
-    session_id UUID,                     -- UUIDv7
-    user_id Nullable(UUID),              -- UUIDv7
+    session_id UUID,
+    user_id Nullable(UUID),
 
-    event_name LowCardinality(String),  -- 'click', 'form_submit', 'purchase', etc.
-    event_category LowCardinality(String), -- 'navigation', 'conversion', 'engagement'
-    properties String,                  -- JSON
+    event_name LowCardinality(String),
+    event_category LowCardinality(String),
+    properties String,
 
     page_path String,
     page_title String,
@@ -82,19 +89,22 @@ CREATE TABLE IF NOT EXISTS analytics_db.events_local ON CLUSTER 'my_cluster' (
 PARTITION BY toYYYYMM(timestamp)
 ORDER BY (session_id, timestamp)
 TTL timestamp + INTERVAL 90 DAY;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS analytics_db.events ON CLUSTER 'my_cluster' AS analytics_db.events_local
 ENGINE = Distributed('my_cluster', 'analytics_db', 'events_local', xxHash64(toString(session_id)));
+-- +goose StatementEnd
 
-
+-- +goose StatementBegin
 -- ============================================================
 -- Page Views
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.page_views_local ON CLUSTER 'my_cluster' (
-    id UUID DEFAULT generateUUIDv7(),   -- UUIDv7 (RFC 9562)
+    id UUID DEFAULT generateUUIDv7(),
     timestamp DateTime64(3),
-    session_id UUID,                     -- UUIDv7
-    user_id Nullable(UUID),              -- UUIDv7
+    session_id UUID,
+    user_id Nullable(UUID),
 
     page_path String,
     page_title String,
@@ -104,11 +114,10 @@ CREATE TABLE IF NOT EXISTS analytics_db.page_views_local ON CLUSTER 'my_cluster'
     scroll_depth_percent UInt8 DEFAULT 0,
     load_time_ms UInt32,
 
-    -- Performance metrics
-    ttfb_ms Nullable(UInt32),           -- Time to First Byte
-    fcp_ms Nullable(UInt32),            -- First Contentful Paint
-    lcp_ms Nullable(UInt32),            -- Largest Contentful Paint
-    cls Nullable(Float32)               -- Cumulative Layout Shift
+    ttfb_ms Nullable(UInt32),
+    fcp_ms Nullable(UInt32),
+    lcp_ms Nullable(UInt32),
+    cls Nullable(Float32)
 ) ENGINE = ReplicatedMergeTree(
     '/clickhouse/tables/{shard}/analytics/page_views',
     '{replica}'
@@ -116,25 +125,28 @@ CREATE TABLE IF NOT EXISTS analytics_db.page_views_local ON CLUSTER 'my_cluster'
 PARTITION BY toYYYYMM(timestamp)
 ORDER BY (session_id, timestamp)
 TTL timestamp + INTERVAL 90 DAY;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS analytics_db.page_views ON CLUSTER 'my_cluster' AS analytics_db.page_views_local
 ENGINE = Distributed('my_cluster', 'analytics_db', 'page_views_local', xxHash64(toString(session_id)));
+-- +goose StatementEnd
 
-
+-- +goose StatementBegin
 -- ============================================================
 -- Funnel Events
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.funnel_events_local ON CLUSTER 'my_cluster' (
     timestamp DateTime64(3),
-    session_id UUID,                     -- UUIDv7
-    user_id Nullable(UUID),              -- UUIDv7
+    session_id UUID,
+    user_id Nullable(UUID),
 
-    funnel_name LowCardinality(String), -- 'signup', 'checkout', 'onboarding'
+    funnel_name LowCardinality(String),
     step_number UInt8,
     step_name String,
 
     is_completed Bool DEFAULT false,
-    dropped_at Nullable(String),        -- Where user dropped off
+    dropped_at Nullable(String),
     time_in_step_seconds Nullable(UInt32)
 ) ENGINE = ReplicatedMergeTree(
     '/clickhouse/tables/{shard}/analytics/funnel_events',
@@ -143,16 +155,19 @@ CREATE TABLE IF NOT EXISTS analytics_db.funnel_events_local ON CLUSTER 'my_clust
 PARTITION BY toYYYYMM(timestamp)
 ORDER BY (funnel_name, session_id, step_number)
 TTL timestamp + INTERVAL 90 DAY;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS analytics_db.funnel_events ON CLUSTER 'my_cluster' AS analytics_db.funnel_events_local
 ENGINE = Distributed('my_cluster', 'analytics_db', 'funnel_events_local', xxHash64(toString(session_id)));
+-- +goose StatementEnd
 
-
+-- +goose StatementBegin
 -- ============================================================
 -- User Profiles (Aggregated)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.user_profiles_local ON CLUSTER 'my_cluster' (
-    user_id UUID,                        -- UUIDv7
+    user_id UUID,
     updated_at DateTime64(3),
 
     first_seen_at DateTime64(3),
@@ -161,17 +176,14 @@ CREATE TABLE IF NOT EXISTS analytics_db.user_profiles_local ON CLUSTER 'my_clust
     total_events UInt32 DEFAULT 0,
     total_page_views UInt32 DEFAULT 0,
 
-    -- Engagement metrics
     avg_session_duration_seconds Float32 DEFAULT 0,
     avg_pages_per_session Float32 DEFAULT 0,
 
-    -- ML-ready fields
-    persona Nullable(String),           -- ML-assigned persona
+    persona Nullable(String),
     lifetime_value Decimal(10,2) DEFAULT 0,
     churn_risk_score Float32 DEFAULT 0,
     engagement_score Float32 DEFAULT 0,
 
-    -- Attribution
     first_utm_source Nullable(String),
     first_utm_medium Nullable(String),
     first_utm_campaign Nullable(String),
@@ -179,28 +191,31 @@ CREATE TABLE IF NOT EXISTS analytics_db.user_profiles_local ON CLUSTER 'my_clust
     last_utm_medium Nullable(String),
     last_utm_campaign Nullable(String),
 
-    properties String                   -- JSON for custom properties
+    properties String
 ) ENGINE = ReplicatedReplacingMergeTree(
     '/clickhouse/tables/{shard}/analytics/user_profiles',
     '{replica}',
     updated_at
 )
 ORDER BY user_id;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS analytics_db.user_profiles ON CLUSTER 'my_cluster' AS analytics_db.user_profiles_local
 ENGINE = Distributed('my_cluster', 'analytics_db', 'user_profiles_local', xxHash64(toString(user_id)));
+-- +goose StatementEnd
 
-
+-- +goose StatementBegin
 -- ============================================================
 -- Error Tracking
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_db.errors_local ON CLUSTER 'my_cluster' (
-    id UUID DEFAULT generateUUIDv7(),   -- UUIDv7 (RFC 9562)
+    id UUID DEFAULT generateUUIDv7(),
     timestamp DateTime64(3),
-    session_id UUID,                     -- UUIDv7
-    user_id Nullable(UUID),              -- UUIDv7
+    session_id UUID,
+    user_id Nullable(UUID),
 
-    error_type LowCardinality(String),  -- 'javascript', 'network', 'api'
+    error_type LowCardinality(String),
     error_message String,
     error_stack Nullable(String),
 
@@ -208,7 +223,7 @@ CREATE TABLE IF NOT EXISTS analytics_db.errors_local ON CLUSTER 'my_cluster' (
     browser LowCardinality(String),
     os LowCardinality(String),
 
-    metadata String                     -- JSON
+    metadata String
 ) ENGINE = ReplicatedMergeTree(
     '/clickhouse/tables/{shard}/analytics/errors',
     '{replica}'
@@ -216,6 +231,27 @@ CREATE TABLE IF NOT EXISTS analytics_db.errors_local ON CLUSTER 'my_cluster' (
 PARTITION BY toYYYYMM(timestamp)
 ORDER BY (error_type, timestamp)
 TTL timestamp + INTERVAL 30 DAY;
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS analytics_db.errors ON CLUSTER 'my_cluster' AS analytics_db.errors_local
 ENGINE = Distributed('my_cluster', 'analytics_db', 'errors_local', xxHash64(toString(session_id)));
+-- +goose StatementEnd
+
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE IF EXISTS analytics_db.errors ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.errors_local ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.user_profiles ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.user_profiles_local ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.funnel_events ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.funnel_events_local ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.page_views ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.page_views_local ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.events ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.events_local ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.sessions ON CLUSTER 'my_cluster';
+DROP TABLE IF EXISTS analytics_db.sessions_local ON CLUSTER 'my_cluster';
+DROP DATABASE IF EXISTS analytics_db ON CLUSTER 'my_cluster';
+-- +goose StatementEnd
