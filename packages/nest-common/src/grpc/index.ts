@@ -67,7 +67,7 @@ export {
   RateLimitConfig,
   RateLimitStore,
   InMemoryRateLimitStore,
-  RateLimitModuleOptions,
+  RateLimitModuleOptions as GrpcRateLimitModuleOptions, // Aliased to avoid conflict with rate-limit module
   RATE_LIMIT_STORE,
   GRPC_RATE_LIMIT_KEY,
   DEFAULT_RATE_LIMIT,
@@ -92,11 +92,11 @@ export {
 export {
   // Types
   RetryConfig,
-  CircuitBreakerConfig,
+  CircuitBreakerConfig as GrpcCircuitBreakerConfig, // Aliased to avoid conflict with resilience module
   ResilienceConfig,
   ResilientCallOptions,
-  CircuitState,
-  CircuitBreakerMetrics,
+  CircuitState as GrpcCircuitState, // Aliased to avoid conflict with resilience module
+  CircuitBreakerMetrics as GrpcCircuitBreakerMetrics, // Aliased for consistency
   GrpcHealthStatus,
   GrpcResilience,
   // Defaults
@@ -109,7 +109,7 @@ export {
   isRetryableError,
   retryWithBackoff,
   // Classes
-  CircuitBreaker,
+  CircuitBreaker as GrpcCircuitBreaker, // Aliased to avoid conflict with resilience module
   GrpcHealthAggregator,
   // Global instances
   grpcHealthAggregator,

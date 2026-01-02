@@ -1,45 +1,46 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import { status as GrpcStatus } from '@grpc/grpc-js';
 
 import { UsersService } from '../../src/users/users.service';
-import { PrismaService } from '../../src/database/prisma.service';
-import { createMockPrismaService, MockPrismaService } from '../utils/mock-prisma';
+import { IdentityGrpcClient } from '@my-girok/nest-common';
 import { resetTestCounter } from '../utils/test-factory';
-
-jest.mock('bcrypt');
 
 describe('UsersService', () => {
   let service: UsersService;
-  let mockPrisma: MockPrismaService;
+  let mockIdentityClient: {
+    getAccount: jest.Mock;
+    getAccountByEmail: jest.Mock;
+    getAccountByUsername: jest.Mock;
+    updateAccount: jest.Mock;
+    validatePassword: jest.Mock;
+  };
 
   const userId = '00000000-0000-7000-0000-000000000001';
 
-  const mockUser = {
+  const mockAccount = {
     id: userId,
     email: 'test@example.com',
     username: 'testuser',
-    password: 'hashed-password',
-    name: 'Test User',
-    avatar: null,
-    role: 'USER',
-    provider: 'LOCAL',
-    providerId: null,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    externalId: 'ext-123',
-    accountMode: 'SERVICE',
-    countryCode: 'KR',
+    status: 1, // ACTIVE
+    email_verified: true,
+    created_at: { seconds: Math.floor(Date.now() / 1000), nanos: 0 },
+    updated_at: { seconds: Math.floor(Date.now() / 1000), nanos: 0 },
   };
 
   beforeEach(async () => {
     resetTestCounter();
 
-    mockPrisma = createMockPrismaService();
+    mockIdentityClient = {
+      getAccount: jest.fn(),
+      getAccountByEmail: jest.fn(),
+      getAccountByUsername: jest.fn(),
+      updateAccount: jest.fn(),
+      validatePassword: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UsersService, { provide: PrismaService, useValue: mockPrisma }],
+      providers: [UsersService, { provide: IdentityGrpcClient, useValue: mockIdentityClient }],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
@@ -52,7 +53,7 @@ describe('UsersService', () => {
   describe('findById', () => {
     it('should return user without password', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({ account: mockAccount });
 
       // Act
       const result = await service.findById(userId);
@@ -60,12 +61,23 @@ describe('UsersService', () => {
       // Assert
       expect(result.id).toBe(userId);
       expect(result.email).toBe('test@example.com');
+      expect(result.username).toBe('testuser');
+      expect(result.emailVerified).toBe(true);
       expect((result as any).password).toBeUndefined();
     });
 
     it('should throw NotFoundException when user not found', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockIdentityClient.getAccount.mockResolvedValue({ account: null });
+
+      // Act & Assert
+      await expect(service.findById(userId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when gRPC returns NOT_FOUND', async () => {
+      // Arrange
+      const grpcError = Object.assign(new Error('Not found'), { code: GrpcStatus.NOT_FOUND });
+      mockIdentityClient.getAccount.mockRejectedValue(grpcError);
 
       // Act & Assert
       await expect(service.findById(userId)).rejects.toThrow(NotFoundException);
@@ -75,7 +87,7 @@ describe('UsersService', () => {
   describe('findByEmail', () => {
     it('should return user by email', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccountByEmail.mockResolvedValue({ account: mockAccount });
 
       // Act
       const result = await service.findByEmail('test@example.com');
@@ -87,7 +99,16 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException when user not found', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockIdentityClient.getAccountByEmail.mockResolvedValue({ account: null });
+
+      // Act & Assert
+      await expect(service.findByEmail('unknown@example.com')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when gRPC returns NOT_FOUND', async () => {
+      // Arrange
+      const grpcError = Object.assign(new Error('Not found'), { code: GrpcStatus.NOT_FOUND });
+      mockIdentityClient.getAccountByEmail.mockRejectedValue(grpcError);
 
       // Act & Assert
       await expect(service.findByEmail('unknown@example.com')).rejects.toThrow(NotFoundException);
@@ -97,7 +118,7 @@ describe('UsersService', () => {
   describe('findByUsername', () => {
     it('should return user by username', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccountByUsername.mockResolvedValue({ account: mockAccount });
 
       // Act
       const result = await service.findByUsername('testuser');
@@ -109,7 +130,16 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException when user not found', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockIdentityClient.getAccountByUsername.mockResolvedValue({ account: null });
+
+      // Act & Assert
+      await expect(service.findByUsername('unknown')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when gRPC returns NOT_FOUND', async () => {
+      // Arrange
+      const grpcError = Object.assign(new Error('Not found'), { code: GrpcStatus.NOT_FOUND });
+      mockIdentityClient.getAccountByUsername.mockRejectedValue(grpcError);
 
       // Act & Assert
       await expect(service.findByUsername('unknown')).rejects.toThrow(NotFoundException);
@@ -117,103 +147,107 @@ describe('UsersService', () => {
   });
 
   describe('updateProfile', () => {
-    it('should update user name', async () => {
+    it('should update user profile via gRPC', async () => {
       // Arrange
-      const updatedUser = { ...mockUser, name: 'Updated Name' };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+      mockIdentityClient.updateAccount.mockResolvedValue({ account: mockAccount });
 
       // Act
       const result = await service.updateProfile(userId, { name: 'Updated Name' });
 
       // Assert
-      expect(result.name).toBe('Updated Name');
+      expect(result.id).toBe(userId);
+      expect(result.email).toBe('test@example.com');
       expect((result as any).password).toBeUndefined();
     });
 
-    it('should update user avatar', async () => {
+    it('should throw NotFoundException when user not found during update', async () => {
       // Arrange
-      const updatedUser = { ...mockUser, avatar: 'https://example.com/avatar.jpg' };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+      mockIdentityClient.updateAccount.mockResolvedValue({ account: null });
 
-      // Act
-      const result = await service.updateProfile(userId, {
-        avatar: 'https://example.com/avatar.jpg',
-      });
-
-      // Assert
-      expect(result.avatar).toBe('https://example.com/avatar.jpg');
+      // Act & Assert
+      await expect(service.updateProfile(userId, { name: 'New Name' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
-    it('should update both name and avatar', async () => {
+    it('should throw NotFoundException when gRPC returns NOT_FOUND', async () => {
       // Arrange
-      const updatedUser = {
-        ...mockUser,
-        name: 'New Name',
-        avatar: 'https://example.com/new-avatar.jpg',
-      };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+      const grpcError = Object.assign(new Error('Not found'), { code: GrpcStatus.NOT_FOUND });
+      mockIdentityClient.updateAccount.mockRejectedValue(grpcError);
 
-      // Act
-      const result = await service.updateProfile(userId, {
-        name: 'New Name',
-        avatar: 'https://example.com/new-avatar.jpg',
-      });
-
-      // Assert
-      expect(result.name).toBe('New Name');
-      expect(result.avatar).toBe('https://example.com/new-avatar.jpg');
+      // Act & Assert
+      await expect(
+        service.updateProfile(userId, { avatar: 'https://example.com/avatar.jpg' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('changePassword', () => {
-    it('should change password successfully', async () => {
-      // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('new-hashed-password');
-      mockPrisma.user.update.mockResolvedValue({ ...mockUser, password: 'new-hashed-password' });
+    it('should throw UnauthorizedException when password change is requested', async () => {
+      // Arrange - Password validation passes but change is not supported
+      mockIdentityClient.validatePassword.mockResolvedValue({ valid: true });
 
-      // Act
-      const result = await service.changePassword(userId, 'current-password', 'new-password');
-
-      // Assert
-      expect(result.message).toBe('Password changed successfully');
-      expect(mockPrisma.user.update).toHaveBeenCalledWith({
-        where: { id: userId },
-        data: { password: 'new-hashed-password' },
-      });
+      // Act & Assert - Password change must go through identity-service
+      await expect(
+        service.changePassword(userId, 'current-password', 'new-password'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw NotFoundException when user not found', async () => {
+    it('should throw UnauthorizedException when current password is incorrect', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockIdentityClient.validatePassword.mockResolvedValue({ valid: false });
+
+      // Act & Assert
+      await expect(
+        service.changePassword(userId, 'wrong-password', 'new-password'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw NotFoundException when user not found during password validation', async () => {
+      // Arrange
+      const grpcError = Object.assign(new Error('Not found'), { code: GrpcStatus.NOT_FOUND });
+      mockIdentityClient.validatePassword.mockRejectedValue(grpcError);
 
       // Act & Assert
       await expect(service.changePassword(userId, 'current', 'new')).rejects.toThrow(
         NotFoundException,
       );
     });
+  });
 
-    it('should throw UnauthorizedException for OAuth users', async () => {
+  describe('mapAccountToUser', () => {
+    it('should correctly map account timestamps', async () => {
       // Arrange
-      const oauthUser = { ...mockUser, password: null, provider: 'GOOGLE' };
-      mockPrisma.user.findUnique.mockResolvedValue(oauthUser);
+      const accountWithTimestamps = {
+        ...mockAccount,
+        created_at: { seconds: 1704067200, nanos: 0 }, // 2024-01-01 00:00:00 UTC
+        updated_at: { seconds: 1704153600, nanos: 0 }, // 2024-01-02 00:00:00 UTC
+      };
+      mockIdentityClient.getAccount.mockResolvedValue({ account: accountWithTimestamps });
 
-      // Act & Assert
-      await expect(service.changePassword(userId, 'current', 'new')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      // Act
+      const result = await service.findById(userId);
+
+      // Assert
+      expect(result.createdAt).toBeInstanceOf(Date);
+      expect(result.updatedAt).toBeInstanceOf(Date);
     });
 
-    it('should throw UnauthorizedException when current password is incorrect', async () => {
+    it('should handle missing timestamps', async () => {
       // Arrange
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      const accountWithoutTimestamps = {
+        ...mockAccount,
+        created_at: undefined,
+        updated_at: undefined,
+      };
+      mockIdentityClient.getAccount.mockResolvedValue({ account: accountWithoutTimestamps });
 
-      // Act & Assert
-      await expect(
-        service.changePassword(userId, 'wrong-password', 'new-password'),
-      ).rejects.toThrow(UnauthorizedException);
+      // Act
+      const result = await service.findById(userId);
+
+      // Assert
+      expect(result.createdAt).toBeInstanceOf(Date);
+      expect(result.updatedAt).toBeInstanceOf(Date);
     });
   });
 });

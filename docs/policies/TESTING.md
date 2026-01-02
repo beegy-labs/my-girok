@@ -1,5 +1,16 @@
 # Testing Standards
 
+## Coverage Requirements
+
+| Metric     | Minimum | Enforcement       |
+| ---------- | ------- | ----------------- |
+| Statements | **80%** | CI blocks on fail |
+| Branches   | 70%     | Warning only      |
+| Functions  | **80%** | CI blocks on fail |
+| Lines      | **80%** | CI blocks on fail |
+
+> **Coverage below 80% will block CI and prevent merge.**
+
 ## Pre-Work Checklist
 
 **Before starting any development work:**
@@ -110,6 +121,75 @@ module.exports = {
 - Shared database tests
 - Global state tests
 
+## gRPC Testing
+
+### Consumer Services (using gRPC clients)
+
+Services consuming gRPC endpoints must mock the gRPC client:
+
+```typescript
+import { IdentityGrpcClient } from '@my-girok/nest-common';
+
+let mockIdentityClient: {
+  getAccount: jest.Mock;
+  getProfile: jest.Mock;
+};
+
+beforeEach(async () => {
+  mockIdentityClient = {
+    getAccount: jest.fn(),
+    getProfile: jest.fn(),
+  };
+
+  const module = await Test.createTestingModule({
+    providers: [MyService, { provide: IdentityGrpcClient, useValue: mockIdentityClient }],
+  }).compile();
+});
+```
+
+### Provider Services (exposing gRPC endpoints)
+
+Services exposing gRPC endpoints need `*.grpc.controller.spec.ts`:
+
+```typescript
+import { RpcException } from '@nestjs/microservices';
+import { status as GrpcStatus } from '@grpc/grpc-js';
+
+// Test error handling
+it('should wrap errors in RpcException', async () => {
+  mockService.method.mockRejectedValue(new Error('DB error'));
+  await expect(controller.grpcMethod(request)).rejects.toThrow(RpcException);
+});
+
+// Test NOT_FOUND handling
+it('should return NOT_FOUND for missing entity', async () => {
+  mockService.findOne.mockRejectedValue(new NotFoundException());
+
+  try {
+    await controller.getEntity({ id: 'invalid' });
+  } catch (e) {
+    expect(e).toBeInstanceOf(RpcException);
+    expect(e.getError().code).toBe(GrpcStatus.NOT_FOUND);
+  }
+});
+
+// Test proto timestamp conversion
+it('should convert Date to proto timestamp', async () => {
+  const result = await controller.getEntity({ id: '123' });
+  expect(result.created_at?.seconds).toBeGreaterThan(0);
+});
+```
+
+### Required gRPC Tests
+
+| Test Category         | Required |
+| --------------------- | -------- |
+| Happy path            | Yes      |
+| NOT_FOUND handling    | Yes      |
+| RpcException wrapping | Yes      |
+| Proto type conversion | Yes      |
+| Validation errors     | Yes      |
+
 ---
 
-**File naming**: `*.spec.ts` (unit), `*.e2e-spec.ts` (E2E)
+**File naming**: `*.spec.ts` (unit), `*.e2e-spec.ts` (E2E), `*.grpc.controller.spec.ts` (gRPC)

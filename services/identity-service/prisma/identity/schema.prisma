@@ -57,12 +57,12 @@ model Account {
   lastSuccessLoginAt DateTime? @map("last_success_login_at") @db.Timestamptz(6)
 
   // Relations
-  profile         Profile?
-  sessions        Session[]
-  devices         Device[]
-  revokedTokens   RevokedToken[]
-  mfaBackupCodes  MfaBackupCode[]
-  passwordHistory PasswordHistory[]
+  profile               Profile?
+  sessions              Session[]
+  devices               Device[]
+  revokedTokens         RevokedToken[]
+  mfaBackupCodeRecords  MfaBackupCode[]
+  passwordHistory       PasswordHistory[]
 
   @@index([externalId])
   @@index([email])

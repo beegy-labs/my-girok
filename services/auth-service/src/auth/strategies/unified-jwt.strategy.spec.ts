@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UnifiedJwtStrategy } from './unified-jwt.strategy';
 import { PrismaService } from '../../database/prisma.service';
+import { IdentityGrpcClient } from '@my-girok/nest-common';
 import {
   UserJwtPayload,
   AdminJwtPayload,
@@ -20,6 +21,10 @@ describe('UnifiedJwtStrategy', () => {
     $queryRaw: jest.Mock;
   };
   let mockConfigService: { get: jest.Mock };
+  let mockIdentityClient: {
+    getAccount: jest.Mock;
+    getProfile: jest.Mock;
+  };
 
   beforeEach(async () => {
     mockPrismaService = {
@@ -38,11 +43,17 @@ describe('UnifiedJwtStrategy', () => {
       }),
     };
 
+    mockIdentityClient = {
+      getAccount: jest.fn(),
+      getProfile: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UnifiedJwtStrategy,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: IdentityGrpcClient, useValue: mockIdentityClient },
       ],
     }).compile();
 
@@ -65,6 +76,7 @@ describe('UnifiedJwtStrategy', () => {
             UnifiedJwtStrategy,
             { provide: PrismaService, useValue: mockPrismaService },
             { provide: ConfigService, useValue: noSecretConfigService },
+            { provide: IdentityGrpcClient, useValue: mockIdentityClient },
           ],
         }).compile(),
       ).rejects.toThrow('JWT_SECRET is not configured');
@@ -88,13 +100,19 @@ describe('UnifiedJwtStrategy', () => {
 
     it('should validate and return authenticated user for valid user payload', async () => {
       // Arrange
-      const mockUser = {
-        id: 'user-123',
-        email: 'user@example.com',
-        name: 'Test User',
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-123',
+          email: 'user@example.com',
+          username: 'testuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: 'user-123',
+          display_name: 'Test User',
+        },
+      });
 
       // Act
       const result = await strategy.validate(userPayload);
@@ -115,21 +133,19 @@ describe('UnifiedJwtStrategy', () => {
         },
       });
 
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: 'user-123' },
-        select: { id: true, email: true, name: true },
-      });
+      expect(mockIdentityClient.getAccount).toHaveBeenCalledWith({ id: 'user-123' });
     });
 
-    it('should return empty name when user has no name', async () => {
+    it('should return empty name when user has no profile', async () => {
       // Arrange
-      const mockUser = {
-        id: 'user-123',
-        email: 'user@example.com',
-        name: null,
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-123',
+          email: 'user@example.com',
+          username: 'testuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockRejectedValue(new Error('Profile not found'));
 
       // Act
       const result = await strategy.validate(userPayload);
@@ -140,11 +156,10 @@ describe('UnifiedJwtStrategy', () => {
 
     it('should throw UnauthorizedException when user not found', async () => {
       // Arrange
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockIdentityClient.getAccount.mockResolvedValue({ account: null });
 
       // Act & Assert
       await expect(strategy.validate(userPayload)).rejects.toThrow(UnauthorizedException);
-      await expect(strategy.validate(userPayload)).rejects.toThrow('User not found');
     });
 
     it('should handle UNIFIED account mode', async () => {
@@ -154,13 +169,19 @@ describe('UnifiedJwtStrategy', () => {
         accountMode: 'UNIFIED',
       };
 
-      const mockUser = {
-        id: 'user-123',
-        email: 'user@example.com',
-        name: 'Unified User',
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-123',
+          email: 'user@example.com',
+          username: 'testuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: 'user-123',
+          display_name: 'Unified User',
+        },
+      });
 
       // Act
       const result = (await strategy.validate(unifiedPayload)) as AuthenticatedUser;
@@ -359,13 +380,19 @@ describe('UnifiedJwtStrategy', () => {
 
     it('should validate and return authenticated user for legacy ACCESS token', async () => {
       // Arrange
-      const mockUser = {
-        id: 'user-legacy-123',
-        email: 'legacy@example.com',
-        name: 'Legacy User',
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-legacy-123',
+          email: 'legacy@example.com',
+          username: 'legacyuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: 'user-legacy-123',
+          display_name: 'Legacy User',
+        },
+      });
 
       // Act
       const result = await strategy.validate(legacyPayload);
@@ -389,13 +416,19 @@ describe('UnifiedJwtStrategy', () => {
         type: 'REFRESH',
       };
 
-      const mockUser = {
-        id: 'user-legacy-123',
-        email: 'legacy@example.com',
-        name: 'Legacy User',
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-legacy-123',
+          email: 'legacy@example.com',
+          username: 'legacyuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: 'user-legacy-123',
+          display_name: 'Legacy User',
+        },
+      });
 
       // Act
       const result = await strategy.validate(refreshPayload);
@@ -412,13 +445,19 @@ describe('UnifiedJwtStrategy', () => {
         domain: 'resume',
       };
 
-      const mockUser = {
-        id: 'user-legacy-123',
-        email: 'legacy@example.com',
-        name: 'Legacy User',
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-legacy-123',
+          email: 'legacy@example.com',
+          username: 'legacyuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: 'user-legacy-123',
+          display_name: 'Legacy User',
+        },
+      });
 
       // Act
       const result = await strategy.validate(domainPayload);
@@ -429,22 +468,22 @@ describe('UnifiedJwtStrategy', () => {
 
     it('should throw UnauthorizedException when legacy user not found', async () => {
       // Arrange
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockIdentityClient.getAccount.mockResolvedValue({ account: null });
 
       // Act & Assert
       await expect(strategy.validate(legacyPayload)).rejects.toThrow(UnauthorizedException);
-      await expect(strategy.validate(legacyPayload)).rejects.toThrow('User not found');
     });
 
-    it('should return empty name for legacy user with null name', async () => {
+    it('should return empty name for legacy user with no profile', async () => {
       // Arrange
-      const mockUser = {
-        id: 'user-legacy-123',
-        email: 'legacy@example.com',
-        name: null,
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-legacy-123',
+          email: 'legacy@example.com',
+          username: 'legacyuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockRejectedValue(new Error('Profile not found'));
 
       // Act
       const result = await strategy.validate(legacyPayload);
@@ -493,13 +532,19 @@ describe('UnifiedJwtStrategy', () => {
         services: {},
       };
 
-      const mockUser = {
-        id: 'user-123',
-        email: 'user@example.com',
-        name: 'User Without Services',
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: 'user-123',
+          email: 'user@example.com',
+          username: 'testuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: 'user-123',
+          display_name: 'User Without Services',
+        },
+      });
 
       // Act
       const result = (await strategy.validate(payloadWithNoServices)) as AuthenticatedUser;

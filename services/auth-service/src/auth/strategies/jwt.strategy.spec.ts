@@ -10,6 +10,15 @@ describe('JwtStrategy', () => {
   let mockAuthService: { validateUser: jest.Mock };
   let mockConfigService: { get: jest.Mock };
 
+  // New user structure after gRPC migration (no role, provider, name, avatar)
+  const mockUser = {
+    id: 'user-123',
+    email: 'user@example.com',
+    username: 'testuser',
+    emailVerified: true,
+    createdAt: new Date(),
+  };
+
   beforeEach(async () => {
     mockAuthService = {
       validateUser: jest.fn(),
@@ -49,17 +58,6 @@ describe('JwtStrategy', () => {
 
     it('should return user for valid JWT payload', async () => {
       // Arrange
-      const mockUser = {
-        id: 'user-123',
-        email: 'user@example.com',
-        name: 'Test User',
-        role: Role.USER,
-        provider: 'LOCAL',
-        emailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
       mockAuthService.validateUser.mockResolvedValue(mockUser);
 
       // Act
@@ -99,12 +97,9 @@ describe('JwtStrategy', () => {
       const mockManager = {
         id: 'manager-456',
         email: 'manager@example.com',
-        name: 'Test Manager',
-        role: Role.MANAGER,
-        provider: 'LOCAL',
+        username: 'manager',
         emailVerified: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockAuthService.validateUser.mockResolvedValue(mockManager);
@@ -114,7 +109,7 @@ describe('JwtStrategy', () => {
 
       // Assert
       expect(result).toEqual(mockManager);
-      expect(result.role).toBe(Role.MANAGER);
+      expect(result.id).toBe('manager-456');
     });
 
     it('should handle payload with MASTER role', async () => {
@@ -129,12 +124,9 @@ describe('JwtStrategy', () => {
       const mockMaster = {
         id: 'master-789',
         email: 'master@example.com',
-        name: 'Master Admin',
-        role: Role.MASTER,
-        provider: 'LOCAL',
+        username: 'master',
         emailVerified: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockAuthService.validateUser.mockResolvedValue(mockMaster);
@@ -144,7 +136,7 @@ describe('JwtStrategy', () => {
 
       // Assert
       expect(result).toEqual(mockMaster);
-      expect(result.role).toBe(Role.MASTER);
+      expect(result.id).toBe('master-789');
     });
 
     it('should handle payload with REFRESH token type', async () => {
@@ -154,17 +146,6 @@ describe('JwtStrategy', () => {
         email: 'user@example.com',
         role: Role.USER,
         type: 'REFRESH',
-      };
-
-      const mockUser = {
-        id: 'user-123',
-        email: 'user@example.com',
-        name: 'Test User',
-        role: Role.USER,
-        provider: 'LOCAL',
-        emailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockAuthService.validateUser.mockResolvedValue(mockUser);
@@ -186,17 +167,6 @@ describe('JwtStrategy', () => {
         domain: 'resume',
       };
 
-      const mockUser = {
-        id: 'user-123',
-        email: 'user@example.com',
-        name: 'Test User',
-        role: Role.USER,
-        provider: 'LOCAL',
-        emailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
       mockAuthService.validateUser.mockResolvedValue(mockUser);
 
       // Act
@@ -215,18 +185,15 @@ describe('JwtStrategy', () => {
         type: 'ACCESS',
       };
 
-      const mockUser = {
+      const differentUser = {
         id: 'different-user-id-999',
         email: 'different@example.com',
-        name: 'Different User',
-        role: Role.USER,
-        provider: 'LOCAL',
+        username: 'differentuser',
         emailVerified: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
-      mockAuthService.validateUser.mockResolvedValue(mockUser);
+      mockAuthService.validateUser.mockResolvedValue(differentUser);
 
       // Act
       await strategy.validate(payloadWithDifferentSub);
@@ -261,16 +228,13 @@ describe('JwtStrategy', () => {
         type: 'ACCESS',
       };
 
+      // OAuth user returns same structure (provider info is in identity-service)
       const mockOAuthUser = {
         id: 'oauth-user-123',
         email: 'oauth@example.com',
-        name: 'OAuth User',
-        role: Role.USER,
-        provider: 'GOOGLE',
-        providerId: 'google-provider-id',
+        username: 'oauthuser',
         emailVerified: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       mockAuthService.validateUser.mockResolvedValue(mockOAuthUser);
@@ -280,7 +244,7 @@ describe('JwtStrategy', () => {
 
       // Assert
       expect(result).toEqual(mockOAuthUser);
-      expect(result.provider).toBe('GOOGLE');
+      expect(result.email).toBe('oauth@example.com');
     });
   });
 });

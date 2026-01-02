@@ -291,7 +291,7 @@ export class GrpcValidationPipe {
  * ```
  */
 export function ValidateGrpcRequest(options: GrpcValidationOptions = {}): MethodDecorator {
-  return (target, propertyKey, descriptor: PropertyDescriptor) => {
+  return (_target, _propertyKey, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {

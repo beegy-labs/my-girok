@@ -8,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ConsentType } from '../../../node_modules/.prisma/auth-client';
+import { ConsentType } from '@my-girok/types';
 
 export class RequestLinkDto {
   @IsString()

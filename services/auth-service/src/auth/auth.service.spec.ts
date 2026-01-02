@@ -4,8 +4,8 @@ import { PrismaService } from '../database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ConflictException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { AuthProvider } from '@my-girok/types';
+import { IdentityGrpcClient } from '@my-girok/nest-common';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -23,6 +23,17 @@ describe('AuthService', () => {
   };
   let mockJwtService: { sign: jest.Mock; signAsync: jest.Mock; verify: jest.Mock };
   let mockConfigService: { get: jest.Mock };
+  let mockIdentityGrpcClient: {
+    createAccount: jest.Mock;
+    getAccount: jest.Mock;
+    getAccountByEmail: jest.Mock;
+    updateAccount: jest.Mock;
+    validateCredentials: jest.Mock;
+    validatePassword: jest.Mock;
+    createSession: jest.Mock;
+    validateSession: jest.Mock;
+    revokeSession: jest.Mock;
+  };
 
   beforeEach(async () => {
     // Create fresh mocks for each test
@@ -64,12 +75,25 @@ describe('AuthService', () => {
       }),
     };
 
+    mockIdentityGrpcClient = {
+      createAccount: jest.fn(),
+      getAccount: jest.fn(),
+      getAccountByEmail: jest.fn(),
+      updateAccount: jest.fn(),
+      validateCredentials: jest.fn(),
+      validatePassword: jest.fn(),
+      createSession: jest.fn(),
+      validateSession: jest.fn(),
+      revokeSession: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: IdentityGrpcClient, useValue: mockIdentityGrpcClient },
       ],
     }).compile();
 
@@ -81,7 +105,7 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('should register a new user with hashed password', async () => {
+    it('should register a new user via gRPC', async () => {
       // Arrange
       const registerDto = {
         email: 'test@example.com',
@@ -90,32 +114,22 @@ describe('AuthService', () => {
         name: 'Test User',
       };
 
-      const mockUser = {
+      const mockAccount = {
         id: '123',
         email: registerDto.email,
         username: registerDto.username,
-        password: 'hashed_password',
-        name: registerDto.name,
-        avatar: null,
-        role: 'USER',
-        provider: 'LOCAL',
-        providerId: null,
-        emailVerified: false,
-        accountMode: 'SERVICE',
-        countryCode: 'KR',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        email_verified: false,
+        created_at: { seconds: Math.floor(Date.now() / 1000) },
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-      mockPrismaService.user.create.mockResolvedValue(mockUser);
+      mockIdentityGrpcClient.createAccount.mockResolvedValue({ account: mockAccount });
       mockPrismaService.$queryRaw.mockResolvedValue([]);
       mockJwtService.signAsync
         .mockResolvedValueOnce('access-token')
         .mockResolvedValueOnce('refresh-token');
       mockPrismaService.session.create.mockResolvedValue({
         id: 'session-123',
-        subjectId: mockUser.id,
+        subjectId: mockAccount.id,
         subjectType: 'USER',
         tokenHash: 'hashed-token',
         expiresAt: new Date(),
@@ -128,17 +142,18 @@ describe('AuthService', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.user.email).toBe(registerDto.email);
-      // Password is not included in UserPayload type (security by design)
       expect(result.accessToken).toBe('access-token');
       expect(result.refreshToken).toBe('refresh-token');
-      expect(mockPrismaService.user.create).toHaveBeenCalled();
-
-      // Verify password was hashed
-      const createCall = mockPrismaService.user.create.mock.calls[0][0];
-      expect(createCall.data.password).not.toBe('Plain123!');
+      expect(mockIdentityGrpcClient.createAccount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: registerDto.email,
+          username: registerDto.username,
+          password: registerDto.password,
+        }),
+      );
     });
 
-    it('should throw ConflictException if email already exists', async () => {
+    it('should throw ConflictException if email already exists via gRPC', async () => {
       // Arrange
       const registerDto = {
         email: 'existing@example.com',
@@ -147,96 +162,59 @@ describe('AuthService', () => {
         name: 'Existing User',
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue({
-        id: '456',
-        email: registerDto.email,
-        username: registerDto.username,
-      });
+      // Mock gRPC ALREADY_EXISTS error
+      const grpcError = new Error('email already exists');
+      (grpcError as any).code = 6; // ALREADY_EXISTS status code
+      mockIdentityGrpcClient.createAccount.mockRejectedValue(grpcError);
 
       // Act & Assert
       await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
-      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
     });
 
-    it('should hash password with bcrypt using 12 rounds', async () => {
+    it('should throw ConflictException if username already exists via gRPC', async () => {
       // Arrange
       const registerDto = {
-        email: 'hash@example.com',
-        username: 'hashtest',
-        password: 'TestPass123!',
-        name: 'Hash Test',
+        email: 'new@example.com',
+        username: 'existinguser',
+        password: 'Pass123!',
+        name: 'New User',
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-      mockPrismaService.user.create.mockImplementation(async (args: any) => ({
-        id: '789',
-        ...args.data,
-        role: 'USER',
-        provider: 'LOCAL',
-        providerId: null,
-        emailVerified: false,
-        accountMode: 'SERVICE',
-        countryCode: 'KR',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }));
-      mockPrismaService.$queryRaw.mockResolvedValue([]);
-      mockJwtService.signAsync.mockResolvedValue('token');
-      mockPrismaService.session.create.mockResolvedValue({} as any);
+      // Mock gRPC ALREADY_EXISTS error for username
+      const grpcError = new Error('username already exists');
+      (grpcError as any).code = 6; // ALREADY_EXISTS status code
+      mockIdentityGrpcClient.createAccount.mockRejectedValue(grpcError);
 
-      // Act
-      await service.register(registerDto);
-
-      // Assert
-      const createCall = mockPrismaService.user.create.mock.calls[0][0];
-      const hashedPassword = createCall.data.password;
-
-      expect(hashedPassword).toBeDefined();
-      expect(hashedPassword).not.toBe('TestPass123!');
-      expect(hashedPassword.startsWith('$2b$12$')).toBe(true); // bcrypt with 12 rounds
-      expect(await bcrypt.compare('TestPass123!', hashedPassword)).toBe(true);
+      // Act & Assert
+      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
     });
   });
 
   describe('login', () => {
-    it('should login with valid credentials', async () => {
+    it('should login with valid credentials via gRPC', async () => {
       // Arrange
       const loginDto = {
         email: 'user@example.com',
         password: 'ValidPass123!',
       };
 
-      const hashedPassword = await bcrypt.hash(loginDto.password, 12);
-      const mockUser = {
+      const mockAccount = {
         id: 'user-123',
         email: loginDto.email,
-        password: hashedPassword,
-        name: 'Test User',
-        avatar: null,
-        role: 'USER',
-        provider: 'LOCAL',
-        providerId: null,
-        emailVerified: true,
-        accountMode: 'SERVICE',
-        countryCode: 'KR',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        username: 'testuser',
+        email_verified: true,
+        mode: 1, // ACCOUNT_MODE_SERVICE
+        created_at: { seconds: Math.floor(Date.now() / 1000) },
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      // $queryRaw for user services
+      mockIdentityGrpcClient.getAccountByEmail.mockResolvedValue({ account: mockAccount });
+      mockIdentityGrpcClient.validatePassword.mockResolvedValue({ valid: true });
+      mockIdentityGrpcClient.getAccount.mockResolvedValue({ account: mockAccount });
+      mockIdentityGrpcClient.createSession.mockResolvedValue({ session: { id: 'session-456' } });
       mockPrismaService.$queryRaw.mockResolvedValue([]);
       mockJwtService.signAsync
         .mockResolvedValueOnce('login-access-token')
         .mockResolvedValueOnce('login-refresh-token');
-      mockPrismaService.session.create.mockResolvedValue({
-        id: 'session-456',
-        subjectId: mockUser.id,
-        subjectType: 'USER',
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(),
-        createdAt: new Date(),
-      });
 
       // Act
       const result = await service.login(loginDto);
@@ -244,70 +222,75 @@ describe('AuthService', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.user.email).toBe(loginDto.email);
-      expect(result.user.id).toBe(mockUser.id);
+      expect(result.user.id).toBe(mockAccount.id);
       expect(result.accessToken).toBe('login-access-token');
       expect(result.refreshToken).toBe('login-refresh-token');
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { email: loginDto.email },
+      expect(mockIdentityGrpcClient.getAccountByEmail).toHaveBeenCalledWith({
+        email: loginDto.email,
+      });
+      expect(mockIdentityGrpcClient.validatePassword).toHaveBeenCalledWith({
+        account_id: mockAccount.id,
+        password: loginDto.password,
       });
     });
 
-    it('should throw UnauthorizedException for invalid password', async () => {
+    it('should throw UnauthorizedException for invalid password via gRPC', async () => {
       // Arrange
       const loginDto = {
         email: 'user@example.com',
         password: 'WrongPassword123!',
       };
 
-      const correctHashedPassword = await bcrypt.hash('CorrectPass123!', 12);
-      const mockUser = {
+      const mockAccount = {
         id: 'user-123',
         email: loginDto.email,
-        password: correctHashedPassword,
-        name: 'Test User',
-        role: 'USER',
-        provider: 'LOCAL',
+        username: 'testuser',
+        email_verified: true,
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityGrpcClient.getAccountByEmail.mockResolvedValue({ account: mockAccount });
+      mockIdentityGrpcClient.validatePassword.mockResolvedValue({ valid: false });
 
       // Act & Assert
       await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
-      expect(mockPrismaService.session.create).not.toHaveBeenCalled();
+      expect(mockIdentityGrpcClient.createSession).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException for non-existent user', async () => {
+    it('should throw UnauthorizedException for non-existent user via gRPC', async () => {
       // Arrange
       const loginDto = {
         email: 'nonexistent@example.com',
         password: 'AnyPassword123!',
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      // Mock NOT_FOUND error from gRPC
+      const notFoundError = new Error('Account not found');
+      (notFoundError as any).code = 5; // NOT_FOUND status code
+      mockIdentityGrpcClient.getAccountByEmail.mockRejectedValue(notFoundError);
 
       // Act & Assert
       await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
-      expect(mockPrismaService.session.create).not.toHaveBeenCalled();
+      expect(mockIdentityGrpcClient.createSession).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException for OAuth users', async () => {
+    it('should throw UnauthorizedException for OAuth users via gRPC', async () => {
       // Arrange
       const loginDto = {
         email: 'oauth@example.com',
         password: 'SomePassword123!',
       };
 
-      const mockOAuthUser = {
+      const mockOAuthAccount = {
         id: 'oauth-user-123',
         email: loginDto.email,
-        password: null, // OAuth users have no password
-        name: 'OAuth User',
-        role: 'USER',
-        provider: 'GOOGLE',
-        providerId: 'google-123',
+        username: 'oauthuser',
+        email_verified: true,
+        provider: 2, // GOOGLE provider
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(mockOAuthUser);
+      mockIdentityGrpcClient.getAccountByEmail.mockResolvedValue({ account: mockOAuthAccount });
+      // OAuth users can't validate with password - gRPC returns false
+      mockIdentityGrpcClient.validatePassword.mockResolvedValue({ valid: false });
 
       // Act & Assert
       await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
@@ -315,50 +298,34 @@ describe('AuthService', () => {
   });
 
   describe('refreshToken', () => {
-    it('should refresh tokens with valid refresh token', async () => {
+    it('should refresh tokens with valid refresh token via gRPC', async () => {
       // Arrange
       const validRefreshToken = 'valid-refresh-token-xyz';
-      const mockUser = {
+      const mockAccount = {
         id: 'user-123',
         email: 'user@example.com',
-        name: 'Test User',
-        role: 'USER',
-        provider: 'LOCAL',
-        emailVerified: true,
-        accountMode: 'SERVICE',
-        countryCode: 'KR',
-      };
-
-      // Session uses tokenHash, not plain token
-      const mockSession = {
-        id: 'session-123',
-        subjectId: mockUser.id,
-        subjectType: 'USER',
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        revokedAt: null,
-        createdAt: new Date(),
+        username: 'testuser',
+        email_verified: true,
+        mode: 1, // ACCOUNT_MODE_SERVICE
+        created_at: { seconds: Math.floor(Date.now() / 1000) },
       };
 
       mockJwtService.verify.mockReturnValue({
-        sub: mockUser.id,
-        email: mockUser.email,
+        sub: mockAccount.id,
+        email: mockAccount.email,
       });
-      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      // $queryRaw for user services
+      mockIdentityGrpcClient.validateSession.mockResolvedValue({
+        valid: true,
+        account_id: mockAccount.id,
+        session_id: 'session-123',
+      });
+      mockIdentityGrpcClient.getAccount.mockResolvedValue({ account: mockAccount });
+      mockIdentityGrpcClient.revokeSession.mockResolvedValue({});
+      mockIdentityGrpcClient.createSession.mockResolvedValue({ session: { id: 'new-session' } });
       mockPrismaService.$queryRaw.mockResolvedValue([]);
       mockJwtService.signAsync
         .mockResolvedValueOnce('new-access-token')
         .mockResolvedValueOnce('new-refresh-token');
-      mockPrismaService.session.update.mockResolvedValue({
-        id: mockSession.id,
-        subjectId: mockUser.id,
-        subjectType: 'USER',
-        tokenHash: 'new-hashed-token',
-        expiresAt: new Date(),
-        createdAt: new Date(),
-      });
 
       // Act
       const result = await service.refreshToken(validRefreshToken);
@@ -368,37 +335,36 @@ describe('AuthService', () => {
       expect(result.accessToken).toBe('new-access-token');
       expect(result.refreshToken).toBe('new-refresh-token');
       expect(mockJwtService.verify).toHaveBeenCalledWith(validRefreshToken);
-      expect(mockPrismaService.session.update).toHaveBeenCalled();
+      expect(mockIdentityGrpcClient.validateSession).toHaveBeenCalled();
+      expect(mockIdentityGrpcClient.revokeSession).toHaveBeenCalledWith({
+        session_id: 'session-123',
+        reason: 'Token refresh',
+      });
     });
 
-    it('should throw UnauthorizedException for expired refresh token', async () => {
+    it('should throw UnauthorizedException for invalid session via gRPC', async () => {
       // Arrange
-      const expiredRefreshToken = 'expired-refresh-token';
-      const mockSession = {
-        id: 'session-123',
-        subjectId: 'user-123',
-        subjectType: 'USER',
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(Date.now() - 1000), // Expired 1 second ago
-        revokedAt: null,
-        createdAt: new Date(),
-      };
+      const invalidRefreshToken = 'invalid-refresh-token';
 
       mockJwtService.verify.mockReturnValue({});
-      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
+      mockIdentityGrpcClient.validateSession.mockResolvedValue({
+        valid: false,
+      });
 
       // Act & Assert
-      await expect(service.refreshToken(expiredRefreshToken)).rejects.toThrow(
+      await expect(service.refreshToken(invalidRefreshToken)).rejects.toThrow(
         'Invalid refresh token',
       );
     });
 
-    it('should throw UnauthorizedException for non-existent session', async () => {
+    it('should throw UnauthorizedException for non-existent session via gRPC', async () => {
       // Arrange
       const invalidRefreshToken = 'non-existent-token';
 
       mockJwtService.verify.mockReturnValue({});
-      mockPrismaService.session.findUnique.mockResolvedValue(null);
+      mockIdentityGrpcClient.validateSession.mockResolvedValue({
+        valid: false,
+      });
 
       // Act & Assert
       await expect(service.refreshToken(invalidRefreshToken)).rejects.toThrow(
@@ -418,70 +384,39 @@ describe('AuthService', () => {
       await expect(service.refreshToken(invalidToken)).rejects.toThrow();
     });
 
-    it('should throw UnauthorizedException for revoked session', async () => {
+    it('should throw UnauthorizedException for revoked session via gRPC', async () => {
       // Arrange
       const revokedToken = 'revoked-refresh-token';
-      const mockSession = {
-        id: 'session-123',
-        subjectId: 'user-123',
-        subjectType: 'USER',
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        revokedAt: new Date(), // Session has been revoked
-        createdAt: new Date(),
-      };
 
       mockJwtService.verify.mockReturnValue({});
-      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
+      // gRPC returns valid=false for revoked sessions
+      mockIdentityGrpcClient.validateSession.mockResolvedValue({
+        valid: false,
+      });
 
       // Act & Assert
       await expect(service.refreshToken(revokedToken)).rejects.toThrow('Invalid refresh token');
     });
 
-    it('should throw UnauthorizedException for non-USER session type', async () => {
-      // Arrange
-      const adminToken = 'admin-refresh-token';
-      const mockSession = {
-        id: 'session-123',
-        subjectId: 'admin-123',
-        subjectType: 'ADMIN', // Not USER type
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        revokedAt: null,
-        createdAt: new Date(),
-      };
-
-      mockJwtService.verify.mockReturnValue({});
-      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
-
-      // Act & Assert
-      await expect(service.refreshToken(adminToken)).rejects.toThrow('Invalid refresh token');
-    });
-
-    it('should throw UnauthorizedException when user not found during refresh', async () => {
+    it('should throw UnauthorizedException when user not found during refresh via gRPC', async () => {
       // Arrange
       const validToken = 'valid-refresh-token';
-      const mockSession = {
-        id: 'session-123',
-        subjectId: 'deleted-user-123',
-        subjectType: 'USER',
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        revokedAt: null,
-        createdAt: new Date(),
-      };
 
       mockJwtService.verify.mockReturnValue({});
-      mockPrismaService.session.findUnique.mockResolvedValue(mockSession);
-      mockPrismaService.user.findUnique.mockResolvedValue(null); // User no longer exists
+      mockIdentityGrpcClient.validateSession.mockResolvedValue({
+        valid: true,
+        account_id: 'deleted-user-123',
+        session_id: 'session-123',
+      });
+      mockIdentityGrpcClient.getAccount.mockResolvedValue({ account: null });
 
       // Act & Assert
-      await expect(service.refreshToken(validToken)).rejects.toThrow('Invalid refresh token');
+      await expect(service.refreshToken(validToken)).rejects.toThrow('User not found');
     });
   });
 
   describe('register - username conflict', () => {
-    it('should throw ConflictException if username already exists', async () => {
+    it('should throw ConflictException if username already exists via gRPC', async () => {
       // Arrange
       const registerDto = {
         email: 'new@example.com',
@@ -490,14 +425,13 @@ describe('AuthService', () => {
         name: 'New User',
       };
 
-      // Email check passes (no existing email), username check fails (existing username)
-      mockPrismaService.user.findUnique
-        .mockResolvedValueOnce(null) // First call for email - not found
-        .mockResolvedValueOnce({ id: '456', username: 'existinguser' }); // Second call for username - found
+      // Mock gRPC ALREADY_EXISTS error for username
+      const grpcError = new Error('username already taken');
+      (grpcError as any).code = 6; // ALREADY_EXISTS status code
+      mockIdentityGrpcClient.createAccount.mockRejectedValue(grpcError);
 
       // Act & Assert
       await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
-      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
     });
 
     it('should throw ConflictException with correct message for existing username', async () => {
@@ -509,10 +443,10 @@ describe('AuthService', () => {
         name: 'New User 2',
       };
 
-      // Email check passes (no existing email), username check fails (existing username)
-      mockPrismaService.user.findUnique
-        .mockResolvedValueOnce(null) // First call for email - not found
-        .mockResolvedValueOnce({ id: '789', username: 'takenuser' }); // Second call for username - found
+      // Mock gRPC ALREADY_EXISTS error for username
+      const grpcError = new Error('username already taken');
+      (grpcError as any).code = 6; // ALREADY_EXISTS status code
+      mockIdentityGrpcClient.createAccount.mockRejectedValue(grpcError);
 
       // Act & Assert
       await expect(service.register(registerDto)).rejects.toThrow('Username already taken');
@@ -520,38 +454,42 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('should revoke user session on logout', async () => {
+    it('should revoke user session on logout via gRPC', async () => {
       // Arrange
       const userId = 'user-123';
       const refreshToken = 'refresh-token-to-revoke';
 
-      mockPrismaService.session.updateMany.mockResolvedValue({ count: 1 });
+      mockIdentityGrpcClient.validateSession.mockResolvedValue({
+        valid: true,
+        session_id: 'session-123',
+        account_id: userId,
+      });
+      mockIdentityGrpcClient.revokeSession.mockResolvedValue({});
 
       // Act
       await service.logout(userId, refreshToken);
 
       // Assert
-      expect(mockPrismaService.session.updateMany).toHaveBeenCalledWith({
-        where: {
-          subjectId: userId,
-          subjectType: 'USER',
-          tokenHash: expect.any(String),
-        },
-        data: {
-          revokedAt: expect.any(Date),
-        },
+      expect(mockIdentityGrpcClient.validateSession).toHaveBeenCalled();
+      expect(mockIdentityGrpcClient.revokeSession).toHaveBeenCalledWith({
+        session_id: 'session-123',
+        reason: 'User logout',
       });
     });
 
-    it('should handle logout when session does not exist', async () => {
+    it('should handle logout when session does not exist via gRPC', async () => {
       // Arrange
       const userId = 'user-123';
       const invalidToken = 'non-existent-token';
 
-      mockPrismaService.session.updateMany.mockResolvedValue({ count: 0 });
+      // Session not found - validateSession returns valid=false
+      mockIdentityGrpcClient.validateSession.mockResolvedValue({
+        valid: false,
+      });
 
       // Act & Assert - should not throw
       await expect(service.logout(userId, invalidToken)).resolves.toBeUndefined();
+      expect(mockIdentityGrpcClient.revokeSession).not.toHaveBeenCalled();
     });
   });
 
@@ -637,29 +575,18 @@ describe('AuthService', () => {
   });
 
   describe('generateTokens', () => {
-    it('should handle $queryRaw error gracefully and continue with empty services', async () => {
+    it('should handle gRPC error gracefully and use default values', async () => {
       // Arrange
       const userId = 'user-123';
       const email = 'test@example.com';
       const role = 'USER';
 
-      const mockUser = {
-        id: userId,
-        email,
-        accountMode: 'SERVICE',
-        countryCode: 'KR',
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockPrismaService.$queryRaw.mockRejectedValue(
-        new Error('Table user_services does not exist'),
-      );
+      // Mock gRPC error
+      mockIdentityGrpcClient.getAccount.mockRejectedValue(new Error('gRPC unavailable'));
+      mockPrismaService.$queryRaw.mockResolvedValue([]);
       mockJwtService.signAsync
         .mockResolvedValueOnce('access-token')
         .mockResolvedValueOnce('refresh-token');
-
-      // Spy on console.debug
-      const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
 
       // Act
       const result = await service.generateTokens(userId, email, role);
@@ -667,11 +594,14 @@ describe('AuthService', () => {
       // Assert
       expect(result.accessToken).toBe('access-token');
       expect(result.refreshToken).toBe('refresh-token');
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[AuthService] user_services query skipped'),
+      // Should use default values (SERVICE mode, KR country)
+      expect(mockJwtService.signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accountMode: 'SERVICE',
+          countryCode: 'KR',
+        }),
+        expect.any(Object),
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('should include user services in access token when available', async () => {
@@ -680,11 +610,10 @@ describe('AuthService', () => {
       const email = 'test@example.com';
       const role = 'USER';
 
-      const mockUser = {
+      const mockAccount = {
         id: userId,
         email,
-        accountMode: 'UNIFIED',
-        countryCode: 'US',
+        mode: 2, // ACCOUNT_MODE_UNIFIED
       };
 
       const mockUserServices = [
@@ -693,7 +622,7 @@ describe('AuthService', () => {
         { status: 'ACTIVE', countryCode: 'US', serviceSlug: 'resume' },
       ];
 
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityGrpcClient.getAccount.mockResolvedValue({ account: mockAccount });
       mockPrismaService.$queryRaw.mockResolvedValue(mockUserServices);
       mockJwtService.signAsync
         .mockResolvedValueOnce('access-token-with-services')
@@ -709,8 +638,6 @@ describe('AuthService', () => {
           sub: userId,
           email,
           type: 'USER_ACCESS',
-          accountMode: 'UNIFIED',
-          countryCode: 'US',
           services: {
             girok: { status: 'ACTIVE', countries: ['US', 'KR'] },
             resume: { status: 'ACTIVE', countries: ['US'] },
@@ -797,33 +724,37 @@ describe('AuthService', () => {
   });
 
   describe('validateUser', () => {
-    it('should return user when found', async () => {
+    it('should return user when found via gRPC', async () => {
       // Arrange
       const userId = 'user-123';
-      const mockUser = {
+      const mockAccount = {
         id: userId,
         email: 'test@example.com',
-        name: 'Test User',
-        role: 'USER',
+        username: 'testuser',
+        email_verified: true,
+        created_at: { seconds: Math.floor(Date.now() / 1000) },
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockIdentityGrpcClient.getAccount.mockResolvedValue({ account: mockAccount });
 
       // Act
       const result = await service.validateUser(userId);
 
       // Assert
-      expect(result).toEqual(mockUser);
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: userId },
-      });
+      expect(result).toBeDefined();
+      expect(result?.id).toBe(userId);
+      expect(result?.email).toBe(mockAccount.email);
+      expect(mockIdentityGrpcClient.getAccount).toHaveBeenCalledWith({ id: userId });
     });
 
-    it('should return null when user not found', async () => {
+    it('should return null when user not found via gRPC', async () => {
       // Arrange
       const userId = 'non-existent-user';
 
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      // Mock NOT_FOUND error
+      const notFoundError = new Error('Account not found');
+      (notFoundError as any).code = 5; // NOT_FOUND status code
+      mockIdentityGrpcClient.getAccount.mockRejectedValue(notFoundError);
 
       // Act
       const result = await service.validateUser(userId);
@@ -834,25 +765,21 @@ describe('AuthService', () => {
   });
 
   describe('findOrCreateOAuthUser', () => {
-    it('should return existing OAuth user when found', async () => {
+    it('should return existing OAuth user when found via gRPC', async () => {
       // Arrange
       const email = 'oauth@example.com';
       const provider = AuthProvider.GOOGLE;
       const providerId = 'google-user-123';
 
-      const mockExistingUser = {
+      const mockExistingAccount = {
         id: 'user-123',
         email,
         username: 'oauthuser123',
-        name: 'OAuth User',
-        avatar: 'https://avatar.url/photo.jpg',
-        provider,
-        providerId,
-        role: 'USER',
-        emailVerified: true,
+        email_verified: true,
+        created_at: { seconds: Math.floor(Date.now() / 1000) },
       };
 
-      mockPrismaService.user.findFirst.mockResolvedValue(mockExistingUser);
+      mockIdentityGrpcClient.getAccountByEmail.mockResolvedValue({ account: mockExistingAccount });
 
       // Act
       const result = await service.findOrCreateOAuthUser(
@@ -864,17 +791,14 @@ describe('AuthService', () => {
       );
 
       // Assert
-      expect(result).toEqual(mockExistingUser);
-      expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith({
-        where: {
-          provider,
-          providerId,
-        },
-      });
-      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+      expect(result).toBeDefined();
+      expect(result.id).toBe(mockExistingAccount.id);
+      expect(result.email).toBe(email);
+      expect(mockIdentityGrpcClient.getAccountByEmail).toHaveBeenCalledWith({ email });
+      expect(mockIdentityGrpcClient.createAccount).not.toHaveBeenCalled();
     });
 
-    it('should create new OAuth user when not found', async () => {
+    it('should create new OAuth user when not found via gRPC', async () => {
       // Arrange
       const email = 'new-oauth@example.com';
       const provider = AuthProvider.GOOGLE;
@@ -882,68 +806,62 @@ describe('AuthService', () => {
       const name = 'New OAuth User';
       const avatar = 'https://avatar.url/new-photo.jpg';
 
-      mockPrismaService.user.findFirst.mockResolvedValue(null);
-      mockPrismaService.user.findUnique.mockResolvedValue(null); // For externalId uniqueness check
+      // Mock NOT_FOUND error from getAccountByEmail
+      const notFoundError = new Error('Account not found');
+      (notFoundError as any).code = 5; // NOT_FOUND status code
+      mockIdentityGrpcClient.getAccountByEmail.mockRejectedValue(notFoundError);
 
-      const mockCreatedUser = {
+      const mockCreatedAccount = {
         id: 'new-user-789',
         email,
         username: expect.stringMatching(/^newoauth[a-z0-9]+$/),
-        externalId: expect.any(String),
-        name,
-        avatar,
-        provider,
-        providerId,
-        role: 'USER',
-        emailVerified: true,
+        email_verified: true,
+        created_at: { seconds: Math.floor(Date.now() / 1000) },
       };
 
-      mockPrismaService.user.create.mockResolvedValue(mockCreatedUser);
+      mockIdentityGrpcClient.createAccount.mockResolvedValue({ account: mockCreatedAccount });
 
       // Act
       const result = await service.findOrCreateOAuthUser(email, provider, providerId, name, avatar);
 
       // Assert
       expect(result).toBeDefined();
-      expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith({
-        where: {
-          provider,
-          providerId,
-        },
-      });
-      expect(mockPrismaService.user.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(mockIdentityGrpcClient.createAccount).toHaveBeenCalledWith(
+        expect.objectContaining({
           email,
-          provider,
-          providerId,
-          name,
-          avatar,
-          role: 'USER',
-          emailVerified: true,
+          provider_id: providerId,
         }),
-      });
+      );
     });
 
-    it('should generate unique username from email prefix', async () => {
+    it('should generate unique username from email prefix via gRPC', async () => {
       // Arrange
       const email = 'Test.User+tag@example.com';
       const provider = AuthProvider.KAKAO;
       const providerId = 'kakao-123';
 
-      mockPrismaService.user.findFirst.mockResolvedValue(null);
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-      mockPrismaService.user.create.mockImplementation(async (args) => ({
-        id: 'created-id',
-        ...args.data,
-      }));
+      // Mock NOT_FOUND error from getAccountByEmail
+      const notFoundError = new Error('Account not found');
+      (notFoundError as any).code = 5; // NOT_FOUND status code
+      mockIdentityGrpcClient.getAccountByEmail.mockRejectedValue(notFoundError);
+
+      mockIdentityGrpcClient.createAccount.mockResolvedValue({
+        account: {
+          id: 'created-id',
+          email,
+          username: 'testusertag123abc',
+          email_verified: true,
+          created_at: { seconds: Math.floor(Date.now() / 1000) },
+        },
+      });
 
       // Act
       await service.findOrCreateOAuthUser(email, provider, providerId);
 
       // Assert
-      const createCall = mockPrismaService.user.create.mock.calls[0][0];
+      const createCall = mockIdentityGrpcClient.createAccount.mock.calls[0][0];
       // Username should be sanitized: lowercase, alphanumeric only, plus random suffix
-      expect(createCall.data.username).toMatch(/^testusertag[a-z0-9]{6}$/);
+      expect(createCall.username).toMatch(/^testusertag[a-z0-9]{6}$/);
     });
 
     it('should handle OAuth user creation without optional name and avatar', async () => {
@@ -952,83 +870,80 @@ describe('AuthService', () => {
       const provider = AuthProvider.NAVER;
       const providerId = 'naver-123';
 
-      mockPrismaService.user.findFirst.mockResolvedValue(null);
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-      mockPrismaService.user.create.mockImplementation(async (args) => ({
-        id: 'created-id',
-        ...args.data,
-      }));
+      // Mock NOT_FOUND error from getAccountByEmail
+      const notFoundError = new Error('Account not found');
+      (notFoundError as any).code = 5; // NOT_FOUND status code
+      mockIdentityGrpcClient.getAccountByEmail.mockRejectedValue(notFoundError);
+
+      mockIdentityGrpcClient.createAccount.mockResolvedValue({
+        account: {
+          id: 'created-id',
+          email,
+          username: 'minimal123abc',
+          email_verified: true,
+          created_at: { seconds: Math.floor(Date.now() / 1000) },
+        },
+      });
 
       // Act
-      await service.findOrCreateOAuthUser(email, provider, providerId);
+      const result = await service.findOrCreateOAuthUser(email, provider, providerId);
 
       // Assert
-      const createCall = mockPrismaService.user.create.mock.calls[0][0];
-      expect(createCall.data.name).toBeUndefined();
-      expect(createCall.data.avatar).toBeUndefined();
+      expect(result).toBeDefined();
+      expect(mockIdentityGrpcClient.createAccount).toHaveBeenCalled();
     });
   });
 
   describe('saveRefreshToken', () => {
-    it('should save session with ipAddress and userAgent', async () => {
+    it('should save session with ipAddress and userAgent via gRPC', async () => {
       // Arrange
       const userId = 'user-123';
       const refreshToken = 'refresh-token-xyz';
       const ipAddress = '192.168.1.1';
       const userAgent = 'Mozilla/5.0 (Windows NT 10.0)';
 
-      mockPrismaService.session.create.mockResolvedValue({
-        id: 'session-123',
-        subjectId: userId,
-        subjectType: 'USER',
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(),
-        ipAddress,
-        userAgent,
+      mockIdentityGrpcClient.createSession.mockResolvedValue({
+        session: {
+          id: 'session-123',
+          account_id: userId,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        },
       });
 
       // Act
       await service.saveRefreshToken(userId, refreshToken, ipAddress, userAgent);
 
       // Assert
-      expect(mockPrismaService.session.create).toHaveBeenCalledWith({
-        data: {
-          subjectId: userId,
-          subjectType: 'USER',
-          tokenHash: expect.any(String),
-          expiresAt: expect.any(Date),
-          ipAddress,
-          userAgent,
-        },
+      expect(mockIdentityGrpcClient.createSession).toHaveBeenCalledWith({
+        account_id: userId,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        expires_in_ms: 14 * 24 * 60 * 60 * 1000, // 14 days
       });
     });
 
-    it('should save session without optional ipAddress and userAgent', async () => {
+    it('should save session without optional ipAddress and userAgent via gRPC', async () => {
       // Arrange
       const userId = 'user-456';
       const refreshToken = 'refresh-token-abc';
 
-      mockPrismaService.session.create.mockResolvedValue({
-        id: 'session-456',
-        subjectId: userId,
-        subjectType: 'USER',
-        tokenHash: 'hashed-token',
-        expiresAt: new Date(),
+      mockIdentityGrpcClient.createSession.mockResolvedValue({
+        session: {
+          id: 'session-456',
+          account_id: userId,
+        },
       });
 
       // Act
       await service.saveRefreshToken(userId, refreshToken);
 
       // Assert
-      expect(mockPrismaService.session.create).toHaveBeenCalledWith({
-        data: {
-          subjectId: userId,
-          subjectType: 'USER',
-          tokenHash: expect.any(String),
-          expiresAt: expect.any(Date),
-          ipAddress: undefined,
-          userAgent: undefined,
-        },
+      expect(mockIdentityGrpcClient.createSession).toHaveBeenCalledWith({
+        account_id: userId,
+        ip_address: undefined,
+        user_agent: undefined,
+        expires_in_ms: 14 * 24 * 60 * 60 * 1000, // 14 days
       });
     });
   });

@@ -166,16 +166,14 @@ export class GrpcClientsModule {
   /**
    * Create async providers for clients
    */
-  private static createAsyncProviders(options: GrpcClientsAsyncOptions): Provider[] {
+  private static createAsyncProviders(_options: GrpcClientsAsyncOptions): Provider[] {
     return [IdentityGrpcClient, AuthGrpcClient, LegalGrpcClient];
   }
 
   /**
    * Create async options for ClientsModule
    */
-  private static createClientsAsyncOptions(
-    options: GrpcClientsAsyncOptions,
-  ): {
+  private static createClientsAsyncOptions(options: GrpcClientsAsyncOptions): {
     name: string;
     useFactory: (...args: unknown[]) => ClientOptions | Promise<ClientOptions>;
     inject?: unknown[];

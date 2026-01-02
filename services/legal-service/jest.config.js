@@ -26,6 +26,8 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@my-girok/types$': '<rootDir>/../../packages/types/src',
     '^@my-girok/nest-common$': '<rootDir>/../../packages/nest-common/src',
+    // Resolve ESM .js imports to .ts files in workspace packages
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   coverageThreshold: {
     global: {

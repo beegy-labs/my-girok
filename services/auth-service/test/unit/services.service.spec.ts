@@ -5,6 +5,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ServicesService } from '../../src/services/services.service';
 import { AuthService } from '../../src/auth/auth.service';
 import { PrismaService } from '../../src/database/prisma.service';
+import { IdentityGrpcClient } from '@my-girok/nest-common';
 import { createMockPrismaService, MockPrismaService } from '../utils/mock-prisma';
 import { createMockCacheManager, MockCacheManager } from '../utils/mock-cache';
 import { generateTestId, resetTestCounter } from '../utils/test-factory';
@@ -17,6 +18,10 @@ describe('ServicesService', () => {
   let mockAuthService: {
     generateTokensWithServices: jest.Mock;
     saveRefreshToken: jest.Mock;
+  };
+  let mockIdentityClient: {
+    getAccount: jest.Mock;
+    getProfile: jest.Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -31,13 +36,6 @@ describe('ServicesService', () => {
     requiredConsents: {},
   };
 
-  const mockUser = {
-    id: userId,
-    email: 'test@example.com',
-    accountMode: 'SERVICE',
-    countryCode: 'KR',
-  };
-
   beforeEach(async () => {
     resetTestCounter();
 
@@ -50,6 +48,21 @@ describe('ServicesService', () => {
       }),
       saveRefreshToken: jest.fn().mockResolvedValue(undefined),
     };
+    mockIdentityClient = {
+      getAccount: jest.fn().mockResolvedValue({
+        account: {
+          id: userId,
+          email: 'test@example.com',
+          username: 'testuser',
+        },
+      }),
+      getProfile: jest.fn().mockResolvedValue({
+        profile: {
+          account_id: userId,
+          country_code: 'KR',
+        },
+      }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -57,6 +70,7 @@ describe('ServicesService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: CACHE_MANAGER, useValue: mockCache },
         { provide: AuthService, useValue: mockAuthService },
+        { provide: IdentityGrpcClient, useValue: mockIdentityClient },
       ],
     }).compile();
 
@@ -148,7 +162,20 @@ describe('ServicesService', () => {
         .mockResolvedValueOnce([]) // validateRequiredConsents - requirements
         .mockResolvedValueOnce([{ status: 'ACTIVE', countryCode: 'KR', serviceSlug }]); // getUserServices
 
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      // User lookup via gRPC
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: userId,
+          email: 'test@example.com',
+          username: 'testuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: userId,
+          country_code: 'KR',
+        },
+      });
 
       // Mock transaction
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
@@ -248,7 +275,8 @@ describe('ServicesService', () => {
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
 
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      // User lookup via gRPC now returns null account
+      mockIdentityClient.getAccount.mockResolvedValue({ account: null });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         await callback({ $executeRaw: jest.fn().mockResolvedValue(1) });
@@ -278,7 +306,20 @@ describe('ServicesService', () => {
           { status: 'ACTIVE', countryCode: 'JP', serviceSlug },
         ]);
 
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      // User lookup via gRPC
+      mockIdentityClient.getAccount.mockResolvedValue({
+        account: {
+          id: userId,
+          email: 'test@example.com',
+          username: 'testuser',
+        },
+      });
+      mockIdentityClient.getProfile.mockResolvedValue({
+        profile: {
+          account_id: userId,
+          country_code: 'KR',
+        },
+      });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         await callback({ $executeRaw: jest.fn().mockResolvedValue(1) });
