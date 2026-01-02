@@ -35,6 +35,7 @@
     "@nestjs/microservices": "catalog:",
     "@nestjs/passport": "catalog:",
     "@nestjs/platform-express": "catalog:",
+    "@nestjs/schedule": "catalog:",
     "@nestjs/swagger": "catalog:",
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.5.0",
