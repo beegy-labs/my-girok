@@ -446,6 +446,20 @@ const result = await clickhouse.query(sql, params);
 | `whereRaw()`                     | Raw SQL condition (use caution)               |
 | `build()`                        | Returns `{ conditions, params, whereClause }` |
 
+### Partition Helper
+
+Format dates for ClickHouse partition keys:
+
+```typescript
+import { formatPartition } from '@my-girok/nest-common';
+
+// Monthly partition (YYYYMM)
+formatPartition(new Date('2026-01-15'), 'month'); // "202601"
+
+// Daily partition (YYYYMMDD)
+formatPartition(new Date('2026-01-15'), 'day'); // "20260115"
+```
+
 ### Environment Variables
 
 | Variable                           | Required | Default | Description                |
