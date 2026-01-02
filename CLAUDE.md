@@ -63,7 +63,7 @@ Read: `.ai/i18n-locale.md` + `.ai/apps/web-main.md`
 
 **Working on database migrations?**
 Read: `.ai/database.md` + `.ai/rules.md` (Database Migrations section)
-Full guide: `docs/DATABASE.md`
+Policy: `docs/policies/DATABASE.md`
 
 **Working on Helm/Kubernetes deployment?**
 Read: `.ai/helm-deployment.md` + `.ai/ci-cd.md`
@@ -181,6 +181,7 @@ Full details: [.ai/git-flow.md](.ai/git-flow.md)
 
 ## Need More Detail?
 
+**Database migrations** -> `docs/policies/DATABASE.md`
 **Security policies** -> `docs/policies/SECURITY.md`
 **Testing standards** -> `docs/policies/TESTING.md`
 **Performance tips** -> `docs/policies/PERFORMANCE.md`

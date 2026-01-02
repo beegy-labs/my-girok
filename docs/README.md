@@ -102,7 +102,7 @@ Kubernetes deployment guide:
 ### Development
 
 - [Core Rules](../.ai/rules.md) - Essential development rules
-- [Database Guide](DATABASE.md) - Database management & migrations
+- [Database Guide](policies/DATABASE.md) - Database management & migrations
 - [Design System](DESIGN_SYSTEM.md) - WCAG 2.1 AAA design system
 - [Internationalization](I18N.md) - i18n setup and usage
 - [CI/CD](CI_CD.md) - Continuous integration & deployment
@@ -115,6 +115,7 @@ Kubernetes deployment guide:
 
 ### Policies
 
+- [Database](policies/DATABASE.md) - goose migrations (SSOT) + ClickHouse
 - [Security](policies/SECURITY.md) - Security best practices
 - [Testing](policies/TESTING.md) - Testing standards
 - [Caching](policies/CACHING.md) - Valkey/Redis caching strategy

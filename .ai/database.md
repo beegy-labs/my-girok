@@ -4,21 +4,35 @@
 
 ## Stack
 
-| Component | Tool          | Purpose                  |
-| --------- | ------------- | ------------------------ |
-| Migration | goose (MIT)   | Schema versioning (SSOT) |
-| ORM       | Prisma 6      | Client generation only   |
-| Database  | PostgreSQL 16 | Primary data store       |
+| Component  | Tool          | Purpose                  |
+| ---------- | ------------- | ------------------------ |
+| Migration  | goose (MIT)   | Schema versioning (SSOT) |
+| ORM        | Prisma 6      | Client generation only   |
+| PostgreSQL | PostgreSQL 16 | Primary data store       |
+| ClickHouse | ClickHouse    | Analytics & Audit        |
 
 ## SSOT Principle
+
+**goose is the Single Source of Truth for ALL database schemas (PostgreSQL + ClickHouse).**
 
 ```
 migrations/ (goose SQL)  →  Docker Image  →  ArgoCD PreSync  →  App Deploy
                                                   ↓
-                                           prisma db pull
+                                           prisma db pull (PostgreSQL only)
+```
+
+## File Structure
+
+```
+services/<service>/
+├── migrations/              # goose SQL (SSOT)
+│   └── 20251231000000_*.sql
+└── prisma/schema.prisma     # Client only (PostgreSQL)
 ```
 
 ## Commands
+
+### PostgreSQL
 
 ```bash
 # Create migration
@@ -37,7 +51,19 @@ goose -dir migrations postgres "$DATABASE_URL" down
 pnpm prisma db pull && pnpm prisma generate
 ```
 
+### ClickHouse
+
+```bash
+# Apply
+goose -dir migrations clickhouse "$CLICKHOUSE_URL" up
+
+# Status
+goose -dir migrations clickhouse "$CLICKHOUSE_URL" status
+```
+
 ## SQL Format
+
+### PostgreSQL
 
 ```sql
 -- +goose Up
@@ -51,28 +77,39 @@ CREATE TABLE features (
 DROP TABLE IF EXISTS features;
 ```
 
-### PL/pgSQL Functions
+### ClickHouse
 
 ```sql
+-- +goose Up
 -- +goose StatementBegin
-CREATE FUNCTION update_updated_at() RETURNS TRIGGER AS $$
-BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
-$$ LANGUAGE plpgsql;
+CREATE TABLE IF NOT EXISTS db.table ON CLUSTER 'my_cluster' (
+    id UUID DEFAULT generateUUIDv7(),
+    timestamp DateTime64(3)
+) ENGINE = ReplicatedMergeTree(...)
+PARTITION BY toYYYYMM(timestamp)
+ORDER BY (timestamp);
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE IF EXISTS db.table ON CLUSTER 'my_cluster';
 -- +goose StatementEnd
 ```
 
 ## Best Practices
 
-| Do                       | Don't                      |
-| ------------------------ | -------------------------- |
-| Use goose for migrations | Use `prisma migrate`       |
-| Use TEXT for ID columns  | Use UUID type              |
-| Use TIMESTAMPTZ(6)       | Use TIMESTAMP              |
-| Include `-- +goose Down` | Skip down migration        |
-| Test locally first       | Modify existing migrations |
-| Manual Sync in ArgoCD    | Auto-sync for DB changes   |
+| Do                        | Don't                    |
+| ------------------------- | ------------------------ |
+| Use goose for ALL DBs     | Use `prisma migrate`     |
+| Use TEXT for PostgreSQL   | Use UUID type            |
+| Use UUIDv7 for ClickHouse | Use UUIDv4               |
+| Use TIMESTAMPTZ(6)        | Use TIMESTAMP            |
+| Include `-- +goose Down`  | Skip down migration      |
+| Manual Sync in ArgoCD     | Auto-sync for DB changes |
 
 ## Databases
+
+### PostgreSQL
 
 | Service          | Database (dev / prod)               |
 | ---------------- | ----------------------------------- |
@@ -82,10 +119,13 @@ $$ LANGUAGE plpgsql;
 |                  | auth_dev / auth                     |
 |                  | legal_dev / legal                   |
 
-> **Note**: identity-service uses 3 pre-separated databases for Zero Migration architecture.
-> User: `identity_dev` has access to all 3 databases.
-> See `.ai/services/identity-service.md` for details.
+### ClickHouse
+
+| Service           | Database     | Retention |
+| ----------------- | ------------ | --------- |
+| audit-service     | audit_db     | 5 years   |
+| analytics-service | analytics_db | 90d ~ 1y  |
 
 ---
 
-**Full guide**: `docs/DATABASE.md`
+**Full guide**: `docs/policies/DATABASE.md`
