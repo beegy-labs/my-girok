@@ -21,13 +21,13 @@ import {
  * Logger instance for transaction-related messages.
  * Uses NestJS Logger with 'Transactional' context for easy filtering.
  */
-const logger = new Logger('Transactional');
+const logger = new Logger(T.TRANSACTIONAL_LOGGER_CONTEXT);
 
 /**
  * OpenTelemetry tracer for transaction spans.
  * Creates spans for distributed tracing of transaction lifecycle.
  */
-const tracer = trace.getTracer('transactional');
+const tracer = trace.getTracer(T.TRANSACTIONAL_TRACER_NAME);
 
 /**
  * Transaction isolation levels supported by Prisma and PostgreSQL.
@@ -459,198 +459,26 @@ function validateOptions(options: TransactionalOptions): Required<TransactionalO
   return opts;
 }
 
-/**
- * Comprehensive retryable error codes for transaction retry logic.
- *
- * These error codes indicate transient failures that may succeed on retry.
- * The retry logic uses exponential backoff with jitter to prevent thundering herd.
- *
- * **Prisma Error Codes (P-series):**
- * @see https://www.prisma.io/docs/reference/api-reference/error-reference
- *
- * **PostgreSQL Error Codes:**
- * @see https://www.postgresql.org/docs/current/errcodes-appendix.html
- *
- * **Network Error Codes:**
- * Standard Node.js/libc error codes for network failures.
- */
-const RETRYABLE_ERROR_CODES = new Set([
-  // === Prisma Error Codes ===
-  // P2034: Write conflict or deadlock in interactive transaction
-  // Occurs when concurrent transactions modify the same rows. Retry with backoff.
-  'P2034',
-
-  // P2024: Connection pool timeout - all connections in use
-  // Indicates high load; retry after pool frees a connection.
-  'P2024',
-
-  // P2028: Transaction API error - transaction was aborted/rolled back
-  // Can occur from timeout or connection issues; worth retrying.
-  'P2028',
-
-  // P1017: Server closed the connection unexpectedly
-  // Often happens during deployments or network hiccups.
-  'P1017',
-
-  // P1001: Cannot reach the database server
-  // Transient network issue; may resolve on retry.
-  'P1001',
-
-  // P1002: Database server timed out
-  // Server overloaded; retry with backoff to reduce pressure.
-  'P1002',
-
-  // === PostgreSQL Error Codes ===
-  // 40001: Serialization failure
-  // Transaction could not be serialized with Serializable isolation.
-  // Standard retry scenario for optimistic concurrency.
-  '40001',
-
-  // 40P01: Deadlock detected
-  // Two transactions waiting for each other. PostgreSQL aborts one.
-  // Retry with randomized delay to break deadlock pattern.
-  '40P01',
-
-  // 25P02: In failed SQL transaction / transaction aborted
-  // Transaction was aborted, possibly by timeout or error.
-  '25P02',
-
-  // 57014: Query cancelled (statement_timeout reached)
-  // Query took too long; may succeed with fresh transaction.
-  '57014',
-
-  // 08000: Connection exception (category)
-  // General connection failure.
-  '08000',
-
-  // 08003: Connection does not exist
-  // Connection was closed; need to reconnect.
-  '08003',
-
-  // 08006: Connection failure
-  // Lost connection during operation.
-  '08006',
-
-  // 53300: Too many connections
-  // Server connection limit reached; retry after some drop.
-  '53300',
-
-  // 55P03: Lock not available (NOWAIT option)
-  // Requested lock is held by another transaction.
-  '55P03',
-
-  // === Network Error Codes (Node.js/libc) ===
-  // ECONNREFUSED: Connection refused by server
-  // Server not listening; may be restarting.
-  'ECONNREFUSED',
-
-  // ETIMEDOUT: Connection timed out
-  // Network latency or server overload.
-  'ETIMEDOUT',
-
-  // ECONNRESET: Connection reset by peer
-  // Server closed connection unexpectedly.
-  'ECONNRESET',
-
-  // ENOTFOUND: DNS resolution failed
-  // Transient DNS issue.
-  'ENOTFOUND',
-
-  // EPIPE: Broken pipe
-  // Writing to a closed connection.
-  'EPIPE',
-
-  // EHOSTUNREACH: Host unreachable
-  // Network routing issue.
-  'EHOSTUNREACH',
-
-  // 57P03: Cannot connect now
-  // Server starting up, retry after short delay.
-  '57P03',
-
-  // XX000: Internal error
-  // Generic internal database error, may be transient.
-  'XX000',
-]);
-
-/**
- * Non-retryable error codes that should fail immediately.
- *
- * These errors indicate permanent failures that will not be resolved by retrying:
- * - Data integrity violations (constraints)
- * - Syntax/schema errors
- * - Resource exhaustion
- * - Permission issues
- *
- * Retrying these would waste resources and delay error reporting.
- *
- * @see https://www.postgresql.org/docs/current/errcodes-appendix.html
- */
-const NON_RETRYABLE_ERROR_CODES = new Set([
-  // 23505: Unique constraint violation
-  // Duplicate key - application must handle (different data or upsert).
-  '23505',
-
-  // 23503: Foreign key constraint violation
-  // Referenced row doesn't exist - application logic error.
-  '23503',
-
-  // 22P02: Invalid text representation
-  // Cannot parse input value (e.g., 'abc' for integer).
-  '22P02',
-
-  // 53100: Disk full
-  // Server out of storage - requires admin intervention.
-  '53100',
-
-  // 53200: Out of memory
-  // Server memory exhausted - requires admin intervention.
-  '53200',
-
-  // 57P01: Admin shutdown
-  // Server shutting down intentionally.
-  '57P01',
-
-  // 42P01: Undefined table
-  // Schema error - table doesn't exist.
-  '42P01',
-
-  // 42703: Undefined column
-  // Schema error - column doesn't exist.
-  '42703',
-
-  // 42601: SQL syntax error
-  // Invalid SQL - programming error.
-  '42601',
-
-  // 42501: Insufficient privilege
-  // Permission denied - requires authorization change.
-  '42501',
-
-  // 23514: Check constraint violation
-  // Application logic error.
-  '23514',
-
-  // 22003: Numeric value out of range
-  // Application logic error.
-  '22003',
-
-  // 22001: String data right truncation
-  // Value too long for column.
-  '22001',
-
-  // P2002: Unique constraint failed
-  // Prisma unique constraint violation.
-  'P2002',
-
-  // P2003: Foreign key constraint failed
-  // Prisma foreign key constraint violation.
-  'P2003',
-
-  // P2025: Record not found
-  // Prisma record to update/delete not found.
-  'P2025',
-]);
+import { Logger } from '@nestjs/common';
+import type { PrismaClient } from '@prisma/client';
+import { trace, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api';
+import {
+  getTransactionContext,
+  getTransaction,
+  generateTransactionId,
+  runInTransaction,
+  clearTransactionContext,
+  suspendAndRunInTransaction,
+  TransactionContext,
+  PrismaTransactionClient,
+} from './transaction-context';
+import {
+  CircuitBreaker,
+  CircuitBreakerError,
+  CircuitState,
+} from '../../resilience/circuit-breaker';
+import { RETRYABLE_DB_ERROR_CODES, NON_RETRYABLE_DB_ERROR_CODES } from '../db-error-codes';
+import * as T from './transactional.constants';
 
 // ============================================================================
 // Transaction Metrics
@@ -846,11 +674,11 @@ function isRetryableError(error: unknown): boolean {
   }
 
   // Check explicit non-retryable first (takes precedence)
-  if (NON_RETRYABLE_ERROR_CODES.has(code)) {
+  if (NON_RETRYABLE_DB_ERROR_CODES.has(code)) {
     return false;
   }
 
-  return RETRYABLE_ERROR_CODES.has(code);
+  return RETRYABLE_DB_ERROR_CODES.has(code);
 }
 
 /**
@@ -1184,23 +1012,23 @@ async function executeNewTransaction<T>(
   // Create OTEL span ONCE outside retry loop (optimized)
   const spanAttributes = opts.enableTracing
     ? {
-        'db.operation.name': 'transaction',
-        'db.system': 'postgresql',
-        'db.name': opts.dbName,
-        'server.address': opts.serverAddress,
-        'server.port': opts.serverPort,
-        'db.transaction.id': transactionId,
-        'db.transaction.isolation_level': opts.isolationLevel,
-        'db.transaction.max_attempts': opts.maxRetries,
-        'db.transaction.timeout_ms': opts.timeout,
-        'db.transaction.propagation': opts.propagation,
-        'db.transaction.depth': depth,
-        'db.transaction.read_only': opts.readOnly,
-        'db.transaction.routing_hint': effectiveRoutingHint,
-        'db.transaction.use_savepoint': opts.useSavepoint,
-        'db.transaction.use_circuit_breaker': opts.useCircuitBreaker,
-        'db.transaction.suspended': suspendedContext ? 'true' : 'false',
-        'db.transaction.suspended_id': suspendedContext?.transactionId ?? '',
+        [T.OTEL_ATTR_DB_OPERATION]: 'transaction',
+        [T.OTEL_ATTR_DB_SYSTEM]: 'postgresql',
+        [T.OTEL_ATTR_DB_NAME]: opts.dbName,
+        [T.OTEL_ATTR_SERVER_ADDRESS]: opts.serverAddress,
+        [T.OTEL_ATTR_SERVER_PORT]: opts.serverPort,
+        [T.OTEL_ATTR_TX_ID]: transactionId,
+        [T.OTEL_ATTR_TX_ISOLATION_LEVEL]: opts.isolationLevel,
+        [T.OTEL_ATTR_TX_MAX_ATTEMPTS]: opts.maxRetries,
+        [T.OTEL_ATTR_TX_TIMEOUT_MS]: opts.timeout,
+        [T.OTEL_ATTR_TX_PROPAGATION]: opts.propagation,
+        [T.OTEL_ATTR_TX_DEPTH]: depth,
+        [T.OTEL_ATTR_TX_READ_ONLY]: opts.readOnly,
+        [T.OTEL_ATTR_TX_ROUTING_HINT]: effectiveRoutingHint,
+        [T.OTEL_ATTR_TX_USE_SAVEPOINT]: opts.useSavepoint,
+        [T.OTEL_ATTR_TX_USE_CIRCUIT_BREAKER]: opts.useCircuitBreaker,
+        [T.OTEL_ATTR_TX_SUSPENDED]: suspendedContext ? 'true' : 'false',
+        [T.OTEL_ATTR_TX_SUSPENDED_ID]: suspendedContext?.transactionId ?? '',
       }
     : undefined;
 
@@ -1269,12 +1097,8 @@ async function executeNewTransaction<T>(
     );
 
     // Add success event to span
-    if (span) {
-      span.addEvent('transaction.committed', {
-        duration_ms: duration,
-        attempt: attemptNumber,
-      });
-    }
+    if (span)
+      span.addEvent(T.OTEL_EVENT_TX_COMMITTED, { duration_ms: duration, attempt: attemptNumber });
 
     // Update success metrics
     metrics.successfulTransactions++;
@@ -1325,14 +1149,13 @@ async function executeNewTransaction<T>(
           const errorMessage = error instanceof Error ? error.message : String(error);
 
           // Add error event to span
-          if (span) {
-            span.addEvent('transaction.error', {
+          if (span)
+            span.addEvent(T.OTEL_EVENT_TX_ERROR, {
               attempt: attempts,
               error_code: errorCode ?? 'unknown',
               error_message: errorMessage,
               retryable: isRetryableError(error),
             });
-          }
 
           if (isRetryableError(error) && attempts < opts.maxRetries) {
             // Check if we still have time for another attempt

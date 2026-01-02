@@ -647,6 +647,11 @@ Retry-After: 60              (when 429)
 
 Prisma transaction management with AsyncLocalStorage context propagation.
 
+**SSoT Refactoring Note**: Key constants and error codes are externalized for maintainability.
+
+- **Error Codes**: `packages/nest-common/src/database/db-error-codes.ts`
+- **String Constants**: `packages/nest-common/src/database/transactional/transactional.constants.ts`
+
 ```typescript
 import { Transactional, getPrismaClient, isInTransaction } from '@my-girok/nest-common';
 
@@ -708,27 +713,24 @@ if (isInTransaction()) {
 
 // Get current transaction ID
 const txId = getCurrentTransactionId();
-
-// Get nesting depth
-const depth = getTransactionDepth();
 ```
 
 ### Retryable Errors
 
-Automatically retried: `P2034` (deadlock), `P2024` (pool timeout), `40001` (serialization), `40P01` (deadlock), network errors.
-
-NOT retried: `23505` (unique violation), `23503` (FK violation), syntax errors.
+- **Policy Definition**: `packages/nest-common/src/database/db-error-codes.ts`
+- **Automatically retried**: `P2034` (deadlock), `P2024` (pool timeout), `40001` (serialization), `40P01` (deadlock), network errors.
+- **NOT retried**: `23505` (unique violation), `23503` (FK violation), syntax errors.
 
 ### OTEL Span Attributes
 
-```
-db.operation: transaction
-db.system: postgresql
-db.transaction.id: tx_abc123
-db.transaction.isolation_level: ReadCommitted
-db.transaction.attempt: 1
-db.transaction.propagation: required
-```
+- **Policy Definition**: `packages/nest-common/src/database/transactional/transactional.constants.ts`
+- **Example Attributes**:
+  - `db.operation: transaction`
+  - `db.system: postgresql`
+  - `db.transaction.id: tx_abc123`
+  - `db.transaction.isolation_level: ReadCommitted`
+  - `db.transaction.attempt: 1`
+  - `db.transaction.propagation: required`
 
 ---
 
