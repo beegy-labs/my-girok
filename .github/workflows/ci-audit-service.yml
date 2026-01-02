@@ -94,10 +94,10 @@ jobs:
           cd gitops && git pull --rebase
           DEPLOY_ENV="${{ inputs.deploy_env || 'develop' }}"
           case "${DEPLOY_ENV}" in
-            main) FILE="clusters/home/values/my-girok-audit-service-prod.yaml"; ENV="production" ;;
-            develop) FILE="clusters/home/values/my-girok-audit-service-dev.yaml"; ENV="development" ;;
-            release) FILE="clusters/home/values/my-girok-audit-service-release.yaml"; ENV="staging" ;;
-            *) FILE="clusters/home/values/my-girok-audit-service-dev.yaml"; ENV="development" ;;
+            main) FILE="clusters/home/values/common-audit-service-prod.yaml"; ENV="production" ;;
+            develop) FILE="clusters/home/values/common-audit-service-dev.yaml"; ENV="development" ;;
+            release) FILE="clusters/home/values/common-audit-service-release.yaml"; ENV="staging" ;;
+            *) FILE="clusters/home/values/common-audit-service-dev.yaml"; ENV="development" ;;
           esac
           sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
           git config user.name "GitHub Actions Bot"
