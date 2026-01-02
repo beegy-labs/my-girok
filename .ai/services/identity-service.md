@@ -210,7 +210,7 @@ services/identity-service/
     │   ├── interceptors/       # Idempotency, request context
     │   ├── filters/            # Exception filters
     │   ├── decorators/         # @Public, @CurrentUser
-    │   └── utils/              # Masking utilities
+    │   └── utils/              # Sanitize utilities
     ├── accounts/
     │   ├── accounts.module.ts
     │   ├── accounts.controller.ts
@@ -392,7 +392,7 @@ OUTBOX_POLLING_INTERVAL_MS=5000
 | RFC 9562 (UUIDv7)    | ✅     | All IDs via `ID.generate()`      |
 | RFC 9068 (JWT)       | ✅     | `aud` claim, token hash storage  |
 | Transactional Outbox | ✅     | Atomic with business operations  |
-| PII Masking          | ✅     | `masking.util.ts` for all logs   |
+| PII Masking          | ✅     | `@my-girok/nest-common` for logs |
 | Idempotency          | ✅     | `Idempotency-Key` header support |
 | Token Hashing        | ✅     | refreshTokenHash (SHA-256)       |
 

@@ -54,3 +54,4 @@ export * from './grpc';
 
 // ClickHouse - Import separately: @my-girok/nest-common/clickhouse
 // Not exported from main barrel to prevent loading @clickhouse/client in services that don't use it
+export * from './utils/date.util';

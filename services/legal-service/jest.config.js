@@ -1,25 +1,19 @@
-/** @type {import('jest').Config} */
 module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
+  roots: ['<rootDir>/src', '<rootDir>/test'],
   testRegex: '.*\\.spec\\.ts$',
-  transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
-  },
+  transform: { '^.+\\.(t|j)s$': 'ts-jest' },
   collectCoverageFrom: [
-    'src/**/*.ts',
+    'src/**/*.(t|j)s',
+    '!src/**/*.spec.ts',
+    '!src/**/*.e2e-spec.ts',
+    '!src/**/index.ts',
     '!src/main.ts',
     '!src/**/*.module.ts',
     '!src/**/*.dto.ts',
-    '!src/**/index.ts',
-    '!src/config/**/*.ts',
-    '!src/database/prisma.service.ts',
-    '!src/**/*.controller.ts',
-    'src/**/grpc/*.controller.ts',
-    '!src/common/cache/cache.service.ts',
-    '!src/common/cache/cache-ttl.constants.ts',
-    '!src/common/outbox/outbox.service.ts',
-    '!src/common/outbox/outbox-publisher.job.ts',
+    '!src/**/*.entity.ts',
+    '!src/config/*.ts',
   ],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
@@ -27,9 +21,8 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@my-girok/types$': '<rootDir>/../../packages/types/src',
     '^@my-girok/nest-common$': '<rootDir>/../../packages/nest-common/src',
-    // Resolve ESM .js imports to .ts files in workspace packages
-    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  transformIgnorePatterns: ['/node_modules/'],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -38,9 +31,7 @@ module.exports = {
       statements: 80,
     },
   },
-  coverageReporters: ['text', 'text-summary', 'lcov', 'html'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  setupFilesAfterEnv: [],
+  testTimeout: 30000,
   verbose: true,
-  testTimeout: 10000,
+  moduleDirectories: ['node_modules', '<rootDir>'],
 };

@@ -825,8 +825,7 @@ export class LegalGrpcController {
     try {
       const document = await this.legalDocumentsService.findOne(consent.documentId);
       return this.toProtoConsent(consent, document);
-    } catch (error) {
-      // Document not found - return consent with default values
+    } catch (_error) {
       this.logger.warn(`Document not found for consent ${consent.id}: ${consent.documentId}`);
       return this.toProtoConsent(consent);
     }

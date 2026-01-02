@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OutboxService } from '../outbox';
-import { maskUuid, maskEmail } from '../utils/masking.util';
+import { maskUuid, maskEmail, maskIpAddress } from '@my-girok/nest-common';
 
 /**
  * Audit action types
@@ -232,7 +232,7 @@ export class AuditService {
 
     if (entry.ipAddress) {
       // Mask last octet of IPv4
-      masked.ipAddress = this.maskIpAddress(entry.ipAddress);
+      masked.ipAddress = maskIpAddress(entry.ipAddress);
     }
 
     if (entry.userAgent) {
@@ -247,26 +247,6 @@ export class AuditService {
     }
 
     return masked;
-  }
-
-  /**
-   * Mask IP address (GDPR compliance)
-   */
-  private maskIpAddress(ip: string): string {
-    if (ip.includes(':')) {
-      // IPv6 - mask last 64 bits
-      const parts = ip.split(':');
-      if (parts.length >= 4) {
-        return parts.slice(0, 4).join(':') + ':****:****:****:****';
-      }
-    } else {
-      // IPv4 - mask last octet
-      const parts = ip.split('.');
-      if (parts.length === 4) {
-        return parts.slice(0, 3).join('.') + '.***';
-      }
-    }
-    return ip;
   }
 
   /**

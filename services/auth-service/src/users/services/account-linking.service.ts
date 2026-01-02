@@ -1,3 +1,4 @@
+import { maskEmail } from '@my-girok/nest-common';
 import {
   Injectable,
   NotFoundException,
@@ -107,7 +108,7 @@ export class AccountLinkingService {
       if (!userMap.has(row.userId)) {
         userMap.set(row.userId, {
           id: row.userId,
-          email: this.maskEmail(row.email),
+          email: maskEmail(row.email),
           services: [],
           createdAt: row.userCreatedAt,
         });
@@ -470,14 +471,5 @@ export class AccountLinkingService {
         `;
       }
     }
-  }
-
-  private maskEmail(email: string): string {
-    const [local, domain] = email.split('@');
-    if (local.length <= 2) {
-      return `${local[0]}***@${domain}`;
-    }
-    const maskedLocal = local.charAt(0) + '***' + local.charAt(local.length - 1);
-    return `${maskedLocal}@${domain}`;
   }
 }
