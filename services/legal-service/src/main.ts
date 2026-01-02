@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { join } from 'path';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -50,10 +52,34 @@ async function bootstrap() {
     SwaggerModule.setup('legal/docs', app, document);
   }
 
+  // gRPC Microservice
+  const grpcPort = process.env.GRPC_PORT || 50053;
+  const protoPath = join(__dirname, '../../../packages/proto/legal/v1/legal.proto');
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'legal.v1',
+      protoPath,
+      url: `0.0.0.0:${grpcPort}`,
+      loader: {
+        keepCase: true,
+        longs: Number,
+        enums: Number,
+        defaults: true,
+        oneofs: true,
+      },
+    },
+  });
+
+  // Start all microservices
+  await app.startAllMicroservices();
+
   const port = process.env.PORT || 3006;
   await app.listen(port);
 
   logger.log(`Legal Service is running on port ${port}`);
+  logger.log(`Legal Service gRPC is running on port ${grpcPort}`);
   logger.log(`Swagger docs available at http://localhost:${port}/legal/docs`);
 }
 

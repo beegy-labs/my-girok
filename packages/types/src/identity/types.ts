@@ -11,21 +11,88 @@
 
 /**
  * Account status enumeration
+ * SSOT: Aligned with packages/proto/identity/v1/identity.proto
  * @see services/identity-service/prisma/identity/schema.prisma
  */
-export type AccountStatus =
-  | 'PENDING_VERIFICATION'
-  | 'ACTIVE'
-  | 'SUSPENDED'
-  | 'DEACTIVATED'
-  | 'DELETED';
+export enum AccountStatus {
+  /** Initial state, awaiting email verification */
+  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
+  /** Fully active account */
+  ACTIVE = 'ACTIVE',
+  /** Temporarily suspended by admin */
+  SUSPENDED = 'SUSPENDED',
+  /** Soft-deleted, can be restored */
+  DELETED = 'DELETED',
+  /** Locked due to security reasons (failed logins, etc.) */
+  LOCKED = 'LOCKED',
+}
+
+/** Proto enum numeric values for AccountStatus */
+export const AccountStatusProto = {
+  UNSPECIFIED: 0,
+  PENDING: 1,
+  ACTIVE: 2,
+  SUSPENDED: 3,
+  DELETED: 4,
+  LOCKED: 5,
+} as const;
+
+/** Map Proto numeric to TypeScript enum */
+export const protoToAccountStatus: Record<number, AccountStatus> = {
+  0: AccountStatus.PENDING_VERIFICATION,
+  1: AccountStatus.PENDING_VERIFICATION,
+  2: AccountStatus.ACTIVE,
+  3: AccountStatus.SUSPENDED,
+  4: AccountStatus.DELETED,
+  5: AccountStatus.LOCKED,
+};
+
+/** Map TypeScript enum to Proto numeric */
+export const accountStatusToProto: Record<AccountStatus, number> = {
+  [AccountStatus.PENDING_VERIFICATION]: AccountStatusProto.PENDING,
+  [AccountStatus.ACTIVE]: AccountStatusProto.ACTIVE,
+  [AccountStatus.SUSPENDED]: AccountStatusProto.SUSPENDED,
+  [AccountStatus.DELETED]: AccountStatusProto.DELETED,
+  [AccountStatus.LOCKED]: AccountStatusProto.LOCKED,
+};
 
 /**
  * Account mode enumeration
- * SERVICE: Per-service independent accounts
- * UNIFIED: Integrated across services (Global Account)
+ * SSOT: Aligned with packages/proto/identity/v1/identity.proto
+ *
+ * Note: Proto defines granular modes (USER, ADMIN, OPERATOR, SERVICE)
+ * Application layer uses simplified modes (UNIFIED for all user types, SERVICE for machine accounts)
  */
-export type AccountMode = 'SERVICE' | 'UNIFIED';
+export enum AccountMode {
+  /** Machine-to-machine service account */
+  SERVICE = 'SERVICE',
+  /** Unified user account (includes USER, ADMIN, OPERATOR roles) */
+  UNIFIED = 'UNIFIED',
+}
+
+/** Proto enum numeric values for AccountMode */
+export const AccountModeProto = {
+  UNSPECIFIED: 0,
+  USER: 1,
+  ADMIN: 2,
+  OPERATOR: 3,
+  SERVICE: 4,
+} as const;
+
+/** Map Proto numeric to TypeScript enum */
+export const protoToAccountMode: Record<number, AccountMode> = {
+  0: AccountMode.UNIFIED,
+  1: AccountMode.UNIFIED,
+  2: AccountMode.UNIFIED,
+  3: AccountMode.UNIFIED,
+  4: AccountMode.SERVICE,
+};
+
+/** Map TypeScript enum to Proto numeric (defaults to USER for UNIFIED) */
+export const accountModeToProto: Record<AccountMode, number> = {
+  [AccountMode.UNIFIED]: AccountModeProto.USER,
+  [AccountMode.SERVICE]: AccountModeProto.SERVICE,
+};
 
 /**
  * Auth provider enumeration

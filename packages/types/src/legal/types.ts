@@ -4,20 +4,20 @@
  */
 
 import type { ConsentType, LegalDocumentType } from './enums.js';
+import {
+  ConsentStatus,
+  ConsentSource,
+  DSRRequestType,
+  DSRRequestStatus,
+  LegalDocumentStatus,
+} from './enums.js';
+
+// Re-export enums for convenience
+export { ConsentStatus, ConsentSource, DSRRequestType, DSRRequestStatus, LegalDocumentStatus };
 
 // ============================================================================
 // Consent Types
 // ============================================================================
-
-/**
- * Consent status enumeration
- */
-export type ConsentStatus = 'GRANTED' | 'WITHDRAWN' | 'EXPIRED' | 'PENDING';
-
-/**
- * Consent source enumeration
- */
-export type ConsentSource = 'REGISTRATION' | 'SETTINGS' | 'MODAL' | 'API' | 'IMPORT';
 
 /**
  * Consent entity
@@ -100,28 +100,6 @@ export interface BulkConsentCheckResult {
 // ============================================================================
 
 /**
- * DSR request type enumeration
- */
-export type DSRRequestType =
-  | 'ACCESS'
-  | 'RECTIFICATION'
-  | 'ERASURE'
-  | 'PORTABILITY'
-  | 'RESTRICTION'
-  | 'OBJECTION';
-
-/**
- * DSR request status enumeration
- */
-export type DSRRequestStatus =
-  | 'PENDING'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'REJECTED'
-  | 'CANCELLED'
-  | 'EXPIRED';
-
-/**
  * DSR request entity
  * GDPR/CCPA Data Subject Request
  */
@@ -187,11 +165,6 @@ export interface ProcessDSRRequestDto {
 // ============================================================================
 // Legal Document Types (Extended)
 // ============================================================================
-
-/**
- * Legal document status
- */
-export type LegalDocumentStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 /**
  * Legal document entity (extended)

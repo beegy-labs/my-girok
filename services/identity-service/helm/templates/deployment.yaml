@@ -35,52 +35,159 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - name: http
-          containerPort: {{ .Values.app.port }}
+          containerPort: {{ .Values.app.httpPort }}
+          protocol: TCP
+        - name: grpc
+          containerPort: {{ .Values.app.grpcPort }}
           protocol: TCP
         env:
+        # ============================================================
+        # Basic Configuration
+        # ============================================================
         - name: NODE_ENV
           value: {{ .Values.app.nodeEnv | quote }}
         - name: PORT
-          value: {{ .Values.app.port | quote }}
-        - name: DATABASE_URL
+          value: {{ .Values.app.httpPort | quote }}
+        - name: GRPC_PORT
+          value: {{ .Values.app.grpcPort | quote }}
+        {{- if .Values.app.corsOrigins }}
+        - name: CORS_ORIGINS
+          value: {{ .Values.app.corsOrigins | quote }}
+        {{- end }}
+        - name: FRONTEND_URL
+          value: {{ .Values.app.frontendUrl | quote }}
+
+        # ============================================================
+        # Database URLs (3 Databases - Write)
+        # ============================================================
+        - name: IDENTITY_DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: {{ include "identity-service.fullname" . }}-secret
-              key: database-url
-        - name: JWT_SECRET
+              key: identity-database-url
+        - name: AUTH_DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: {{ include "identity-service.fullname" . }}-secret
-              key: jwt-secret
-        - name: JWT_REFRESH_SECRET
+              key: auth-database-url
+        - name: LEGAL_DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: {{ include "identity-service.fullname" . }}-secret
-              key: jwt-refresh-secret
+              key: legal-database-url
+
+        # ============================================================
+        # CQRS - Read Replica URLs (Optional)
+        # ============================================================
+        {{- if .Values.app.cqrs.enabled }}
+        - name: CQRS_ENABLED
+          value: "true"
+        - name: IDENTITY_READ_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "identity-service.fullname" . }}-secret
+              key: identity-read-database-url
+              optional: true
+        - name: AUTH_READ_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "identity-service.fullname" . }}-secret
+              key: auth-read-database-url
+              optional: true
+        - name: LEGAL_READ_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "identity-service.fullname" . }}-secret
+              key: legal-read-database-url
+              optional: true
+        - name: CQRS_READ_POOL_SIZE
+          value: {{ .Values.app.cqrs.readReplica.poolSize | quote }}
+        - name: CQRS_READ_IDLE_TIMEOUT
+          value: {{ .Values.app.cqrs.readReplica.idleTimeout | quote }}
+        {{- else }}
+        - name: CQRS_ENABLED
+          value: "false"
+        {{- end }}
+
+        # ============================================================
+        # Module Mode Configuration
+        # ============================================================
+        - name: IDENTITY_MODE
+          value: {{ .Values.app.moduleMode.identity | quote }}
+        - name: AUTH_MODE
+          value: {{ .Values.app.moduleMode.auth | quote }}
+        - name: LEGAL_MODE
+          value: {{ .Values.app.moduleMode.legal | quote }}
+
+        # ============================================================
+        # Outbox Configuration
+        # ============================================================
+        - name: OUTBOX_POLLING_INTERVAL_MS
+          value: {{ .Values.app.outbox.pollingIntervalMs | quote }}
+        - name: OUTBOX_BATCH_SIZE
+          value: {{ .Values.app.outbox.batchSize | quote }}
+        - name: OUTBOX_MAX_RETRIES
+          value: {{ .Values.app.outbox.maxRetries | quote }}
+
+        # ============================================================
+        # Redpanda Configuration (Future)
+        # ============================================================
+        {{- if .Values.app.redpanda.enabled }}
+        - name: REDPANDA_ENABLED
+          value: "true"
+        - name: REDPANDA_BROKERS
+          value: {{ .Values.app.redpanda.brokers | quote }}
+        {{- else }}
+        - name: REDPANDA_ENABLED
+          value: "false"
+        {{- end }}
+
+        # ============================================================
+        # JWT Configuration
+        # ============================================================
+        - name: JWT_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "identity-service.fullname" . }}-secret
+              key: jwt-private-key
+        - name: JWT_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "identity-service.fullname" . }}-secret
+              key: jwt-public-key
         - name: JWT_ACCESS_EXPIRATION
           value: {{ .Values.app.jwt.accessExpiration | quote }}
         - name: JWT_REFRESH_EXPIRATION
           value: {{ .Values.app.jwt.refreshExpiration | quote }}
-        - name: FRONTEND_URL
-          value: {{ .Values.app.frontendUrl | quote }}
-        {{- if .Values.valkey.enabled }}
+        - name: JWT_ROTATION_GRACE_PERIOD
+          value: {{ .Values.app.jwt.rotationGracePeriod | quote }}
+
+        # ============================================================
+        # Valkey (Redis-compatible) Configuration
+        # ============================================================
         - name: VALKEY_HOST
-          value: {{ .Values.valkey.host | quote }}
+          value: {{ .Values.app.valkey.host | quote }}
         - name: VALKEY_PORT
-          value: {{ .Values.valkey.port | quote }}
+          value: {{ .Values.app.valkey.port | quote }}
         - name: VALKEY_DB
-          value: {{ .Values.valkey.db | quote }}
+          value: {{ .Values.app.valkey.db | quote }}
         - name: VALKEY_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.valkey.secretName }}
-              key: {{ .Values.valkey.secretKey }}
+              name: {{ include "identity-service.fullname" . }}-secret
+              key: valkey-password
               optional: true
+
+        # ============================================================
+        # OpenTelemetry Configuration
+        # ============================================================
+        {{- if .Values.app.otel.enabled }}
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.app.otel.endpoint | quote }}
+        - name: OTEL_SERVICE_NAME
+          value: {{ .Values.app.otel.serviceName | quote }}
         {{- end }}
-        {{- if .Values.kafka.enabled }}
-        - name: KAFKA_BROKERS
-          value: {{ .Values.kafka.brokers | quote }}
-        {{- end }}
+
         {{- with .Values.livenessProbe }}
         livenessProbe:
           {{- toYaml . | nindent 12 }}

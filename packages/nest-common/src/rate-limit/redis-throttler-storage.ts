@@ -291,7 +291,7 @@ export class RedisThrottlerStorage implements ThrottlerStorage, OnModuleDestroy 
   // Script SHA for EVALSHA optimization
   private scriptSha: string | null = null;
 
-  constructor(private readonly options: RedisThrottlerStorageOptions) {
+  constructor(options: RedisThrottlerStorageOptions) {
     // Validate required options - must have either url or sentinels
     if (!options.url && !options.sentinels) {
       throw new Error('RedisThrottlerStorage requires either url or sentinels configuration');

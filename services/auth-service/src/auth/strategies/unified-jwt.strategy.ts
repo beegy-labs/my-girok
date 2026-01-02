@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +17,8 @@ import {
   isOperatorPayload,
   isLegacyPayload,
 } from '@my-girok/types';
+import { IdentityGrpcClient, isGrpcError } from '@my-girok/nest-common';
+import { status as GrpcStatus } from '@grpc/grpc-js';
 
 /**
  * Unified JWT Strategy for User/Admin/Operator authentication
@@ -24,9 +26,12 @@ import {
  */
 @Injectable()
 export class UnifiedJwtStrategy extends PassportStrategy(Strategy, 'unified-jwt') {
+  private readonly logger = new Logger(UnifiedJwtStrategy.name);
+
   constructor(
     configService: ConfigService,
     private prisma: PrismaService,
+    private identityClient: IdentityGrpcClient,
   ) {
     const secret = configService.get<string>('JWT_SECRET');
     if (!secret) {
@@ -62,24 +67,42 @@ export class UnifiedJwtStrategy extends PassportStrategy(Strategy, 'unified-jwt'
   }
 
   private async validateUser(payload: UserJwtPayload): Promise<AuthenticatedUser> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: { id: true, email: true, name: true },
-    });
+    try {
+      const response = await this.identityClient.getAccount({ id: payload.sub });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+      if (!response.account) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Get profile for name if available
+      let name = '';
+      try {
+        const profileResponse = await this.identityClient.getProfile({
+          account_id: payload.sub,
+        });
+        if (profileResponse.profile) {
+          name = profileResponse.profile.display_name || '';
+        }
+      } catch {
+        // Profile not found is OK, use empty name
+      }
+
+      return {
+        type: 'USER',
+        id: response.account.id,
+        email: response.account.email,
+        name,
+        accountMode: payload.accountMode,
+        countryCode: payload.countryCode,
+        services: payload.services,
+      };
+    } catch (error) {
+      if (isGrpcError(error) && error.code === GrpcStatus.NOT_FOUND) {
+        throw new UnauthorizedException('User not found');
+      }
+      this.logger.error('Failed to validate user', error);
+      throw new UnauthorizedException('User validation failed');
     }
-
-    return {
-      type: 'USER',
-      id: user.id,
-      email: user.email,
-      name: user.name || '',
-      accountMode: payload.accountMode,
-      countryCode: payload.countryCode,
-      services: payload.services,
-    };
   }
 
   private async validateAdmin(payload: AdminJwtPayload): Promise<AuthenticatedAdmin> {
@@ -143,24 +166,42 @@ export class UnifiedJwtStrategy extends PassportStrategy(Strategy, 'unified-jwt'
   }
 
   private async validateLegacyUser(payload: any): Promise<AuthenticatedUser> {
-    // Backward compatibility for old tokens
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: { id: true, email: true, name: true },
-    });
+    try {
+      // Backward compatibility for old tokens - validate via gRPC
+      const response = await this.identityClient.getAccount({ id: payload.sub });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+      if (!response.account) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Get profile for name if available
+      let name = '';
+      try {
+        const profileResponse = await this.identityClient.getProfile({
+          account_id: payload.sub,
+        });
+        if (profileResponse.profile) {
+          name = profileResponse.profile.display_name || '';
+        }
+      } catch {
+        // Profile not found is OK, use empty name
+      }
+
+      return {
+        type: 'USER',
+        id: response.account.id,
+        email: response.account.email,
+        name,
+        accountMode: 'SERVICE',
+        countryCode: 'KR',
+        services: {},
+      };
+    } catch (error) {
+      if (isGrpcError(error) && error.code === GrpcStatus.NOT_FOUND) {
+        throw new UnauthorizedException('User not found');
+      }
+      this.logger.error('Failed to validate legacy user', error);
+      throw new UnauthorizedException('User validation failed');
     }
-
-    return {
-      type: 'USER',
-      id: user.id,
-      email: user.email,
-      name: user.name || '',
-      accountMode: 'SERVICE',
-      countryCode: 'KR',
-      services: {},
-    };
   }
 }

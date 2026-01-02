@@ -31,5 +31,16 @@ export * from './events/index.js';
  * This avoids conflicts with existing auth/legal types and allows
  * the identity module to be self-contained for future service separation.
  */
-// NOT exported here to avoid type conflicts
-// Use: import * as Identity from '@my-girok/types/identity';
+// Export Proto mapping utilities for gRPC type conversion
+export {
+  // Identity Proto mappings
+  AccountStatusProto,
+  AccountModeProto,
+  protoToAccountStatus,
+  protoToAccountMode,
+  accountStatusToProto,
+  accountModeToProto,
+} from './identity/types.js';
+
+// Re-export identity module as namespace for full access
+export * as Identity from './identity/index.js';

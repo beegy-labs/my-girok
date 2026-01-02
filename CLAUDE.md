@@ -12,6 +12,15 @@
 
 1. **[.ai/rules.md](.ai/rules.md)** - Core DO/DON'T rules (CRITICAL)
 2. **[.ai/architecture.md](.ai/architecture.md)** - Architecture patterns and routing
+3. **[docs/TEST_COVERAGE.md](docs/TEST_COVERAGE.md)** - Test coverage status & pending tests
+
+### Testing Requirements
+
+**All code changes MUST include tests.** Check `docs/TEST_COVERAGE.md` for:
+
+- Current coverage status per service
+- Pending tests that need to be written
+- Files excluded from coverage (and why)
 
 ## Task-Based Navigation
 

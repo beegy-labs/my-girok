@@ -17,12 +17,13 @@ Authorization, RBAC, operators, and sanctions management
 
 ## Service Info
 
-| Property | Value                      |
-| -------- | -------------------------- |
-| Port     | 3001                       |
-| Database | auth_db (PostgreSQL)       |
-| Codebase | `services/auth-service/`   |
-| Events   | `auth.*` topics (Redpanda) |
+| Property  | Value                      |
+| --------- | -------------------------- |
+| REST Port | 3001                       |
+| gRPC Port | 50052                      |
+| Database  | auth_db (PostgreSQL)       |
+| Codebase  | `services/auth-service/`   |
+| Events    | `auth.*` topics (Redpanda) |
 
 ---
 
@@ -45,6 +46,52 @@ auth-service (Port 3001)
 
 - `identity-service`: Account validation (gRPC)
 - `legal-service`: Consent checks (gRPC)
+
+---
+
+## gRPC Server (Port 50052)
+
+This service exposes a gRPC server for authorization checks from other services.
+
+### Available Methods
+
+| Method                 | Request                           | Response                       | Description                  |
+| ---------------------- | --------------------------------- | ------------------------------ | ---------------------------- |
+| CheckPermission        | `{operator_id, resource, action}` | `{allowed, reason}`            | Check single permission      |
+| CheckPermissions       | `{operator_id, permissions[]}`    | `{results[]}`                  | Check multiple permissions   |
+| GetOperatorPermissions | `{operator_id}`                   | `{permissions[]}`              | Get all operator permissions |
+| GetRole                | `{id}`                            | `{role}`                       | Get role by ID               |
+| GetRolesByOperator     | `{operator_id}`                   | `{roles[]}`                    | Get operator's roles         |
+| GetOperator            | `{id}`                            | `{operator}`                   | Get operator by ID           |
+| ValidateOperator       | `{id}`                            | `{valid, status}`              | Check operator exists/active |
+| CheckSanction          | `{subject_id, type}`              | `{is_sanctioned, sanctions[]}` | Check active sanctions       |
+| GetActiveSanctions     | `{subject_id}`                    | `{sanctions[]}`                | Get all active sanctions     |
+
+### Proto Definition
+
+```
+packages/proto/auth/v1/auth.proto
+```
+
+### Client Usage (from other services)
+
+```typescript
+import { AuthGrpcClient } from '@my-girok/nest-common';
+
+@Injectable()
+export class IdentityService {
+  constructor(private readonly authClient: AuthGrpcClient) {}
+
+  async canAccessResource(operatorId: string, resource: string) {
+    const { allowed } = await this.authClient.checkPermission({
+      operator_id: operatorId,
+      resource,
+      action: 'read',
+    });
+    return allowed;
+  }
+}
+```
 
 ---
 

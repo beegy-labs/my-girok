@@ -3,47 +3,10 @@
  * Event types for Account, Session, Device, Profile, Auth, Legal domains
  */
 
-// ============================================================================
-// Base Event Types
-// ============================================================================
+import type { BaseDomainEvent, EventActor } from '../common/index.js';
 
-/**
- * Base event interface
- * All domain events extend this interface
- */
-export interface BaseDomainEvent {
-  /** Unique event ID */
-  eventId: string;
-  /** Event type identifier */
-  eventType: string;
-  /** Aggregate type (e.g., 'Account', 'Session') */
-  aggregateType: string;
-  /** Aggregate ID (e.g., accountId, sessionId) */
-  aggregateId: string;
-  /** Event timestamp */
-  timestamp: Date;
-  /** Event version for schema evolution */
-  version: number;
-  /** Correlation ID for request tracing */
-  correlationId?: string;
-  /** Causation ID (previous event that caused this event) */
-  causationId?: string;
-  /** Actor who triggered the event */
-  actor?: EventActor;
-  /** Additional metadata */
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Actor who triggered the event
- */
-export interface EventActor {
-  id: string;
-  type: 'ACCOUNT' | 'OPERATOR' | 'ADMIN' | 'SYSTEM' | 'ANONYMOUS';
-  email?: string;
-  ipAddress?: string;
-  userAgent?: string;
-}
+// Re-export base types for backward compatibility
+export type { BaseDomainEvent, EventActor };
 
 // ============================================================================
 // Account Events

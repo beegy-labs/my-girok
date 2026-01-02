@@ -3,19 +3,14 @@
  * Role, Permission types for authorization
  */
 
+import { PermissionAction, RoleScope, RoleStatus } from './enums.js';
+
+// Re-export enums for convenience
+export { PermissionAction, RoleScope, RoleStatus };
+
 // ============================================================================
 // Role Types
 // ============================================================================
-
-/**
- * Role scope enumeration
- */
-export type RoleScope = 'PLATFORM' | 'SERVICE' | 'TENANT';
-
-/**
- * Role status enumeration
- */
-export type RoleStatus = 'ACTIVE' | 'INACTIVE' | 'DEPRECATED';
 
 /**
  * Role entity
@@ -77,20 +72,6 @@ export interface UpdateRoleDto {
 // ============================================================================
 // Permission Types
 // ============================================================================
-
-/**
- * Permission action enumeration
- */
-export type PermissionAction =
-  | 'CREATE'
-  | 'READ'
-  | 'UPDATE'
-  | 'DELETE'
-  | 'LIST'
-  | 'MANAGE'
-  | 'EXECUTE'
-  | 'APPROVE'
-  | 'REJECT';
 
 /**
  * Permission entity

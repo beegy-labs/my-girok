@@ -404,6 +404,54 @@ interface DomainEvent<T = unknown> {
 
 ---
 
+## Proto-Generated Types
+
+> SSOT: `packages/types/src/generated/proto/`
+
+Auto-generated from proto files via `pnpm generate` in `packages/proto/`.
+
+### Structure
+
+```
+packages/types/src/generated/proto/
+├── identity/v1/
+│   ├── identity_pb.d.ts      # TypeScript definitions
+│   ├── identity_pb.js        # Runtime code
+│   ├── identity_pb.client.d.ts  # Client stubs
+│   └── identity_pb.client.js
+├── auth/v1/
+│   ├── auth_pb.d.ts
+│   ├── auth_pb.js
+│   ├── auth_pb.client.d.ts
+│   └── auth_pb.client.js
+├── legal/v1/
+│   └── ... (same structure)
+└── google/protobuf/
+    └── timestamp_pb.{d.ts,js}
+```
+
+### Generated Types per Package
+
+| Package       | Message Types                                      |
+| ------------- | -------------------------------------------------- |
+| `identity.v1` | Account, Session, Device, Profile, Timestamp       |
+| `auth.v1`     | Role, Permission, Operator, Sanction               |
+| `legal.v1`    | Consent, LegalDocument, DsrRequest, LawRequirement |
+
+### Regenerating Types
+
+```bash
+cd packages/proto
+pnpm generate
+```
+
+### Usage Note
+
+These types are primarily used by `@my-girok/nest-common` gRPC clients.
+For application code, prefer the hand-written types in `packages/types/src/`.
+
+---
+
 ## Usage
 
 ```typescript

@@ -1,10 +1,15 @@
 {{- if .Values.migration.enabled }}
+# ============================================================
+# Identity DB Migration (Phase 1)
+# ============================================================
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "identity-service.fullname" . }}-migrate
+  name: {{ include "identity-service.fullname" . }}-migrate-identity
   labels:
     {{- include "identity-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+    migration-db: identity
   annotations:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
@@ -17,6 +22,7 @@ spec:
       labels:
         {{- include "identity-service.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: migration
+        migration-db: identity
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -36,16 +42,151 @@ spec:
             - /bin/sh
             - -c
             - |
-              set -e
-              echo "Running identity_db migrations..."
-              goose -dir /app/services/identity-service/migrations postgres "$DATABASE_URL" up
-              echo "Migrations completed successfully!"
+              echo "Running Identity DB migration..."
+              goose -dir /app/services/identity-service/migrations/identity postgres "$DATABASE_URL" up
+              echo "Identity DB migration completed."
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: {{ include "identity-service.fullname" . }}-secret
-                  key: database-url
+                  key: identity-database-url
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+# ============================================================
+# Auth DB Migration (Phase 2)
+# ============================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "identity-service.fullname" . }}-migrate-auth
+  labels:
+    {{- include "identity-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+    migration-db: auth
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-4"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "identity-service.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+        migration-db: auth
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "identity-service.serviceAccountName" . }}
+      restartPolicy: Never
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Running Auth DB migration..."
+              goose -dir /app/services/identity-service/migrations/auth postgres "$DATABASE_URL" up
+              echo "Auth DB migration completed."
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "identity-service.fullname" . }}-secret
+                  key: auth-database-url
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+# ============================================================
+# Legal DB Migration (Phase 3)
+# ============================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "identity-service.fullname" . }}-migrate-legal
+  labels:
+    {{- include "identity-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+    migration-db: legal
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "identity-service.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+        migration-db: legal
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "identity-service.serviceAccountName" . }}
+      restartPolicy: Never
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Running Legal DB migration..."
+              goose -dir /app/services/identity-service/migrations/legal postgres "$DATABASE_URL" up
+              echo "Legal DB migration completed."
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "identity-service.fullname" . }}-secret
+                  key: legal-database-url
           resources:
             limits:
               cpu: 200m

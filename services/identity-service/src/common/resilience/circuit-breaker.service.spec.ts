@@ -21,7 +21,7 @@ describe('CircuitBreakerService', () => {
       name: 'test-circuit',
       failureThreshold: 3,
       successThreshold: 2,
-      timeout: 5000,
+      resetTimeoutMs: 5000,
     };
 
     it('should execute function successfully when circuit is closed', async () => {
@@ -41,7 +41,7 @@ describe('CircuitBreakerService', () => {
         await expect(service.execute(defaultOptions, mockFn)).rejects.toThrow('fail');
       }
 
-      const state = service.getState('test-circuit');
+      const state = service.getCircuitState('test-circuit');
       expect(state).toBe(CircuitState.OPEN);
     });
 
@@ -58,7 +58,7 @@ describe('CircuitBreakerService', () => {
 
       // Should reject without calling the function
       await expect(service.execute(defaultOptions, mockFn)).rejects.toThrow(
-        'Circuit breaker is open',
+        'Circuit breaker "test-circuit" is open',
       );
       expect(mockFn).not.toHaveBeenCalled();
     });
@@ -72,7 +72,7 @@ describe('CircuitBreakerService', () => {
         await expect(service.execute(defaultOptions, mockFn)).rejects.toThrow('fail');
       }
 
-      expect(service.getState('test-circuit')).toBe(CircuitState.OPEN);
+      expect(service.getCircuitState('test-circuit')).toBe(CircuitState.OPEN);
 
       // Advance time past the timeout
       jest.advanceTimersByTime(6000);
@@ -104,7 +104,7 @@ describe('CircuitBreakerService', () => {
       await service.execute(defaultOptions, mockFn);
       await service.execute(defaultOptions, mockFn);
 
-      expect(service.getState('test-circuit')).toBe(CircuitState.CLOSED);
+      expect(service.getCircuitState('test-circuit')).toBe(CircuitState.CLOSED);
     });
 
     it('should reopen circuit if failure in half-open state', async () => {
@@ -122,7 +122,7 @@ describe('CircuitBreakerService', () => {
       // Fail again in half-open state
       await expect(service.execute(defaultOptions, mockFn)).rejects.toThrow('fail');
 
-      expect(service.getState('test-circuit')).toBe(CircuitState.OPEN);
+      expect(service.getCircuitState('test-circuit')).toBe(CircuitState.OPEN);
     });
 
     it('should use custom fallback when provided', async () => {
@@ -144,13 +144,13 @@ describe('CircuitBreakerService', () => {
     });
   });
 
-  describe('getState', () => {
-    it('should return CLOSED for unknown circuit', () => {
-      expect(service.getState('unknown-circuit')).toBe(CircuitState.CLOSED);
+  describe('getCircuitState', () => {
+    it('should return undefined for unknown circuit', () => {
+      expect(service.getCircuitState('unknown-circuit')).toBeUndefined();
     });
   });
 
-  describe('reset', () => {
+  describe('resetCircuit', () => {
     it('should reset circuit to closed state', async () => {
       const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
 
@@ -158,50 +158,44 @@ describe('CircuitBreakerService', () => {
       for (let i = 0; i < 3; i++) {
         await expect(
           service.execute(
-            { name: 'reset-test', failureThreshold: 3, successThreshold: 2, timeout: 5000 },
+            { name: 'reset-test', failureThreshold: 3, successThreshold: 2, resetTimeoutMs: 5000 },
             mockFn,
           ),
         ).rejects.toThrow('fail');
       }
 
-      expect(service.getState('reset-test')).toBe(CircuitState.OPEN);
+      expect(service.getCircuitState('reset-test')).toBe(CircuitState.OPEN);
 
-      service.reset('reset-test');
+      service.resetCircuit('reset-test');
 
-      expect(service.getState('reset-test')).toBe(CircuitState.CLOSED);
+      expect(service.getCircuitState('reset-test')).toBe(CircuitState.CLOSED);
     });
   });
 
-  describe('getStats', () => {
-    it('should return circuit statistics', async () => {
+  describe('getAllCircuitStates', () => {
+    it('should return all circuit states', async () => {
       const mockFn = jest.fn().mockResolvedValue('success');
 
       await service.execute(
-        { name: 'stats-test', failureThreshold: 3, successThreshold: 2, timeout: 5000 },
+        { name: 'stats-test', failureThreshold: 3, successThreshold: 2, resetTimeoutMs: 5000 },
         mockFn,
       );
 
-      const stats = service.getStats('stats-test');
+      const allStates = service.getAllCircuitStates();
 
-      expect(stats).toEqual(
+      expect(allStates['stats-test']).toEqual(
         expect.objectContaining({
           state: CircuitState.CLOSED,
           failures: 0,
-          successes: expect.any(Number),
         }),
       );
     });
 
-    it('should return default stats for unknown circuit', () => {
-      const stats = service.getStats('unknown');
+    it('should return empty object for no circuits', () => {
+      const freshService = new CircuitBreakerService();
+      const allStates = freshService.getAllCircuitStates();
 
-      expect(stats).toEqual({
-        state: CircuitState.CLOSED,
-        failures: 0,
-        successes: 0,
-        lastFailure: null,
-        lastSuccess: null,
-      });
+      expect(allStates).toEqual({});
     });
   });
 });

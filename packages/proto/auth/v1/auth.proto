@@ -1,0 +1,244 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/auth/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// AuthService provides authentication, authorization, and sanction operations
+service AuthService {
+  // Permission operations
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+  rpc CheckPermissions(CheckPermissionsRequest) returns (CheckPermissionsResponse);
+  rpc GetOperatorPermissions(GetOperatorPermissionsRequest) returns (GetOperatorPermissionsResponse);
+
+  // Role operations
+  rpc GetRole(GetRoleRequest) returns (GetRoleResponse);
+  rpc GetRolesByOperator(GetRolesByOperatorRequest) returns (GetRolesByOperatorResponse);
+
+  // Operator operations
+  rpc GetOperator(GetOperatorRequest) returns (GetOperatorResponse);
+  rpc ValidateOperator(ValidateOperatorRequest) returns (ValidateOperatorResponse);
+
+  // Sanction operations
+  rpc CheckSanction(CheckSanctionRequest) returns (CheckSanctionResponse);
+  rpc GetActiveSanctions(GetActiveSanctionsRequest) returns (GetActiveSanctionsResponse);
+}
+
+// Permission represents a single permission
+message Permission {
+  string id = 1;
+  string resource = 2;
+  string action = 3;
+  string category = 4;
+  string description = 5;
+  bool is_system = 6;
+}
+
+// Role represents a role with permissions
+message Role {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 level = 4;
+  RoleScope scope = 5;
+  repeated Permission permissions = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// RoleScope defines where the role applies
+enum RoleScope {
+  ROLE_SCOPE_UNSPECIFIED = 0;
+  ROLE_SCOPE_GLOBAL = 1;
+  ROLE_SCOPE_SERVICE = 2;
+  ROLE_SCOPE_TENANT = 3;
+}
+
+// Operator represents an admin/operator user
+message Operator {
+  string id = 1;
+  string account_id = 2;
+  string email = 3;
+  string display_name = 4;
+  OperatorStatus status = 5;
+  string role_id = 6;
+  Role role = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  google.protobuf.Timestamp last_login_at = 10;
+}
+
+// OperatorStatus represents the current state of an operator
+enum OperatorStatus {
+  OPERATOR_STATUS_UNSPECIFIED = 0;
+  OPERATOR_STATUS_PENDING = 1;
+  OPERATOR_STATUS_ACTIVE = 2;
+  OPERATOR_STATUS_SUSPENDED = 3;
+  OPERATOR_STATUS_REVOKED = 4;
+}
+
+// Sanction represents a restriction on an account
+message Sanction {
+  string id = 1;
+  string subject_id = 2;
+  SubjectType subject_type = 3;
+  SanctionType type = 4;
+  SanctionSeverity severity = 5;
+  string reason = 6;
+  string evidence = 7;
+  string issued_by = 8;
+  google.protobuf.Timestamp issued_at = 9;
+  google.protobuf.Timestamp expires_at = 10;
+  SanctionStatus status = 11;
+}
+
+// SubjectType identifies what kind of entity is sanctioned
+enum SubjectType {
+  SUBJECT_TYPE_UNSPECIFIED = 0;
+  SUBJECT_TYPE_USER = 1;
+  SUBJECT_TYPE_OPERATOR = 2;
+  SUBJECT_TYPE_SERVICE = 3;
+}
+
+// SanctionType categorizes the sanction
+enum SanctionType {
+  SANCTION_TYPE_UNSPECIFIED = 0;
+  SANCTION_TYPE_WARNING = 1;
+  SANCTION_TYPE_MUTE = 2;
+  SANCTION_TYPE_TEMPORARY_BAN = 3;
+  SANCTION_TYPE_PERMANENT_BAN = 4;
+  SANCTION_TYPE_FEATURE_RESTRICTION = 5;
+}
+
+// SanctionSeverity indicates the severity level
+enum SanctionSeverity {
+  SANCTION_SEVERITY_UNSPECIFIED = 0;
+  SANCTION_SEVERITY_LOW = 1;
+  SANCTION_SEVERITY_MEDIUM = 2;
+  SANCTION_SEVERITY_HIGH = 3;
+  SANCTION_SEVERITY_CRITICAL = 4;
+}
+
+// SanctionStatus represents the current state of a sanction
+enum SanctionStatus {
+  SANCTION_STATUS_UNSPECIFIED = 0;
+  SANCTION_STATUS_ACTIVE = 1;
+  SANCTION_STATUS_EXPIRED = 2;
+  SANCTION_STATUS_REVOKED = 3;
+  SANCTION_STATUS_APPEALED = 4;
+}
+
+// === Request/Response Messages ===
+
+// CheckPermission
+message CheckPermissionRequest {
+  string operator_id = 1;
+  string resource = 2;
+  string action = 3;
+  map<string, string> context = 4;
+}
+
+message CheckPermissionResponse {
+  bool allowed = 1;
+  string reason = 2;
+  repeated string matched_permissions = 3;
+}
+
+// CheckPermissions (batch)
+message CheckPermissionsRequest {
+  string operator_id = 1;
+  repeated PermissionCheck checks = 2;
+}
+
+message PermissionCheck {
+  string resource = 1;
+  string action = 2;
+}
+
+message CheckPermissionsResponse {
+  bool all_allowed = 1;
+  repeated PermissionCheckResult results = 2;
+}
+
+message PermissionCheckResult {
+  string resource = 1;
+  string action = 2;
+  bool allowed = 3;
+  string reason = 4;
+}
+
+// GetOperatorPermissions
+message GetOperatorPermissionsRequest {
+  string operator_id = 1;
+  bool include_role_permissions = 2;
+}
+
+message GetOperatorPermissionsResponse {
+  repeated Permission permissions = 1;
+  repeated Permission direct_permissions = 2;
+  repeated Permission role_permissions = 3;
+}
+
+// GetRole
+message GetRoleRequest {
+  string id = 1;
+}
+
+message GetRoleResponse {
+  Role role = 1;
+}
+
+// GetRolesByOperator
+message GetRolesByOperatorRequest {
+  string operator_id = 1;
+}
+
+message GetRolesByOperatorResponse {
+  repeated Role roles = 1;
+}
+
+// GetOperator
+message GetOperatorRequest {
+  string id = 1;
+}
+
+message GetOperatorResponse {
+  Operator operator = 1;
+}
+
+// ValidateOperator
+message ValidateOperatorRequest {
+  string id = 1;
+}
+
+message ValidateOperatorResponse {
+  bool valid = 1;
+  OperatorStatus status = 2;
+  string message = 3;
+}
+
+// CheckSanction
+message CheckSanctionRequest {
+  string subject_id = 1;
+  SubjectType subject_type = 2;
+  optional SanctionType sanction_type = 3;
+}
+
+message CheckSanctionResponse {
+  bool is_sanctioned = 1;
+  repeated Sanction active_sanctions = 2;
+  SanctionSeverity highest_severity = 3;
+}
+
+// GetActiveSanctions
+message GetActiveSanctionsRequest {
+  string subject_id = 1;
+  SubjectType subject_type = 2;
+}
+
+message GetActiveSanctionsResponse {
+  repeated Sanction sanctions = 1;
+  int32 total_count = 2;
+}

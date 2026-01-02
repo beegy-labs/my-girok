@@ -49,6 +49,50 @@ kubectl get pods -n my-girok
 - ✅ Use Sealed Secrets for production
 - ✅ Separate values per environment (values-dev.yaml, values-prod.yaml)
 
+## Identity Service (Multi-Database)
+
+Identity service uses 3 separate databases with CQRS support:
+
+```bash
+cd services/identity-service/helm
+cp values.yaml.example values.yaml
+```
+
+### CQRS Configuration
+
+```yaml
+app:
+  cqrs:
+    enabled: true # Enable read replicas
+    readReplica:
+      poolSize: 10
+      idleTimeout: 30000
+```
+
+### Sealed Secrets (6 DB URLs)
+
+```bash
+kubectl create secret generic my-girok-identity-service-secret \
+  --from-literal=identity-database-url="postgresql://..." \
+  --from-literal=auth-database-url="postgresql://..." \
+  --from-literal=legal-database-url="postgresql://..." \
+  --from-literal=identity-read-database-url="postgresql://..." \
+  --from-literal=auth-read-database-url="postgresql://..." \
+  --from-literal=legal-read-database-url="postgresql://..." \
+  --from-literal=jwt-private-key="..." \
+  --from-literal=jwt-public-key="..." \
+  --dry-run=client -o yaml | \
+kubeseal --format yaml > sealed-secret.yaml
+```
+
+### Migration Order (3 Jobs)
+
+| Phase | Database    | Sync Wave |
+| ----- | ----------- | --------- |
+| 1     | identity_db | -5        |
+| 2     | auth_db     | -4        |
+| 3     | legal_db    | -3        |
+
 ## Environment-Specific
 
 Users create multiple values files:

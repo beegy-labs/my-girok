@@ -156,15 +156,14 @@ describe('SagaOrchestratorService', () => {
     });
 
     it('should timeout step execution', async () => {
-      jest.useFakeTimers();
-
       const saga: SagaDefinition<TestContext> = {
         name: 'TimeoutSaga',
         steps: [
           {
             name: 'SlowStep',
             execute: async (ctx) => {
-              await new Promise((resolve) => setTimeout(resolve, 60000));
+              // Simulate a step that takes longer than timeout
+              await new Promise((resolve) => setTimeout(resolve, 2000));
               return ctx;
             },
             compensate: async () => {},
@@ -172,15 +171,12 @@ describe('SagaOrchestratorService', () => {
         ],
       };
 
-      const executePromise = service.execute(saga, { value: 0 }, { stepTimeoutMs: 1000 });
-
-      jest.advanceTimersByTime(2000);
-
-      const result = await executePromise;
+      // Use a very short timeout to trigger failure quickly
+      const result = await service.execute(saga, { value: 0 }, { stepTimeoutMs: 100 });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('timeout');
-    });
+    }, 10000);
 
     it('should pass options to saga execution', async () => {
       const saga: SagaDefinition<TestContext> = {

@@ -82,6 +82,16 @@ Each database contains **intentionally duplicated** functions for Zero Migration
 | Service → Service | gRPC     | Internal communication     |
 | Async Events      | Redpanda | Kafka-compatible, no JVM   |
 
+### gRPC Ports
+
+| Service          | REST Port | gRPC Port | Package       |
+| ---------------- | --------- | --------- | ------------- |
+| identity-service | 3000      | 50051     | `identity.v1` |
+| auth-service     | 3001      | 50052     | `auth.v1`     |
+| legal-service    | 3005      | 50053     | `legal.v1`    |
+
+**Proto files**: `packages/proto/{identity,auth,legal}/v1/*.proto`
+
 ## Architecture Layers
 
 ```
