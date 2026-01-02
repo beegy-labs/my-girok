@@ -446,6 +446,20 @@ const result = await clickhouse.query(sql, params);
 | `whereRaw()`                     | Raw SQL condition (use caution)               |
 | `build()`                        | Returns `{ conditions, params, whereClause }` |
 
+### Partition Helper
+
+Format dates for ClickHouse partition keys:
+
+```typescript
+import { formatPartition } from '@my-girok/nest-common';
+
+// Monthly partition (YYYYMM)
+formatPartition(new Date('2026-01-15'), 'month'); // "202601"
+
+// Daily partition (YYYYMMDD)
+formatPartition(new Date('2026-01-15'), 'day'); // "20260115"
+```
+
 ### Environment Variables
 
 | Variable                           | Required | Default | Description                |
@@ -828,7 +842,18 @@ Retry-After: 60               # Seconds to wait (only when 429)
 
 ## @Transactional Decorator
 
-Declarative transaction management for Prisma with AsyncLocalStorage-based context propagation, automatic retry on deadlock, and OTEL tracing.
+Declarative transaction management for Prisma, featuring AsyncLocalStorage-based context propagation, automatic retry on deadlocks, and comprehensive OTEL tracing. This decorator is a critical component for ensuring data integrity across complex, multi-step database operations.
+
+### SSoT-based Refactoring (2026-01)
+
+To improve maintainability and adhere to the Single Source of Truth (SSoT) principle, key internal components of the decorator have been externalized:
+
+- **Error Code Policies**: All database, Prisma, and network error codes used for retry logic are now centrally managed in:
+  - `packages/nest-common/src/database/db-error-codes.ts`
+- **Internal Constants**: All hardcoded strings for logging, tracing, and OpenTelemetry attributes are now managed as constants in:
+  - `packages/nest-common/src/database/transactional/transactional.constants.ts`
+
+**Developer Guidance**: When modifying transaction retry behavior or OTEL attributes, **do not** edit `transactional.decorator.ts` directly. Instead, modify the appropriate constants file to ensure changes are applied globally and consistently.
 
 ### Basic Usage
 
@@ -841,12 +866,11 @@ export class UserService {
 
   @Transactional()
   async createUserWithProfile(dto: CreateUserDto) {
-    // All operations share the same transaction
-    const user = await this.prisma.user.create({
-      data: { email: dto.email },
-    });
+    // All subsequent operations, including those in other services/repositories
+    // that use getPrismaClient, will share the same transaction.
+    const user = await this.prisma.user.create({ data: { email: dto.email } });
 
-    // This also runs in the same transaction!
+    // This service call also runs in the same transaction!
     await this.profileService.createProfile(user.id, dto.profile);
 
     return user;
@@ -856,65 +880,53 @@ export class UserService {
 
 ### Propagation Modes
 
-The decorator supports 6 propagation modes, similar to Spring's `@Transactional`:
+The decorator supports 6 propagation modes, inspired by Spring's `@Transactional`, to control how nested transactional methods interact.
 
-| Mode                 | Behavior                                  | Use Case                              |
-| -------------------- | ----------------------------------------- | ------------------------------------- |
-| `required` (default) | Join existing transaction or create new   | Most operations                       |
-| `requires_new`       | Always create new, suspend existing       | Audit logs, independent operations    |
-| `supports`           | Use existing if available, none otherwise | Optional transaction participation    |
-| `mandatory`          | Must have existing, throw if none         | Operations that require transaction   |
-| `never`              | Must NOT have existing, throw if exists   | Operations that must run outside tx   |
-| `not_supported`      | Suspend existing, run without transaction | Read-only queries, external API calls |
-
-```typescript
-@Transactional({ propagation: 'requires_new' })
-async auditLog(action: string) {
-  // Always in its own transaction, even if called from another @Transactional method
-}
-
-@Transactional({ propagation: 'mandatory' })
-async updateInventory(productId: string, quantity: number) {
-  // Throws error if called without existing transaction
-}
-```
+| Mode                 | Behavior                                                               | Use Case Examples                                                             |
+| -------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `required` (default) | Joins an existing transaction or creates a new one.                    | Most standard service methods.                                                |
+| `requires_new`       | Always starts a new transaction, suspending any existing one.          | Logging audit trails that must commit even if the parent operation fails.     |
+| `supports`           | Joins a transaction if one exists, otherwise runs non-transactionally. | Read-only operations that can optionally participate in a transaction.        |
+| `mandatory`          | Throws an error if no transaction exists.                              | Helper methods that must only be called from within a transactional boundary. |
+| `never`              | Throws an error if a transaction exists.                               | Methods that must never participate in a database transaction.                |
+| `not_supported`      | Suspends any existing transaction and runs non-transactionally.        | Calling external, non-transactional services (e.g., third-party APIs).        |
 
 ### Configuration Options
 
-```typescript
-interface TransactionalOptions {
-  timeout?: number; // Default: 30000ms (min: 1000, max: 300000)
-  isolationLevel?: TransactionIsolationLevel; // Default: 'ReadCommitted'
-  maxRetries?: number; // Default: 3 (total attempts)
-  retryDelay?: number; // Default: 100ms (base delay)
-  prismaProperty?: string; // Default: 'prisma'
-  propagation?: TransactionPropagation; // Default: 'required'
-  enableTracing?: boolean; // Default: true
-}
+You can customize the behavior of each transaction by passing an options object.
 
-type TransactionIsolationLevel =
-  | 'ReadUncommitted'
-  | 'ReadCommitted'
-  | 'RepeatableRead'
-  | 'Serializable'
-  | 'Snapshot';
+```typescript
+@Transactional({
+  timeout: 60000, // 1 minute timeout
+  isolationLevel: 'Serializable', // Highest isolation for critical operations
+  maxRetries: 5, // More retries for high-contention scenarios
+  propagation: 'requires_new',
+})
+async processPayment(dto: PaymentDto) {
+  // ...
+}
 ```
+
+| Option           | Default         | Description                                                           |
+| ---------------- | --------------- | --------------------------------------------------------------------- |
+| `timeout`        | `30000`         | Total transaction timeout in milliseconds.                            |
+| `isolationLevel` | `ReadCommitted` | `ReadUncommitted`, `ReadCommitted`, `RepeatableRead`, `Serializable`. |
+| `maxRetries`     | `3`             | Total attempts on retryable errors (deadlocks, etc.).                 |
+| `retryDelay`     | `100`           | Base delay in milliseconds for exponential backoff.                   |
+| `prismaProperty` | `prisma`        | The name of the Prisma client property on `this`.                     |
+| `propagation`    | `required`      | The transaction propagation mode.                                     |
+| `enableTracing`  | `true`          | Enables OpenTelemetry span creation for the transaction.              |
 
 ### Automatic Retry Logic
 
-The decorator automatically retries on transient errors using **full jitter exponential backoff**:
+The decorator automatically retries on transient errors using **full jitter exponential backoff** to prevent thundering herd issues.
 
-**Retryable errors:**
+- **Retryable Errors**: Defined in `db-error-codes.ts`. Includes deadlocks (`P2034`, `40P01`), serialization failures (`40001`), connection pool timeouts (`P2024`), and various network issues (`ECONNRESET`, etc.).
+- **Non-Retryable Errors**: Also defined in `db-error-codes.ts`. Includes unique constraint violations (`23505`, `P2002`), foreign key violations (`23503`, `P2003`), and other permanent errors that should fail immediately.
 
-- Prisma: `P2034` (deadlock), `P2024` (pool timeout), `P2028` (tx error), `P1001/P1002/P1017` (connection)
-- PostgreSQL: `40001` (serialization), `40P01` (deadlock), `53300` (too many connections), `55P03` (lock timeout)
-- Network: `ECONNREFUSED`, `ETIMEDOUT`, `ECONNRESET`
+### Helper Functions for Transaction-Aware Code
 
-**Non-retryable errors (fail immediately):**
-
-- `23505` (unique violation), `23503` (FK violation), `42P01` (undefined table), syntax errors
-
-### Helper Functions
+These helpers allow any part of your application to interact with the current transaction context.
 
 ```typescript
 import {
@@ -924,80 +936,43 @@ import {
   getTransactionDepth,
 } from '@my-girok/nest-common';
 
-// Get transaction-aware Prisma client
-async someMethod() {
-  const client = getPrismaClient(this.prisma);
-  // Uses transaction client if in transaction, otherwise normal client
-}
-
-// Check if currently in transaction
-if (isInTransaction()) {
-  // We're inside a @Transactional method
-}
-
-// Get current transaction ID (for logging)
-const txId = getCurrentTransactionId(); // 'tx_abc123...' or undefined
-
-// Get nesting depth
-const depth = getTransactionDepth(); // 0, 1, 2, ...
-```
-
-### OTEL Integration
-
-When `enableTracing: true` (default), each transaction creates an OTEL span with:
-
-```
-db.operation: transaction
-db.system: postgresql
-db.transaction.id: tx_m2x9k1_abc123
-db.transaction.isolation_level: ReadCommitted
-db.transaction.attempt: 1
-db.transaction.timeout_ms: 30000
-db.transaction.propagation: required
-```
-
-### Max Depth Protection
-
-Transactions are limited to 10 nesting levels to prevent stack overflow. Exceeding this throws an error.
-
-### Example: Complex Transaction with Multiple Services
-
-```typescript
 @Injectable()
-export class OrderService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly inventoryService: InventoryService,
-    private readonly paymentService: PaymentService,
-    private readonly auditService: AuditService,
-  ) {}
+export class SomeRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
-  @Transactional({ timeout: 60000, isolationLevel: 'Serializable' })
-  async createOrder(dto: CreateOrderDto) {
-    // 1. Create order
-    const order = await this.prisma.order.create({ data: dto });
-
-    // 2. Update inventory (same transaction via AsyncLocalStorage)
-    await this.inventoryService.decrementStock(dto.productId, dto.quantity);
-
-    // 3. Process payment (same transaction)
-    await this.paymentService.charge(dto.userId, order.total);
-
-    // 4. Audit log (new independent transaction)
-    await this.auditService.log('order.created', order.id);
-
-    return order;
+  async findUser(id: string) {
+    // This will use the transaction client if called from a @Transactional method,
+    // otherwise it uses the default Prisma client.
+    const client = getPrismaClient(this.prisma);
+    return client.user.findUnique({ where: { id } });
   }
-}
 
-@Injectable()
-export class AuditService {
-  @Transactional({ propagation: 'requires_new' })
-  async log(action: string, entityId: string) {
-    // Always commits, even if parent transaction rolls back
+  logWithContext(message: string) {
+    const txId = getCurrentTransactionId(); // 'tx_abc123...' or undefined
+    if (isInTransaction()) {
+      const depth = getTransactionDepth(); // e.g., 1, 2, ...
+      this.logger.log(`[TX:${txId}, Depth:${depth}] ${message}`);
+    } else {
+      this.logger.log(`[No-TX] ${message}`);
+    }
   }
 }
 ```
+
+### OpenTelemetry Integration
+
+When enabled, each transaction is wrapped in an OTEL span, providing deep visibility into database performance. Key attributes are defined as constants in `transactional.constants.ts`.
+
+**Example Trace Attributes:**
+
+- `db.operation: transaction`
+- `db.system: postgresql`
+- `db.transaction.id: tx_m2x9k1_abc123`
+- `db.transaction.isolation_level: ReadCommitted`
+- `db.transaction.attempt: 1`
+- `db.transaction.propagation: required`
+- `db.transaction.depth: 2`
+- `db.transaction.suspended: true` (for `requires_new`)
 
 ---
 
@@ -1215,6 +1190,48 @@ packages/proto/
 ├── identity/v1/identity.proto
 ├── auth/v1/auth.proto
 └── legal/v1/legal.proto
+```
+
+---
+
+## PII Masking Utilities
+
+Utilities for masking Personally Identifiable Information (PII) in logs and audit trails.
+
+### Functions
+
+| Function              | Purpose               | Example Output        |
+| --------------------- | --------------------- | --------------------- |
+| `maskEmail()`         | Email masking         | `u***@example.com`    |
+| `maskPhone()`         | Phone masking         | `010-***-5678`        |
+| `maskIpAddress()`     | IP masking            | `192.168.x.x`         |
+| `maskName()`          | Name masking          | `J*** D***` / `김**`  |
+| `maskUuid()`          | UUID masking          | `0193****890a`        |
+| `maskCreditCard()`    | Card masking          | `4111-****-****-1111` |
+| `maskBirthDate()`     | Date masking          | `1990-**-**`          |
+| `maskAddress()`       | Address masking       | `Seoul ***`           |
+| `maskObject()`        | Recursive PII masking | Auto-detect fields    |
+| `createMaskedUserLog` | User log masking      | Combined masking      |
+
+### Quick Example
+
+```typescript
+import { maskEmail, maskPhone, maskObject } from '@my-girok/nest-common';
+
+// Single field
+maskEmail('user@example.com'); // "u***@example.com"
+maskPhone('+821012345678'); // "+820***5678"
+
+// Object (auto-detects PII fields)
+maskObject({ email: 'user@example.com', status: 'active' });
+// { email: 'u***@example.com', status: 'active' }
+```
+
+### Default PII Fields (auto-detected)
+
+```
+email, phone, name, firstName, lastName, username, password,
+ssn, birthDate, address, creditCard, ipAddress, ip
 ```
 
 ---

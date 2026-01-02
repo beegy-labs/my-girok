@@ -396,6 +396,19 @@ export class MyService {
 | `ClickHouseQueryBuilder` | Query builder class            |
 | `isHealthy()`            | Check connection status        |
 | `batchInsert()`          | Chunked insert for large data  |
+| `formatPartition()`      | Date to partition key string   |
+
+### Partition Helper
+
+```typescript
+import { formatPartition } from '@my-girok/nest-common';
+
+// Monthly partition (YYYYMM)
+formatPartition(new Date('2026-01-15'), 'month'); // "202601"
+
+// Daily partition (YYYYMMDD)
+formatPartition(new Date('2026-01-15'), 'day'); // "20260115"
+```
 
 ### Environment Variables
 
@@ -634,6 +647,11 @@ Retry-After: 60              (when 429)
 
 Prisma transaction management with AsyncLocalStorage context propagation.
 
+**SSoT Refactoring Note**: Key constants and error codes are externalized for maintainability.
+
+- **Error Codes**: `packages/nest-common/src/database/db-error-codes.ts`
+- **String Constants**: `packages/nest-common/src/database/transactional/transactional.constants.ts`
+
 ```typescript
 import { Transactional, getPrismaClient, isInTransaction } from '@my-girok/nest-common';
 
@@ -695,27 +713,24 @@ if (isInTransaction()) {
 
 // Get current transaction ID
 const txId = getCurrentTransactionId();
-
-// Get nesting depth
-const depth = getTransactionDepth();
 ```
 
 ### Retryable Errors
 
-Automatically retried: `P2034` (deadlock), `P2024` (pool timeout), `40001` (serialization), `40P01` (deadlock), network errors.
-
-NOT retried: `23505` (unique violation), `23503` (FK violation), syntax errors.
+- **Policy Definition**: `packages/nest-common/src/database/db-error-codes.ts`
+- **Automatically retried**: `P2034` (deadlock), `P2024` (pool timeout), `40001` (serialization), `40P01` (deadlock), network errors.
+- **NOT retried**: `23505` (unique violation), `23503` (FK violation), syntax errors.
 
 ### OTEL Span Attributes
 
-```
-db.operation: transaction
-db.system: postgresql
-db.transaction.id: tx_abc123
-db.transaction.isolation_level: ReadCommitted
-db.transaction.attempt: 1
-db.transaction.propagation: required
-```
+- **Policy Definition**: `packages/nest-common/src/database/transactional/transactional.constants.ts`
+- **Example Attributes**:
+  - `db.operation: transaction`
+  - `db.system: postgresql`
+  - `db.transaction.id: tx_abc123`
+  - `db.transaction.isolation_level: ReadCommitted`
+  - `db.transaction.attempt: 1`
+  - `db.transaction.propagation: required`
 
 ---
 
@@ -788,6 +803,71 @@ try {
 | `AUTH_GRPC_PORT`     | 50052     | Auth gRPC port        |
 | `LEGAL_GRPC_HOST`    | localhost | Legal service host    |
 | `LEGAL_GRPC_PORT`    | 50053     | Legal gRPC port       |
+
+---
+
+## PII Masking
+
+Utilities for masking Personally Identifiable Information in logs and audit trails.
+
+```typescript
+import {
+  maskEmail,
+  maskPhone,
+  maskIpAddress,
+  maskName,
+  maskObject,
+  createMaskedUserLog,
+} from '@my-girok/nest-common';
+```
+
+### Functions
+
+| Function              | Purpose               | Example Output        |
+| --------------------- | --------------------- | --------------------- |
+| `maskEmail`           | Email masking         | `u***@example.com`    |
+| `maskPhone`           | Phone masking         | `010-***-5678`        |
+| `maskIpAddress`       | IP masking            | `192.168.x.x`         |
+| `maskName`            | Name masking          | `J*** D***` / `김**`  |
+| `maskUuid`            | UUID masking          | `0193****890a`        |
+| `maskCreditCard`      | Card masking          | `4111-****-****-1111` |
+| `maskBirthDate`       | Date masking          | `1990-**-**`          |
+| `maskAddress`         | Address masking       | `Seoul ***`           |
+| `maskObject`          | Recursive PII masking | Auto-detect fields    |
+| `createMaskedUserLog` | User log data masking | Combined masking      |
+
+### Usage
+
+```typescript
+// Single field masking
+maskEmail('user@example.com'); // "u***@example.com"
+maskPhone('+821012345678'); // "+820***5678"
+maskName('John Doe'); // "J*** D***"
+maskName('김철수'); // "김**"
+
+// Object masking (auto-detects PII fields)
+const masked = maskObject({
+  email: 'user@example.com',
+  phone: '010-1234-5678',
+  name: 'John Doe',
+  status: 'active', // Not masked
+});
+// { email: 'u***@example.com', phone: '010-***-5678', name: 'J*** D***', status: 'active' }
+
+// Custom fields
+const masked = maskObject(data, {
+  fieldsToMask: ['customEmail', 'secretField'],
+});
+```
+
+### Default PII Fields
+
+Auto-detected by `maskObject`:
+
+```
+email, phone, name, firstName, lastName, username, password,
+ssn, birthDate, address, creditCard, ipAddress, ip
+```
 
 ---
 
