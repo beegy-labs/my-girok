@@ -791,4 +791,69 @@ try {
 
 ---
 
+## PII Masking
+
+Utilities for masking Personally Identifiable Information in logs and audit trails.
+
+```typescript
+import {
+  maskEmail,
+  maskPhone,
+  maskIpAddress,
+  maskName,
+  maskObject,
+  createMaskedUserLog,
+} from '@my-girok/nest-common';
+```
+
+### Functions
+
+| Function              | Purpose               | Example Output        |
+| --------------------- | --------------------- | --------------------- |
+| `maskEmail`           | Email masking         | `u***@example.com`    |
+| `maskPhone`           | Phone masking         | `010-***-5678`        |
+| `maskIpAddress`       | IP masking            | `192.168.x.x`         |
+| `maskName`            | Name masking          | `J*** D***` / `김**`  |
+| `maskUuid`            | UUID masking          | `0193****890a`        |
+| `maskCreditCard`      | Card masking          | `4111-****-****-1111` |
+| `maskBirthDate`       | Date masking          | `1990-**-**`          |
+| `maskAddress`         | Address masking       | `Seoul ***`           |
+| `maskObject`          | Recursive PII masking | Auto-detect fields    |
+| `createMaskedUserLog` | User log data masking | Combined masking      |
+
+### Usage
+
+```typescript
+// Single field masking
+maskEmail('user@example.com'); // "u***@example.com"
+maskPhone('+821012345678'); // "+820***5678"
+maskName('John Doe'); // "J*** D***"
+maskName('김철수'); // "김**"
+
+// Object masking (auto-detects PII fields)
+const masked = maskObject({
+  email: 'user@example.com',
+  phone: '010-1234-5678',
+  name: 'John Doe',
+  status: 'active', // Not masked
+});
+// { email: 'u***@example.com', phone: '010-***-5678', name: 'J*** D***', status: 'active' }
+
+// Custom fields
+const masked = maskObject(data, {
+  fieldsToMask: ['customEmail', 'secretField'],
+});
+```
+
+### Default PII Fields
+
+Auto-detected by `maskObject`:
+
+```
+email, phone, name, firstName, lastName, username, password,
+ssn, birthDate, address, creditCard, ipAddress, ip
+```
+
+---
+
 **Detailed docs**: `docs/packages/nest-common.md`

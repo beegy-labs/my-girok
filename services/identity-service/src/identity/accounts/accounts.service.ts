@@ -11,12 +11,11 @@ import { Prisma } from '.prisma/identity-client';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
 import { PaginatedResponse } from '../../common/pagination';
-import { maskUuid, maskEmail } from '@my-girok/nest-common';
+import { maskUuid, maskEmail, ID } from '@my-girok/nest-common';
 import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-account.dto';
 import { UpdateAccountDto, AccountStatus, ChangePasswordDto } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
 import * as OTPAuth from 'otpauth';
 
 /**
@@ -50,7 +49,6 @@ export class AccountsService {
   // Config values with defaults
   private readonly bcryptRounds: number;
   private readonly externalIdPrefix: string;
-  private readonly externalIdLength: number;
   private readonly lockThreshold: number;
   private readonly lockDurationMinutes: number;
   private readonly mfaBackupCodesCount: number;
@@ -63,7 +61,6 @@ export class AccountsService {
     // Load config values
     this.bcryptRounds = this.configService.get<number>('security.bcryptRounds', 12);
     this.externalIdPrefix = this.configService.get<string>('account.externalIdPrefix', 'ACC_');
-    this.externalIdLength = this.configService.get<number>('account.externalIdLength', 10);
     this.lockThreshold = this.configService.get<number>('security.accountLockThreshold', 5);
     this.lockDurationMinutes = this.configService.get<number>(
       'security.accountLockDurationMinutes',
@@ -73,11 +70,10 @@ export class AccountsService {
   }
 
   /**
-   * Generate a unique external ID for accounts
+   * Generate a unique external ID for accounts using the common ID generator.
    */
   private generateExternalId(): string {
-    const randomPart = crypto.randomBytes(5).toString('base64url').slice(0, this.externalIdLength);
-    return `${this.externalIdPrefix}${randomPart}`;
+    return `${this.externalIdPrefix}${ID.generate()}`;
   }
 
   /**
@@ -86,21 +82,17 @@ export class AccountsService {
   async create(dto: CreateAccountDto): Promise<AccountEntity> {
     this.logger.log(`Creating account for email: ${maskEmail(dto.email)}`);
 
-    // Check if email already exists
-    const existingEmail = await this.prisma.account.findUnique({
-      where: { email: dto.email },
-    });
-    if (existingEmail) {
-      throw new ConflictException('Email already registered');
-    }
-
-    // Check if username already exists
-    const existingUsername = await this.prisma.account.findUnique({
-      where: { username: dto.username },
-    });
-    if (existingUsername) {
-      throw new ConflictException('Username already taken');
-    }
+    // Check for conflicts first to provide clearer error messages
+    await this.prisma.account
+      .findUnique({ where: { email: dto.email }, select: { id: true } })
+      .then((res) => {
+        if (res) throw new ConflictException('Email already registered');
+      });
+    await this.prisma.account
+      .findUnique({ where: { username: dto.username }, select: { id: true } })
+      .then((res) => {
+        if (res) throw new ConflictException('Username already taken');
+      });
 
     // For LOCAL provider, password is required
     const provider = dto.provider || AuthProvider.LOCAL;
@@ -119,59 +111,42 @@ export class AccountsService {
       hashedPassword = await bcrypt.hash(dto.password, this.bcryptRounds);
     }
 
-    // Generate unique external ID with retry on conflict
-    // Uses a transaction to handle race conditions properly
-    let account: Awaited<ReturnType<typeof this.prisma.account.create>>;
-    let attempts = 0;
-    const maxAttempts = 5;
+    try {
+      const account = await this.prisma.account.create({
+        data: {
+          externalId: this.generateExternalId(),
+          email: dto.email,
+          username: dto.username,
+          password: hashedPassword,
+          provider,
+          providerId: dto.providerId || null,
+          mode: dto.mode || AccountMode.SERVICE,
+          status: provider === AuthProvider.LOCAL ? 'PENDING_VERIFICATION' : 'ACTIVE',
+          emailVerified: provider !== AuthProvider.LOCAL,
+          emailVerifiedAt: provider !== AuthProvider.LOCAL ? new Date() : null,
+          region: dto.region || null,
+          locale: dto.locale || null,
+          timezone: dto.timezone || null,
+          countryCode: dto.countryCode || null,
+        },
+      });
 
-    while (attempts < maxAttempts) {
-      const externalId = this.generateExternalId();
-      try {
-        account = await this.prisma.account.create({
-          data: {
-            externalId,
-            email: dto.email,
-            username: dto.username,
-            password: hashedPassword,
-            provider,
-            providerId: dto.providerId || null,
-            mode: dto.mode || AccountMode.SERVICE,
-            status: provider === AuthProvider.LOCAL ? 'PENDING_VERIFICATION' : 'ACTIVE',
-            emailVerified: provider !== AuthProvider.LOCAL,
-            emailVerifiedAt: provider !== AuthProvider.LOCAL ? new Date() : null,
-            region: dto.region || null,
-            locale: dto.locale || null,
-            timezone: dto.timezone || null,
-            countryCode: dto.countryCode || null,
-          },
-        });
-
-        this.logger.log(`Account created with ID: ${maskUuid(account.id)}`);
-        return AccountEntity.fromPrisma(account);
-      } catch (error) {
-        // Handle unique constraint violation (P2002)
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-          const target = error.meta?.target as string[];
-          if (target?.includes('externalId')) {
-            attempts++;
-            this.logger.warn(`External ID collision, retrying (${attempts}/${maxAttempts})`);
-            continue;
-          }
-          if (target?.includes('email')) {
-            throw new ConflictException('Email already registered');
-          }
-          if (target?.includes('username')) {
-            throw new ConflictException('Username already taken');
-          }
+      this.logger.log(`Account created with ID: ${maskUuid(account.id)}`);
+      return AccountEntity.fromPrisma(account);
+    } catch (error) {
+      // Handle potential race conditions for unique constraints
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const target = error.meta?.target as string[];
+        if (target?.includes('email')) {
+          throw new ConflictException('Email already registered (race condition)');
         }
-        // Re-throw other errors
-        throw error;
+        if (target?.includes('username')) {
+          throw new ConflictException('Username already taken (race condition)');
+        }
       }
+      // Re-throw other errors
+      throw error;
     }
-
-    // If we exhausted all attempts
-    throw new ConflictException('Failed to generate unique external ID after multiple attempts');
   }
 
   /**

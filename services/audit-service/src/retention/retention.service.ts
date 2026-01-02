@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { formatPartition } from '@my-girok/nest-common';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 
 export interface RetentionPolicy {
@@ -147,7 +148,7 @@ export class RetentionService {
 
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - policy.retentionDays);
-      const cutoffPartition = this.formatPartition(cutoffDate, policy.partitionUnit);
+      const cutoffPartition = formatPartition(cutoffDate, policy.partitionUnit);
 
       try {
         // Find expired partitions using parameterized query
@@ -199,16 +200,5 @@ export class RetentionService {
     }
 
     return { tablesProcessed, partitionsDropped };
-  }
-
-  private formatPartition(date: Date, unit: 'month' | 'day'): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-
-    if (unit === 'month') {
-      return `${year}${month}`;
-    }
-    return `${year}${month}${day}`;
   }
 }
