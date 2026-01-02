@@ -11,8 +11,8 @@
  */
 
 import { status as GrpcStatus } from '@grpc/grpc-js';
-import { Observable, throwError, timer } from 'rxjs';
-import { catchError, mergeMap, retryWhen, timeout } from 'rxjs/operators';
+import { firstValueFrom, Observable, throwError, timer } from 'rxjs';
+import { catchError, retry, timeout } from 'rxjs/operators';
 import { Logger } from '@nestjs/common';
 import { GrpcError, isGrpcError } from './grpc.types';
 import { normalizeGrpcError } from './grpc-error.util';
@@ -334,6 +334,7 @@ export function isRetryableError(error: unknown, config: RetryConfig): boolean {
 
 /**
  * Create a retry operator for RxJS observables
+ * Uses RxJS 8 compatible retry({ delay }) pattern
  */
 export function retryWithBackoff<T>(
   config: RetryConfig = DEFAULT_RETRY_CONFIG,
@@ -341,34 +342,33 @@ export function retryWithBackoff<T>(
 ): (source: Observable<T>) => Observable<T> {
   return (source: Observable<T>) =>
     source.pipe(
-      retryWhen((errors) =>
-        errors.pipe(
-          mergeMap((error, attempt) => {
-            const normalizedError = normalizeGrpcError(error);
+      retry({
+        count: config.maxRetries,
+        delay: (error, retryCount) => {
+          const normalizedError = normalizeGrpcError(error);
 
-            if (attempt >= config.maxRetries) {
-              logger?.warn(`Max retries (${config.maxRetries}) exceeded`, {
-                error: normalizedError,
-              });
-              return throwError(() => normalizedError);
-            }
+          if (!isRetryableError(error, config)) {
+            logger?.debug(`Non-retryable error, not retrying`, {
+              errorCode: normalizedError.code,
+            });
+            return throwError(() => normalizedError);
+          }
 
-            if (!isRetryableError(error, config)) {
-              logger?.debug(`Non-retryable error, not retrying`, {
-                errorCode: normalizedError.code,
-              });
-              return throwError(() => normalizedError);
-            }
+          // retryCount is 1-based in RxJS 8 retry operator
+          const attempt = retryCount - 1;
+          const delay = calculateBackoffDelay(attempt, config);
+          logger?.debug(`Retrying after ${delay}ms (attempt ${retryCount}/${config.maxRetries})`);
 
-            const delay = calculateBackoffDelay(attempt, config);
-            logger?.debug(
-              `Retrying after ${delay}ms (attempt ${attempt + 1}/${config.maxRetries})`,
-            );
-
-            return timer(delay);
-          }),
-        ),
-      ),
+          return timer(delay);
+        },
+      }),
+      catchError((error) => {
+        const normalizedError = normalizeGrpcError(error);
+        logger?.warn(`Max retries (${config.maxRetries}) exceeded`, {
+          error: normalizedError,
+        });
+        return throwError(() => normalizedError);
+      }),
     );
 }
 
@@ -428,7 +428,8 @@ export function createGrpcResilience(serviceName: string, config: Partial<Resili
       }
 
       try {
-        let observable = fn().pipe(timeout(timeoutMs));
+        // Use timeout({ first }) for RxJS 8 compatibility
+        let observable = fn().pipe(timeout({ first: timeoutMs }));
 
         // Apply retry logic
         if (!options.skipRetry) {
@@ -444,12 +445,8 @@ export function createGrpcResilience(serviceName: string, config: Partial<Resili
           }),
         );
 
-        const result = await new Promise<T>((resolve, reject) => {
-          observable.subscribe({
-            next: (value) => resolve(value),
-            error: (err) => reject(err),
-          });
-        });
+        // Use firstValueFrom for RxJS 8 compatibility instead of subscribe
+        const result = await firstValueFrom(observable);
 
         circuitBreaker.onSuccess();
         return result;

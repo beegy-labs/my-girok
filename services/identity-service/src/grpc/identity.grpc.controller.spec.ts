@@ -403,4 +403,308 @@ describe('IdentityGrpcController', () => {
       expect(result.message).toContain('SUSPENDED');
     });
   });
+
+  describe('validateSession', () => {
+    let cryptoService: { hash: jest.Mock };
+
+    beforeEach(() => {
+      cryptoService = { hash: jest.fn().mockImplementation((val) => `hashed_${val}`) };
+      (controller as unknown as { cryptoService: typeof cryptoService }).cryptoService =
+        cryptoService;
+    });
+
+    it('should return valid=true for valid active session', async () => {
+      const futureDate = new Date(Date.now() + 3600000); // 1 hour from now
+      const validSession = {
+        ...mockSession,
+        isActive: true,
+        expiresAt: futureDate,
+      };
+      sessionsService.findByTokenHash.mockResolvedValue(validSession as never);
+
+      const result = await controller.validateSession({ token_hash: 'valid_token' });
+
+      expect(result.valid).toBe(true);
+      expect(result.account_id).toBe(mockSession.accountId);
+      expect(result.session_id).toBe(mockSession.id);
+      expect(result.message).toBe('Session is valid');
+      expect(cryptoService.hash).toHaveBeenCalledWith('valid_token');
+    });
+
+    it('should return valid=false for non-existent session', async () => {
+      sessionsService.findByTokenHash.mockResolvedValue(null);
+
+      const result = await controller.validateSession({ token_hash: 'invalid_token' });
+
+      expect(result.valid).toBe(false);
+      expect(result.account_id).toBe('');
+      expect(result.session_id).toBe('');
+      expect(result.message).toBe('Session not found');
+    });
+
+    it('should return valid=false for expired session', async () => {
+      const pastDate = new Date(Date.now() - 3600000); // 1 hour ago
+      const expiredSession = {
+        ...mockSession,
+        isActive: true,
+        expiresAt: pastDate,
+      };
+      sessionsService.findByTokenHash.mockResolvedValue(expiredSession as never);
+
+      const result = await controller.validateSession({ token_hash: 'expired_token' });
+
+      expect(result.valid).toBe(false);
+      expect(result.message).toBe('Session has expired');
+    });
+
+    it('should return valid=false for revoked session', async () => {
+      const futureDate = new Date(Date.now() + 3600000);
+      const revokedSession = {
+        ...mockSession,
+        isActive: false,
+        expiresAt: futureDate,
+      };
+      sessionsService.findByTokenHash.mockResolvedValue(revokedSession as never);
+
+      const result = await controller.validateSession({ token_hash: 'revoked_token' });
+
+      expect(result.valid).toBe(false);
+      expect(result.message).toBe('Session has been revoked');
+    });
+  });
+
+  describe('revokeSession', () => {
+    it('should revoke session successfully', async () => {
+      sessionsService.revoke.mockResolvedValue(undefined);
+
+      const result = await controller.revokeSession({
+        session_id: mockSession.id,
+        reason: 'User logout',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Session revoked successfully');
+      expect(sessionsService.revoke).toHaveBeenCalledWith(mockSession.id, {
+        reason: 'User logout',
+      });
+    });
+
+    it('should throw NOT_FOUND when session does not exist', async () => {
+      sessionsService.revoke.mockRejectedValue(new NotFoundException('Session not found'));
+
+      try {
+        await controller.revokeSession({
+          session_id: 'nonexistent-session-id',
+          reason: 'User logout',
+        });
+        fail('Expected RpcException to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(RpcException);
+        expect((error as RpcException).getError()).toEqual({
+          code: GrpcStatus.NOT_FOUND,
+          message: 'Session not found',
+        });
+      }
+    });
+  });
+
+  describe('revokeAllSessions', () => {
+    it('should revoke all sessions successfully with count', async () => {
+      sessionsService.revokeAllForAccount.mockResolvedValue(5);
+
+      const result = await controller.revokeAllSessions({
+        account_id: mockAccount.id,
+        reason: 'Security breach',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.revoked_count).toBe(5);
+      expect(result.message).toBe('Successfully revoked 5 session(s)');
+      expect(sessionsService.revokeAllForAccount).toHaveBeenCalledWith(mockAccount.id, undefined);
+    });
+
+    it('should return zero count when no sessions to revoke', async () => {
+      sessionsService.revokeAllForAccount.mockResolvedValue(0);
+
+      const result = await controller.revokeAllSessions({
+        account_id: mockAccount.id,
+        reason: 'Cleanup',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.revoked_count).toBe(0);
+      expect(result.message).toBe('Successfully revoked 0 session(s)');
+    });
+
+    it('should exclude specified session when provided', async () => {
+      sessionsService.revokeAllForAccount.mockResolvedValue(3);
+
+      const excludeSessionId = 'session-to-keep';
+      const result = await controller.revokeAllSessions({
+        account_id: mockAccount.id,
+        exclude_session_id: excludeSessionId,
+        reason: 'Logout from other devices',
+      });
+
+      expect(result.success).toBe(true);
+      expect(sessionsService.revokeAllForAccount).toHaveBeenCalledWith(
+        mockAccount.id,
+        excludeSessionId,
+      );
+    });
+  });
+
+  describe('getAccountDevices', () => {
+    let devicesService: { findAll: jest.Mock };
+
+    beforeEach(() => {
+      devicesService = { findAll: jest.fn() };
+      (controller as unknown as { devicesService: typeof devicesService }).devicesService =
+        devicesService;
+    });
+
+    it('should return devices list successfully', async () => {
+      const mockDevices = [
+        {
+          id: 'device-1',
+          accountId: mockAccount.id,
+          fingerprint: 'fp-123',
+          deviceType: 'desktop',
+          name: 'Chrome on Windows',
+          platform: 'Windows',
+          osVersion: '11',
+          browserName: 'Chrome',
+          browserVersion: '120.0',
+          isTrusted: true,
+          lastActiveAt: new Date('2024-01-15'),
+          createdAt: new Date('2024-01-01'),
+        },
+        {
+          id: 'device-2',
+          accountId: mockAccount.id,
+          fingerprint: 'fp-456',
+          deviceType: 'mobile',
+          name: 'Safari on iPhone',
+          platform: 'iOS',
+          osVersion: '17.2',
+          browserName: 'Safari',
+          browserVersion: '17.0',
+          isTrusted: false,
+          lastActiveAt: new Date('2024-01-10'),
+          createdAt: new Date('2024-01-05'),
+        },
+      ];
+
+      devicesService.findAll.mockResolvedValue({ data: mockDevices });
+
+      const result = await controller.getAccountDevices({ account_id: mockAccount.id });
+
+      expect(result.devices).toHaveLength(2);
+      expect(result.devices[0].id).toBe('device-1');
+      expect(result.devices[0].device_type).toBe('desktop');
+      expect(result.devices[0].is_trusted).toBe(true);
+      expect(result.devices[1].id).toBe('device-2');
+      expect(result.devices[1].device_type).toBe('mobile');
+      expect(result.devices[1].is_trusted).toBe(false);
+      expect(devicesService.findAll).toHaveBeenCalledWith({
+        accountId: mockAccount.id,
+        page: 1,
+        limit: 100,
+      });
+    });
+
+    it('should return empty list when no devices found', async () => {
+      devicesService.findAll.mockResolvedValue({ data: [] });
+
+      const result = await controller.getAccountDevices({ account_id: mockAccount.id });
+
+      expect(result.devices).toHaveLength(0);
+      expect(result.devices).toEqual([]);
+    });
+  });
+
+  describe('getProfile', () => {
+    let profilesService: { findByAccountId: jest.Mock };
+
+    beforeEach(() => {
+      profilesService = { findByAccountId: jest.fn() };
+      (controller as unknown as { profilesService: typeof profilesService }).profilesService =
+        profilesService;
+    });
+
+    it('should return profile successfully', async () => {
+      const mockProfile = {
+        id: 'profile-123',
+        accountId: mockAccount.id,
+        displayName: 'Test User',
+        avatar: 'https://example.com/avatar.jpg',
+        bio: 'Hello, I am a test user',
+        birthDate: new Date('1990-01-15'),
+        phoneNumber: '+821012345678',
+        countryCode: 'KR',
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-15'),
+      };
+
+      profilesService.findByAccountId.mockResolvedValue(mockProfile);
+      accountsService.findById.mockResolvedValue({
+        ...mockAccount,
+        locale: 'ko-KR',
+        timezone: 'Asia/Seoul',
+      } as never);
+
+      const result = await controller.getProfile({ account_id: mockAccount.id });
+
+      expect(result.profile).toBeDefined();
+      expect(result.profile.id).toBe('profile-123');
+      expect(result.profile.account_id).toBe(mockAccount.id);
+      expect(result.profile.display_name).toBe('Test User');
+      expect(result.profile.avatar_url).toBe('https://example.com/avatar.jpg');
+      expect(result.profile.bio).toBe('Hello, I am a test user');
+      expect(result.profile.birth_date).toBe('1990-01-15');
+      expect(result.profile.phone_number).toBe('+821012345678');
+      expect(result.profile.country_code).toBe('KR');
+      expect(result.profile.language_code).toBe('ko-KR');
+      expect(result.profile.timezone).toBe('Asia/Seoul');
+    });
+
+    it('should throw NOT_FOUND when profile does not exist', async () => {
+      profilesService.findByAccountId.mockRejectedValue(new NotFoundException('Profile not found'));
+
+      try {
+        await controller.getProfile({ account_id: 'nonexistent-account-id' });
+        fail('Expected RpcException to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(RpcException);
+        expect((error as RpcException).getError()).toEqual({
+          code: GrpcStatus.NOT_FOUND,
+          message: 'Profile not found',
+        });
+      }
+    });
+
+    it('should return profile with empty locale/timezone if account lookup fails', async () => {
+      const mockProfile = {
+        id: 'profile-123',
+        accountId: mockAccount.id,
+        displayName: 'Test User',
+        avatar: null,
+        bio: null,
+        birthDate: null,
+        phoneNumber: null,
+        countryCode: 'US',
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-15'),
+      };
+
+      profilesService.findByAccountId.mockResolvedValue(mockProfile);
+      accountsService.findById.mockRejectedValue(new NotFoundException('Account not found'));
+
+      const result = await controller.getProfile({ account_id: mockAccount.id });
+
+      expect(result.profile).toBeDefined();
+      expect(result.profile.language_code).toBe('');
+      expect(result.profile.timezone).toBe('');
+    });
+  });
 });

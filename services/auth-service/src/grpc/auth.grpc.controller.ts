@@ -3,54 +3,34 @@ import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { Prisma } from '../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../database/prisma.service';
+import {
+  // Shared Proto enum utilities from SSOT
+  toProtoTimestamp,
+  OperatorStatusProto,
+  isActiveToOperatorStatus,
+  RoleScopeProto,
+  roleScopeToProto,
+  SubjectTypeProto,
+  subjectTypeToProto,
+  protoToSubjectType,
+  SanctionTypeProto,
+  sanctionTypeToProto,
+  protoToSanctionType,
+  SanctionSeverityProto,
+  sanctionSeverityToProto,
+  SanctionStatusProto,
+  sanctionStatusToProto,
+  dbToProtoWithFallback,
+} from '@my-girok/nest-common';
+import { OperatorStatus, SanctionSubjectType } from '@my-girok/types';
 
-// Proto enum mappings
-enum ProtoOperatorStatus {
-  OPERATOR_STATUS_UNSPECIFIED = 0,
-  OPERATOR_STATUS_PENDING = 1,
-  OPERATOR_STATUS_ACTIVE = 2,
-  OPERATOR_STATUS_SUSPENDED = 3,
-  OPERATOR_STATUS_REVOKED = 4,
-}
-
-enum ProtoRoleScope {
-  ROLE_SCOPE_UNSPECIFIED = 0,
-  ROLE_SCOPE_GLOBAL = 1,
-  ROLE_SCOPE_SERVICE = 2,
-  ROLE_SCOPE_TENANT = 3,
-}
-
-enum ProtoSubjectType {
-  SUBJECT_TYPE_UNSPECIFIED = 0,
-  SUBJECT_TYPE_USER = 1,
-  SUBJECT_TYPE_OPERATOR = 2,
-  SUBJECT_TYPE_SERVICE = 3,
-}
-
-enum ProtoSanctionType {
-  SANCTION_TYPE_UNSPECIFIED = 0,
-  SANCTION_TYPE_WARNING = 1,
-  SANCTION_TYPE_MUTE = 2,
-  SANCTION_TYPE_TEMPORARY_BAN = 3,
-  SANCTION_TYPE_PERMANENT_BAN = 4,
-  SANCTION_TYPE_FEATURE_RESTRICTION = 5,
-}
-
-enum ProtoSanctionSeverity {
-  SANCTION_SEVERITY_UNSPECIFIED = 0,
-  SANCTION_SEVERITY_LOW = 1,
-  SANCTION_SEVERITY_MEDIUM = 2,
-  SANCTION_SEVERITY_HIGH = 3,
-  SANCTION_SEVERITY_CRITICAL = 4,
-}
-
-enum ProtoSanctionStatus {
-  SANCTION_STATUS_UNSPECIFIED = 0,
-  SANCTION_STATUS_ACTIVE = 1,
-  SANCTION_STATUS_EXPIRED = 2,
-  SANCTION_STATUS_REVOKED = 3,
-  SANCTION_STATUS_APPEALED = 4,
-}
+// Proto enum values (re-exported for local use)
+const ProtoOperatorStatus = OperatorStatusProto;
+const ProtoRoleScope = RoleScopeProto;
+const ProtoSubjectType = SubjectTypeProto;
+const ProtoSanctionType = SanctionTypeProto;
+const ProtoSanctionSeverity = SanctionSeverityProto;
+const ProtoSanctionStatus = SanctionStatusProto;
 
 // Interfaces for proto messages
 interface Permission {
@@ -67,7 +47,7 @@ interface Role {
   name: string;
   description: string;
   level: number;
-  scope: ProtoRoleScope;
+  scope: number; // Proto RoleScope numeric value
   permissions: Permission[];
   createdAt?: { seconds: number; nanos: number };
   updatedAt?: { seconds: number; nanos: number };
@@ -78,7 +58,7 @@ interface Operator {
   accountId: string;
   email: string;
   displayName: string;
-  status: ProtoOperatorStatus;
+  status: number; // Proto OperatorStatus numeric value
   roleId: string;
   role?: Role;
   createdAt?: { seconds: number; nanos: number };
@@ -89,15 +69,15 @@ interface Operator {
 interface Sanction {
   id: string;
   subjectId: string;
-  subjectType: ProtoSubjectType;
-  type: ProtoSanctionType;
-  severity: ProtoSanctionSeverity;
+  subjectType: number; // Proto SubjectType numeric value
+  type: number; // Proto SanctionType numeric value
+  severity: number; // Proto SanctionSeverity numeric value
   reason: string;
   evidence: string;
   issuedBy: string;
   issuedAt?: { seconds: number; nanos: number };
   expiresAt?: { seconds: number; nanos: number };
-  status: ProtoSanctionStatus;
+  status: number; // Proto SanctionStatus numeric value
 }
 
 // Request/Response interfaces
@@ -177,25 +157,25 @@ interface ValidateOperatorRequest {
 
 interface ValidateOperatorResponse {
   valid: boolean;
-  status: ProtoOperatorStatus;
+  status: number; // Proto OperatorStatus numeric value
   message: string;
 }
 
 interface CheckSanctionRequest {
   subjectId: string;
-  subjectType: ProtoSubjectType;
-  sanctionType?: ProtoSanctionType;
+  subjectType: number; // Proto SubjectType numeric value
+  sanctionType?: number; // Proto SanctionType numeric value
 }
 
 interface CheckSanctionResponse {
   isSanctioned: boolean;
   activeSanctions: Sanction[];
-  highestSeverity: ProtoSanctionSeverity;
+  highestSeverity: number; // Proto SanctionSeverity numeric value
 }
 
 interface GetActiveSanctionsRequest {
   subjectId: string;
-  subjectType: ProtoSubjectType;
+  subjectType: number; // Proto SubjectType numeric value
 }
 
 interface GetActiveSanctionsResponse {
@@ -256,119 +236,83 @@ export class AuthGrpcController {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Convert Date to protobuf Timestamp
-   */
-  private toTimestamp(
-    date: Date | null | undefined,
-  ): { seconds: number; nanos: number } | undefined {
-    if (!date) return undefined;
-    const ms = date.getTime();
-    return {
-      seconds: Math.floor(ms / 1000),
-      nanos: (ms % 1000) * 1_000_000,
-    };
-  }
-
-  /**
    * Map DB operator status to proto enum
+   * Uses SSOT utility from @my-girok/nest-common
    */
-  private mapOperatorStatus(isActive: boolean): ProtoOperatorStatus {
-    return isActive
-      ? ProtoOperatorStatus.OPERATOR_STATUS_ACTIVE
-      : ProtoOperatorStatus.OPERATOR_STATUS_SUSPENDED;
+  private mapOperatorStatus(isActive: boolean): number {
+    const status = isActiveToOperatorStatus(isActive);
+    return status === OperatorStatus.ACTIVE
+      ? ProtoOperatorStatus.ACTIVE
+      : ProtoOperatorStatus.SUSPENDED;
   }
 
   /**
    * Map DB role scope to proto enum
+   * Uses SSOT mapping from @my-girok/types
    */
-  private mapRoleScope(scope: string): ProtoRoleScope {
-    const scopeMap: Record<string, ProtoRoleScope> = {
-      GLOBAL: ProtoRoleScope.ROLE_SCOPE_GLOBAL,
-      SERVICE: ProtoRoleScope.ROLE_SCOPE_SERVICE,
-      TENANT: ProtoRoleScope.ROLE_SCOPE_TENANT,
-    };
-    return scopeMap[scope] ?? ProtoRoleScope.ROLE_SCOPE_UNSPECIFIED;
+  private mapRoleScope(scope: string): number {
+    return dbToProtoWithFallback(scope, roleScopeToProto, ProtoRoleScope.UNSPECIFIED);
   }
 
   /**
    * Map DB subject type to proto enum
+   * Uses SSOT mapping from @my-girok/types
    */
-  private mapSubjectType(type: string): ProtoSubjectType {
-    const typeMap: Record<string, ProtoSubjectType> = {
-      USER: ProtoSubjectType.SUBJECT_TYPE_USER,
-      OPERATOR: ProtoSubjectType.SUBJECT_TYPE_OPERATOR,
-      ADMIN: ProtoSubjectType.SUBJECT_TYPE_OPERATOR, // Map ADMIN to OPERATOR
-      SERVICE: ProtoSubjectType.SUBJECT_TYPE_SERVICE,
-    };
-    return typeMap[type] ?? ProtoSubjectType.SUBJECT_TYPE_UNSPECIFIED;
+  private mapSubjectType(type: string): number {
+    // Handle ADMIN -> OPERATOR mapping
+    const normalizedType = type === 'ADMIN' ? SanctionSubjectType.OPERATOR : type;
+    return dbToProtoWithFallback(normalizedType, subjectTypeToProto, ProtoSubjectType.UNSPECIFIED);
   }
 
   /**
    * Map proto subject type to DB string
+   * Uses SSOT mapping from @my-girok/types
    */
-  private protoSubjectTypeToDb(type: ProtoSubjectType): string {
-    const typeMap: Record<ProtoSubjectType, string> = {
-      [ProtoSubjectType.SUBJECT_TYPE_UNSPECIFIED]: 'USER',
-      [ProtoSubjectType.SUBJECT_TYPE_USER]: 'USER',
-      [ProtoSubjectType.SUBJECT_TYPE_OPERATOR]: 'ADMIN',
-      [ProtoSubjectType.SUBJECT_TYPE_SERVICE]: 'SERVICE',
-    };
-    return typeMap[type];
+  private protoSubjectTypeToDb(type: number): string {
+    const appType = protoToSubjectType[type as keyof typeof protoToSubjectType];
+    // Map OPERATOR back to ADMIN for DB (auth-service specific)
+    return appType === SanctionSubjectType.OPERATOR ? 'ADMIN' : appType || 'USER';
   }
 
   /**
    * Map DB sanction type to proto enum
+   * Uses SSOT mapping from @my-girok/types
    */
-  private mapSanctionType(type: string): ProtoSanctionType {
-    const typeMap: Record<string, ProtoSanctionType> = {
-      WARNING: ProtoSanctionType.SANCTION_TYPE_WARNING,
-      MUTE: ProtoSanctionType.SANCTION_TYPE_MUTE,
-      TEMPORARY_BAN: ProtoSanctionType.SANCTION_TYPE_TEMPORARY_BAN,
-      PERMANENT_BAN: ProtoSanctionType.SANCTION_TYPE_PERMANENT_BAN,
-      FEATURE_RESTRICTION: ProtoSanctionType.SANCTION_TYPE_FEATURE_RESTRICTION,
-    };
-    return typeMap[type] ?? ProtoSanctionType.SANCTION_TYPE_UNSPECIFIED;
+  private mapSanctionType(type: string): number {
+    return dbToProtoWithFallback(type, sanctionTypeToProto, ProtoSanctionType.UNSPECIFIED);
   }
 
   /**
    * Map proto sanction type to DB string
+   * Uses SSOT mapping from @my-girok/types
    */
-  private protoSanctionTypeToDb(type: ProtoSanctionType): string | undefined {
-    const typeMap: Record<ProtoSanctionType, string | undefined> = {
-      [ProtoSanctionType.SANCTION_TYPE_UNSPECIFIED]: undefined,
-      [ProtoSanctionType.SANCTION_TYPE_WARNING]: 'WARNING',
-      [ProtoSanctionType.SANCTION_TYPE_MUTE]: 'MUTE',
-      [ProtoSanctionType.SANCTION_TYPE_TEMPORARY_BAN]: 'TEMPORARY_BAN',
-      [ProtoSanctionType.SANCTION_TYPE_PERMANENT_BAN]: 'PERMANENT_BAN',
-      [ProtoSanctionType.SANCTION_TYPE_FEATURE_RESTRICTION]: 'FEATURE_RESTRICTION',
-    };
-    return typeMap[type];
+  private protoSanctionTypeToDb(type: number): string | undefined {
+    if (type === ProtoSanctionType.UNSPECIFIED) return undefined;
+    return protoToSanctionType[type as keyof typeof protoToSanctionType];
   }
 
   /**
    * Map DB sanction severity to proto enum
+   * Uses SSOT mapping from @my-girok/types
    */
-  private mapSanctionSeverity(severity: string): ProtoSanctionSeverity {
-    const severityMap: Record<string, ProtoSanctionSeverity> = {
-      LOW: ProtoSanctionSeverity.SANCTION_SEVERITY_LOW,
-      MEDIUM: ProtoSanctionSeverity.SANCTION_SEVERITY_MEDIUM,
-      HIGH: ProtoSanctionSeverity.SANCTION_SEVERITY_HIGH,
-      CRITICAL: ProtoSanctionSeverity.SANCTION_SEVERITY_CRITICAL,
-    };
-    return severityMap[severity] ?? ProtoSanctionSeverity.SANCTION_SEVERITY_UNSPECIFIED;
+  private mapSanctionSeverity(severity: string): number {
+    return dbToProtoWithFallback(
+      severity,
+      sanctionSeverityToProto,
+      ProtoSanctionSeverity.UNSPECIFIED,
+    );
   }
 
   /**
    * Map DB sanction status to proto enum
+   * Uses SSOT mapping from @my-girok/types
    */
-  private mapSanctionStatus(statusValue: string): ProtoSanctionStatus {
-    const statusMap: Record<string, ProtoSanctionStatus> = {
-      ACTIVE: ProtoSanctionStatus.SANCTION_STATUS_ACTIVE,
-      EXPIRED: ProtoSanctionStatus.SANCTION_STATUS_EXPIRED,
-      REVOKED: ProtoSanctionStatus.SANCTION_STATUS_REVOKED,
-      APPEALED: ProtoSanctionStatus.SANCTION_STATUS_APPEALED,
-    };
-    return statusMap[statusValue] ?? ProtoSanctionStatus.SANCTION_STATUS_UNSPECIFIED;
+  private mapSanctionStatus(statusValue: string): number {
+    return dbToProtoWithFallback(
+      statusValue,
+      sanctionStatusToProto,
+      ProtoSanctionStatus.UNSPECIFIED,
+    );
   }
 
   /**
@@ -396,8 +340,8 @@ export class AuthGrpcController {
       level: row.level,
       scope: this.mapRoleScope(row.scope),
       permissions,
-      createdAt: this.toTimestamp(row.createdAt),
-      updatedAt: this.toTimestamp(row.updatedAt),
+      createdAt: toProtoTimestamp(row.createdAt),
+      updatedAt: toProtoTimestamp(row.updatedAt),
     };
   }
 
@@ -413,9 +357,9 @@ export class AuthGrpcController {
       status: this.mapOperatorStatus(row.isActive),
       roleId: row.roleId ?? '',
       role,
-      createdAt: this.toTimestamp(row.createdAt),
-      updatedAt: this.toTimestamp(row.updatedAt),
-      lastLoginAt: this.toTimestamp(row.lastLoginAt),
+      createdAt: toProtoTimestamp(row.createdAt),
+      updatedAt: toProtoTimestamp(row.updatedAt),
+      lastLoginAt: toProtoTimestamp(row.lastLoginAt),
     };
   }
 
@@ -432,8 +376,8 @@ export class AuthGrpcController {
       reason: row.reason,
       evidence: row.evidenceUrls?.join(',') ?? '',
       issuedBy: row.issuedBy,
-      issuedAt: this.toTimestamp(row.startAt),
-      expiresAt: this.toTimestamp(row.endAt),
+      issuedAt: toProtoTimestamp(row.startAt),
+      expiresAt: toProtoTimestamp(row.endAt),
       status: this.mapSanctionStatus(row.status),
     };
   }
@@ -571,32 +515,147 @@ export class AuthGrpcController {
     );
 
     try {
-      const results: PermissionCheckResult[] = [];
-      let allAllowed = true;
+      const checks = request.checks ?? [];
+      if (checks.length === 0) {
+        return { allAllowed: true, results: [] };
+      }
 
-      for (const check of request.checks ?? []) {
-        const result = await this.checkPermission({
-          operatorId: request.operatorId,
-          resource: check.resource,
-          action: check.action,
-        });
+      // Check if operator exists and is active (single query)
+      const operators = await this.prisma.$queryRaw<{ id: string; isActive: boolean }[]>`
+        SELECT id, is_active as "isActive"
+        FROM operators
+        WHERE id = ${request.operatorId}::uuid
+        LIMIT 1
+      `;
 
-        results.push({
-          resource: check.resource,
-          action: check.action,
-          allowed: result.allowed,
-          reason: result.reason,
-        });
+      if (!operators.length) {
+        return {
+          allAllowed: false,
+          results: checks.map((check) => ({
+            resource: check.resource,
+            action: check.action,
+            allowed: false,
+            reason: 'Operator not found',
+          })),
+        };
+      }
 
-        if (!result.allowed) {
-          allAllowed = false;
+      if (!operators[0].isActive) {
+        return {
+          allAllowed: false,
+          results: checks.map((check) => ({
+            resource: check.resource,
+            action: check.action,
+            allowed: false,
+            reason: 'Operator is not active',
+          })),
+        };
+      }
+
+      // Build resource/action pairs for batch query using Prisma.sql tagged template
+      const resourceActionPairs = checks.map((c) => Prisma.sql`(${c.resource}, ${c.action})`);
+      const resourceActionCondition = Prisma.join(resourceActionPairs, ', ');
+
+      // Get all matching permissions in a single query (direct + role + wildcard)
+      const matchedPermissions = await this.prisma.$queryRaw<
+        { resource: string; action: string; permissionId: string; source: string }[]
+      >`
+        WITH requested_checks AS (
+          SELECT * FROM (VALUES ${resourceActionCondition}) AS t(resource, action)
+        ),
+        all_permissions AS (
+          -- Direct permissions (exact match)
+          SELECT p.resource, p.action, p.id as "permissionId", 'direct' as source
+          FROM operator_permissions op
+          JOIN permissions p ON op.permission_id = p.id
+          WHERE op.operator_id = ${request.operatorId}::uuid
+            AND (p.resource, p.action) IN (SELECT resource, action FROM requested_checks)
+
+          UNION ALL
+
+          -- Role permissions (exact match)
+          SELECT p.resource, p.action, p.id as "permissionId", 'role' as source
+          FROM operators o
+          JOIN roles r ON o.role_id = r.id
+          JOIN role_permissions rp ON r.id = rp.role_id
+          JOIN permissions p ON rp.permission_id = p.id
+          WHERE o.id = ${request.operatorId}::uuid
+            AND (p.resource, p.action) IN (SELECT resource, action FROM requested_checks)
+
+          UNION ALL
+
+          -- Wildcard permissions (direct)
+          SELECT rc.resource, rc.action, p.id as "permissionId", 'wildcard' as source
+          FROM requested_checks rc
+          CROSS JOIN operator_permissions op
+          JOIN permissions p ON op.permission_id = p.id
+          WHERE op.operator_id = ${request.operatorId}::uuid
+            AND (
+              (p.resource = rc.resource AND p.action = '*')
+              OR (p.resource = '*' AND p.action = rc.action)
+              OR (p.resource = '*' AND p.action = '*')
+            )
+
+          UNION ALL
+
+          -- Wildcard permissions (role)
+          SELECT rc.resource, rc.action, p.id as "permissionId", 'wildcard' as source
+          FROM requested_checks rc
+          CROSS JOIN operators o
+          JOIN roles r ON o.role_id = r.id
+          JOIN role_permissions rp ON r.id = rp.role_id
+          JOIN permissions p ON rp.permission_id = p.id
+          WHERE o.id = ${request.operatorId}::uuid
+            AND (
+              (p.resource = rc.resource AND p.action = '*')
+              OR (p.resource = '*' AND p.action = rc.action)
+              OR (p.resource = '*' AND p.action = '*')
+            )
+        )
+        SELECT DISTINCT resource, action, "permissionId", source FROM all_permissions
+      `;
+
+      // Build a map of resource:action -> permission info
+      const permissionMap = new Map<string, { source: string; permissionId: string }>();
+      for (const perm of matchedPermissions) {
+        const key = `${perm.resource}:${perm.action}`;
+        if (!permissionMap.has(key)) {
+          permissionMap.set(key, { source: perm.source, permissionId: perm.permissionId });
         }
       }
 
-      return {
-        allAllowed,
-        results,
-      };
+      // Map results
+      const results: PermissionCheckResult[] = [];
+      let allAllowed = true;
+
+      for (const check of checks) {
+        const key = `${check.resource}:${check.action}`;
+        const matched = permissionMap.get(key);
+
+        if (matched) {
+          const reasonMap: Record<string, string> = {
+            direct: 'Permission granted via direct assignment',
+            role: 'Permission granted via role',
+            wildcard: 'Permission granted via wildcard',
+          };
+          results.push({
+            resource: check.resource,
+            action: check.action,
+            allowed: true,
+            reason: reasonMap[matched.source] ?? 'Permission granted',
+          });
+        } else {
+          allAllowed = false;
+          results.push({
+            resource: check.resource,
+            action: check.action,
+            allowed: false,
+            reason: 'Permission not found',
+          });
+        }
+      }
+
+      return { allAllowed, results };
     } catch (error) {
       this.logger.error(`CheckPermissions failed: ${error}`);
       throw new RpcException({
@@ -717,30 +776,79 @@ export class AuthGrpcController {
     this.logger.debug(`GetRolesByOperator: operator=${request.operatorId}`);
 
     try {
-      // Get the operator's assigned role (operators have a single role_id)
-      const roleRows = await this.prisma.$queryRaw<RoleRow[]>`
-        SELECT r.id, r.name, r.description, r.level, r.scope, r.created_at as "createdAt", r.updated_at as "updatedAt"
+      // Get the operator's assigned role with permissions in a single query using LEFT JOIN
+      const rows = await this.prisma.$queryRaw<
+        (RoleRow & {
+          permissionId: string | null;
+          permissionResource: string | null;
+          permissionAction: string | null;
+          permissionCategory: string | null;
+          permissionDescription: string | null;
+          permissionIsSystem: boolean | null;
+        })[]
+      >`
+        SELECT
+          r.id,
+          r.name,
+          r.description,
+          r.level,
+          r.scope,
+          r.created_at as "createdAt",
+          r.updated_at as "updatedAt",
+          p.id as "permissionId",
+          p.resource as "permissionResource",
+          p.action as "permissionAction",
+          p.category as "permissionCategory",
+          p.description as "permissionDescription",
+          p.is_system as "permissionIsSystem"
         FROM operators o
         JOIN roles r ON o.role_id = r.id
+        LEFT JOIN role_permissions rp ON r.id = rp.role_id
+        LEFT JOIN permissions p ON rp.permission_id = p.id
         WHERE o.id = ${request.operatorId}::uuid
       `;
 
-      if (!roleRows.length) {
+      if (!rows.length) {
         return { roles: [] };
       }
 
-      // Get permissions for each role
-      const roles: Role[] = [];
-      for (const roleRow of roleRows) {
-        const permissionRows = await this.prisma.$queryRaw<PermissionRow[]>`
-          SELECT p.id, p.resource, p.action, p.category, p.description, p.is_system as "isSystem"
-          FROM role_permissions rp
-          JOIN permissions p ON rp.permission_id = p.id
-          WHERE rp.role_id = ${roleRow.id}::uuid
-        `;
-        const permissions = permissionRows.map((row) => this.mapPermission(row));
-        roles.push(this.mapRole(roleRow, permissions));
+      // Group permissions by role (using Map for O(1) lookup)
+      const roleMap = new Map<string, { role: RoleRow; permissions: Permission[] }>();
+
+      for (const row of rows) {
+        if (!roleMap.has(row.id)) {
+          roleMap.set(row.id, {
+            role: {
+              id: row.id,
+              name: row.name,
+              description: row.description,
+              level: row.level,
+              scope: row.scope,
+              createdAt: row.createdAt,
+              updatedAt: row.updatedAt,
+            },
+            permissions: [],
+          });
+        }
+
+        // Add permission if exists (LEFT JOIN may return null)
+        if (row.permissionId) {
+          const roleEntry = roleMap.get(row.id)!;
+          roleEntry.permissions.push({
+            id: row.permissionId,
+            resource: row.permissionResource!,
+            action: row.permissionAction!,
+            category: row.permissionCategory ?? '',
+            description: row.permissionDescription ?? '',
+            isSystem: row.permissionIsSystem ?? false,
+          });
+        }
       }
+
+      // Convert map to array of Role objects
+      const roles: Role[] = Array.from(roleMap.values()).map(({ role, permissions }) =>
+        this.mapRole(role, permissions),
+      );
 
       return { roles };
     } catch (error) {
@@ -821,7 +929,7 @@ export class AuthGrpcController {
       if (!operators.length) {
         return {
           valid: false,
-          status: ProtoOperatorStatus.OPERATOR_STATUS_UNSPECIFIED,
+          status: ProtoOperatorStatus.UNSPECIFIED,
           message: 'Operator not found',
         };
       }
@@ -906,7 +1014,7 @@ export class AuthGrpcController {
       const activeSanctions = sanctions.map((row) => this.mapSanction(row));
 
       // Find highest severity
-      let highestSeverity = ProtoSanctionSeverity.SANCTION_SEVERITY_UNSPECIFIED;
+      let highestSeverity: number = ProtoSanctionSeverity.UNSPECIFIED;
       for (const sanction of activeSanctions) {
         if (sanction.severity > highestSeverity) {
           highestSeverity = sanction.severity;

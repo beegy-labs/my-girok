@@ -49,6 +49,20 @@ export {
   RoleScopeProto,
   protoToRoleScope,
   roleScopeToProto,
+  // Operator status mappings
+  OperatorStatusProto,
+  protoToOperatorStatus,
+  operatorStatusToProto,
+  isActiveToOperatorStatus,
+  operatorStatusToIsActive,
+  // Auth provider mappings
+  AuthProviderProto,
+  protoToAuthProvider,
+  authProviderToProto,
+  // Sanction severity mappings
+  SanctionSeverityProto,
+  protoToSanctionSeverity,
+  sanctionSeverityToProto,
 } from '@my-girok/types';
 
 export {

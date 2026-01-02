@@ -43,8 +43,98 @@ export { IdentityGrpcClient } from './identity-grpc.client';
 export { AuthGrpcClient, AUTH_GRPC_CACHE_CONFIG } from './auth-grpc.client';
 export { LegalGrpcClient } from './legal-grpc.client';
 
+// Timestamp Utilities
+export {
+  toProtoTimestamp,
+  fromProtoTimestamp,
+  toProtoTimestampNullable,
+  fromProtoTimestampNullable,
+  nowAsProtoTimestamp,
+  compareProtoTimestamps,
+  isProtoTimestampPast,
+  isProtoTimestampFuture,
+} from './grpc-timestamp.util';
+
+// Enum Mapping Utilities
+export {
+  // Generic mapping helpers
+  createEnumMapper,
+  safeFromProto,
+  safeToProto,
+  mapArrayFromProto,
+  mapArrayToProto,
+  PROTO_ENUM_UNSPECIFIED,
+  isProtoEnumUnspecified,
+  dbToProtoWithFallback,
+  protoToDbWithFallback,
+  // Re-exported Proto mappings (also available from grpc.types)
+  // Identity
+  AccountStatusProto,
+  AccountModeProto,
+  protoToAccountStatus,
+  protoToAccountMode,
+  accountStatusToProto,
+  accountModeToProto,
+  // Auth
+  RoleScopeProto,
+  protoToRoleScope,
+  roleScopeToProto,
+  OperatorStatusProto,
+  protoToOperatorStatus,
+  operatorStatusToProto,
+  isActiveToOperatorStatus,
+  operatorStatusToIsActive,
+  AuthProviderProto,
+  protoToAuthProvider,
+  authProviderToProto,
+  SanctionSeverityProto,
+  protoToSanctionSeverity,
+  sanctionSeverityToProto,
+  // Legal
+  ConsentTypeProto,
+  ConsentStatusProto,
+  DocumentTypeProto,
+  DsrTypeProto,
+  DsrStatusProto,
+  protoToConsentType,
+  protoToConsentStatus,
+  protoToDocumentType,
+  protoToDsrType,
+  protoToDsrStatus,
+  consentTypeToProto,
+  consentStatusToProto,
+  documentTypeToProto,
+  dsrTypeToProto,
+  dsrStatusToProto,
+  // Sanction
+  SubjectTypeProto,
+  SanctionTypeProto,
+  SanctionStatusProto,
+  protoToSubjectType,
+  protoToSanctionType,
+  protoToSanctionStatus,
+  subjectTypeToProto,
+  sanctionTypeToProto,
+  sanctionStatusToProto,
+} from './grpc-enum.util';
+export type { EnumMapper } from './grpc-enum.util';
+
 // Error Utilities
-export { GrpcError, isGrpcError, normalizeGrpcError } from './grpc-error.util';
+export {
+  GrpcError,
+  isGrpcError,
+  normalizeGrpcError,
+  // Server-side error handling
+  handleGrpcError,
+  createGrpcError,
+  GrpcErrors,
+  // HTTP <-> gRPC status mapping
+  httpStatusToGrpcStatus,
+  grpcStatusToHttpStatus,
+  // Error checking utilities
+  isGrpcStatusCode,
+  isRetryableGrpcError,
+} from './grpc-error.util';
 
 // Validation Utilities
 export {

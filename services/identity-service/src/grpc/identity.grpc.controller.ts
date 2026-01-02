@@ -8,81 +8,74 @@ import { ProfilesService } from '../identity/profiles/profiles.service';
 import { CryptoService } from '../common/crypto';
 import { AuthProvider, AccountMode } from '../identity/accounts/dto/create-account.dto';
 import { AccountStatus } from '../identity/accounts/dto/update-account.dto';
+import {
+  // Shared Proto enum utilities from SSOT
+  toProtoTimestamp,
+  AccountStatusProto,
+  AccountModeProto,
+  AuthProviderProto,
+} from '@my-girok/nest-common';
 
 /**
  * Proto enum mappings for AccountStatus
+ * Uses SSOT from @my-girok/types
  */
 const AccountStatusMap: Record<string, number> = {
-  PENDING_VERIFICATION: 1,
-  ACTIVE: 2,
-  SUSPENDED: 3,
-  DELETED: 4,
-  LOCKED: 5,
+  PENDING_VERIFICATION: AccountStatusProto.PENDING,
+  ACTIVE: AccountStatusProto.ACTIVE,
+  SUSPENDED: AccountStatusProto.SUSPENDED,
+  DELETED: AccountStatusProto.DELETED,
+  LOCKED: AccountStatusProto.LOCKED,
 };
 
 /**
  * Proto enum mappings for AccountMode
+ * Uses SSOT from @my-girok/types
  */
 const AccountModeMap: Record<string, number> = {
-  USER: 1,
-  ADMIN: 2,
-  OPERATOR: 3,
-  SERVICE: 4,
-  UNIFIED: 1, // Map UNIFIED to USER for proto compatibility
+  USER: AccountModeProto.USER,
+  ADMIN: AccountModeProto.ADMIN,
+  OPERATOR: AccountModeProto.OPERATOR,
+  SERVICE: AccountModeProto.SERVICE,
+  UNIFIED: AccountModeProto.USER, // Map UNIFIED to USER for proto compatibility
 };
 
 /**
  * Proto enum mappings for AuthProvider
- * Proto: UNSPECIFIED=0, LOCAL=1, GOOGLE=2, APPLE=3, KAKAO=4, NAVER=5
- * Prisma: LOCAL, GOOGLE, KAKAO, NAVER, APPLE, MICROSOFT, GITHUB
+ * Uses SSOT from @my-girok/types
  */
 const AuthProviderMap: Record<number, AuthProvider> = {
-  0: AuthProvider.LOCAL,
-  1: AuthProvider.LOCAL,
-  2: AuthProvider.GOOGLE,
-  3: AuthProvider.APPLE,
-  4: AuthProvider.KAKAO,
-  5: AuthProvider.NAVER,
+  [AuthProviderProto.UNSPECIFIED]: AuthProvider.LOCAL,
+  [AuthProviderProto.LOCAL]: AuthProvider.LOCAL,
+  [AuthProviderProto.GOOGLE]: AuthProvider.GOOGLE,
+  [AuthProviderProto.APPLE]: AuthProvider.APPLE,
+  [AuthProviderProto.KAKAO]: AuthProvider.KAKAO,
+  [AuthProviderProto.NAVER]: AuthProvider.NAVER,
 };
 
 /**
  * Proto to AccountMode mapping
- * Proto: UNSPECIFIED=0, USER=1, ADMIN=2, OPERATOR=3, SERVICE=4
- * Prisma: SERVICE, UNIFIED
- * Note: Proto modes map to UNIFIED (general user) or SERVICE (service account)
+ * Uses SSOT from @my-girok/types
  */
 const ProtoToAccountModeMap: Record<number, AccountMode> = {
-  0: AccountMode.UNIFIED, // UNSPECIFIED -> UNIFIED
-  1: AccountMode.UNIFIED, // USER -> UNIFIED
-  2: AccountMode.UNIFIED, // ADMIN -> UNIFIED (no admin mode in Prisma)
-  3: AccountMode.UNIFIED, // OPERATOR -> UNIFIED (no operator mode in Prisma)
-  4: AccountMode.SERVICE, // SERVICE -> SERVICE
+  [AccountModeProto.UNSPECIFIED]: AccountMode.UNIFIED,
+  [AccountModeProto.USER]: AccountMode.UNIFIED,
+  [AccountModeProto.ADMIN]: AccountMode.UNIFIED,
+  [AccountModeProto.OPERATOR]: AccountMode.UNIFIED,
+  [AccountModeProto.SERVICE]: AccountMode.SERVICE,
 };
 
 /**
  * Proto to AccountStatus mapping
- * Proto: UNSPECIFIED=0, PENDING=1, ACTIVE=2, SUSPENDED=3, DELETED=4, LOCKED=5
- * Prisma: PENDING_VERIFICATION, ACTIVE, SUSPENDED, DEACTIVATED, DELETED
+ * Uses SSOT from @my-girok/types
  */
 const ProtoToAccountStatusMap: Record<number, AccountStatus> = {
-  1: AccountStatus.PENDING_VERIFICATION,
-  2: AccountStatus.ACTIVE,
-  3: AccountStatus.SUSPENDED,
-  4: AccountStatus.DELETED,
-  5: AccountStatus.SUSPENDED, // LOCKED -> SUSPENDED (no LOCKED in Prisma)
+  [AccountStatusProto.PENDING]: AccountStatus.PENDING_VERIFICATION,
+  [AccountStatusProto.ACTIVE]: AccountStatus.ACTIVE,
+  [AccountStatusProto.SUSPENDED]: AccountStatus.SUSPENDED,
+  [AccountStatusProto.DELETED]: AccountStatus.DELETED,
+  [AccountStatusProto.LOCKED]: AccountStatus.SUSPENDED, // LOCKED -> SUSPENDED (no LOCKED in Prisma)
 };
-
-/**
- * Convert Date to google.protobuf.Timestamp format
- */
-function toTimestamp(date: Date | null | undefined): { seconds: number; nanos: number } | null {
-  if (!date) return null;
-  const ms = date.getTime();
-  return {
-    seconds: Math.floor(ms / 1000),
-    nanos: (ms % 1000) * 1000000,
-  };
-}
 
 /**
  * Request/Response interfaces matching proto definitions
@@ -220,8 +213,8 @@ export class IdentityGrpcController {
           mode: AccountModeMap[account.mode] || 0,
           mfa_enabled: account.mfaEnabled,
           email_verified: account.emailVerified,
-          created_at: toTimestamp(account.createdAt),
-          updated_at: toTimestamp(account.updatedAt),
+          created_at: toProtoTimestamp(account.createdAt),
+          updated_at: toProtoTimestamp(account.updatedAt),
         },
       };
     } catch (error) {
@@ -308,8 +301,8 @@ export class IdentityGrpcController {
           mode: AccountModeMap[account.mode] || 0,
           mfa_enabled: account.mfaEnabled,
           email_verified: account.emailVerified,
-          created_at: toTimestamp(account.createdAt),
-          updated_at: toTimestamp(account.updatedAt),
+          created_at: toProtoTimestamp(account.createdAt),
+          updated_at: toProtoTimestamp(account.updatedAt),
         },
       };
     } catch (error) {
@@ -350,8 +343,8 @@ export class IdentityGrpcController {
           mode: AccountModeMap[account.mode] || 0,
           mfa_enabled: account.mfaEnabled,
           email_verified: account.emailVerified,
-          created_at: toTimestamp(account.createdAt),
-          updated_at: toTimestamp(account.updatedAt),
+          created_at: toProtoTimestamp(account.createdAt),
+          updated_at: toProtoTimestamp(account.updatedAt),
         },
       };
     } catch (error) {
@@ -405,7 +398,7 @@ export class IdentityGrpcController {
         valid: isValid,
         account_id: session.accountId,
         session_id: session.id,
-        expires_at: toTimestamp(session.expiresAt),
+        expires_at: toProtoTimestamp(session.expiresAt),
         message,
       };
     } catch (error) {
@@ -498,8 +491,8 @@ export class IdentityGrpcController {
         browser_name: device.browserName || '',
         browser_version: device.browserVersion || '',
         is_trusted: device.isTrusted,
-        last_seen_at: toTimestamp(device.lastActiveAt),
-        created_at: toTimestamp(device.createdAt),
+        last_seen_at: toProtoTimestamp(device.lastActiveAt),
+        created_at: toProtoTimestamp(device.createdAt),
       }));
 
       return { devices };
@@ -634,8 +627,8 @@ export class IdentityGrpcController {
           country_code: profile.countryCode || '',
           language_code: languageCode,
           timezone: timezone,
-          created_at: toTimestamp(profile.createdAt),
-          updated_at: toTimestamp(profile.updatedAt),
+          created_at: toProtoTimestamp(profile.createdAt),
+          updated_at: toProtoTimestamp(profile.updatedAt),
         },
       };
     } catch (error) {
@@ -687,8 +680,8 @@ export class IdentityGrpcController {
           mode: AccountModeMap[account.mode] || 0,
           mfa_enabled: account.mfaEnabled,
           email_verified: account.emailVerified,
-          created_at: toTimestamp(account.createdAt),
-          updated_at: toTimestamp(account.updatedAt),
+          created_at: toProtoTimestamp(account.createdAt),
+          updated_at: toProtoTimestamp(account.updatedAt),
         },
       };
     } catch (error) {
@@ -743,8 +736,8 @@ export class IdentityGrpcController {
           mode: AccountModeMap[account.mode] || 0,
           mfa_enabled: account.mfaEnabled,
           email_verified: account.emailVerified,
-          created_at: toTimestamp(account.createdAt),
-          updated_at: toTimestamp(account.updatedAt),
+          created_at: toProtoTimestamp(account.createdAt),
+          updated_at: toProtoTimestamp(account.updatedAt),
         },
       };
     } catch (error) {
@@ -855,9 +848,9 @@ export class IdentityGrpcController {
           device_id: session.deviceId || '',
           ip_address: session.ipAddress || '',
           user_agent: session.userAgent || '',
-          created_at: toTimestamp(session.createdAt),
-          expires_at: toTimestamp(session.expiresAt),
-          last_activity_at: toTimestamp(session.lastActivityAt),
+          created_at: toProtoTimestamp(session.createdAt),
+          expires_at: toProtoTimestamp(session.expiresAt),
+          last_activity_at: toProtoTimestamp(session.lastActivityAt),
         },
         access_token: session.accessToken,
         refresh_token: session.refreshToken,

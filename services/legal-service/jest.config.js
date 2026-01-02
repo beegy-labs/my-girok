@@ -15,6 +15,7 @@ module.exports = {
     '!src/config/**/*.ts',
     '!src/database/prisma.service.ts',
     '!src/**/*.controller.ts',
+    'src/**/grpc/*.controller.ts',
     '!src/common/cache/cache.service.ts',
     '!src/common/cache/cache-ttl.constants.ts',
     '!src/common/outbox/outbox.service.ts',

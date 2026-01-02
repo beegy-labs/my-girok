@@ -9,87 +9,97 @@ import { ConsentResponseDto } from '../consents/dto';
 import { LegalDocumentResponseDto } from '../legal-documents/dto';
 import { LawRegistryResponseDto } from '../law-registry/dto';
 import { DsrRequestResponseDto } from '../dsr-requests/dto';
+import {
+  // Shared Proto enum utilities from SSOT
+  toProtoTimestamp,
+  ConsentTypeProto,
+  ConsentStatusProto,
+  DocumentTypeProto,
+  DsrTypeProto,
+  DsrStatusProto,
+} from '@my-girok/nest-common';
 
 // Proto enum mappings (proto value -> internal value)
+// Uses SSOT from @my-girok/types via @my-girok/nest-common
 const CONSENT_TYPE_MAP: Record<number, string> = {
-  0: 'UNSPECIFIED',
-  1: 'TERMS_OF_SERVICE',
-  2: 'PRIVACY_POLICY',
-  3: 'MARKETING',
-  4: 'ANALYTICS',
-  5: 'THIRD_PARTY_SHARING',
-  6: 'AGE_VERIFICATION',
-  7: 'PARENTAL_CONSENT',
+  [ConsentTypeProto.UNSPECIFIED]: 'UNSPECIFIED',
+  [ConsentTypeProto.TERMS_OF_SERVICE]: 'TERMS_OF_SERVICE',
+  [ConsentTypeProto.PRIVACY_POLICY]: 'PRIVACY_POLICY',
+  [ConsentTypeProto.MARKETING]: 'MARKETING',
+  [ConsentTypeProto.ANALYTICS]: 'ANALYTICS',
+  [ConsentTypeProto.THIRD_PARTY_SHARING]: 'THIRD_PARTY_SHARING',
+  [ConsentTypeProto.AGE_VERIFICATION]: 'AGE_VERIFICATION',
+  [ConsentTypeProto.PARENTAL_CONSENT]: 'PARENTAL_CONSENT',
 };
 
 const CONSENT_TYPE_REVERSE_MAP: Record<string, number> = {
-  UNSPECIFIED: 0,
-  TERMS_OF_SERVICE: 1,
-  PRIVACY_POLICY: 2,
-  MARKETING: 3,
-  ANALYTICS: 4,
-  THIRD_PARTY_SHARING: 5,
-  AGE_VERIFICATION: 6,
-  PARENTAL_CONSENT: 7,
+  UNSPECIFIED: ConsentTypeProto.UNSPECIFIED,
+  TERMS_OF_SERVICE: ConsentTypeProto.TERMS_OF_SERVICE,
+  PRIVACY_POLICY: ConsentTypeProto.PRIVACY_POLICY,
+  MARKETING: ConsentTypeProto.MARKETING,
+  ANALYTICS: ConsentTypeProto.ANALYTICS,
+  THIRD_PARTY_SHARING: ConsentTypeProto.THIRD_PARTY_SHARING,
+  AGE_VERIFICATION: ConsentTypeProto.AGE_VERIFICATION,
+  PARENTAL_CONSENT: ConsentTypeProto.PARENTAL_CONSENT,
 };
 
 const CONSENT_STATUS_MAP: Record<string, number> = {
-  UNSPECIFIED: 0,
-  ACTIVE: 1,
-  GRANTED: 1, // Map GRANTED to ACTIVE for proto
-  EXPIRED: 2,
-  REVOKED: 3,
-  WITHDRAWN: 3, // Map WITHDRAWN to REVOKED for proto
-  SUPERSEDED: 4,
+  UNSPECIFIED: ConsentStatusProto.UNSPECIFIED,
+  ACTIVE: ConsentStatusProto.ACTIVE,
+  GRANTED: ConsentStatusProto.ACTIVE, // Map GRANTED to ACTIVE for proto
+  EXPIRED: ConsentStatusProto.EXPIRED,
+  REVOKED: ConsentStatusProto.REVOKED,
+  WITHDRAWN: ConsentStatusProto.REVOKED, // Map WITHDRAWN to REVOKED for proto
+  SUPERSEDED: ConsentStatusProto.SUPERSEDED,
 };
 
 const DOCUMENT_TYPE_MAP: Record<number, string> = {
-  0: 'UNSPECIFIED',
-  1: 'TERMS_OF_SERVICE',
-  2: 'PRIVACY_POLICY',
-  3: 'COOKIE_POLICY',
-  4: 'DATA_PROCESSING_AGREEMENT',
-  5: 'ACCEPTABLE_USE_POLICY',
+  [DocumentTypeProto.UNSPECIFIED]: 'UNSPECIFIED',
+  [DocumentTypeProto.TERMS_OF_SERVICE]: 'TERMS_OF_SERVICE',
+  [DocumentTypeProto.PRIVACY_POLICY]: 'PRIVACY_POLICY',
+  [DocumentTypeProto.COOKIE_POLICY]: 'COOKIE_POLICY',
+  [DocumentTypeProto.DATA_PROCESSING_AGREEMENT]: 'DATA_PROCESSING_AGREEMENT',
+  [DocumentTypeProto.ACCEPTABLE_USE_POLICY]: 'ACCEPTABLE_USE_POLICY',
 };
 
 const DOCUMENT_TYPE_REVERSE_MAP: Record<string, number> = {
-  UNSPECIFIED: 0,
-  TERMS_OF_SERVICE: 1,
-  PRIVACY_POLICY: 2,
-  COOKIE_POLICY: 3,
-  DATA_PROCESSING_AGREEMENT: 4,
-  ACCEPTABLE_USE_POLICY: 5,
-  CONSENT_FORM: 1, // Map to TERMS_OF_SERVICE as fallback
+  UNSPECIFIED: DocumentTypeProto.UNSPECIFIED,
+  TERMS_OF_SERVICE: DocumentTypeProto.TERMS_OF_SERVICE,
+  PRIVACY_POLICY: DocumentTypeProto.PRIVACY_POLICY,
+  COOKIE_POLICY: DocumentTypeProto.COOKIE_POLICY,
+  DATA_PROCESSING_AGREEMENT: DocumentTypeProto.DATA_PROCESSING_AGREEMENT,
+  ACCEPTABLE_USE_POLICY: DocumentTypeProto.ACCEPTABLE_USE_POLICY,
+  CONSENT_FORM: DocumentTypeProto.TERMS_OF_SERVICE, // Map to TERMS_OF_SERVICE as fallback
 };
 
 const DSR_TYPE_MAP: Record<number, string> = {
-  0: 'UNSPECIFIED',
-  1: 'ACCESS',
-  2: 'RECTIFICATION',
-  3: 'ERASURE',
-  4: 'PORTABILITY',
-  5: 'RESTRICTION',
-  6: 'OBJECTION',
+  [DsrTypeProto.UNSPECIFIED]: 'UNSPECIFIED',
+  [DsrTypeProto.ACCESS]: 'ACCESS',
+  [DsrTypeProto.RECTIFICATION]: 'RECTIFICATION',
+  [DsrTypeProto.ERASURE]: 'ERASURE',
+  [DsrTypeProto.PORTABILITY]: 'PORTABILITY',
+  [DsrTypeProto.RESTRICTION]: 'RESTRICTION',
+  [DsrTypeProto.OBJECTION]: 'OBJECTION',
 };
 
 const DSR_TYPE_REVERSE_MAP: Record<string, number> = {
-  UNSPECIFIED: 0,
-  ACCESS: 1,
-  RECTIFICATION: 2,
-  ERASURE: 3,
-  PORTABILITY: 4,
-  RESTRICTION: 5,
-  OBJECTION: 6,
+  UNSPECIFIED: DsrTypeProto.UNSPECIFIED,
+  ACCESS: DsrTypeProto.ACCESS,
+  RECTIFICATION: DsrTypeProto.RECTIFICATION,
+  ERASURE: DsrTypeProto.ERASURE,
+  PORTABILITY: DsrTypeProto.PORTABILITY,
+  RESTRICTION: DsrTypeProto.RESTRICTION,
+  OBJECTION: DsrTypeProto.OBJECTION,
 };
 
 const DSR_STATUS_MAP: Record<string, number> = {
-  UNSPECIFIED: 0,
-  PENDING: 1,
-  IN_PROGRESS: 2,
-  COMPLETED: 3,
-  REJECTED: 4,
-  EXPIRED: 5,
-  CANCELLED: 4, // Map CANCELLED to REJECTED
+  UNSPECIFIED: DsrStatusProto.UNSPECIFIED,
+  PENDING: DsrStatusProto.PENDING,
+  IN_PROGRESS: DsrStatusProto.IN_PROGRESS,
+  COMPLETED: DsrStatusProto.COMPLETED,
+  REJECTED: DsrStatusProto.REJECTED,
+  EXPIRED: DsrStatusProto.EXPIRED,
+  CANCELLED: DsrStatusProto.REJECTED, // Map CANCELLED to REJECTED
 };
 
 // Proto request/response interfaces
@@ -350,18 +360,29 @@ export class LegalGrpcController {
         }
       }
 
-      // Determine missing and expired consents
-      // Since we don't have document type info directly, we'll compare against required types
-      // In a real implementation, we'd need to join with documents to get their types
+      // Build a map of documents from consents by querying documents
+      const documentMap = new Map<string, LegalDocumentResponseDto>();
+      for (const consent of activeConsents) {
+        try {
+          const document = await this.legalDocumentsService.findOne(consent.documentId);
+          documentMap.set(consent.documentId, document);
+        } catch {
+          // Document not found, skip this consent
+          this.logger.warn(`Document not found for consent: ${consent.id}`);
+        }
+      }
+
+      // Determine missing consents by comparing document types with required consent types
       for (const requiredType of requiredTypes) {
         const protoType = CONSENT_TYPE_REVERSE_MAP[requiredType] || 0;
         if (protoType === 0) continue;
 
-        // Check if any active consent covers this type
-        // This is simplified - in production you'd match against document types
-        const hasConsent = activeConsents.some((_c) => {
-          // Would need to check document type here
-          return true; // Simplified for now
+        // Check if any active consent covers this type by matching document type
+        const hasConsent = activeConsents.some((c) => {
+          const document = documentMap.get(c.documentId);
+          // Map document type to consent type for comparison
+          // Document types like TERMS_OF_SERVICE, PRIVACY_POLICY map directly to consent types
+          return document?.type === requiredType;
         });
 
         if (!hasConsent && request.required_types.includes(protoType)) {
@@ -375,7 +396,9 @@ export class LegalGrpcController {
         all_required_granted: allGranted,
         missing_consents: missingConsents,
         expired_consents: expiredConsents,
-        active_consents: activeConsents.map((c) => this.toProtoConsent(c)),
+        active_consents: activeConsents.map((c) =>
+          this.toProtoConsent(c, documentMap.get(c.documentId)),
+        ),
       };
     } catch (error) {
       this.handleError('CheckConsents', error);
@@ -406,8 +429,13 @@ export class LegalGrpcController {
         filteredConsents = filteredConsents.filter((c) => c.status !== 'EXPIRED');
       }
 
+      // Convert consents to proto format with document lookup
+      const protoConsents = await Promise.all(
+        filteredConsents.map((c) => this.toProtoConsentWithDocument(c)),
+      );
+
       return {
-        consents: filteredConsents.map((c) => this.toProtoConsent(c)),
+        consents: protoConsents,
         total_count: filteredConsents.length,
       };
     } catch (error) {
@@ -430,9 +458,12 @@ export class LegalGrpcController {
         consentMethod: 'grpc_request',
       });
 
+      // Get document to populate consent type and version
+      const protoConsent = await this.toProtoConsentWithDocument(consent);
+
       return {
         success: true,
-        consent: this.toProtoConsent(consent),
+        consent: protoConsent,
         message: 'Consent granted successfully',
       };
     } catch (error) {
@@ -742,7 +773,7 @@ export class LegalGrpcController {
 
       return {
         deadline: {
-          deadline: this.toProtoTimestamp(deadline),
+          deadline: toProtoTimestamp(deadline),
           days_remaining: Math.max(0, daysRemaining),
           is_overdue: isOverdue,
         },
@@ -759,28 +790,46 @@ export class LegalGrpcController {
   // HELPER METHODS
   // ============================================================================
 
-  private toProtoTimestamp(date: Date | null | undefined): ProtoTimestamp | undefined {
-    if (!date) return undefined;
-    const d = date instanceof Date ? date : new Date(date);
-    const seconds = Math.floor(d.getTime() / 1000);
-    const nanos = (d.getTime() % 1000) * 1000000;
-    return { seconds, nanos };
-  }
+  // Note: toProtoTimestamp is now imported from @my-girok/nest-common
 
-  private toProtoConsent(consent: ConsentResponseDto): ProtoConsent {
+  private toProtoConsent(
+    consent: ConsentResponseDto,
+    document?: LegalDocumentResponseDto,
+  ): ProtoConsent {
+    // Map document type to consent type
+    // Document types: TERMS_OF_SERVICE, PRIVACY_POLICY, COOKIE_POLICY, etc.
+    // These map directly to consent types
+    const documentType = document?.type || 'UNSPECIFIED';
+    const consentType = CONSENT_TYPE_REVERSE_MAP[documentType] ?? 0;
+
     return {
       id: consent.id,
       account_id: consent.accountId,
-      consent_type: CONSENT_TYPE_REVERSE_MAP['TERMS_OF_SERVICE'] || 1, // Default, would need document type mapping
+      consent_type: consentType,
       document_id: consent.documentId,
-      document_version: '1.0.0', // Would need to fetch from document
+      document_version: document?.version || '',
       status: CONSENT_STATUS_MAP[consent.status] || 0,
       ip_address: '', // Not stored in response DTO
       user_agent: '', // Not stored in response DTO
-      agreed_at: this.toProtoTimestamp(consent.consentedAt),
+      agreed_at: toProtoTimestamp(consent.consentedAt),
       expires_at: undefined, // Not stored in response DTO
-      revoked_at: consent.withdrawnAt ? this.toProtoTimestamp(consent.withdrawnAt) : undefined,
+      revoked_at: consent.withdrawnAt ? toProtoTimestamp(consent.withdrawnAt) : undefined,
     };
+  }
+
+  /**
+   * Converts a consent to proto format with document lookup.
+   * Fetches the document to get type and version information.
+   */
+  private async toProtoConsentWithDocument(consent: ConsentResponseDto): Promise<ProtoConsent> {
+    try {
+      const document = await this.legalDocumentsService.findOne(consent.documentId);
+      return this.toProtoConsent(consent, document);
+    } catch (error) {
+      // Document not found - return consent with default values
+      this.logger.warn(`Document not found for consent ${consent.id}: ${consent.documentId}`);
+      return this.toProtoConsent(consent);
+    }
   }
 
   private toProtoLegalDocument(
@@ -796,9 +845,9 @@ export class LegalGrpcController {
       language_code: doc.locale,
       country_code: doc.countryCode,
       is_mandatory: doc.type === 'TERMS_OF_SERVICE' || doc.type === 'PRIVACY_POLICY',
-      effective_at: doc.effectiveFrom ? this.toProtoTimestamp(doc.effectiveFrom) : undefined,
-      expires_at: doc.effectiveTo ? this.toProtoTimestamp(doc.effectiveTo) : undefined,
-      created_at: this.toProtoTimestamp(doc.createdAt),
+      effective_at: doc.effectiveFrom ? toProtoTimestamp(doc.effectiveFrom) : undefined,
+      expires_at: doc.effectiveTo ? toProtoTimestamp(doc.effectiveTo) : undefined,
+      created_at: toProtoTimestamp(doc.createdAt),
     };
   }
 
@@ -827,9 +876,9 @@ export class LegalGrpcController {
       type: DSR_TYPE_REVERSE_MAP[dsr.requestType] || 0,
       status: DSR_STATUS_MAP[dsr.status] || 0,
       reason: dsr.description || '',
-      submitted_at: this.toProtoTimestamp(dsr.requestedAt),
-      deadline_at: this.toProtoTimestamp(dsr.dueDate),
-      completed_at: dsr.completedAt ? this.toProtoTimestamp(dsr.completedAt) : undefined,
+      submitted_at: toProtoTimestamp(dsr.requestedAt),
+      deadline_at: toProtoTimestamp(dsr.dueDate),
+      completed_at: dsr.completedAt ? toProtoTimestamp(dsr.completedAt) : undefined,
       processed_by: dsr.assignedTo || '',
     };
   }
