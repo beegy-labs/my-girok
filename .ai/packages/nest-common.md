@@ -396,6 +396,19 @@ export class MyService {
 | `ClickHouseQueryBuilder` | Query builder class            |
 | `isHealthy()`            | Check connection status        |
 | `batchInsert()`          | Chunked insert for large data  |
+| `formatPartition()`      | Date to partition key string   |
+
+### Partition Helper
+
+```typescript
+import { formatPartition } from '@my-girok/nest-common';
+
+// Monthly partition (YYYYMM)
+formatPartition(new Date('2026-01-15'), 'month'); // "202601"
+
+// Daily partition (YYYYMMDD)
+formatPartition(new Date('2026-01-15'), 'day'); // "20260115"
+```
 
 ### Environment Variables
 
