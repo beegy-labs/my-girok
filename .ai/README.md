@@ -1,202 +1,157 @@
 # AI Assistant Navigation
 
-> **Purpose**: This directory contains LLM-optimized documentation for AI assistants working on my-girok project.
+> LLM-optimized documentation for multi-LLM assistants
 
-## How to Use This Directory
+## Documentation Policy
 
-**When starting a new task:**
+### `.ai/` = LLM Quick Reference (30-50 lines max)
 
-1. Read `rules.md` for core development rules
-2. Read `architecture.md` for system patterns (2025 architecture)
-3. Read specific service/app file based on your task
+```
+Purpose: Token-efficient, pattern-focused, instant lookup
+Format:  Tables, commands, code snippets only
+Avoid:   Explanations, tutorials, detailed examples
+Link:    Always end with "**Full guide**: docs/..."
+```
+
+### `docs/` = Detailed Documentation (Human + LLM)
+
+```
+Purpose: Complete guides, policies, tutorials
+Format:  Explanations, examples, troubleshooting
+Audience: Human developers + LLM when details needed
+```
+
+### Writing Guidelines
+
+| .ai/ Files            | docs/ Files                 |
+| --------------------- | --------------------------- |
+| 30-50 lines max       | 100-500 lines               |
+| Tables & commands     | Explanations & examples     |
+| No "why", only "what" | Why + How + Troubleshooting |
+| Link to docs/         | Link to .ai/ for quick ref  |
+
+**Example `.ai/` structure:**
+
+```markdown
+# Topic
+
+> One-line description
+
+## Commands
+
+table or code block
+
+## Key Patterns
+
+table only
+
+---
+
+**Full guide**: docs/path/FILE.md
+```
+
+### Service Document Template
+
+All service docs in `.ai/services/` follow this structure:
+
+| Section           | Required | Notes                             |
+| ----------------- | -------- | --------------------------------- |
+| Service Info      | Yes      | Port, DB, Cache, Events, Codebase |
+| Domain Boundaries | Yes      | This Service / NOT This Service   |
+| REST API          | Yes      | Endpoints only                    |
+| gRPC Server       | Yes      | N/A if REST only                  |
+| Database Tables   | Yes      | Table + Purpose                   |
+| Events            | Yes      | N/A if none                       |
+| Caching           | Yes      | Key pattern + TTL                 |
+| Environment       | Yes      | Required env vars                 |
+
+**Template**: `.ai/templates/service.md`
+
+### Link Validation
+
+Pre-commit hook validates markdown links:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+pre-commit install
+
+# Manual check
+npx markdown-link-check .ai/**/*.md
+```
+
+---
 
 ## Quick Links
 
-### Core Documentation
+### Core (READ FIRST)
 
-- **[rules.md](rules.md)** - Essential DO/DON'T rules (READ FIRST)
-- **[best-practices.md](best-practices.md)** - 2026 Best Practices checklist (monthly review)
-- **[architecture.md](architecture.md)** - Architecture patterns (Full BFF + GraphQL + gRPC)
-- **[caching.md](caching.md)** - Valkey/Redis caching patterns (Cache-Aside)
-- **[ssot.md](ssot.md)** - Single Source of Truth strategy (Tailwind CSS 4)
-- **[i18n-locale.md](i18n-locale.md)** - Internationalization & Locale system
-- **[resume.md](resume.md)** - Resume feature documentation
-- **[user-preferences.md](user-preferences.md)** - User preferences system
-- **[pull-requests.md](pull-requests.md)** - PR creation and review guidelines
+| File                                   | Purpose         |
+| -------------------------------------- | --------------- |
+| [rules.md](rules.md)                   | DO/DON'T rules  |
+| [architecture.md](architecture.md)     | System patterns |
+| [best-practices.md](best-practices.md) | 2026 checklist  |
 
-### Development & Deployment
+### Infrastructure
 
-- **[project-setup.md](project-setup.md)** - Quick project setup guide
-- **[git-flow.md](git-flow.md)** - Git Flow workflow reference
-- **[ci-cd.md](ci-cd.md)** - CI/CD pipeline (GitHub Actions + ArgoCD)
-- **[database.md](database.md)** - Database migrations and management
-- **[docker-deployment.md](docker-deployment.md)** - Docker Compose quick reference
-- **[helm-deployment.md](helm-deployment.md)** - Kubernetes/Helm quick reference
-- **[testing.md](testing.md)** - TDD guidelines and testing patterns
+| File                                         | Purpose         |
+| -------------------------------------------- | --------------- |
+| [database.md](database.md)                   | goose commands  |
+| [caching.md](caching.md)                     | Valkey patterns |
+| [ci-cd.md](ci-cd.md)                         | GitHub Actions  |
+| [docker-deployment.md](docker-deployment.md) | Docker Compose  |
+| [helm-deployment.md](helm-deployment.md)     | K8s/Helm        |
+| [testing.md](testing.md)                     | TDD patterns    |
+| [git-flow.md](git-flow.md)                   | Branch strategy |
 
-### Services (Implemented)
+### Services
 
-- **[services/identity-service.md](services/identity-service.md)** - Multi-app user management platform (Future)
-- **[services/auth-service.md](services/auth-service.md)** - Authentication, authorization & Legal/Consent API (Current)
-- **[services/personal-service.md](services/personal-service.md)** - Resume, Profile (REST)
-- **[services/audit-service.md](services/audit-service.md)** - Compliance logging (ClickHouse, 5yr retention)
-- **[services/analytics-service.md](services/analytics-service.md)** - Business analytics (ClickHouse, MVs)
+| File                                                           | Purpose            |
+| -------------------------------------------------------------- | ------------------ |
+| [services/identity-service.md](services/identity-service.md)   | Accounts, sessions |
+| [services/auth-service.md](services/auth-service.md)           | RBAC, operators    |
+| [services/legal-service.md](services/legal-service.md)         | Consents, DSR      |
+| [services/personal-service.md](services/personal-service.md)   | Resume             |
+| [services/audit-service.md](services/audit-service.md)         | Compliance logging |
+| [services/analytics-service.md](services/analytics-service.md) | Business analytics |
 
-### Frontend Apps (Implemented)
+### Frontend & Packages
 
-- **[apps/web-main.md](apps/web-main.md)** - Main web application (React + Vite)
-- **[apps/storybook.md](apps/storybook.md)** - Storybook component documentation
+| File                                                   | Purpose          |
+| ------------------------------------------------------ | ---------------- |
+| [apps/web-main.md](apps/web-main.md)                   | React web app    |
+| [packages/design-tokens.md](packages/design-tokens.md) | WCAG tokens      |
+| [packages/nest-common.md](packages/nest-common.md)     | NestJS utilities |
 
-### Shared Packages
+---
 
-- **[packages/design-tokens.md](packages/design-tokens.md)** - WCAG 2.1 AAA design tokens (SSOT)
-- **[packages/nest-common.md](packages/nest-common.md)** - Shared NestJS utilities (guards, decorators, gRPC)
-- **[packages/types.md](packages/types.md)** - TypeScript types + Protobuf
-- **[packages/ui-components.md](packages/ui-components.md)** - React UI components
+## Task Navigation
 
-## Task-Based Navigation
+| Task               | Read                                    |
+| ------------------ | --------------------------------------- |
+| Authentication     | `rules.md` + `services/auth-service.md` |
+| Resume feature     | `services/personal-service.md`          |
+| Database migration | `database.md`                           |
+| Add caching        | `caching.md`                            |
+| Deploy to K8s      | `helm-deployment.md`                    |
+| Create PR          | `git-flow.md`                           |
+| Add tests          | `testing.md`                            |
 
-**"I need to add authentication..."**
-→ Read: `rules.md` + `architecture.md` + `services/auth-service.md`
-→ Future: `services/identity-service.md`
+---
 
-**"I need to work on Identity Platform..."**
-→ Read: `services/identity-service.md` + `architecture.md`
-→ Policy: `docs/policies/IDENTITY_PLATFORM.md`
-
-**"I need to work on resume..."**
-→ Read: `rules.md` + `services/personal-service.md`
-
-**"I need to update the web frontend..."**
-→ Read: `rules.md` + `apps/web-main.md`
-
-**"I need to set up the project..."**
-→ Read: `project-setup.md`
-
-**"I need to deploy with Docker..."**
-→ Read: `docker-deployment.md`
-
-**"I need to deploy to Kubernetes..."**
-→ Read: `helm-deployment.md`
-
-**"I need to understand Git workflow..."**
-→ Read: `git-flow.md`
-
-**"I need to setup CI/CD..."**
-→ Read: `ci-cd.md`
-
-**"I need to manage database migrations..."**
-→ Read: `database.md`
-
-**"I need testing/security/performance info..."**
-→ Read: `testing.md` or refer to `docs/policies/` for detailed documentation
-
-**"I need to implement caching..."**
-→ Read: `caching.md`
-→ Full guide: `docs/policies/CACHING.md`
-
-**"I need to create a new NestJS service..."**
-→ Read: `rules.md` + `packages/nest-common.md`
-
-**"I need to add design tokens or styling..."**
-→ Read: `ssot.md` + `packages/design-tokens.md` + `docs/DESIGN_SYSTEM.md`
-
-**"I need to work on i18n or locale settings..."**
-→ Read: `i18n-locale.md` + `apps/web-main.md`
-
-**"I need to work on resume features..."**
-→ Read: `resume.md` + `services/personal-service.md`
-
-**"I need to work on Storybook..."**
-→ Read: `apps/storybook.md`
-
-**"I need to create a PR..."**
-→ Read: `pull-requests.md` + `git-flow.md`
-
-**"I need to work on legal/consent features..."**
-→ Read: `services/auth-service.md` (Legal API section) + `packages/types.md` (Legal Types)
-→ Policy: `docs/policies/LEGAL_CONSENT.md`
-
-**"I need to work on ads/promotions..."**
-→ Read: `apps/web-main.md` (Advertisement section)
-→ Full guide: `docs/guides/ADSENSE_GUIDE.md`
-
-## Identity Platform Strategy
-
-**Key Principle**: Services combined (operational simplicity) + DBs pre-separated (future extraction)
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Identity Service (Combined)                   │
-│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
-│   │  Identity   │   │    Auth     │   │    Legal    │           │
-│   │   Module    │   │   Module    │   │   Module    │           │
-│   └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
-└──────────┼─────────────────┼─────────────────┼───────────────────┘
-           ▼                 ▼                 ▼
-    ┌────────────┐    ┌────────────┐    ┌────────────┐
-    │identity_db │    │  auth_db   │    │  legal_db  │
-    └────────────┘    └────────────┘    └────────────┘
+Cilium Gateway API
+       │
+┌──────┼──────┬──────────────┬────────────┐
+│      │      │              │            │
+▼      ▼      ▼              ▼            ▼
+Identity  Auth   Personal   Audit    Analytics
+Service  Service  Service   Service   Service
+  │        │        │          │          │
+  ▼        ▼        ▼          ▼          ▼
+PostgreSQL (3 DBs)    PostgreSQL  ClickHouse (2 DBs)
 ```
 
-**Service Evolution:**
-
-| Phase   | State                           | DBs |
-| ------- | ------------------------------- | --- |
-| Current | auth-service (all-in-one)       | 1   |
-| Next    | identity-service (combined)     | 3   |
-| Future  | 3 separate services (if needed) | 3   |
-
-**Global Law Coverage:** PIPA (KR), GDPR (EU), CCPA (US), APPI (JP)
-
-## Current Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Cilium Gateway API                        │
-│  api.girok.dev │ accounts.girok.dev │ my.girok.dev         │
-└──────────┬─────────────┬────────────────────────────────────┘
-           │             │
-    ┌──────▼──────┐  ┌───▼────────┐  ┌────────────┐  ┌────────────┐
-    │Auth Service │  │  Personal  │  │   Audit    │  │ Analytics  │
-    │ (REST+gRPC) │  │  Service   │  │  Service   │  │  Service   │
-    │ PostgreSQL  │  │ PostgreSQL │  │ ClickHouse │  │ ClickHouse │
-    └─────────────┘  └────────────┘  └────────────┘  └────────────┘
-           │               │               │               │
-           └───────────────┴───────────────┴───────────────┘
-                                   │
-                            ┌──────▼──────┐
-                            │   Valkey    │
-                            │ (Caching)   │
-                            └─────────────┘
-```
-
-**Planned (Not Implemented):**
-
-- Identity Service (replaces auth-service)
-- GraphQL BFF (Federation Gateway)
-- WS Gateway (Socket.io)
-- Feed Service (MongoDB)
-- Chat Service (MongoDB)
-- Matching Service (Valkey)
-- Media Service (MinIO)
-- LLM API (Python FastAPI)
-
-## Token Optimization
-
-- **This directory (.ai/)**: ~5K tokens (patterns, APIs, flows)
-- **Full docs (docs/)**: ~73K tokens (detailed policies, tutorials)
-
-**Read .ai/ for coding tasks, refer to docs/ for learning/policies.**
-
-## File Format
-
-Each service/app file contains:
-
-1. **Purpose** - What this service does
-2. **Tech Stack** - Technologies used
-3. **API/gRPC Endpoints** - Key routes and methods
-4. **Key Flows** - Important business logic flows
-5. **Integration** - How it connects to other services
-
-Keep it concise, pattern-focused, and example-driven.
+**Token Budget**: `.ai/` ~2K tokens, `docs/` ~73K tokens

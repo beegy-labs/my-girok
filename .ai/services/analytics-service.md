@@ -1,93 +1,80 @@
 # Analytics Service
 
-> Business analytics with ClickHouse (90d-1yr retention)
+> Business analytics with ClickHouse (90d-2yr retention)
 
-## Tech Stack
+## Service Info
 
-| Component | Technology                |
-| --------- | ------------------------- |
-| Framework | NestJS 11, TypeScript 5.9 |
-| Database  | ClickHouse (analytics_db) |
-| Port      | 3004                      |
+| Property | Value                         |
+| -------- | ----------------------------- |
+| REST     | :3004                         |
+| gRPC     | N/A                           |
+| Database | analytics_db (ClickHouse)     |
+| Cache    | Valkey DB 4                   |
+| Events   | N/A                           |
+| Codebase | `services/analytics-service/` |
+
+## Domain Boundaries
+
+| This Service         | NOT This Service           |
+| -------------------- | -------------------------- |
+| Session Analytics    | Compliance logging (audit) |
+| Event Tracking       | User accounts (identity)   |
+| Funnel Analysis      | Authorization (auth)       |
+| Campaign Attribution | User data (personal)       |
 
 ## REST API
 
-### Ingestion
-
-| Method | Path                  | Auth | Description         |
-| ------ | --------------------- | ---- | ------------------- |
-| POST   | `/v1/ingest/session`  | API  | Start session       |
-| POST   | `/v1/ingest/event`    | API  | Track event         |
-| POST   | `/v1/ingest/pageview` | API  | Track page view     |
-| POST   | `/v1/ingest/error`    | API  | Track error         |
-| POST   | `/v1/ingest/batch`    | API  | Batch ingest        |
-| POST   | `/v1/ingest/identify` | API  | Link anonymous→user |
-
-### Sessions
-
-| Method | Path                        | Auth             | Description       |
-| ------ | --------------------------- | ---------------- | ----------------- |
-| GET    | `/v1/sessions`              | `analytics:read` | Session list      |
-| GET    | `/v1/sessions/stats`        | `analytics:read` | Session stats     |
-| GET    | `/v1/sessions/summary`      | `analytics:read` | Session summary   |
-| GET    | `/v1/sessions/distribution` | `analytics:read` | Device/Browser/OS |
-| GET    | `/v1/sessions/:id/timeline` | `analytics:read` | Session timeline  |
-
-### Events
-
-| Method | Path         | Auth             | Description |
-| ------ | ------------ | ---------------- | ----------- |
-| GET    | `/v1/events` | `analytics:read` | Event list  |
-
-### Behavior
-
-| Method | Path                        | Auth             | Description        |
-| ------ | --------------------------- | ---------------- | ------------------ |
-| GET    | `/v1/behavior/summary`      | `analytics:read` | Behavior summary   |
-| GET    | `/v1/behavior/top-events`   | `analytics:read` | Top events         |
-| GET    | `/v1/behavior/by-category`  | `analytics:read` | Events by category |
-| GET    | `/v1/behavior/user/:userId` | `analytics:read` | User behavior      |
-
-### Funnels
-
-| Method | Path                        | Auth             | Description      |
-| ------ | --------------------------- | ---------------- | ---------------- |
-| GET    | `/v1/funnels/:name`         | `analytics:read` | Funnel analysis  |
-| GET    | `/v1/funnels/compare`       | `analytics:read` | Compare funnels  |
-| GET    | `/v1/funnels/dropoff/:step` | `analytics:read` | Dropoff analysis |
-
-## ClickHouse Schema
-
 ```
-analytics_db/
-├── sessions          # User sessions (1yr TTL)
-├── events            # User events (90d TTL)
-├── page_views        # Page views (90d TTL)
-├── funnel_events     # Funnel tracking (90d TTL)
-├── user_profiles     # Aggregated profiles
-└── errors            # Error tracking (30d TTL)
+POST  /v1/ingest/session, /v1/ingest/event
+POST  /v1/ingest/pageview, /v1/ingest/error
+POST  /v1/ingest/batch, /v1/ingest/identify
+
+GET   /v1/sessions, /v1/sessions/stats
+GET   /v1/sessions/summary, /v1/sessions/distribution
+GET   /v1/sessions/:id/timeline
+
+GET   /v1/events
+GET   /v1/behavior/summary, /v1/behavior/top-events
+GET   /v1/behavior/by-category, /v1/behavior/user/:userId
+
+GET   /v1/funnels/:name, /v1/funnels/compare
+GET   /v1/funnels/dropoff/:step
 ```
+
+## gRPC Server
+
+N/A - REST only
+
+## Database Tables
+
+| Table         | TTL     | Purpose          |
+| ------------- | ------- | ---------------- |
+| sessions      | 1 year  | User sessions    |
+| events        | 90 days | User events      |
+| page_views    | 90 days | Page views       |
+| funnel_events | 90 days | Funnel tracking  |
+| user_profiles | -       | Aggregated users |
+| errors        | 30 days | Error tracking   |
 
 ## Materialized Views
 
-Pre-aggregated data for dashboard queries:
+| MV                  | TTL     | Purpose        |
+| ------------------- | ------- | -------------- |
+| daily_session_stats | 1 year  | Daily metrics  |
+| hourly_event_counts | 90 days | Event trends   |
+| utm_campaign_stats  | 90 days | Campaign attr. |
+| funnel_stats        | 90 days | Funnel conv.   |
 
-| MV                          | Target Table           | TTL | Purpose                   |
-| --------------------------- | ---------------------- | --- | ------------------------- |
-| `daily_session_stats_mv`    | daily_session_stats    | 1y  | Daily metrics             |
-| `hourly_event_counts_mv`    | hourly_event_counts    | 90d | Event trends              |
-| `hourly_session_metrics_mv` | hourly_session_metrics | 30d | Hourly trends             |
-| `session_dist_*_mv`         | session_distributions  | 90d | Device/Browser/OS/Country |
-| `utm_campaign_stats_mv`     | utm_campaign_stats     | 90d | Campaign attribution      |
-| `funnel_stats_mv`           | funnel_stats           | 90d | Funnel conversion         |
-| `page_performance_mv`       | page_performance_stats | 90d | Core Web Vitals           |
+## Events
 
-## Caching (Valkey DB 4)
+N/A
 
-| Data             | Key Pattern                             | TTL | Invalidation |
-| ---------------- | --------------------------------------- | --- | ------------ |
-| Behavior Summary | `analytics:behavior:{serviceId}:{date}` | 5m  | MV refresh   |
-| Funnel Data      | `analytics:funnel:{funnelId}:{date}`    | 15m | MV refresh   |
+## Caching
+
+| Key Pattern                             | TTL |
+| --------------------------------------- | --- |
+| `analytics:behavior:{serviceId}:{date}` | 5m  |
+| `analytics:funnel:{funnelId}:{date}`    | 15m |
 
 ## Environment
 
@@ -95,25 +82,12 @@ Pre-aggregated data for dashboard queries:
 PORT=3004
 CLICKHOUSE_HOST=clickhouse
 CLICKHOUSE_DATABASE=analytics_db
-CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=false  # High throughput
+CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=false
 VALKEY_HOST=localhost
 VALKEY_DB=4
-```
-
-## Query Examples
-
-```sql
--- Session distributions (uses MV)
-SELECT dimension_value, session_count, bounce_count
-FROM session_distributions
-WHERE dimension_type = 'device' AND date >= today() - 7;
-
--- UTM campaign performance (uses MV)
-SELECT utm_source, session_count, conversion_count
-FROM utm_campaign_stats WHERE date = today();
 ```
 
 ---
 
 **Schema**: `infrastructure/clickhouse/schemas/02-analytics_db.sql`
-**MVs**: `infrastructure/clickhouse/schemas/03-materialized_views.sql`
+**Full docs**: `docs/services/ANALYTICS_SERVICE.md`

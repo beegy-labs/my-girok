@@ -1,96 +1,51 @@
-# 2026 Best Practices (Quick Reference)
+# 2026 Best Practices
 
-> Monthly review checklist - Last updated: 2026-01-02
+> Monthly review checklist
 
 ## Database
 
-| Do                       | Don't            |
-| ------------------------ | ---------------- |
-| goose for ALL migrations | `prisma migrate` |
-| TEXT for PostgreSQL IDs  | UUID type        |
-| UUIDv7 for ClickHouse    | UUIDv4           |
-| TIMESTAMPTZ(6)           | TIMESTAMP        |
-| `-- +goose Down` section | Skip rollback    |
-| Manual ArgoCD sync       | Auto-sync for DB |
+| Do                   | Don't            |
+| -------------------- | ---------------- |
+| goose for migrations | `prisma migrate` |
+| TEXT for IDs         | UUID type        |
+| TIMESTAMPTZ(6)       | TIMESTAMP        |
 
 ## React 19+
 
-| Do                             | Don't                           |
-| ------------------------------ | ------------------------------- |
-| React Compiler (auto-optimize) | Manual memo/useMemo/useCallback |
-| `use()` for async data         | useEffect + useState fetch      |
-| `useOptimistic` for UI         | Manual optimistic state         |
-| `useActionState` for forms     | Manual form state               |
-| Design tokens (SSOT)           | Inline styles                   |
+| Do                   | Don't               |
+| -------------------- | ------------------- |
+| React Compiler       | Manual memo/useMemo |
+| `use()` for async    | useEffect fetch     |
+| Design tokens (SSOT) | Inline styles       |
 
 ## Backend
 
-| Do                                | Don't                       |
-| --------------------------------- | --------------------------- |
-| `@Transactional()` for multi-step | Manual transaction handling |
-| gRPC internal, REST external      | REST for everything         |
-| `@my-girok/nest-common` utils     | Duplicate utilities         |
-| class-validator                   | Manual validation           |
-
-## TypeScript 5.9+
-
-| Do                     | Don't                      |
-| ---------------------- | -------------------------- |
-| Strict mode            | `any` types                |
-| `satisfies` operator   | Type assertions            |
-| `@my-girok/types`      | Duplicate type definitions |
-| Prisma-generated types | Manual DB types            |
+| Do                 | Don't               |
+| ------------------ | ------------------- |
+| `@Transactional()` | Manual transactions |
+| gRPC internal      | REST everywhere     |
+| class-validator    | Manual validation   |
 
 ## Testing
 
-| Do                          | Don't                 |
-| --------------------------- | --------------------- |
-| 80% minimum coverage        | Skip tests            |
-| Test fixtures               | Hardcoded data        |
-| Time-independent assertions | `Date.now()` in tests |
-
-## Security
-
-| Do                     | Don't                    |
-| ---------------------- | ------------------------ |
-| Sealed Secrets / Vault | Secrets in code          |
-| Parameterized queries  | String concatenation SQL |
-| Rate limiting on auth  | Unlimited attempts       |
-| Audit logging          | Silent operations        |
-
-## DevOps
-
-| Do                 | Don't                 |
-| ------------------ | --------------------- |
-| ArgoCD GitOps      | Manual kubectl apply  |
-| Manual sync for DB | Auto-sync migrations  |
-| Helm charts        | Raw YAML              |
-| Health checks      | No liveness/readiness |
-
-## Documentation
-
-| Do                            | Don't                   |
-| ----------------------------- | ----------------------- |
-| `.ai/` for LLM docs           | Single monolithic docs  |
-| `docs/policies/` for policies | Scattered policy files  |
-| English only                  | Mixed languages         |
-| No AI attribution             | "Generated with Claude" |
+| Do            | Don't          |
+| ------------- | -------------- |
+| 80% coverage  | Skip tests     |
+| Test fixtures | Hardcoded data |
 
 ## Git
 
-| Do                              | Don't                     |
-| ------------------------------- | ------------------------- |
-| Squash: feat → develop          | Merge commits on features |
-| Merge: develop → release → main | Squash on release/main    |
-| Conventional commits            | Random commit messages    |
+| Do                     | Don't             |
+| ---------------------- | ----------------- |
+| Squash: feat → develop | Merge on features |
+| Merge: develop → main  | Squash on release |
 
 ## Anti-Patterns
 
 ```
-❌ Over-engineering for future needs
-❌ Abstractions for one-time operations
+❌ Over-engineering
+❌ Abstractions for one-time ops
 ❌ Features beyond requirements
-❌ Backwards-compatibility hacks
 ```
 
 ---

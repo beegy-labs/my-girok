@@ -1,66 +1,78 @@
 # Analytics Service
 
-> Business intelligence and analytics service with ClickHouse storage
+> Business intelligence and analytics with ClickHouse
 
 ## Overview
 
-The Analytics Service provides business analytics and metrics tracking for the platform. It processes and stores user behavior data, conversion funnels, and business KPIs.
+The Analytics Service provides business analytics and metrics tracking. It processes user behavior data, conversion funnels, and business KPIs.
+
+| Property  | Value                      |
+| --------- | -------------------------- |
+| REST Port | 3004                       |
+| Framework | NestJS 11 + TypeScript 5.9 |
+| Database  | analytics_db (ClickHouse)  |
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                   Client Applications                        │
-│  - web-main, web-admin, mobile apps                         │
-└─────────────────────────────────────────────────────────────┘
-              │ HTTP/OTLP
-              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Analytics Service (NestJS)                  │
-│  ┌──────────────────────┐  ┌──────────────────────┐        │
-│  │  IngestionController │  │  QueryController     │        │
-│  │  - POST /v1/track    │  │  - GET /v1/stats     │        │
-│  │  - POST /v1/identify │  │  - GET /v1/funnels   │        │
-│  │  - POST /v1/page     │  │  - GET /v1/cohorts   │        │
-│  └──────────────────────┘  └──────────────────────┘        │
-└─────────────────────────────────────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  ClickHouse (analytics_db)                   │
-│  - user_events         - page_views                         │
-│  - user_profiles       - session_summaries                  │
-│  - conversion_events   - daily_metrics (MV)                 │
-└─────────────────────────────────────────────────────────────┘
+Client Applications (web-main, web-admin, mobile)
+  │ HTTP/OTLP
+  ▼
+Analytics Service (NestJS)
+  ├── IngestionController (POST /v1/track, /v1/identify)
+  └── QueryController (GET /v1/stats, /v1/funnels)
+          │
+          ▼
+    ClickHouse (analytics_db)
 ```
 
-## API Endpoints
+## API Reference
 
-### Event Ingestion
+> See `.ai/services/analytics-service.md` for quick endpoint list.
 
-| Method | Endpoint       | Description           |
-| ------ | -------------- | --------------------- |
-| POST   | `/v1/track`    | Track custom events   |
-| POST   | `/v1/identify` | Identify/update user  |
-| POST   | `/v1/page`     | Track page view       |
-| POST   | `/v1/batch`    | Batch event ingestion |
+### Event Ingestion API
 
-### Query APIs
+| Method | Endpoint              | Auth | Description     |
+| ------ | --------------------- | ---- | --------------- |
+| POST   | `/v1/ingest/session`  | API  | Start session   |
+| POST   | `/v1/ingest/event`    | API  | Track event     |
+| POST   | `/v1/ingest/pageview` | API  | Track page view |
+| POST   | `/v1/ingest/error`    | API  | Track error     |
+| POST   | `/v1/ingest/batch`    | API  | Batch ingest    |
+| POST   | `/v1/ingest/identify` | API  | Link user       |
 
-| Method | Endpoint             | Description          |
-| ------ | -------------------- | -------------------- |
-| GET    | `/v1/stats/overview` | Get metrics overview |
-| GET    | `/v1/stats/users`    | User metrics         |
-| GET    | `/v1/stats/events`   | Event metrics        |
-| GET    | `/v1/funnels/:id`    | Funnel analysis      |
-| GET    | `/v1/cohorts/:id`    | Cohort analysis      |
+### Sessions API
 
-### Admin APIs
+| Method | Endpoint                    | Auth             | Description       |
+| ------ | --------------------------- | ---------------- | ----------------- |
+| GET    | `/v1/sessions`              | `analytics:read` | Session list      |
+| GET    | `/v1/sessions/stats`        | `analytics:read` | Session stats     |
+| GET    | `/v1/sessions/summary`      | `analytics:read` | Session summary   |
+| GET    | `/v1/sessions/distribution` | `analytics:read` | Device/Browser/OS |
+| GET    | `/v1/sessions/:id/timeline` | `analytics:read` | Session timeline  |
 
-| Method | Endpoint           | Description                 |
-| ------ | ------------------ | --------------------------- |
-| GET    | `/v1/admin/events` | Query raw events (admin)    |
-| GET    | `/v1/admin/users`  | Query user profiles (admin) |
+### Events API
+
+| Method | Endpoint     | Auth             | Description |
+| ------ | ------------ | ---------------- | ----------- |
+| GET    | `/v1/events` | `analytics:read` | Event list  |
+
+### Behavior API
+
+| Method | Endpoint                    | Auth             | Description        |
+| ------ | --------------------------- | ---------------- | ------------------ |
+| GET    | `/v1/behavior/summary`      | `analytics:read` | Behavior summary   |
+| GET    | `/v1/behavior/top-events`   | `analytics:read` | Top events         |
+| GET    | `/v1/behavior/by-category`  | `analytics:read` | Events by category |
+| GET    | `/v1/behavior/user/:userId` | `analytics:read` | User behavior      |
+
+### Funnels API
+
+| Method | Endpoint                    | Auth             | Description      |
+| ------ | --------------------------- | ---------------- | ---------------- |
+| GET    | `/v1/funnels/:name`         | `analytics:read` | Funnel analysis  |
+| GET    | `/v1/funnels/compare`       | `analytics:read` | Compare funnels  |
+| GET    | `/v1/funnels/dropoff/:step` | `analytics:read` | Dropoff analysis |
 
 ## Event Schema
 
@@ -96,51 +108,30 @@ interface IdentifyDto {
 }
 ```
 
-### Page View
-
-```typescript
-interface PageViewDto {
-  userId?: string;
-  anonymousId?: string;
-  name?: string;
-  properties?: {
-    path: string;
-    title: string;
-    url: string;
-    referrer?: string;
-  };
-}
-```
-
-## ClickHouse Tables
+## ClickHouse Schema
 
 ### user_events
 
 ```sql
 CREATE TABLE analytics_db.user_events (
-  id UUID DEFAULT generateUUIDv7(),
-  date Date DEFAULT toDate(timestamp),
-  timestamp DateTime64(3),
-
-  user_id Nullable(UUID),
-  anonymous_id String,
-  session_id String,
-
-  event_name LowCardinality(String),
-  event_category LowCardinality(String),
-  properties String,  -- JSON
-
-  page_path String,
-  page_title String,
-  referrer String,
-
-  device_type LowCardinality(String),
-  os LowCardinality(String),
-  browser LowCardinality(String),
-
-  country LowCardinality(String),
-  region String,
-  city String
+    id UUID DEFAULT generateUUIDv7(),
+    date Date DEFAULT toDate(timestamp),
+    timestamp DateTime64(3),
+    user_id Nullable(UUID),
+    anonymous_id String,
+    session_id String,
+    event_name LowCardinality(String),
+    event_category LowCardinality(String),
+    properties String,  -- JSON
+    page_path String,
+    page_title String,
+    referrer String,
+    device_type LowCardinality(String),
+    os LowCardinality(String),
+    browser LowCardinality(String),
+    country LowCardinality(String),
+    region String,
+    city String
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(date)
 ORDER BY (date, user_id, event_name, timestamp)
@@ -151,21 +142,29 @@ TTL date + INTERVAL 2 YEAR;
 
 ```sql
 CREATE TABLE analytics_db.user_profiles (
-  user_id UUID,
-
-  email Nullable(String),
-  name Nullable(String),
-
-  traits String,  -- JSON
-
-  first_seen DateTime64(3),
-  last_seen DateTime64(3),
-
-  event_count UInt64,
-  session_count UInt32
+    user_id UUID,
+    email Nullable(String),
+    name Nullable(String),
+    traits String,  -- JSON
+    first_seen DateTime64(3),
+    last_seen DateTime64(3),
+    event_count UInt64,
+    session_count UInt32
 ) ENGINE = ReplacingMergeTree(last_seen)
 ORDER BY user_id;
 ```
+
+## Materialized Views
+
+| MV                        | Target Table           | TTL     | Purpose              |
+| ------------------------- | ---------------------- | ------- | -------------------- |
+| daily_session_stats_mv    | daily_session_stats    | 1 year  | Daily metrics        |
+| hourly_event_counts_mv    | hourly_event_counts    | 90 days | Event trends         |
+| hourly_session_metrics_mv | hourly_session_metrics | 30 days | Hourly trends        |
+| session*dist*\*\_mv       | session_distributions  | 90 days | Device/Browser/OS    |
+| utm_campaign_stats_mv     | utm_campaign_stats     | 90 days | Campaign attribution |
+| funnel_stats_mv           | funnel_stats           | 90 days | Funnel conversion    |
+| page_performance_mv       | page_performance_stats | 90 days | Core Web Vitals      |
 
 ## Data Retention
 
@@ -178,9 +177,11 @@ ORDER BY user_id;
 
 ## Rate Limiting
 
-- Track endpoint: 100 req/min per user
-- Batch endpoint: 10 req/min, 1000 events/batch
-- Query endpoints: 60 req/min per admin
+| Endpoint | Limit                     | Notes |
+| -------- | ------------------------- | ----- |
+| Track    | 100/min per user          |       |
+| Batch    | 10/min, 1000 events/batch |       |
+| Query    | 60/min per admin          |       |
 
 ## Development
 
@@ -188,28 +189,10 @@ ORDER BY user_id;
 # Start service
 pnpm --filter analytics-service dev
 
-# Build
-pnpm --filter analytics-service build
-```
-
-## Environment Variables
-
-```env
-# ClickHouse
-CLICKHOUSE_HOST=localhost
-CLICKHOUSE_PORT=8123
-CLICKHOUSE_DATABASE=analytics_db
-CLICKHOUSE_USER=default
-CLICKHOUSE_PASSWORD=
-
-# Rate Limiting
-RATE_LIMIT_TTL=60000
-RATE_LIMIT_MAX=100
-
-# JWT
-JWT_SECRET=your-secret
+# Run tests
+pnpm --filter analytics-service test
 ```
 
 ## Related Documentation
 
-- [.ai/services/analytics-service.md](../../.ai/services/analytics-service.md)
+- [ClickHouse Infrastructure](../infrastructure/CLICKHOUSE.md)
