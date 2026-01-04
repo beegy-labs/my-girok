@@ -2,53 +2,48 @@
 
 > Resume management with PostgreSQL + MinIO + BullMQ
 
-## Tech Stack
+## Service Info
 
-| Component | Technology                |
-| --------- | ------------------------- |
-| Framework | NestJS 11, TypeScript 5.9 |
-| Database  | PostgreSQL 16, Prisma 6   |
-| Storage   | MinIO (S3-compatible)     |
-| Queue     | BullMQ + Valkey           |
-| Port      | REST :3002                |
+| Property | Value                        |
+| -------- | ---------------------------- |
+| REST     | :3002                        |
+| Database | personal_db (PostgreSQL)     |
+| Storage  | MinIO (S3-compatible)        |
+| Queue    | BullMQ + Valkey              |
+| Codebase | `services/personal-service/` |
 
 ## REST API
 
-### Resume
+### Resume CRUD
 
-| Method | Path                  | Auth | Description  |
-| ------ | --------------------- | ---- | ------------ |
-| GET    | `/resume`             | ✅   | List resumes |
-| GET    | `/resume/:id`         | ✅   | Get resume   |
-| POST   | `/resume`             | ✅   | Create       |
-| PUT    | `/resume/:id`         | ✅   | Update       |
-| DELETE | `/resume/:id`         | ✅   | Delete       |
-| POST   | `/resume/:id/copy`    | ✅   | Duplicate    |
-| PATCH  | `/resume/:id/default` | ✅   | Set default  |
+```
+POST/GET/PUT/DELETE  /resume, /resume/:id
+PATCH                /resume/:id/default
+POST                 /resume/:id/copy
+```
 
-### Attachments
+### Sections & Attachments
 
-| Method | Path                           | Auth | Description |
-| ------ | ------------------------------ | ---- | ----------- |
-| POST   | `/resume/:id/attachments`      | ✅   | Upload      |
-| GET    | `/resume/:id/attachments`      | ✅   | List        |
-| DELETE | `/resume/:id/attachments/:aid` | ✅   | Delete      |
+```
+PATCH   /resume/:id/sections/order|visibility
+POST    /resume/:id/attachments
+DELETE  /resume/:id/attachments/:aid
+```
 
-### Public
+### Public Access
 
-| Method | Path                       | Auth | Description    |
-| ------ | -------------------------- | ---- | -------------- |
-| GET    | `/resume/public/:username` | ❌   | Default resume |
-| GET    | `/resume/image-proxy?key=` | ❌   | Image proxy    |
-| GET    | `/share/public/:token`     | ❌   | Shared resume  |
+```
+GET     /resume/public/:username       # Default resume (no auth)
+GET     /resume/image-proxy?key=       # Image proxy (no auth)
+GET     /share/public/:token           # Shared resume (no auth)
+POST    /share/resume/:resumeId        # Create share link (auth)
+```
 
 ### User Preferences
 
-| Method | Path                   | Description     |
-| ------ | ---------------------- | --------------- |
-| GET    | `/v1/user-preferences` | Get preferences |
-| POST   | `/v1/user-preferences` | Upsert          |
-| DELETE | `/v1/user-preferences` | Reset           |
+```
+GET/POST/DELETE  /v1/user-preferences
+```
 
 ## Key Models
 
@@ -57,11 +52,10 @@
 ```prisma
 model Resume {
   id, userId, title, name, email
-  profileImage    // MinIO URL
-  birthDate       // YYYY-MM-DD
-  militaryService // COMPLETED, EXEMPTED, NOT_APPLICABLE
-  copyStatus      // PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED
-
+  profileImage      // MinIO URL
+  birthDate         // YYYY-MM-DD
+  militaryService   // COMPLETED, EXEMPTED, NOT_APPLICABLE
+  copyStatus        // PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED
   sections, attachments, skills, experiences, educations
 }
 ```
@@ -79,58 +73,48 @@ model ExperienceProject {
 }
 ```
 
-### Enums
+## Enums
 
-| Enum            | Values                                                                                                               |
-| --------------- | -------------------------------------------------------------------------------------------------------------------- |
-| PaperSize       | A4, LETTER                                                                                                           |
-| Gender          | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                                                                               |
-| MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                                                                                  |
-| DegreeType      | HIGH_SCHOOL, ASSOCIATE_2/3, BACHELOR, MASTER, DOCTORATE                                                              |
-| SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE, KEY_ACHIEVEMENTS, APPLICATION_REASON, ATTACHMENTS, COVER_LETTER |
-| CopyStatus      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED                                                                     |
-
-### Soft Delete
-
-Resume supports soft delete with `deletedAt` timestamp. Use `findMany({ where: { deletedAt: null } })` for active resumes.
+| Enum            | Values                                                    |
+| --------------- | --------------------------------------------------------- |
+| PaperSize       | A4, LETTER                                                |
+| Gender          | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                    |
+| MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                       |
+| DegreeType      | HIGH_SCHOOL, ASSOCIATE_2/3, BACHELOR, MASTER, DOCTORATE   |
+| SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE, etc. |
+| CopyStatus      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED          |
 
 ## File Storage (MinIO)
 
 ```
-resumes/{userId}/{resumeId}/{uuid}.{ext}
-tmp/{userId}/{uuid}.{ext}  # 24hr auto-cleanup
+resumes/{userId}/{resumeId}/{uuid}.{ext}   # Permanent
+tmp/{userId}/{uuid}.{ext}                   # 24hr auto-cleanup
 ```
 
-**Constraints**: 10 MB max, Image (JPEG/PNG/GIF/WEBP), Doc (PDF/DOCX)
+| Constraint  | Value                |
+| ----------- | -------------------- |
+| Max Size    | 10 MB                |
+| Image Types | JPEG, PNG, GIF, WEBP |
+| Doc Types   | PDF, DOCX            |
+
+## Caching (Valkey DB 1)
+
+| Key Pattern                     | TTL |
+| ------------------------------- | --- |
+| `personal:user_id:{username}`   | 2h  |
+| `personal:preferences:{userId}` | 1h  |
 
 ## Environment
 
 ```bash
 PORT=3002
-DATABASE_URL=postgresql://user:pass@postgres:5432/personal
+DATABASE_URL=postgresql://...personal_db
 MINIO_ENDPOINT=minio:9000
 MINIO_BUCKET=my-girok-resumes
 VALKEY_HOST=localhost
-VALKEY_PORT=6379
 VALKEY_DB=1
 ```
 
-## Caching (Valkey DB 1)
-
-| Data             | Key Pattern                     | TTL | Invalidation |
-| ---------------- | ------------------------------- | --- | ------------ |
-| Username→UserId  | `personal:user_id:{username}`   | 2h  | user delete  |
-| User Preferences | `personal:preferences:{userId}` | 1h  | prefs update |
-
-```typescript
-import { CacheKey } from '@my-girok/nest-common';
-
-const key = CacheKey.make('personal', 'preferences', userId);
-// → "dev:personal:preferences:550e8400..."
-```
-
-**Policy**: `docs/policies/CACHING.md` | `.ai/caching.md`
-
 ---
 
-**Detailed docs**: `docs/services/PERSONAL_SERVICE.md`
+**Full docs**: `docs/services/PERSONAL_SERVICE.md`
