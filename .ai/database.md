@@ -4,30 +4,21 @@
 
 ## Stack
 
-| Component  | Tool          | Purpose                  |
-| ---------- | ------------- | ------------------------ |
-| Migration  | goose (MIT)   | Schema versioning (SSOT) |
-| ORM        | Prisma 6      | Client generation only   |
-| PostgreSQL | PostgreSQL 16 | Primary data store       |
-| ClickHouse | ClickHouse    | Analytics & Audit        |
+| Component  | Tool          | Purpose            |
+| ---------- | ------------- | ------------------ |
+| Migration  | goose (MIT)   | Schema versioning  |
+| ORM        | Prisma 6      | Client generation  |
+| PostgreSQL | PostgreSQL 16 | Primary data store |
+| ClickHouse | ClickHouse    | Analytics & Audit  |
 
 ## SSOT Principle
 
-**goose is the Single Source of Truth for ALL database schemas (PostgreSQL + ClickHouse).**
+**goose is the Single Source of Truth for ALL database schemas.**
 
 ```
 migrations/ (goose SQL)  →  Docker Image  →  ArgoCD PreSync  →  App Deploy
                                                   ↓
-                                           prisma db pull (PostgreSQL only)
-```
-
-## File Structure
-
-```
-services/<service>/
-├── migrations/              # goose SQL (SSOT)
-│   └── 20251231000000_*.sql
-└── prisma/schema.prisma     # Client only (PostgreSQL)
+                                           prisma db pull
 ```
 
 ## Commands
@@ -35,29 +26,18 @@ services/<service>/
 ### PostgreSQL
 
 ```bash
-# Create migration
-goose -dir migrations create add_feature sql
+goose -dir migrations create add_feature sql   # Create
+goose -dir migrations postgres "$DATABASE_URL" up      # Apply
+goose -dir migrations postgres "$DATABASE_URL" status  # Status
+goose -dir migrations postgres "$DATABASE_URL" down    # Rollback
 
-# Apply
-goose -dir migrations postgres "$DATABASE_URL" up
-
-# Status
-goose -dir migrations postgres "$DATABASE_URL" status
-
-# Rollback
-goose -dir migrations postgres "$DATABASE_URL" down
-
-# Sync Prisma (after goose)
-pnpm prisma db pull && pnpm prisma generate
+pnpm prisma db pull && pnpm prisma generate    # Sync Prisma
 ```
 
 ### ClickHouse
 
 ```bash
-# Apply
 goose -dir migrations clickhouse "$CLICKHOUSE_URL" up
-
-# Status
 goose -dir migrations clickhouse "$CLICKHOUSE_URL" status
 ```
 
@@ -98,33 +78,24 @@ DROP TABLE IF EXISTS db.table ON CLUSTER 'my_cluster';
 
 ## Best Practices
 
-| Do                        | Don't                    |
-| ------------------------- | ------------------------ |
-| Use goose for ALL DBs     | Use `prisma migrate`     |
-| Use TEXT for PostgreSQL   | Use UUID type            |
-| Use UUIDv7 for ClickHouse | Use UUIDv4               |
-| Use TIMESTAMPTZ(6)        | Use TIMESTAMP            |
-| Include `-- +goose Down`  | Skip down migration      |
-| Manual Sync in ArgoCD     | Auto-sync for DB changes |
+| Do                        | Don't                |
+| ------------------------- | -------------------- |
+| Use goose for ALL DBs     | Use `prisma migrate` |
+| Use TEXT for PostgreSQL   | Use UUID type        |
+| Use TIMESTAMPTZ(6)        | Use TIMESTAMP        |
+| Include `-- +goose Down`  | Skip down migration  |
+| Use UUIDv7 for ClickHouse | Use UUIDv4           |
 
 ## Databases
 
-### PostgreSQL
-
-| Service          | Database (dev / prod)               |
-| ---------------- | ----------------------------------- |
-| auth-service     | girok_auth_dev / girok_auth         |
-| personal-service | girok_personal_dev / girok_personal |
-| identity-service | identity_dev / identity             |
-|                  | auth_dev / auth                     |
-|                  | legal_dev / legal                   |
-
-### ClickHouse
-
-| Service           | Database     | Retention |
-| ----------------- | ------------ | --------- |
-| audit-service     | audit_db     | 5 years   |
-| analytics-service | analytics_db | 90d ~ 1y  |
+| Service   | Dev DB             | Prod DB        |
+| --------- | ------------------ | -------------- |
+| identity  | identity_dev       | identity       |
+| auth      | auth_dev           | auth           |
+| legal     | legal_dev          | legal          |
+| personal  | girok_personal_dev | girok_personal |
+| audit     | audit_db           | audit_db       |
+| analytics | analytics_db       | analytics_db   |
 
 ---
 
