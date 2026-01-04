@@ -1,169 +1,95 @@
 # Identity Service
 
-> Core identity management: accounts, sessions, devices, profiles (Port 3000)
+> Core identity management: accounts, sessions, devices, profiles
 
 ## Overview
 
-The Identity Service manages core user identity data for the my-girok Identity Platform. It is one of three separated services in Phase 3 architecture.
+The Identity Service manages core user identity data for the my-girok Identity Platform. It handles user accounts, sessions, devices, and profiles.
 
----
+| Property  | Value                       |
+| --------- | --------------------------- |
+| REST Port | 3000                        |
+| gRPC Port | 50051                       |
+| Framework | NestJS 11 + TypeScript 5.9  |
+| Database  | identity_db (PostgreSQL 16) |
 
-## Domain Boundaries (CRITICAL)
+> **Note**: This service handles ONLY identity. Authorization is handled by `auth-service`, legal compliance by `legal-service`.
 
-> **WARNING**: This service has a strict domain boundary. It handles ONLY identity-related data.
+## Domain Boundaries
 
-### What Belongs HERE (identity-service)
+### What Belongs Here
 
-```
-+------------------------------------------------------------------+
-|                    IDENTITY-SERVICE SCOPE                         |
-|                        (Port 3000)                                |
-+------------------------------------------------------------------+
-|                                                                   |
-|  [OK] accounts        - User core identity, status, MFA          |
-|  [OK] sessions        - Login sessions, token management         |
-|  [OK] devices         - Device registration, trust               |
-|  [OK] profiles        - User profile data (name, avatar, etc)    |
-|  [OK] credentials     - Password, OAuth, passkeys                |
-|  [OK] app-registry    - Multi-app configuration                  |
-|  [OK] outbox_events   - Transactional outbox for this service    |
-|                                                                   |
-+------------------------------------------------------------------+
-```
+- Accounts (user identity, status, MFA)
+- Sessions (login sessions, token management)
+- Devices (device registration, trust)
+- Profiles (user profile data)
+- Credentials (password, OAuth, passkeys)
 
 ### What Does NOT Belong Here
 
-```
-+------------------------------------------------------------------+
-|                    DO NOT ADD TO THIS SERVICE                     |
-+------------------------------------------------------------------+
-|                                                                   |
-|  [X] roles/permissions    --> belongs to auth-service             |
-|  [X] operators/admins     --> belongs to auth-service             |
-|  [X] sanctions            --> belongs to auth-service             |
-|  [X] api-keys             --> belongs to auth-service             |
-|  [X] consents             --> belongs to legal-service            |
-|  [X] legal documents      --> belongs to legal-service            |
-|  [X] law-registry         --> belongs to legal-service            |
-|  [X] dsr-requests         --> belongs to legal-service            |
-|                                                                   |
-+------------------------------------------------------------------+
-```
+| Domain               | Correct Service |
+| -------------------- | --------------- |
+| Roles, Permissions   | auth-service    |
+| Operators, Sanctions | auth-service    |
+| Consents, Documents  | legal-service   |
+| DSR Requests         | legal-service   |
 
-### Service Boundary Summary
+## API Reference
 
-| Service          | Database    | Port | Scope                                    |
-| ---------------- | ----------- | ---- | ---------------------------------------- |
-| identity-service | identity_db | 3000 | accounts, sessions, devices, profiles    |
-| auth-service     | auth_db     | 3001 | roles, permissions, operators, sanctions |
-| legal-service    | legal_db    | 3005 | consents, documents, law-registry, dsr   |
+> See `.ai/services/identity-service.md` for quick endpoint list.
 
----
+### Accounts API
 
-## Architecture
+| Method | Endpoint                           | Description             |
+| ------ | ---------------------------------- | ----------------------- |
+| POST   | `/v1/accounts`                     | Create account          |
+| GET    | `/v1/accounts`                     | List accounts           |
+| GET    | `/v1/accounts/:id`                 | Get account by ID       |
+| GET    | `/v1/accounts/by-email/:email`     | Get by email            |
+| GET    | `/v1/accounts/by-username/:uname`  | Get by username         |
+| PATCH  | `/v1/accounts/:id`                 | Update account          |
+| DELETE | `/v1/accounts/:id`                 | Soft delete             |
+| POST   | `/v1/accounts/:id/verify-email`    | Verify email            |
+| POST   | `/v1/accounts/:id/change-password` | Change password (3/min) |
+| PATCH  | `/v1/accounts/:id/status`          | Update status           |
+| POST   | `/v1/accounts/:id/mfa/enable`      | Enable MFA              |
+| POST   | `/v1/accounts/:id/mfa/verify`      | Verify MFA setup        |
+| POST   | `/v1/accounts/:id/mfa/disable`     | Disable MFA             |
 
-### Identity Platform (Phase 3 - 3 Separate Services)
+### Sessions API
 
-```
-+==================================================================================+
-|                          IDENTITY PLATFORM (Phase 3)                              |
-|                                                                                   |
-|   +------------------------+  +------------------------+  +---------------------+ |
-|   |   IDENTITY-SERVICE     |  |     AUTH-SERVICE       |  |    LEGAL-SERVICE    | |
-|   |      (Port 3000)       |  |      (Port 3001)       |  |     (Port 3005)     | |
-|   +------------------------+  +------------------------+  +---------------------+ |
-|   |                        |  |                        |  |                     | |
-|   |  * accounts            |  |  * roles               |  |  * consents         | |
-|   |  * sessions            |  |  * permissions         |  |  * legal-documents  | |
-|   |  * devices             |  |  * operators           |  |  * law-registry     | |
-|   |  * profiles            |  |  * sanctions           |  |  * dsr-requests     | |
-|   |  * credentials         |  |  * api-keys            |  |                     | |
-|   |  * app-registry        |  |  * admins              |  |                     | |
-|   +------------------------+  +------------------------+  +---------------------+ |
-|              |                         |                          |               |
-|              v                         v                          v               |
-|        identity_db                 auth_db                   legal_db             |
-|       (PostgreSQL)               (PostgreSQL)              (PostgreSQL)           |
-+==================================================================================+
+| Method | Endpoint                                | Description     |
+| ------ | --------------------------------------- | --------------- |
+| POST   | `/v1/sessions`                          | Create session  |
+| GET    | `/v1/sessions`                          | List sessions   |
+| GET    | `/v1/sessions/:id`                      | Get session     |
+| POST   | `/v1/sessions/refresh`                  | Refresh tokens  |
+| POST   | `/v1/sessions/validate`                 | Validate token  |
+| POST   | `/v1/sessions/:id/touch`                | Update activity |
+| DELETE | `/v1/sessions/:id`                      | Revoke session  |
+| DELETE | `/v1/sessions/account/:accountId`       | Revoke all      |
+| GET    | `/v1/sessions/account/:accountId/count` | Session count   |
+| POST   | `/v1/sessions/cleanup`                  | Admin cleanup   |
 
-Communication: gRPC between services (no direct DB access across services)
-```
+### Devices API
 
-### This Service's Scope
+| Method | Endpoint                  | Description          |
+| ------ | ------------------------- | -------------------- |
+| POST   | `/v1/devices`             | Register device      |
+| GET    | `/v1/devices/:id`         | Get device           |
+| GET    | `/v1/devices/account/:id` | List account devices |
+| PATCH  | `/v1/devices/:id`         | Update device        |
+| DELETE | `/v1/devices/:id`         | Remove device        |
+| POST   | `/v1/devices/:id/trust`   | Trust device         |
 
-| Domain      | Tables          | Purpose                          |
-| ----------- | --------------- | -------------------------------- |
-| Accounts    | `accounts`      | User identity, status, MFA       |
-| Sessions    | `sessions`      | Login sessions, token management |
-| Devices     | `devices`       | Device registration, trust       |
-| Profiles    | `profiles`      | User profile data                |
-| Credentials | `credentials`   | Password, OAuth, passkeys        |
-| Apps        | `app_registry`  | Multi-app configuration          |
-| Events      | `outbox_events` | Transactional outbox             |
+### Profiles API
 
-## Key Features
-
-- **UUIDv7 Primary Keys**: Time-ordered UUIDs (RFC 9562) for better B-tree performance
-- **Transactional Outbox Pattern**: Reliable event publishing with retry logic
-- **gRPC Inter-Service**: Communicates with auth-service and legal-service
-- **MFA Support**: TOTP (RFC 6238), SMS, EMAIL methods
-
-## API Endpoints
-
-### Accounts
-
-| Method | Endpoint                          | Description               |
-| ------ | --------------------------------- | ------------------------- |
-| POST   | `/accounts`                       | Create account            |
-| GET    | `/accounts`                       | List accounts (paginated) |
-| GET    | `/accounts/:id`                   | Get account by ID         |
-| GET    | `/accounts/by-email/:email`       | Get by email              |
-| GET    | `/accounts/by-username/:username` | Get by username           |
-| PATCH  | `/accounts/:id`                   | Update account            |
-| DELETE | `/accounts/:id`                   | Soft delete account       |
-| POST   | `/accounts/:id/verify-email`      | Verify email              |
-| POST   | `/accounts/:id/change-password`   | Change password (3/min)   |
-| PATCH  | `/accounts/:id/status`            | Update status             |
-| POST   | `/accounts/:id/mfa/enable`        | Enable MFA                |
-| POST   | `/accounts/:id/mfa/verify`        | Verify MFA setup          |
-| POST   | `/accounts/:id/mfa/disable`       | Disable MFA               |
-
-### Sessions
-
-| Method | Endpoint                             | Description               |
-| ------ | ------------------------------------ | ------------------------- |
-| POST   | `/sessions`                          | Create session (10/min)   |
-| GET    | `/sessions`                          | List sessions (paginated) |
-| GET    | `/sessions/:id`                      | Get session by ID         |
-| POST   | `/sessions/refresh`                  | Refresh tokens (30/min)   |
-| POST   | `/sessions/validate`                 | Validate token (100/min)  |
-| POST   | `/sessions/:id/touch`                | Update activity timestamp |
-| DELETE | `/sessions/:id`                      | Revoke session            |
-| DELETE | `/sessions/account/:accountId`       | Revoke all sessions       |
-| GET    | `/sessions/account/:accountId/count` | Active session count      |
-| POST   | `/sessions/cleanup`                  | Admin: cleanup (1/min)    |
-
-### Devices
-
-| Method | Endpoint                      | Description          |
-| ------ | ----------------------------- | -------------------- |
-| POST   | `/devices`                    | Register device      |
-| GET    | `/devices/:id`                | Get device by ID     |
-| GET    | `/devices/account/:accountId` | List account devices |
-| PATCH  | `/devices/:id`                | Update device        |
-| DELETE | `/devices/:id`                | Remove device        |
-| POST   | `/devices/:id/trust`          | Trust device         |
-
-### Profiles
-
-| Method | Endpoint               | Description    |
-| ------ | ---------------------- | -------------- |
-| GET    | `/profiles/:accountId` | Get profile    |
-| PATCH  | `/profiles/:accountId` | Update profile |
+| Method | Endpoint           | Description    |
+| ------ | ------------------ | -------------- |
+| GET    | `/v1/profiles/:id` | Get profile    |
+| PATCH  | `/v1/profiles/:id` | Update profile |
 
 ## Database Schema
-
-### identity_db Tables
 
 ```sql
 -- Accounts (core identity)
@@ -182,8 +108,8 @@ CREATE TABLE accounts (
     failed_login_attempts INT DEFAULT 0,
     locked_until TIMESTAMPTZ(6),
     last_password_change TIMESTAMPTZ(6),
-    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ(6) DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) DEFAULT NOW()
 );
 
 -- Sessions
@@ -198,7 +124,7 @@ CREATE TABLE sessions (
     expires_at TIMESTAMPTZ(6) NOT NULL,
     last_activity_at TIMESTAMPTZ(6),
     revoked_at TIMESTAMPTZ(6),
-    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ(6) DEFAULT NOW()
 );
 
 -- Devices
@@ -210,15 +136,12 @@ CREATE TABLE devices (
     device_type VARCHAR(20),
     platform VARCHAR(50),
     os_version VARCHAR(50),
-    app_version VARCHAR(20),
     browser_name VARCHAR(50),
-    browser_version VARCHAR(20),
     is_trusted BOOLEAN DEFAULT FALSE,
     trusted_at TIMESTAMPTZ(6),
     push_token TEXT,
-    push_platform VARCHAR(20),
     last_seen_at TIMESTAMPTZ(6),
-    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ(6) DEFAULT NOW()
 );
 
 -- Profiles
@@ -231,25 +154,22 @@ CREATE TABLE profiles (
     birth_date DATE,
     gender VARCHAR(20),
     address JSONB,
-    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
-);
-
--- Outbox Events
-CREATE TABLE outbox_events (
-    id UUID PRIMARY KEY,
-    aggregate_type VARCHAR(50) NOT NULL,
-    aggregate_id UUID NOT NULL,
-    event_type VARCHAR(100) NOT NULL,
-    payload JSONB NOT NULL,
-    status VARCHAR(20) DEFAULT 'PENDING',
-    retry_count INT DEFAULT 0,
-    created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
-    published_at TIMESTAMPTZ(6)
+    created_at TIMESTAMPTZ(6) DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6) DEFAULT NOW()
 );
 ```
 
 ## Security
+
+### Account Security
+
+| Feature          | Implementation              |
+| ---------------- | --------------------------- |
+| Password Hashing | bcrypt (cost factor 12)     |
+| Token Storage    | SHA-256 hash (never plain)  |
+| MFA Methods      | TOTP (RFC 6238), SMS, EMAIL |
+| Lockout Policy   | 5 failed → 30min lock       |
+| Password History | Last 5 passwords blocked    |
 
 ### MFA Implementation
 
@@ -262,242 +182,19 @@ const encryptedSecret = cryptoService.encrypt(totpSecret);
 
 Set `ENCRYPTION_KEY` environment variable (32 bytes, base64 encoded).
 
-### Account Security
-
-| Feature          | Implementation                 |
-| ---------------- | ------------------------------ |
-| Password Hashing | bcrypt (cost factor 12)        |
-| Token Storage    | SHA-256 hash (never plaintext) |
-| Lockout Policy   | 5 failed attempts → 30min lock |
-| Password History | Last 5 passwords blocked       |
-
-### Guards
-
-| Guard          | Purpose             | Header          |
-| -------------- | ------------------- | --------------- |
-| `JwtAuthGuard` | User authentication | `Authorization` |
-| `ApiKeyGuard`  | Service-to-service  | `X-API-Key`     |
-
-## Event Types
-
-```typescript
-// Account Events
-'ACCOUNT_CREATED';
-'ACCOUNT_UPDATED';
-'ACCOUNT_DELETED';
-'ACCOUNT_STATUS_CHANGED';
-'EMAIL_VERIFIED';
-'PASSWORD_CHANGED';
-
-// Session Events
-'SESSION_STARTED';
-'SESSION_REFRESHED';
-'SESSION_ENDED';
-'ALL_SESSIONS_REVOKED';
-
-// Device Events
-'DEVICE_REGISTERED';
-'DEVICE_TRUSTED';
-'DEVICE_REMOVED';
-
-// MFA Events
-'MFA_ENABLED';
-'MFA_DISABLED';
-'MFA_VERIFIED';
-```
-
-## Configuration
-
-### Environment Variables
-
-```env
-PORT=3000
-NODE_ENV=development
-
-# Database
-DATABASE_URL=postgresql://user:pass@host:5432/identity_db
-
-# Cache (Valkey/Redis)
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# JWT
-JWT_SECRET=...
-JWT_EXPIRES_IN=1h
-REFRESH_TOKEN_EXPIRES_IN=14d
-
-# API Keys (service-to-service)
-API_KEYS=key1,key2
-
-# Encryption (MFA secrets)
-ENCRYPTION_KEY=<32-bytes-base64>
-```
-
 ### Rate Limiting
 
-| Endpoint                             | Limit | TTL | Reason                    |
-| ------------------------------------ | ----- | --- | ------------------------- |
-| `POST /sessions`                     | 10    | 60s | Prevent session flood     |
-| `POST /sessions/refresh`             | 30    | 60s | Allow reasonable refresh  |
-| `POST /sessions/validate`            | 100   | 60s | High-frequency validation |
-| `POST /sessions/cleanup`             | 1     | 60s | Admin operation           |
-| `POST /accounts/:id/change-password` | 3     | 60s | Prevent brute force       |
-
-## Caching Strategy
-
-| Cache Key Pattern          | TTL     | Purpose               |
-| -------------------------- | ------- | --------------------- |
-| `account:id:{id}`          | 5 min   | Account by ID         |
-| `account:email:{email}`    | 5 min   | Account by email      |
-| `account:username:{uname}` | 5 min   | Account by username   |
-| `session:token:{hash}`     | 1 hour  | Session by token hash |
-| `revoked:jti:{jti}`        | 14 days | Revoked token JTIs    |
-
-## Development
-
-### Run Migrations
-
-```bash
-# Using goose
-goose -dir migrations/identity postgres "$DATABASE_URL" up
-```
-
-### Generate Prisma Client
-
-```bash
-pnpm prisma:generate:identity
-```
-
-### Run Service
-
-```bash
-pnpm dev
-```
-
-## Inter-Service Communication
-
-### Accessing Data from Other Services
-
-When identity-service needs data from other domains, use gRPC calls - NEVER direct database access.
-
-```
-+------------------------------------------------------------------+
-|                    CORRECT: Use gRPC                              |
-+------------------------------------------------------------------+
-|                                                                   |
-|  // Check if user is sanctioned before creating session          |
-|  const sanctions = await authServiceClient.getSanctions({        |
-|    accountId: account.id                                         |
-|  });                                                              |
-|                                                                   |
-|  // Get user consents for registration flow                      |
-|  const consents = await legalServiceClient.getConsents({         |
-|    accountId: account.id,                                        |
-|    appId: app.id                                                 |
-|  });                                                              |
-|                                                                   |
-+------------------------------------------------------------------+
-```
-
-```
-+------------------------------------------------------------------+
-|                    WRONG: Direct DB Access                        |
-+------------------------------------------------------------------+
-|                                                                   |
-|  // DO NOT DO THIS - accessing auth_db from identity-service     |
-|  const sanctions = await authPrisma.sanctions.findMany({         |
-|    where: { accountId }                                          |
-|  });                                                              |
-|                                                                   |
-+------------------------------------------------------------------+
-```
-
-### Cross-Service References
-
-When storing references to entities in other services, use UUIDs without foreign key constraints:
-
-```sql
--- In identity_db: NO cross-DB foreign keys
--- This account_id references auth_db.sanctions, but NO FK constraint
-CREATE TABLE example_table (
-    id UUID PRIMARY KEY,
-    account_id UUID NOT NULL,  -- References identity_db.accounts (same DB, FK OK)
-    -- No FK constraint to other databases
-);
-```
-
-### Event Publishing
-
-Each service publishes events only to its own `outbox_events` table:
-
-```typescript
-// In identity-service: only write to identity_db.outbox_events
-await this.prisma.outboxEvents.create({
-  data: {
-    aggregateType: 'ACCOUNT',
-    aggregateId: account.id,
-    eventType: 'ACCOUNT_CREATED',
-    payload: { accountId: account.id, email: account.email },
-  },
-});
-```
-
----
+| Endpoint                             | Limit | TTL |
+| ------------------------------------ | ----- | --- |
+| `POST /sessions`                     | 10    | 60s |
+| `POST /sessions/refresh`             | 30    | 60s |
+| `POST /sessions/validate`            | 100   | 60s |
+| `POST /sessions/cleanup`             | 1     | 60s |
+| `POST /accounts/:id/change-password` | 3     | 60s |
 
 ## gRPC Server
 
-The identity-service exposes a gRPC server on port **50051** for inter-service communication.
-
-### Starting the gRPC Server
-
-The gRPC server starts alongside the REST API:
-
-```bash
-# In main.ts
-const grpcApp = await NestFactory.createMicroservice<MicroserviceOptions>(
-  AppModule,
-  createIdentityGrpcOptions({ port: 50051 }),
-);
-await grpcApp.listen();
-```
-
-### Proto Definition
-
-```protobuf
-// packages/proto/identity/v1/identity.proto
-syntax = "proto3";
-package identity.v1;
-
-service IdentityService {
-  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
-  rpc GetAccountByEmail(GetAccountByEmailRequest) returns (GetAccountByEmailResponse);
-  rpc GetAccountByUsername(GetAccountByUsernameRequest) returns (GetAccountByUsernameResponse);
-  rpc ValidateAccount(ValidateAccountRequest) returns (ValidateAccountResponse);
-  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
-  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse);
-  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
-  rpc ValidatePassword(ValidatePasswordRequest) returns (ValidatePasswordResponse);
-  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
-  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
-  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
-  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
-  rpc GetAccountDevices(GetAccountDevicesRequest) returns (GetAccountDevicesResponse);
-  rpc TrustDevice(TrustDeviceRequest) returns (TrustDeviceResponse);
-  rpc RevokeDevice(RevokeDeviceRequest) returns (RevokeDeviceResponse);
-  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
-}
-```
-
-### gRPC Environment Variables
-
-| Variable             | Default | Description       |
-| -------------------- | ------- | ----------------- |
-| `IDENTITY_GRPC_PORT` | 50051   | gRPC server port  |
-| `IDENTITY_GRPC_HOST` | 0.0.0.0 | gRPC bind address |
-
-### Client Usage (from other services)
-
-Other services can call identity-service via the `IdentityGrpcClient`:
+> See `.ai/services/identity-service.md` for method list.
 
 ```typescript
 import { GrpcClientsModule, IdentityGrpcClient } from '@my-girok/nest-common';
@@ -518,88 +215,35 @@ export class SomeService {
 }
 ```
 
----
+## Inter-Service Communication
 
-## Helm Deployment
+When identity-service needs data from other domains, use gRPC - NEVER direct database access:
 
-### Chart Location
+```typescript
+// CORRECT: Use gRPC
+const sanctions = await authServiceClient.getSanctions({ accountId });
+const consents = await legalServiceClient.getConsents({ accountId });
 
-The identity-service Helm chart is located at `services/identity-service/helm/`.
+// WRONG: Direct DB access (DO NOT DO THIS)
+// const sanctions = await authPrisma.sanctions.findMany({ where: { accountId } });
+```
 
-### Quick Start
+## Development
 
 ```bash
-cd services/identity-service/helm
-cp values.yaml.example values.yaml
-# Edit values.yaml
-helm install my-girok-identity . -f values.yaml
+# Start service
+pnpm --filter @my-girok/identity-service dev
+
+# Run tests
+pnpm --filter @my-girok/identity-service test
+
+# Run migrations
+goose -dir migrations/identity postgres "$DATABASE_URL" up
 ```
-
-### CQRS Configuration (Read/Write Separation)
-
-Enable read replicas for improved read performance:
-
-```yaml
-app:
-  cqrs:
-    enabled: true
-    readReplica:
-      poolSize: 10 # Connection pool for read replica
-      idleTimeout: 30000 # 30 seconds idle timeout
-```
-
-### Database URLs (6 URLs with CQRS)
-
-| Purpose | Environment Variable         | Description         |
-| ------- | ---------------------------- | ------------------- |
-| Write   | `IDENTITY_DATABASE_URL`      | Primary identity_db |
-| Write   | `AUTH_DATABASE_URL`          | Primary auth_db     |
-| Write   | `LEGAL_DATABASE_URL`         | Primary legal_db    |
-| Read    | `IDENTITY_READ_DATABASE_URL` | Replica identity_db |
-| Read    | `AUTH_READ_DATABASE_URL`     | Replica auth_db     |
-| Read    | `LEGAL_READ_DATABASE_URL`    | Replica legal_db    |
-
-### Migration Jobs (3 Databases)
-
-ArgoCD PreSync hooks run migrations in order:
-
-| Phase | Database    | Sync Wave | Description               |
-| ----- | ----------- | --------- | ------------------------- |
-| 1     | identity_db | -5        | Accounts, sessions, etc.  |
-| 2     | auth_db     | -4        | Roles, permissions, etc.  |
-| 3     | legal_db    | -3        | Consents, documents, etc. |
-
-### Sealed Secrets
-
-```bash
-kubectl create secret generic my-girok-identity-service-secret \
-  --from-literal=identity-database-url="postgresql://user:pass@host:5432/identity_db" \
-  --from-literal=auth-database-url="postgresql://user:pass@host:5432/auth_db" \
-  --from-literal=legal-database-url="postgresql://user:pass@host:5432/legal_db" \
-  --from-literal=identity-read-database-url="postgresql://user:pass@read-host:5432/identity_db" \
-  --from-literal=auth-read-database-url="postgresql://user:pass@read-host:5432/auth_db" \
-  --from-literal=legal-read-database-url="postgresql://user:pass@read-host:5432/legal_db" \
-  --from-literal=jwt-private-key="..." \
-  --from-literal=jwt-public-key="..." \
-  --from-literal=valkey-password="..." \
-  --dry-run=client -o yaml | \
-kubeseal --format yaml > sealed-secret.yaml
-```
-
-### Service Ports
-
-| Port  | Protocol | Name | Purpose       |
-| ----- | -------- | ---- | ------------- |
-| 3005  | HTTP     | http | REST API      |
-| 50051 | gRPC     | grpc | gRPC services |
-
----
 
 ## Related Documentation
 
-- [Architecture Overview](../../.ai/architecture.md)
-- [Identity Platform Policy](../policies/IDENTITY_PLATFORM.md) (includes Domain Boundaries)
-- [Identity Service LLM Reference](../../.ai/services/identity-service.md)
-- [Auth Service](../../.ai/services/auth-service.md)
-- [Legal Service](../../.ai/services/legal-service.md)
-- [gRPC Clients Guide](../packages/nest-common.md#grpc-clients)
+- [Auth Service](./AUTH_SERVICE.md)
+- [Legal Service](./LEGAL_SERVICE.md)
+- [Identity Platform Policy](../policies/IDENTITY_PLATFORM.md)
+- [gRPC Guide](../guides/GRPC.md)
