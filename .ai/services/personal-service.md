@@ -7,97 +7,60 @@
 | Property | Value                        |
 | -------- | ---------------------------- |
 | REST     | :3002                        |
+| gRPC     | N/A                          |
 | Database | personal_db (PostgreSQL)     |
+| Cache    | Valkey DB 1                  |
 | Storage  | MinIO (S3-compatible)        |
-| Queue    | BullMQ + Valkey              |
+| Events   | N/A                          |
 | Codebase | `services/personal-service/` |
+
+## Domain Boundaries
+
+| This Service     | NOT This Service              |
+| ---------------- | ----------------------------- |
+| Resume CRUD      | Accounts, Sessions (identity) |
+| User Preferences | Roles, Permissions (auth)     |
+| File Attachments | Consents, Documents (legal)   |
+| Public Sharing   | Analytics, Audit logging      |
 
 ## REST API
 
-### Resume CRUD
-
 ```
 POST/GET/PUT/DELETE  /resume, /resume/:id
-PATCH                /resume/:id/default
-POST                 /resume/:id/copy
-```
+PATCH  /resume/:id/default
+POST   /resume/:id/copy
+PATCH  /resume/:id/sections/order|visibility
+POST   /resume/:id/attachments
+DELETE /resume/:id/attachments/:aid
 
-### Sections & Attachments
+GET   /resume/public/:username       # No auth
+GET   /share/public/:token           # No auth
+POST  /share/resume/:resumeId        # Auth required
 
-```
-PATCH   /resume/:id/sections/order|visibility
-POST    /resume/:id/attachments
-DELETE  /resume/:id/attachments/:aid
-```
-
-### Public Access
-
-```
-GET     /resume/public/:username       # Default resume (no auth)
-GET     /resume/image-proxy?key=       # Image proxy (no auth)
-GET     /share/public/:token           # Shared resume (no auth)
-POST    /share/resume/:resumeId        # Create share link (auth)
-```
-
-### User Preferences
-
-```
 GET/POST/DELETE  /v1/user-preferences
 ```
 
-## Key Models
+## gRPC Server
 
-### Resume
+N/A - REST only
 
-```prisma
-model Resume {
-  id, userId, title, name, email
-  profileImage      // MinIO URL
-  birthDate         // YYYY-MM-DD
-  militaryService   // COMPLETED, EXEMPTED, NOT_APPLICABLE
-  copyStatus        // PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED
-  sections, attachments, skills, experiences, educations
-}
-```
+## Database Tables
 
-### Experience
+| Table            | Purpose           |
+| ---------------- | ----------------- |
+| resumes          | Resume metadata   |
+| sections         | Resume sections   |
+| experiences      | Work history      |
+| educations       | Education history |
+| skills           | Skill entries     |
+| attachments      | File references   |
+| user_preferences | User settings     |
 
-```prisma
-model Experience {
-  company, startDate, endDate, finalPosition, jobTitle
-  projects: ExperienceProject[]
-}
+## Events
 
-model ExperienceProject {
-  name, description, techStack[], achievements[]
-}
-```
+N/A
 
-## Enums
-
-| Enum            | Values                                                    |
-| --------------- | --------------------------------------------------------- |
-| PaperSize       | A4, LETTER                                                |
-| Gender          | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY                    |
-| MilitaryService | COMPLETED, EXEMPTED, NOT_APPLICABLE                       |
-| DegreeType      | HIGH_SCHOOL, ASSOCIATE_2/3, BACHELOR, MASTER, DOCTORATE   |
-| SectionType     | SKILLS, EXPERIENCE, PROJECT, EDUCATION, CERTIFICATE, etc. |
-| CopyStatus      | PENDING, IN_PROGRESS, COMPLETED, PARTIAL, FAILED          |
-
-## File Storage (MinIO)
-
-```
-resumes/{userId}/{resumeId}/{uuid}.{ext}   # Permanent
-tmp/{userId}/{uuid}.{ext}                   # 24hr auto-cleanup
-```
-
-| Constraint  | Value                |
-| ----------- | -------------------- |
-| Max Size    | 10 MB                |
-| Image Types | JPEG, PNG, GIF, WEBP |
-| Doc Types   | PDF, DOCX            |
-
-## Caching (Valkey DB 1)
+## Caching
 
 | Key Pattern                     | TTL |
 | ------------------------------- | --- |

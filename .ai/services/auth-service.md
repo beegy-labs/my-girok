@@ -9,6 +9,7 @@
 | REST     | :3001                    |
 | gRPC     | :50052                   |
 | Database | auth_db (PostgreSQL)     |
+| Cache    | Valkey DB 0              |
 | Events   | `auth.*` (Redpanda)      |
 | Codebase | `services/auth-service/` |
 
@@ -23,45 +24,22 @@
 
 ## REST API
 
-### Roles & Permissions
-
 ```
 POST/GET/PATCH/DELETE  /roles, /roles/:id
 POST/DELETE            /roles/:id/permissions/:permissionId
 POST/GET/PATCH/DELETE  /permissions, /permissions/:id
-GET                    /permissions/categories
-```
 
-### Operators
-
-```
 POST/GET/PATCH/DELETE  /operators, /operators/:id
-POST                   /operators/invite, /operators/accept-invite
-POST/DELETE            /operators/:id/permissions/:permissionId
-```
+POST   /operators/invite, /operators/accept-invite
+POST/DELETE  /operators/:id/permissions/:permissionId
 
-### Sanctions
+POST/GET/PATCH  /sanctions, /sanctions/:id
+POST   /sanctions/:id/revoke|extend|reduce
+GET/POST  /sanctions/:id/appeal
 
-```
-POST/GET/PATCH         /sanctions, /sanctions/:id
-POST                   /sanctions/:id/revoke|extend|reduce
-GET/POST               /sanctions/:id/appeal
-POST                   /sanctions/:id/appeal/review
-```
-
-### Services & Features
-
-```
-POST/GET/PATCH         /services, /services/:id
-GET/PATCH              /services/:id/config
+POST/GET/PATCH  /services, /services/:id
+GET/PATCH  /services/:id/config
 POST/GET/PATCH/DELETE  /services/:id/features/:featureId
-GET/POST/DELETE        /services/:id/testers/users|admins
-```
-
-### Settings
-
-```
-GET/POST/PATCH/DELETE  /settings/countries, /settings/locales
 ```
 
 ## gRPC Server (:50052)
@@ -73,63 +51,27 @@ GET/POST/PATCH/DELETE  /settings/countries, /settings/locales
 | GetOperatorPermissions | Get all permissions      |
 | GetRole                | Get role by ID           |
 | GetRolesByOperator     | Get operator's roles     |
-| GetOperator            | Get operator by ID       |
 | ValidateOperator       | Check operator status    |
 | CheckSanction          | Check active sanctions   |
 | GetActiveSanctions     | Get all active sanctions |
 
 **Proto**: `packages/proto/auth/v1/auth.proto`
 
-```typescript
-import { AuthGrpcClient } from '@my-girok/nest-common';
-
-const { allowed } = await this.authClient.checkPermission({
-  operator_id: operatorId,
-  resource: 'role',
-  action: 'read',
-});
-```
-
 ## Database Tables
 
-| Table                  | Purpose              |
-| ---------------------- | -------------------- |
-| roles                  | Role definitions     |
-| permissions            | Permission defs      |
-| role_permissions       | Role-Permission join |
-| operators              | Service operators    |
-| operator_invitations   | Invitations          |
-| operator_permissions   | Direct permissions   |
-| sanctions              | Account sanctions    |
-| sanction_notifications | Sanction notices     |
-| services               | Registered services  |
-| service_configs        | Service config       |
-| service_features       | Feature flags        |
-| service_testers        | Tester management    |
-| countries, locales     | Settings             |
+| Table                | Purpose              |
+| -------------------- | -------------------- |
+| roles                | Role definitions     |
+| permissions          | Permission defs      |
+| role_permissions     | Role-Permission join |
+| operators            | Service operators    |
+| operator_invitations | Invitations          |
+| sanctions            | Account sanctions    |
+| services             | Registered services  |
+| service_configs      | Service config       |
+| service_features     | Feature flags        |
 
-## H-RBAC Hierarchy
-
-```
-SYSTEM: system_super(100) > system_admin(80) > system_moderator(50)
-TENANT: partner_super(100) > partner_admin(80) > partner_editor(50)
-```
-
-```typescript
-@Permissions('role:read')      // resource:action
-@Permissions('*')              // Wildcard
-```
-
-## Sanction Types
-
-| Type                | Severity |
-| ------------------- | -------- |
-| WARNING             | LOW      |
-| TEMPORARY_BAN       | MEDIUM   |
-| PERMANENT_BAN       | HIGH     |
-| FEATURE_RESTRICTION | MEDIUM   |
-
-## Event Types
+## Events
 
 ```typescript
 'ROLE_CREATED' | 'ROLE_UPDATED' | 'ROLE_DELETED';
@@ -152,8 +94,9 @@ TENANT: partner_super(100) > partner_admin(80) > partner_editor(50)
 
 ```bash
 PORT=3001
+GRPC_PORT=50052
 DATABASE_URL=postgresql://...auth_db
-REDIS_HOST=localhost
+VALKEY_HOST=localhost
 JWT_SECRET=...
 API_KEYS=key1,key2
 ```
