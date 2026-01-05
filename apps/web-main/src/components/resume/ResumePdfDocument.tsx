@@ -9,11 +9,16 @@ import {
 import { PaperSizeKey } from '../../constants/paper';
 import { sortByOrder, getBulletSymbol } from '../../utils/hierarchical-renderer';
 
+// Import local font files (Vite resolves to URLs at build time)
+// SSOT: Fonts managed in @my-girok/design-tokens package
+import PretendardRegular from '@my-girok/design-tokens/fonts/pretendard/Pretendard-Regular.otf';
+import PretendardSemiBold from '@my-girok/design-tokens/fonts/pretendard/Pretendard-SemiBold.otf';
+import PretendardBold from '@my-girok/design-tokens/fonts/pretendard/Pretendard-Bold.otf';
+
 // Supported locales for PDF
 export type PdfLocale = 'ko' | 'en' | 'ja';
 
 // Register fonts for multilingual support with full Unicode coverage
-// NOTE: Use npm CDN path, not gh (GitHub) path - gh path returns 404
 // Using Pretendard which has excellent CJK and special character support
 // Register both string and numeric fontWeight variants to handle all PDF renderer calls
 // IMPORTANT: Pretendard does NOT have native italic variants, so we use regular as fallback
@@ -22,67 +27,67 @@ Font.register({
   fonts: [
     // Regular weight (normal/400)
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      src: PretendardRegular,
       fontWeight: 'normal',
       fontStyle: 'normal',
     },
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      src: PretendardRegular,
       fontWeight: 400,
       fontStyle: 'normal',
     },
     // Regular weight italic fallback (Pretendard has no native italic)
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      src: PretendardRegular,
       fontWeight: 'normal',
       fontStyle: 'italic',
     },
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Regular.otf',
+      src: PretendardRegular,
       fontWeight: 400,
       fontStyle: 'italic',
     },
     // SemiBold weight (semibold/600)
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      src: PretendardSemiBold,
       fontWeight: 'semibold',
       fontStyle: 'normal',
     },
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      src: PretendardSemiBold,
       fontWeight: 600,
       fontStyle: 'normal',
     },
     // SemiBold italic fallback
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      src: PretendardSemiBold,
       fontWeight: 'semibold',
       fontStyle: 'italic',
     },
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-SemiBold.otf',
+      src: PretendardSemiBold,
       fontWeight: 600,
       fontStyle: 'italic',
     },
     // Bold weight (bold/700)
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      src: PretendardBold,
       fontWeight: 'bold',
       fontStyle: 'normal',
     },
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      src: PretendardBold,
       fontWeight: 700,
       fontStyle: 'normal',
     },
     // Bold italic fallback
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      src: PretendardBold,
       fontWeight: 'bold',
       fontStyle: 'italic',
     },
     {
-      src: 'https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-Bold.otf',
+      src: PretendardBold,
       fontWeight: 700,
       fontStyle: 'italic',
     },

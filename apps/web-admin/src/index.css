@@ -1,4 +1,5 @@
 @import '@my-girok/design-tokens/tokens.css';
+@import '@my-girok/design-tokens/fonts/inter.css';
 
 :root {
   font-family:
