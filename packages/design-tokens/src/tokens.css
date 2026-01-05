@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Local Fonts - SSOT: All fonts managed via design-tokens package */
+@import '../fonts/playfair-display.css';
+
 /* ============================================
    WCAG 2.1 AAA COMPLIANT DESIGN SYSTEM
    "Clean White Oak" (Light) & "Midnight Gentle Study" (Dark)

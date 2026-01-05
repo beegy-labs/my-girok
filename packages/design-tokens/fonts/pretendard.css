@@ -1,0 +1,90 @@
+/* Pretendard Font - Local */
+/* Source: https://github.com/orioncactus/pretendard */
+/* License: OFL (Open Font License) 1.1 */
+/* Copyright: (c) 2021 Kil Hyung-jin */
+
+/* Regular weight (normal/400) */
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Regular.otf') format('opentype');
+}
+
+/* Regular weight italic fallback (Pretendard has no native italic) */
+@font-face {
+  font-family: 'Pretendard';
+  font-style: italic;
+  font-weight: normal;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Regular.otf') format('opentype');
+}
+
+/* SemiBold weight (semibold/600) */
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-SemiBold.otf') format('opentype');
+}
+
+/* SemiBold italic fallback */
+@font-face {
+  font-family: 'Pretendard';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-SemiBold.otf') format('opentype');
+}
+
+/* Bold weight (bold/700) */
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: bold;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Bold.otf') format('opentype');
+}
+
+/* Bold italic fallback */
+@font-face {
+  font-family: 'Pretendard';
+  font-style: italic;
+  font-weight: bold;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./pretendard/Pretendard-Bold.otf') format('opentype');
+}
