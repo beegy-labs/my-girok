@@ -1,11 +1,47 @@
 # @my-girok/design-tokens
 
-> WCAG 2.1 AAA compliant design tokens
+> WCAG 2.1 AAA compliant design tokens with local fonts
 
 ## Usage
 
 ```css
+/* Import tokens (includes Playfair Display font automatically) */
 @import '@my-girok/design-tokens/tokens.css';
+
+/* Optional: Import Inter font separately (for admin interfaces) */
+@import '@my-girok/design-tokens/fonts/inter.css';
+```
+
+## Local Fonts (SSOT)
+
+All fonts are stored locally in this package. **Never use external CDN links.**
+
+| Font             | Weights                   | Usage                |
+| ---------------- | ------------------------- | -------------------- |
+| Playfair Display | 400-900 (normal + italic) | Editorial titles     |
+| Inter            | 400, 500, 600, 700        | Admin interfaces     |
+| Pretendard       | 400, 600, 700             | PDF generation (CJK) |
+
+### Font Files Location
+
+```
+packages/design-tokens/fonts/
+├── inter/                 # Inter font files (.ttf)
+├── playfair-display/      # Playfair Display font files (.ttf)
+├── pretendard/            # Pretendard font files (.otf) - Korean/CJK
+├── inter.css              # @font-face for Inter
+├── playfair-display.css   # @font-face for Playfair Display
+├── pretendard.css         # @font-face for Pretendard
+├── index.css              # All fonts combined
+└── LICENSE                # OFL 1.1 license for all fonts
+```
+
+### PDF Generation Font Import
+
+```typescript
+// For @react-pdf/renderer, import font files directly
+import PretendardRegular from '@my-girok/design-tokens/fonts/pretendard/Pretendard-Regular.otf';
+import PretendardBold from '@my-girok/design-tokens/fonts/pretendard/Pretendard-Bold.otf';
 ```
 
 ## Token Categories

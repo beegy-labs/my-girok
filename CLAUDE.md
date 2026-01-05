@@ -87,6 +87,10 @@ Read: `.ai/resume.md` + `.ai/services/personal-service.md`
 Read: `.ai/services/auth-service.md` (Legal API section) + `.ai/packages/types.md`
 Policy: `docs/policies/LEGAL_CONSENT.md`
 
+**Adding fonts or external resources?**
+Read: `.ai/packages/design-tokens.md` + `.ai/rules.md` (Resources section)
+Policy: `docs/policies/EXTERNAL_RESOURCES.md`
+
 ## Documentation Structure
 
 ```
@@ -188,6 +192,7 @@ Full details: [.ai/git-flow.md](.ai/git-flow.md)
 **Testing standards** -> `docs/policies/TESTING.md`
 **Performance tips** -> `docs/policies/PERFORMANCE.md`
 **Deployment guide** -> `docs/policies/DEPLOYMENT.md`
+**External resources** -> `docs/policies/EXTERNAL_RESOURCES.md`
 
 ## Token Optimization
 

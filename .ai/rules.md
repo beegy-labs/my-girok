@@ -34,40 +34,44 @@
 
 ### NEVER
 
-| Category | Rule                                            |
-| -------- | ----------------------------------------------- |
-| Types    | Duplicate types → Use `packages/types`          |
-| Utils    | Duplicate NestJS/UI utils → Use shared packages |
-| DB       | Use `prisma migrate` → Use goose (SSOT)         |
-| DB       | Use TEXT for IDs → Use native UUID with UUIDv7  |
-| DB       | Auto-sync ArgoCD for DB → Manual Sync only      |
-| Code     | Prisma in Controllers → Use Services            |
-| Code     | Hardcode secrets → Use ConfigService            |
-| Code     | Skip error handling                             |
-| React    | Recreate expensive objects every render         |
-| React    | State for navigation → Call navigate() directly |
-| HTML     | Nested `<main>` tags → One per page             |
-| HTML     | Footer inside `<main>` → Footer sibling of main |
+| Category  | Rule                                            |
+| --------- | ----------------------------------------------- |
+| Types     | Duplicate types → Use `packages/types`          |
+| Utils     | Duplicate NestJS/UI utils → Use shared packages |
+| DB        | Use `prisma migrate` → Use goose (SSOT)         |
+| DB        | Use TEXT for IDs → Use native UUID with UUIDv7  |
+| DB        | Auto-sync ArgoCD for DB → Manual Sync only      |
+| Code      | Prisma in Controllers → Use Services            |
+| Code      | Hardcode secrets → Use ConfigService            |
+| Code      | Skip error handling                             |
+| React     | Recreate expensive objects every render         |
+| React     | State for navigation → Call navigate() directly |
+| HTML      | Nested `<main>` tags → One per page             |
+| HTML      | Footer inside `<main>` → Footer sibling of main |
+| Resources | External CDN links → Self-host locally          |
+| Fonts     | Google Fonts CDN → Use design-tokens package    |
 
 ### ALWAYS
 
-| Category | Rule                                      |
-| -------- | ----------------------------------------- |
-| Types    | Define first in `packages/types`          |
-| Backend  | Use `@my-girok/nest-common`               |
-| Frontend | Use `@my-girok/ui-components`             |
-| DB       | Use goose for migrations                  |
-| DB       | Use `TIMESTAMPTZ(6)` for timestamps       |
-| DB       | Include `-- +goose Down`                  |
-| Code     | Use `@Transactional()` for multi-step DB  |
-| Code     | Use Guards for protected endpoints        |
-| Code     | Prevent N+1 queries                       |
-| React    | Use React.memo for list item components   |
-| React    | Use useMemo for expensive calculations    |
-| Testing  | **80% coverage minimum (CI blocks)**      |
-| Testing  | Check `docs/TEST_COVERAGE.md` before work |
-| Testing  | Include tests with code changes           |
-| Testing  | Mock gRPC clients in consumer services    |
+| Category  | Rule                                      |
+| --------- | ----------------------------------------- |
+| Types     | Define first in `packages/types`          |
+| Backend   | Use `@my-girok/nest-common`               |
+| Frontend  | Use `@my-girok/ui-components`             |
+| DB        | Use goose for migrations                  |
+| DB        | Use `TIMESTAMPTZ(6)` for timestamps       |
+| DB        | Include `-- +goose Down`                  |
+| Code      | Use `@Transactional()` for multi-step DB  |
+| Code      | Use Guards for protected endpoints        |
+| Code      | Prevent N+1 queries                       |
+| React     | Use React.memo for list item components   |
+| React     | Use useMemo for expensive calculations    |
+| Testing   | **80% coverage minimum (CI blocks)**      |
+| Testing   | Check `docs/TEST_COVERAGE.md` before work |
+| Testing   | Include tests with code changes           |
+| Testing   | Mock gRPC clients in consumer services    |
+| Resources | Self-host fonts/scripts in design-tokens  |
+| Resources | Include LICENSE for external resources    |
 
 ## Key Patterns
 

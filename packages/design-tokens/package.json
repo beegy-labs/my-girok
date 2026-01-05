@@ -5,16 +5,25 @@
   "main": "src/tokens.css",
   "exports": {
     ".": "./src/tokens.css",
-    "./tokens.css": "./src/tokens.css"
+    "./tokens.css": "./src/tokens.css",
+    "./fonts/inter.css": "./fonts/inter.css",
+    "./fonts/playfair-display.css": "./fonts/playfair-display.css",
+    "./fonts/pretendard.css": "./fonts/pretendard.css",
+    "./fonts/index.css": "./fonts/index.css",
+    "./fonts/inter/*": "./fonts/inter/*",
+    "./fonts/playfair-display/*": "./fonts/playfair-display/*",
+    "./fonts/pretendard/*": "./fonts/pretendard/*"
   },
   "files": [
-    "src"
+    "src",
+    "fonts"
   ],
   "keywords": [
     "design-tokens",
     "css-variables",
     "tailwind",
-    "wcag"
+    "wcag",
+    "fonts"
   ],
   "peerDependencies": {
     "tailwindcss": "^4.0.0"

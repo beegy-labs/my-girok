@@ -1,0 +1,6 @@
+/* Design Tokens - Local Fonts */
+/* Import this file to use all local fonts */
+
+@import './inter.css';
+@import './playfair-display.css';
+@import './pretendard.css';
