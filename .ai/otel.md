@@ -1,6 +1,6 @@
 # OTEL Integration
 
-> OpenTelemetry patterns for admin audit and observability
+> OpenTelemetry patterns for admin audit and observability | **Last Updated**: 2026-01-06
 
 ## Architecture
 

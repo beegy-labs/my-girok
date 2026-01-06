@@ -1,6 +1,6 @@
 # Caching Quick Reference
 
-> Valkey 9.x + Cache-Aside pattern
+> Valkey 9.x + Cache-Aside pattern | **Last Updated**: 2026-01-06
 
 ## Stack
 

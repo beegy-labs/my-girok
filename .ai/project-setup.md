@@ -1,5 +1,7 @@
 # Project Setup Quick Reference
 
+> Quick start guide for new developers | **Last Updated**: 2026-01-06
+
 ## Initial Setup
 
 ```bash
@@ -30,12 +32,14 @@ pnpm dev
 ## Key Configuration Files
 
 ### `.env` (services/auth-service/)
+
 - Database credentials
 - JWT secrets (min 32 chars)
 - OAuth credentials (optional)
 - NEVER commit actual .env files
 
 ### `docker-compose.yml`
+
 - Database credentials
 - Container configuration
 - Port mappings
@@ -43,6 +47,7 @@ pnpm dev
 - NEVER commit actual docker-compose.yml
 
 ### `helm/values.yaml`
+
 - Kubernetes resources
 - Ingress domains
 - Replica counts
@@ -51,12 +56,14 @@ pnpm dev
 ## File Patterns
 
 **Commit to Git:**
+
 - `*.example` files
 - Documentation
 - Source code
 - Dockerfiles
 
 **Never Commit:**
+
 - `.env`, `.env.*` (except .example)
 - `docker-compose.yml` (only .example)
 - `helm/values.yaml` (only .example)

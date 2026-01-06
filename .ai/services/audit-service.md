@@ -1,6 +1,6 @@
 # Audit Service
 
-> Compliance logging with ClickHouse (7-year retention)
+> Compliance logging with ClickHouse (7-year retention) | **Last Updated**: 2026-01-06
 
 ## Service Info
 

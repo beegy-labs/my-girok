@@ -1,5 +1,7 @@
 # Docker Deployment Quick Reference
 
+> Docker Compose local development | **Last Updated**: 2026-01-06
+
 ## Files Structure
 
 ```

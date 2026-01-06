@@ -1,0 +1,242 @@
+# AI Documentation Manifest
+# Machine-readable contract for LLM agents
+# Project: my-girok
+
+version: "1.0"
+last_updated: "2026-01-06"
+
+# 3-Tier Architecture Definition
+architecture:
+  tier1_indicate:
+    description: "LLM entry points - task-based navigation"
+    files:
+      - path: "CLAUDE.md"
+        llm: "claude"
+        last_updated: "2026-01-05"
+        features: ["task-based-navigation", "essential-reading"]
+      - path: "GEMINI.md"
+        llm: "gemini"
+        last_updated: "2026-01-06"
+        features: ["task-based-navigation", "essential-reading"]
+
+  tier2_abstract:
+    description: "LLM-optimized context (token-efficient, 30-50 lines max)"
+    base_path: ".ai/"
+    token_budget: "~2K tokens"
+
+    core:
+      - path: "README.md"
+        purpose: "Navigation hub for all AI documentation"
+        required: true
+        priority: 0
+        last_updated: "2026-01-04"
+      - path: "rules.md"
+        purpose: "Core DO/DON'T rules (CRITICAL)"
+        required: true
+        priority: 1
+        last_updated: "2026-01-05"
+        is_ssot_for: "docs/policies/LLM_GUIDELINES.md"
+      - path: "best-practices.md"
+        purpose: "2026 Best Practices checklist"
+        required: true
+        priority: 2
+        last_updated: "2026-01-04"
+      - path: "architecture.md"
+        purpose: "System patterns and routing"
+        required: true
+        priority: 3
+        last_updated: "2026-01-02"
+      - path: "ssot.md"
+        purpose: "Single Source of Truth strategy"
+        required: false
+        priority: 4
+        last_updated: "2026-01-01"
+
+    infrastructure:
+      - path: "database.md"
+        purpose: "goose + Prisma migrations"
+        last_updated: "2026-01-04"
+        details: "docs/policies/DATABASE.md"
+      - path: "caching.md"
+        purpose: "Valkey/Redis patterns"
+        last_updated: "2026-01-04"
+        details: "docs/policies/CACHING.md"
+      - path: "ci-cd.md"
+        purpose: "GitHub Actions + ArgoCD"
+        last_updated: "2026-01-04"
+        details: "docs/CI_CD.md"
+      - path: "helm-deployment.md"
+        purpose: "Kubernetes/Helm deployment"
+        last_updated: "2026-01-04"
+        details: "docs/policies/DEPLOYMENT.md"
+      - path: "docker-deployment.md"
+        purpose: "Docker Compose quick ref"
+        last_updated: "2025-11-06"
+        details: "docs/DOCKER_DEPLOYMENT.md"
+      - path: "testing.md"
+        purpose: "TDD guidelines (80% coverage)"
+        last_updated: "2026-01-04"
+        details: "docs/policies/TESTING.md"
+      - path: "git-flow.md"
+        purpose: "GitFlow branching strategy"
+        last_updated: "2026-01-04"
+      - path: "otel.md"
+        purpose: "OpenTelemetry observability"
+        last_updated: "2025-12-30"
+
+    services:
+      - path: "services/identity-service.md"
+        purpose: "Multi-app user platform (Future)"
+        last_updated: "2026-01-04"
+        details: "docs/services/IDENTITY_SERVICE.md"
+      - path: "services/auth-service.md"
+        purpose: "Authentication + RBAC"
+        last_updated: "2026-01-04"
+        details: "docs/services/AUTH_SERVICE.md"
+      - path: "services/legal-service.md"
+        purpose: "Consents, DSR, compliance"
+        last_updated: "2026-01-04"
+        details: "docs/services/LEGAL_SERVICE.md"
+      - path: "services/personal-service.md"
+        purpose: "Resume, Profile API"
+        last_updated: "2026-01-04"
+        details: "docs/services/PERSONAL_SERVICE.md"
+      - path: "services/audit-service.md"
+        purpose: "Compliance logging (ClickHouse)"
+        last_updated: "2026-01-04"
+        details: "docs/services/AUDIT_SERVICE.md"
+      - path: "services/analytics-service.md"
+        purpose: "Business analytics (ClickHouse)"
+        last_updated: "2026-01-04"
+        details: "docs/services/ANALYTICS_SERVICE.md"
+
+    apps:
+      - path: "apps/web-main.md"
+        purpose: "React 19 web app"
+        last_updated: "2025-12-25"
+        details: "docs/apps/WEB_MAIN.md"
+      - path: "apps/web-admin.md"
+        purpose: "Admin dashboard"
+        last_updated: "2025-12-30"
+      - path: "apps/storybook.md"
+        purpose: "Component library"
+        last_updated: "2025-12-24"
+
+    packages:
+      - path: "packages/design-tokens.md"
+        purpose: "WCAG 2.1 AAA design tokens (SSOT)"
+        last_updated: "2026-01-05"
+        details: "docs/DESIGN_SYSTEM.md"
+      - path: "packages/nest-common.md"
+        purpose: "NestJS utilities, guards, decorators"
+        last_updated: "2026-01-02"
+        details: "docs/packages/nest-common.md"
+      - path: "packages/types.md"
+        purpose: "TypeScript + Protobuf types"
+        last_updated: "2026-01-02"
+        details: "docs/packages/TYPES.md"
+      - path: "packages/ui-components.md"
+        purpose: "React UI components"
+        last_updated: "2025-12-24"
+
+    features:
+      - path: "resume.md"
+        purpose: "Resume feature documentation"
+        last_updated: "2025-12-26"
+        details: "docs/guides/RESUME.md"
+      - path: "i18n-locale.md"
+        purpose: "Internationalization system"
+        last_updated: "2025-12-24"
+        details: "docs/I18N.md"
+      - path: "user-preferences.md"
+        purpose: "User preferences API"
+        last_updated: "2025-12-24"
+
+    templates:
+      - path: "templates/service.md"
+        purpose: "Service document template"
+        last_updated: "2026-01-04"
+
+  tier3_concrete:
+    description: "Human-readable detailed documentation"
+    base_path: "docs/"
+    token_budget: "~73K tokens"
+    subdirectories:
+      - path: "policies/"
+        purpose: "Detailed governance and policies"
+        file_count: 12
+      - path: "guides/"
+        purpose: "Step-by-step tutorials"
+        file_count: 10
+      - path: "services/"
+        purpose: "Service specifications"
+        file_count: 6
+      - path: "packages/"
+        purpose: "Package documentation"
+        file_count: 2
+      - path: "reports/"
+        purpose: "Analysis and review reports"
+        file_count: 3
+
+# Bootstrap chain for LLM agents
+bootstrap_chain:
+  - "{LLM}.md"
+  - ".ai/README.md"
+  - ".ai/rules.md"
+  - ".ai/best-practices.md"
+  - ".ai/architecture.md"
+
+# Task-to-file routing
+task_routing:
+  authentication: [".ai/rules.md", ".ai/services/auth-service.md"]
+  identity_platform: [".ai/services/identity-service.md", ".ai/architecture.md"]
+  resume_profile: [".ai/services/personal-service.md", ".ai/resume.md"]
+  audit_compliance: [".ai/services/audit-service.md"]
+  analytics: [".ai/services/analytics-service.md"]
+  frontend: [".ai/rules.md", ".ai/apps/web-main.md"]
+  design_tokens: [".ai/ssot.md", ".ai/packages/design-tokens.md"]
+  database_migration: [".ai/database.md", ".ai/rules.md"]
+  caching: [".ai/caching.md"]
+  deployment: [".ai/helm-deployment.md", ".ai/ci-cd.md"]
+  testing: [".ai/testing.md"]
+  create_pr: [".ai/pull-requests.md", ".ai/git-flow.md"]
+
+# Cross-reference rules
+linking:
+  direction: "tier2 -> tier3"
+  pattern: "**Full guide**: `docs/path/FILE.md`"
+  bidirectional_allowed: true
+  explicit_required: true
+
+# SSOT consolidations
+ssot_consolidations:
+  - source: ".ai/rules.md"
+    replaces: "docs/policies/LLM_GUIDELINES.md"
+    reason: "Avoid duplication of core rules"
+
+# Multi-LLM extensibility
+extensibility:
+  add_llm_steps:
+    - "Create {LLM_NAME}.md at repository root"
+    - "Copy structure from CLAUDE.md with Task-based Navigation"
+    - "Update this manifest under tier1_indicate.files"
+  supported_llms:
+    - claude
+    - gemini
+  future_llms:
+    - copilot
+    - grok
+    - llama
+
+# Validation rules
+validation:
+  required_files:
+    - "CLAUDE.md"
+    - "GEMINI.md"
+    - ".ai/README.md"
+    - ".ai/rules.md"
+    - ".ai/architecture.md"
+  changelog_required: true
+  changelog_path: ".ai/CHANGELOG.md"
+  max_lines_per_ai_file: 50
+  link_validation: true

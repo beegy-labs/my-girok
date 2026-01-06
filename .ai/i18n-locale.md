@@ -1,6 +1,6 @@
 # i18n & Locale System
 
-> Language/Country separation for UI and legal compliance
+> Language/Country separation for UI and legal compliance | **Last Updated**: 2026-01-06
 
 ## Supported Locales
 

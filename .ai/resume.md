@@ -1,6 +1,6 @@
 # Resume Management - LLM Guide
 
-> Quick reference for AI assistants working with the resume feature
+> Quick reference for AI assistants working with the resume feature | **Last Updated**: 2026-01-06
 
 ## Data Structure
 

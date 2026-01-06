@@ -1,6 +1,6 @@
 # SSOT Strategy
 
-> Single Source of Truth for all packages and services
+> Single Source of Truth for all packages and services | **Last Updated**: 2026-01-06
 
 ---
 
