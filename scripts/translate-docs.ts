@@ -189,39 +189,39 @@ async function main() {
   const genAI = new GoogleGenerativeAI(apiKey);
 
   console.log('=== Docs Translation ===');
+  console.log('Rate limit: 3 requests/minute (20-second delay)');
   console.log(`Target locale: ${targetLocale}`);
   console.log('');
 
-  const allFiles = await getFilesToTranslate();
+  const files = await getFilesToTranslate();
 
-  if (allFiles.length === 0) {
+  if (files.length === 0) {
     console.log('No files to translate');
     return;
   }
 
-  const BATCH_SIZE = 5;
-  const filesToProcess = allFiles.slice(0, BATCH_SIZE);
-
-  console.log(`Total files found: ${allFiles.length}`);
-  console.log(`Processing first batch of ${filesToProcess.length} files...`);
+  console.log(`Files to translate: ${files.length}`);
   console.log('');
 
   const results: TranslationResult[] = [];
 
-  for (const file of filesToProcess) {
+  for (const file of files) {
     const result = await translateFile(genAI, file, targetLocale);
     results.push(result);
 
-    // Rate limiting: wait 1 second between API calls
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Rate limiting: wait 20 seconds between API calls (3 req/min)
+    if (files.indexOf(file) < files.length - 1) {
+      console.log('Waiting 20 seconds before next translation...');
+      await new Promise((resolve) => setTimeout(resolve, 20000));
+    }
   }
 
   // Summary
   console.log('');
-  console.log('=== Batch Summary ===');
+  console.log('=== Summary ===');
   const successful = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
-  console.log(`Total in batch: ${results.length}`);
+  console.log(`Total: ${results.length}`);
   console.log(`Success: ${successful}`);
   console.log(`Failed: ${failed}`);
 
@@ -229,11 +229,8 @@ async function main() {
     console.log('');
     console.log('Failed files:');
     results.filter((r) => !r.success).forEach((r) => console.log(`  - ${r.file}: ${r.error}`));
-    // Do not exit on partial failure, just report.
+    process.exit(1);
   }
-
-  console.log('\nFinished processing the first batch.');
-  console.log('To continue with the next batch, please provide confirmation.');
 }
 
 main().catch((error) => {
