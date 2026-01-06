@@ -1,6 +1,6 @@
 # Auth Service
 
-> Authorization, RBAC, operators, and sanctions management
+> Authorization, RBAC, operators, and sanctions management | **Last Updated**: 2026-01-06
 
 ## Service Info
 

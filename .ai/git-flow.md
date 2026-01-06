@@ -1,5 +1,7 @@
 # Git Flow Quick Reference
 
+> GitFlow branching strategy | **Last Updated**: 2026-01-06
+
 ## Branch Flow
 
 ```

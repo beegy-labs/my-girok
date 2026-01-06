@@ -1,6 +1,6 @@
 # Core Development Rules
 
-> Essential rules for AI assistants
+> Essential rules for AI assistants | **Last Updated**: 2026-01-06
 
 ## Language Policy
 

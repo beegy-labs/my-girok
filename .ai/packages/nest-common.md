@@ -1,6 +1,6 @@
 # @my-girok/nest-common
 
-> Shared NestJS utilities for microservices
+> Shared NestJS utilities for microservices | **Last Updated**: 2026-01-06
 
 ## Imports
 

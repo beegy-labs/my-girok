@@ -1,6 +1,6 @@
 # Testing Quick Reference
 
-> TDD: RED → GREEN → REFACTOR
+> TDD: RED → GREEN → REFACTOR | **Last Updated**: 2026-01-06
 
 ## Coverage
 

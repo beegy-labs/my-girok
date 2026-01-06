@@ -1,6 +1,6 @@
 # Architecture (2025)
 
-> Hybrid: REST + gRPC + GraphQL | Identity Platform | Event-Driven
+> Hybrid: REST + gRPC + GraphQL | Identity Platform | Event-Driven | **Last Updated**: 2026-01-06
 
 ## Identity Platform Strategy
 

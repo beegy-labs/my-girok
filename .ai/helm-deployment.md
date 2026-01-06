@@ -1,6 +1,6 @@
 # Helm Deployment Quick Reference
 
-> Helm + ArgoCD + Sealed Secrets
+> Helm + ArgoCD + Sealed Secrets | **Last Updated**: 2026-01-06
 
 ## Files Structure
 

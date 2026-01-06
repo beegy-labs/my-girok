@@ -1,6 +1,6 @@
 # 2026 Best Practices
 
-> Monthly review checklist
+> Monthly review checklist | **Last Updated**: 2026-01-06
 
 ## Database
 
