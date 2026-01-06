@@ -15,11 +15,11 @@
 1. **[.ai/rules.md](.ai/rules.md)** - Core DO/DON'T rules (CRITICAL)
 2. **[.ai/best-practices.md](.ai/best-practices.md)** - 2026 Best Practices (monthly review)
 3. **[.ai/architecture.md](.ai/architecture.md)** - Architecture patterns and routing
-4. **[docs/TEST_COVERAGE.md](docs/TEST_COVERAGE.md)** - Test coverage status & pending tests
+4. **[docs/en/TEST_COVERAGE.md](docs/en/TEST_COVERAGE.md)** - Test coverage status & pending tests
 
 ### Testing Requirements
 
-**All code changes MUST include tests.** Check `docs/TEST_COVERAGE.md` for:
+**All code changes MUST include tests.** Check `docs/en/TEST_COVERAGE.md` for:
 
 - Current coverage status per service
 - Pending tests that need to be written
@@ -35,18 +35,18 @@ Future: `.ai/services/identity-service.md`
 
 **Working on Identity Platform (multi-app user management)?**
 Read: `.ai/services/identity-service.md` + `.ai/architecture.md`
-Policy: `docs/policies/IDENTITY_PLATFORM.md`
+Policy: `docs/en/policies/IDENTITY_PLATFORM.md`
 
 **Working on resume/profile?**
 Read: `.ai/rules.md` + `.ai/services/personal-service.md`
 
 **Working on audit/compliance logging?**
 Read: `.ai/rules.md` + `.ai/services/audit-service.md`
-Full guide: `docs/services/AUDIT_SERVICE.md`
+Full guide: `docs/en/services/AUDIT_SERVICE.md`
 
 **Working on analytics/business intelligence?**
 Read: `.ai/rules.md` + `.ai/services/analytics-service.md`
-Full guide: `docs/services/ANALYTICS_SERVICE.md`
+Full guide: `docs/en/services/ANALYTICS_SERVICE.md`
 
 ### Frontend Development
 
@@ -66,7 +66,7 @@ Read: `.ai/i18n-locale.md` + `.ai/apps/web-main.md`
 
 **Working on database migrations?**
 Read: `.ai/database.md` + `.ai/rules.md` (Database Migrations section)
-Policy: `docs/policies/DATABASE.md`
+Policy: `docs/en/policies/DATABASE.md`
 
 **Working on Helm/Kubernetes deployment?**
 Read: `.ai/helm-deployment.md` + `.ai/ci-cd.md`
@@ -75,7 +75,7 @@ Read: `.ai/helm-deployment.md` + `.ai/ci-cd.md`
 
 **Working on caching with Valkey/Redis?**
 Read: `.ai/caching.md`
-Full guide: `docs/policies/CACHING.md`
+Full guide: `docs/en/policies/CACHING.md`
 
 ### Other Tasks
 
@@ -87,11 +87,11 @@ Read: `.ai/resume.md` + `.ai/services/personal-service.md`
 
 **Working on legal/consent features?**
 Read: `.ai/services/auth-service.md` (Legal API section) + `.ai/packages/types.md`
-Policy: `docs/policies/LEGAL_CONSENT.md`
+Policy: `docs/en/policies/LEGAL_CONSENT.md`
 
 **Adding fonts or external resources?**
 Read: `.ai/packages/design-tokens.md` + `.ai/rules.md` (Resources section)
-Policy: `docs/policies/EXTERNAL_RESOURCES.md`
+Policy: `docs/en/policies/EXTERNAL_RESOURCES.md`
 
 ## Documentation Structure
 
@@ -100,37 +100,38 @@ my-girok/
 ├── CLAUDE.md                 # <- You are here (Entry point)
 ├── README.md                 # Project introduction
 │
-├── .ai/                      # LLM-optimized docs
+├── .ai/                      # SSOT - LLM interface (token-optimized)
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
-│   ├── architecture.md       # Architecture patterns (2025)
-│   ├── caching.md            # Valkey/Redis caching patterns
-│   ├── database.md           # goose + ArgoCD migration strategy
-│   ├── ssot.md               # Single Source of Truth strategy
-│   ├── i18n-locale.md        # Internationalization & Locale
-│   ├── resume.md             # Resume feature documentation
-│   ├── user-preferences.md   # User preferences system
-│   ├── pull-requests.md      # PR guidelines
-│   ├── services/             # Backend service APIs
-│   │   ├── identity-service.md # Multi-app user platform (Future)
-│   │   ├── auth-service.md   # Authentication (REST + Legal API)
-│   │   ├── personal-service.md # Resume, Profile
-│   │   ├── audit-service.md  # Compliance logging (ClickHouse)
-│   │   └── analytics-service.md # Business analytics (ClickHouse)
-│   ├── packages/             # Shared packages
-│   │   ├── design-tokens.md  # WCAG 2.1 AAA design tokens (SSOT)
-│   │   ├── nest-common.md
-│   │   ├── types.md
-│   │   └── ui-components.md
-│   └── apps/                 # Frontend app guides
-│       ├── web-main.md
-│       └── storybook.md      # Storybook configuration
+│   ├── architecture.md       # Architecture patterns
+│   ├── services/             # Service interfaces
+│   └── packages/             # Package interfaces
 │
-└── docs/                     # Human-readable docs
-    ├── policies/             # Detailed policies
-    ├── guides/               # Tutorials (GraphQL, gRPC, Redpanda)
-    └── api/                  # API specs
+└── docs/
+    ├── llm/                  # SSOT - Structured data (YAML/JSON)
+    │   ├── services/         # Service specs
+    │   ├── policies/         # Policy data
+    │   └── _meta/            # i18n config, glossary
+    │
+    ├── en/                   # PRIMARY - English (standard)
+    │   ├── policies/         # Detailed policies
+    │   ├── services/         # Service guides
+    │   └── guides/           # Tutorials
+    │
+    └── kr/                   # TRANSLATED - Korean (CI translation)
+        ├── policies/
+        ├── services/
+        └── guides/
 ```
+
+### Docs-as-Code Architecture
+
+| Layer            | Path        | Role                                  |
+| ---------------- | ----------- | ------------------------------------- |
+| SSOT (Interface) | `.ai/`      | LLM-optimized markdown (30-50 lines)  |
+| SSOT (Data)      | `docs/llm/` | Machine-readable YAML/JSON            |
+| PRIMARY          | `docs/en/`  | English documentation (standard)      |
+| TRANSLATED       | `docs/kr/`  | Korean documentation (CI translation) |
 
 ## Key Principles
 
@@ -188,18 +189,18 @@ Full details: [.ai/git-flow.md](.ai/git-flow.md)
 
 ## Need More Detail?
 
-**2026 Best Practices** -> `docs/policies/BEST_PRACTICES_2026.md`
-**Database migrations** -> `docs/policies/DATABASE.md`
-**Security policies** -> `docs/policies/SECURITY.md`
-**Testing standards** -> `docs/policies/TESTING.md`
-**Performance tips** -> `docs/policies/PERFORMANCE.md`
-**Deployment guide** -> `docs/policies/DEPLOYMENT.md`
-**External resources** -> `docs/policies/EXTERNAL_RESOURCES.md`
+**2026 Best Practices** -> `docs/en/policies/BEST_PRACTICES_2026.md`
+**Database migrations** -> `docs/en/policies/DATABASE.md`
+**Security policies** -> `docs/en/policies/SECURITY.md`
+**Testing standards** -> `docs/en/policies/TESTING.md`
+**Performance tips** -> `docs/en/policies/PERFORMANCE.md`
+**Deployment guide** -> `docs/en/policies/DEPLOYMENT.md`
+**External resources** -> `docs/en/policies/EXTERNAL_RESOURCES.md`
 
 ## Token Optimization
 
 - **Read .ai/ for coding** - Patterns, APIs, flows
-- **Refer to docs/ for policies** - Detailed guides, tutorials
+- **Refer to docs/en/ for policies** - Detailed guides, tutorials
 
 **Always prefer .ai/ documentation for implementation tasks.**
 

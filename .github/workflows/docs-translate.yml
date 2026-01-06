@@ -1,0 +1,123 @@
+name: Docs - Translate
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'docs/en/**'
+      - 'docs/llm/**'
+      - '.github/workflows/docs-translate.yml'
+  workflow_dispatch:
+    inputs:
+      force_full:
+        description: 'Force full translation (ignore cache)'
+        required: false
+        default: 'false'
+        type: boolean
+      target_locale:
+        description: 'Target locale (kr, ja, etc.) - empty for all'
+        required: false
+        default: ''
+        type: string
+
+env:
+  PRIMARY_LOCALE: en
+  TARGET_LOCALES: kr
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: [self-hosted, kubernetes, gitops]
+    outputs:
+      changed_files: ${{ steps.changes.outputs.files }}
+      should_translate: ${{ steps.changes.outputs.should_translate }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files
+        id: changes
+        run: |
+          if [ "${{ github.event.inputs.force_full }}" == "true" ]; then
+            FILES=$(find docs/en -name "*.md" | tr '\n' ',')
+            echo "files=$FILES" >> $GITHUB_OUTPUT
+            echo "should_translate=true" >> $GITHUB_OUTPUT
+          else
+            FILES=$(git diff --name-only HEAD~1 HEAD -- 'docs/en/**/*.md' | tr '\n' ',')
+            if [ -n "$FILES" ]; then
+              echo "files=$FILES" >> $GITHUB_OUTPUT
+              echo "should_translate=true" >> $GITHUB_OUTPUT
+            else
+              echo "files=" >> $GITHUB_OUTPUT
+              echo "should_translate=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  translate:
+    name: Translate to ${{ matrix.locale }}
+    runs-on: [self-hosted, kubernetes, gitops]
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should_translate == 'true'
+    strategy:
+      matrix:
+        locale: [kr]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install -g tsx
+
+      - name: Run translation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CHANGED_FILES: ${{ needs.detect-changes.outputs.changed_files }}
+          TARGET_LOCALE: ${{ matrix.locale }}
+        run: |
+          tsx scripts/translate-docs.ts
+
+      - name: Validate translation
+        run: |
+          tsx scripts/validate-translation.ts --locale=${{ matrix.locale }}
+
+      - name: Commit translated docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add docs/${{ matrix.locale }}/
+
+          if git diff --staged --quiet; then
+            echo "No translation changes to commit"
+          else
+            git commit -m "docs(i18n): auto-translate to ${{ matrix.locale }}
+
+          Translated files:
+          ${{ needs.detect-changes.outputs.changed_files }}
+
+          [skip ci]"
+            git push
+          fi
+
+  notify:
+    name: Notify
+    runs-on: [self-hosted, kubernetes, gitops]
+    needs: [detect-changes, translate]
+    if: always() && needs.detect-changes.outputs.should_translate == 'true'
+    steps:
+      - name: Summary
+        run: |
+          echo "## Translation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source**: docs/en/" >> $GITHUB_STEP_SUMMARY
+          echo "- **Targets**: ${{ env.TARGET_LOCALES }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ needs.translate.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changed Files" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ needs.detect-changes.outputs.changed_files }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

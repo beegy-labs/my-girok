@@ -1,0 +1,36 @@
+# i18n Configuration for Docs-as-Code Compiler
+# Version: 1.0
+# Last Updated: 2026-01-06
+
+locales:
+  - code: en
+    name: English
+    primary: true       # PRIMARY - Standard language (generated from SSOT)
+  - code: kr
+    name: 한국어
+    translated: true    # TRANSLATED - CI translation
+
+compilation:
+  strategy: sequential  # Generate en first, then translate
+  primary: en           # Standard language
+  fallback: en          # Use English original on translation failure
+
+translation:
+  source: docs/en/      # Translation source
+  targets:
+    - docs/kr/          # Korean translation
+  trigger: on_en_change # Run translation CI when docs/en/ changes
+
+  # Translation settings
+  settings:
+    preserve:
+      - code_blocks     # Preserve code blocks as-is
+      - links           # Preserve markdown links
+      - numbers         # Preserve numbers
+      - technical_terms # Preserve technical terminology
+
+    validation:
+      length_ratio:
+        min: 0.5        # Minimum 50% of original length
+        max: 1.5        # Maximum 150% of original length
+      required_sections: true  # All sections must be translated
