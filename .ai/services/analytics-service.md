@@ -90,4 +90,4 @@ VALKEY_DB=4
 ---
 
 **Schema**: `infrastructure/clickhouse/schemas/02-analytics_db.sql`
-**Full docs**: `docs/services/ANALYTICS_SERVICE.md`
+**Full docs**: `docs/en/services/ANALYTICS_SERVICE.md`

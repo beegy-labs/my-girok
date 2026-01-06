@@ -91,4 +91,4 @@ const languages = useMemo(() => getEnabledLanguages(), []);
 
 ---
 
-**Full guide**: `docs/I18N.md`
+**Full guide**: `docs/en/I18N.md`

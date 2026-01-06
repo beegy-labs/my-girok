@@ -1,0 +1,50 @@
+# Testing Policy - Machine-Readable
+# SSOT for: .ai/testing.md, docs/en/policies/TESTING.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+methodology: "TDD"
+workflow:
+  - "RED"
+  - "GREEN"
+  - "REFACTOR"
+
+coverage:
+  overall: 80
+  branches: 75
+  critical_paths:
+    - name: "Auth"
+      minimum: 95
+    - name: "Payment"
+      minimum: 95
+
+test_pyramid:
+  unit: 70
+  integration: 20
+  e2e: 10
+
+commands:
+  - name: "Run all"
+    command: "pnpm test"
+  - name: "Watch mode"
+    command: "pnpm test:watch"
+  - name: "Coverage"
+    command: "pnpm test:cov"
+  - name: "E2E tests"
+    command: "pnpm test:e2e"
+
+file_naming:
+  unit: "*.spec.ts"
+  e2e: "*.e2e-spec.ts"
+
+rules:
+  do:
+    - "Write tests BEFORE code"
+    - "Test behavior"
+    - "Mock external deps"
+    - "Clean up after tests"
+  dont:
+    - "Test after"
+    - "Test implementation"
+    - "Use real APIs"
+    - "Share state"

@@ -1,0 +1,64 @@
+# Deployment Policy - Machine-Readable
+# SSOT for: .ai/helm-deployment.md, docs/en/policies/DEPLOYMENT.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+orchestration: "Kubernetes"
+package_manager: "Kustomize"
+gitops: "ArgoCD"
+gateway: "Cilium Gateway API"
+
+environments:
+  - name: "development"
+    cluster: "local"
+    auto_sync: true
+  - name: "staging"
+    cluster: "staging"
+    auto_sync: true
+  - name: "production"
+    cluster: "production"
+    auto_sync: false
+    manual_approval: true
+
+database_sync:
+  rule: "NEVER auto-sync database migrations in ArgoCD"
+  reason: "Prevent accidental data loss"
+  method: "Manual sync only"
+
+secrets:
+  tool: "Sealed Secrets"
+  workflow:
+    - "Create secret YAML"
+    - "Encrypt with kubeseal"
+    - "Commit sealed secret"
+    - "ArgoCD applies"
+
+health_checks:
+  liveness:
+    path: "/health/live"
+    initial_delay_seconds: 10
+    period_seconds: 10
+  readiness:
+    path: "/health/ready"
+    initial_delay_seconds: 5
+    period_seconds: 5
+
+resources:
+  default:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+scaling:
+  hpa:
+    min_replicas: 2
+    max_replicas: 10
+    target_cpu_utilization: 70
+
+rollout:
+  strategy: "RollingUpdate"
+  max_surge: "25%"
+  max_unavailable: "25%"

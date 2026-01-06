@@ -173,4 +173,4 @@ const handleSubmit = async (data) => {
 
 ---
 
-**Detailed docs**: `docs/guides/RESUME.md`
+**Detailed docs**: `docs/en/guides/RESUME.md`

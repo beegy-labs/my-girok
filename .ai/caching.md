@@ -43,4 +43,4 @@ async handle({ roleId }) {
 
 ---
 
-**Full guide**: `docs/policies/CACHING.md`
+**Full guide**: `docs/en/policies/CACHING.md`

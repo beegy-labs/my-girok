@@ -1,0 +1,86 @@
+# Git Workflow Policy - Machine-Readable
+# SSOT for: .ai/git-flow.md, docs/en/policies/GIT_WORKFLOW.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+branching_model: "GitFlow"
+
+branches:
+  - name: "main"
+    purpose: "Production-ready code"
+    environment: "Production"
+    protected: true
+  - name: "release"
+    purpose: "Staging/pre-production"
+    environment: "Staging"
+    protected: true
+  - name: "develop"
+    purpose: "Integration branch"
+    environment: "Development"
+    protected: true
+  - name: "feat/*"
+    purpose: "New features"
+    protected: false
+  - name: "fix/*"
+    purpose: "Bug fixes"
+    protected: false
+
+merge_strategy:
+  - source: "feat/*"
+    target: "develop"
+    type: "squash"
+    command: "gh pr merge --squash --delete-branch"
+  - source: "develop"
+    target: "release"
+    type: "merge"
+    command: "gh pr merge --merge"
+  - source: "release"
+    target: "main"
+    type: "merge"
+    command: "gh pr merge --merge"
+
+commit_convention:
+  format: "<type>(<scope>): <subject>"
+  types:
+    - type: "feat"
+      description: "New feature"
+    - type: "fix"
+      description: "Bug fix"
+    - type: "refactor"
+      description: "Code refactoring"
+    - type: "docs"
+      description: "Documentation changes"
+    - type: "test"
+      description: "Adding or updating tests"
+    - type: "chore"
+      description: "Maintenance tasks"
+    - type: "perf"
+      description: "Performance improvements"
+    - type: "style"
+      description: "Code style changes"
+    - type: "ci"
+      description: "CI/CD configuration"
+
+protection_rules:
+  all_branches:
+    - "Require pull request reviews"
+    - "Require status checks to pass"
+    - "Restrict force pushes"
+  main:
+    - "Require 2 approvals"
+    - "Require signed commits"
+    - "Require deployment approval"
+
+best_practices:
+  do:
+    - "Keep feature branches short-lived (< 1 week)"
+    - "Write descriptive commit messages"
+    - "Rebase feature branches on develop before PR"
+    - "Delete branches after merge"
+    - "Use conventional commits"
+  dont:
+    - "Commit directly to protected branches"
+    - "Force push to shared branches"
+    - "Create overly large PRs (> 500 lines)"
+    - "Mix unrelated changes in one commit"
+    - "Skip code review"

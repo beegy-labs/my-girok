@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://girok.dev/schemas/manifest.schema.json",
+  "title": "AI Documentation Manifest Schema",
+  "description": "JSON Schema for .ai/manifest.yaml",
+  "type": "object",
+  "required": ["version", "architecture", "bootstrap_chain"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date"
+    },
+    "architecture": {
+      "type": "object",
+      "required": ["tier1_indicate", "tier2_abstract", "tier3_concrete"],
+      "properties": {
+        "tier1_indicate": {
+          "type": "object",
+          "required": ["description", "files"],
+          "properties": {
+            "description": { "type": "string" },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["path", "llm"],
+                "properties": {
+                  "path": { "type": "string" },
+                  "llm": { "type": "string" },
+                  "last_updated": { "type": "string" },
+                  "features": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tier2_abstract": {
+          "type": "object",
+          "required": ["description", "base_path"],
+          "properties": {
+            "description": { "type": "string" },
+            "base_path": { "type": "string" },
+            "token_budget": { "type": "string" },
+            "core": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/docFile" }
+            },
+            "infrastructure": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/docFile" }
+            },
+            "services": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/docFile" }
+            },
+            "apps": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/docFile" }
+            },
+            "packages": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/docFile" }
+            }
+          }
+        },
+        "tier3_concrete": {
+          "type": "object",
+          "required": ["description", "base_path"],
+          "properties": {
+            "description": { "type": "string" },
+            "base_path": { "type": "string" },
+            "token_budget": { "type": "string" },
+            "subdirectories": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["path", "purpose"],
+                "properties": {
+                  "path": { "type": "string" },
+                  "purpose": { "type": "string" },
+                  "file_count": { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bootstrap_chain": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "task_routing": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "required_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "changelog_required": { "type": "boolean" },
+        "changelog_path": { "type": "string" },
+        "max_lines_per_ai_file": { "type": "integer" },
+        "link_validation": { "type": "boolean" }
+      }
+    }
+  },
+  "definitions": {
+    "docFile": {
+      "type": "object",
+      "required": ["path", "purpose"],
+      "properties": {
+        "path": { "type": "string" },
+        "purpose": { "type": "string" },
+        "required": { "type": "boolean" },
+        "priority": { "type": "integer" },
+        "last_updated": { "type": "string" },
+        "details": { "type": "string" },
+        "is_ssot_for": { "type": "string" }
+      }
+    }
+  }
+}

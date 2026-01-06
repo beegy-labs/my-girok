@@ -39,7 +39,7 @@ tokens.css (@theme) → Tailwind Utility Classes → Components
 | `min-h-input`    | `min-h-[48px]`                 |
 
 **Tokens**: `packages/design-tokens/src/tokens.css`
-**Detailed docs**: `docs/DESIGN_SYSTEM.md`
+**Detailed docs**: `docs/en/DESIGN_SYSTEM.md`
 
 ---
 

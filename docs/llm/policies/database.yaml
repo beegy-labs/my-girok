@@ -1,0 +1,67 @@
+# Database Policy - Machine-Readable
+# SSOT for: .ai/database.md, docs/en/policies/DATABASE.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+migration_tool: "goose"
+orm: "Prisma"
+deployment: "ArgoCD"
+
+workflow:
+  - step: "Create migration"
+    command: "goose -dir migrations create add_feature sql"
+  - step: "Apply migration"
+    command: 'goose -dir migrations postgres "$DATABASE_URL" up'
+  - step: "Check status"
+    command: 'goose -dir migrations postgres "$DATABASE_URL" status'
+  - step: "Sync Prisma"
+    command: "pnpm prisma db pull && pnpm prisma generate"
+
+clickhouse:
+  apply: 'goose -dir migrations clickhouse "$CLICKHOUSE_URL" up'
+
+sql_format:
+  template: |
+    -- +goose Up
+    CREATE TABLE features (
+        id UUID PRIMARY KEY,
+        created_at TIMESTAMPTZ(6) DEFAULT NOW()
+    );
+
+    -- +goose Down
+    DROP TABLE IF EXISTS features;
+
+rules:
+  do:
+    - tool: "goose"
+      scope: "ALL databases"
+    - type: "UUID"
+      reason: "Native UUID with UUIDv7"
+    - timestamp: "TIMESTAMPTZ(6)"
+    - rollback: "Include -- +goose Down"
+  dont:
+    - tool: "prisma migrate"
+      reason: "goose is SSOT"
+    - type: "TEXT for IDs"
+      reason: "Use native UUID"
+    - timestamp: "TIMESTAMP without timezone"
+    - skip: "rollback section"
+
+databases:
+  - name: "identity_db"
+    service: "identity-service"
+    tables: 8
+  - name: "auth_db"
+    service: "auth-service"
+    tables: 12
+  - name: "legal_db"
+    service: "legal-service"
+    tables: 10
+  - name: "personal_db"
+    service: "personal-service"
+  - name: "audit_db"
+    service: "audit-service"
+    engine: "ClickHouse"
+  - name: "analytics_db"
+    service: "analytics-service"
+    engine: "ClickHouse"

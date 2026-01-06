@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://girok.dev/schemas/policy.schema.json",
+  "title": "Policy Specification Schema",
+  "description": "JSON Schema for policy YAML specifications in docs/llm/policies/",
+  "type": "object",
+  "required": ["version", "last_updated"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "Schema version"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Last update date (YYYY-MM-DD)"
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "do": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["category", "rule"],
+                "properties": {
+                  "category": { "type": "string" },
+                  "rule": { "type": "string" },
+                  "solution": { "type": "string" }
+                }
+              }
+            ]
+          }
+        },
+        "dont": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["category", "rule"],
+                "properties": {
+                  "category": { "type": "string" },
+                  "rule": { "type": "string" },
+                  "reason": { "type": "string" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "command"],
+        "properties": {
+          "name": { "type": "string" },
+          "command": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "overall": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "branches": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}

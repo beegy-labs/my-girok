@@ -1,0 +1,94 @@
+# Core Development Rules - Machine-Readable
+# SSOT for: .ai/rules.md, docs/en/policies/LLM_GUIDELINES.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+language_policy:
+  primary: en
+  rule: "ALL code, documentation, and commits MUST be in English"
+
+documentation:
+  structure:
+    - path: ".ai/"
+      purpose: "Token-optimized LLM docs"
+      audience: "AI assistants"
+    - path: "docs/"
+      purpose: "Detailed human-readable docs"
+      audience: "Human + LLM"
+
+architecture_rules:
+  never:
+    - category: "Types"
+      rule: "Duplicate types"
+      solution: "Use packages/types"
+    - category: "Utils"
+      rule: "Duplicate NestJS/UI utils"
+      solution: "Use shared packages"
+    - category: "DB"
+      rule: "Use prisma migrate"
+      solution: "Use goose (SSOT)"
+    - category: "DB"
+      rule: "Use TEXT for IDs"
+      solution: "Use native UUID with UUIDv7"
+    - category: "Code"
+      rule: "Prisma in Controllers"
+      solution: "Use Services"
+    - category: "Code"
+      rule: "Hardcode secrets"
+      solution: "Use ConfigService"
+    - category: "Resources"
+      rule: "External CDN links"
+      solution: "Self-host locally"
+    - category: "Fonts"
+      rule: "Google Fonts CDN"
+      solution: "Use design-tokens package"
+
+  always:
+    - category: "Types"
+      rule: "Define first in packages/types"
+    - category: "Backend"
+      rule: "Use @my-girok/nest-common"
+    - category: "Frontend"
+      rule: "Use @my-girok/ui-components"
+    - category: "DB"
+      rule: "Use goose for migrations"
+    - category: "DB"
+      rule: "Use TIMESTAMPTZ(6) for timestamps"
+    - category: "DB"
+      rule: "Include -- +goose Down"
+    - category: "Code"
+      rule: "Use @Transactional() for multi-step DB"
+    - category: "Testing"
+      rule: "80% coverage minimum (CI blocks)"
+    - category: "Resources"
+      rule: "Self-host fonts/scripts in design-tokens"
+
+security:
+  secrets: "Sealed Secrets or ESO, never commit"
+  input: "class-validator DTOs, sanitize HTML"
+  auth:
+    access_token_ttl: "15min"
+    refresh_token_ttl: "14days"
+  cors:
+    ios_safari: "explicit headers + maxAge: 3600"
+
+performance_targets:
+  - type: "Simple queries"
+    target_ms: 50
+  - type: "List endpoints"
+    target_ms: 200
+  - type: "Complex queries"
+    target_ms: 500
+  - type: "Mutations"
+    target_ms: 300
+
+commit_format:
+  pattern: "<type>(<scope>): <subject>"
+  types:
+    - feat
+    - fix
+    - refactor
+    - docs
+    - test
+    - chore
+    - perf

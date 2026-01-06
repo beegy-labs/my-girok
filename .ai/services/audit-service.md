@@ -87,4 +87,4 @@ VALKEY_DB=3
 ---
 
 **Schema**: `infrastructure/clickhouse/schemas/01-audit_db.sql`
-**Full docs**: `docs/services/AUDIT_SERVICE.md`
+**Full docs**: `docs/en/services/AUDIT_SERVICE.md`

@@ -50,4 +50,4 @@
 
 ---
 
-**Full guide**: `docs/policies/BEST_PRACTICES_2026.md`
+**Full guide**: `docs/en/policies/BEST_PRACTICES_2026.md`

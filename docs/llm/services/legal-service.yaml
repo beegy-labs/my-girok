@@ -1,0 +1,103 @@
+# Legal Service Specification - Machine-Readable
+# SSOT for: .ai/services/legal-service.md, docs/en/services/LEGAL_SERVICE.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+service:
+  name: "legal-service"
+  description: "Consent management, DSR, compliance - GDPR, PIPA, CCPA"
+  status: "Active"
+
+ports:
+  rest: 3005
+  grpc: 50053
+
+database:
+  name: "legal_db"
+  engine: "PostgreSQL"
+  tables: 10
+
+entities:
+  - name: "consents"
+    description: "User consent records"
+    fields:
+      - "id"
+      - "accountId"
+      - "purposeCode"
+      - "granted"
+      - "grantedAt"
+  - name: "documents"
+    description: "Legal documents (ToS, Privacy)"
+    fields:
+      - "id"
+      - "type"
+      - "version"
+      - "content"
+      - "effectiveDate"
+  - name: "law_registry"
+    description: "Country-specific laws"
+    fields:
+      - "id"
+      - "countryCode"
+      - "lawCode"
+      - "requirements"
+  - name: "dsr_requests"
+    description: "Data Subject Requests"
+    fields:
+      - "id"
+      - "accountId"
+      - "type"
+      - "status"
+      - "deadline"
+
+grpc:
+  package: "legal.v1"
+  proto_path: "packages/proto/legal/v1/"
+  services:
+    - "ConsentService"
+    - "DocumentService"
+    - "DSRService"
+
+global_laws:
+  - code: "PIPA"
+    country: "KR"
+    requirements:
+      - "Age 14+"
+      - "Night push restriction"
+  - code: "GDPR"
+    country: "EU"
+    requirements:
+      - "Age 16+"
+      - "Data portability"
+      - "Right to be forgotten"
+  - code: "CCPA"
+    country: "US"
+    requirements:
+      - "Age 13+"
+      - "Opt-out option"
+  - code: "APPI"
+    country: "JP"
+    requirements:
+      - "Cross-border transfer rules"
+
+dsr_types:
+  - type: "ACCESS"
+    deadline_days: 30
+    description: "Request data copy"
+  - type: "RECTIFICATION"
+    deadline_days: 30
+    description: "Correct inaccurate data"
+  - type: "ERASURE"
+    deadline_days: 30
+    description: "Delete personal data"
+  - type: "PORTABILITY"
+    deadline_days: 30
+    description: "Export data in machine-readable format"
+
+events:
+  publishes:
+    - "CONSENT_GRANTED"
+    - "CONSENT_REVOKED"
+    - "DSR_SUBMITTED"
+    - "DSR_COMPLETED"
+    - "DOCUMENT_ACCEPTED"

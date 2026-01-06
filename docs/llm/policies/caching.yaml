@@ -1,0 +1,59 @@
+# Caching Policy - Machine-Readable
+# SSOT for: .ai/caching.md, docs/en/policies/CACHING.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+backend: "Valkey"
+compatibility: "Redis"
+
+ttl_defaults:
+  - name: "SHORT"
+    seconds: 60
+    use_case: "Rate limiting, OTP"
+  - name: "MEDIUM"
+    seconds: 300
+    use_case: "Session data, tokens"
+  - name: "LONG"
+    seconds: 3600
+    use_case: "User profiles, preferences"
+  - name: "DAY"
+    seconds: 86400
+    use_case: "Static content, configs"
+
+patterns:
+  cache_aside:
+    description: "Check cache, fetch from DB if miss, update cache"
+    recommended: true
+  write_through:
+    description: "Write to cache and DB simultaneously"
+    use_case: "Critical data consistency"
+  write_behind:
+    description: "Write to cache, async to DB"
+    use_case: "High-write scenarios"
+
+key_naming:
+  format: "{service}:{entity}:{id}"
+  examples:
+    - "auth:session:abc123"
+    - "personal:resume:user-456"
+    - "identity:profile:user-789"
+
+invalidation:
+  strategies:
+    - name: "TTL-based"
+      description: "Automatic expiration"
+    - name: "Event-driven"
+      description: "Invalidate on data change"
+    - name: "Manual"
+      description: "Explicit cache clear"
+
+rules:
+  do:
+    - "Use consistent key naming"
+    - "Set appropriate TTL"
+    - "Handle cache misses gracefully"
+    - "Use cache-aside for reads"
+  dont:
+    - "Cache sensitive data without encryption"
+    - "Use cache as primary storage"
+    - "Ignore cache invalidation"

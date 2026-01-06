@@ -1,0 +1,86 @@
+# Analytics Service Specification - Machine-Readable
+# SSOT for: .ai/services/analytics-service.md, docs/en/services/ANALYTICS_SERVICE.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+service:
+  name: "analytics-service"
+  description: "Business analytics and metrics"
+  status: "Active"
+
+ports:
+  rest: 3007
+
+database:
+  name: "analytics_db"
+  engine: "ClickHouse"
+  retention:
+    default: "90 days"
+    aggregated: "1 year"
+
+tables:
+  - name: "sessions"
+    description: "User sessions"
+    columns:
+      - "sessionId"
+      - "accountId"
+      - "startedAt"
+      - "endedAt"
+      - "deviceType"
+  - name: "events"
+    description: "User events"
+    columns:
+      - "timestamp"
+      - "sessionId"
+      - "eventName"
+      - "properties"
+  - name: "page_views"
+    description: "Page view tracking"
+    columns:
+      - "timestamp"
+      - "sessionId"
+      - "path"
+      - "referrer"
+  - name: "funnel_events"
+    description: "Conversion funnel events"
+    columns:
+      - "timestamp"
+      - "accountId"
+      - "funnelId"
+      - "stepId"
+
+api_endpoints:
+  - method: "POST"
+    path: "/analytics/events"
+    description: "Track event"
+  - method: "POST"
+    path: "/analytics/page-views"
+    description: "Track page view"
+  - method: "GET"
+    path: "/analytics/metrics"
+    description: "Get metrics"
+    query_params:
+      - "metric"
+      - "startDate"
+      - "endDate"
+      - "granularity"
+  - method: "GET"
+    path: "/analytics/funnels/:id"
+    description: "Get funnel analysis"
+
+metrics:
+  - name: "DAU"
+    description: "Daily Active Users"
+  - name: "MAU"
+    description: "Monthly Active Users"
+  - name: "Retention"
+    description: "User retention rates"
+  - name: "Conversion"
+    description: "Funnel conversion rates"
+
+events:
+  subscribes:
+    - "SESSION_STARTED"
+    - "SESSION_ENDED"
+    - "PAGE_VIEWED"
+    - "FEATURE_USED"

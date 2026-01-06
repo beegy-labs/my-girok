@@ -1,0 +1,73 @@
+# Personal Service Specification - Machine-Readable
+# SSOT for: .ai/services/personal-service.md, docs/en/services/PERSONAL_SERVICE.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+service:
+  name: "personal-service"
+  description: "Resume and Profile management API"
+  status: "Active"
+
+ports:
+  rest: 3002
+  grpc: null # TBD
+
+database:
+  name: "personal_db"
+  engine: "PostgreSQL"
+
+entities:
+  - name: "resumes"
+    description: "User resume data"
+    fields:
+      - "id"
+      - "userId"
+      - "title"
+      - "content"
+      - "visibility"
+  - name: "resume_sections"
+    description: "Resume sections"
+    types:
+      - "education"
+      - "experience"
+      - "skills"
+      - "projects"
+  - name: "share_links"
+    description: "Resume sharing links"
+    fields:
+      - "id"
+      - "resumeId"
+      - "token"
+      - "expiresAt"
+
+api_endpoints:
+  - method: "POST"
+    path: "/personal/resumes"
+    description: "Create resume"
+  - method: "GET"
+    path: "/personal/resumes/:id"
+    description: "Get resume"
+  - method: "PUT"
+    path: "/personal/resumes/:id"
+    description: "Update resume"
+  - method: "DELETE"
+    path: "/personal/resumes/:id"
+    description: "Delete resume"
+  - method: "POST"
+    path: "/personal/resumes/:id/share"
+    description: "Create share link"
+  - method: "GET"
+    path: "/personal/shared/:token"
+    description: "View shared resume"
+
+visibility_modes:
+  - "PRIVATE"
+  - "LINK_ONLY"
+  - "PUBLIC"
+
+events:
+  publishes:
+    - "RESUME_CREATED"
+    - "RESUME_UPDATED"
+    - "RESUME_SHARED"
+    - "RESUME_VIEWED"

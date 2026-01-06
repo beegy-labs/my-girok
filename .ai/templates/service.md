@@ -61,4 +61,4 @@ DATABASE_URL=
 
 ---
 
-**Full docs**: `docs/services/{SERVICE}_SERVICE.md`
+**Full docs**: `docs/en/services/{SERVICE}_SERVICE.md`

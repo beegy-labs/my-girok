@@ -1,0 +1,82 @@
+# Identity Service Specification - Machine-Readable
+# SSOT for: .ai/services/identity-service.md, docs/en/services/IDENTITY_SERVICE.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+service:
+  name: "identity-service"
+  description: "Multi-app user platform - Accounts, Sessions, Devices, Profiles"
+  status: "Active"
+
+ports:
+  rest: 3000
+  grpc: 50051
+
+database:
+  name: "identity_db"
+  engine: "PostgreSQL"
+  tables: 8
+
+entities:
+  - name: "accounts"
+    description: "User accounts with UUIDv7"
+    fields:
+      - "id (UUID)"
+      - "email"
+      - "passwordHash"
+      - "accountMode"
+      - "createdAt"
+  - name: "sessions"
+    description: "Login sessions"
+    fields:
+      - "id"
+      - "accountId"
+      - "deviceId"
+      - "expiresAt"
+  - name: "devices"
+    description: "Device management"
+    fields:
+      - "id"
+      - "accountId"
+      - "fingerprint"
+      - "userAgent"
+  - name: "profiles"
+    description: "User profiles"
+    fields:
+      - "id"
+      - "accountId"
+      - "displayName"
+      - "avatarUrl"
+
+grpc:
+  package: "identity.v1"
+  proto_path: "packages/proto/identity/v1/"
+  services:
+    - "AccountService"
+    - "SessionService"
+    - "ProfileService"
+
+api_endpoints:
+  - method: "POST"
+    path: "/identity/accounts"
+    description: "Create account"
+  - method: "GET"
+    path: "/identity/accounts/:id"
+    description: "Get account"
+  - method: "POST"
+    path: "/identity/sessions"
+    description: "Create session"
+  - method: "DELETE"
+    path: "/identity/sessions/:id"
+    description: "End session"
+  - method: "GET"
+    path: "/identity/profiles/:accountId"
+    description: "Get profile"
+
+events:
+  publishes:
+    - "ACCOUNT_CREATED"
+    - "ACCOUNT_UPDATED"
+    - "SESSION_STARTED"
+    - "SESSION_ENDED"
+    - "DEVICE_REGISTERED"

@@ -80,4 +80,4 @@ VALKEY_DB=1
 
 ---
 
-**Full docs**: `docs/services/PERSONAL_SERVICE.md`
+**Full docs**: `docs/en/services/PERSONAL_SERVICE.md`

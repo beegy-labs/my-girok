@@ -1,0 +1,78 @@
+# Audit Service Specification - Machine-Readable
+# SSOT for: .ai/services/audit-service.md, docs/en/services/AUDIT_SERVICE.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+service:
+  name: "audit-service"
+  description: "Compliance logging for regulatory requirements"
+  status: "Active"
+
+ports:
+  rest: 3006
+
+database:
+  name: "audit_db"
+  engine: "ClickHouse"
+  retention: "5 years"
+
+tables:
+  - name: "access_logs"
+    description: "API access logs"
+    columns:
+      - "timestamp"
+      - "accountId"
+      - "action"
+      - "resource"
+      - "ip"
+      - "userAgent"
+  - name: "consent_history"
+    description: "Consent change history"
+    columns:
+      - "timestamp"
+      - "accountId"
+      - "purposeCode"
+      - "previousValue"
+      - "newValue"
+  - name: "admin_actions"
+    description: "Admin/operator actions"
+    columns:
+      - "timestamp"
+      - "operatorId"
+      - "action"
+      - "targetId"
+      - "details"
+
+api_endpoints:
+  - method: "POST"
+    path: "/audit/logs"
+    description: "Write audit log"
+  - method: "GET"
+    path: "/audit/logs"
+    description: "Query audit logs"
+    query_params:
+      - "accountId"
+      - "action"
+      - "startDate"
+      - "endDate"
+  - method: "GET"
+    path: "/audit/reports/compliance"
+    description: "Generate compliance report"
+
+compliance_standards:
+  - "GDPR Article 30"
+  - "PIPA"
+  - "SOC 2"
+  - "ISO 27001"
+
+retention_policy:
+  default: "5 years"
+  reason: "Regulatory compliance requirements"
+
+events:
+  subscribes:
+    - "CONSENT_GRANTED"
+    - "CONSENT_REVOKED"
+    - "DSR_SUBMITTED"
+    - "DSR_COMPLETED"
+    - "ADMIN_ACTION"

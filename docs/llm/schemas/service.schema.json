@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://girok.dev/schemas/service.schema.json",
+  "title": "Service Specification Schema",
+  "description": "JSON Schema for service YAML specifications in docs/llm/services/",
+  "type": "object",
+  "required": ["version", "service", "ports", "database"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "Schema version"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Last update date (YYYY-MM-DD)"
+    },
+    "service": {
+      "type": "object",
+      "required": ["name", "description", "status"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z]+-service$"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Planned", "Deprecated"]
+        }
+      }
+    },
+    "ports": {
+      "type": "object",
+      "properties": {
+        "rest": {
+          "type": ["integer", "null"],
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "grpc": {
+          "type": ["integer", "null"],
+          "minimum": 50000,
+          "maximum": 50100
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "required": ["name", "engine"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_]+_db$"
+        },
+        "engine": {
+          "type": "string",
+          "enum": ["PostgreSQL", "MongoDB", "ClickHouse", "Valkey"]
+        },
+        "tables": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retention": {
+          "type": "string"
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "grpc": {
+      "type": "object",
+      "properties": {
+        "package": {
+          "type": "string",
+          "pattern": "^[a-z]+\\.v[0-9]+$"
+        },
+        "proto_path": {
+          "type": "string"
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "api_endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["method", "path", "description"],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "properties": {
+        "publishes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_]+$"
+          }
+        },
+        "subscribes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_]+$"
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,19 +2,19 @@
 /**
  * Docs Translation Script
  *
- * Translates documentation from docs/en/ to target locales using Claude API.
+ * Translates documentation from docs/en/ to target locales using Google API.
  * Preserves code blocks, links, and technical terminology.
  *
  * Usage:
- *   ANTHROPIC_API_KEY=xxx tsx scripts/translate-docs.ts
+ *   GOOGLE_API_KEY=xxx tsx scripts/translate-docs.ts
  *
  * Environment Variables:
- *   ANTHROPIC_API_KEY - Required: Claude API key
+ *   GOOGLE_API_KEY - Required: Google API key
  *   CHANGED_FILES - Optional: Comma-separated list of files to translate
  *   TARGET_LOCALE - Optional: Target locale (default: kr)
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
@@ -108,7 +108,7 @@ async function loadConfig(): Promise<I18nConfig> {
 }
 
 async function translateFile(
-  client: Anthropic,
+  genAI: GoogleGenerativeAI,
   sourcePath: string,
   targetLocale: string,
 ): Promise<TranslationResult> {
@@ -125,19 +125,11 @@ async function translateFile(
 
     console.log(`Translating: ${relativePath} -> ${targetLocale}`);
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8192,
-      temperature: 0, // Deterministic output
-      messages: [
-        {
-          role: 'user',
-          content: getTranslationPrompt(targetLocale, content, relativePath),
-        },
-      ],
-    });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+    const prompt = getTranslationPrompt(targetLocale, content, relativePath);
 
-    const translatedContent = response.content[0].type === 'text' ? response.content[0].text : '';
+    const result = await model.generateContent(prompt);
+    const translatedContent = result.response.text();
 
     // Ensure target directory exists
     const targetDir = path.dirname(targetPath);
@@ -187,33 +179,37 @@ async function getFilesToTranslate(): Promise<string[]> {
 }
 
 async function main() {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    console.error('Error: ANTHROPIC_API_KEY environment variable is required');
+    console.error('Error: GOOGLE_API_KEY environment variable is required');
     process.exit(1);
   }
 
   const targetLocale = process.env.TARGET_LOCALE || 'kr';
-  const client = new Anthropic({ apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey);
 
   console.log('=== Docs Translation ===');
   console.log(`Target locale: ${targetLocale}`);
   console.log('');
 
-  const files = await getFilesToTranslate();
+  const allFiles = await getFilesToTranslate();
 
-  if (files.length === 0) {
+  if (allFiles.length === 0) {
     console.log('No files to translate');
     return;
   }
 
-  console.log(`Files to translate: ${files.length}`);
+  const BATCH_SIZE = 5;
+  const filesToProcess = allFiles.slice(0, BATCH_SIZE);
+
+  console.log(`Total files found: ${allFiles.length}`);
+  console.log(`Processing first batch of ${filesToProcess.length} files...`);
   console.log('');
 
   const results: TranslationResult[] = [];
 
-  for (const file of files) {
-    const result = await translateFile(client, file, targetLocale);
+  for (const file of filesToProcess) {
+    const result = await translateFile(genAI, file, targetLocale);
     results.push(result);
 
     // Rate limiting: wait 1 second between API calls
@@ -222,10 +218,10 @@ async function main() {
 
   // Summary
   console.log('');
-  console.log('=== Summary ===');
+  console.log('=== Batch Summary ===');
   const successful = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
-  console.log(`Total: ${results.length}`);
+  console.log(`Total in batch: ${results.length}`);
   console.log(`Success: ${successful}`);
   console.log(`Failed: ${failed}`);
 
@@ -233,8 +229,11 @@ async function main() {
     console.log('');
     console.log('Failed files:');
     results.filter((r) => !r.success).forEach((r) => console.log(`  - ${r.file}: ${r.error}`));
-    process.exit(1);
+    // Do not exit on partial failure, just report.
   }
+
+  console.log('\nFinished processing the first batch.');
+  console.log('To continue with the next batch, please provide confirmation.');
 }
 
 main().catch((error) => {

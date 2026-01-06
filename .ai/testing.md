@@ -45,4 +45,4 @@ pnpm test:e2e       # E2E tests
 
 ---
 
-**Full guide**: `docs/policies/TESTING.md`
+**Full guide**: `docs/en/policies/TESTING.md`

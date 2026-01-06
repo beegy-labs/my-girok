@@ -319,5 +319,5 @@ ServiceAccessGuard / CountryConsentGuard (optional)
 - Auth Service: `.ai/services/auth-service.md`
 - Legal Service: `.ai/services/legal-service.md`
 
-**Full roadmap**: `docs/ARCHITECTURE_ROADMAP.md`
-**Platform policy**: `docs/policies/IDENTITY_PLATFORM.md`
+**Full roadmap**: `docs/en/ARCHITECTURE_ROADMAP.md`
+**Platform policy**: `docs/en/policies/IDENTITY_PLATFORM.md`

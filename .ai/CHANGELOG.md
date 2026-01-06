@@ -12,9 +12,14 @@ Categories: `added`, `changed`, `removed`, `fixed`, `consolidated`
 
 - **added**: `manifest.yaml` - Machine-readable document contract for LLM agents
 - **added**: `CHANGELOG.md` - Version tracking for AI documentation
-- **changed**: All docs - Added `last_updated` metadata headers
-- **changed**: All docs - Standardized `Full guide` links to `docs/`
-- **consolidated**: `docs/policies/LLM_GUIDELINES.md` → `rules.md` (SSOT violation fix)
+- **added**: `docs/llm/policies/*.yaml` - 7 policy YAML data files (rules, testing, database, caching, security, deployment, git-workflow)
+- **added**: `docs/llm/services/*.yaml` - 6 service specification YAML files
+- **added**: `docs/llm/schemas/*.json` - 3 JSON Schema definitions (service, policy, manifest)
+- **added**: `docs/en/policies/GIT_WORKFLOW.md` - Git workflow detailed documentation
+- **changed**: All `.ai/` docs - Updated `docs/` references to `docs/en/`
+- **changed**: `manifest.yaml` - Added `ssot_data` section for docs/llm layer
+- **changed**: `git-flow.md` - Added Full guide reference
+- **consolidated**: `docs/en/policies/LLM_GUIDELINES.md` → `rules.md` (SSOT violation fix)
 - **changed**: `GEMINI.md` - Enhanced to match CLAUDE.md with Task-based Navigation
 
 ## 2026-01-05

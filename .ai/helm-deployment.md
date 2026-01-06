@@ -61,4 +61,4 @@ helm install <release> . -f values.yaml -f values-prod.yaml
 
 ---
 
-**Full guide**: `docs/policies/DEPLOYMENT.md`
+**Full guide**: `docs/en/policies/DEPLOYMENT.md`

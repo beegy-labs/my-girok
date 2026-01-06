@@ -53,25 +53,25 @@
 
 ### ALWAYS
 
-| Category  | Rule                                      |
-| --------- | ----------------------------------------- |
-| Types     | Define first in `packages/types`          |
-| Backend   | Use `@my-girok/nest-common`               |
-| Frontend  | Use `@my-girok/ui-components`             |
-| DB        | Use goose for migrations                  |
-| DB        | Use `TIMESTAMPTZ(6)` for timestamps       |
-| DB        | Include `-- +goose Down`                  |
-| Code      | Use `@Transactional()` for multi-step DB  |
-| Code      | Use Guards for protected endpoints        |
-| Code      | Prevent N+1 queries                       |
-| React     | Use React.memo for list item components   |
-| React     | Use useMemo for expensive calculations    |
-| Testing   | **80% coverage minimum (CI blocks)**      |
-| Testing   | Check `docs/TEST_COVERAGE.md` before work |
-| Testing   | Include tests with code changes           |
-| Testing   | Mock gRPC clients in consumer services    |
-| Resources | Self-host fonts/scripts in design-tokens  |
-| Resources | Include LICENSE for external resources    |
+| Category  | Rule                                         |
+| --------- | -------------------------------------------- |
+| Types     | Define first in `packages/types`             |
+| Backend   | Use `@my-girok/nest-common`                  |
+| Frontend  | Use `@my-girok/ui-components`                |
+| DB        | Use goose for migrations                     |
+| DB        | Use `TIMESTAMPTZ(6)` for timestamps          |
+| DB        | Include `-- +goose Down`                     |
+| Code      | Use `@Transactional()` for multi-step DB     |
+| Code      | Use Guards for protected endpoints           |
+| Code      | Prevent N+1 queries                          |
+| React     | Use React.memo for list item components      |
+| React     | Use useMemo for expensive calculations       |
+| Testing   | **80% coverage minimum (CI blocks)**         |
+| Testing   | Check `docs/en/TEST_COVERAGE.md` before work |
+| Testing   | Include tests with code changes              |
+| Testing   | Mock gRPC clients in consumer services       |
+| Resources | Self-host fonts/scripts in design-tokens     |
+| Resources | Include LICENSE for external resources       |
 
 ## Key Patterns
 
@@ -176,7 +176,7 @@ DROP TABLE IF EXISTS features;
 
 ## Identity Platform
 
-> Policy: `docs/policies/IDENTITY_PLATFORM.md`
+> Policy: `docs/en/policies/IDENTITY_PLATFORM.md`
 
 ### Triple-Layer Access Control
 
@@ -253,4 +253,4 @@ import { TextInput, Button, Alert, SortableList } from '@my-girok/ui-components'
 
 ---
 
-**Detailed policies**: `docs/policies/`
+**Detailed policies**: `docs/en/policies/`

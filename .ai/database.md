@@ -41,4 +41,4 @@ DROP TABLE IF EXISTS features;
 
 ---
 
-**Full guide**: `docs/policies/DATABASE.md`
+**Full guide**: `docs/en/policies/DATABASE.md`

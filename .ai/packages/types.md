@@ -488,4 +488,4 @@ pnpm --filter @my-girok/types build
 
 ---
 
-**Human docs**: [docs/packages/TYPES.md](../../docs/packages/TYPES.md)
+**Full guide**: `docs/en/packages/TYPES.md`

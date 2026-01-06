@@ -99,4 +99,4 @@ API_KEYS=key1,key2
 
 ---
 
-**Full docs**: `docs/services/LEGAL_SERVICE.md`
+**Full docs**: `docs/en/services/LEGAL_SERVICE.md`

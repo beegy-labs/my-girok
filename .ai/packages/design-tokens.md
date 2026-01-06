@@ -99,4 +99,4 @@ All text meets 7:1+ contrast (AAA):
 ---
 
 **SSOT Guide**: `.ai/ssot.md`
-**Full Spec**: `docs/DESIGN_SYSTEM.md`
+**Full Spec**: `docs/en/DESIGN_SYSTEM.md`

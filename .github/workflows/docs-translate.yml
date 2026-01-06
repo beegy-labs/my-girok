@@ -74,7 +74,7 @@ jobs:
 
       - name: Run translation
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           CHANGED_FILES: ${{ needs.detect-changes.outputs.changed_files }}
           TARGET_LOCALE: ${{ matrix.locale }}
         run: |

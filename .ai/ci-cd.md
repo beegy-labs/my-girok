@@ -34,4 +34,4 @@ docker build -t test/auth-service:local -f services/auth-service/Dockerfile .
 
 ---
 
-**Full guide**: `docs/CI_CD.md`
+**Full guide**: `docs/en/CI_CD.md`

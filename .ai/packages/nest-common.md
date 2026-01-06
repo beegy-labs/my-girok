@@ -182,7 +182,7 @@ await this.cache.set(key, data, CacheTTL.SESSION); // 30m
 | `USERNAME_LOOKUP` | 2h       | username → userId mapping    |
 | `EXPORT_STATUS`   | 24h      | export job tracking          |
 
-**Policy**: `docs/policies/CACHING.md`
+**Policy**: `docs/en/policies/CACHING.md`
 
 ## ID (UUIDv7 - RFC 9562)
 
@@ -871,4 +871,4 @@ ssn, birthDate, address, creditCard, ipAddress, ip
 
 ---
 
-**Detailed docs**: `docs/packages/nest-common.md`
+**Detailed docs**: `docs/en/packages/nest-common.md`

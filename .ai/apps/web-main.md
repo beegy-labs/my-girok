@@ -246,4 +246,4 @@ pnpm --filter web-main test     # Test
 
 ---
 
-**Detailed docs**: `docs/apps/WEB_MAIN.md`
+**Detailed docs**: `docs/en/apps/WEB_MAIN.md`

@@ -53,4 +53,4 @@ Types: feat, fix, refactor, docs, test, chore
 
 ---
 
-**Full guide**: `docs/policies/GIT_WORKFLOW.md`
+**Full guide**: `docs/en/policies/GIT_WORKFLOW.md`

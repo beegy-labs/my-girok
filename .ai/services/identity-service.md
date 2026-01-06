@@ -97,4 +97,4 @@ JWT_PUBLIC_KEY=...
 
 ---
 
-**Full docs**: `docs/services/IDENTITY_SERVICE.md`
+**Full docs**: `docs/en/services/IDENTITY_SERVICE.md`

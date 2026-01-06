@@ -104,4 +104,4 @@ pnpm --filter @my-girok/ui-components build      # Build
 
 ---
 
-**Human docs**: [docs/DESIGN_SYSTEM.md](../../docs/DESIGN_SYSTEM.md)
+**Human docs**: [docs/DESIGN_SYSTEM.md](../../docs/en/DESIGN_SYSTEM.md)

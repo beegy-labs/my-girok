@@ -1,0 +1,71 @@
+# Security Policy - Machine-Readable
+# SSOT for: docs/en/policies/SECURITY.md
+version: "1.0"
+last_updated: "2026-01-06"
+
+secrets_management:
+  kubernetes: "Sealed Secrets"
+  alternative: "External Secrets Operator (ESO)"
+  rule: "NEVER commit secrets to repository"
+
+authentication:
+  access_token:
+    type: "JWT"
+    ttl_minutes: 15
+    algorithm: "RS256"
+  refresh_token:
+    ttl_days: 14
+    storage: "httpOnly cookie"
+  session:
+    storage: "Valkey"
+    cookie:
+      httpOnly: true
+      secure: true
+      sameSite: "strict"
+
+authorization:
+  model: "RBAC"
+  guard_flow:
+    - "UnifiedAuthGuard"
+    - "ServiceAccessGuard"
+    - "CountryConsentGuard"
+  token_types:
+    - "USER_ACCESS"
+    - "ADMIN_ACCESS"
+    - "OPERATOR_ACCESS"
+
+input_validation:
+  backend: "class-validator"
+  frontend: "zod"
+  sanitization: "DOMPurify for HTML"
+
+cors:
+  ios_safari:
+    explicit_headers: true
+    max_age: 3600
+  allowed_origins:
+    - "https://my.girok.dev"
+    - "https://admin.girok.dev"
+
+rate_limiting:
+  login_attempts: 5
+  lockout_duration_minutes: 15
+  api_requests_per_minute: 100
+
+identity_platform:
+  security_levels:
+    - level: "STRICT"
+      domain_check: true
+      jwt_required: true
+      header_check: true
+      use_case: "Production (default)"
+    - level: "STANDARD"
+      domain_check: false
+      jwt_required: true
+      header_check: true
+      use_case: "Staging, internal"
+    - level: "RELAXED"
+      domain_check: false
+      jwt_required: true
+      header_check: false
+      use_case: "Development"
