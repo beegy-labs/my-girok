@@ -2,6 +2,8 @@
 
 > LLM-optimized documentation for multi-LLM assistants
 
+**Last Updated**: 2026-01-06 | **Manifest**: [manifest.yaml](manifest.yaml) | **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+
 ## Documentation Policy
 
 ### `.ai/` = LLM Quick Reference (30-50 lines max)

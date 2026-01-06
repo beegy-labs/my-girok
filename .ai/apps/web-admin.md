@@ -1,6 +1,6 @@
 # web-admin
 
-> Admin console for Girok H-RBAC multi-tenant system
+> Admin console for Girok H-RBAC multi-tenant system | **Last Updated**: 2026-01-06
 
 ## Quick Reference
 

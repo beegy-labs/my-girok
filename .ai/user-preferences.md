@@ -1,6 +1,6 @@
 # User Preferences
 
-> Cookie-first preferences for theme and section order
+> Cookie-first preferences for theme and section order | **Last Updated**: 2026-01-06
 
 ## API Endpoints
 
