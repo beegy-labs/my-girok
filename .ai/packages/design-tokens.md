@@ -98,5 +98,4 @@ All text meets 7:1+ contrast (AAA):
 
 ---
 
-**SSOT Guide**: `.ai/ssot.md`
-**Full Spec**: `docs/DESIGN_SYSTEM.md`
+**SSOT**: `docs/llm/packages/design-tokens.md` | **Full docs**: `docs/en/packages/design-tokens.md`

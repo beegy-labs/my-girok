@@ -871,4 +871,4 @@ ssn, birthDate, address, creditCard, ipAddress, ip
 
 ---
 
-**Detailed docs**: `docs/packages/nest-common.md`
+**SSOT**: `docs/llm/packages/nest-common.md` | **Full docs**: `docs/en/packages/nest-common.md`

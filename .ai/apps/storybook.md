@@ -78,4 +78,4 @@ pnpm --filter @my-girok/ui-components test:a11y
 
 ---
 
-**Related**: `.ai/packages/ui-components.md`, `.ai/packages/design-tokens.md`
+**SSOT**: `docs/llm/apps/storybook.md` | **Full docs**: `docs/en/apps/storybook.md`

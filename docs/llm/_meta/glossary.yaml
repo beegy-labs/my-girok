@@ -1,0 +1,104 @@
+# Documentation Glossary
+# Version: 1.0
+# Last Updated: 2026-01-06
+#
+# Purpose: Ensure consistent terminology across all languages
+# Usage: Terms listed here should NOT be translated
+
+# Technical terms (keep as-is in all languages)
+preserve:
+  # Frameworks & Libraries
+  - React
+  - NestJS
+  - Prisma
+  - TypeScript
+  - JavaScript
+  - Node.js
+  - Vite
+  - Tailwind CSS
+  - GraphQL
+  - gRPC
+  - REST API
+  - Kubernetes
+  - Docker
+  - Helm
+  - ArgoCD
+  - Redis
+  - Valkey
+  - PostgreSQL
+  - ClickHouse
+  - Redpanda
+
+  # Project-specific
+  - my-girok
+  - SSOT
+  - BFF
+  - WCAG
+  - UUIDv7
+  - goose
+
+  # Patterns & Concepts
+  - GitFlow
+  - CI/CD
+  - RBAC
+  - JWT
+  - OAuth
+  - DSR
+  - GDPR
+
+  # Commands & Code
+  - pnpm
+  - npm
+  - git
+  - kubectl
+  - helm
+
+# Translations (term: {locale: translation})
+translations:
+  service:
+    kr: 서비스
+    ja: サービス
+
+  policy:
+    kr: 정책
+    ja: ポリシー
+
+  guide:
+    kr: 가이드
+    ja: ガイド
+
+  authentication:
+    kr: 인증
+    ja: 認証
+
+  authorization:
+    kr: 인가
+    ja: 認可
+
+  database:
+    kr: 데이터베이스
+    ja: データベース
+
+  migration:
+    kr: 마이그레이션
+    ja: マイグレーション
+
+  deployment:
+    kr: 배포
+    ja: デプロイ
+
+  testing:
+    kr: 테스팅
+    ja: テスト
+
+  caching:
+    kr: 캐싱
+    ja: キャッシュ
+
+  security:
+    kr: 보안
+    ja: セキュリティ
+
+  performance:
+    kr: 성능
+    ja: パフォーマンス

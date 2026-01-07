@@ -6,7 +6,7 @@
 
 | Property | Value                        |
 | -------- | ---------------------------- |
-| REST     | :3000                        |
+| REST     | :3005                        |
 | gRPC     | :50051                       |
 | Database | identity_db (PostgreSQL)     |
 | Cache    | Valkey DB 0                  |
@@ -87,7 +87,7 @@ GET/PATCH  /profiles/:accountId
 ## Environment
 
 ```bash
-PORT=3000
+PORT=3005
 GRPC_PORT=50051
 DATABASE_URL=postgresql://...identity_db
 VALKEY_HOST=localhost
@@ -97,4 +97,4 @@ JWT_PUBLIC_KEY=...
 
 ---
 
-**Full docs**: `docs/services/IDENTITY_SERVICE.md`
+**SSOT**: `docs/llm/services/identity-service.md` | **Full docs**: `docs/en/services/identity-service.md`
