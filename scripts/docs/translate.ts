@@ -26,6 +26,10 @@ const LANGUAGE_NAMES: Record<string, string> = {
   de: 'German',
 };
 
+// Default retry configuration
+const DEFAULT_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
 // Parse CLI arguments
 const { values } = parseArgs({
   options: {
@@ -33,6 +37,7 @@ const { values } = parseArgs({
     provider: { type: 'string', short: 'p', default: 'ollama' },
     model: { type: 'string', short: 'm' },
     file: { type: 'string', short: 'f' },
+    retries: { type: 'string', short: 'r', default: String(DEFAULT_RETRIES) },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -49,12 +54,14 @@ Options:
   -p, --provider <name>  LLM provider: ollama, gemini (default: ollama)
   -m, --model <name>     Model name (optional)
   -f, --file <path>      Translate specific file only (relative to docs/en/)
+  -r, --retries <num>    Number of retries on failure (default: ${DEFAULT_RETRIES})
   -h, --help             Show this help
 
 Examples:
   pnpm docs:translate --locale kr
   pnpm docs:translate --locale kr --provider gemini
   pnpm docs:translate --file policies/SECURITY.md --locale kr
+  pnpm docs:translate --locale kr --retries 5
 `);
   process.exit(0);
 }
@@ -82,6 +89,11 @@ function buildPrompt(template: string, content: string, targetLanguage: string):
   return template.replace('{{TARGET_LANGUAGE}}', targetLanguage).replace('{{CONTENT}}', content);
 }
 
+// Sleep utility for retry delay
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // Get all markdown files in a directory recursively
 function getMarkdownFiles(dir: string): string[] {
   const files: string[] = [];
@@ -102,43 +114,68 @@ function getMarkdownFiles(dir: string): string[] {
   return files;
 }
 
-// Translate a single file
+// Translate a single file with retry logic
 async function translateFile(
   provider: LLMProvider,
   sourcePath: string,
   targetPath: string,
   targetLanguage: string,
   promptTemplate: string,
+  maxRetries: number,
 ): Promise<void> {
   const content = fs.readFileSync(sourcePath, 'utf-8');
   const prompt = buildPrompt(promptTemplate, content, targetLanguage);
+  const fileName = path.basename(sourcePath);
 
-  console.log(`  Translating: ${path.basename(sourcePath)}...`);
+  let lastError: Error | undefined;
 
-  const translated = await provider.generate(prompt, {
-    temperature: 0.1,
-    maxTokens: 16384,
-  });
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt === 1) {
+        console.log(`  Translating: ${fileName}...`);
+      } else {
+        console.log(`  Retrying (${attempt}/${maxRetries}): ${fileName}...`);
+      }
 
-  // Ensure target directory exists
-  const targetDir = path.dirname(targetPath);
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+      const translated = await provider.generate(prompt, {
+        temperature: 0.1,
+        maxTokens: 16384,
+      });
+
+      // Ensure target directory exists
+      const targetDir = path.dirname(targetPath);
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      fs.writeFileSync(targetPath, translated, 'utf-8');
+      console.log(`  ✓ Saved: ${targetPath}`);
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (attempt < maxRetries) {
+        const delay = RETRY_DELAY_MS * attempt; // Exponential backoff
+        console.log(`  ⚠ Attempt ${attempt} failed, retrying in ${delay / 1000}s...`);
+        await sleep(delay);
+      }
+    }
   }
 
-  fs.writeFileSync(targetPath, translated, 'utf-8');
-  console.log(`  ✓ Saved: ${targetPath}`);
+  throw lastError ?? new Error('Translation failed after all retries');
 }
 
 // Main function
 async function main() {
   const locale = values.locale!;
   const providerName = values.provider!;
+  const maxRetries = parseInt(values.retries!, 10) || DEFAULT_RETRIES;
   const targetLanguage = LANGUAGE_NAMES[locale] ?? locale;
 
   console.log(`\n📚 Documentation Translation`);
   console.log(`   Provider: ${providerName}`);
   console.log(`   Target: ${locale} (${targetLanguage})`);
+  console.log(`   Retries: ${maxRetries}`);
   console.log('');
 
   // Create provider
@@ -188,10 +225,17 @@ async function main() {
     const targetPath = path.join(targetDir, relativePath);
 
     try {
-      await translateFile(provider, sourcePath, targetPath, targetLanguage, promptTemplate);
+      await translateFile(
+        provider,
+        sourcePath,
+        targetPath,
+        targetLanguage,
+        promptTemplate,
+        maxRetries,
+      );
       success++;
     } catch (error) {
-      console.error(`  ❌ Failed: ${relativePath}`);
+      console.error(`  ❌ Failed after ${maxRetries} attempts: ${relativePath}`);
       console.error(`     ${error}`);
       failed++;
     }

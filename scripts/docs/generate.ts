@@ -18,6 +18,10 @@ import { createOllamaProvider } from './providers/ollama.ts';
 import { createGeminiProvider } from './providers/gemini.ts';
 import type { LLMProvider } from './providers/index.ts';
 
+// Default retry configuration
+const DEFAULT_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
 // Parse CLI arguments
 const { values } = parseArgs({
   options: {
@@ -25,6 +29,7 @@ const { values } = parseArgs({
     model: { type: 'string', short: 'm' },
     file: { type: 'string', short: 'f' },
     force: { type: 'boolean', default: false },
+    retries: { type: 'string', short: 'r', default: String(DEFAULT_RETRIES) },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -43,6 +48,7 @@ Options:
   -m, --model <name>     Model name (optional)
   -f, --file <path>      Generate specific file only (relative to docs/llm/)
   --force                Regenerate even if target exists and is newer
+  -r, --retries <num>    Number of retries on failure (default: ${DEFAULT_RETRIES})
   -h, --help             Show this help
 
 Examples:
@@ -50,6 +56,7 @@ Examples:
   pnpm docs:generate --provider gemini
   pnpm docs:generate --file policies/security.md
   pnpm docs:generate --force
+  pnpm docs:generate --retries 5
 `);
   process.exit(0);
 }
@@ -75,6 +82,11 @@ function loadPromptTemplate(): string {
 // Build generation prompt
 function buildPrompt(template: string, content: string): string {
   return template.replace('{{CONTENT}}', content);
+}
+
+// Sleep utility for retry delay
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Get all markdown files in a directory recursively
@@ -112,42 +124,67 @@ function needsRegeneration(sourcePath: string, targetPath: string, force: boolea
   return sourceStat.mtime > targetStat.mtime;
 }
 
-// Generate a single file
+// Generate a single file with retry logic
 async function generateFile(
   provider: LLMProvider,
   sourcePath: string,
   targetPath: string,
   promptTemplate: string,
+  maxRetries: number,
 ): Promise<void> {
   const content = fs.readFileSync(sourcePath, 'utf-8');
   const prompt = buildPrompt(promptTemplate, content);
+  const fileName = path.basename(sourcePath);
 
-  console.log(`  Generating: ${path.basename(sourcePath)}...`);
+  let lastError: Error | undefined;
 
-  const generated = await provider.generate(prompt, {
-    temperature: 0.3,
-    maxTokens: 16384,
-  });
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt === 1) {
+        console.log(`  Generating: ${fileName}...`);
+      } else {
+        console.log(`  Retrying (${attempt}/${maxRetries}): ${fileName}...`);
+      }
 
-  // Ensure target directory exists
-  const targetDir = path.dirname(targetPath);
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+      const generated = await provider.generate(prompt, {
+        temperature: 0.3,
+        maxTokens: 16384,
+      });
+
+      // Ensure target directory exists
+      const targetDir = path.dirname(targetPath);
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      fs.writeFileSync(targetPath, generated, 'utf-8');
+      console.log(`  ✓ Saved: ${targetPath}`);
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (attempt < maxRetries) {
+        const delay = RETRY_DELAY_MS * attempt; // Exponential backoff
+        console.log(`  ⚠ Attempt ${attempt} failed, retrying in ${delay / 1000}s...`);
+        await sleep(delay);
+      }
+    }
   }
 
-  fs.writeFileSync(targetPath, generated, 'utf-8');
-  console.log(`  ✓ Saved: ${targetPath}`);
+  throw lastError ?? new Error('Generation failed after all retries');
 }
 
 // Main function
 async function main() {
   const providerName = values.provider!;
   const force = values.force ?? false;
+  const maxRetries = parseInt(values.retries!, 10) || DEFAULT_RETRIES;
 
   console.log(`\n📚 Documentation Generation (SSOT → Human-readable)`);
   console.log(`   Provider: ${providerName}`);
   console.log(`   Source: docs/llm/`);
   console.log(`   Target: docs/en/`);
+  console.log(`   Retries: ${maxRetries}`);
   console.log('');
 
   // Create provider
@@ -215,10 +252,10 @@ async function main() {
     const targetPath = path.join(targetDir, relativePath);
 
     try {
-      await generateFile(provider, sourcePath, targetPath, promptTemplate);
+      await generateFile(provider, sourcePath, targetPath, promptTemplate, maxRetries);
       success++;
     } catch (error) {
-      console.error(`  ❌ Failed: ${relativePath}`);
+      console.error(`  ❌ Failed after ${maxRetries} attempts: ${relativePath}`);
       console.error(`     ${error}`);
       failed++;
     }
