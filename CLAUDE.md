@@ -129,6 +129,25 @@ pnpm docs:generate                    # docs/llm → docs/en
 pnpm docs:translate --locale kr       # docs/en → docs/kr
 ```
 
+### CLI Options
+
+| Command          | Options                                                                |
+| ---------------- | ---------------------------------------------------------------------- |
+| `docs:generate`  | `--force`, `--file <path>`, `--retry-failed`, `--clean`, `--provider`  |
+| `docs:translate` | `--locale`, `--file <path>`, `--retry-failed`, `--clean`, `--provider` |
+
+### Error Recovery
+
+```bash
+# Retry only failed files
+pnpm docs:generate --retry-failed
+pnpm docs:translate --locale kr --retry-failed
+
+# Restart all (clear history)
+pnpm docs:generate --clean
+pnpm docs:translate --locale kr --clean
+```
+
 ### Update Requirements
 
 | Change Type        | .ai/ Update        | docs/llm/ Update   |

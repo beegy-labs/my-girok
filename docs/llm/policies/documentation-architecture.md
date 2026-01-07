@@ -25,20 +25,78 @@
 | Run generate after llm/ changes | Skip generation step     |
 | Run translate after en/ changes | Skip translation step    |
 
-## Generation Commands
+## CLI Commands
+
+### docs:generate (docs/llm → docs/en)
 
 ```bash
-pnpm docs:generate                    # docs/llm → docs/en
-pnpm docs:translate --locale kr       # docs/en → docs/kr
-pnpm docs:translate --provider gemini # specific provider
+pnpm docs:generate                    # Generate all (incremental)
+pnpm docs:generate --force            # Regenerate all files
+pnpm docs:generate --file <path>      # Generate specific file
+pnpm docs:generate --retry-failed     # Retry only failed files
+pnpm docs:generate --clean            # Clear history + generate all
+pnpm docs:generate --provider gemini  # Use Gemini provider
+```
+
+| Option           | Description                                  |
+| ---------------- | -------------------------------------------- |
+| `--provider, -p` | LLM provider: ollama (default), gemini       |
+| `--model, -m`    | Specific model name                          |
+| `--file, -f`     | Generate single file (relative to docs/llm/) |
+| `--force`        | Regenerate even if up-to-date                |
+| `--retry-failed` | Process only previously failed files         |
+| `--clean`        | Clear failed history and restart all         |
+
+### docs:translate (docs/en → docs/kr)
+
+```bash
+pnpm docs:translate --locale kr             # Translate all
+pnpm docs:translate --locale kr --file <p>  # Translate specific file
+pnpm docs:translate --locale kr --retry-failed  # Retry failed only
+pnpm docs:translate --locale kr --clean     # Clear history + translate all
+pnpm docs:translate --provider gemini       # Use Gemini provider
+```
+
+| Option           | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `--locale, -l`   | Target locale: kr (default), ja, zh, es, fr, de |
+| `--provider, -p` | LLM provider: ollama (default), gemini          |
+| `--model, -m`    | Specific model name                             |
+| `--file, -f`     | Translate single file (relative to docs/en/)    |
+| `--retry-failed` | Process only previously failed files            |
+| `--clean`        | Clear failed history and restart all            |
+
+## Failed Files Recovery
+
+Scripts track failed files for retry:
+
+| Script    | Failed Files Location         |
+| --------- | ----------------------------- |
+| generate  | `.docs-generate-failed.json`  |
+| translate | `.docs-translate-failed.json` |
+
+### Recovery Workflow
+
+```bash
+# 1. First run - some files fail
+pnpm docs:translate --locale kr
+# Output: Success: 45, Failed: 5
+
+# 2. Retry only failed files
+pnpm docs:translate --locale kr --retry-failed
+# Output: Retrying 5 failed files...
+
+# 3. Or restart everything
+pnpm docs:translate --locale kr --clean
+# Output: 🧹 Cleared failed files history
 ```
 
 ## Supported Providers
 
-| Task                | Providers              |
-| ------------------- | ---------------------- |
-| Generate (llm → en) | Gemini, Claude, OpenAI |
-| Translate (en → kr) | Ollama, Gemini         |
+| Provider | Generate | Translate | Default Model |
+| -------- | -------- | --------- | ------------- |
+| Ollama   | ✓        | ✓         | gpt-oss:20b   |
+| Gemini   | ✓        | ✓         | gemini-pro    |
 
 ## Format Guidelines
 
@@ -88,6 +146,8 @@ format: [prose, examples, guides]
 
 ## Workflow Example
 
+### Basic Workflow
+
 ```bash
 # 1. Developer updates SSOT
 vim docs/llm/services/auth-service.md
@@ -101,6 +161,29 @@ pnpm docs:translate --locale kr
 # 4. Commit all changes
 git add docs/
 git commit -m "docs: update auth-service documentation"
+```
+
+### With Error Recovery
+
+```bash
+# 1. Generate - some files may fail
+pnpm docs:generate
+# Output: Success: 40, Failed: 2
+
+# 2. Retry failed files
+pnpm docs:generate --retry-failed
+# Output: Success: 2, Failed: 0
+
+# 3. Translate - some files may fail
+pnpm docs:translate --locale kr
+# Output: Success: 38, Failed: 4
+
+# 4. Retry failed translations
+pnpm docs:translate --locale kr --retry-failed
+# Output: Success: 4, Failed: 0
+
+# 5. If still failing, restart clean
+pnpm docs:translate --locale kr --clean
 ```
 
 ## Directory Structure
