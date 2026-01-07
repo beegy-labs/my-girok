@@ -6,7 +6,7 @@
 
 | Property | Value                     |
 | -------- | ------------------------- |
-| REST     | :3003                     |
+| REST     | :3010                     |
 | gRPC     | N/A                       |
 | Database | audit_db (ClickHouse)     |
 | Cache    | Valkey DB 3               |
@@ -76,7 +76,7 @@ N/A
 ## Environment
 
 ```bash
-PORT=3003
+PORT=3010
 CLICKHOUSE_HOST=clickhouse
 CLICKHOUSE_DATABASE=audit_db
 CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=true
@@ -87,4 +87,4 @@ VALKEY_DB=3
 ---
 
 **Schema**: `infrastructure/clickhouse/schemas/01-audit_db.sql`
-**Full docs**: `docs/services/AUDIT_SERVICE.md`
+**SSOT**: `docs/llm/services/audit-service.md` | **Full docs**: `docs/en/services/audit-service.md`

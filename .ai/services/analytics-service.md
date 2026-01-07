@@ -6,7 +6,7 @@
 
 | Property | Value                         |
 | -------- | ----------------------------- |
-| REST     | :3004                         |
+| REST     | :3011                         |
 | gRPC     | N/A                           |
 | Database | analytics_db (ClickHouse)     |
 | Cache    | Valkey DB 4                   |
@@ -79,7 +79,7 @@ N/A
 ## Environment
 
 ```bash
-PORT=3004
+PORT=3011
 CLICKHOUSE_HOST=clickhouse
 CLICKHOUSE_DATABASE=analytics_db
 CLICKHOUSE_WAIT_FOR_ASYNC_INSERT=false
@@ -90,4 +90,4 @@ VALKEY_DB=4
 ---
 
 **Schema**: `infrastructure/clickhouse/schemas/02-analytics_db.sql`
-**Full docs**: `docs/services/ANALYTICS_SERVICE.md`
+**SSOT**: `docs/llm/services/analytics-service.md` | **Full docs**: `docs/en/services/analytics-service.md`

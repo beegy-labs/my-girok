@@ -6,7 +6,7 @@
 
 | Property | Value                        |
 | -------- | ---------------------------- |
-| REST     | :3002                        |
+| REST     | :4002                        |
 | gRPC     | N/A                          |
 | Database | personal_db (PostgreSQL)     |
 | Cache    | Valkey DB 1                  |
@@ -70,7 +70,7 @@ N/A
 ## Environment
 
 ```bash
-PORT=3002
+PORT=4002
 DATABASE_URL=postgresql://...personal_db
 MINIO_ENDPOINT=minio:9000
 MINIO_BUCKET=my-girok-resumes
@@ -80,4 +80,4 @@ VALKEY_DB=1
 
 ---
 
-**Full docs**: `docs/services/PERSONAL_SERVICE.md`
+**SSOT**: `docs/llm/services/personal-service.md` | **Full docs**: `docs/en/services/personal-service.md`

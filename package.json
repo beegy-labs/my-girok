@@ -16,7 +16,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:translate": "node --experimental-strip-types scripts/docs/translate.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",

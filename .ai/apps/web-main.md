@@ -246,4 +246,4 @@ pnpm --filter web-main test     # Test
 
 ---
 
-**Detailed docs**: `docs/apps/WEB_MAIN.md`
+**SSOT**: `docs/llm/apps/web-main.md` | **Full docs**: `docs/en/apps/web-main.md`

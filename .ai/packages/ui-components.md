@@ -104,4 +104,4 @@ pnpm --filter @my-girok/ui-components build      # Build
 
 ---
 
-**Human docs**: [docs/DESIGN_SYSTEM.md](../../docs/DESIGN_SYSTEM.md)
+**SSOT**: `docs/llm/packages/ui-components.md` | **Full docs**: `docs/en/packages/ui-components.md`
