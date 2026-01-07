@@ -36,6 +36,7 @@ const { values } = parseArgs({
     file: { type: 'string', short: 'f' },
     force: { type: 'boolean', default: false },
     'retry-failed': { type: 'boolean', default: false },
+    clean: { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -55,6 +56,7 @@ Options:
   -f, --file <path>      Generate specific file only (relative to docs/llm/)
   --force                Regenerate even if target exists and is newer
   --retry-failed         Retry only files that failed in previous run
+  --clean                Clear failed history and restart all files
   -h, --help             Show this help
 
 Examples:
@@ -63,6 +65,7 @@ Examples:
   pnpm docs:generate --file policies/security.md
   pnpm docs:generate --force
   pnpm docs:generate --retry-failed
+  pnpm docs:generate --clean
 `);
   process.exit(0);
 }
@@ -182,6 +185,15 @@ async function main() {
   const providerName = values.provider!;
   const force = values.force ?? false;
   const retryFailed = values['retry-failed'] ?? false;
+  const clean = values.clean ?? false;
+
+  // Clean mode: clear failed history first
+  if (clean) {
+    if (fs.existsSync(FAILED_FILES_PATH)) {
+      fs.unlinkSync(FAILED_FILES_PATH);
+      console.log('🧹 Cleared failed files history\n');
+    }
+  }
 
   console.log(`\n📚 Documentation Generation (SSOT → Human-readable)`);
   console.log(`   Provider: ${providerName}`);
@@ -189,6 +201,8 @@ async function main() {
   console.log(`   Target: docs/en/`);
   if (retryFailed) {
     console.log(`   Mode: Retry failed files only`);
+  } else if (clean) {
+    console.log(`   Mode: Clean restart (all files)`);
   }
   console.log('');
 

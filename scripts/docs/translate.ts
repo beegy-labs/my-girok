@@ -44,6 +44,7 @@ const { values } = parseArgs({
     model: { type: 'string', short: 'm' },
     file: { type: 'string', short: 'f' },
     'retry-failed': { type: 'boolean', default: false },
+    clean: { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -61,6 +62,7 @@ Options:
   -m, --model <name>     Model name (optional)
   -f, --file <path>      Translate specific file only (relative to docs/en/)
   --retry-failed         Retry only files that failed in previous run
+  --clean                Clear failed history and restart all files
   -h, --help             Show this help
 
 Examples:
@@ -68,6 +70,7 @@ Examples:
   pnpm docs:translate --locale kr --provider gemini
   pnpm docs:translate --file policies/security.md --locale kr
   pnpm docs:translate --locale kr --retry-failed
+  pnpm docs:translate --locale kr --clean
 `);
   process.exit(0);
 }
@@ -173,13 +176,24 @@ async function main() {
   const locale = values.locale!;
   const providerName = values.provider!;
   const retryFailed = values['retry-failed'] ?? false;
+  const clean = values.clean ?? false;
   const targetLanguage = LANGUAGE_NAMES[locale] ?? locale;
+
+  // Clean mode: clear failed history first
+  if (clean) {
+    if (fs.existsSync(FAILED_FILES_PATH)) {
+      fs.unlinkSync(FAILED_FILES_PATH);
+      console.log('🧹 Cleared failed files history\n');
+    }
+  }
 
   console.log(`\n📚 Documentation Translation`);
   console.log(`   Provider: ${providerName}`);
   console.log(`   Target: ${locale} (${targetLanguage})`);
   if (retryFailed) {
     console.log(`   Mode: Retry failed files only`);
+  } else if (clean) {
+    console.log(`   Mode: Clean restart (all files)`);
   }
   console.log('');
 
