@@ -1,6 +1,6 @@
 # @my-girok/design-tokens
 
-> WCAG 2.1 AAA compliant design tokens with local fonts
+> WCAG 2.1 AAA compliant design tokens with local fonts | **Last Updated**: 2026-01-06
 
 ## Usage
 

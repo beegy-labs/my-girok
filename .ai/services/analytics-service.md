@@ -1,6 +1,6 @@
 # Analytics Service
 
-> Business analytics with ClickHouse (90d-2yr retention)
+> Business analytics with ClickHouse (90d-2yr retention) | **Last Updated**: 2026-01-06
 
 ## Service Info
 

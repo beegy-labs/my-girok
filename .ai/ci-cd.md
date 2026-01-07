@@ -1,6 +1,6 @@
 # CI/CD Quick Reference
 
-> GitHub Actions → Harbor → ArgoCD → Kubernetes
+> GitHub Actions → Harbor → ArgoCD → Kubernetes | **Last Updated**: 2026-01-06
 
 ## Pipeline
 

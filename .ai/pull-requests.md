@@ -1,5 +1,7 @@
 # AI Guide: Pull Requests
 
+> Pull request conventions for AI assistants | **Last Updated**: 2026-01-06
+
 This document outlines the conventions for creating Pull Requests (PRs) for AI assistants.
 
 ## PR Title

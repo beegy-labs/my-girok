@@ -2,6 +2,8 @@
 
 > LLM-optimized pointers for multi-LLM assistants
 
+**Last Updated**: 2026-01-07 | **Manifest**: [manifest.yaml](manifest.yaml) | **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+
 ## 4-Tier Documentation (2026)
 
 ```

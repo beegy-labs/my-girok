@@ -1,6 +1,6 @@
 # Identity Service
 
-> Core identity: accounts, sessions, devices, profiles
+> Core identity: accounts, sessions, devices, profiles | **Last Updated**: 2026-01-06
 
 ## Service Info
 

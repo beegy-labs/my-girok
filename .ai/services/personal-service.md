@@ -1,6 +1,6 @@
 # Personal Service
 
-> Resume management with PostgreSQL + MinIO + BullMQ
+> Resume management with PostgreSQL + MinIO + BullMQ | **Last Updated**: 2026-01-06
 
 ## Service Info
 

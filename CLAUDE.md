@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-> **AI Assistant Entry Point for my-girok project**
+> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-06
+
+**Manifest**: [.ai/manifest.yaml](.ai/manifest.yaml) | **Changelog**: [.ai/CHANGELOG.md](.ai/CHANGELOG.md)
 
 ## Quick Start
 

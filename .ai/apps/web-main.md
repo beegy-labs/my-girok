@@ -1,6 +1,6 @@
 # Web Main App
 
-> Public-facing web application for My-Girok
+> Public-facing web application for My-Girok | **Last Updated**: 2026-01-06
 
 ## Tech Stack
 

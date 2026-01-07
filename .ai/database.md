@@ -1,6 +1,6 @@
 # Database Quick Reference
 
-> goose (SSOT) + Prisma (client) + ArgoCD
+> goose (SSOT) + Prisma (client) + ArgoCD | **Last Updated**: 2026-01-06
 
 ## Commands
 

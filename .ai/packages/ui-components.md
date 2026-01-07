@@ -1,6 +1,6 @@
 # @my-girok/ui-components
 
-> WCAG 2.1 AAA React components - V0.0.1
+> WCAG 2.1 AAA React components - V0.0.1 | **Last Updated**: 2026-01-06
 
 ## Components
 

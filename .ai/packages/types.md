@@ -1,6 +1,6 @@
 # @my-girok/types
 
-> Shared TypeScript types - SSOT for all services
+> Shared TypeScript types - SSOT for all services | **Last Updated**: 2026-01-06
 
 ## Structure
 

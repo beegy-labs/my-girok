@@ -1,6 +1,8 @@
 # GEMINI.md
 
-> **AI Assistant Entry Point for my-girok project**
+> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-07
+
+**Manifest**: [.ai/manifest.yaml](.ai/manifest.yaml) | **Changelog**: [.ai/CHANGELOG.md](.ai/CHANGELOG.md)
 
 ## Quick Start
 
@@ -11,8 +13,9 @@
 **For ANY task, read these first:**
 
 1. **[.ai/rules.md](.ai/rules.md)** - Core DO/DON'T rules (CRITICAL)
-2. **[.ai/best-practices.md](.ai/best-practices.md)** - 2026 Best Practices
-3. **[.ai/architecture.md](.ai/architecture.md)** - Architecture patterns
+2. **[.ai/best-practices.md](.ai/best-practices.md)** - 2026 Best Practices (monthly review)
+3. **[.ai/architecture.md](.ai/architecture.md)** - Architecture patterns and routing
+4. **[docs/llm/policies/testing.md](docs/llm/policies/testing.md)** - Test coverage status
 
 ## Documentation Policy (2026) - CRITICAL
 
@@ -52,17 +55,36 @@ pnpm docs:generate                    # docs/llm → docs/en
 pnpm docs:translate --locale kr       # docs/en → docs/kr
 ```
 
-### Update Requirements
-
-| Change Type        | .ai/ Update        | docs/llm/ Update   |
-| ------------------ | ------------------ | ------------------ |
-| New component/hook | apps/ or packages/ | -                  |
-| New API endpoint   | services/          | services/          |
-| New pattern        | rules.md           | -                  |
-| Major feature      | relevant file      | guides/            |
-| New policy         | rules.md summary   | policies/ full doc |
-
 **Full policy**: `docs/llm/policies/documentation-architecture.md`
+
+## Task-Based Navigation
+
+### Backend Development
+
+**Working on authentication?**
+Read: `.ai/rules.md` + `.ai/services/auth-service.md`
+
+**Working on Identity Platform?**
+Read: `.ai/services/identity-service.md` + `.ai/architecture.md`
+
+**Working on resume/profile?**
+Read: `.ai/rules.md` + `.ai/services/personal-service.md`
+
+### Frontend Development
+
+**Working on web app?**
+Read: `.ai/rules.md` + `.ai/apps/web-main.md`
+
+**Working on design tokens/styling?**
+Read: `.ai/ssot.md` + `.ai/packages/design-tokens.md`
+
+### Database & Deployment
+
+**Working on database migrations?**
+Read: `.ai/database.md` + `.ai/rules.md`
+
+**Working on Helm/Kubernetes?**
+Read: `.ai/helm-deployment.md` + `.ai/ci-cd.md`
 
 ## Directory Structure
 
@@ -75,7 +97,8 @@ my-girok/
 ├── .ai/                      # LLM-optimized docs (EDITABLE)
 │   ├── README.md             # Navigation guide
 │   ├── rules.md              # Core rules (READ FIRST)
-│   ├── best-practices.md     # 2026 Best Practices
+│   ├── manifest.yaml         # Machine-readable contract
+│   ├── CHANGELOG.md          # Documentation changelog
 │   ├── services/             # Backend service APIs
 │   ├── packages/             # Shared packages
 │   └── apps/                 # Frontend app guides
@@ -95,6 +118,15 @@ my-girok/
 
 **ALL code, documentation, and commits MUST be in English**
 
+### Git Branch & Merge Policy (GitFlow Standard)
+
+```
+feat/* ──squash──> develop ──merge──> release ──merge──> main
+                    (Dev)    (Staging)   (Prod)
+```
+
+Full details: [.ai/git-flow.md](.ai/git-flow.md)
+
 ### Git Commit Policy
 
 **NEVER mention AI assistance in commit messages**
@@ -105,10 +137,11 @@ my-girok/
 
 ### Architecture
 
-- Full BFF Pattern
+- Full BFF Pattern (IETF recommended, session-based auth)
 - GraphQL Federation for API aggregation
 - gRPC for internal service communication
-- Redpanda for event-driven messaging
+- Redpanda for event-driven messaging (Kafka-compatible, no JVM)
+- Cilium Gateway API for edge routing
 
 ### Development Rules
 
@@ -124,18 +157,8 @@ my-girok/
 | Web      | React 19.2, TypeScript 5.9, Tailwind 4.1, Vite 7.2 |
 | Backend  | Node.js 24, NestJS 11                              |
 | Database | PostgreSQL 16, Prisma 6, Valkey                    |
+| AI       | Python 3.13, FastAPI                               |
 | Deploy   | Kubernetes, Kustomize                              |
-
-## Task Navigation
-
-| Task           | Read                               |
-| -------------- | ---------------------------------- |
-| Authentication | `.ai/services/auth-service.md`     |
-| Resume/Profile | `.ai/services/personal-service.md` |
-| Web Frontend   | `.ai/apps/web-main.md`             |
-| Database       | `.ai/database.md`                  |
-| Caching        | `.ai/caching.md`                   |
-| PR Guidelines  | `.ai/pull-requests.md`             |
 
 ## Detailed Policies
 

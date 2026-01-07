@@ -1,6 +1,6 @@
 # @my-girok/storybook
 
-> Design System Documentation - V0.0.1 AAA Workstation
+> Design System Documentation - V0.0.1 AAA Workstation | **Last Updated**: 2026-01-06
 
 ## Structure
 

@@ -1,6 +1,6 @@
 # Legal Service
 
-> Consent management, legal documents, law registry, DSR handling
+> Consent management, legal documents, law registry, DSR handling | **Last Updated**: 2026-01-06
 
 ## Service Info
 
