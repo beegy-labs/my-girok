@@ -6,29 +6,31 @@
 
 **ALL code, documentation, and commits MUST be in English.**
 
-## Documentation Policy
+## Documentation Policy (4-Tier)
 
-**Code changes MUST include documentation updates.** No confirmation needed.
+```
+.ai/        → docs/llm/     → docs/en/    → docs/kr/
+(Pointer)     (SSOT)          (Generated)   (Translated)
+```
 
-### Documentation Structure
-
-| Directory | Purpose                      | Audience      | Content                     |
-| --------- | ---------------------------- | ------------- | --------------------------- |
-| `.ai/`    | Token-optimized LLM docs     | AI assistants | Patterns, APIs, examples    |
-| `docs/`   | Detailed human-readable docs | Human + LLM   | Policies, guides, tutorials |
+| Tier | Path        | Editable | Purpose                |
+| ---- | ----------- | -------- | ---------------------- |
+| 1    | `.ai/`      | **Yes**  | Pointer (30-50 lines)  |
+| 2    | `docs/llm/` | **Yes**  | SSOT (token-optimized) |
+| 3    | `docs/en/`  | **No**   | Human docs (generated) |
+| 4    | `docs/kr/`  | **No**   | Korean (translated)    |
 
 ### Update Requirements
 
-| Change Type            | `.ai/` Update                 | `docs/` Update          |
-| ---------------------- | ----------------------------- | ----------------------- |
-| New component/hook     | Add to `apps/` or `packages/` | -                       |
-| New API endpoint       | Add to `services/`            | -                       |
-| New pattern/convention | Add to `rules.md`             | -                       |
-| New feature (major)    | Add section to relevant file  | Add to `guides/`        |
-| New policy             | Summary in `rules.md`         | Full doc in `policies/` |
-| Breaking change        | Update affected files         | Update affected files   |
+| Change Type        | `.ai/`             | `docs/llm/`    |
+| ------------------ | ------------------ | -------------- |
+| New component/hook | apps/ or packages/ | -              |
+| New API endpoint   | services/          | services/      |
+| New pattern        | rules.md           | -              |
+| Major feature      | relevant file      | guides/        |
+| New policy         | rules.md summary   | policies/ full |
 
-**Principle**: `.ai/` = concise (what, how), `docs/` = detailed (why, deep dive).
+**SSOT Policy**: `docs/llm/policies/documentation-architecture.md`
 
 ## Architecture Rules
 
@@ -253,4 +255,4 @@ import { TextInput, Button, Alert, SortableList } from '@my-girok/ui-components'
 
 ---
 
-**Detailed policies**: `docs/policies/`
+**SSOT**: `docs/llm/policies/` | **Full docs**: `docs/en/policies/`

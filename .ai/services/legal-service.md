@@ -6,7 +6,7 @@
 
 | Property | Value                     |
 | -------- | ------------------------- |
-| REST     | :3005                     |
+| REST     | :3006                     |
 | gRPC     | :50053                    |
 | Database | legal_db (PostgreSQL)     |
 | Cache    | Valkey DB 0               |
@@ -89,7 +89,7 @@ GET   /dsr-requests/pending
 ## Environment
 
 ```bash
-PORT=3005
+PORT=3006
 GRPC_PORT=50053
 DATABASE_URL=postgresql://...legal_db
 VALKEY_HOST=localhost
@@ -99,4 +99,4 @@ API_KEYS=key1,key2
 
 ---
 
-**Full docs**: `docs/services/LEGAL_SERVICE.md`
+**SSOT**: `docs/llm/services/legal-service.md` | **Full docs**: `docs/en/services/legal-service.md`

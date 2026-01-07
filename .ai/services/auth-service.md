@@ -103,4 +103,4 @@ API_KEYS=key1,key2
 
 ---
 
-**Full docs**: `docs/services/AUTH_SERVICE.md`
+**SSOT**: `docs/llm/services/auth-service.md` | **Full docs**: `docs/en/services/auth-service.md`
