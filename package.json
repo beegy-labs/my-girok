@@ -17,6 +17,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky",
+    "docs:generate": "node --experimental-strip-types scripts/docs/generate.ts",
     "docs:translate": "node --experimental-strip-types scripts/docs/translate.ts"
   },
   "devDependencies": {
