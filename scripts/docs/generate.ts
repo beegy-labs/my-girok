@@ -15,18 +15,19 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parseArgs } from 'node:util';
-import { createOllamaProvider } from './providers/ollama.ts';
-import { createGeminiProvider } from './providers/gemini.ts';
+import {
+  createProvider,
+  getMarkdownFiles,
+  loadFailedFiles,
+  saveFailedFiles,
+  clearFailedFiles,
+  needsRegeneration,
+  type FailedFile,
+} from './utils.ts';
 import type { LLMProvider } from './providers/index.ts';
 
 // Failed files tracking
 const FAILED_FILES_PATH = path.join(process.cwd(), '.docs-generate-failed.json');
-
-interface FailedFile {
-  relativePath: string;
-  error: string;
-  timestamp: string;
-}
 
 // Parse CLI arguments
 const { values } = parseArgs({
@@ -70,18 +71,6 @@ Examples:
   process.exit(0);
 }
 
-// Create provider
-function createProvider(name: string, model?: string): LLMProvider {
-  switch (name) {
-    case 'ollama':
-      return createOllamaProvider(undefined, model);
-    case 'gemini':
-      return createGeminiProvider(undefined, model);
-    default:
-      throw new Error(`Unknown provider: ${name}`);
-  }
-}
-
 // Load generation prompt template
 function loadPromptTemplate(): string {
   const promptPath = path.join(import.meta.dirname, 'prompts', 'generate.txt');
@@ -91,66 +80,6 @@ function loadPromptTemplate(): string {
 // Build generation prompt
 function buildPrompt(template: string, content: string): string {
   return template.replace('{{CONTENT}}', content);
-}
-
-// Get all markdown files in a directory recursively
-function getMarkdownFiles(dir: string): string[] {
-  const files: string[] = [];
-
-  if (!fs.existsSync(dir)) {
-    return files;
-  }
-
-  function walk(currentDir: string) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        walk(fullPath);
-      } else if (entry.name.endsWith('.md')) {
-        files.push(fullPath);
-      }
-    }
-  }
-
-  walk(dir);
-  return files;
-}
-
-// Check if target needs regeneration
-function needsRegeneration(sourcePath: string, targetPath: string, force: boolean): boolean {
-  if (force) return true;
-  if (!fs.existsSync(targetPath)) return true;
-
-  const sourceStat = fs.statSync(sourcePath);
-  const targetStat = fs.statSync(targetPath);
-
-  return sourceStat.mtime > targetStat.mtime;
-}
-
-// Load failed files from previous run
-function loadFailedFiles(): FailedFile[] {
-  if (!fs.existsSync(FAILED_FILES_PATH)) {
-    return [];
-  }
-  try {
-    const content = fs.readFileSync(FAILED_FILES_PATH, 'utf-8');
-    return JSON.parse(content);
-  } catch {
-    return [];
-  }
-}
-
-// Save failed files
-function saveFailedFiles(failedFiles: FailedFile[]): void {
-  if (failedFiles.length === 0) {
-    // Remove file if no failures
-    if (fs.existsSync(FAILED_FILES_PATH)) {
-      fs.unlinkSync(FAILED_FILES_PATH);
-    }
-    return;
-  }
-  fs.writeFileSync(FAILED_FILES_PATH, JSON.stringify(failedFiles, null, 2), 'utf-8');
 }
 
 // Generate a single file
@@ -189,8 +118,7 @@ async function main() {
 
   // Clean mode: clear failed history first
   if (clean) {
-    if (fs.existsSync(FAILED_FILES_PATH)) {
-      fs.unlinkSync(FAILED_FILES_PATH);
+    if (clearFailedFiles(FAILED_FILES_PATH)) {
       console.log('🧹 Cleared failed files history\n');
     }
   }
@@ -240,7 +168,7 @@ async function main() {
 
   if (retryFailed) {
     // Load failed files from previous run
-    const previousFailed = loadFailedFiles();
+    const previousFailed = loadFailedFiles(FAILED_FILES_PATH);
     if (previousFailed.length === 0) {
       console.log('✓ No failed files to retry.\n');
       return;
@@ -299,7 +227,7 @@ async function main() {
   }
 
   // Save failed files for retry
-  saveFailedFiles(failedFiles);
+  saveFailedFiles(FAILED_FILES_PATH, failedFiles);
 
   console.log(`\n✅ Generation complete`);
   console.log(`   Success: ${success}`);
