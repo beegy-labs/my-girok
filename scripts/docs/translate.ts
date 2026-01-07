@@ -6,7 +6,8 @@
  *   pnpm docs:translate --locale kr
  *   pnpm docs:translate --locale kr --provider ollama
  *   pnpm docs:translate --locale kr --provider gemini
- *   pnpm docs:translate --file policies/SECURITY.md --locale kr
+ *   pnpm docs:translate --file policies/security.md --locale kr
+ *   pnpm docs:translate --locale kr --retry-failed   # Retry only failed files
  */
 
 import * as fs from 'node:fs';
@@ -26,9 +27,14 @@ const LANGUAGE_NAMES: Record<string, string> = {
   de: 'German',
 };
 
-// Default retry configuration
-const DEFAULT_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+// Failed files tracking
+const FAILED_FILES_PATH = path.join(process.cwd(), '.docs-translate-failed.json');
+
+interface FailedFile {
+  relativePath: string;
+  error: string;
+  timestamp: string;
+}
 
 // Parse CLI arguments
 const { values } = parseArgs({
@@ -37,7 +43,7 @@ const { values } = parseArgs({
     provider: { type: 'string', short: 'p', default: 'ollama' },
     model: { type: 'string', short: 'm' },
     file: { type: 'string', short: 'f' },
-    retries: { type: 'string', short: 'r', default: String(DEFAULT_RETRIES) },
+    'retry-failed': { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -54,14 +60,14 @@ Options:
   -p, --provider <name>  LLM provider: ollama, gemini (default: ollama)
   -m, --model <name>     Model name (optional)
   -f, --file <path>      Translate specific file only (relative to docs/en/)
-  -r, --retries <num>    Number of retries on failure (default: ${DEFAULT_RETRIES})
+  --retry-failed         Retry only files that failed in previous run
   -h, --help             Show this help
 
 Examples:
   pnpm docs:translate --locale kr
   pnpm docs:translate --locale kr --provider gemini
-  pnpm docs:translate --file policies/SECURITY.md --locale kr
-  pnpm docs:translate --locale kr --retries 5
+  pnpm docs:translate --file policies/security.md --locale kr
+  pnpm docs:translate --locale kr --retry-failed
 `);
   process.exit(0);
 }
@@ -89,11 +95,6 @@ function buildPrompt(template: string, content: string, targetLanguage: string):
   return template.replace('{{TARGET_LANGUAGE}}', targetLanguage).replace('{{CONTENT}}', content);
 }
 
-// Sleep utility for retry delay
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 // Get all markdown files in a directory recursively
 function getMarkdownFiles(dir: string): string[] {
   const files: string[] = [];
@@ -114,68 +115,72 @@ function getMarkdownFiles(dir: string): string[] {
   return files;
 }
 
-// Translate a single file with retry logic
+// Load failed files from previous run
+function loadFailedFiles(): FailedFile[] {
+  if (!fs.existsSync(FAILED_FILES_PATH)) {
+    return [];
+  }
+  try {
+    const content = fs.readFileSync(FAILED_FILES_PATH, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return [];
+  }
+}
+
+// Save failed files
+function saveFailedFiles(failedFiles: FailedFile[]): void {
+  if (failedFiles.length === 0) {
+    // Remove file if no failures
+    if (fs.existsSync(FAILED_FILES_PATH)) {
+      fs.unlinkSync(FAILED_FILES_PATH);
+    }
+    return;
+  }
+  fs.writeFileSync(FAILED_FILES_PATH, JSON.stringify(failedFiles, null, 2), 'utf-8');
+}
+
+// Translate a single file
 async function translateFile(
   provider: LLMProvider,
   sourcePath: string,
   targetPath: string,
   targetLanguage: string,
   promptTemplate: string,
-  maxRetries: number,
 ): Promise<void> {
   const content = fs.readFileSync(sourcePath, 'utf-8');
   const prompt = buildPrompt(promptTemplate, content, targetLanguage);
-  const fileName = path.basename(sourcePath);
 
-  let lastError: Error | undefined;
+  console.log(`  Translating: ${path.basename(sourcePath)}...`);
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      if (attempt === 1) {
-        console.log(`  Translating: ${fileName}...`);
-      } else {
-        console.log(`  Retrying (${attempt}/${maxRetries}): ${fileName}...`);
-      }
+  const translated = await provider.generate(prompt, {
+    temperature: 0.1,
+    maxTokens: 16384,
+  });
 
-      const translated = await provider.generate(prompt, {
-        temperature: 0.1,
-        maxTokens: 16384,
-      });
-
-      // Ensure target directory exists
-      const targetDir = path.dirname(targetPath);
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
-      }
-
-      fs.writeFileSync(targetPath, translated, 'utf-8');
-      console.log(`  ✓ Saved: ${targetPath}`);
-      return;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-
-      if (attempt < maxRetries) {
-        const delay = RETRY_DELAY_MS * attempt; // Exponential backoff
-        console.log(`  ⚠ Attempt ${attempt} failed, retrying in ${delay / 1000}s...`);
-        await sleep(delay);
-      }
-    }
+  // Ensure target directory exists
+  const targetDir = path.dirname(targetPath);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
   }
 
-  throw lastError ?? new Error('Translation failed after all retries');
+  fs.writeFileSync(targetPath, translated, 'utf-8');
+  console.log(`  ✓ Saved: ${targetPath}`);
 }
 
 // Main function
 async function main() {
   const locale = values.locale!;
   const providerName = values.provider!;
-  const maxRetries = parseInt(values.retries!, 10) || DEFAULT_RETRIES;
+  const retryFailed = values['retry-failed'] ?? false;
   const targetLanguage = LANGUAGE_NAMES[locale] ?? locale;
 
   console.log(`\n📚 Documentation Translation`);
   console.log(`   Provider: ${providerName}`);
   console.log(`   Target: ${locale} (${targetLanguage})`);
-  console.log(`   Retries: ${maxRetries}`);
+  if (retryFailed) {
+    console.log(`   Mode: Retry failed files only`);
+  }
   console.log('');
 
   // Create provider
@@ -203,7 +208,21 @@ async function main() {
 
   // Get files to translate
   let filesToTranslate: string[];
-  if (values.file) {
+
+  if (retryFailed) {
+    // Load failed files from previous run
+    const previousFailed = loadFailedFiles();
+    if (previousFailed.length === 0) {
+      console.log('✓ No failed files to retry.\n');
+      return;
+    }
+    filesToTranslate = previousFailed.map((f) => path.join(sourceDir, f.relativePath));
+    console.log(`📄 Retrying ${filesToTranslate.length} failed files:\n`);
+    for (const f of previousFailed) {
+      console.log(`   - ${f.relativePath}`);
+    }
+    console.log('');
+  } else if (values.file) {
     const sourcePath = path.join(sourceDir, values.file);
     if (!fs.existsSync(sourcePath)) {
       console.error(`❌ File not found: ${sourcePath}`);
@@ -218,33 +237,36 @@ async function main() {
 
   // Translate each file
   let success = 0;
-  let failed = 0;
+  const failedFiles: FailedFile[] = [];
 
   for (const sourcePath of filesToTranslate) {
     const relativePath = path.relative(sourceDir, sourcePath);
     const targetPath = path.join(targetDir, relativePath);
 
     try {
-      await translateFile(
-        provider,
-        sourcePath,
-        targetPath,
-        targetLanguage,
-        promptTemplate,
-        maxRetries,
-      );
+      await translateFile(provider, sourcePath, targetPath, targetLanguage, promptTemplate);
       success++;
     } catch (error) {
-      console.error(`  ❌ Failed after ${maxRetries} attempts: ${relativePath}`);
-      console.error(`     ${error}`);
-      failed++;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`  ❌ Failed: ${relativePath}`);
+      console.error(`     ${errorMessage}`);
+      failedFiles.push({
+        relativePath,
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 
+  // Save failed files for retry
+  saveFailedFiles(failedFiles);
+
   console.log(`\n✅ Translation complete`);
   console.log(`   Success: ${success}`);
-  if (failed > 0) {
-    console.log(`   Failed: ${failed}`);
+  if (failedFiles.length > 0) {
+    console.log(`   Failed: ${failedFiles.length}`);
+    console.log(`\n💡 To retry failed files, run:`);
+    console.log(`   pnpm docs:translate --locale ${locale} --retry-failed`);
   }
 }
 

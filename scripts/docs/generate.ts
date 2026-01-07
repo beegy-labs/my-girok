@@ -9,6 +9,7 @@
  *   pnpm docs:generate --provider ollama
  *   pnpm docs:generate --provider gemini
  *   pnpm docs:generate --file policies/security.md
+ *   pnpm docs:generate --retry-failed   # Retry only failed files
  */
 
 import * as fs from 'node:fs';
@@ -18,9 +19,14 @@ import { createOllamaProvider } from './providers/ollama.ts';
 import { createGeminiProvider } from './providers/gemini.ts';
 import type { LLMProvider } from './providers/index.ts';
 
-// Default retry configuration
-const DEFAULT_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+// Failed files tracking
+const FAILED_FILES_PATH = path.join(process.cwd(), '.docs-generate-failed.json');
+
+interface FailedFile {
+  relativePath: string;
+  error: string;
+  timestamp: string;
+}
 
 // Parse CLI arguments
 const { values } = parseArgs({
@@ -29,7 +35,7 @@ const { values } = parseArgs({
     model: { type: 'string', short: 'm' },
     file: { type: 'string', short: 'f' },
     force: { type: 'boolean', default: false },
-    retries: { type: 'string', short: 'r', default: String(DEFAULT_RETRIES) },
+    'retry-failed': { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -48,7 +54,7 @@ Options:
   -m, --model <name>     Model name (optional)
   -f, --file <path>      Generate specific file only (relative to docs/llm/)
   --force                Regenerate even if target exists and is newer
-  -r, --retries <num>    Number of retries on failure (default: ${DEFAULT_RETRIES})
+  --retry-failed         Retry only files that failed in previous run
   -h, --help             Show this help
 
 Examples:
@@ -56,7 +62,7 @@ Examples:
   pnpm docs:generate --provider gemini
   pnpm docs:generate --file policies/security.md
   pnpm docs:generate --force
-  pnpm docs:generate --retries 5
+  pnpm docs:generate --retry-failed
 `);
   process.exit(0);
 }
@@ -82,11 +88,6 @@ function loadPromptTemplate(): string {
 // Build generation prompt
 function buildPrompt(template: string, content: string): string {
   return template.replace('{{CONTENT}}', content);
-}
-
-// Sleep utility for retry delay
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Get all markdown files in a directory recursively
@@ -124,67 +125,71 @@ function needsRegeneration(sourcePath: string, targetPath: string, force: boolea
   return sourceStat.mtime > targetStat.mtime;
 }
 
-// Generate a single file with retry logic
+// Load failed files from previous run
+function loadFailedFiles(): FailedFile[] {
+  if (!fs.existsSync(FAILED_FILES_PATH)) {
+    return [];
+  }
+  try {
+    const content = fs.readFileSync(FAILED_FILES_PATH, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return [];
+  }
+}
+
+// Save failed files
+function saveFailedFiles(failedFiles: FailedFile[]): void {
+  if (failedFiles.length === 0) {
+    // Remove file if no failures
+    if (fs.existsSync(FAILED_FILES_PATH)) {
+      fs.unlinkSync(FAILED_FILES_PATH);
+    }
+    return;
+  }
+  fs.writeFileSync(FAILED_FILES_PATH, JSON.stringify(failedFiles, null, 2), 'utf-8');
+}
+
+// Generate a single file
 async function generateFile(
   provider: LLMProvider,
   sourcePath: string,
   targetPath: string,
   promptTemplate: string,
-  maxRetries: number,
 ): Promise<void> {
   const content = fs.readFileSync(sourcePath, 'utf-8');
   const prompt = buildPrompt(promptTemplate, content);
-  const fileName = path.basename(sourcePath);
 
-  let lastError: Error | undefined;
+  console.log(`  Generating: ${path.basename(sourcePath)}...`);
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      if (attempt === 1) {
-        console.log(`  Generating: ${fileName}...`);
-      } else {
-        console.log(`  Retrying (${attempt}/${maxRetries}): ${fileName}...`);
-      }
+  const generated = await provider.generate(prompt, {
+    temperature: 0.3,
+    maxTokens: 16384,
+  });
 
-      const generated = await provider.generate(prompt, {
-        temperature: 0.3,
-        maxTokens: 16384,
-      });
-
-      // Ensure target directory exists
-      const targetDir = path.dirname(targetPath);
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
-      }
-
-      fs.writeFileSync(targetPath, generated, 'utf-8');
-      console.log(`  ✓ Saved: ${targetPath}`);
-      return;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-
-      if (attempt < maxRetries) {
-        const delay = RETRY_DELAY_MS * attempt; // Exponential backoff
-        console.log(`  ⚠ Attempt ${attempt} failed, retrying in ${delay / 1000}s...`);
-        await sleep(delay);
-      }
-    }
+  // Ensure target directory exists
+  const targetDir = path.dirname(targetPath);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
   }
 
-  throw lastError ?? new Error('Generation failed after all retries');
+  fs.writeFileSync(targetPath, generated, 'utf-8');
+  console.log(`  ✓ Saved: ${targetPath}`);
 }
 
 // Main function
 async function main() {
   const providerName = values.provider!;
   const force = values.force ?? false;
-  const maxRetries = parseInt(values.retries!, 10) || DEFAULT_RETRIES;
+  const retryFailed = values['retry-failed'] ?? false;
 
   console.log(`\n📚 Documentation Generation (SSOT → Human-readable)`);
   console.log(`   Provider: ${providerName}`);
   console.log(`   Source: docs/llm/`);
   console.log(`   Target: docs/en/`);
-  console.log(`   Retries: ${maxRetries}`);
+  if (retryFailed) {
+    console.log(`   Mode: Retry failed files only`);
+  }
   console.log('');
 
   // Create provider
@@ -217,54 +222,77 @@ async function main() {
   }
 
   // Get files to generate
-  let filesToGenerate: string[];
-  if (values.file) {
+  let filesToProcess: string[];
+
+  if (retryFailed) {
+    // Load failed files from previous run
+    const previousFailed = loadFailedFiles();
+    if (previousFailed.length === 0) {
+      console.log('✓ No failed files to retry.\n');
+      return;
+    }
+    filesToProcess = previousFailed.map((f) => path.join(sourceDir, f.relativePath));
+    console.log(`📄 Retrying ${filesToProcess.length} failed files:\n`);
+    for (const f of previousFailed) {
+      console.log(`   - ${f.relativePath}`);
+    }
+    console.log('');
+  } else if (values.file) {
     const sourcePath = path.join(sourceDir, values.file);
     if (!fs.existsSync(sourcePath)) {
       console.error(`❌ File not found: ${sourcePath}`);
       process.exit(1);
     }
-    filesToGenerate = [sourcePath];
+    filesToProcess = [sourcePath];
   } else {
-    filesToGenerate = getMarkdownFiles(sourceDir);
-  }
+    // Get all files and filter those needing regeneration
+    const allFiles = getMarkdownFiles(sourceDir);
+    filesToProcess = allFiles.filter((sourcePath) => {
+      const relativePath = path.relative(sourceDir, sourcePath);
+      const targetPath = path.join(targetDir, relativePath);
+      return needsRegeneration(sourcePath, targetPath, force);
+    });
 
-  // Filter files that need regeneration
-  const filesToProcess = filesToGenerate.filter((sourcePath) => {
-    const relativePath = path.relative(sourceDir, sourcePath);
-    const targetPath = path.join(targetDir, relativePath);
-    return needsRegeneration(sourcePath, targetPath, force);
-  });
-
-  if (filesToProcess.length === 0) {
-    console.log('✓ All files are up to date. Use --force to regenerate.\n');
-    return;
+    if (filesToProcess.length === 0) {
+      console.log('✓ All files are up to date. Use --force to regenerate.\n');
+      return;
+    }
   }
 
   console.log(`📄 Files to generate: ${filesToProcess.length}\n`);
 
   // Generate each file
   let success = 0;
-  let failed = 0;
+  const failedFiles: FailedFile[] = [];
 
   for (const sourcePath of filesToProcess) {
     const relativePath = path.relative(sourceDir, sourcePath);
     const targetPath = path.join(targetDir, relativePath);
 
     try {
-      await generateFile(provider, sourcePath, targetPath, promptTemplate, maxRetries);
+      await generateFile(provider, sourcePath, targetPath, promptTemplate);
       success++;
     } catch (error) {
-      console.error(`  ❌ Failed after ${maxRetries} attempts: ${relativePath}`);
-      console.error(`     ${error}`);
-      failed++;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`  ❌ Failed: ${relativePath}`);
+      console.error(`     ${errorMessage}`);
+      failedFiles.push({
+        relativePath,
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 
+  // Save failed files for retry
+  saveFailedFiles(failedFiles);
+
   console.log(`\n✅ Generation complete`);
   console.log(`   Success: ${success}`);
-  if (failed > 0) {
-    console.log(`   Failed: ${failed}`);
+  if (failedFiles.length > 0) {
+    console.log(`   Failed: ${failedFiles.length}`);
+    console.log(`\n💡 To retry failed files, run:`);
+    console.log(`   pnpm docs:generate --retry-failed`);
   }
 }
 

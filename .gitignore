@@ -126,3 +126,7 @@ storybook-static/
 .local/
 *.local
 apps/web-admin/.vite-cache/
+
+# Documentation generation failed files
+.docs-generate-failed.json
+.docs-translate-failed.json
