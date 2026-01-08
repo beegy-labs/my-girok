@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/common/v1";
+
+// ============================================================
+// Common Enums shared across services
+// ============================================================
+
+// MfaMethod represents available Multi-Factor Authentication methods.
+// Used by both auth.v1 (admin MFA) and identity.v1 (user MFA).
+enum MfaMethod {
+  // Unspecified MFA method
+  MFA_METHOD_UNSPECIFIED = 0;
+
+  // Time-based One-Time Password (RFC 6238)
+  // Uses authenticator apps like Google Authenticator, Authy, etc.
+  MFA_METHOD_TOTP = 1;
+
+  // Backup code - Single-use recovery codes
+  // Generated during MFA setup for account recovery
+  MFA_METHOD_BACKUP_CODE = 2;
+}
