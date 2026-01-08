@@ -1,4 +1,33 @@
 /**
+ * Auth BFF Constants
+ *
+ * This module re-exports shared types from @my-girok/types and defines
+ * BFF-specific session configuration.
+ */
+import {
+  AccountType,
+  ACCOUNT_TYPES,
+  OAuthProvider,
+  OAUTH_PROVIDERS,
+  AuthProvider,
+  COOKIE_NAMES,
+  HEADER_NAMES,
+  COOKIE_DEFAULTS,
+} from '@my-girok/types';
+
+// Re-export shared types for convenience
+export {
+  AccountType,
+  ACCOUNT_TYPES,
+  OAuthProvider,
+  OAUTH_PROVIDERS,
+  AuthProvider,
+  COOKIE_NAMES,
+  HEADER_NAMES,
+  COOKIE_DEFAULTS,
+};
+
+/**
  * Session Configuration
  *
  * Session Expiration Policy:
@@ -64,16 +93,24 @@ export const SESSION_CONFIG = {
   },
 } as const;
 
+/**
+ * Cookie options for BFF session management
+ * Uses shared defaults from @my-girok/types
+ */
 export const COOKIE_OPTIONS = {
-  httpOnly: true,
+  httpOnly: COOKIE_DEFAULTS.HTTP_ONLY,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  path: '/',
+  sameSite: COOKIE_DEFAULTS.SAME_SITE,
+  path: COOKIE_DEFAULTS.PATH,
 };
 
+/**
+ * CSRF configuration
+ * Uses shared cookie/header names from @my-girok/types
+ */
 export const CSRF_CONFIG = {
-  COOKIE_NAME: 'XSRF-TOKEN',
-  HEADER_NAME: 'X-XSRF-TOKEN',
+  COOKIE_NAME: COOKIE_NAMES.CSRF_TOKEN,
+  HEADER_NAME: HEADER_NAMES.CSRF_TOKEN,
 } as const;
 
 export const RATE_LIMIT_CONFIG = {
@@ -99,12 +136,6 @@ export const RATE_LIMIT_CONFIG = {
     limit: 3,
   },
 } as const;
-
-export const OAUTH_PROVIDERS = ['google', 'kakao', 'naver', 'apple'] as const;
-export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
-
-export const ACCOUNT_TYPES = ['USER', 'OPERATOR', 'ADMIN'] as const;
-export type AccountType = (typeof ACCOUNT_TYPES)[number];
 
 export const DEVICE_FINGERPRINT_HEADERS = [
   'user-agent',

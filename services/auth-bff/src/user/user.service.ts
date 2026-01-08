@@ -4,6 +4,7 @@ import { IdentityGrpcClient, Account } from '../grpc-clients';
 import { SessionService } from '../session/session.service';
 import { BffSession } from '../common/types';
 import { UserRegisterDto, UserLoginDto, UserInfoDto, UserLoginResponseDto } from './dto/user.dto';
+import { AccountType } from '../config/constants';
 
 // Auth provider enum matching proto
 const AUTH_PROVIDER = {
@@ -91,7 +92,7 @@ export class UserService {
       await this.sessionService.createSession(
         res,
         {
-          accountType: 'USER',
+          accountType: AccountType.USER,
           accountId: account.id,
           email: account.email,
           accessToken: sessionResponse.accessToken,
@@ -249,7 +250,7 @@ export class UserService {
       await this.sessionService.createSession(
         res,
         {
-          accountType: 'USER',
+          accountType: AccountType.USER,
           accountId: account.id,
           email: account.email,
           accessToken: sessionResponse.accessToken,
@@ -418,7 +419,7 @@ export class UserService {
     await this.sessionService.createSession(
       res,
       {
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: account.id,
         email: account.email,
         accessToken: sessionResponse.accessToken,

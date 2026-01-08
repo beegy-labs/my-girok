@@ -15,6 +15,7 @@ import { Request, Response } from 'express';
 import { UserService } from './user.service';
 import { Public, CurrentSession, RequireMfa, AllowedAccountTypes } from '../common/decorators';
 import { BffSession } from '../common/types';
+import { AccountType } from '../config/constants';
 import {
   UserRegisterDto,
   UserLoginDto,
@@ -29,7 +30,7 @@ import {
 
 @ApiTags('user')
 @Controller('user')
-@AllowedAccountTypes('USER')
+@AllowedAccountTypes(AccountType.USER)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { SessionStore } from '../../src/session/session.store';
 import { CreateSessionInput } from '../../src/common/types';
+import { AccountType } from '../../src/config/constants';
 
 // Mock Redis
 const mockRedis = {
@@ -62,7 +63,7 @@ describe('SessionStore', () => {
   describe('create', () => {
     it('should create a new session', async () => {
       const input: CreateSessionInput = {
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'access-token',
@@ -76,7 +77,7 @@ describe('SessionStore', () => {
 
       expect(session).toBeDefined();
       expect(session.id).toHaveLength(64);
-      expect(session.accountType).toBe('USER');
+      expect(session.accountType).toBe(AccountType.USER);
       expect(session.accountId).toBe('user-123');
       expect(session.email).toBe('test@example.com');
       expect(session.accessToken).toContain(':'); // encrypted format
@@ -87,7 +88,7 @@ describe('SessionStore', () => {
 
     it('should set correct TTL based on account type', async () => {
       const adminInput: CreateSessionInput = {
-        accountType: 'ADMIN',
+        accountType: AccountType.ADMIN,
         accountId: 'admin-123',
         email: 'admin@example.com',
         accessToken: 'access-token',
@@ -114,7 +115,7 @@ describe('SessionStore', () => {
     it('should return session for valid ID', async () => {
       const storedSession = {
         id: 'session-123',
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -139,7 +140,7 @@ describe('SessionStore', () => {
     it('should return null and delete expired session', async () => {
       const expiredSession = {
         id: 'session-123',
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -172,7 +173,7 @@ describe('SessionStore', () => {
     it('should delete existing session', async () => {
       const storedSession = {
         id: 'session-123',
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -206,7 +207,7 @@ describe('SessionStore', () => {
     it('should return true when session is about to expire', async () => {
       const soonExpiringSession = {
         id: 'session-123',
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -239,7 +240,7 @@ describe('SessionStore', () => {
     it('should update lastActivityAt without extending for USER session with plenty of time', async () => {
       const session = {
         id: 'session-123',
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -264,7 +265,7 @@ describe('SessionStore', () => {
     it('should extend USER session when within sliding window', async () => {
       const session = {
         id: 'session-123',
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -290,7 +291,7 @@ describe('SessionStore', () => {
     it('should NOT extend ADMIN session (sliding disabled)', async () => {
       const session = {
         id: 'session-123',
-        accountType: 'ADMIN',
+        accountType: AccountType.ADMIN,
         accountId: 'admin-123',
         email: 'admin@example.com',
         accessToken: 'encrypted',
@@ -317,7 +318,7 @@ describe('SessionStore', () => {
       const createdAt = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
       const session = {
         id: 'session-123',
-        accountType: 'USER',
+        accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -344,7 +345,7 @@ describe('SessionStore', () => {
     it('should return true for session past max age', () => {
       const oldSession = {
         id: 'session-123',
-        accountType: 'USER' as const,
+        accountType: AccountType.USER as const,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',
@@ -365,7 +366,7 @@ describe('SessionStore', () => {
     it('should return false for session within max age', () => {
       const validSession = {
         id: 'session-123',
-        accountType: 'USER' as const,
+        accountType: AccountType.USER as const,
         accountId: 'user-123',
         email: 'test@example.com',
         accessToken: 'encrypted',

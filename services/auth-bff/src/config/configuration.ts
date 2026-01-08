@@ -1,3 +1,5 @@
+import { COOKIE_NAMES } from '@my-girok/types';
+
 // Unsafe default values that must not be used in production
 const UNSAFE_DEFAULTS = {
   SESSION_SECRET: 'session-secret-change-in-production',
@@ -59,7 +61,7 @@ export default () => ({
 
   session: {
     secret: process.env.SESSION_SECRET || UNSAFE_DEFAULTS.SESSION_SECRET,
-    cookieName: process.env.SESSION_COOKIE_NAME || 'girok_session',
+    cookieName: process.env.SESSION_COOKIE_NAME || COOKIE_NAMES.SESSION,
     maxAge: parseInt(process.env.SESSION_MAX_AGE || '604800000', 10), // 7 days
     secure: process.env.NODE_ENV === 'production',
     sameSite: (process.env.SESSION_SAME_SITE as 'strict' | 'lax' | 'none') || 'strict',

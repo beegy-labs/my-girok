@@ -16,6 +16,7 @@ import { Request, Response } from 'express';
 import { AdminService } from './admin.service';
 import { Public, CurrentSession, RequireMfa, AllowedAccountTypes } from '../common/decorators';
 import { BffSession } from '../common/types';
+import { AccountType } from '../config/constants';
 import {
   AdminLoginDto,
   AdminLoginMfaDto,
@@ -31,7 +32,7 @@ import {
 
 @ApiTags('admin')
 @Controller('admin')
-@AllowedAccountTypes('ADMIN')
+@AllowedAccountTypes(AccountType.ADMIN)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 

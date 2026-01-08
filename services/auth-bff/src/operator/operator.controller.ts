@@ -6,10 +6,11 @@ import { OperatorService } from './operator.service';
 import { Public, CurrentSession, AllowedAccountTypes } from '../common/decorators';
 import { BffSession } from '../common/types';
 import { OperatorLoginDto, OperatorLoginResponseDto, OperatorInfoDto } from './dto/operator.dto';
+import { AccountType } from '../config/constants';
 
 @ApiTags('operator')
 @Controller('operator')
-@AllowedAccountTypes('OPERATOR')
+@AllowedAccountTypes(AccountType.OPERATOR)
 export class OperatorController {
   constructor(private readonly operatorService: OperatorService) {}
 

@@ -9,6 +9,7 @@ import {
   AdminInfoDto,
   AdminSessionListDto,
 } from './dto/admin.dto';
+import { AccountType } from '../config/constants';
 
 @Injectable()
 export class AdminService {
@@ -361,7 +362,7 @@ export class AdminService {
     await this.sessionService.createSession(
       res,
       {
-        accountType: 'ADMIN',
+        accountType: AccountType.ADMIN,
         accountId: admin.id,
         email: admin.email,
         accessToken,

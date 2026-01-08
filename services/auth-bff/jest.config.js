@@ -1,10 +1,17 @@
 module.exports = {
+  preset: 'ts-jest',
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   roots: ['<rootDir>/src', '<rootDir>/test'],
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: false,
+        tsconfig: '<rootDir>/tsconfig.json',
+      },
+    ],
   },
   collectCoverageFrom: [
     'src/**/*.(t|j)s',
@@ -29,7 +36,10 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@my-girok/types$': '<rootDir>/../../packages/types/src',
+    // Map .js imports to .ts files in packages/types
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@my-girok/types$': '<rootDir>/../../packages/types/src/index.ts',
+    '^@my-girok/types/(.*)$': '<rootDir>/../../packages/types/src/$1',
     '^@my-girok/nest-common$': '<rootDir>/../../packages/nest-common/src',
   },
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],

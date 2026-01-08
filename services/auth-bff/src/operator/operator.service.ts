@@ -4,6 +4,7 @@ import { IdentityGrpcClient, AuthGrpcClient, Permission } from '../grpc-clients'
 import { SessionService } from '../session/session.service';
 import { BffSession } from '../common/types';
 import { OperatorLoginDto, OperatorInfoDto } from './dto/operator.dto';
+import { AccountType } from '../config/constants';
 
 const SESSION_CONTEXT = {
   USER: 1,
@@ -104,7 +105,7 @@ export class OperatorService {
       await this.sessionService.createSession(
         res,
         {
-          accountType: 'OPERATOR',
+          accountType: AccountType.OPERATOR,
           accountId: account.id,
           email: account.email,
           serviceId: dto.serviceId,

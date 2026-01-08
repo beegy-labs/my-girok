@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SessionGuard } from '../../src/common/guards/session.guard';
 import { SessionService } from '../../src/session/session.service';
 import { BffSession } from '../../src/common/types';
+import { AccountType } from '../../src/config/constants';
 
 describe('SessionGuard', () => {
   let guard: SessionGuard;
@@ -12,7 +13,7 @@ describe('SessionGuard', () => {
 
   const mockSession: BffSession = {
     id: 'session-123',
-    accountType: 'USER',
+    accountType: AccountType.USER,
     accountId: 'user-123',
     email: 'test@example.com',
     accessToken: 'encrypted-access-token',

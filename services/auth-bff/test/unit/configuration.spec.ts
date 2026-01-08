@@ -25,7 +25,7 @@ describe('Configuration', () => {
     it('should throw in production with missing SESSION_SECRET', () => {
       process.env.NODE_ENV = 'production';
       delete process.env.SESSION_SECRET;
-      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!';
+      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!!';
       process.env.VALKEY_PASSWORD = 'secure-password';
 
       expect(() => {
@@ -37,7 +37,7 @@ describe('Configuration', () => {
     it('should throw in production with default SESSION_SECRET', () => {
       process.env.NODE_ENV = 'production';
       process.env.SESSION_SECRET = 'session-secret-change-in-production';
-      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!';
+      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!!';
       process.env.VALKEY_PASSWORD = 'secure-password';
 
       expect(() => {
@@ -49,7 +49,7 @@ describe('Configuration', () => {
     it('should throw in production with short SESSION_SECRET', () => {
       process.env.NODE_ENV = 'production';
       process.env.SESSION_SECRET = 'short';
-      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!';
+      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!!';
       process.env.VALKEY_PASSWORD = 'secure-password';
 
       expect(() => {
@@ -85,7 +85,7 @@ describe('Configuration', () => {
     it('should throw in production with missing VALKEY_PASSWORD', () => {
       process.env.NODE_ENV = 'production';
       process.env.SESSION_SECRET = 'a-secure-32-character-secret-here!';
-      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!';
+      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!!';
       delete process.env.VALKEY_PASSWORD;
 
       expect(() => {
@@ -97,7 +97,7 @@ describe('Configuration', () => {
     it('should not throw in production with all valid secrets', () => {
       process.env.NODE_ENV = 'production';
       process.env.SESSION_SECRET = 'a-secure-32-character-secret-here!';
-      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!';
+      process.env.ENCRYPTION_KEY = 'a-secure-32-character-key-here!!';
       process.env.VALKEY_PASSWORD = 'secure-password';
 
       expect(() => {

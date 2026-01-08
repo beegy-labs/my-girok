@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Public } from '../common/decorators';
-import { OAUTH_PROVIDERS, OAuthProvider } from '../config/constants';
+import { OAUTH_PROVIDERS, OAuthProvider, AuthProvider } from '../config/constants';
 
 @ApiTags('oauth')
 @Controller('oauth')
@@ -24,13 +24,14 @@ export class OAuthController {
       throw new BadRequestException(`Invalid OAuth provider: ${provider}`);
     }
 
-    const config = this.getProviderConfig(provider as OAuthProvider);
+    const normalizedProvider = this.normalizeProvider(provider);
+    const config = this.getProviderConfig(normalizedProvider);
     if (!config.clientId) {
       throw new BadRequestException(`OAuth provider ${provider} is not configured`);
     }
 
     // Build OAuth URL based on provider
-    const authUrl = this.buildAuthUrl(provider as OAuthProvider, config, redirectUri);
+    const authUrl = this.buildAuthUrl(normalizedProvider, config, redirectUri);
     res.redirect(authUrl);
   }
 
@@ -64,7 +65,12 @@ export class OAuthController {
   }
 
   private isValidProvider(provider: string): provider is OAuthProvider {
-    return OAUTH_PROVIDERS.includes(provider as OAuthProvider);
+    const upperProvider = provider.toUpperCase() as OAuthProvider;
+    return OAUTH_PROVIDERS.includes(upperProvider);
+  }
+
+  private normalizeProvider(provider: string): OAuthProvider {
+    return provider.toUpperCase() as OAuthProvider;
   }
 
   private getProviderConfig(provider: OAuthProvider): {
@@ -72,11 +78,16 @@ export class OAuthController {
     clientSecret: string;
     callbackUrl: string;
   } {
+    const configKey = this.getConfigKey(provider);
     return {
-      clientId: this.configService.get<string>(`oauth.${provider}.clientId`, ''),
-      clientSecret: this.configService.get<string>(`oauth.${provider}.clientSecret`, ''),
-      callbackUrl: this.configService.get<string>(`oauth.${provider}.callbackUrl`, ''),
+      clientId: this.configService.get<string>(`oauth.${configKey}.clientId`, ''),
+      clientSecret: this.configService.get<string>(`oauth.${configKey}.clientSecret`, ''),
+      callbackUrl: this.configService.get<string>(`oauth.${configKey}.callbackUrl`, ''),
     };
+  }
+
+  private getConfigKey(provider: OAuthProvider): string {
+    return provider.toLowerCase();
   }
 
   private buildAuthUrl(
@@ -87,7 +98,7 @@ export class OAuthController {
     const state = this.generateState(redirectUri);
 
     switch (provider) {
-      case 'google':
+      case AuthProvider.GOOGLE:
         return (
           `https://accounts.google.com/o/oauth2/v2/auth?` +
           `client_id=${config.clientId}` +
@@ -97,7 +108,7 @@ export class OAuthController {
           `&state=${state}`
         );
 
-      case 'kakao':
+      case AuthProvider.KAKAO:
         return (
           `https://kauth.kakao.com/oauth/authorize?` +
           `client_id=${config.clientId}` +
@@ -106,7 +117,7 @@ export class OAuthController {
           `&state=${state}`
         );
 
-      case 'naver':
+      case AuthProvider.NAVER:
         return (
           `https://nid.naver.com/oauth2.0/authorize?` +
           `client_id=${config.clientId}` +
@@ -115,7 +126,7 @@ export class OAuthController {
           `&state=${state}`
         );
 
-      case 'apple':
+      case AuthProvider.APPLE:
         return (
           `https://appleid.apple.com/auth/authorize?` +
           `client_id=${config.clientId}` +
