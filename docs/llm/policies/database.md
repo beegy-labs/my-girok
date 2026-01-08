@@ -58,19 +58,67 @@ goose -dir migrations clickhouse "$CLICKHOUSE_URL" up
 
 ## Migration Format
 
+### UUIDv7 Policy (RFC 9562)
+
+All new tables MUST use `uuid_generate_v7()` for ID generation. This ensures:
+
+- Time-ordered UUIDs for better index performance
+- No index fragmentation
+- Chronological sorting by ID
+
+```sql
+-- Define uuid_generate_v7() if not exists (use CREATE OR REPLACE for idempotency)
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION uuid_generate_v7()
+RETURNS uuid AS $$
+DECLARE
+  unix_ts_ms bytea;
+  uuid_bytes bytea;
+BEGIN
+  unix_ts_ms = substring(int8send(floor(extract(epoch from clock_timestamp()) * 1000)::bigint) from 3);
+  uuid_bytes = unix_ts_ms || gen_random_bytes(10);
+  uuid_bytes = set_byte(uuid_bytes, 6, (b'0111' || get_byte(uuid_bytes, 6)::bit(4))::bit(8)::int);
+  uuid_bytes = set_byte(uuid_bytes, 8, (b'10' || get_byte(uuid_bytes, 8)::bit(6))::bit(8)::int);
+  return encode(uuid_bytes, 'hex')::uuid;
+END
+$$ LANGUAGE plpgsql VOLATILE;
+-- +goose StatementEnd
+```
+
 ### PostgreSQL
 
 ```sql
 -- +goose Up
+-- Note: uuid_generate_v7() must be defined in an earlier migration or this file
 CREATE TABLE user_preferences (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),  -- UUIDv7 required
+    user_id UUID NOT NULL,  -- External ref to identity-service
     created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 );
 
 -- +goose Down
 DROP TABLE IF EXISTS user_preferences;
+```
+
+### Enum Types
+
+Define PostgreSQL enum types BEFORE using in tables:
+
+```sql
+-- +goose Up
+-- 1. Define enum type first
+CREATE TYPE user_status AS ENUM ('ACTIVE', 'SUSPENDED', 'DELETED');
+
+-- 2. Then use in table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    status user_status NOT NULL DEFAULT 'ACTIVE'
+);
+
+-- +goose Down
+DROP TABLE IF EXISTS users;
+DROP TYPE IF EXISTS user_status;
 ```
 
 ### ClickHouse
