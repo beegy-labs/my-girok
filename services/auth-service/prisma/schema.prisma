@@ -152,6 +152,11 @@ model admins {
   changedPasswords      AdminPasswordHistory[]      @relation("AdminPasswordHistoryChangedBy")
   loginAttempts         AdminLoginAttempt[]
 
+  // Operator assignment relations
+  operatorAssignmentsAssigned     OperatorAssignment[]           @relation("OperatorAssignmentAssignedBy")
+  operatorAssignmentsDeactivated  OperatorAssignment[]           @relation("OperatorAssignmentDeactivatedBy")
+  operatorAssignmentPermissions   OperatorAssignmentPermission[]
+
   @@index([email], map: "idx_admins_email")
   @@index([parent_id], map: "idx_admins_parent_id")
   @@index([role_id], map: "idx_admins_role_id")
@@ -333,9 +338,10 @@ model permissions {
   tenant_type  tenant_type?
   service_id   String?      @map("service_id") @db.Uuid
 
-  role_permissions    role_permissions[]
-  operatorPermissions OperatorPermission[]
-  service             Service?             @relation(fields: [service_id], references: [id])
+  role_permissions              role_permissions[]
+  operatorPermissions           OperatorPermission[]
+  operatorAssignmentPermissions OperatorAssignmentPermission[]
+  service                       Service?                       @relation(fields: [service_id], references: [id])
 
   @@unique([resource, action, service_id])
   @@index([resource], map: "idx_permissions_resource")
@@ -419,6 +425,7 @@ model Service {
   personalInfoAccessLogs PersonalInfoAccessLog[]
   operators              Operator[]
   operatorInvitations    OperatorInvitation[]
+  operatorAssignments    OperatorAssignment[]
   roles                  roles[]
   permissions            permissions[]
   adminServices          AdminService[]
@@ -684,6 +691,90 @@ model OperatorPermission {
   @@index([operatorId])
   @@index([permissionId])
   @@map("operator_permissions")
+}
+
+// ============================================================
+// OPERATOR ASSIGNMENTS (User-based operator role)
+// ============================================================
+
+model OperatorAssignment {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // External reference to identity_db.accounts
+  accountId String @map("account_id") @db.Uuid
+
+  // Assignment context
+  serviceId   String @map("service_id") @db.Uuid
+  countryCode String @map("country_code") @db.VarChar(2)
+
+  // Admin who assigned
+  assignedBy String   @map("assigned_by") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(6)
+
+  // Status
+  status            OperatorAssignmentStatus @default(ACTIVE)
+  deactivatedAt     DateTime?                @map("deactivated_at") @db.Timestamptz(6)
+  deactivatedBy     String?                  @map("deactivated_by") @db.Uuid
+  deactivationReason String?                 @map("deactivation_reason") @db.VarChar(255)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  service      Service                        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  assignedByAdmin admins                      @relation("OperatorAssignmentAssignedBy", fields: [assignedBy], references: [id])
+  deactivatedByAdmin admins?                  @relation("OperatorAssignmentDeactivatedBy", fields: [deactivatedBy], references: [id])
+  permissions  OperatorAssignmentPermission[]
+
+  @@unique([accountId, serviceId, countryCode])
+  @@index([accountId])
+  @@index([serviceId])
+  @@index([countryCode])
+  @@index([assignedBy])
+  @@index([status])
+  @@index([serviceId, countryCode])
+  @@map("operator_assignments")
+}
+
+enum OperatorAssignmentStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+
+  @@map("operator_assignment_status")
+}
+
+model OperatorAssignmentPermission {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // Assignment reference
+  assignmentId String @map("assignment_id") @db.Uuid
+
+  // Permission reference
+  permissionId String @map("permission_id") @db.Uuid
+
+  // Grant metadata
+  grantedBy String   @map("granted_by") @db.Uuid
+  grantedAt DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
+
+  // Expiration (optional time-limited permissions)
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  assignment OperatorAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  permission permissions        @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  grantedByAdmin admins         @relation(fields: [grantedBy], references: [id])
+
+  @@unique([assignmentId, permissionId])
+  @@index([assignmentId])
+  @@index([permissionId])
+  @@index([grantedBy])
+  @@index([expiresAt])
+  @@map("operator_assignment_permissions")
 }
 
 model AdminService {
