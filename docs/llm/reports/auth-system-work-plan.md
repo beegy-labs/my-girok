@@ -26,8 +26,8 @@ cat packages/proto/common/v1/common.proto  # Shared types (MfaMethod)
 | Step 2: Proto Definition        | (part of #498) | ✅ Merged   | #506, #507, #508, #509 |
 | **Step 3-1: auth-service gRPC** | #498           | ✅ CLOSED   | **#510 merged**        |
 | Step 3-2: identity+audit gRPC   | (part of #498) | ⏳ Optional | identity-service MFA   |
-| **Step 4: auth-bff**            | #499           | 🔴 **NEXT** | Phase 3                |
-| Step 5: Frontend                | #500           | 🔴 Pending  | Depends on #499        |
+| **Step 4: auth-bff**            | #499           | ✅ CLOSED   | **#511 merged**        |
+| **Step 5: Frontend**            | #500           | 🔴 **NEXT** | Depends on #499        |
 | Step 6: Audit Integration       | #501           | 🔴 Pending  | Depends on #499        |
 | Step 7: Test & Docs             | #502           | 🔴 Pending  | Final phase            |
 
@@ -58,99 +58,95 @@ Operator Assignment (6): Assign, Revoke, Get, GetService, UpdatePermissions, Get
 
 ---
 
-## Next Step: Phase 3 - auth-bff (#499)
+## Completed Work (PR #511) - auth-bff
+
+### Files Created
+
+| Category        | Files                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------- |
+| **Session**     | `session.store.ts`, `session.service.ts` (Valkey + AES-256-GCM encryption)                        |
+| **Controllers** | `admin.controller.ts`, `user.controller.ts`, `operator.controller.ts`, `oauth.controller.ts`      |
+| **Services**    | `admin.service.ts`, `user.service.ts`, `operator.service.ts`                                      |
+| **gRPC**        | `auth.client.ts`, `identity.client.ts`                                                            |
+| **Guards**      | `session.guard.ts` (role-based access control)                                                    |
+| **Types**       | `packages/types`: `AccountType` enum, `COOKIE_NAMES`, `HEADER_NAMES`                              |
+| **Tests**       | `session.store.spec.ts`, `session.guard.spec.ts`, `configuration.spec.ts`, `crypto.utils.spec.ts` |
+
+### Key Features
+
+- Valkey session store with AES-256-GCM token encryption
+- Sliding session policy with configurable TTL per account type
+- Device fingerprinting for session binding
+- Production secret validation at startup
+- Rate limiting and CSRF protection
+
+---
+
+## Next Step: Phase 5 - Frontend (#500)
 
 ### Overview
 
-BFF 패턴 기반 인증 게이트웨이 서비스. 모든 클라이언트 인증 요청을 처리하고 세션 관리.
+프론트엔드 인증 UI 구현. web-admin (Admin MFA 로그인), web-main (User 로그인/회원가입).
 
 ### Branch
 
 ```bash
-git checkout -b feat/auth-bff-service
-```
-
-### Service Structure
-
-```
-services/auth-bff/
-├── src/
-│   ├── main.ts
-│   ├── app.module.ts
-│   ├── session/          # Valkey session store
-│   ├── user/             # User auth endpoints
-│   ├── admin/            # Admin auth endpoints
-│   ├── operator/         # Operator auth endpoints
-│   ├── oauth/            # OAuth providers
-│   └── grpc-clients/     # identity + auth + audit clients
-├── Dockerfile
-└── package.json
+git checkout -b feat/auth-frontend
 ```
 
 ### Key Tasks
 
-| Task                | Priority | Description                                         |
-| ------------------- | -------- | --------------------------------------------------- |
-| Service Scaffolding | P0       | NestJS project, modules, config                     |
-| Session Store       | P0       | Valkey-based BffSession management                  |
-| Admin Endpoints     | P0       | `/admin/login`, `/admin/login-mfa`, `/admin/logout` |
-| User Endpoints      | P0       | `/user/login`, `/user/register`, `/user/logout`     |
-| Operator Endpoints  | P1       | `/operator/login`, `/operator/logout`               |
-| OAuth               | P1       | Google, Kakao, Naver, Apple                         |
-| Security            | P0       | Rate limiting, CSRF, cookies                        |
-| gRPC Clients        | P0       | identity-service, auth-service clients              |
+| Task                 | Priority | App       | Description                 |
+| -------------------- | -------- | --------- | --------------------------- |
+| Admin Login Page     | P0       | web-admin | 이메일/비밀번호 로그인 폼   |
+| Admin MFA Page       | P0       | web-admin | TOTP/백업코드 입력 폼       |
+| Admin Dashboard Auth | P0       | web-admin | 세션 관리, 로그아웃         |
+| User Login Page      | P0       | web-main  | 이메일/비밀번호 로그인 폼   |
+| User Register Page   | P0       | web-main  | 회원가입 폼                 |
+| OAuth Buttons        | P1       | web-main  | Google, Kakao, Naver, Apple |
+| Auth Store (Zustand) | P0       | Both      | 인증 상태 관리              |
+| Protected Routes     | P0       | Both      | 인증 필요 라우트 가드       |
 
-### Session Model (Valkey)
+### API Integration
 
 ```typescript
-interface BffSession {
-  id: string;
-  accountType: 'USER' | 'OPERATOR' | 'ADMIN';
-  accountId: string;
-  appSlug?: string;
-  serviceId?: string;
-  accessToken: string; // encrypted
-  refreshToken: string; // encrypted
-  deviceFingerprint: string;
-  mfaVerified: boolean;
-  createdAt: Date;
-  expiresAt: Date;
-}
+// auth-bff endpoints to integrate
+const AUTH_BFF_BASE = '/api/auth';
+
+// Admin
+POST ${AUTH_BFF_BASE}/admin/login
+POST ${AUTH_BFF_BASE}/admin/login-mfa
+POST ${AUTH_BFF_BASE}/admin/logout
+GET  ${AUTH_BFF_BASE}/admin/me
+
+// User
+POST ${AUTH_BFF_BASE}/user/register
+POST ${AUTH_BFF_BASE}/user/login
+POST ${AUTH_BFF_BASE}/user/logout
+GET  ${AUTH_BFF_BASE}/user/me
+
+// OAuth
+GET  ${AUTH_BFF_BASE}/oauth/:provider
+GET  ${AUTH_BFF_BASE}/oauth/:provider/callback
 ```
-
-### REST Endpoints
-
-| Category | Endpoints                                                                                                      |
-| -------- | -------------------------------------------------------------------------------------------------------------- |
-| Admin    | POST `/admin/login`, `/admin/login-mfa`, `/admin/logout`, `/admin/refresh`, GET `/admin/me`, `/admin/sessions` |
-| User     | POST `/user/register`, `/user/login`, `/user/logout`, `/user/refresh`, GET `/user/me`                          |
-| Operator | POST `/operator/login`, `/operator/logout`, `/operator/refresh`, GET `/operator/me`                            |
-| OAuth    | GET `/oauth/:provider`, `/oauth/:provider/callback`                                                            |
 
 ---
 
 ## Remaining Phases
 
-### Phase 4: Frontend (#500)
-
-- web-admin: Admin login flow with MFA
-- web-main: User login/register flow
-- OAuth login buttons
-- Depends on: Phase 3 (auth-bff)
-
-### Phase 5: Audit Integration (#501)
+### Phase 6: Audit Integration (#501)
 
 - audit-service gRPC implementation
 - ClickHouse tables (auth_events, security_alerts)
 - Security alert rules
-- Depends on: Phase 3 (auth-bff)
+- Depends on: Phase 5 (Frontend)
 
-### Phase 6: Testing & Documentation (#502)
+### Phase 7: Testing & Documentation (#502)
 
-- E2E tests
-- 80%+ coverage
-- API documentation
-- Depends on: Phase 4, 5
+- E2E tests for full auth flow
+- 80%+ coverage across all services
+- API documentation (OpenAPI/Swagger)
+- Depends on: Phase 5, 6
 
 ---
 
