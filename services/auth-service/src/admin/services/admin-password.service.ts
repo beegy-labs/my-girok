@@ -52,7 +52,8 @@ export class AdminPasswordService {
     // Verify current password
     const admin = await this.getAdminPassword(adminId);
     if (!admin) {
-      return { success: false, message: 'Admin not found' };
+      // Return generic message to prevent user enumeration
+      return { success: false, message: 'Current password is incorrect' };
     }
 
     const isCurrentValid = await bcrypt.compare(currentPassword, admin.password);
@@ -97,7 +98,7 @@ export class AdminPasswordService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Password changed for admin ${adminId}`);
+    this.logger.log(`Password changed for admin ${adminId.slice(0, 8)}...`);
     return { success: true, message: 'Password changed successfully' };
   }
 
@@ -126,7 +127,9 @@ export class AdminPasswordService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Force password change set for admin ${adminId} by ${requesterId}`);
+    this.logger.log(
+      `Force password change set for admin ${adminId.slice(0, 8)}... by ${requesterId.slice(0, 8)}...`,
+    );
     return { success: true, message: 'Password change required on next login' };
   }
 
@@ -197,6 +200,21 @@ export class AdminPasswordService {
       valid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * Calculate password strength score (0-100)
+   * Used for logging and monitoring only
+   */
+  calculatePasswordStrength(password: string): number {
+    let score = 0;
+    if (password.length >= 12) score += 25;
+    if (password.length >= 16) score += 10;
+    if (/[A-Z]/.test(password)) score += 15;
+    if (/[a-z]/.test(password)) score += 15;
+    if (/[0-9]/.test(password)) score += 15;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20;
+    return Math.min(score, 100);
   }
 
   /**

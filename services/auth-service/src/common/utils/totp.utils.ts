@@ -22,6 +22,9 @@ export const BACKUP_CODE_CONFIG = {
   CHARSET: '23456789ABCDEFGHJKLMNPQRSTUVWXYZ', // Exclude confusing chars: 0, O, 1, I
 } as const;
 
+// Salt for backup code hashing (should match in all environments)
+const BACKUP_CODE_SALT = 'my-girok:backup-code:v1:';
+
 /**
  * Generate TOTP-compatible secret (base32 encoded)
  * Uses OTPAuth.Secret for RFC 4648 compliant Base32 encoding
@@ -100,7 +103,10 @@ export function generateBackupCodes(count: number = BACKUP_CODE_CONFIG.COUNT): s
 export function hashBackupCode(code: string): string {
   // Remove formatting (dashes) and uppercase for consistent hashing
   const normalized = code.replace(/-/g, '').toUpperCase();
-  return crypto.createHash('sha256').update(normalized).digest('hex');
+  return crypto
+    .createHash('sha256')
+    .update(BACKUP_CODE_SALT + normalized)
+    .digest('hex');
 }
 
 /**
@@ -109,5 +115,16 @@ export function hashBackupCode(code: string): string {
  */
 export function verifyBackupCode(code: string, hashedCodes: string[]): number {
   const inputHash = hashBackupCode(code);
-  return hashedCodes.findIndex((hash) => hash === inputHash);
+  const inputBuffer = Buffer.from(inputHash);
+
+  for (let i = 0; i < hashedCodes.length; i++) {
+    const storedBuffer = Buffer.from(hashedCodes[i]);
+    if (
+      inputBuffer.length === storedBuffer.length &&
+      crypto.timingSafeEqual(inputBuffer, storedBuffer)
+    ) {
+      return i;
+    }
+  }
+  return -1;
 }

@@ -1143,7 +1143,28 @@ export class AuthGrpcController {
     accessToken?: string;
     refreshToken?: string;
   }> {
-    this.logger.debug(`AdminLogin: email=${request.email}`);
+    // TODO: Add rate limiting - limit to 5 attempts per IP per 15 minutes
+    // Use Redis/Valkey to track: `rate:login:${request.ipAddress}`
+
+    this.logger.debug(`AdminLogin: email=${request.email.replace(/(.{2}).*(@.*)/, '$1***$2')}`);
+
+    // Input validation
+    if (!request.email || !this.isValidEmail(request.email)) {
+      return {
+        success: false,
+        mfaRequired: false,
+        availableMethods: [],
+        message: 'Invalid email format',
+      };
+    }
+    if (!request.password || request.password.length < 1) {
+      return {
+        success: false,
+        mfaRequired: false,
+        availableMethods: [],
+        message: 'Password is required',
+      };
+    }
 
     try {
       // Find admin by email
@@ -1350,6 +1371,14 @@ export class AuthGrpcController {
     refreshToken?: string;
   }> {
     this.logger.debug(`AdminLoginMfa: challengeId=${request.challengeId}`);
+
+    // Input validation
+    if (!request.challengeId || !this.isValidUuid(request.challengeId)) {
+      return { success: false, message: 'Invalid challenge ID' };
+    }
+    if (!request.code || request.code.length < 6) {
+      return { success: false, message: 'Invalid MFA code' };
+    }
 
     try {
       // Get challenge from cache
@@ -2073,5 +2102,23 @@ export class AuthGrpcController {
       updatedAt: toProtoTimestamp(assignment.updatedAt),
       permissions: [], // Permissions are fetched separately
     };
+  }
+
+  /**
+   * Validate UUID format
+   */
+  private isValidUuid(id: string): boolean {
+    if (!id) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-7][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  }
+
+  /**
+   * Validate email format
+   */
+  private isValidEmail(email: string): boolean {
+    if (!email) return false;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 }

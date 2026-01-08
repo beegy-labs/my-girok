@@ -92,7 +92,7 @@ export class AdminMfaService {
       `;
     }
 
-    this.logger.log(`MFA setup initiated for admin ${adminId}`);
+    this.logger.log(`MFA setup initiated for admin ${adminId.slice(0, 8)}...`);
 
     return {
       success: true,
@@ -123,7 +123,7 @@ export class AdminMfaService {
     const isValid = verifyTotpCode(secret, code);
 
     if (!isValid) {
-      this.logger.warn(`Invalid TOTP code during MFA setup for admin ${adminId}`);
+      this.logger.warn(`Invalid TOTP code during MFA setup for admin ${adminId.slice(0, 8)}...`);
       return false;
     }
 
@@ -147,7 +147,7 @@ export class AdminMfaService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`MFA enabled for admin ${adminId}`);
+    this.logger.log(`MFA enabled for admin ${adminId.slice(0, 8)}...`);
     return true;
   }
 
@@ -155,6 +155,8 @@ export class AdminMfaService {
    * Verify TOTP code during login
    */
   async verifyTotpCode(adminId: string, code: string): Promise<boolean> {
+    // TODO: Add TOTP code reuse prevention - track last verified timestamp
+    // to prevent replay attacks within the same 30-second window
     const config = await this.getMfaConfig(adminId);
     if (!config || !config.totpEnabled || !config.totpSecret) {
       return false;
@@ -190,7 +192,16 @@ export class AdminMfaService {
       WHERE admin_id = ${adminId}::uuid
     `;
 
-    this.logger.log(`Backup code used for admin ${adminId}, ${updatedHashes.length} remaining`);
+    this.logger.log(
+      `Backup code used for admin ${adminId.slice(0, 8)}..., ${updatedHashes.length} remaining`,
+    );
+
+    if (updatedHashes.length <= 2) {
+      this.logger.warn(
+        `Low backup codes remaining for admin ${adminId.slice(0, 8)}...: ${updatedHashes.length} left`,
+      );
+    }
+
     return true;
   }
 
@@ -217,7 +228,7 @@ export class AdminMfaService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`MFA disabled for admin ${adminId}`);
+    this.logger.log(`MFA disabled for admin ${adminId.slice(0, 8)}...`);
     return true;
   }
 
@@ -243,7 +254,7 @@ export class AdminMfaService {
       WHERE admin_id = ${adminId}::uuid
     `;
 
-    this.logger.log(`Backup codes regenerated for admin ${adminId}`);
+    this.logger.log(`Backup codes regenerated for admin ${adminId.slice(0, 8)}...`);
     return backupCodes;
   }
 

@@ -145,7 +145,8 @@ describe('AdminPasswordService', () => {
       const result = await service.changePassword(mockAdminId, 'currentPassword', validPassword);
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe('Admin not found');
+      // Message changed to prevent user enumeration
+      expect(result.message).toBe('Current password is incorrect');
     });
 
     it('should fail if current password is incorrect', async () => {

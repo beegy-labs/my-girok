@@ -61,6 +61,9 @@ export class OperatorAssignmentService {
     assignedBy: string,
     permissionIds: string[] = [],
   ): Promise<{ success: boolean; assignment?: OperatorAssignmentRow; message: string }> {
+    // TODO: Add authorization check - verify assignedBy has permission to assign operators
+    // await this.verifyCallerPermission(assignedBy, 'operator:assign');
+
     // Check if assignment already exists
     const existing = await this.getAssignment(accountId, serviceId, countryCode);
     if (existing) {
@@ -102,7 +105,9 @@ export class OperatorAssignmentService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Operator assigned: account=${accountId}, service=${serviceId}`);
+    this.logger.log(
+      `Operator assigned: account=${accountId.slice(0, 8)}..., service=${serviceId.slice(0, 8)}...`,
+    );
 
     return {
       success: true,
@@ -119,6 +124,9 @@ export class OperatorAssignmentService {
     revokedBy: string,
     reason: string,
   ): Promise<{ success: boolean; message: string }> {
+    // TODO: Add authorization check - verify revokedBy has permission to revoke operators
+    // await this.verifyCallerPermission(revokedBy, 'operator:revoke');
+
     const assignment = await this.getAssignmentById(assignmentId);
     if (!assignment) {
       return { success: false, message: 'Assignment not found' };
@@ -148,7 +156,7 @@ export class OperatorAssignmentService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Operator assignment revoked: ${assignmentId}`);
+    this.logger.log(`Operator assignment revoked: ${assignmentId.slice(0, 8)}...`);
     return { success: true, message: 'Assignment revoked successfully' };
   }
 
@@ -288,6 +296,9 @@ export class OperatorAssignmentService {
     permissionIds: string[],
     updatedBy: string,
   ): Promise<{ success: boolean; assignment?: OperatorAssignmentRow; message: string }> {
+    // TODO: Add authorization check - verify updatedBy has permission to update operator permissions
+    // await this.verifyCallerPermission(updatedBy, 'operator:update_permissions');
+
     const assignment = await this.getAssignmentById(assignmentId);
     if (!assignment) {
       return { success: false, message: 'Assignment not found' };
@@ -323,7 +334,7 @@ export class OperatorAssignmentService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Operator permissions updated: ${assignmentId}`);
+    this.logger.log(`Operator permissions updated: ${assignmentId.slice(0, 8)}...`);
     return {
       success: true,
       assignment: (await this.getAssignmentById(assignmentId)) ?? undefined,

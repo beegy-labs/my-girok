@@ -23,9 +23,10 @@ export class CryptoService {
           'ENCRYPTION_KEY is required in production. Generate with: openssl rand -base64 32',
         );
       }
-      this.logger.warn('ENCRYPTION_KEY not set - using development key. DO NOT use in production!');
-      // Fixed development key - NEVER use in production
-      this.encryptionKey = Buffer.from('dev-only-encryption-key-32bytes!', 'utf8');
+      this.logger.warn(
+        'ENCRYPTION_KEY not set - generating ephemeral dev key. Data encrypted in this session cannot be decrypted after restart!',
+      );
+      this.encryptionKey = crypto.randomBytes(this.keyLength);
     } else {
       this.encryptionKey = Buffer.from(keyEnv, 'base64');
       if (this.encryptionKey.length !== this.keyLength) {
@@ -66,6 +67,13 @@ export class CryptoService {
     const iv = Buffer.from(ivBase64, 'base64');
     const authTag = Buffer.from(authTagBase64, 'base64');
 
+    if (iv.length !== this.ivLength) {
+      throw new Error('Invalid IV length');
+    }
+    if (authTag.length !== 16) {
+      throw new Error('Invalid auth tag length');
+    }
+
     const decipher = crypto.createDecipheriv(this.algorithm, this.encryptionKey, iv);
     decipher.setAuthTag(authTag);
 
@@ -87,5 +95,14 @@ export class CryptoService {
    */
   generateToken(bytes: number = 32): string {
     return crypto.randomBytes(bytes).toString('base64url');
+  }
+
+  /**
+   * Constant-time comparison for security sensitive operations
+   * Prevents timing attacks when comparing sensitive values
+   */
+  constantTimeCompare(a: Buffer, b: Buffer): boolean {
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
   }
 }

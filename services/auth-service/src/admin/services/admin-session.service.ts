@@ -114,7 +114,9 @@ export class AdminSessionService {
       )
     `;
 
-    this.logger.log(`Session created for admin ${adminId}: ${sessionId}`);
+    this.logger.log(
+      `Session created for admin: ${adminId.slice(0, 8)}..., sessionId: ${sessionId.slice(0, 8)}...`,
+    );
 
     return {
       sessionId,
@@ -246,7 +248,7 @@ export class AdminSessionService {
     `;
 
     if (result > 0) {
-      this.logger.log(`Session logged out: ${sessionId}`);
+      this.logger.log(`Session logged out: ${sessionId.slice(0, 8)}...`);
     }
 
     return result > 0;
@@ -279,7 +281,7 @@ export class AdminSessionService {
     }
 
     if (result > 0) {
-      this.logger.log(`Revoked ${result} sessions for admin ${adminId}`);
+      this.logger.log(`Revoked ${result} sessions for admin: ${adminId.slice(0, 8)}...`);
 
       await this.outboxService.addEventDirect('ADMIN_SESSION_REVOKED', adminId, {
         adminId,
@@ -295,12 +297,14 @@ export class AdminSessionService {
 
   /**
    * Get all active sessions for an admin
+   * Note: tokenHash and refreshTokenHash are excluded for security
    */
-  async getActiveSessions(adminId: string): Promise<AdminSessionData[]> {
-    return this.prisma.$queryRaw<AdminSessionData[]>`
+  async getActiveSessions(
+    adminId: string,
+  ): Promise<Omit<AdminSessionData, 'tokenHash' | 'refreshTokenHash'>[]> {
+    return this.prisma.$queryRaw<Omit<AdminSessionData, 'tokenHash' | 'refreshTokenHash'>[]>`
       SELECT
-        id, admin_id as "adminId", token_hash as "tokenHash",
-        refresh_token_hash as "refreshTokenHash",
+        id, admin_id as "adminId",
         mfa_verified as "mfaVerified", mfa_verified_at as "mfaVerifiedAt",
         mfa_method as "mfaMethod",
         ip_address as "ipAddress", user_agent as "userAgent",
