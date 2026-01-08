@@ -17,13 +17,62 @@ service AuthService {
   rpc GetRole(GetRoleRequest) returns (GetRoleResponse);
   rpc GetRolesByOperator(GetRolesByOperatorRequest) returns (GetRolesByOperatorResponse);
 
-  // Operator operations
+  // Operator operations (legacy - use OperatorAssignment for new implementations)
   rpc GetOperator(GetOperatorRequest) returns (GetOperatorResponse);
   rpc ValidateOperator(ValidateOperatorRequest) returns (ValidateOperatorResponse);
 
   // Sanction operations
   rpc CheckSanction(CheckSanctionRequest) returns (CheckSanctionResponse);
   rpc GetActiveSanctions(GetActiveSanctionsRequest) returns (GetActiveSanctionsResponse);
+
+  // ============================================================
+  // Admin Authentication (Enterprise Auth)
+  // ============================================================
+
+  // Admin login - Step 1: Validate credentials (MFA challenge returned if enabled)
+  rpc AdminLogin(AdminLoginRequest) returns (AdminLoginResponse);
+
+  // Admin login - Step 2: Verify MFA code
+  rpc AdminLoginMfa(AdminLoginMfaRequest) returns (AdminLoginMfaResponse);
+
+  // Admin session management
+  rpc AdminValidateSession(AdminValidateSessionRequest) returns (AdminValidateSessionResponse);
+  rpc AdminRefreshSession(AdminRefreshSessionRequest) returns (AdminRefreshSessionResponse);
+  rpc AdminLogout(AdminLogoutRequest) returns (AdminLogoutResponse);
+  rpc AdminRevokeAllSessions(AdminRevokeAllSessionsRequest) returns (AdminRevokeAllSessionsResponse);
+  rpc AdminGetActiveSessions(AdminGetActiveSessionsRequest) returns (AdminGetActiveSessionsResponse);
+
+  // Admin MFA management
+  rpc AdminSetupMfa(AdminSetupMfaRequest) returns (AdminSetupMfaResponse);
+  rpc AdminVerifyMfa(AdminVerifyMfaRequest) returns (AdminVerifyMfaResponse);
+  rpc AdminDisableMfa(AdminDisableMfaRequest) returns (AdminDisableMfaResponse);
+  rpc AdminRegenerateBackupCodes(AdminRegenerateBackupCodesRequest) returns (AdminRegenerateBackupCodesResponse);
+
+  // Admin password management
+  rpc AdminChangePassword(AdminChangePasswordRequest) returns (AdminChangePasswordResponse);
+  rpc AdminForcePasswordChange(AdminForcePasswordChangeRequest) returns (AdminForcePasswordChangeResponse);
+
+  // ============================================================
+  // Operator Assignment (User-based operators)
+  // ============================================================
+
+  // Assign operator role to a user account
+  rpc AssignOperator(AssignOperatorRequest) returns (AssignOperatorResponse);
+
+  // Revoke operator assignment
+  rpc RevokeOperatorAssignment(RevokeOperatorAssignmentRequest) returns (RevokeOperatorAssignmentResponse);
+
+  // Get operator assignment for a user
+  rpc GetOperatorAssignment(GetOperatorAssignmentRequest) returns (GetOperatorAssignmentResponse);
+
+  // Get all operator assignments for a service
+  rpc GetServiceOperatorAssignments(GetServiceOperatorAssignmentsRequest) returns (GetServiceOperatorAssignmentsResponse);
+
+  // Update operator assignment permissions
+  rpc UpdateOperatorAssignmentPermissions(UpdateOperatorAssignmentPermissionsRequest) returns (UpdateOperatorAssignmentPermissionsResponse);
+
+  // Get operator assignment permissions
+  rpc GetOperatorAssignmentPermissions(GetOperatorAssignmentPermissionsRequest) returns (GetOperatorAssignmentPermissionsResponse);
 }
 
 // Permission represents a single permission
@@ -241,4 +290,339 @@ message GetActiveSanctionsRequest {
 message GetActiveSanctionsResponse {
   repeated Sanction sanctions = 1;
   int32 total_count = 2;
+}
+
+// ============================================================
+// Admin Authentication Messages
+// ============================================================
+
+// Admin represents a platform administrator
+message Admin {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  AdminScope scope = 4;
+  string role_id = 5;
+  Role role = 6;
+  bool is_active = 7;
+  bool mfa_required = 8;
+  bool mfa_enabled = 9;
+  bool force_password_change = 10;
+  google.protobuf.Timestamp last_login_at = 11;
+  google.protobuf.Timestamp password_changed_at = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+// AdminScope defines admin authority level
+enum AdminScope {
+  ADMIN_SCOPE_UNSPECIFIED = 0;
+  ADMIN_SCOPE_SYSTEM = 1;   // Full platform access
+  ADMIN_SCOPE_TENANT = 2;   // Tenant-level access
+}
+
+// AdminSession represents an active admin session
+message AdminSession {
+  string id = 1;
+  string admin_id = 2;
+  bool mfa_verified = 3;
+  string mfa_method = 4;
+  string ip_address = 5;
+  string user_agent = 6;
+  string device_fingerprint = 7;
+  bool is_active = 8;
+  google.protobuf.Timestamp mfa_verified_at = 9;
+  google.protobuf.Timestamp last_activity_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+// MfaMethod represents available MFA methods
+enum MfaMethod {
+  MFA_METHOD_UNSPECIFIED = 0;
+  MFA_METHOD_TOTP = 1;
+  MFA_METHOD_BACKUP_CODE = 2;
+}
+
+// AdminLogin - Step 1: Credentials validation
+message AdminLoginRequest {
+  string email = 1;
+  string password = 2;
+  string ip_address = 3;
+  string user_agent = 4;
+  string device_fingerprint = 5;
+}
+
+message AdminLoginResponse {
+  bool success = 1;
+  bool mfa_required = 2;
+  string challenge_id = 3;  // For MFA step
+  repeated MfaMethod available_methods = 4;
+  string message = 5;
+  Admin admin = 6;  // Only populated if MFA not required
+  AdminSession session = 7;  // Only populated if MFA not required
+  string access_token = 8;
+  string refresh_token = 9;
+}
+
+// AdminLoginMfa - Step 2: MFA verification
+message AdminLoginMfaRequest {
+  string challenge_id = 1;
+  string code = 2;
+  MfaMethod method = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+  string device_fingerprint = 6;
+}
+
+message AdminLoginMfaResponse {
+  bool success = 1;
+  string message = 2;
+  Admin admin = 3;
+  AdminSession session = 4;
+  string access_token = 5;
+  string refresh_token = 6;
+}
+
+// AdminValidateSession
+message AdminValidateSessionRequest {
+  string token_hash = 1;
+}
+
+message AdminValidateSessionResponse {
+  bool valid = 1;
+  string admin_id = 2;
+  string session_id = 3;
+  bool mfa_verified = 4;
+  google.protobuf.Timestamp expires_at = 5;
+  string message = 6;
+}
+
+// AdminRefreshSession
+message AdminRefreshSessionRequest {
+  string refresh_token_hash = 1;
+}
+
+message AdminRefreshSessionResponse {
+  bool success = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  string message = 5;
+}
+
+// AdminLogout
+message AdminLogoutRequest {
+  string session_id = 1;
+}
+
+message AdminLogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// AdminRevokeAllSessions
+message AdminRevokeAllSessionsRequest {
+  string admin_id = 1;
+  optional string exclude_session_id = 2;
+  string reason = 3;
+}
+
+message AdminRevokeAllSessionsResponse {
+  bool success = 1;
+  int32 revoked_count = 2;
+  string message = 3;
+}
+
+// AdminGetActiveSessions
+message AdminGetActiveSessionsRequest {
+  string admin_id = 1;
+}
+
+message AdminGetActiveSessionsResponse {
+  repeated AdminSession sessions = 1;
+  int32 total_count = 2;
+}
+
+// ============================================================
+// Admin MFA Management Messages
+// ============================================================
+
+// AdminSetupMfa
+message AdminSetupMfaRequest {
+  string admin_id = 1;
+}
+
+message AdminSetupMfaResponse {
+  bool success = 1;
+  string secret = 2;  // Base32 encoded TOTP secret
+  string qr_code_uri = 3;  // otpauth:// URI for QR code
+  repeated string backup_codes = 4;  // Plain text backup codes (one-time view)
+  string message = 5;
+}
+
+// AdminVerifyMfa (initial setup verification)
+message AdminVerifyMfaRequest {
+  string admin_id = 1;
+  string code = 2;
+}
+
+message AdminVerifyMfaResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// AdminDisableMfa
+message AdminDisableMfaRequest {
+  string admin_id = 1;
+  string password = 2;  // Require password for security
+}
+
+message AdminDisableMfaResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// AdminRegenerateBackupCodes
+message AdminRegenerateBackupCodesRequest {
+  string admin_id = 1;
+  string password = 2;  // Require password for security
+}
+
+message AdminRegenerateBackupCodesResponse {
+  bool success = 1;
+  repeated string backup_codes = 2;  // New plain text backup codes
+  string message = 3;
+}
+
+// ============================================================
+// Admin Password Management Messages
+// ============================================================
+
+// AdminChangePassword
+message AdminChangePasswordRequest {
+  string admin_id = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+message AdminChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// AdminForcePasswordChange (by system admin)
+message AdminForcePasswordChangeRequest {
+  string admin_id = 1;
+  string requester_admin_id = 2;  // Admin requesting the change
+}
+
+message AdminForcePasswordChangeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================
+// Operator Assignment Messages
+// ============================================================
+
+// OperatorAssignment represents an operator role assignment to a user
+message OperatorAssignment {
+  string id = 1;
+  string account_id = 2;  // Reference to identity_db.accounts
+  string service_id = 3;
+  string country_code = 4;
+  OperatorAssignmentStatus status = 5;
+  string assigned_by = 6;  // Admin ID who assigned
+  google.protobuf.Timestamp assigned_at = 7;
+  google.protobuf.Timestamp deactivated_at = 8;
+  string deactivation_reason = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  repeated Permission permissions = 12;  // Assigned permissions
+}
+
+// OperatorAssignmentStatus
+enum OperatorAssignmentStatus {
+  OPERATOR_ASSIGNMENT_STATUS_UNSPECIFIED = 0;
+  OPERATOR_ASSIGNMENT_STATUS_ACTIVE = 1;
+  OPERATOR_ASSIGNMENT_STATUS_SUSPENDED = 2;
+  OPERATOR_ASSIGNMENT_STATUS_REVOKED = 3;
+}
+
+// AssignOperator
+message AssignOperatorRequest {
+  string account_id = 1;  // User account to assign operator role
+  string service_id = 2;
+  string country_code = 3;
+  string assigned_by = 4;  // Admin ID
+  repeated string permission_ids = 5;  // Initial permissions
+}
+
+message AssignOperatorResponse {
+  bool success = 1;
+  OperatorAssignment assignment = 2;
+  string message = 3;
+}
+
+// RevokeOperatorAssignment
+message RevokeOperatorAssignmentRequest {
+  string assignment_id = 1;
+  string revoked_by = 2;  // Admin ID
+  string reason = 3;
+}
+
+message RevokeOperatorAssignmentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetOperatorAssignment
+message GetOperatorAssignmentRequest {
+  string account_id = 1;
+  string service_id = 2;
+  string country_code = 3;
+}
+
+message GetOperatorAssignmentResponse {
+  OperatorAssignment assignment = 1;
+  bool found = 2;
+}
+
+// GetServiceOperatorAssignments
+message GetServiceOperatorAssignmentsRequest {
+  string service_id = 1;
+  optional string country_code = 2;
+  optional OperatorAssignmentStatus status = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message GetServiceOperatorAssignmentsResponse {
+  repeated OperatorAssignment assignments = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// UpdateOperatorAssignmentPermissions
+message UpdateOperatorAssignmentPermissionsRequest {
+  string assignment_id = 1;
+  repeated string permission_ids = 2;  // New permission list (replaces existing)
+  string updated_by = 3;  // Admin ID
+}
+
+message UpdateOperatorAssignmentPermissionsResponse {
+  bool success = 1;
+  OperatorAssignment assignment = 2;
+  string message = 3;
+}
+
+// GetOperatorAssignmentPermissions
+message GetOperatorAssignmentPermissionsRequest {
+  string assignment_id = 1;
+}
+
+message GetOperatorAssignmentPermissionsResponse {
+  repeated Permission permissions = 1;
 }
