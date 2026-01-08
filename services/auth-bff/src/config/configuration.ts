@@ -1,8 +1,64 @@
+// Unsafe default values that must not be used in production
+const UNSAFE_DEFAULTS = {
+  SESSION_SECRET: 'session-secret-change-in-production',
+  ENCRYPTION_KEY: 'encryption-key-32-chars-change!',
+} as const;
+
+/**
+ * Validates that critical secrets are properly configured in production.
+ * Throws an error if unsafe default values are detected in production environment.
+ */
+function validateProductionSecrets(): void {
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (!isProduction) return;
+
+  const errors: string[] = [];
+
+  // Validate SESSION_SECRET
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret || sessionSecret === UNSAFE_DEFAULTS.SESSION_SECRET) {
+    errors.push('SESSION_SECRET must be set to a secure value in production');
+  } else if (sessionSecret.length < 32) {
+    errors.push('SESSION_SECRET must be at least 32 characters long');
+  }
+
+  // Validate ENCRYPTION_KEY
+  const encryptionKey = process.env.ENCRYPTION_KEY;
+  if (!encryptionKey || encryptionKey === UNSAFE_DEFAULTS.ENCRYPTION_KEY) {
+    errors.push('ENCRYPTION_KEY must be set to a secure value in production');
+  } else if (encryptionKey.length < 32) {
+    errors.push('ENCRYPTION_KEY must be exactly 32 characters for AES-256');
+  }
+
+  // Validate VALKEY_PASSWORD in production
+  const valkeyPassword = process.env.VALKEY_PASSWORD;
+  if (!valkeyPassword) {
+    errors.push('VALKEY_PASSWORD must be set in production');
+  }
+
+  if (errors.length > 0) {
+    const errorMessage = [
+      '🚨 CRITICAL SECURITY ERROR: Unsafe configuration detected in production!',
+      '',
+      'The following security requirements are not met:',
+      ...errors.map((e) => `  - ${e}`),
+      '',
+      'Application startup aborted to prevent security vulnerabilities.',
+      'Please configure all required environment variables properly.',
+    ].join('\n');
+
+    throw new Error(errorMessage);
+  }
+}
+
+// Run validation on module load
+validateProductionSecrets();
+
 export default () => ({
   port: parseInt(process.env.PORT || '4005', 10),
 
   session: {
-    secret: process.env.SESSION_SECRET || 'session-secret-change-in-production',
+    secret: process.env.SESSION_SECRET || UNSAFE_DEFAULTS.SESSION_SECRET,
     cookieName: process.env.SESSION_COOKIE_NAME || 'girok_session',
     maxAge: parseInt(process.env.SESSION_MAX_AGE || '604800000', 10), // 7 days
     secure: process.env.NODE_ENV === 'production',
@@ -10,7 +66,7 @@ export default () => ({
   },
 
   encryption: {
-    key: process.env.ENCRYPTION_KEY || 'encryption-key-32-chars-change!',
+    key: process.env.ENCRYPTION_KEY || UNSAFE_DEFAULTS.ENCRYPTION_KEY,
   },
 
   valkey: {

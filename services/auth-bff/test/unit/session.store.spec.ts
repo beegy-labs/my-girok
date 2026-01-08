@@ -226,4 +226,161 @@ describe('SessionStore', () => {
       expect(result).toBe(true); // USER threshold is 24 hours
     });
   });
+
+  describe('touch (sliding session)', () => {
+    it('should return failure for non-existent session', async () => {
+      mockRedis.get.mockResolvedValue(null);
+
+      const result = await store.touch('non-existent-id');
+
+      expect(result).toEqual({ success: false, extended: false });
+    });
+
+    it('should update lastActivityAt without extending for USER session with plenty of time', async () => {
+      const session = {
+        id: 'session-123',
+        accountType: 'USER',
+        accountId: 'user-123',
+        email: 'test@example.com',
+        accessToken: 'encrypted',
+        refreshToken: 'encrypted',
+        deviceFingerprint: 'fingerprint',
+        mfaVerified: false,
+        mfaRequired: false,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days left
+        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
+      };
+
+      mockRedis.get.mockResolvedValue(JSON.stringify(session));
+      mockRedis.pttl.mockResolvedValue(5 * 24 * 60 * 60 * 1000); // 5 days in ms
+
+      const result = await store.touch('session-123');
+
+      expect(result.success).toBe(true);
+      expect(result.extended).toBe(false); // Not within sliding window
+    });
+
+    it('should extend USER session when within sliding window', async () => {
+      const session = {
+        id: 'session-123',
+        accountType: 'USER',
+        accountId: 'user-123',
+        email: 'test@example.com',
+        accessToken: 'encrypted',
+        refreshToken: 'encrypted',
+        deviceFingerprint: 'fingerprint',
+        mfaVerified: false,
+        mfaRequired: false,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), // 12 hours left
+        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
+      };
+
+      mockRedis.get.mockResolvedValue(JSON.stringify(session));
+      mockRedis.pttl.mockResolvedValue(12 * 60 * 60 * 1000); // 12 hours in ms (within 24h window)
+
+      const result = await store.touch('session-123');
+
+      expect(result.success).toBe(true);
+      expect(result.extended).toBe(true); // Should be extended
+      expect(mockRedis.set).toHaveBeenCalled();
+    });
+
+    it('should NOT extend ADMIN session (sliding disabled)', async () => {
+      const session = {
+        id: 'session-123',
+        accountType: 'ADMIN',
+        accountId: 'admin-123',
+        email: 'admin@example.com',
+        accessToken: 'encrypted',
+        refreshToken: 'encrypted',
+        deviceFingerprint: 'fingerprint',
+        mfaVerified: true,
+        mfaRequired: true,
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes left
+        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
+      };
+
+      mockRedis.get.mockResolvedValue(JSON.stringify(session));
+      mockRedis.pttl.mockResolvedValue(30 * 60 * 1000); // 30 minutes (within 1h window)
+
+      const result = await store.touch('session-123');
+
+      expect(result.success).toBe(true);
+      expect(result.extended).toBe(false); // ADMIN sliding is disabled
+    });
+
+    it('should cap extension at MAX_AGE', async () => {
+      // Session created 29 days ago, about to hit max age
+      const createdAt = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
+      const session = {
+        id: 'session-123',
+        accountType: 'USER',
+        accountId: 'user-123',
+        email: 'test@example.com',
+        accessToken: 'encrypted',
+        refreshToken: 'encrypted',
+        deviceFingerprint: 'fingerprint',
+        mfaVerified: false,
+        mfaRequired: false,
+        createdAt: createdAt.toISOString(),
+        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
+      };
+
+      mockRedis.get.mockResolvedValue(JSON.stringify(session));
+      mockRedis.pttl.mockResolvedValue(12 * 60 * 60 * 1000);
+
+      const result = await store.touch('session-123');
+
+      expect(result.success).toBe(true);
+      // Should be extended but capped at max age (30 days from creation)
+    });
+  });
+
+  describe('isSessionExpiredByMaxAge', () => {
+    it('should return true for session past max age', () => {
+      const oldSession = {
+        id: 'session-123',
+        accountType: 'USER' as const,
+        accountId: 'user-123',
+        email: 'test@example.com',
+        accessToken: 'encrypted',
+        refreshToken: 'encrypted',
+        deviceFingerprint: 'fingerprint',
+        mfaVerified: false,
+        mfaRequired: false,
+        createdAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000), // 31 days ago
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        lastActivityAt: new Date(),
+      };
+
+      const result = store.isSessionExpiredByMaxAge(oldSession);
+
+      expect(result).toBe(true); // USER max age is 30 days
+    });
+
+    it('should return false for session within max age', () => {
+      const validSession = {
+        id: 'session-123',
+        accountType: 'USER' as const,
+        accountId: 'user-123',
+        email: 'test@example.com',
+        accessToken: 'encrypted',
+        refreshToken: 'encrypted',
+        deviceFingerprint: 'fingerprint',
+        mfaVerified: false,
+        mfaRequired: false,
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        lastActivityAt: new Date(),
+      };
+
+      const result = store.isSessionExpiredByMaxAge(validSession);
+
+      expect(result).toBe(false);
+    });
+  });
 });

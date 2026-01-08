@@ -145,22 +145,78 @@ export class SessionStore implements OnModuleDestroy {
   }
 
   /**
-   * Updates a session's last activity time
+   * Updates a session's last activity time and applies sliding session policy.
+   *
+   * Sliding Session Policy:
+   * - If enabled for the account type and remaining TTL is below SLIDING_WINDOW,
+   *   the session is extended by SLIDING_EXTENSION (not full TTL)
+   * - Session cannot exceed MAX_AGE from creation time (absolute limit)
+   * - Returns whether the session was extended
    */
-  async touch(sessionId: string): Promise<boolean> {
+  async touch(sessionId: string): Promise<{ success: boolean; extended: boolean }> {
     const session = await this.get(sessionId);
     if (!session) {
-      return false;
+      return { success: false, extended: false };
     }
 
-    session.lastActivityAt = new Date();
-    const ttl = await this.redis.pttl(`${SESSION_PREFIX}${sessionId}`);
+    const now = new Date();
+    session.lastActivityAt = now;
 
-    if (ttl > 0) {
-      await this.redis.set(`${SESSION_PREFIX}${sessionId}`, JSON.stringify(session), 'PX', ttl);
+    const currentTtl = await this.redis.pttl(`${SESSION_PREFIX}${sessionId}`);
+    if (currentTtl <= 0) {
+      return { success: false, extended: false };
     }
 
-    return true;
+    let newTtl = currentTtl;
+    let extended = false;
+
+    // Check if sliding session is enabled for this account type
+    const slidingEnabled = SESSION_CONFIG.SLIDING_ENABLED[session.accountType];
+
+    if (slidingEnabled) {
+      const slidingWindow = SESSION_CONFIG.SLIDING_WINDOW[session.accountType];
+      const slidingExtension = SESSION_CONFIG.SLIDING_EXTENSION[session.accountType];
+      const maxAge = SESSION_CONFIG.MAX_AGE[session.accountType];
+
+      // Check if session is within sliding window (needs extension)
+      if (currentTtl < slidingWindow) {
+        // Calculate maximum allowed expiration based on creation time
+        const maxExpiresAt = new Date(session.createdAt.getTime() + maxAge);
+        const proposedExpiresAt = new Date(now.getTime() + currentTtl + slidingExtension);
+
+        // Extend by sliding extension, but don't exceed max age
+        if (proposedExpiresAt <= maxExpiresAt) {
+          newTtl = currentTtl + slidingExtension;
+          session.expiresAt = new Date(now.getTime() + newTtl);
+          extended = true;
+          this.logger.debug(
+            `Extended session ${sessionId} by ${slidingExtension / 1000}s (sliding session)`,
+          );
+        } else {
+          // Cap at max age
+          const remainingMaxAge = maxExpiresAt.getTime() - now.getTime();
+          if (remainingMaxAge > currentTtl) {
+            newTtl = remainingMaxAge;
+            session.expiresAt = maxExpiresAt;
+            extended = true;
+            this.logger.debug(`Extended session ${sessionId} to max age limit (sliding session)`);
+          }
+        }
+      }
+    }
+
+    await this.redis.set(`${SESSION_PREFIX}${sessionId}`, JSON.stringify(session), 'PX', newTtl);
+
+    return { success: true, extended };
+  }
+
+  /**
+   * Checks if a session has exceeded its maximum age (absolute limit)
+   */
+  isSessionExpiredByMaxAge(session: BffSession): boolean {
+    const maxAge = SESSION_CONFIG.MAX_AGE[session.accountType];
+    const maxExpiresAt = new Date(session.createdAt.getTime() + maxAge);
+    return new Date() > maxExpiresAt;
   }
 
   /**
