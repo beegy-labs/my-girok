@@ -1,0 +1,449 @@
+syntax = "proto3";
+
+package audit.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/audit/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// AuditService provides authentication event logging and security monitoring
+service AuditService {
+  // Authentication Events
+  rpc LogAuthEvent(LogAuthEventRequest) returns (LogAuthEventResponse);
+  rpc GetAuthEvents(GetAuthEventsRequest) returns (GetAuthEventsResponse);
+
+  // Security Events
+  rpc LogSecurityEvent(LogSecurityEventRequest) returns (LogSecurityEventResponse);
+  rpc GetSecurityEvents(GetSecurityEventsRequest) returns (GetSecurityEventsResponse);
+
+  // Admin Audit Log
+  rpc LogAdminAction(LogAdminActionRequest) returns (LogAdminActionResponse);
+  rpc GetAdminAuditLog(GetAdminAuditLogRequest) returns (GetAdminAuditLogResponse);
+
+  // Compliance Reports
+  rpc GenerateComplianceReport(GenerateComplianceReportRequest) returns (GenerateComplianceReportResponse);
+}
+
+// ============================================================
+// Auth Event Types and Messages
+// ============================================================
+
+// AuthEventType categorizes authentication events
+enum AuthEventType {
+  AUTH_EVENT_TYPE_UNSPECIFIED = 0;
+
+  // Login events
+  AUTH_EVENT_TYPE_LOGIN_SUCCESS = 1;
+  AUTH_EVENT_TYPE_LOGIN_FAILED = 2;
+  AUTH_EVENT_TYPE_LOGIN_BLOCKED = 3;
+
+  // Logout events
+  AUTH_EVENT_TYPE_LOGOUT = 4;
+  AUTH_EVENT_TYPE_SESSION_EXPIRED = 5;
+  AUTH_EVENT_TYPE_SESSION_REVOKED = 6;
+
+  // MFA events
+  AUTH_EVENT_TYPE_MFA_SETUP = 7;
+  AUTH_EVENT_TYPE_MFA_VERIFIED = 8;
+  AUTH_EVENT_TYPE_MFA_FAILED = 9;
+  AUTH_EVENT_TYPE_MFA_DISABLED = 10;
+  AUTH_EVENT_TYPE_BACKUP_CODE_USED = 11;
+  AUTH_EVENT_TYPE_BACKUP_CODES_REGENERATED = 12;
+
+  // Password events
+  AUTH_EVENT_TYPE_PASSWORD_CHANGED = 13;
+  AUTH_EVENT_TYPE_PASSWORD_RESET = 14;
+  AUTH_EVENT_TYPE_PASSWORD_RESET_REQUESTED = 15;
+
+  // Account events
+  AUTH_EVENT_TYPE_ACCOUNT_CREATED = 16;
+  AUTH_EVENT_TYPE_ACCOUNT_LOCKED = 17;
+  AUTH_EVENT_TYPE_ACCOUNT_UNLOCKED = 18;
+  AUTH_EVENT_TYPE_ACCOUNT_DELETED = 19;
+
+  // Token events
+  AUTH_EVENT_TYPE_TOKEN_REFRESHED = 20;
+  AUTH_EVENT_TYPE_TOKEN_REVOKED = 21;
+
+  // Operator events
+  AUTH_EVENT_TYPE_OPERATOR_ASSIGNED = 22;
+  AUTH_EVENT_TYPE_OPERATOR_REVOKED = 23;
+  AUTH_EVENT_TYPE_OPERATOR_LOGIN = 24;
+  AUTH_EVENT_TYPE_OPERATOR_LOGOUT = 25;
+}
+
+// AccountType identifies the type of account
+enum AccountType {
+  ACCOUNT_TYPE_UNSPECIFIED = 0;
+  ACCOUNT_TYPE_USER = 1;
+  ACCOUNT_TYPE_OPERATOR = 2;
+  ACCOUNT_TYPE_ADMIN = 3;
+}
+
+// AuthEventResult indicates the outcome
+enum AuthEventResult {
+  AUTH_EVENT_RESULT_UNSPECIFIED = 0;
+  AUTH_EVENT_RESULT_SUCCESS = 1;
+  AUTH_EVENT_RESULT_FAILURE = 2;
+  AUTH_EVENT_RESULT_BLOCKED = 3;
+}
+
+// AuthEvent represents an authentication-related event
+message AuthEvent {
+  string id = 1;
+  AuthEventType event_type = 2;
+  AccountType account_type = 3;
+  string account_id = 4;
+  string session_id = 5;
+
+  // Request context
+  string ip_address = 6;
+  string user_agent = 7;
+  string device_fingerprint = 8;
+  string country_code = 9;
+
+  // Result
+  AuthEventResult result = 10;
+  string failure_reason = 11;
+
+  // Additional context
+  map<string, string> metadata = 12;
+
+  // Timestamps
+  google.protobuf.Timestamp timestamp = 13;
+}
+
+// LogAuthEvent
+message LogAuthEventRequest {
+  AuthEventType event_type = 1;
+  AccountType account_type = 2;
+  string account_id = 3;
+  string session_id = 4;
+  string ip_address = 5;
+  string user_agent = 6;
+  string device_fingerprint = 7;
+  string country_code = 8;
+  AuthEventResult result = 9;
+  string failure_reason = 10;
+  map<string, string> metadata = 11;
+}
+
+message LogAuthEventResponse {
+  bool success = 1;
+  string event_id = 2;
+  string message = 3;
+}
+
+// GetAuthEvents
+message GetAuthEventsRequest {
+  // Filters
+  optional string account_id = 1;
+  optional AccountType account_type = 2;
+  optional AuthEventType event_type = 3;
+  optional AuthEventResult result = 4;
+  optional string ip_address = 5;
+  optional string session_id = 6;
+
+  // Time range
+  google.protobuf.Timestamp start_time = 7;
+  google.protobuf.Timestamp end_time = 8;
+
+  // Pagination
+  int32 page = 9;
+  int32 page_size = 10;
+
+  // Sorting
+  string order_by = 11;  // "timestamp", "event_type", etc.
+  bool descending = 12;
+}
+
+message GetAuthEventsResponse {
+  repeated AuthEvent events = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// ============================================================
+// Security Event Types and Messages
+// ============================================================
+
+// SecurityEventType categorizes security-related events
+enum SecurityEventType {
+  SECURITY_EVENT_TYPE_UNSPECIFIED = 0;
+
+  // Suspicious activity
+  SECURITY_EVENT_TYPE_SUSPICIOUS_LOGIN = 1;
+  SECURITY_EVENT_TYPE_BRUTE_FORCE_ATTEMPT = 2;
+  SECURITY_EVENT_TYPE_CREDENTIAL_STUFFING = 3;
+
+  // Rate limiting
+  SECURITY_EVENT_TYPE_RATE_LIMIT_EXCEEDED = 4;
+  SECURITY_EVENT_TYPE_IP_BLOCKED = 5;
+  SECURITY_EVENT_TYPE_IP_UNBLOCKED = 6;
+
+  // Session anomalies
+  SECURITY_EVENT_TYPE_SESSION_HIJACK_ATTEMPT = 7;
+  SECURITY_EVENT_TYPE_CONCURRENT_SESSION_LIMIT = 8;
+  SECURITY_EVENT_TYPE_TOKEN_REUSE_DETECTED = 9;
+
+  // Geographic anomalies
+  SECURITY_EVENT_TYPE_IMPOSSIBLE_TRAVEL = 10;
+  SECURITY_EVENT_TYPE_NEW_COUNTRY_LOGIN = 11;
+  SECURITY_EVENT_TYPE_NEW_DEVICE_LOGIN = 12;
+
+  // Data access
+  SECURITY_EVENT_TYPE_SENSITIVE_DATA_ACCESS = 13;
+  SECURITY_EVENT_TYPE_BULK_DATA_EXPORT = 14;
+}
+
+// SecurityEventSeverity indicates the severity level
+enum SecurityEventSeverity {
+  SECURITY_EVENT_SEVERITY_UNSPECIFIED = 0;
+  SECURITY_EVENT_SEVERITY_INFO = 1;
+  SECURITY_EVENT_SEVERITY_LOW = 2;
+  SECURITY_EVENT_SEVERITY_MEDIUM = 3;
+  SECURITY_EVENT_SEVERITY_HIGH = 4;
+  SECURITY_EVENT_SEVERITY_CRITICAL = 5;
+}
+
+// SecurityEvent represents a security-related event
+message SecurityEvent {
+  string id = 1;
+  SecurityEventType event_type = 2;
+  SecurityEventSeverity severity = 3;
+
+  // Subject
+  string subject_id = 4;
+  AccountType subject_type = 5;
+
+  // Request context
+  string ip_address = 6;
+  string user_agent = 7;
+  string country_code = 8;
+
+  // Event details
+  string description = 9;
+  map<string, string> metadata = 10;
+
+  // Response
+  bool action_taken = 11;
+  string action_description = 12;
+
+  // Timestamps
+  google.protobuf.Timestamp timestamp = 13;
+}
+
+// LogSecurityEvent
+message LogSecurityEventRequest {
+  SecurityEventType event_type = 1;
+  SecurityEventSeverity severity = 2;
+  string subject_id = 3;
+  AccountType subject_type = 4;
+  string ip_address = 5;
+  string user_agent = 6;
+  string country_code = 7;
+  string description = 8;
+  map<string, string> metadata = 9;
+  bool action_taken = 10;
+  string action_description = 11;
+}
+
+message LogSecurityEventResponse {
+  bool success = 1;
+  string event_id = 2;
+  string message = 3;
+}
+
+// GetSecurityEvents
+message GetSecurityEventsRequest {
+  // Filters
+  optional string subject_id = 1;
+  optional AccountType subject_type = 2;
+  optional SecurityEventType event_type = 3;
+  optional SecurityEventSeverity min_severity = 4;
+  optional string ip_address = 5;
+
+  // Time range
+  google.protobuf.Timestamp start_time = 6;
+  google.protobuf.Timestamp end_time = 7;
+
+  // Pagination
+  int32 page = 8;
+  int32 page_size = 9;
+
+  // Sorting
+  string order_by = 10;
+  bool descending = 11;
+}
+
+message GetSecurityEventsResponse {
+  repeated SecurityEvent events = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// ============================================================
+// Admin Audit Log Messages
+// ============================================================
+
+// AdminActionType categorizes admin actions
+enum AdminActionType {
+  ADMIN_ACTION_TYPE_UNSPECIFIED = 0;
+
+  // User management
+  ADMIN_ACTION_TYPE_USER_VIEW = 1;
+  ADMIN_ACTION_TYPE_USER_UPDATE = 2;
+  ADMIN_ACTION_TYPE_USER_DELETE = 3;
+  ADMIN_ACTION_TYPE_USER_SUSPEND = 4;
+  ADMIN_ACTION_TYPE_USER_UNSUSPEND = 5;
+
+  // Operator management
+  ADMIN_ACTION_TYPE_OPERATOR_ASSIGN = 6;
+  ADMIN_ACTION_TYPE_OPERATOR_REVOKE = 7;
+  ADMIN_ACTION_TYPE_OPERATOR_UPDATE_PERMISSIONS = 8;
+
+  // Sanction management
+  ADMIN_ACTION_TYPE_SANCTION_APPLY = 9;
+  ADMIN_ACTION_TYPE_SANCTION_REVOKE = 10;
+  ADMIN_ACTION_TYPE_SANCTION_UPDATE = 11;
+
+  // System configuration
+  ADMIN_ACTION_TYPE_CONFIG_UPDATE = 12;
+  ADMIN_ACTION_TYPE_ROLE_CREATE = 13;
+  ADMIN_ACTION_TYPE_ROLE_UPDATE = 14;
+  ADMIN_ACTION_TYPE_ROLE_DELETE = 15;
+
+  // Data access
+  ADMIN_ACTION_TYPE_DATA_EXPORT = 16;
+  ADMIN_ACTION_TYPE_REPORT_GENERATE = 17;
+}
+
+// AdminAuditLog represents an admin action audit entry
+message AdminAuditLog {
+  string id = 1;
+  string admin_id = 2;
+  AdminActionType action_type = 3;
+
+  // Target
+  string target_id = 4;
+  string target_type = 5;
+
+  // Request context
+  string ip_address = 6;
+  string user_agent = 7;
+
+  // Action details
+  string description = 8;
+  string before_state = 9;  // JSON of state before action
+  string after_state = 10;   // JSON of state after action
+  map<string, string> metadata = 11;
+
+  // Result
+  bool success = 12;
+  string error_message = 13;
+
+  // Timestamps
+  google.protobuf.Timestamp timestamp = 14;
+}
+
+// LogAdminAction
+message LogAdminActionRequest {
+  string admin_id = 1;
+  AdminActionType action_type = 2;
+  string target_id = 3;
+  string target_type = 4;
+  string ip_address = 5;
+  string user_agent = 6;
+  string description = 7;
+  string before_state = 8;
+  string after_state = 9;
+  map<string, string> metadata = 10;
+  bool success = 11;
+  string error_message = 12;
+}
+
+message LogAdminActionResponse {
+  bool success = 1;
+  string log_id = 2;
+  string message = 3;
+}
+
+// GetAdminAuditLog
+message GetAdminAuditLogRequest {
+  // Filters
+  optional string admin_id = 1;
+  optional AdminActionType action_type = 2;
+  optional string target_id = 3;
+  optional string target_type = 4;
+  optional bool success_only = 5;
+
+  // Time range
+  google.protobuf.Timestamp start_time = 6;
+  google.protobuf.Timestamp end_time = 7;
+
+  // Pagination
+  int32 page = 8;
+  int32 page_size = 9;
+
+  // Sorting
+  string order_by = 10;
+  bool descending = 11;
+}
+
+message GetAdminAuditLogResponse {
+  repeated AdminAuditLog logs = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// ============================================================
+// Compliance Report Messages
+// ============================================================
+
+// ReportType categorizes compliance reports
+enum ReportType {
+  REPORT_TYPE_UNSPECIFIED = 0;
+  REPORT_TYPE_AUTH_SUMMARY = 1;
+  REPORT_TYPE_SECURITY_SUMMARY = 2;
+  REPORT_TYPE_ADMIN_AUDIT = 3;
+  REPORT_TYPE_USER_ACTIVITY = 4;
+  REPORT_TYPE_FAILED_LOGIN_ANALYSIS = 5;
+  REPORT_TYPE_MFA_ADOPTION = 6;
+}
+
+// ReportFormat specifies the output format
+enum ReportFormat {
+  REPORT_FORMAT_UNSPECIFIED = 0;
+  REPORT_FORMAT_JSON = 1;
+  REPORT_FORMAT_CSV = 2;
+  REPORT_FORMAT_PDF = 3;
+}
+
+// GenerateComplianceReport
+message GenerateComplianceReportRequest {
+  ReportType report_type = 1;
+  ReportFormat format = 2;
+
+  // Time range
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+
+  // Filters
+  optional string service_id = 5;
+  optional string country_code = 6;
+
+  // Options
+  bool include_pii = 7;  // Whether to include personally identifiable information
+  string requested_by = 8;  // Admin ID requesting the report
+}
+
+message GenerateComplianceReportResponse {
+  bool success = 1;
+  string report_id = 2;
+  string download_url = 3;  // Signed URL for download
+  google.protobuf.Timestamp expires_at = 4;
+  string message = 5;
+}
