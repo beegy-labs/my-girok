@@ -43,6 +43,10 @@ import {
   ServiceFeatureService,
   ServiceTesterService,
   SanctionService,
+  AdminSessionService,
+  AdminMfaService,
+  AdminPasswordService,
+  OperatorAssignmentService,
 } from './services';
 
 // Guards
@@ -106,6 +110,10 @@ import { AuditInterceptor } from './interceptors';
     ServiceFeatureService,
     ServiceTesterService,
     SanctionService,
+    AdminSessionService,
+    AdminMfaService,
+    AdminPasswordService,
+    OperatorAssignmentService,
     // Guards
     AdminAuthGuard,
     PermissionGuard,
@@ -127,6 +135,10 @@ import { AuditInterceptor } from './interceptors';
     ServiceFeatureService,
     ServiceTesterService,
     SanctionService,
+    AdminSessionService,
+    AdminMfaService,
+    AdminPasswordService,
+    OperatorAssignmentService,
     AdminServiceAccessGuard,
   ],
 })

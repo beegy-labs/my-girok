@@ -51,6 +51,7 @@
     "express": "^5.2.1",
     "helmet": "catalog:",
     "keyv": "^5.5.5",
+    "otpauth": "^9.4.1",
     "passport": "catalog:",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "catalog:",

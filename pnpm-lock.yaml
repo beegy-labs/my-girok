@@ -964,6 +964,9 @@ importers:
       keyv:
         specifier: ^5.5.5
         version: 5.5.5
+      otpauth:
+        specifier: ^9.4.1
+        version: 9.4.1
       passport:
         specifier: 'catalog:'
         version: 0.7.0

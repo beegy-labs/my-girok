@@ -79,6 +79,24 @@ export class OutboxService {
   }
 
   /**
+   * Add an event to the outbox without a transaction.
+   * Use this for gRPC handlers where transaction context is not available.
+   * Note: This is less safe than addEvent as it's not part of the business transaction.
+   *
+   * @param eventType - The type of event
+   * @param aggregateId - The ID of the aggregate root that produced the event
+   * @param payload - The event payload (will be serialized to JSON)
+   * @returns The created outbox event ID
+   */
+  async addEventDirect(
+    eventType: string,
+    aggregateId: string,
+    payload: Record<string, unknown>,
+  ): Promise<string> {
+    return this.addEvent(this.prisma, eventType, aggregateId, payload);
+  }
+
+  /**
    * Save a single event to the outbox within a transaction.
    * Alias for addEvent for consistency with interface naming.
    *

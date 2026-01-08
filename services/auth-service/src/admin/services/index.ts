@@ -12,3 +12,7 @@ export * from './service-config.service';
 export * from './service-feature.service';
 export * from './service-tester.service';
 export * from './sanction.service';
+export * from './admin-session.service';
+export * from './admin-mfa.service';
+export * from './admin-password.service';
+export * from './operator-assignment.service';
