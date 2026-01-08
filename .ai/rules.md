@@ -158,13 +158,45 @@ pnpm prisma db pull && pnpm prisma generate
 
 ```sql
 -- +goose Up
+-- For new tables, define uuid_generate_v7() if not exists (CREATE OR REPLACE)
 CREATE TABLE features (
-    id UUID PRIMARY KEY,  -- UUIDv7 from application (not gen_random_uuid)
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),  -- UUIDv7 required (RFC 9562)
     created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
 );
 
 -- +goose Down
 DROP TABLE IF EXISTS features;
+```
+
+| Rule          | Details                                                        |
+| ------------- | -------------------------------------------------------------- |
+| ID Generation | `uuid_generate_v7()` for all tables (NOT gen_random_uuid)      |
+| Function Def  | Define with `CREATE OR REPLACE FUNCTION` for idempotency       |
+| Enum Types    | Define with `CREATE TYPE` before using in tables               |
+| Prisma Sync   | Always run `prisma db pull && prisma generate` after migration |
+
+## Proto Conventions
+
+| Rule         | Details                                                  |
+| ------------ | -------------------------------------------------------- |
+| Shared Types | Define in `common/v1/common.proto`, import where needed  |
+| Imports      | `import "common/v1/common.proto";` for shared enums      |
+| Package      | `package {service}.v1;` (e.g., `auth.v1`, `identity.v1`) |
+| go_package   | `github.com/beegy-labs/my-girok/gen/{service}/v1`        |
+
+```protobuf
+// Shared enum example (common.proto)
+enum MfaMethod {
+  MFA_METHOD_UNSPECIFIED = 0;
+  MFA_METHOD_TOTP = 1;
+  MFA_METHOD_BACKUP_CODE = 2;
+}
+
+// Service-specific usage
+import "common/v1/common.proto";
+message Request {
+  common.v1.MfaMethod method = 1;
+}
 ```
 
 ## Security
