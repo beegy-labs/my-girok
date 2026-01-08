@@ -19,40 +19,46 @@
 
 ## Documentation Policy (2026) - CRITICAL
 
-### 4-Tier Structure
+This project uses a layered documentation structure. As an AI assistant, you must adhere to these rules.
 
-```
-.ai/        → docs/llm/     → docs/en/    → docs/kr/
-(Pointer)     (SSOT)          (Generated)   (Translated)
-```
+### Documentation Layers
 
-| Tier | Path        | Editable | Format                      |
-| ---- | ----------- | -------- | --------------------------- |
-| 1    | `.ai/`      | **Yes**  | Tables, links, max 50 lines |
-| 2    | `docs/llm/` | **Yes**  | YAML, tables, code (SSOT)   |
-| 3    | `docs/en/`  | **No**   | Prose, examples (generated) |
-| 4    | `docs/kr/`  | **No**   | Korean translation          |
+| Path | Role | Editable by AI? | Description |
 
-### Edit Rules
+| :---------- | :--------------------------------- | :-------------- | :---------------------------------------------------------------------------- |
 
-| DO                                          | DO NOT                   |
-| ------------------------------------------- | ------------------------ |
-| Edit `.ai/` directly                        | Edit `docs/en/` directly |
-| Edit `docs/llm/` directly                   | Edit `docs/kr/` directly |
-| Run `pnpm docs:generate` after llm/ changes | Skip generation step     |
-| Run `pnpm docs:translate` after en/ changes | Skip translation step    |
+| `.ai/` | **Indicator** | **Yes** | Quick-reference files (~20 lines) for core concepts. Points to the SSOT. |
 
-### Generation Flow
+| `docs/llm/` | **LLM-Optimized SSOT** | **Yes** | The detailed Single Source of Truth, optimized for LLM consumption. |
+
+| `docs/en/` | **Human-Readable Docs** | **No** | Generated from `docs/llm/`. **DO NOT EDIT THIS DIRECTORY.** |
+
+| `docs/kr/` | **Translated Docs** | **No** | Generated from `docs/en/`. **DO NOT EDIT THIS DIRECTORY.** |
+
+### AI Editing Workflow
+
+1.  **Your scope is limited**: You can **ONLY** edit files within the `.ai/` and `docs/llm/` directories.
+
+2.  **Check for staleness**: Before editing, ensure the `.ai/` indicator and `docs/llm/` SSOT are in sync.
+
+3.  **Perform the edit**: Apply changes to the relevant files in `.ai/` and/or `docs/llm/`.
+
+### User-Managed Generation Flow
+
+The `docs/en/` and `docs/kr/` directories are synchronized by the **user** running specific scripts. You are not responsible for this part of the workflow.
 
 ```bash
-# 1. Edit SSOT
-vim docs/llm/services/example.md
 
-# 2. Generate English docs
-pnpm docs:generate                    # docs/llm → docs/en
+# User action to generate English docs from SSOT
 
-# 3. Translate to Korean
-pnpm docs:translate --locale kr       # docs/en → docs/kr
+pnpm docs:generate
+
+
+
+# User action to translate English docs to Korean
+
+pnpm docs:translate --locale kr
+
 ```
 
 **Full policy**: `docs/llm/policies/documentation-architecture.md`
