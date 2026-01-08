@@ -113,6 +113,11 @@ model Session {
   refreshTokenHash         String? @unique @map("refresh_token_hash") @db.VarChar(128)
   previousRefreshTokenHash String? @map("previous_refresh_token_hash") @db.VarChar(128)
 
+  // Session context (USER or OPERATOR)
+  sessionContext         SessionContext @default(USER) @map("session_context")
+  serviceId              String?        @map("service_id") @db.Uuid // External ref to auth_db.services
+  operatorAssignmentId   String?        @map("operator_assignment_id") @db.Uuid // External ref to auth_db.operator_assignments
+
   // Session metadata
   deviceId  String? @map("device_id") @db.Uuid
   ipAddress String? @map("ip_address") @db.VarChar(45)
@@ -142,7 +147,18 @@ model Session {
   @@index([expiresAt])
   @@index([isActive])
   @@index([accountId, isActive, expiresAt])
+  @@index([sessionContext])
+  @@index([serviceId])
+  @@index([operatorAssignmentId])
+  @@index([accountId, sessionContext, serviceId])
   @@map("sessions")
+}
+
+enum SessionContext {
+  USER
+  OPERATOR
+
+  @@map("session_context")
 }
 
 // ============================================================
