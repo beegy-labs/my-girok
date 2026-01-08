@@ -1,50 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ClickHouseService } from '@my-girok/nest-common/clickhouse';
 import { ID } from '@my-girok/nest-common';
+import { Audit } from '@my-girok/types';
 
-// Proto enum values (matching audit.proto)
-export const AuthEventType = {
-  UNSPECIFIED: 0,
-  LOGIN_SUCCESS: 1,
-  LOGIN_FAILED: 2,
-  LOGIN_BLOCKED: 3,
-  LOGOUT: 4,
-  SESSION_EXPIRED: 5,
-  SESSION_REVOKED: 6,
-  MFA_SETUP: 7,
-  MFA_VERIFIED: 8,
-  MFA_FAILED: 9,
-  MFA_DISABLED: 10,
-  BACKUP_CODE_USED: 11,
-  BACKUP_CODES_REGENERATED: 12,
-  PASSWORD_CHANGED: 13,
-  PASSWORD_RESET: 14,
-  PASSWORD_RESET_REQUESTED: 15,
-  ACCOUNT_CREATED: 16,
-  ACCOUNT_LOCKED: 17,
-  ACCOUNT_UNLOCKED: 18,
-  ACCOUNT_DELETED: 19,
-  TOKEN_REFRESHED: 20,
-  TOKEN_REVOKED: 21,
-  OPERATOR_ASSIGNED: 22,
-  OPERATOR_REVOKED: 23,
-  OPERATOR_LOGIN: 24,
-  OPERATOR_LOGOUT: 25,
-} as const;
-
-export const AccountType = {
-  UNSPECIFIED: 0,
-  USER: 1,
-  OPERATOR: 2,
-  ADMIN: 3,
-} as const;
-
-export const AuthEventResult = {
-  UNSPECIFIED: 0,
-  SUCCESS: 1,
-  FAILURE: 2,
-  BLOCKED: 3,
-} as const;
+// Re-export from shared types for convenience
+export const AuthEventType = Audit.AuthEventType;
+export const AccountType = Audit.AccountType;
+export const AuthEventResult = Audit.AuthEventResult;
 
 // Request interfaces
 export interface LogAuthEventRequest {
