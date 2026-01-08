@@ -7,6 +7,16 @@ import * as bcrypt from 'bcrypt';
 import { Prisma } from '../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../database/prisma.service';
 import { ID } from '@my-girok/nest-common';
+import { maskEmail } from '../common/utils/logging.utils';
+import { isValidUuid, isValidEmail } from '../common/utils/validation.utils';
+import {
+  PermissionRow,
+  Permission,
+  mapPermissionRowToProto,
+  PermissionCheck,
+  PermissionCheckResult,
+} from '../common/types/permission.types';
+import { MFA_CHALLENGE_CONFIG } from '../common/config/constants';
 import {
   // Shared Proto enum utilities from SSOT
   toProtoTimestamp,
@@ -41,15 +51,7 @@ const ProtoSanctionType = SanctionTypeProto;
 const ProtoSanctionSeverity = SanctionSeverityProto;
 const ProtoSanctionStatus = SanctionStatusProto;
 
-// Interfaces for proto messages
-interface Permission {
-  id: string;
-  resource: string;
-  action: string;
-  category: string;
-  description: string;
-  isSystem: boolean;
-}
+// Interfaces for proto messages (Permission imported from SSOT)
 
 interface Role {
   id: string;
@@ -103,22 +105,14 @@ interface CheckPermissionResponse {
   matchedPermissions: string[];
 }
 
-interface PermissionCheck {
-  resource: string;
-  action: string;
-}
+// PermissionCheck imported from SSOT
 
 interface CheckPermissionsRequest {
   operatorId: string;
   checks: PermissionCheck[];
 }
 
-interface PermissionCheckResult {
-  resource: string;
-  action: string;
-  allowed: boolean;
-  reason: string;
-}
+// PermissionCheckResult imported from SSOT
 
 interface CheckPermissionsResponse {
   allAllowed: boolean;
@@ -192,15 +186,7 @@ interface GetActiveSanctionsResponse {
   totalCount: number;
 }
 
-// Database row interfaces
-interface PermissionRow {
-  id: string;
-  resource: string;
-  action: string;
-  category: string | null;
-  description: string | null;
-  isSystem: boolean;
-}
+// Database row interfaces (PermissionRow imported from SSOT)
 
 interface OperatorRow {
   id: string;
@@ -238,9 +224,7 @@ interface SanctionRow {
   status: string;
 }
 
-// MFA Challenge TTL (5 minutes)
-const MFA_CHALLENGE_TTL_SECONDS = 300;
-const MFA_CHALLENGE_MAX_ATTEMPTS = 3;
+// MFA Challenge config imported from SSOT (MFA_CHALLENGE_CONFIG)
 
 // Proto MfaMethod enum values
 const ProtoMfaMethod = {
@@ -364,16 +348,10 @@ export class AuthGrpcController {
 
   /**
    * Map permission row to proto Permission
+   * Uses SSOT utility from permission.types
    */
   private mapPermission(row: PermissionRow): Permission {
-    return {
-      id: row.id,
-      resource: row.resource,
-      action: row.action,
-      category: row.category ?? '',
-      description: row.description ?? '',
-      isSystem: row.isSystem,
-    };
+    return mapPermissionRowToProto(row);
   }
 
   /**
@@ -1146,10 +1124,10 @@ export class AuthGrpcController {
     // TODO: Add rate limiting - limit to 5 attempts per IP per 15 minutes
     // Use Redis/Valkey to track: `rate:login:${request.ipAddress}`
 
-    this.logger.debug(`AdminLogin: email=${request.email.replace(/(.{2}).*(@.*)/, '$1***$2')}`);
+    this.logger.debug(`AdminLogin: email=${maskEmail(request.email)}`);
 
-    // Input validation
-    if (!request.email || !this.isValidEmail(request.email)) {
+    // Input validation (using SSOT validation utilities)
+    if (!request.email || !isValidEmail(request.email)) {
       return {
         success: false,
         mfaRequired: false,
@@ -1290,9 +1268,9 @@ export class AuthGrpcController {
         };
 
         await this.cache.set(
-          `admin:mfa:challenge:${challengeId}`,
+          `${MFA_CHALLENGE_CONFIG.CACHE_PREFIX}${challengeId}`,
           JSON.stringify(challenge),
-          MFA_CHALLENGE_TTL_SECONDS * 1000,
+          MFA_CHALLENGE_CONFIG.TTL_SECONDS * 1000,
         );
 
         const availableMethods = await this.adminMfaService.getAvailableMethods(admin.id);
@@ -1373,7 +1351,7 @@ export class AuthGrpcController {
     this.logger.debug(`AdminLoginMfa: challengeId=${request.challengeId}`);
 
     // Input validation
-    if (!request.challengeId || !this.isValidUuid(request.challengeId)) {
+    if (!request.challengeId || !isValidUuid(request.challengeId)) {
       return { success: false, message: 'Invalid challenge ID' };
     }
     if (!request.code || request.code.length < 6) {
@@ -1383,7 +1361,7 @@ export class AuthGrpcController {
     try {
       // Get challenge from cache
       const challengeData = await this.cache.get<string>(
-        `admin:mfa:challenge:${request.challengeId}`,
+        `${MFA_CHALLENGE_CONFIG.CACHE_PREFIX}${request.challengeId}`,
       );
       if (!challengeData) {
         return { success: false, message: 'Challenge expired or invalid' };
@@ -1396,22 +1374,22 @@ export class AuthGrpcController {
         this.logger.warn(
           `MFA challenge IP mismatch: expected=${challenge.ipAddress}, got=${request.ipAddress}`,
         );
-        await this.cache.del(`admin:mfa:challenge:${request.challengeId}`);
+        await this.cache.del(`${MFA_CHALLENGE_CONFIG.CACHE_PREFIX}${request.challengeId}`);
         return { success: false, message: 'Security verification failed' };
       }
 
       // Check attempt limit
-      if (challenge.attempts >= MFA_CHALLENGE_MAX_ATTEMPTS) {
-        await this.cache.del(`admin:mfa:challenge:${request.challengeId}`);
+      if (challenge.attempts >= MFA_CHALLENGE_CONFIG.MAX_ATTEMPTS) {
+        await this.cache.del(`${MFA_CHALLENGE_CONFIG.CACHE_PREFIX}${request.challengeId}`);
         return { success: false, message: 'Too many attempts' };
       }
 
       // Update attempt count
       challenge.attempts++;
       await this.cache.set(
-        `admin:mfa:challenge:${request.challengeId}`,
+        `${MFA_CHALLENGE_CONFIG.CACHE_PREFIX}${request.challengeId}`,
         JSON.stringify(challenge),
-        MFA_CHALLENGE_TTL_SECONDS * 1000,
+        MFA_CHALLENGE_CONFIG.TTL_SECONDS * 1000,
       );
 
       // Verify MFA code
@@ -1442,7 +1420,7 @@ export class AuthGrpcController {
       }
 
       // Delete challenge
-      await this.cache.del(`admin:mfa:challenge:${request.challengeId}`);
+      await this.cache.del(`${MFA_CHALLENGE_CONFIG.CACHE_PREFIX}${request.challengeId}`);
 
       // Create session with MFA verified
       const sessionResult = await this.adminSessionService.createSession(
@@ -2104,21 +2082,5 @@ export class AuthGrpcController {
     };
   }
 
-  /**
-   * Validate UUID format
-   */
-  private isValidUuid(id: string): boolean {
-    if (!id) return false;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-7][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id);
-  }
-
-  /**
-   * Validate email format
-   */
-  private isValidEmail(email: string): boolean {
-    if (!email) return false;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
+  // Validation methods (isValidUuid, isValidEmail) imported from SSOT validation.utils
 }

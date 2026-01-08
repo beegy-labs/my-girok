@@ -1,9 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  OperatorAssignmentService,
-  OperatorAssignmentRow,
-  PermissionRow,
-} from './operator-assignment.service';
+import { OperatorAssignmentService, OperatorAssignmentRow } from './operator-assignment.service';
+import { PermissionRow } from '../../common/types/permission.types';
 import { PrismaService } from '../../database/prisma.service';
 import { OutboxService } from '../../common/outbox/outbox.service';
 

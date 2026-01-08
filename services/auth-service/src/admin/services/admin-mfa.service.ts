@@ -11,6 +11,7 @@ import {
   hashBackupCode,
   verifyBackupCode as verifyBackupCodeUtil,
 } from '../../common/utils/totp.utils';
+import { maskId } from '../../common/utils/logging.utils';
 
 export interface MfaSetupResult {
   success: boolean;
@@ -92,7 +93,7 @@ export class AdminMfaService {
       `;
     }
 
-    this.logger.log(`MFA setup initiated for admin ${adminId.slice(0, 8)}...`);
+    this.logger.log(`MFA setup initiated for admin ${maskId(adminId)}`);
 
     return {
       success: true,
@@ -123,7 +124,7 @@ export class AdminMfaService {
     const isValid = verifyTotpCode(secret, code);
 
     if (!isValid) {
-      this.logger.warn(`Invalid TOTP code during MFA setup for admin ${adminId.slice(0, 8)}...`);
+      this.logger.warn(`Invalid TOTP code during MFA setup for admin ${maskId(adminId)}`);
       return false;
     }
 
@@ -147,7 +148,7 @@ export class AdminMfaService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`MFA enabled for admin ${adminId.slice(0, 8)}...`);
+    this.logger.log(`MFA enabled for admin ${maskId(adminId)}`);
     return true;
   }
 
@@ -193,12 +194,12 @@ export class AdminMfaService {
     `;
 
     this.logger.log(
-      `Backup code used for admin ${adminId.slice(0, 8)}..., ${updatedHashes.length} remaining`,
+      `Backup code used for admin ${maskId(adminId)}, ${updatedHashes.length} remaining`,
     );
 
     if (updatedHashes.length <= 2) {
       this.logger.warn(
-        `Low backup codes remaining for admin ${adminId.slice(0, 8)}...: ${updatedHashes.length} left`,
+        `Low backup codes remaining for admin ${maskId(adminId)}: ${updatedHashes.length} left`,
       );
     }
 
@@ -228,7 +229,7 @@ export class AdminMfaService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`MFA disabled for admin ${adminId.slice(0, 8)}...`);
+    this.logger.log(`MFA disabled for admin ${maskId(adminId)}`);
     return true;
   }
 
@@ -254,7 +255,7 @@ export class AdminMfaService {
       WHERE admin_id = ${adminId}::uuid
     `;
 
-    this.logger.log(`Backup codes regenerated for admin ${adminId.slice(0, 8)}...`);
+    this.logger.log(`Backup codes regenerated for admin ${maskId(adminId)}`);
     return backupCodes;
   }
 

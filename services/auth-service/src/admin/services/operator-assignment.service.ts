@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional, ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { OutboxService } from '../../common/outbox/outbox.service';
+import { maskId } from '../../common/utils/logging.utils';
+import { PermissionRow } from '../../common/types/permission.types';
 
 export interface OperatorAssignmentRow {
   id: string;
@@ -16,15 +18,6 @@ export interface OperatorAssignmentRow {
   deactivationReason: string | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface PermissionRow {
-  id: string;
-  resource: string;
-  action: string;
-  category: string | null;
-  description: string | null;
-  isSystem: boolean;
 }
 
 export interface AssignmentFilter {
@@ -106,7 +99,7 @@ export class OperatorAssignmentService {
     });
 
     this.logger.log(
-      `Operator assigned: account=${accountId.slice(0, 8)}..., service=${serviceId.slice(0, 8)}...`,
+      `Operator assigned: account=${maskId(accountId)}, service=${maskId(serviceId)}`,
     );
 
     return {
@@ -156,7 +149,7 @@ export class OperatorAssignmentService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Operator assignment revoked: ${assignmentId.slice(0, 8)}...`);
+    this.logger.log(`Operator assignment revoked: ${maskId(assignmentId)}`);
     return { success: true, message: 'Assignment revoked successfully' };
   }
 
@@ -334,7 +327,7 @@ export class OperatorAssignmentService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Operator permissions updated: ${assignmentId.slice(0, 8)}...`);
+    this.logger.log(`Operator permissions updated: ${maskId(assignmentId)}`);
     return {
       success: true,
       assignment: (await this.getAssignmentById(assignmentId)) ?? undefined,

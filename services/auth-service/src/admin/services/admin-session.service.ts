@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { hashToken, getSessionExpiresAt, SESSION_EXPIRY } from '../../common/utils/session.utils';
+import { maskId } from '../../common/utils/logging.utils';
 import { OutboxService } from '../../common/outbox/outbox.service';
 
 export interface SessionMetadata {
@@ -115,7 +116,7 @@ export class AdminSessionService {
     `;
 
     this.logger.log(
-      `Session created for admin: ${adminId.slice(0, 8)}..., sessionId: ${sessionId.slice(0, 8)}...`,
+      `Session created for admin: ${maskId(adminId)}, sessionId: ${maskId(sessionId)}`,
     );
 
     return {
@@ -248,7 +249,7 @@ export class AdminSessionService {
     `;
 
     if (result > 0) {
-      this.logger.log(`Session logged out: ${sessionId.slice(0, 8)}...`);
+      this.logger.log(`Session logged out: ${maskId(sessionId)}`);
     }
 
     return result > 0;
@@ -281,7 +282,7 @@ export class AdminSessionService {
     }
 
     if (result > 0) {
-      this.logger.log(`Revoked ${result} sessions for admin: ${adminId.slice(0, 8)}...`);
+      this.logger.log(`Revoked ${result} sessions for admin: ${maskId(adminId)}`);
 
       await this.outboxService.addEventDirect('ADMIN_SESSION_REVOKED', adminId, {
         adminId,

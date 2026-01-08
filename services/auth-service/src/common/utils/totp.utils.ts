@@ -1,29 +1,7 @@
 import * as crypto from 'crypto';
 import * as OTPAuth from 'otpauth';
 
-/**
- * TOTP configuration constants
- */
-export const TOTP_CONFIG = {
-  ISSUER: 'MyGirok Admin',
-  ALGORITHM: 'SHA1' as const,
-  DIGITS: 6,
-  PERIOD: 30,
-  WINDOW: 1, // Allow 1 period before/after for time drift
-  SECRET_BYTES: 20, // 160 bits
-} as const;
-
-/**
- * Backup code configuration
- */
-export const BACKUP_CODE_CONFIG = {
-  COUNT: 10,
-  LENGTH: 8, // 8 character codes
-  CHARSET: '23456789ABCDEFGHJKLMNPQRSTUVWXYZ', // Exclude confusing chars: 0, O, 1, I
-} as const;
-
-// Salt for backup code hashing (should match in all environments)
-const BACKUP_CODE_SALT = 'my-girok:backup-code:v1:';
+import { TOTP_CONFIG, BACKUP_CODE_CONFIG, CRYPTO_SALTS } from '../config/constants';
 
 /**
  * Generate TOTP-compatible secret (base32 encoded)
@@ -105,7 +83,7 @@ export function hashBackupCode(code: string): string {
   const normalized = code.replace(/-/g, '').toUpperCase();
   return crypto
     .createHash('sha256')
-    .update(BACKUP_CODE_SALT + normalized)
+    .update(CRYPTO_SALTS.BACKUP_CODE + normalized)
     .digest('hex');
 }
 

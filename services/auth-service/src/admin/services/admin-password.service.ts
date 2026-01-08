@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { ID } from '@my-girok/nest-common';
 import { PrismaService } from '../../database/prisma.service';
 import { OutboxService } from '../../common/outbox/outbox.service';
+import { maskId } from '../../common/utils/logging.utils';
+import { PASSWORD_CONFIG } from '../../common/config/constants';
 
 export interface PasswordValidationResult {
   valid: boolean;
@@ -36,9 +38,18 @@ export class AdminPasswordService {
     private readonly configService: ConfigService,
     private readonly outboxService: OutboxService,
   ) {
-    this.bcryptRounds = this.configService.get<number>('BCRYPT_ROUNDS', 12);
-    this.passwordHistoryCount = this.configService.get<number>('PASSWORD_HISTORY_COUNT', 5);
-    this.passwordExpiryDays = this.configService.get<number>('PASSWORD_EXPIRY_DAYS', 90);
+    this.bcryptRounds = this.configService.get<number>(
+      'BCRYPT_ROUNDS',
+      PASSWORD_CONFIG.BCRYPT_ROUNDS,
+    );
+    this.passwordHistoryCount = this.configService.get<number>(
+      'PASSWORD_HISTORY_COUNT',
+      PASSWORD_CONFIG.HISTORY_COUNT,
+    );
+    this.passwordExpiryDays = this.configService.get<number>(
+      'PASSWORD_EXPIRY_DAYS',
+      PASSWORD_CONFIG.EXPIRY_DAYS,
+    );
   }
 
   /**
@@ -98,7 +109,7 @@ export class AdminPasswordService {
       timestamp: now.toISOString(),
     });
 
-    this.logger.log(`Password changed for admin ${adminId.slice(0, 8)}...`);
+    this.logger.log(`Password changed for admin ${maskId(adminId)}`);
     return { success: true, message: 'Password changed successfully' };
   }
 
@@ -128,7 +139,7 @@ export class AdminPasswordService {
     });
 
     this.logger.log(
-      `Force password change set for admin ${adminId.slice(0, 8)}... by ${requesterId.slice(0, 8)}...`,
+      `Force password change set for admin ${maskId(adminId)} by ${maskId(requesterId)}`,
     );
     return { success: true, message: 'Password change required on next login' };
   }
@@ -176,8 +187,8 @@ export class AdminPasswordService {
   validatePasswordPolicy(password: string): PasswordValidationResult {
     const errors: string[] = [];
 
-    if (password.length < 12) {
-      errors.push('Password must be at least 12 characters');
+    if (password.length < PASSWORD_CONFIG.MIN_LENGTH) {
+      errors.push(`Password must be at least ${PASSWORD_CONFIG.MIN_LENGTH} characters`);
     }
 
     if (!/[A-Z]/.test(password)) {
@@ -208,8 +219,8 @@ export class AdminPasswordService {
    */
   calculatePasswordStrength(password: string): number {
     let score = 0;
-    if (password.length >= 12) score += 25;
-    if (password.length >= 16) score += 10;
+    if (password.length >= PASSWORD_CONFIG.MIN_LENGTH) score += 25;
+    if (password.length >= PASSWORD_CONFIG.MIN_LENGTH + 4) score += 10;
     if (/[A-Z]/.test(password)) score += 15;
     if (/[a-z]/.test(password)) score += 15;
     if (/[0-9]/.test(password)) score += 15;

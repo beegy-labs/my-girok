@@ -6,9 +6,8 @@ import {
   generateBackupCodes,
   hashBackupCode,
   verifyBackupCode,
-  TOTP_CONFIG,
-  BACKUP_CODE_CONFIG,
 } from './totp.utils';
+import { TOTP_CONFIG, BACKUP_CODE_CONFIG } from '../config/constants';
 
 describe('TOTP Utils', () => {
   describe('generateTotpSecret', () => {
