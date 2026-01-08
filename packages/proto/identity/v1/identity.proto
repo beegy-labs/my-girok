@@ -5,6 +5,7 @@ package identity.v1;
 option go_package = "github.com/beegy-labs/my-girok/gen/identity/v1";
 
 import "google/protobuf/timestamp.proto";
+import "common/v1/common.proto";
 
 // IdentityService provides account, session, and device management operations
 service IdentityService {
@@ -432,13 +433,6 @@ message UnlockAccountResponse {
 // MFA Management Messages (User)
 // ============================================================
 
-// MfaMethod for users
-enum MfaMethod {
-  MFA_METHOD_UNSPECIFIED = 0;
-  MFA_METHOD_TOTP = 1;
-  MFA_METHOD_BACKUP_CODE = 2;
-}
-
 // SetupMfa
 message SetupMfaRequest {
   string account_id = 1;
@@ -467,7 +461,7 @@ message VerifyMfaSetupResponse {
 message VerifyMfaCodeRequest {
   string account_id = 1;
   string code = 2;
-  MfaMethod method = 3;
+  common.v1.MfaMethod method = 3;
 }
 
 message VerifyMfaCodeResponse {
