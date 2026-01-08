@@ -22,6 +22,23 @@ service IdentityService {
   // Authentication
   rpc ValidatePassword(ValidatePasswordRequest) returns (ValidatePasswordResponse);
 
+  // Password Management
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc CheckPasswordHistory(CheckPasswordHistoryRequest) returns (CheckPasswordHistoryResponse);
+  rpc RecordLoginAttempt(RecordLoginAttemptRequest) returns (RecordLoginAttemptResponse);
+  rpc LockAccount(LockAccountRequest) returns (LockAccountResponse);
+  rpc UnlockAccount(UnlockAccountRequest) returns (UnlockAccountResponse);
+
+  // MFA Management (User)
+  rpc SetupMfa(SetupMfaRequest) returns (SetupMfaResponse);
+  rpc VerifyMfaSetup(VerifyMfaSetupRequest) returns (VerifyMfaSetupResponse);
+  rpc VerifyMfaCode(VerifyMfaCodeRequest) returns (VerifyMfaCodeResponse);
+  rpc DisableMfa(DisableMfaRequest) returns (DisableMfaResponse);
+  rpc GetBackupCodes(GetBackupCodesRequest) returns (GetBackupCodesResponse);
+  rpc RegenerateBackupCodes(RegenerateBackupCodesRequest) returns (RegenerateBackupCodesResponse);
+  rpc UseBackupCode(UseBackupCodeRequest) returns (UseBackupCodeResponse);
+
   // Session operations
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
   rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
@@ -111,6 +128,16 @@ message Session {
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp expires_at = 7;
   google.protobuf.Timestamp last_activity_at = 8;
+  SessionContext session_context = 9;
+  optional string service_id = 10;  // For OPERATOR context
+  optional string operator_assignment_id = 11;  // For OPERATOR context
+}
+
+// SessionContext differentiates user vs operator sessions
+enum SessionContext {
+  SESSION_CONTEXT_UNSPECIFIED = 0;
+  SESSION_CONTEXT_USER = 1;
+  SESSION_CONTEXT_OPERATOR = 2;
 }
 
 // === Request/Response Messages ===
@@ -297,6 +324,9 @@ message CreateSessionRequest {
   optional string ip_address = 3;
   optional string user_agent = 4;
   optional int64 expires_in_ms = 5;
+  SessionContext session_context = 6;
+  optional string service_id = 7;  // Required for OPERATOR context
+  optional string operator_assignment_id = 8;  // Required for OPERATOR context
 }
 
 message CreateSessionResponse {
@@ -315,4 +345,177 @@ enum AuthProvider {
   AUTH_PROVIDER_APPLE = 3;
   AUTH_PROVIDER_KAKAO = 4;
   AUTH_PROVIDER_NAVER = 5;
+}
+
+// ============================================================
+// Password Management Messages
+// ============================================================
+
+// ChangePassword
+message ChangePasswordRequest {
+  string account_id = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ResetPassword (via token/email)
+message ResetPasswordRequest {
+  string account_id = 1;
+  string new_password = 2;
+  string reset_token = 3;  // Verification token
+}
+
+message ResetPasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// CheckPasswordHistory (OWASP compliance)
+message CheckPasswordHistoryRequest {
+  string account_id = 1;
+  string password_hash = 2;
+  int32 history_count = 3;  // How many previous passwords to check (default: 12)
+}
+
+message CheckPasswordHistoryResponse {
+  bool is_reused = 1;  // true if password was used before
+  string message = 2;
+}
+
+// RecordLoginAttempt
+message RecordLoginAttemptRequest {
+  string account_id = 1;
+  string email = 2;
+  string ip_address = 3;
+  string user_agent = 4;
+  bool success = 5;
+  string failure_reason = 6;
+}
+
+message RecordLoginAttemptResponse {
+  bool account_locked = 1;
+  int32 failed_attempts = 2;
+  int32 max_attempts = 3;
+  google.protobuf.Timestamp locked_until = 4;
+}
+
+// LockAccount
+message LockAccountRequest {
+  string account_id = 1;
+  int32 duration_minutes = 2;
+  string reason = 3;
+}
+
+message LockAccountResponse {
+  bool success = 1;
+  google.protobuf.Timestamp locked_until = 2;
+  string message = 3;
+}
+
+// UnlockAccount
+message UnlockAccountRequest {
+  string account_id = 1;
+  string unlocked_by = 2;  // Admin/system that unlocked
+}
+
+message UnlockAccountResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================
+// MFA Management Messages (User)
+// ============================================================
+
+// MfaMethod for users
+enum MfaMethod {
+  MFA_METHOD_UNSPECIFIED = 0;
+  MFA_METHOD_TOTP = 1;
+  MFA_METHOD_BACKUP_CODE = 2;
+}
+
+// SetupMfa
+message SetupMfaRequest {
+  string account_id = 1;
+}
+
+message SetupMfaResponse {
+  bool success = 1;
+  string secret = 2;  // Base32 encoded TOTP secret
+  string qr_code_uri = 3;  // otpauth:// URI for QR code
+  repeated string backup_codes = 4;  // Plain text backup codes (one-time view)
+  string message = 5;
+}
+
+// VerifyMfaSetup (initial setup verification)
+message VerifyMfaSetupRequest {
+  string account_id = 1;
+  string code = 2;
+}
+
+message VerifyMfaSetupResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// VerifyMfaCode (during login)
+message VerifyMfaCodeRequest {
+  string account_id = 1;
+  string code = 2;
+  MfaMethod method = 3;
+}
+
+message VerifyMfaCodeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// DisableMfa
+message DisableMfaRequest {
+  string account_id = 1;
+  string password = 2;  // Require password for security
+}
+
+message DisableMfaResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetBackupCodes (check remaining count)
+message GetBackupCodesRequest {
+  string account_id = 1;
+}
+
+message GetBackupCodesResponse {
+  int32 remaining_count = 1;
+  google.protobuf.Timestamp generated_at = 2;
+}
+
+// RegenerateBackupCodes
+message RegenerateBackupCodesRequest {
+  string account_id = 1;
+  string password = 2;  // Require password for security
+}
+
+message RegenerateBackupCodesResponse {
+  bool success = 1;
+  repeated string backup_codes = 2;  // New plain text backup codes
+  string message = 3;
+}
+
+// UseBackupCode
+message UseBackupCodeRequest {
+  string account_id = 1;
+  string code = 2;
+}
+
+message UseBackupCodeResponse {
+  bool success = 1;
+  int32 remaining_count = 2;
+  string message = 3;
 }
