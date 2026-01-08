@@ -5,6 +5,7 @@ package auth.v1;
 option go_package = "github.com/beegy-labs/my-girok/gen/auth/v1";
 
 import "google/protobuf/timestamp.proto";
+import "common/v1/common.proto";
 
 // AuthService provides authentication, authorization, and sanction operations
 service AuthService {
@@ -337,13 +338,6 @@ message AdminSession {
   google.protobuf.Timestamp created_at = 12;
 }
 
-// MfaMethod represents available MFA methods
-enum MfaMethod {
-  MFA_METHOD_UNSPECIFIED = 0;
-  MFA_METHOD_TOTP = 1;
-  MFA_METHOD_BACKUP_CODE = 2;
-}
-
 // AdminLogin - Step 1: Credentials validation
 message AdminLoginRequest {
   string email = 1;
@@ -357,7 +351,7 @@ message AdminLoginResponse {
   bool success = 1;
   bool mfa_required = 2;
   string challenge_id = 3;  // For MFA step
-  repeated MfaMethod available_methods = 4;
+  repeated common.v1.MfaMethod available_methods = 4;
   string message = 5;
   Admin admin = 6;  // Only populated if MFA not required
   AdminSession session = 7;  // Only populated if MFA not required
@@ -369,7 +363,7 @@ message AdminLoginResponse {
 message AdminLoginMfaRequest {
   string challenge_id = 1;
   string code = 2;
-  MfaMethod method = 3;
+  common.v1.MfaMethod method = 3;
   string ip_address = 4;
   string user_agent = 5;
   string device_fingerprint = 6;
