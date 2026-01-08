@@ -182,7 +182,7 @@ model AdminMfaConfig {
 
   // Recovery
   recoveryEmail String? @map("recovery_email") @db.VarChar(255)
-  recoveryPhone String? @map("recovery_phone") @db.VarChar(20)
+  recoveryPhone String? @map("recovery_phone") @db.VarChar(32)
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

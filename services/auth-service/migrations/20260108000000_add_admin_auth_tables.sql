@@ -2,10 +2,49 @@
 -- +goose StatementBegin
 
 -- =============================================================================
+-- UUID v7 FUNCTION (Time-ordered UUIDs for better indexing - RFC 9562)
+-- =============================================================================
+CREATE OR REPLACE FUNCTION uuid_generate_v7()
+RETURNS uuid
+AS $$
+DECLARE
+  unix_ts_ms bytea;
+  uuid_bytes bytea;
+BEGIN
+  unix_ts_ms = substring(int8send(floor(extract(epoch from clock_timestamp()) * 1000)::bigint) from 3);
+  uuid_bytes = unix_ts_ms || gen_random_bytes(10);
+  uuid_bytes = set_byte(uuid_bytes, 6, (b'0111' || get_byte(uuid_bytes, 6)::bit(4))::bit(8)::int);
+  uuid_bytes = set_byte(uuid_bytes, 8, (b'10' || get_byte(uuid_bytes, 8)::bit(6))::bit(8)::int);
+  return encode(uuid_bytes, 'hex')::uuid;
+END
+$$ LANGUAGE plpgsql VOLATILE;
+
+-- =============================================================================
+-- ENUM TYPES for Admin Auth
+-- =============================================================================
+CREATE TYPE admin_password_change_reason AS ENUM (
+  'SELF',
+  'FORCED',
+  'RESET'
+);
+
+CREATE TYPE admin_login_failure_reason AS ENUM (
+  'INVALID_PASSWORD',
+  'ACCOUNT_LOCKED',
+  'ACCOUNT_DISABLED',
+  'MFA_REQUIRED',
+  'MFA_FAILED',
+  'INVALID_MFA_CODE',
+  'SESSION_EXPIRED',
+  'IP_BLOCKED',
+  'UNKNOWN'
+);
+
+-- =============================================================================
 -- Admin MFA Configurations (Required for Admin login)
 -- =============================================================================
 CREATE TABLE admin_mfa_configs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
     -- TOTP settings
@@ -20,7 +59,7 @@ CREATE TABLE admin_mfa_configs (
 
     -- Recovery
     recovery_email VARCHAR(255),
-    recovery_phone VARCHAR(20),
+    recovery_phone VARCHAR(32),
 
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
@@ -37,7 +76,7 @@ COMMENT ON TABLE admin_mfa_configs IS 'Admin MFA configurations - MFA is require
 -- Admin Sessions (Separate from user sessions for enhanced security)
 -- =============================================================================
 CREATE TABLE admin_sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
     -- Token hashes (for validation)
@@ -84,7 +123,7 @@ COMMENT ON TABLE admin_sessions IS 'Admin session management with mandatory MFA 
 -- Admin Password History (OWASP 2024 compliance - prevent password reuse)
 -- =============================================================================
 CREATE TABLE admin_password_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
 
     -- Password hash (Argon2id)
@@ -109,7 +148,7 @@ COMMENT ON TABLE admin_password_history IS 'Admin password history for preventin
 -- Admin Login Attempts (Rate limiting and security monitoring)
 -- =============================================================================
 CREATE TABLE admin_login_attempts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
 
     -- Admin identification (email, not admin_id - as admin might not exist)
     email VARCHAR(255) NOT NULL,
@@ -176,5 +215,13 @@ DROP TABLE IF EXISTS admin_login_attempts;
 DROP TABLE IF EXISTS admin_password_history;
 DROP TABLE IF EXISTS admin_sessions;
 DROP TABLE IF EXISTS admin_mfa_configs;
+
+-- Drop enum types
+DROP TYPE IF EXISTS admin_login_failure_reason;
+DROP TYPE IF EXISTS admin_password_change_reason;
+
+-- Drop UUID v7 function (only if not used by other tables)
+-- Note: Keep function if other tables depend on it
+-- DROP FUNCTION IF EXISTS uuid_generate_v7();
 
 -- +goose StatementEnd
