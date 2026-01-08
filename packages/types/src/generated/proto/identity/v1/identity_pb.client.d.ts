@@ -18,6 +18,42 @@ import type { RevokeSessionResponse } from './identity_pb';
 import type { RevokeSessionRequest } from './identity_pb';
 import type { ValidateSessionResponse } from './identity_pb';
 import type { ValidateSessionRequest } from './identity_pb';
+import type { CreateSessionResponse } from './identity_pb';
+import type { CreateSessionRequest } from './identity_pb';
+import type { UseBackupCodeResponse } from './identity_pb';
+import type { UseBackupCodeRequest } from './identity_pb';
+import type { RegenerateBackupCodesResponse } from './identity_pb';
+import type { RegenerateBackupCodesRequest } from './identity_pb';
+import type { GetBackupCodesResponse } from './identity_pb';
+import type { GetBackupCodesRequest } from './identity_pb';
+import type { DisableMfaResponse } from './identity_pb';
+import type { DisableMfaRequest } from './identity_pb';
+import type { VerifyMfaCodeResponse } from './identity_pb';
+import type { VerifyMfaCodeRequest } from './identity_pb';
+import type { VerifyMfaSetupResponse } from './identity_pb';
+import type { VerifyMfaSetupRequest } from './identity_pb';
+import type { SetupMfaResponse } from './identity_pb';
+import type { SetupMfaRequest } from './identity_pb';
+import type { UnlockAccountResponse } from './identity_pb';
+import type { UnlockAccountRequest } from './identity_pb';
+import type { LockAccountResponse } from './identity_pb';
+import type { LockAccountRequest } from './identity_pb';
+import type { RecordLoginAttemptResponse } from './identity_pb';
+import type { RecordLoginAttemptRequest } from './identity_pb';
+import type { CheckPasswordHistoryResponse } from './identity_pb';
+import type { CheckPasswordHistoryRequest } from './identity_pb';
+import type { ResetPasswordResponse } from './identity_pb';
+import type { ResetPasswordRequest } from './identity_pb';
+import type { ChangePasswordResponse } from './identity_pb';
+import type { ChangePasswordRequest } from './identity_pb';
+import type { ValidatePasswordResponse } from './identity_pb';
+import type { ValidatePasswordRequest } from './identity_pb';
+import type { DeleteAccountResponse } from './identity_pb';
+import type { DeleteAccountRequest } from './identity_pb';
+import type { UpdateAccountResponse } from './identity_pb';
+import type { UpdateAccountRequest } from './identity_pb';
+import type { CreateAccountResponse } from './identity_pb';
+import type { CreateAccountRequest } from './identity_pb';
 import type { GetAccountByUsernameResponse } from './identity_pb';
 import type { GetAccountByUsernameRequest } from './identity_pb';
 import type { GetAccountByEmailResponse } from './identity_pb';
@@ -35,7 +71,7 @@ import type { RpcOptions } from '@protobuf-ts/runtime-rpc';
  */
 export interface IIdentityServiceClient {
   /**
-   * Account operations
+   * Account operations - Read
    *
    * @generated from protobuf rpc: GetAccount
    */
@@ -65,8 +101,142 @@ export interface IIdentityServiceClient {
     options?: RpcOptions,
   ): UnaryCall<GetAccountByUsernameRequest, GetAccountByUsernameResponse>;
   /**
+   * Account operations - Write
+   *
+   * @generated from protobuf rpc: CreateAccount
+   */
+  createAccount(
+    input: CreateAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<CreateAccountRequest, CreateAccountResponse>;
+  /**
+   * @generated from protobuf rpc: UpdateAccount
+   */
+  updateAccount(
+    input: UpdateAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<UpdateAccountRequest, UpdateAccountResponse>;
+  /**
+   * @generated from protobuf rpc: DeleteAccount
+   */
+  deleteAccount(
+    input: DeleteAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<DeleteAccountRequest, DeleteAccountResponse>;
+  /**
+   * Authentication
+   *
+   * @generated from protobuf rpc: ValidatePassword
+   */
+  validatePassword(
+    input: ValidatePasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<ValidatePasswordRequest, ValidatePasswordResponse>;
+  /**
+   * Password Management
+   *
+   * @generated from protobuf rpc: ChangePassword
+   */
+  changePassword(
+    input: ChangePasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<ChangePasswordRequest, ChangePasswordResponse>;
+  /**
+   * @generated from protobuf rpc: ResetPassword
+   */
+  resetPassword(
+    input: ResetPasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<ResetPasswordRequest, ResetPasswordResponse>;
+  /**
+   * @generated from protobuf rpc: CheckPasswordHistory
+   */
+  checkPasswordHistory(
+    input: CheckPasswordHistoryRequest,
+    options?: RpcOptions,
+  ): UnaryCall<CheckPasswordHistoryRequest, CheckPasswordHistoryResponse>;
+  /**
+   * @generated from protobuf rpc: RecordLoginAttempt
+   */
+  recordLoginAttempt(
+    input: RecordLoginAttemptRequest,
+    options?: RpcOptions,
+  ): UnaryCall<RecordLoginAttemptRequest, RecordLoginAttemptResponse>;
+  /**
+   * @generated from protobuf rpc: LockAccount
+   */
+  lockAccount(
+    input: LockAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<LockAccountRequest, LockAccountResponse>;
+  /**
+   * @generated from protobuf rpc: UnlockAccount
+   */
+  unlockAccount(
+    input: UnlockAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<UnlockAccountRequest, UnlockAccountResponse>;
+  /**
+   * MFA Management (User)
+   *
+   * @generated from protobuf rpc: SetupMfa
+   */
+  setupMfa(
+    input: SetupMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<SetupMfaRequest, SetupMfaResponse>;
+  /**
+   * @generated from protobuf rpc: VerifyMfaSetup
+   */
+  verifyMfaSetup(
+    input: VerifyMfaSetupRequest,
+    options?: RpcOptions,
+  ): UnaryCall<VerifyMfaSetupRequest, VerifyMfaSetupResponse>;
+  /**
+   * @generated from protobuf rpc: VerifyMfaCode
+   */
+  verifyMfaCode(
+    input: VerifyMfaCodeRequest,
+    options?: RpcOptions,
+  ): UnaryCall<VerifyMfaCodeRequest, VerifyMfaCodeResponse>;
+  /**
+   * @generated from protobuf rpc: DisableMfa
+   */
+  disableMfa(
+    input: DisableMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<DisableMfaRequest, DisableMfaResponse>;
+  /**
+   * @generated from protobuf rpc: GetBackupCodes
+   */
+  getBackupCodes(
+    input: GetBackupCodesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetBackupCodesRequest, GetBackupCodesResponse>;
+  /**
+   * @generated from protobuf rpc: RegenerateBackupCodes
+   */
+  regenerateBackupCodes(
+    input: RegenerateBackupCodesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<RegenerateBackupCodesRequest, RegenerateBackupCodesResponse>;
+  /**
+   * @generated from protobuf rpc: UseBackupCode
+   */
+  useBackupCode(
+    input: UseBackupCodeRequest,
+    options?: RpcOptions,
+  ): UnaryCall<UseBackupCodeRequest, UseBackupCodeResponse>;
+  /**
    * Session operations
    *
+   * @generated from protobuf rpc: CreateSession
+   */
+  createSession(
+    input: CreateSessionRequest,
+    options?: RpcOptions,
+  ): UnaryCall<CreateSessionRequest, CreateSessionResponse>;
+  /**
    * @generated from protobuf rpc: ValidateSession
    */
   validateSession(
@@ -132,7 +302,7 @@ export declare class IdentityServiceClient implements IIdentityServiceClient, Se
   options: any;
   constructor(_transport: RpcTransport);
   /**
-   * Account operations
+   * Account operations - Read
    *
    * @generated from protobuf rpc: GetAccount
    */
@@ -162,8 +332,142 @@ export declare class IdentityServiceClient implements IIdentityServiceClient, Se
     options?: RpcOptions,
   ): UnaryCall<GetAccountByUsernameRequest, GetAccountByUsernameResponse>;
   /**
+   * Account operations - Write
+   *
+   * @generated from protobuf rpc: CreateAccount
+   */
+  createAccount(
+    input: CreateAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<CreateAccountRequest, CreateAccountResponse>;
+  /**
+   * @generated from protobuf rpc: UpdateAccount
+   */
+  updateAccount(
+    input: UpdateAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<UpdateAccountRequest, UpdateAccountResponse>;
+  /**
+   * @generated from protobuf rpc: DeleteAccount
+   */
+  deleteAccount(
+    input: DeleteAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<DeleteAccountRequest, DeleteAccountResponse>;
+  /**
+   * Authentication
+   *
+   * @generated from protobuf rpc: ValidatePassword
+   */
+  validatePassword(
+    input: ValidatePasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<ValidatePasswordRequest, ValidatePasswordResponse>;
+  /**
+   * Password Management
+   *
+   * @generated from protobuf rpc: ChangePassword
+   */
+  changePassword(
+    input: ChangePasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<ChangePasswordRequest, ChangePasswordResponse>;
+  /**
+   * @generated from protobuf rpc: ResetPassword
+   */
+  resetPassword(
+    input: ResetPasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<ResetPasswordRequest, ResetPasswordResponse>;
+  /**
+   * @generated from protobuf rpc: CheckPasswordHistory
+   */
+  checkPasswordHistory(
+    input: CheckPasswordHistoryRequest,
+    options?: RpcOptions,
+  ): UnaryCall<CheckPasswordHistoryRequest, CheckPasswordHistoryResponse>;
+  /**
+   * @generated from protobuf rpc: RecordLoginAttempt
+   */
+  recordLoginAttempt(
+    input: RecordLoginAttemptRequest,
+    options?: RpcOptions,
+  ): UnaryCall<RecordLoginAttemptRequest, RecordLoginAttemptResponse>;
+  /**
+   * @generated from protobuf rpc: LockAccount
+   */
+  lockAccount(
+    input: LockAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<LockAccountRequest, LockAccountResponse>;
+  /**
+   * @generated from protobuf rpc: UnlockAccount
+   */
+  unlockAccount(
+    input: UnlockAccountRequest,
+    options?: RpcOptions,
+  ): UnaryCall<UnlockAccountRequest, UnlockAccountResponse>;
+  /**
+   * MFA Management (User)
+   *
+   * @generated from protobuf rpc: SetupMfa
+   */
+  setupMfa(
+    input: SetupMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<SetupMfaRequest, SetupMfaResponse>;
+  /**
+   * @generated from protobuf rpc: VerifyMfaSetup
+   */
+  verifyMfaSetup(
+    input: VerifyMfaSetupRequest,
+    options?: RpcOptions,
+  ): UnaryCall<VerifyMfaSetupRequest, VerifyMfaSetupResponse>;
+  /**
+   * @generated from protobuf rpc: VerifyMfaCode
+   */
+  verifyMfaCode(
+    input: VerifyMfaCodeRequest,
+    options?: RpcOptions,
+  ): UnaryCall<VerifyMfaCodeRequest, VerifyMfaCodeResponse>;
+  /**
+   * @generated from protobuf rpc: DisableMfa
+   */
+  disableMfa(
+    input: DisableMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<DisableMfaRequest, DisableMfaResponse>;
+  /**
+   * @generated from protobuf rpc: GetBackupCodes
+   */
+  getBackupCodes(
+    input: GetBackupCodesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetBackupCodesRequest, GetBackupCodesResponse>;
+  /**
+   * @generated from protobuf rpc: RegenerateBackupCodes
+   */
+  regenerateBackupCodes(
+    input: RegenerateBackupCodesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<RegenerateBackupCodesRequest, RegenerateBackupCodesResponse>;
+  /**
+   * @generated from protobuf rpc: UseBackupCode
+   */
+  useBackupCode(
+    input: UseBackupCodeRequest,
+    options?: RpcOptions,
+  ): UnaryCall<UseBackupCodeRequest, UseBackupCodeResponse>;
+  /**
    * Session operations
    *
+   * @generated from protobuf rpc: CreateSession
+   */
+  createSession(
+    input: CreateSessionRequest,
+    options?: RpcOptions,
+  ): UnaryCall<CreateSessionRequest, CreateSessionResponse>;
+  /**
    * @generated from protobuf rpc: ValidateSession
    */
   validateSession(

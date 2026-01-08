@@ -8,6 +8,7 @@ import type { BinaryReadOptions } from '@protobuf-ts/runtime';
 import type { IBinaryReader } from '@protobuf-ts/runtime';
 import type { PartialMessage } from '@protobuf-ts/runtime';
 import { MessageType } from '@protobuf-ts/runtime';
+import { MfaMethod } from '../../common/v1/common_pb';
 import { Timestamp } from '../../google/protobuf/timestamp_pb';
 /**
  * Account represents a user account in the system
@@ -200,6 +201,18 @@ export interface Session {
    * @generated from protobuf field: google.protobuf.Timestamp last_activity_at = 8
    */
   lastActivityAt?: Timestamp;
+  /**
+   * @generated from protobuf field: identity.v1.SessionContext session_context = 9
+   */
+  sessionContext: SessionContext;
+  /**
+   * @generated from protobuf field: optional string service_id = 10
+   */
+  serviceId?: string;
+  /**
+   * @generated from protobuf field: optional string operator_assignment_id = 11
+   */
+  operatorAssignmentId?: string;
 }
 /**
  * GetAccount
@@ -494,6 +507,642 @@ export interface GetProfileResponse {
   profile?: Profile;
 }
 /**
+ * CreateAccount
+ *
+ * @generated from protobuf message identity.v1.CreateAccountRequest
+ */
+export interface CreateAccountRequest {
+  /**
+   * @generated from protobuf field: string email = 1
+   */
+  email: string;
+  /**
+   * @generated from protobuf field: string username = 2
+   */
+  username: string;
+  /**
+   * @generated from protobuf field: optional string password = 3
+   */
+  password?: string;
+  /**
+   * @generated from protobuf field: identity.v1.AuthProvider provider = 4
+   */
+  provider: AuthProvider;
+  /**
+   * @generated from protobuf field: optional string provider_id = 5
+   */
+  providerId?: string;
+  /**
+   * @generated from protobuf field: identity.v1.AccountMode mode = 6
+   */
+  mode: AccountMode;
+  /**
+   * @generated from protobuf field: optional string region = 7
+   */
+  region?: string;
+  /**
+   * @generated from protobuf field: optional string locale = 8
+   */
+  locale?: string;
+  /**
+   * @generated from protobuf field: optional string timezone = 9
+   */
+  timezone?: string;
+  /**
+   * @generated from protobuf field: optional string country_code = 10
+   */
+  countryCode?: string;
+}
+/**
+ * @generated from protobuf message identity.v1.CreateAccountResponse
+ */
+export interface CreateAccountResponse {
+  /**
+   * @generated from protobuf field: identity.v1.Account account = 1
+   */
+  account?: Account;
+}
+/**
+ * UpdateAccount
+ *
+ * @generated from protobuf message identity.v1.UpdateAccountRequest
+ */
+export interface UpdateAccountRequest {
+  /**
+   * @generated from protobuf field: string id = 1
+   */
+  id: string;
+  /**
+   * @generated from protobuf field: optional string email = 2
+   */
+  email?: string;
+  /**
+   * @generated from protobuf field: optional identity.v1.AccountStatus status = 3
+   */
+  status?: AccountStatus;
+  /**
+   * @generated from protobuf field: optional bool mfa_enabled = 4
+   */
+  mfaEnabled?: boolean;
+  /**
+   * @generated from protobuf field: optional string region = 5
+   */
+  region?: string;
+  /**
+   * @generated from protobuf field: optional string locale = 6
+   */
+  locale?: string;
+  /**
+   * @generated from protobuf field: optional string timezone = 7
+   */
+  timezone?: string;
+  /**
+   * @generated from protobuf field: optional string country_code = 8
+   */
+  countryCode?: string;
+}
+/**
+ * @generated from protobuf message identity.v1.UpdateAccountResponse
+ */
+export interface UpdateAccountResponse {
+  /**
+   * @generated from protobuf field: identity.v1.Account account = 1
+   */
+  account?: Account;
+}
+/**
+ * DeleteAccount
+ *
+ * @generated from protobuf message identity.v1.DeleteAccountRequest
+ */
+export interface DeleteAccountRequest {
+  /**
+   * @generated from protobuf field: string id = 1
+   */
+  id: string;
+}
+/**
+ * @generated from protobuf message identity.v1.DeleteAccountResponse
+ */
+export interface DeleteAccountResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * ValidatePassword
+ *
+ * @generated from protobuf message identity.v1.ValidatePasswordRequest
+ */
+export interface ValidatePasswordRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string password = 2
+   */
+  password: string;
+}
+/**
+ * @generated from protobuf message identity.v1.ValidatePasswordResponse
+ */
+export interface ValidatePasswordResponse {
+  /**
+   * @generated from protobuf field: bool valid = 1
+   */
+  valid: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * CreateSession
+ *
+ * @generated from protobuf message identity.v1.CreateSessionRequest
+ */
+export interface CreateSessionRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: optional string device_id = 2
+   */
+  deviceId?: string;
+  /**
+   * @generated from protobuf field: optional string ip_address = 3
+   */
+  ipAddress?: string;
+  /**
+   * @generated from protobuf field: optional string user_agent = 4
+   */
+  userAgent?: string;
+  /**
+   * @generated from protobuf field: optional int64 expires_in_ms = 5
+   */
+  expiresInMs?: string;
+  /**
+   * @generated from protobuf field: identity.v1.SessionContext session_context = 6
+   */
+  sessionContext: SessionContext;
+  /**
+   * @generated from protobuf field: optional string service_id = 7
+   */
+  serviceId?: string;
+  /**
+   * @generated from protobuf field: optional string operator_assignment_id = 8
+   */
+  operatorAssignmentId?: string;
+}
+/**
+ * @generated from protobuf message identity.v1.CreateSessionResponse
+ */
+export interface CreateSessionResponse {
+  /**
+   * @generated from protobuf field: identity.v1.Session session = 1
+   */
+  session?: Session;
+  /**
+   * @generated from protobuf field: string access_token = 2
+   */
+  accessToken: string;
+  /**
+   * @generated from protobuf field: string refresh_token = 3
+   */
+  refreshToken: string;
+}
+/**
+ * ChangePassword
+ *
+ * @generated from protobuf message identity.v1.ChangePasswordRequest
+ */
+export interface ChangePasswordRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string current_password = 2
+   */
+  currentPassword: string;
+  /**
+   * @generated from protobuf field: string new_password = 3
+   */
+  newPassword: string;
+}
+/**
+ * @generated from protobuf message identity.v1.ChangePasswordResponse
+ */
+export interface ChangePasswordResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * ResetPassword (via token/email)
+ *
+ * @generated from protobuf message identity.v1.ResetPasswordRequest
+ */
+export interface ResetPasswordRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string new_password = 2
+   */
+  newPassword: string;
+  /**
+   * @generated from protobuf field: string reset_token = 3
+   */
+  resetToken: string;
+}
+/**
+ * @generated from protobuf message identity.v1.ResetPasswordResponse
+ */
+export interface ResetPasswordResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * CheckPasswordHistory (OWASP compliance)
+ *
+ * @generated from protobuf message identity.v1.CheckPasswordHistoryRequest
+ */
+export interface CheckPasswordHistoryRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string password_hash = 2
+   */
+  passwordHash: string;
+  /**
+   * @generated from protobuf field: int32 history_count = 3
+   */
+  historyCount: number;
+}
+/**
+ * @generated from protobuf message identity.v1.CheckPasswordHistoryResponse
+ */
+export interface CheckPasswordHistoryResponse {
+  /**
+   * @generated from protobuf field: bool is_reused = 1
+   */
+  isReused: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * RecordLoginAttempt
+ *
+ * @generated from protobuf message identity.v1.RecordLoginAttemptRequest
+ */
+export interface RecordLoginAttemptRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string email = 2
+   */
+  email: string;
+  /**
+   * @generated from protobuf field: string ip_address = 3
+   */
+  ipAddress: string;
+  /**
+   * @generated from protobuf field: string user_agent = 4
+   */
+  userAgent: string;
+  /**
+   * @generated from protobuf field: bool success = 5
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string failure_reason = 6
+   */
+  failureReason: string;
+}
+/**
+ * @generated from protobuf message identity.v1.RecordLoginAttemptResponse
+ */
+export interface RecordLoginAttemptResponse {
+  /**
+   * @generated from protobuf field: bool account_locked = 1
+   */
+  accountLocked: boolean;
+  /**
+   * @generated from protobuf field: int32 failed_attempts = 2
+   */
+  failedAttempts: number;
+  /**
+   * @generated from protobuf field: int32 max_attempts = 3
+   */
+  maxAttempts: number;
+  /**
+   * @generated from protobuf field: google.protobuf.Timestamp locked_until = 4
+   */
+  lockedUntil?: Timestamp;
+}
+/**
+ * LockAccount
+ *
+ * @generated from protobuf message identity.v1.LockAccountRequest
+ */
+export interface LockAccountRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: int32 duration_minutes = 2
+   */
+  durationMinutes: number;
+  /**
+   * @generated from protobuf field: string reason = 3
+   */
+  reason: string;
+}
+/**
+ * @generated from protobuf message identity.v1.LockAccountResponse
+ */
+export interface LockAccountResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: google.protobuf.Timestamp locked_until = 2
+   */
+  lockedUntil?: Timestamp;
+  /**
+   * @generated from protobuf field: string message = 3
+   */
+  message: string;
+}
+/**
+ * UnlockAccount
+ *
+ * @generated from protobuf message identity.v1.UnlockAccountRequest
+ */
+export interface UnlockAccountRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string unlocked_by = 2
+   */
+  unlockedBy: string;
+}
+/**
+ * @generated from protobuf message identity.v1.UnlockAccountResponse
+ */
+export interface UnlockAccountResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * SetupMfa
+ *
+ * @generated from protobuf message identity.v1.SetupMfaRequest
+ */
+export interface SetupMfaRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+}
+/**
+ * @generated from protobuf message identity.v1.SetupMfaResponse
+ */
+export interface SetupMfaResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string secret = 2
+   */
+  secret: string;
+  /**
+   * @generated from protobuf field: string qr_code_uri = 3
+   */
+  qrCodeUri: string;
+  /**
+   * @generated from protobuf field: repeated string backup_codes = 4
+   */
+  backupCodes: string[];
+  /**
+   * @generated from protobuf field: string message = 5
+   */
+  message: string;
+}
+/**
+ * VerifyMfaSetup (initial setup verification)
+ *
+ * @generated from protobuf message identity.v1.VerifyMfaSetupRequest
+ */
+export interface VerifyMfaSetupRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string code = 2
+   */
+  code: string;
+}
+/**
+ * @generated from protobuf message identity.v1.VerifyMfaSetupResponse
+ */
+export interface VerifyMfaSetupResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * VerifyMfaCode (during login)
+ *
+ * @generated from protobuf message identity.v1.VerifyMfaCodeRequest
+ */
+export interface VerifyMfaCodeRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string code = 2
+   */
+  code: string;
+  /**
+   * @generated from protobuf field: common.v1.MfaMethod method = 3
+   */
+  method: MfaMethod;
+}
+/**
+ * @generated from protobuf message identity.v1.VerifyMfaCodeResponse
+ */
+export interface VerifyMfaCodeResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * DisableMfa
+ *
+ * @generated from protobuf message identity.v1.DisableMfaRequest
+ */
+export interface DisableMfaRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string password = 2
+   */
+  password: string;
+}
+/**
+ * @generated from protobuf message identity.v1.DisableMfaResponse
+ */
+export interface DisableMfaResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * GetBackupCodes (check remaining count)
+ *
+ * @generated from protobuf message identity.v1.GetBackupCodesRequest
+ */
+export interface GetBackupCodesRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+}
+/**
+ * @generated from protobuf message identity.v1.GetBackupCodesResponse
+ */
+export interface GetBackupCodesResponse {
+  /**
+   * @generated from protobuf field: int32 remaining_count = 1
+   */
+  remainingCount: number;
+  /**
+   * @generated from protobuf field: google.protobuf.Timestamp generated_at = 2
+   */
+  generatedAt?: Timestamp;
+}
+/**
+ * RegenerateBackupCodes
+ *
+ * @generated from protobuf message identity.v1.RegenerateBackupCodesRequest
+ */
+export interface RegenerateBackupCodesRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string password = 2
+   */
+  password: string;
+}
+/**
+ * @generated from protobuf message identity.v1.RegenerateBackupCodesResponse
+ */
+export interface RegenerateBackupCodesResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: repeated string backup_codes = 2
+   */
+  backupCodes: string[];
+  /**
+   * @generated from protobuf field: string message = 3
+   */
+  message: string;
+}
+/**
+ * UseBackupCode
+ *
+ * @generated from protobuf message identity.v1.UseBackupCodeRequest
+ */
+export interface UseBackupCodeRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string code = 2
+   */
+  code: string;
+}
+/**
+ * @generated from protobuf message identity.v1.UseBackupCodeResponse
+ */
+export interface UseBackupCodeResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: int32 remaining_count = 2
+   */
+  remainingCount: number;
+  /**
+   * @generated from protobuf field: string message = 3
+   */
+  message: string;
+}
+/**
  * AccountStatus represents the current state of an account
  *
  * @generated from protobuf enum identity.v1.AccountStatus
@@ -550,6 +1199,56 @@ export declare enum AccountMode {
    * @generated from protobuf enum value: ACCOUNT_MODE_SERVICE = 4;
    */
   SERVICE = 4,
+}
+/**
+ * SessionContext differentiates user vs operator sessions
+ *
+ * @generated from protobuf enum identity.v1.SessionContext
+ */
+export declare enum SessionContext {
+  /**
+   * @generated from protobuf enum value: SESSION_CONTEXT_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+  /**
+   * @generated from protobuf enum value: SESSION_CONTEXT_USER = 1;
+   */
+  USER = 1,
+  /**
+   * @generated from protobuf enum value: SESSION_CONTEXT_OPERATOR = 2;
+   */
+  OPERATOR = 2,
+}
+/**
+ * AuthProvider represents authentication method
+ *
+ * @generated from protobuf enum identity.v1.AuthProvider
+ */
+export declare enum AuthProvider {
+  /**
+   * @generated from protobuf enum value: AUTH_PROVIDER_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+  /**
+   * @generated from protobuf enum value: AUTH_PROVIDER_LOCAL = 1;
+   */
+  LOCAL = 1,
+  /**
+   * @generated from protobuf enum value: AUTH_PROVIDER_GOOGLE = 2;
+   */
+  GOOGLE = 2,
+  /**
+   * @generated from protobuf enum value: AUTH_PROVIDER_APPLE = 3;
+   */
+  APPLE = 3,
+  /**
+   * @generated from protobuf enum value: AUTH_PROVIDER_KAKAO = 4;
+   */
+  KAKAO = 4,
+  /**
+   * @generated from protobuf enum value: AUTH_PROVIDER_NAVER = 5;
+   */
+  NAVER = 5,
 }
 declare class Account$Type extends MessageType<Account> {
   constructor();
@@ -1045,6 +1744,690 @@ declare class GetProfileResponse$Type extends MessageType<GetProfileResponse> {
  * @generated MessageType for protobuf message identity.v1.GetProfileResponse
  */
 export declare const GetProfileResponse: GetProfileResponse$Type;
+declare class CreateAccountRequest$Type extends MessageType<CreateAccountRequest> {
+  constructor();
+  create(value?: PartialMessage<CreateAccountRequest>): CreateAccountRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: CreateAccountRequest,
+  ): CreateAccountRequest;
+  internalBinaryWrite(
+    message: CreateAccountRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateAccountRequest
+ */
+export declare const CreateAccountRequest: CreateAccountRequest$Type;
+declare class CreateAccountResponse$Type extends MessageType<CreateAccountResponse> {
+  constructor();
+  create(value?: PartialMessage<CreateAccountResponse>): CreateAccountResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: CreateAccountResponse,
+  ): CreateAccountResponse;
+  internalBinaryWrite(
+    message: CreateAccountResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateAccountResponse
+ */
+export declare const CreateAccountResponse: CreateAccountResponse$Type;
+declare class UpdateAccountRequest$Type extends MessageType<UpdateAccountRequest> {
+  constructor();
+  create(value?: PartialMessage<UpdateAccountRequest>): UpdateAccountRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UpdateAccountRequest,
+  ): UpdateAccountRequest;
+  internalBinaryWrite(
+    message: UpdateAccountRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UpdateAccountRequest
+ */
+export declare const UpdateAccountRequest: UpdateAccountRequest$Type;
+declare class UpdateAccountResponse$Type extends MessageType<UpdateAccountResponse> {
+  constructor();
+  create(value?: PartialMessage<UpdateAccountResponse>): UpdateAccountResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UpdateAccountResponse,
+  ): UpdateAccountResponse;
+  internalBinaryWrite(
+    message: UpdateAccountResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UpdateAccountResponse
+ */
+export declare const UpdateAccountResponse: UpdateAccountResponse$Type;
+declare class DeleteAccountRequest$Type extends MessageType<DeleteAccountRequest> {
+  constructor();
+  create(value?: PartialMessage<DeleteAccountRequest>): DeleteAccountRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: DeleteAccountRequest,
+  ): DeleteAccountRequest;
+  internalBinaryWrite(
+    message: DeleteAccountRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DeleteAccountRequest
+ */
+export declare const DeleteAccountRequest: DeleteAccountRequest$Type;
+declare class DeleteAccountResponse$Type extends MessageType<DeleteAccountResponse> {
+  constructor();
+  create(value?: PartialMessage<DeleteAccountResponse>): DeleteAccountResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: DeleteAccountResponse,
+  ): DeleteAccountResponse;
+  internalBinaryWrite(
+    message: DeleteAccountResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DeleteAccountResponse
+ */
+export declare const DeleteAccountResponse: DeleteAccountResponse$Type;
+declare class ValidatePasswordRequest$Type extends MessageType<ValidatePasswordRequest> {
+  constructor();
+  create(value?: PartialMessage<ValidatePasswordRequest>): ValidatePasswordRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: ValidatePasswordRequest,
+  ): ValidatePasswordRequest;
+  internalBinaryWrite(
+    message: ValidatePasswordRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ValidatePasswordRequest
+ */
+export declare const ValidatePasswordRequest: ValidatePasswordRequest$Type;
+declare class ValidatePasswordResponse$Type extends MessageType<ValidatePasswordResponse> {
+  constructor();
+  create(value?: PartialMessage<ValidatePasswordResponse>): ValidatePasswordResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: ValidatePasswordResponse,
+  ): ValidatePasswordResponse;
+  internalBinaryWrite(
+    message: ValidatePasswordResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ValidatePasswordResponse
+ */
+export declare const ValidatePasswordResponse: ValidatePasswordResponse$Type;
+declare class CreateSessionRequest$Type extends MessageType<CreateSessionRequest> {
+  constructor();
+  create(value?: PartialMessage<CreateSessionRequest>): CreateSessionRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: CreateSessionRequest,
+  ): CreateSessionRequest;
+  internalBinaryWrite(
+    message: CreateSessionRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateSessionRequest
+ */
+export declare const CreateSessionRequest: CreateSessionRequest$Type;
+declare class CreateSessionResponse$Type extends MessageType<CreateSessionResponse> {
+  constructor();
+  create(value?: PartialMessage<CreateSessionResponse>): CreateSessionResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: CreateSessionResponse,
+  ): CreateSessionResponse;
+  internalBinaryWrite(
+    message: CreateSessionResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateSessionResponse
+ */
+export declare const CreateSessionResponse: CreateSessionResponse$Type;
+declare class ChangePasswordRequest$Type extends MessageType<ChangePasswordRequest> {
+  constructor();
+  create(value?: PartialMessage<ChangePasswordRequest>): ChangePasswordRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: ChangePasswordRequest,
+  ): ChangePasswordRequest;
+  internalBinaryWrite(
+    message: ChangePasswordRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ChangePasswordRequest
+ */
+export declare const ChangePasswordRequest: ChangePasswordRequest$Type;
+declare class ChangePasswordResponse$Type extends MessageType<ChangePasswordResponse> {
+  constructor();
+  create(value?: PartialMessage<ChangePasswordResponse>): ChangePasswordResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: ChangePasswordResponse,
+  ): ChangePasswordResponse;
+  internalBinaryWrite(
+    message: ChangePasswordResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ChangePasswordResponse
+ */
+export declare const ChangePasswordResponse: ChangePasswordResponse$Type;
+declare class ResetPasswordRequest$Type extends MessageType<ResetPasswordRequest> {
+  constructor();
+  create(value?: PartialMessage<ResetPasswordRequest>): ResetPasswordRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: ResetPasswordRequest,
+  ): ResetPasswordRequest;
+  internalBinaryWrite(
+    message: ResetPasswordRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ResetPasswordRequest
+ */
+export declare const ResetPasswordRequest: ResetPasswordRequest$Type;
+declare class ResetPasswordResponse$Type extends MessageType<ResetPasswordResponse> {
+  constructor();
+  create(value?: PartialMessage<ResetPasswordResponse>): ResetPasswordResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: ResetPasswordResponse,
+  ): ResetPasswordResponse;
+  internalBinaryWrite(
+    message: ResetPasswordResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ResetPasswordResponse
+ */
+export declare const ResetPasswordResponse: ResetPasswordResponse$Type;
+declare class CheckPasswordHistoryRequest$Type extends MessageType<CheckPasswordHistoryRequest> {
+  constructor();
+  create(value?: PartialMessage<CheckPasswordHistoryRequest>): CheckPasswordHistoryRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: CheckPasswordHistoryRequest,
+  ): CheckPasswordHistoryRequest;
+  internalBinaryWrite(
+    message: CheckPasswordHistoryRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CheckPasswordHistoryRequest
+ */
+export declare const CheckPasswordHistoryRequest: CheckPasswordHistoryRequest$Type;
+declare class CheckPasswordHistoryResponse$Type extends MessageType<CheckPasswordHistoryResponse> {
+  constructor();
+  create(value?: PartialMessage<CheckPasswordHistoryResponse>): CheckPasswordHistoryResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: CheckPasswordHistoryResponse,
+  ): CheckPasswordHistoryResponse;
+  internalBinaryWrite(
+    message: CheckPasswordHistoryResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CheckPasswordHistoryResponse
+ */
+export declare const CheckPasswordHistoryResponse: CheckPasswordHistoryResponse$Type;
+declare class RecordLoginAttemptRequest$Type extends MessageType<RecordLoginAttemptRequest> {
+  constructor();
+  create(value?: PartialMessage<RecordLoginAttemptRequest>): RecordLoginAttemptRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: RecordLoginAttemptRequest,
+  ): RecordLoginAttemptRequest;
+  internalBinaryWrite(
+    message: RecordLoginAttemptRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RecordLoginAttemptRequest
+ */
+export declare const RecordLoginAttemptRequest: RecordLoginAttemptRequest$Type;
+declare class RecordLoginAttemptResponse$Type extends MessageType<RecordLoginAttemptResponse> {
+  constructor();
+  create(value?: PartialMessage<RecordLoginAttemptResponse>): RecordLoginAttemptResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: RecordLoginAttemptResponse,
+  ): RecordLoginAttemptResponse;
+  internalBinaryWrite(
+    message: RecordLoginAttemptResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RecordLoginAttemptResponse
+ */
+export declare const RecordLoginAttemptResponse: RecordLoginAttemptResponse$Type;
+declare class LockAccountRequest$Type extends MessageType<LockAccountRequest> {
+  constructor();
+  create(value?: PartialMessage<LockAccountRequest>): LockAccountRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: LockAccountRequest,
+  ): LockAccountRequest;
+  internalBinaryWrite(
+    message: LockAccountRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.LockAccountRequest
+ */
+export declare const LockAccountRequest: LockAccountRequest$Type;
+declare class LockAccountResponse$Type extends MessageType<LockAccountResponse> {
+  constructor();
+  create(value?: PartialMessage<LockAccountResponse>): LockAccountResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: LockAccountResponse,
+  ): LockAccountResponse;
+  internalBinaryWrite(
+    message: LockAccountResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.LockAccountResponse
+ */
+export declare const LockAccountResponse: LockAccountResponse$Type;
+declare class UnlockAccountRequest$Type extends MessageType<UnlockAccountRequest> {
+  constructor();
+  create(value?: PartialMessage<UnlockAccountRequest>): UnlockAccountRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UnlockAccountRequest,
+  ): UnlockAccountRequest;
+  internalBinaryWrite(
+    message: UnlockAccountRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UnlockAccountRequest
+ */
+export declare const UnlockAccountRequest: UnlockAccountRequest$Type;
+declare class UnlockAccountResponse$Type extends MessageType<UnlockAccountResponse> {
+  constructor();
+  create(value?: PartialMessage<UnlockAccountResponse>): UnlockAccountResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UnlockAccountResponse,
+  ): UnlockAccountResponse;
+  internalBinaryWrite(
+    message: UnlockAccountResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UnlockAccountResponse
+ */
+export declare const UnlockAccountResponse: UnlockAccountResponse$Type;
+declare class SetupMfaRequest$Type extends MessageType<SetupMfaRequest> {
+  constructor();
+  create(value?: PartialMessage<SetupMfaRequest>): SetupMfaRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: SetupMfaRequest,
+  ): SetupMfaRequest;
+  internalBinaryWrite(
+    message: SetupMfaRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.SetupMfaRequest
+ */
+export declare const SetupMfaRequest: SetupMfaRequest$Type;
+declare class SetupMfaResponse$Type extends MessageType<SetupMfaResponse> {
+  constructor();
+  create(value?: PartialMessage<SetupMfaResponse>): SetupMfaResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: SetupMfaResponse,
+  ): SetupMfaResponse;
+  internalBinaryWrite(
+    message: SetupMfaResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.SetupMfaResponse
+ */
+export declare const SetupMfaResponse: SetupMfaResponse$Type;
+declare class VerifyMfaSetupRequest$Type extends MessageType<VerifyMfaSetupRequest> {
+  constructor();
+  create(value?: PartialMessage<VerifyMfaSetupRequest>): VerifyMfaSetupRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: VerifyMfaSetupRequest,
+  ): VerifyMfaSetupRequest;
+  internalBinaryWrite(
+    message: VerifyMfaSetupRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaSetupRequest
+ */
+export declare const VerifyMfaSetupRequest: VerifyMfaSetupRequest$Type;
+declare class VerifyMfaSetupResponse$Type extends MessageType<VerifyMfaSetupResponse> {
+  constructor();
+  create(value?: PartialMessage<VerifyMfaSetupResponse>): VerifyMfaSetupResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: VerifyMfaSetupResponse,
+  ): VerifyMfaSetupResponse;
+  internalBinaryWrite(
+    message: VerifyMfaSetupResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaSetupResponse
+ */
+export declare const VerifyMfaSetupResponse: VerifyMfaSetupResponse$Type;
+declare class VerifyMfaCodeRequest$Type extends MessageType<VerifyMfaCodeRequest> {
+  constructor();
+  create(value?: PartialMessage<VerifyMfaCodeRequest>): VerifyMfaCodeRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: VerifyMfaCodeRequest,
+  ): VerifyMfaCodeRequest;
+  internalBinaryWrite(
+    message: VerifyMfaCodeRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaCodeRequest
+ */
+export declare const VerifyMfaCodeRequest: VerifyMfaCodeRequest$Type;
+declare class VerifyMfaCodeResponse$Type extends MessageType<VerifyMfaCodeResponse> {
+  constructor();
+  create(value?: PartialMessage<VerifyMfaCodeResponse>): VerifyMfaCodeResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: VerifyMfaCodeResponse,
+  ): VerifyMfaCodeResponse;
+  internalBinaryWrite(
+    message: VerifyMfaCodeResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaCodeResponse
+ */
+export declare const VerifyMfaCodeResponse: VerifyMfaCodeResponse$Type;
+declare class DisableMfaRequest$Type extends MessageType<DisableMfaRequest> {
+  constructor();
+  create(value?: PartialMessage<DisableMfaRequest>): DisableMfaRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: DisableMfaRequest,
+  ): DisableMfaRequest;
+  internalBinaryWrite(
+    message: DisableMfaRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DisableMfaRequest
+ */
+export declare const DisableMfaRequest: DisableMfaRequest$Type;
+declare class DisableMfaResponse$Type extends MessageType<DisableMfaResponse> {
+  constructor();
+  create(value?: PartialMessage<DisableMfaResponse>): DisableMfaResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: DisableMfaResponse,
+  ): DisableMfaResponse;
+  internalBinaryWrite(
+    message: DisableMfaResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DisableMfaResponse
+ */
+export declare const DisableMfaResponse: DisableMfaResponse$Type;
+declare class GetBackupCodesRequest$Type extends MessageType<GetBackupCodesRequest> {
+  constructor();
+  create(value?: PartialMessage<GetBackupCodesRequest>): GetBackupCodesRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetBackupCodesRequest,
+  ): GetBackupCodesRequest;
+  internalBinaryWrite(
+    message: GetBackupCodesRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.GetBackupCodesRequest
+ */
+export declare const GetBackupCodesRequest: GetBackupCodesRequest$Type;
+declare class GetBackupCodesResponse$Type extends MessageType<GetBackupCodesResponse> {
+  constructor();
+  create(value?: PartialMessage<GetBackupCodesResponse>): GetBackupCodesResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetBackupCodesResponse,
+  ): GetBackupCodesResponse;
+  internalBinaryWrite(
+    message: GetBackupCodesResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.GetBackupCodesResponse
+ */
+export declare const GetBackupCodesResponse: GetBackupCodesResponse$Type;
+declare class RegenerateBackupCodesRequest$Type extends MessageType<RegenerateBackupCodesRequest> {
+  constructor();
+  create(value?: PartialMessage<RegenerateBackupCodesRequest>): RegenerateBackupCodesRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: RegenerateBackupCodesRequest,
+  ): RegenerateBackupCodesRequest;
+  internalBinaryWrite(
+    message: RegenerateBackupCodesRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RegenerateBackupCodesRequest
+ */
+export declare const RegenerateBackupCodesRequest: RegenerateBackupCodesRequest$Type;
+declare class RegenerateBackupCodesResponse$Type extends MessageType<RegenerateBackupCodesResponse> {
+  constructor();
+  create(value?: PartialMessage<RegenerateBackupCodesResponse>): RegenerateBackupCodesResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: RegenerateBackupCodesResponse,
+  ): RegenerateBackupCodesResponse;
+  internalBinaryWrite(
+    message: RegenerateBackupCodesResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RegenerateBackupCodesResponse
+ */
+export declare const RegenerateBackupCodesResponse: RegenerateBackupCodesResponse$Type;
+declare class UseBackupCodeRequest$Type extends MessageType<UseBackupCodeRequest> {
+  constructor();
+  create(value?: PartialMessage<UseBackupCodeRequest>): UseBackupCodeRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UseBackupCodeRequest,
+  ): UseBackupCodeRequest;
+  internalBinaryWrite(
+    message: UseBackupCodeRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UseBackupCodeRequest
+ */
+export declare const UseBackupCodeRequest: UseBackupCodeRequest$Type;
+declare class UseBackupCodeResponse$Type extends MessageType<UseBackupCodeResponse> {
+  constructor();
+  create(value?: PartialMessage<UseBackupCodeResponse>): UseBackupCodeResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UseBackupCodeResponse,
+  ): UseBackupCodeResponse;
+  internalBinaryWrite(
+    message: UseBackupCodeResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UseBackupCodeResponse
+ */
+export declare const UseBackupCodeResponse: UseBackupCodeResponse$Type;
 /**
  * @generated ServiceType for protobuf service identity.v1.IdentityService
  */

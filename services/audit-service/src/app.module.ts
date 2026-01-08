@@ -9,6 +9,7 @@ import { ClickHouseModule } from './shared/clickhouse/clickhouse.module';
 import { AuditModule } from './audit/audit.module';
 import { AdminAuditModule } from './admin-audit/admin-audit.module';
 import { RetentionModule } from './retention/retention.module';
+import { AuditGrpcController, AuthEventService } from './grpc';
 import configuration from './config/configuration';
 
 @Module({
@@ -47,5 +48,7 @@ import configuration from './config/configuration';
     AdminAuditModule,
     RetentionModule,
   ],
+  controllers: [AuditGrpcController],
+  providers: [AuthEventService],
 })
 export class AppModule {}

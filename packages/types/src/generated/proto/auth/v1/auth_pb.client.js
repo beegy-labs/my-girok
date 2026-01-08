@@ -56,7 +56,7 @@ export class AuthServiceClient {
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
-     * Operator operations
+     * Operator operations (legacy - use OperatorAssignment for new implementations)
      *
      * @generated from protobuf rpc: GetOperator
      */
@@ -85,6 +85,167 @@ export class AuthServiceClient {
      */
     getActiveSanctions(input, options) {
         const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    // ============================================================
+    // Admin Authentication (Enterprise Auth)
+    // ============================================================
+    /**
+     * Admin login - Step 1: Validate credentials (MFA challenge returned if enabled)
+     *
+     * @generated from protobuf rpc: AdminLogin
+     */
+    adminLogin(input, options) {
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Admin login - Step 2: Verify MFA code
+     *
+     * @generated from protobuf rpc: AdminLoginMfa
+     */
+    adminLoginMfa(input, options) {
+        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Admin session management
+     *
+     * @generated from protobuf rpc: AdminValidateSession
+     */
+    adminValidateSession(input, options) {
+        const method = this.methods[11], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminRefreshSession
+     */
+    adminRefreshSession(input, options) {
+        const method = this.methods[12], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminLogout
+     */
+    adminLogout(input, options) {
+        const method = this.methods[13], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminRevokeAllSessions
+     */
+    adminRevokeAllSessions(input, options) {
+        const method = this.methods[14], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminGetActiveSessions
+     */
+    adminGetActiveSessions(input, options) {
+        const method = this.methods[15], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Admin MFA management
+     *
+     * @generated from protobuf rpc: AdminSetupMfa
+     */
+    adminSetupMfa(input, options) {
+        const method = this.methods[16], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminVerifyMfa
+     */
+    adminVerifyMfa(input, options) {
+        const method = this.methods[17], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminDisableMfa
+     */
+    adminDisableMfa(input, options) {
+        const method = this.methods[18], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminRegenerateBackupCodes
+     */
+    adminRegenerateBackupCodes(input, options) {
+        const method = this.methods[19], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Admin password management
+     *
+     * @generated from protobuf rpc: AdminChangePassword
+     */
+    adminChangePassword(input, options) {
+        const method = this.methods[20], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: AdminForcePasswordChange
+     */
+    adminForcePasswordChange(input, options) {
+        const method = this.methods[21], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    // ============================================================
+    // Operator Assignment (User-based operators)
+    // ============================================================
+    /**
+     * Assign operator role to a user account
+     *
+     * @generated from protobuf rpc: AssignOperator
+     */
+    assignOperator(input, options) {
+        const method = this.methods[22], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Revoke operator assignment
+     *
+     * @generated from protobuf rpc: RevokeOperatorAssignment
+     */
+    revokeOperatorAssignment(input, options) {
+        const method = this.methods[23], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Get operator assignment for a user
+     *
+     * @generated from protobuf rpc: GetOperatorAssignment
+     */
+    getOperatorAssignment(input, options) {
+        const method = this.methods[24], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Get all operator assignments for a service
+     *
+     * @generated from protobuf rpc: GetServiceOperatorAssignments
+     */
+    getServiceOperatorAssignments(input, options) {
+        const method = this.methods[25], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Update operator assignment permissions
+     *
+     * @generated from protobuf rpc: UpdateOperatorAssignmentPermissions
+     */
+    updateOperatorAssignmentPermissions(input, options) {
+        const method = this.methods[26], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Get operator assignment permissions
+     *
+     * @generated from protobuf rpc: GetOperatorAssignmentPermissions
+     */
+    getOperatorAssignmentPermissions(input, options) {
+        const method = this.methods[27], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
 }

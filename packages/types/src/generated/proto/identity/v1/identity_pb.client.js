@@ -17,7 +17,7 @@ export class IdentityServiceClient {
         this.options = IdentityService.options;
     }
     /**
-     * Account operations
+     * Account operations - Read
      *
      * @generated from protobuf rpc: GetAccount
      */
@@ -47,26 +47,160 @@ export class IdentityServiceClient {
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
+     * Account operations - Write
+     *
+     * @generated from protobuf rpc: CreateAccount
+     */
+    createAccount(input, options) {
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: UpdateAccount
+     */
+    updateAccount(input, options) {
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: DeleteAccount
+     */
+    deleteAccount(input, options) {
+        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Authentication
+     *
+     * @generated from protobuf rpc: ValidatePassword
+     */
+    validatePassword(input, options) {
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * Password Management
+     *
+     * @generated from protobuf rpc: ChangePassword
+     */
+    changePassword(input, options) {
+        const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ResetPassword
+     */
+    resetPassword(input, options) {
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: CheckPasswordHistory
+     */
+    checkPasswordHistory(input, options) {
+        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: RecordLoginAttempt
+     */
+    recordLoginAttempt(input, options) {
+        const method = this.methods[11], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: LockAccount
+     */
+    lockAccount(input, options) {
+        const method = this.methods[12], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: UnlockAccount
+     */
+    unlockAccount(input, options) {
+        const method = this.methods[13], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * MFA Management (User)
+     *
+     * @generated from protobuf rpc: SetupMfa
+     */
+    setupMfa(input, options) {
+        const method = this.methods[14], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: VerifyMfaSetup
+     */
+    verifyMfaSetup(input, options) {
+        const method = this.methods[15], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: VerifyMfaCode
+     */
+    verifyMfaCode(input, options) {
+        const method = this.methods[16], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: DisableMfa
+     */
+    disableMfa(input, options) {
+        const method = this.methods[17], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetBackupCodes
+     */
+    getBackupCodes(input, options) {
+        const method = this.methods[18], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: RegenerateBackupCodes
+     */
+    regenerateBackupCodes(input, options) {
+        const method = this.methods[19], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: UseBackupCode
+     */
+    useBackupCode(input, options) {
+        const method = this.methods[20], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
      * Session operations
      *
+     * @generated from protobuf rpc: CreateSession
+     */
+    createSession(input, options) {
+        const method = this.methods[21], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: ValidateSession
      */
     validateSession(input, options) {
-        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        const method = this.methods[22], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RevokeSession
      */
     revokeSession(input, options) {
-        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        const method = this.methods[23], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RevokeAllSessions
      */
     revokeAllSessions(input, options) {
-        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        const method = this.methods[24], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
@@ -75,21 +209,21 @@ export class IdentityServiceClient {
      * @generated from protobuf rpc: GetAccountDevices
      */
     getAccountDevices(input, options) {
-        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        const method = this.methods[25], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: TrustDevice
      */
     trustDevice(input, options) {
-        const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        const method = this.methods[26], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RevokeDevice
      */
     revokeDevice(input, options) {
-        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        const method = this.methods[27], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
     /**
@@ -98,7 +232,7 @@ export class IdentityServiceClient {
      * @generated from protobuf rpc: GetProfile
      */
     getProfile(input, options) {
-        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        const method = this.methods[28], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
 }
