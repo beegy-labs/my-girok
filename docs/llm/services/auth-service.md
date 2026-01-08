@@ -40,16 +40,31 @@ POST/GET/PATCH/DELETE /services/:id/features/:featureId
 
 ## gRPC (50052)
 
-| Method                 | Desc           |
-| ---------------------- | -------------- |
-| CheckPermission        | Single check   |
-| CheckPermissions       | Multiple       |
-| GetOperatorPermissions | All perms      |
-| GetRole                | Role by ID     |
-| GetRolesByOperator     | Operator roles |
-| ValidateOperator       | Status check   |
-| CheckSanction          | Active check   |
-| GetActiveSanctions     | All active     |
+| Method                     | Desc             |
+| -------------------------- | ---------------- |
+| CheckPermission            | Single check     |
+| CheckPermissions           | Multiple         |
+| GetOperatorPermissions     | All perms        |
+| GetRole                    | Role by ID       |
+| GetRolesByOperator         | Operator roles   |
+| ValidateOperator           | Status check     |
+| CheckSanction              | Active check     |
+| GetActiveSanctions         | All active       |
+| **Admin Auth**             |                  |
+| AdminLogin                 | Admin login      |
+| AdminLoginMfa              | MFA verification |
+| AdminValidateSession       | Validate session |
+| AdminRefreshSession        | Refresh session  |
+| AdminLogout                | Logout           |
+| AdminRevokeAllSessions     | Revoke all       |
+| AdminGetActiveSessions     | List sessions    |
+| **Admin MFA**              |                  |
+| AdminSetupMfa              | Start MFA setup  |
+| AdminVerifyMfa             | Verify MFA code  |
+| AdminDisableMfa            | Disable MFA      |
+| AdminRegenerateBackupCodes | Regenerate codes |
+| **Admin Password**         |                  |
+| AdminChangePassword        | Change password  |
 
 Proto: `packages/proto/auth/v1/auth.proto`
 

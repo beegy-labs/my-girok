@@ -1,6 +1,6 @@
 # Auth Service
 
-> Authorization, RBAC, operators, and sanctions management | **Last Updated**: 2026-01-06
+> Authorization, RBAC, operators, and sanctions management | **Last Updated**: 2026-01-08
 
 ## Service Info
 
@@ -44,16 +44,31 @@ POST/GET/PATCH/DELETE  /services/:id/features/:featureId
 
 ## gRPC Server (:50052)
 
-| Method                 | Description              |
-| ---------------------- | ------------------------ |
-| CheckPermission        | Check single permission  |
-| CheckPermissions       | Check multiple           |
-| GetOperatorPermissions | Get all permissions      |
-| GetRole                | Get role by ID           |
-| GetRolesByOperator     | Get operator's roles     |
-| ValidateOperator       | Check operator status    |
-| CheckSanction          | Check active sanctions   |
-| GetActiveSanctions     | Get all active sanctions |
+| Method                     | Description              |
+| -------------------------- | ------------------------ |
+| CheckPermission            | Check single permission  |
+| CheckPermissions           | Check multiple           |
+| GetOperatorPermissions     | Get all permissions      |
+| GetRole                    | Get role by ID           |
+| GetRolesByOperator         | Get operator's roles     |
+| ValidateOperator           | Check operator status    |
+| CheckSanction              | Check active sanctions   |
+| GetActiveSanctions         | Get all active sanctions |
+| **Admin Auth**             |                          |
+| AdminLogin                 | Admin login (step 1)     |
+| AdminLoginMfa              | Admin MFA verification   |
+| AdminValidateSession       | Validate admin session   |
+| AdminRefreshSession        | Refresh admin session    |
+| AdminLogout                | Admin logout             |
+| AdminRevokeAllSessions     | Revoke all sessions      |
+| AdminGetActiveSessions     | List active sessions     |
+| **Admin MFA**              |                          |
+| AdminSetupMfa              | Start MFA setup          |
+| AdminVerifyMfa             | Verify MFA code          |
+| AdminDisableMfa            | Disable MFA              |
+| AdminRegenerateBackupCodes | Regenerate backup codes  |
+| **Admin Password**         |                          |
+| AdminChangePassword        | Change admin password    |
 
 **Proto**: `packages/proto/auth/v1/auth.proto`
 
