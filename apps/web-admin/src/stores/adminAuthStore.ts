@@ -1,26 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  scope: 'SYSTEM' | 'TENANT';
-  tenantId: string | null;
-  tenantSlug: string | null;
-  roleName: string;
-  permissions: string[];
-}
+import type { AdminInfo } from '@my-girok/types';
 
 interface AdminAuthState {
-  admin: AdminUser | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  admin: AdminInfo | null;
   isAuthenticated: boolean;
+  // MFA challenge state (transient, not persisted)
+  mfaChallenge: {
+    challengeId: string;
+    availableMethods: string[];
+  } | null;
 
-  setAuth: (admin: AdminUser, accessToken: string, refreshToken: string) => void;
+  setAuth: (admin: AdminInfo) => void;
+  setMfaChallenge: (challengeId: string, methods: string[]) => void;
+  clearMfaChallenge: () => void;
   clearAuth: () => void;
-  updateTokens: (accessToken: string, refreshToken: string) => void;
   hasPermission: (permission: string) => boolean;
 }
 
@@ -28,33 +22,36 @@ export const useAdminAuthStore = create<AdminAuthState>()(
   persist(
     (set, get) => ({
       admin: null,
-      accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
+      mfaChallenge: null,
 
-      setAuth: (admin, accessToken, refreshToken) =>
+      setAuth: (admin) =>
         set({
           admin,
-          accessToken,
-          refreshToken,
           isAuthenticated: true,
+          mfaChallenge: null,
         }),
+
+      setMfaChallenge: (challengeId, availableMethods) =>
+        set({
+          mfaChallenge: { challengeId, availableMethods },
+          isAuthenticated: false,
+        }),
+
+      clearMfaChallenge: () => set({ mfaChallenge: null }),
 
       clearAuth: () =>
         set({
           admin: null,
-          accessToken: null,
-          refreshToken: null,
           isAuthenticated: false,
+          mfaChallenge: null,
         }),
-
-      updateTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
 
       hasPermission: (required: string) => {
         const { admin } = get();
         if (!admin) return false;
 
-        const { permissions } = admin;
+        const permissions = admin.permissions || [];
 
         // Check wildcard (super admin)
         if (permissions.includes('*')) return true;
@@ -71,6 +68,11 @@ export const useAdminAuthStore = create<AdminAuthState>()(
     }),
     {
       name: 'admin-auth-storage',
+      partialize: (state) => ({
+        // Only persist admin info, not MFA challenge
+        admin: state.admin,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 );

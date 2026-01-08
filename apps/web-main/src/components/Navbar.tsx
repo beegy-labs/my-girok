@@ -99,7 +99,7 @@ export default function Navbar() {
                     <User size={16} className="text-theme-primary" aria-hidden="true" />
                   </div>
                   <span className="text-sm font-medium text-theme-text-primary hidden sm:block max-w-[100px] truncate">
-                    {user?.username || user?.name?.slice(0, 10) || 'User'}
+                    {user?.username || 'User'}
                   </span>
                 </button>
 

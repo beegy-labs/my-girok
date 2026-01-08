@@ -18,7 +18,7 @@ export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { setAuth, isAuthenticated } = useAdminAuthStore();
+  const { setAuth, setMfaChallenge, isAuthenticated } = useAdminAuthStore();
   const { resolvedTheme, setTheme } = useTheme();
 
   const [email, setEmail] = useState('');
@@ -58,10 +58,28 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login({ email, password });
-      setAuth(response.admin, response.accessToken, response.refreshToken);
 
-      const from = (location.state as { from?: Location })?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      if (!response.success) {
+        setError(response.message || t('auth.invalidCredentials'));
+        return;
+      }
+
+      // MFA required - redirect to MFA page
+      if (response.mfaRequired && response.challengeId) {
+        setMfaChallenge(response.challengeId, response.availableMethods || ['totp']);
+        navigate('/login/mfa', {
+          state: { from: location.state },
+          replace: true,
+        });
+        return;
+      }
+
+      // Login complete
+      if (response.admin) {
+        setAuth(response.admin);
+        const from = (location.state as { from?: Location })?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

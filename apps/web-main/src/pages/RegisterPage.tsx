@@ -97,20 +97,25 @@ export default function RegisterPage() {
           email,
           username,
           password,
-          name,
-          consents: Object.entries(consents)
-            .filter(([, agreed]) => agreed)
-            .map(([type]) => ({ type: type as ConsentType, agreed: true })),
-          // Include locale info for region-based consent policy
-          language: localeInfo?.language,
-          country: localeInfo?.country,
+          // Include locale info for region-based settings
+          locale: localeInfo?.language,
+          countryCode: localeInfo?.country,
           timezone: localeInfo?.timezone,
         });
+
+        if (!response.success) {
+          setError(response.message || t('errors.registrationFailed'));
+          return;
+        }
+
         // Clear stored data after successful registration
         sessionStorage.removeItem('registration_consents');
         sessionStorage.removeItem('registration_locale_info');
-        setAuth(response.user, response.accessToken, response.refreshToken);
-        navigate('/'); // Direct navigation (2025 best practice)
+
+        if (response.user) {
+          setAuth(response.user);
+          navigate('/'); // Direct navigation (2025 best practice)
+        }
       } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         setError(err.response?.data?.message || t('errors.registrationFailed'));
@@ -122,7 +127,6 @@ export default function RegisterPage() {
       email,
       username,
       password,
-      name,
       consents,
       localeInfo?.country,
       localeInfo?.language,

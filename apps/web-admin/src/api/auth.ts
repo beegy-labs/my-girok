@@ -1,66 +1,124 @@
+import type {
+  AdminLoginRequest,
+  AdminLoginMfaRequest,
+  AdminLoginResponse,
+  AdminInfo,
+  AdminSession,
+  AdminMfaSetupResponse,
+  AdminChangePasswordRequest,
+  BffBaseResponse,
+  SessionRevokeResponse,
+  BackupCodesResponse,
+} from '@my-girok/types';
 import apiClient from './client';
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  admin: {
-    id: string;
-    email: string;
-    name: string;
-    scope: 'SYSTEM' | 'TENANT';
-    tenantId: string | null;
-    tenantSlug: string | null;
-    roleName: string;
-    permissions: string[];
-  };
-}
-
-export interface AdminProfile {
-  id: string;
-  email: string;
-  name: string;
-  scope: 'SYSTEM' | 'TENANT';
-  tenantId: string | null;
-  tenant?: {
-    id: string;
-    name: string;
-    slug: string;
-    type: string;
-    status: string;
-  };
-  role: {
-    id: string;
-    name: string;
-    displayName: string;
-    level: number;
-  };
-  permissions: string[];
-  lastLoginAt: string | null;
-  createdAt: string;
-}
+export type { AdminLoginResponse, AdminInfo, AdminSession };
 
 export const authApi = {
-  login: async (data: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/auth/login', data);
+  /**
+   * Admin login - Step 1
+   * Returns MFA challenge if MFA is enabled, otherwise returns admin info
+   */
+  login: async (data: AdminLoginRequest): Promise<AdminLoginResponse> => {
+    const response = await apiClient.post<AdminLoginResponse>('/admin/login', data);
     return response.data;
   },
 
-  logout: async (refreshToken: string): Promise<void> => {
-    await apiClient.post('/auth/logout', { refreshToken });
-  },
-
-  refresh: async (refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> => {
-    const response = await apiClient.post('/auth/refresh', { refreshToken });
+  /**
+   * Admin MFA login - Step 2 (if MFA required)
+   */
+  loginMfa: async (data: AdminLoginMfaRequest): Promise<AdminLoginResponse> => {
+    const response = await apiClient.post<AdminLoginResponse>('/admin/login-mfa', data);
     return response.data;
   },
 
-  getProfile: async (): Promise<AdminProfile> => {
-    const response = await apiClient.get<AdminProfile>('/auth/me');
+  /**
+   * Logout - destroys session
+   */
+  logout: async (): Promise<BffBaseResponse> => {
+    const response = await apiClient.post<BffBaseResponse>('/admin/logout');
+    return response.data;
+  },
+
+  /**
+   * Get current admin info
+   */
+  getMe: async (): Promise<AdminInfo> => {
+    const response = await apiClient.get<AdminInfo>('/admin/me');
+    return response.data;
+  },
+
+  /**
+   * Refresh session
+   */
+  refresh: async (): Promise<BffBaseResponse> => {
+    const response = await apiClient.post<BffBaseResponse>('/admin/refresh');
+    return response.data;
+  },
+
+  /**
+   * Get active sessions
+   */
+  getSessions: async (): Promise<AdminSession[]> => {
+    const response = await apiClient.get<AdminSession[]>('/admin/sessions');
+    return response.data;
+  },
+
+  /**
+   * Revoke a specific session
+   */
+  revokeSession: async (sessionId: string): Promise<BffBaseResponse> => {
+    const response = await apiClient.delete<BffBaseResponse>(`/admin/sessions/${sessionId}`);
+    return response.data;
+  },
+
+  /**
+   * Revoke all other sessions
+   */
+  revokeAllSessions: async (): Promise<SessionRevokeResponse> => {
+    const response = await apiClient.delete<SessionRevokeResponse>('/admin/sessions');
+    return response.data;
+  },
+
+  /**
+   * Setup MFA - returns QR code and backup codes
+   */
+  setupMfa: async (): Promise<AdminMfaSetupResponse> => {
+    const response = await apiClient.post<AdminMfaSetupResponse>('/admin/mfa/setup');
+    return response.data;
+  },
+
+  /**
+   * Verify MFA setup with TOTP code
+   */
+  verifyMfaSetup: async (code: string): Promise<BffBaseResponse> => {
+    const response = await apiClient.post<BffBaseResponse>('/admin/mfa/verify', { code });
+    return response.data;
+  },
+
+  /**
+   * Disable MFA
+   */
+  disableMfa: async (password: string): Promise<BffBaseResponse> => {
+    const response = await apiClient.post<BffBaseResponse>('/admin/mfa/disable', { password });
+    return response.data;
+  },
+
+  /**
+   * Regenerate backup codes
+   */
+  regenerateBackupCodes: async (password: string): Promise<BackupCodesResponse> => {
+    const response = await apiClient.post<BackupCodesResponse>('/admin/mfa/backup-codes', {
+      password,
+    });
+    return response.data;
+  },
+
+  /**
+   * Change password
+   */
+  changePassword: async (data: AdminChangePasswordRequest): Promise<BffBaseResponse> => {
+    const response = await apiClient.post<BffBaseResponse>('/admin/password', data);
     return response.data;
   },
 };

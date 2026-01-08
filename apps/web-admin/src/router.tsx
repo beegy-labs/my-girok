@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import AdminLayout from './layouts/AdminLayout';
 import PrivateRoute from './components/PrivateRoute';
 import LoginPage from './pages/LoginPage';
+import MfaPage from './pages/MfaPage';
 import { PageErrorBoundary } from './components/PageErrorBoundary';
 import { Spinner } from './components/atoms/Spinner';
 
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/login/mfa',
+    element: <MfaPage />,
   },
   {
     path: '/',

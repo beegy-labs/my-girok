@@ -202,7 +202,7 @@ export default function HomePage() {
   return (
     <>
       <SEO
-        title={isAuthenticated ? `${user?.name || user?.username}'s Archive` : undefined}
+        title={isAuthenticated ? `${user?.username}'s Archive` : undefined}
         description={t('seo.homeDescription', {
           defaultValue:
             'Create, manage, and share your professional resume with girok. Build your career profile, track your achievements, and share your professional story with the world.',
@@ -500,7 +500,7 @@ export default function HomePage() {
                         <div className="flex flex-col justify-center p-6 bg-theme-primary/5 rounded-input border border-theme-primary/20">
                           <p className="text-sm font-bold text-theme-text-primary mb-2">
                             {t('widget.scheduleSummary', {
-                              name: user?.name || user?.username,
+                              name: user?.username,
                               count: 3,
                             })}
                           </p>

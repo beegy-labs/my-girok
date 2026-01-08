@@ -1,152 +1,181 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
+import type {
+  UserLoginRequest,
+  UserLoginMfaRequest,
+  UserLoginResponse,
+  UserRegisterRequest,
+  UserRegisterResponse,
+  UserInfo,
+  UserMfaSetupResponse,
+  UserChangePasswordRequest,
+  BffBaseResponse,
+  BackupCodesResponse,
+  BackupCodesCountResponse,
+  SessionRevokeResponse,
+  OAuthProvider,
+} from '@my-girok/types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// BFF API base URL
+const API_URL = import.meta.env.VITE_AUTH_BFF_URL || 'https://auth-bff.girok.dev';
 
 /**
- * Public API client - for unauthenticated requests (login, register, logout)
- * Does NOT have 401 interceptor to avoid unnecessary token refresh attempts
+ * API client for auth-bff
+ * Uses cookies for session management (withCredentials: true)
  */
-export const publicApi = axios.create({
+const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
-/**
- * Authenticated API client - for requests that require authentication
- * Has request interceptor for adding Bearer token and response interceptor for 401 handling
- */
-export const authApi = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Flag to prevent multiple simultaneous refresh calls
-let isRefreshing = false;
-
-// Request interceptor - Add access token and check for proactive refresh
-authApi.interceptors.request.use(
-  async (config) => {
-    const { accessToken, needsProactiveRefresh, refreshToken } = useAuthStore.getState();
-
-    // Add access token to headers
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-
-    // Proactive refresh: renew refresh token if it has 7 days or less remaining
-    if (!isRefreshing && needsProactiveRefresh() && refreshToken) {
-      isRefreshing = true;
-      try {
-        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
-          refreshToken,
-        });
-
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
-        useAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
-
-        // Update current request with new token
-        config.headers.Authorization = `Bearer ${newAccessToken}`;
-      } catch (error) {
-        console.warn('Proactive token refresh failed:', error);
-        // Don't block the request if proactive refresh fails
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-// Response interceptor - Handle token refresh
-authApi.interceptors.response.use(
+// Response interceptor - Handle 401 errors
+apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const { refreshToken } = useAuthStore.getState();
-        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
-          refreshToken,
-        });
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-        // Update both tokens (refresh endpoint returns new refresh token)
-        if (newRefreshToken) {
-          useAuthStore.getState().updateTokens(accessToken, newRefreshToken);
-        } else {
-          useAuthStore.getState().updateAccessToken(accessToken);
-        }
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return authApi(originalRequest);
-      } catch (refreshError) {
-        useAuthStore.getState().clearAuth();
-        // Preserve current URL to redirect back after login
-        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/login?returnUrl=${returnUrl}`;
-        return Promise.reject(refreshError);
-      }
+    if (error.response?.status === 401) {
+      useAuthStore.getState().clearAuth();
+      // Preserve current URL to redirect back after login
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `/login?returnUrl=${returnUrl}`;
     }
-
     return Promise.reject(error);
   },
 );
 
-import type {
-  RegisterWithConsentsDto,
-  LoginDto as ILoginDto,
-  ChangePasswordDto as IChangePasswordDto,
-} from '@my-girok/types';
+// ============================================================================
+// User Auth API
+// ============================================================================
 
 /**
- * Register a new user with consents
- * Uses publicApi - 401 on validation errors should show error message, not trigger token refresh
+ * Register a new user
  */
-export const register = async (data: RegisterWithConsentsDto) => {
-  const response = await publicApi.post('/v1/auth/register', data);
+export const register = async (data: UserRegisterRequest): Promise<UserRegisterResponse> => {
+  const response = await apiClient.post<UserRegisterResponse>('/user/register', data);
   return response.data;
 };
 
 /**
  * Login with email and password
- * Uses publicApi - 401 on invalid credentials should show error message, not redirect
  */
-export const login = async (data: ILoginDto) => {
-  const response = await publicApi.post('/v1/auth/login', data);
+export const login = async (data: UserLoginRequest): Promise<UserLoginResponse> => {
+  const response = await apiClient.post<UserLoginResponse>('/user/login', data);
+  return response.data;
+};
+
+/**
+ * Complete login with MFA code
+ */
+export const loginMfa = async (data: UserLoginMfaRequest): Promise<UserLoginResponse> => {
+  const response = await apiClient.post<UserLoginResponse>('/user/login-mfa', data);
   return response.data;
 };
 
 /**
  * Logout the current user
- * Uses publicApi - if token is invalid (401), just clear local state
- * No need to refresh token just to invalidate it
  */
-export const logout = async () => {
-  const { refreshToken } = useAuthStore.getState();
+export const logout = async (): Promise<void> => {
   try {
-    await publicApi.post('/v1/auth/logout', { refreshToken });
+    await apiClient.post('/user/logout');
   } finally {
-    // Always clear local state, even if API call fails
     useAuthStore.getState().clearAuth();
   }
 };
 
-export const getCurrentUser = async () => {
-  const response = await authApi.get('/v1/users/me');
+/**
+ * Get current user info
+ */
+export const getCurrentUser = async (): Promise<UserInfo> => {
+  const response = await apiClient.get<UserInfo>('/user/me');
   return response.data;
 };
 
-export const changePassword = async (data: IChangePasswordDto) => {
-  const response = await authApi.post('/v1/users/me/change-password', data);
+/**
+ * Change password
+ */
+export const changePassword = async (data: UserChangePasswordRequest): Promise<BffBaseResponse> => {
+  const response = await apiClient.post<BffBaseResponse>('/user/password', data);
   return response.data;
 };
+
+// ============================================================================
+// MFA API
+// ============================================================================
+
+/**
+ * Setup MFA - returns QR code and backup codes
+ */
+export const setupMfa = async (): Promise<UserMfaSetupResponse> => {
+  const response = await apiClient.post<UserMfaSetupResponse>('/user/mfa/setup');
+  return response.data;
+};
+
+/**
+ * Verify MFA setup with TOTP code
+ */
+export const verifyMfaSetup = async (code: string): Promise<BffBaseResponse> => {
+  const response = await apiClient.post<BffBaseResponse>('/user/mfa/verify', { code });
+  return response.data;
+};
+
+/**
+ * Disable MFA
+ */
+export const disableMfa = async (password: string): Promise<BffBaseResponse> => {
+  const response = await apiClient.post<BffBaseResponse>('/user/mfa/disable', { password });
+  return response.data;
+};
+
+/**
+ * Get backup codes count
+ */
+export const getBackupCodesCount = async (): Promise<BackupCodesCountResponse> => {
+  const response = await apiClient.get<BackupCodesCountResponse>('/user/mfa/backup-codes');
+  return response.data;
+};
+
+/**
+ * Regenerate backup codes
+ */
+export const regenerateBackupCodes = async (password: string): Promise<BackupCodesResponse> => {
+  const response = await apiClient.post<BackupCodesResponse>('/user/mfa/backup-codes', {
+    password,
+  });
+  return response.data;
+};
+
+// ============================================================================
+// Session API
+// ============================================================================
+
+/**
+ * Revoke all other sessions
+ */
+export const revokeAllSessions = async (): Promise<SessionRevokeResponse> => {
+  const response = await apiClient.delete<SessionRevokeResponse>('/user/sessions');
+  return response.data;
+};
+
+// ============================================================================
+// OAuth API
+// ============================================================================
+
+/**
+ * Get OAuth authorization URL
+ */
+export const getOAuthUrl = (provider: OAuthProvider): string => {
+  return `${API_URL}/oauth/${provider.toLowerCase()}`;
+};
+
+/**
+ * Initiate OAuth flow - redirects to provider
+ */
+export const initiateOAuth = (provider: OAuthProvider): void => {
+  window.location.href = getOAuthUrl(provider);
+};
+
+// Export the API client for other uses
+// Also export as publicApi and authApi for backwards compatibility
+export { apiClient, apiClient as publicApi, apiClient as authApi };
