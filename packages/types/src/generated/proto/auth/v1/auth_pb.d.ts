@@ -8,6 +8,7 @@ import type { BinaryReadOptions } from '@protobuf-ts/runtime';
 import type { IBinaryReader } from '@protobuf-ts/runtime';
 import type { PartialMessage } from '@protobuf-ts/runtime';
 import { MessageType } from '@protobuf-ts/runtime';
+import { MfaMethod } from '../../common/v1/common_pb';
 import { Timestamp } from '../../google/protobuf/timestamp_pb';
 /**
  * Permission represents a single permission
@@ -466,6 +467,945 @@ export interface GetActiveSanctionsResponse {
   totalCount: number;
 }
 /**
+ * Admin represents a platform administrator.
+ * Admins are privileged users with access to administrative functions.
+ * Unlike regular users, admins require MFA and have stricter security policies.
+ *
+ * @generated from protobuf message auth.v1.Admin
+ */
+export interface Admin {
+  /**
+   * Unique identifier for the admin (UUIDv7)
+   *
+   * @generated from protobuf field: string id = 1
+   */
+  id: string;
+  /**
+   * Admin email address (used for login)
+   *
+   * @generated from protobuf field: string email = 2
+   */
+  email: string;
+  /**
+   * Display name
+   *
+   * @generated from protobuf field: string name = 3
+   */
+  name: string;
+  /**
+   * Authority scope (SYSTEM or TENANT level)
+   *
+   * @generated from protobuf field: auth.v1.AdminScope scope = 4
+   */
+  scope: AdminScope;
+  /**
+   * Associated role ID for RBAC
+   *
+   * @generated from protobuf field: string role_id = 5
+   */
+  roleId: string;
+  /**
+   * Full role object with permissions
+   *
+   * @generated from protobuf field: auth.v1.Role role = 6
+   */
+  role?: Role;
+  /**
+   * Whether the admin account is active
+   *
+   * @generated from protobuf field: bool is_active = 7
+   */
+  isActive: boolean;
+  /**
+   * Whether MFA is required for this admin (always true for production)
+   *
+   * @generated from protobuf field: bool mfa_required = 8
+   */
+  mfaRequired: boolean;
+  /**
+   * Whether MFA has been set up and verified
+   *
+   * @generated from protobuf field: bool mfa_enabled = 9
+   */
+  mfaEnabled: boolean;
+  /**
+   * Whether a password change is required on next login
+   *
+   * @generated from protobuf field: bool force_password_change = 10
+   */
+  forcePasswordChange: boolean;
+  /**
+   * Last successful login timestamp
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp last_login_at = 11
+   */
+  lastLoginAt?: Timestamp;
+  /**
+   * Last password change timestamp (for rotation policy)
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp password_changed_at = 12
+   */
+  passwordChangedAt?: Timestamp;
+  /**
+   * Account creation timestamp
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp created_at = 13
+   */
+  createdAt?: Timestamp;
+  /**
+   * Last update timestamp
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp updated_at = 14
+   */
+  updatedAt?: Timestamp;
+}
+/**
+ * AdminSession represents an active admin session.
+ * Admin sessions are separate from user sessions for enhanced security.
+ * Each session tracks MFA verification status and device information.
+ *
+ * @generated from protobuf message auth.v1.AdminSession
+ */
+export interface AdminSession {
+  /**
+   * Unique session identifier (UUIDv7)
+   *
+   * @generated from protobuf field: string id = 1
+   */
+  id: string;
+  /**
+   * Admin ID who owns this session
+   *
+   * @generated from protobuf field: string admin_id = 2
+   */
+  adminId: string;
+  /**
+   * Whether MFA has been verified for this session
+   *
+   * @generated from protobuf field: bool mfa_verified = 3
+   */
+  mfaVerified: boolean;
+  /**
+   * MFA method used for verification (TOTP or BACKUP_CODE)
+   *
+   * @generated from protobuf field: string mfa_method = 4
+   */
+  mfaMethod: string;
+  /**
+   * Client IP address at session creation
+   *
+   * @generated from protobuf field: string ip_address = 5
+   */
+  ipAddress: string;
+  /**
+   * Client user agent string
+   *
+   * @generated from protobuf field: string user_agent = 6
+   */
+  userAgent: string;
+  /**
+   * Device fingerprint for fraud detection
+   *
+   * @generated from protobuf field: string device_fingerprint = 7
+   */
+  deviceFingerprint: string;
+  /**
+   * Whether the session is currently active
+   *
+   * @generated from protobuf field: bool is_active = 8
+   */
+  isActive: boolean;
+  /**
+   * When MFA was verified for this session
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp mfa_verified_at = 9
+   */
+  mfaVerifiedAt?: Timestamp;
+  /**
+   * Last activity timestamp (updated on each request)
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp last_activity_at = 10
+   */
+  lastActivityAt?: Timestamp;
+  /**
+   * Session expiration timestamp
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp expires_at = 11
+   */
+  expiresAt?: Timestamp;
+  /**
+   * Session creation timestamp
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp created_at = 12
+   */
+  createdAt?: Timestamp;
+}
+/**
+ * AdminLogin - Step 1: Credentials validation
+ *
+ * @generated from protobuf message auth.v1.AdminLoginRequest
+ */
+export interface AdminLoginRequest {
+  /**
+   * @generated from protobuf field: string email = 1
+   */
+  email: string;
+  /**
+   * @generated from protobuf field: string password = 2
+   */
+  password: string;
+  /**
+   * @generated from protobuf field: string ip_address = 3
+   */
+  ipAddress: string;
+  /**
+   * @generated from protobuf field: string user_agent = 4
+   */
+  userAgent: string;
+  /**
+   * @generated from protobuf field: string device_fingerprint = 5
+   */
+  deviceFingerprint: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminLoginResponse
+ */
+export interface AdminLoginResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: bool mfa_required = 2
+   */
+  mfaRequired: boolean;
+  /**
+   * @generated from protobuf field: string challenge_id = 3
+   */
+  challengeId: string;
+  /**
+   * @generated from protobuf field: repeated common.v1.MfaMethod available_methods = 4
+   */
+  availableMethods: MfaMethod[];
+  /**
+   * @generated from protobuf field: string message = 5
+   */
+  message: string;
+  /**
+   * @generated from protobuf field: auth.v1.Admin admin = 6
+   */
+  admin?: Admin;
+  /**
+   * @generated from protobuf field: auth.v1.AdminSession session = 7
+   */
+  session?: AdminSession;
+  /**
+   * @generated from protobuf field: string access_token = 8
+   */
+  accessToken: string;
+  /**
+   * @generated from protobuf field: string refresh_token = 9
+   */
+  refreshToken: string;
+}
+/**
+ * AdminLoginMfa - Step 2: MFA verification
+ *
+ * @generated from protobuf message auth.v1.AdminLoginMfaRequest
+ */
+export interface AdminLoginMfaRequest {
+  /**
+   * @generated from protobuf field: string challenge_id = 1
+   */
+  challengeId: string;
+  /**
+   * @generated from protobuf field: string code = 2
+   */
+  code: string;
+  /**
+   * @generated from protobuf field: common.v1.MfaMethod method = 3
+   */
+  method: MfaMethod;
+  /**
+   * @generated from protobuf field: string ip_address = 4
+   */
+  ipAddress: string;
+  /**
+   * @generated from protobuf field: string user_agent = 5
+   */
+  userAgent: string;
+  /**
+   * @generated from protobuf field: string device_fingerprint = 6
+   */
+  deviceFingerprint: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminLoginMfaResponse
+ */
+export interface AdminLoginMfaResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+  /**
+   * @generated from protobuf field: auth.v1.Admin admin = 3
+   */
+  admin?: Admin;
+  /**
+   * @generated from protobuf field: auth.v1.AdminSession session = 4
+   */
+  session?: AdminSession;
+  /**
+   * @generated from protobuf field: string access_token = 5
+   */
+  accessToken: string;
+  /**
+   * @generated from protobuf field: string refresh_token = 6
+   */
+  refreshToken: string;
+}
+/**
+ * AdminValidateSession
+ *
+ * @generated from protobuf message auth.v1.AdminValidateSessionRequest
+ */
+export interface AdminValidateSessionRequest {
+  /**
+   * @generated from protobuf field: string token_hash = 1
+   */
+  tokenHash: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminValidateSessionResponse
+ */
+export interface AdminValidateSessionResponse {
+  /**
+   * @generated from protobuf field: bool valid = 1
+   */
+  valid: boolean;
+  /**
+   * @generated from protobuf field: string admin_id = 2
+   */
+  adminId: string;
+  /**
+   * @generated from protobuf field: string session_id = 3
+   */
+  sessionId: string;
+  /**
+   * @generated from protobuf field: bool mfa_verified = 4
+   */
+  mfaVerified: boolean;
+  /**
+   * @generated from protobuf field: google.protobuf.Timestamp expires_at = 5
+   */
+  expiresAt?: Timestamp;
+  /**
+   * @generated from protobuf field: string message = 6
+   */
+  message: string;
+}
+/**
+ * AdminRefreshSession
+ *
+ * @generated from protobuf message auth.v1.AdminRefreshSessionRequest
+ */
+export interface AdminRefreshSessionRequest {
+  /**
+   * @generated from protobuf field: string refresh_token_hash = 1
+   */
+  refreshTokenHash: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminRefreshSessionResponse
+ */
+export interface AdminRefreshSessionResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string access_token = 2
+   */
+  accessToken: string;
+  /**
+   * @generated from protobuf field: string refresh_token = 3
+   */
+  refreshToken: string;
+  /**
+   * @generated from protobuf field: google.protobuf.Timestamp expires_at = 4
+   */
+  expiresAt?: Timestamp;
+  /**
+   * @generated from protobuf field: string message = 5
+   */
+  message: string;
+}
+/**
+ * AdminLogout
+ *
+ * @generated from protobuf message auth.v1.AdminLogoutRequest
+ */
+export interface AdminLogoutRequest {
+  /**
+   * @generated from protobuf field: string session_id = 1
+   */
+  sessionId: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminLogoutResponse
+ */
+export interface AdminLogoutResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * AdminRevokeAllSessions
+ *
+ * @generated from protobuf message auth.v1.AdminRevokeAllSessionsRequest
+ */
+export interface AdminRevokeAllSessionsRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+  /**
+   * @generated from protobuf field: optional string exclude_session_id = 2
+   */
+  excludeSessionId?: string;
+  /**
+   * @generated from protobuf field: string reason = 3
+   */
+  reason: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminRevokeAllSessionsResponse
+ */
+export interface AdminRevokeAllSessionsResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: int32 revoked_count = 2
+   */
+  revokedCount: number;
+  /**
+   * @generated from protobuf field: string message = 3
+   */
+  message: string;
+}
+/**
+ * AdminGetActiveSessions
+ *
+ * @generated from protobuf message auth.v1.AdminGetActiveSessionsRequest
+ */
+export interface AdminGetActiveSessionsRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminGetActiveSessionsResponse
+ */
+export interface AdminGetActiveSessionsResponse {
+  /**
+   * @generated from protobuf field: repeated auth.v1.AdminSession sessions = 1
+   */
+  sessions: AdminSession[];
+  /**
+   * @generated from protobuf field: int32 total_count = 2
+   */
+  totalCount: number;
+}
+/**
+ * AdminSetupMfa
+ *
+ * @generated from protobuf message auth.v1.AdminSetupMfaRequest
+ */
+export interface AdminSetupMfaRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminSetupMfaResponse
+ */
+export interface AdminSetupMfaResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string secret = 2
+   */
+  secret: string;
+  /**
+   * @generated from protobuf field: string qr_code_uri = 3
+   */
+  qrCodeUri: string;
+  /**
+   * @generated from protobuf field: repeated string backup_codes = 4
+   */
+  backupCodes: string[];
+  /**
+   * @generated from protobuf field: string message = 5
+   */
+  message: string;
+}
+/**
+ * AdminVerifyMfa (initial setup verification)
+ *
+ * @generated from protobuf message auth.v1.AdminVerifyMfaRequest
+ */
+export interface AdminVerifyMfaRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+  /**
+   * @generated from protobuf field: string code = 2
+   */
+  code: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminVerifyMfaResponse
+ */
+export interface AdminVerifyMfaResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * AdminDisableMfa
+ *
+ * @generated from protobuf message auth.v1.AdminDisableMfaRequest
+ */
+export interface AdminDisableMfaRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+  /**
+   * @generated from protobuf field: string password = 2
+   */
+  password: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminDisableMfaResponse
+ */
+export interface AdminDisableMfaResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * AdminRegenerateBackupCodes
+ *
+ * @generated from protobuf message auth.v1.AdminRegenerateBackupCodesRequest
+ */
+export interface AdminRegenerateBackupCodesRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+  /**
+   * @generated from protobuf field: string password = 2
+   */
+  password: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminRegenerateBackupCodesResponse
+ */
+export interface AdminRegenerateBackupCodesResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: repeated string backup_codes = 2
+   */
+  backupCodes: string[];
+  /**
+   * @generated from protobuf field: string message = 3
+   */
+  message: string;
+}
+/**
+ * AdminChangePassword
+ *
+ * @generated from protobuf message auth.v1.AdminChangePasswordRequest
+ */
+export interface AdminChangePasswordRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+  /**
+   * @generated from protobuf field: string current_password = 2
+   */
+  currentPassword: string;
+  /**
+   * @generated from protobuf field: string new_password = 3
+   */
+  newPassword: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminChangePasswordResponse
+ */
+export interface AdminChangePasswordResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * AdminForcePasswordChange (by system admin)
+ *
+ * @generated from protobuf message auth.v1.AdminForcePasswordChangeRequest
+ */
+export interface AdminForcePasswordChangeRequest {
+  /**
+   * @generated from protobuf field: string admin_id = 1
+   */
+  adminId: string;
+  /**
+   * @generated from protobuf field: string requester_admin_id = 2
+   */
+  requesterAdminId: string;
+}
+/**
+ * @generated from protobuf message auth.v1.AdminForcePasswordChangeResponse
+ */
+export interface AdminForcePasswordChangeResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * OperatorAssignment represents an operator role assignment to a user account.
+ * A single user can have multiple operator assignments across different services.
+ * The assignment is scoped by service_id and country_code.
+ *
+ * @generated from protobuf message auth.v1.OperatorAssignment
+ */
+export interface OperatorAssignment {
+  /**
+   * Unique assignment identifier (UUIDv7)
+   *
+   * @generated from protobuf field: string id = 1
+   */
+  id: string;
+  /**
+   * Reference to identity_db.accounts (cross-database reference)
+   *
+   * @generated from protobuf field: string account_id = 2
+   */
+  accountId: string;
+  /**
+   * Service this assignment applies to
+   *
+   * @generated from protobuf field: string service_id = 3
+   */
+  serviceId: string;
+  /**
+   * Country code for regional scoping (ISO 3166-1 alpha-2)
+   *
+   * @generated from protobuf field: string country_code = 4
+   */
+  countryCode: string;
+  /**
+   * Current status of the assignment
+   *
+   * @generated from protobuf field: auth.v1.OperatorAssignmentStatus status = 5
+   */
+  status: OperatorAssignmentStatus;
+  /**
+   * Admin ID who created this assignment
+   *
+   * @generated from protobuf field: string assigned_by = 6
+   */
+  assignedBy: string;
+  /**
+   * When the assignment was created
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp assigned_at = 7
+   */
+  assignedAt?: Timestamp;
+  /**
+   * When the assignment was deactivated (if applicable)
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp deactivated_at = 8
+   */
+  deactivatedAt?: Timestamp;
+  /**
+   * Reason for deactivation
+   *
+   * @generated from protobuf field: string deactivation_reason = 9
+   */
+  deactivationReason: string;
+  /**
+   * Record creation timestamp
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp created_at = 10
+   */
+  createdAt?: Timestamp;
+  /**
+   * Last update timestamp
+   *
+   * @generated from protobuf field: google.protobuf.Timestamp updated_at = 11
+   */
+  updatedAt?: Timestamp;
+  /**
+   * Permissions granted to this operator assignment
+   *
+   * @generated from protobuf field: repeated auth.v1.Permission permissions = 12
+   */
+  permissions: Permission[];
+}
+/**
+ * AssignOperator
+ *
+ * @generated from protobuf message auth.v1.AssignOperatorRequest
+ */
+export interface AssignOperatorRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string service_id = 2
+   */
+  serviceId: string;
+  /**
+   * @generated from protobuf field: string country_code = 3
+   */
+  countryCode: string;
+  /**
+   * @generated from protobuf field: string assigned_by = 4
+   */
+  assignedBy: string;
+  /**
+   * @generated from protobuf field: repeated string permission_ids = 5
+   */
+  permissionIds: string[];
+}
+/**
+ * @generated from protobuf message auth.v1.AssignOperatorResponse
+ */
+export interface AssignOperatorResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: auth.v1.OperatorAssignment assignment = 2
+   */
+  assignment?: OperatorAssignment;
+  /**
+   * @generated from protobuf field: string message = 3
+   */
+  message: string;
+}
+/**
+ * RevokeOperatorAssignment
+ *
+ * @generated from protobuf message auth.v1.RevokeOperatorAssignmentRequest
+ */
+export interface RevokeOperatorAssignmentRequest {
+  /**
+   * @generated from protobuf field: string assignment_id = 1
+   */
+  assignmentId: string;
+  /**
+   * @generated from protobuf field: string revoked_by = 2
+   */
+  revokedBy: string;
+  /**
+   * @generated from protobuf field: string reason = 3
+   */
+  reason: string;
+}
+/**
+ * @generated from protobuf message auth.v1.RevokeOperatorAssignmentResponse
+ */
+export interface RevokeOperatorAssignmentResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: string message = 2
+   */
+  message: string;
+}
+/**
+ * GetOperatorAssignment
+ *
+ * @generated from protobuf message auth.v1.GetOperatorAssignmentRequest
+ */
+export interface GetOperatorAssignmentRequest {
+  /**
+   * @generated from protobuf field: string account_id = 1
+   */
+  accountId: string;
+  /**
+   * @generated from protobuf field: string service_id = 2
+   */
+  serviceId: string;
+  /**
+   * @generated from protobuf field: string country_code = 3
+   */
+  countryCode: string;
+}
+/**
+ * @generated from protobuf message auth.v1.GetOperatorAssignmentResponse
+ */
+export interface GetOperatorAssignmentResponse {
+  /**
+   * @generated from protobuf field: auth.v1.OperatorAssignment assignment = 1
+   */
+  assignment?: OperatorAssignment;
+  /**
+   * @generated from protobuf field: bool found = 2
+   */
+  found: boolean;
+}
+/**
+ * GetServiceOperatorAssignments
+ *
+ * @generated from protobuf message auth.v1.GetServiceOperatorAssignmentsRequest
+ */
+export interface GetServiceOperatorAssignmentsRequest {
+  /**
+   * @generated from protobuf field: string service_id = 1
+   */
+  serviceId: string;
+  /**
+   * @generated from protobuf field: optional string country_code = 2
+   */
+  countryCode?: string;
+  /**
+   * @generated from protobuf field: optional auth.v1.OperatorAssignmentStatus status = 3
+   */
+  status?: OperatorAssignmentStatus;
+  /**
+   * @generated from protobuf field: int32 page = 4
+   */
+  page: number;
+  /**
+   * @generated from protobuf field: int32 page_size = 5
+   */
+  pageSize: number;
+}
+/**
+ * @generated from protobuf message auth.v1.GetServiceOperatorAssignmentsResponse
+ */
+export interface GetServiceOperatorAssignmentsResponse {
+  /**
+   * @generated from protobuf field: repeated auth.v1.OperatorAssignment assignments = 1
+   */
+  assignments: OperatorAssignment[];
+  /**
+   * @generated from protobuf field: int32 total_count = 2
+   */
+  totalCount: number;
+  /**
+   * @generated from protobuf field: int32 page = 3
+   */
+  page: number;
+  /**
+   * @generated from protobuf field: int32 page_size = 4
+   */
+  pageSize: number;
+}
+/**
+ * UpdateOperatorAssignmentPermissions
+ *
+ * @generated from protobuf message auth.v1.UpdateOperatorAssignmentPermissionsRequest
+ */
+export interface UpdateOperatorAssignmentPermissionsRequest {
+  /**
+   * @generated from protobuf field: string assignment_id = 1
+   */
+  assignmentId: string;
+  /**
+   * @generated from protobuf field: repeated string permission_ids = 2
+   */
+  permissionIds: string[];
+  /**
+   * @generated from protobuf field: string updated_by = 3
+   */
+  updatedBy: string;
+}
+/**
+ * @generated from protobuf message auth.v1.UpdateOperatorAssignmentPermissionsResponse
+ */
+export interface UpdateOperatorAssignmentPermissionsResponse {
+  /**
+   * @generated from protobuf field: bool success = 1
+   */
+  success: boolean;
+  /**
+   * @generated from protobuf field: auth.v1.OperatorAssignment assignment = 2
+   */
+  assignment?: OperatorAssignment;
+  /**
+   * @generated from protobuf field: string message = 3
+   */
+  message: string;
+}
+/**
+ * GetOperatorAssignmentPermissions
+ *
+ * @generated from protobuf message auth.v1.GetOperatorAssignmentPermissionsRequest
+ */
+export interface GetOperatorAssignmentPermissionsRequest {
+  /**
+   * @generated from protobuf field: string assignment_id = 1
+   */
+  assignmentId: string;
+}
+/**
+ * @generated from protobuf message auth.v1.GetOperatorAssignmentPermissionsResponse
+ */
+export interface GetOperatorAssignmentPermissionsResponse {
+  /**
+   * @generated from protobuf field: repeated auth.v1.Permission permissions = 1
+   */
+  permissions: Permission[];
+}
+/**
  * RoleScope defines where the role applies
  *
  * @generated from protobuf enum auth.v1.RoleScope
@@ -622,6 +1562,60 @@ export declare enum SanctionStatus {
    * @generated from protobuf enum value: SANCTION_STATUS_APPEALED = 4;
    */
   APPEALED = 4,
+}
+/**
+ * AdminScope defines admin authority level
+ *
+ * @generated from protobuf enum auth.v1.AdminScope
+ */
+export declare enum AdminScope {
+  /**
+   * @generated from protobuf enum value: ADMIN_SCOPE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+  /**
+   * Full platform access
+   *
+   * @generated from protobuf enum value: ADMIN_SCOPE_SYSTEM = 1;
+   */
+  SYSTEM = 1,
+  /**
+   * Tenant-level access
+   *
+   * @generated from protobuf enum value: ADMIN_SCOPE_TENANT = 2;
+   */
+  TENANT = 2,
+}
+/**
+ * OperatorAssignmentStatus represents the lifecycle of an operator assignment.
+ *
+ * @generated from protobuf enum auth.v1.OperatorAssignmentStatus
+ */
+export declare enum OperatorAssignmentStatus {
+  /**
+   * Default unspecified value
+   *
+   * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+  /**
+   * Assignment is active and the user has operator privileges
+   *
+   * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_ACTIVE = 1;
+   */
+  ACTIVE = 1,
+  /**
+   * Assignment is temporarily suspended
+   *
+   * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_SUSPENDED = 2;
+   */
+  SUSPENDED = 2,
+  /**
+   * Assignment has been permanently revoked
+   *
+   * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_REVOKED = 3;
+   */
+  REVOKED = 3,
 }
 declare class Permission$Type extends MessageType<Permission> {
   constructor();
@@ -1080,6 +2074,805 @@ declare class GetActiveSanctionsResponse$Type extends MessageType<GetActiveSanct
  * @generated MessageType for protobuf message auth.v1.GetActiveSanctionsResponse
  */
 export declare const GetActiveSanctionsResponse: GetActiveSanctionsResponse$Type;
+declare class Admin$Type extends MessageType<Admin> {
+  constructor();
+  create(value?: PartialMessage<Admin>): Admin;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: Admin,
+  ): Admin;
+  internalBinaryWrite(
+    message: Admin,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.Admin
+ */
+export declare const Admin: Admin$Type;
+declare class AdminSession$Type extends MessageType<AdminSession> {
+  constructor();
+  create(value?: PartialMessage<AdminSession>): AdminSession;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminSession,
+  ): AdminSession;
+  internalBinaryWrite(
+    message: AdminSession,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminSession
+ */
+export declare const AdminSession: AdminSession$Type;
+declare class AdminLoginRequest$Type extends MessageType<AdminLoginRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminLoginRequest>): AdminLoginRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminLoginRequest,
+  ): AdminLoginRequest;
+  internalBinaryWrite(
+    message: AdminLoginRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginRequest
+ */
+export declare const AdminLoginRequest: AdminLoginRequest$Type;
+declare class AdminLoginResponse$Type extends MessageType<AdminLoginResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminLoginResponse>): AdminLoginResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminLoginResponse,
+  ): AdminLoginResponse;
+  internalBinaryWrite(
+    message: AdminLoginResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginResponse
+ */
+export declare const AdminLoginResponse: AdminLoginResponse$Type;
+declare class AdminLoginMfaRequest$Type extends MessageType<AdminLoginMfaRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminLoginMfaRequest>): AdminLoginMfaRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminLoginMfaRequest,
+  ): AdminLoginMfaRequest;
+  internalBinaryWrite(
+    message: AdminLoginMfaRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginMfaRequest
+ */
+export declare const AdminLoginMfaRequest: AdminLoginMfaRequest$Type;
+declare class AdminLoginMfaResponse$Type extends MessageType<AdminLoginMfaResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminLoginMfaResponse>): AdminLoginMfaResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminLoginMfaResponse,
+  ): AdminLoginMfaResponse;
+  internalBinaryWrite(
+    message: AdminLoginMfaResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginMfaResponse
+ */
+export declare const AdminLoginMfaResponse: AdminLoginMfaResponse$Type;
+declare class AdminValidateSessionRequest$Type extends MessageType<AdminValidateSessionRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminValidateSessionRequest>): AdminValidateSessionRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminValidateSessionRequest,
+  ): AdminValidateSessionRequest;
+  internalBinaryWrite(
+    message: AdminValidateSessionRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminValidateSessionRequest
+ */
+export declare const AdminValidateSessionRequest: AdminValidateSessionRequest$Type;
+declare class AdminValidateSessionResponse$Type extends MessageType<AdminValidateSessionResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminValidateSessionResponse>): AdminValidateSessionResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminValidateSessionResponse,
+  ): AdminValidateSessionResponse;
+  internalBinaryWrite(
+    message: AdminValidateSessionResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminValidateSessionResponse
+ */
+export declare const AdminValidateSessionResponse: AdminValidateSessionResponse$Type;
+declare class AdminRefreshSessionRequest$Type extends MessageType<AdminRefreshSessionRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminRefreshSessionRequest>): AdminRefreshSessionRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminRefreshSessionRequest,
+  ): AdminRefreshSessionRequest;
+  internalBinaryWrite(
+    message: AdminRefreshSessionRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRefreshSessionRequest
+ */
+export declare const AdminRefreshSessionRequest: AdminRefreshSessionRequest$Type;
+declare class AdminRefreshSessionResponse$Type extends MessageType<AdminRefreshSessionResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminRefreshSessionResponse>): AdminRefreshSessionResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminRefreshSessionResponse,
+  ): AdminRefreshSessionResponse;
+  internalBinaryWrite(
+    message: AdminRefreshSessionResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRefreshSessionResponse
+ */
+export declare const AdminRefreshSessionResponse: AdminRefreshSessionResponse$Type;
+declare class AdminLogoutRequest$Type extends MessageType<AdminLogoutRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminLogoutRequest>): AdminLogoutRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminLogoutRequest,
+  ): AdminLogoutRequest;
+  internalBinaryWrite(
+    message: AdminLogoutRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLogoutRequest
+ */
+export declare const AdminLogoutRequest: AdminLogoutRequest$Type;
+declare class AdminLogoutResponse$Type extends MessageType<AdminLogoutResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminLogoutResponse>): AdminLogoutResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminLogoutResponse,
+  ): AdminLogoutResponse;
+  internalBinaryWrite(
+    message: AdminLogoutResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLogoutResponse
+ */
+export declare const AdminLogoutResponse: AdminLogoutResponse$Type;
+declare class AdminRevokeAllSessionsRequest$Type extends MessageType<AdminRevokeAllSessionsRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminRevokeAllSessionsRequest>): AdminRevokeAllSessionsRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminRevokeAllSessionsRequest,
+  ): AdminRevokeAllSessionsRequest;
+  internalBinaryWrite(
+    message: AdminRevokeAllSessionsRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRevokeAllSessionsRequest
+ */
+export declare const AdminRevokeAllSessionsRequest: AdminRevokeAllSessionsRequest$Type;
+declare class AdminRevokeAllSessionsResponse$Type extends MessageType<AdminRevokeAllSessionsResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminRevokeAllSessionsResponse>): AdminRevokeAllSessionsResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminRevokeAllSessionsResponse,
+  ): AdminRevokeAllSessionsResponse;
+  internalBinaryWrite(
+    message: AdminRevokeAllSessionsResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRevokeAllSessionsResponse
+ */
+export declare const AdminRevokeAllSessionsResponse: AdminRevokeAllSessionsResponse$Type;
+declare class AdminGetActiveSessionsRequest$Type extends MessageType<AdminGetActiveSessionsRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminGetActiveSessionsRequest>): AdminGetActiveSessionsRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminGetActiveSessionsRequest,
+  ): AdminGetActiveSessionsRequest;
+  internalBinaryWrite(
+    message: AdminGetActiveSessionsRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminGetActiveSessionsRequest
+ */
+export declare const AdminGetActiveSessionsRequest: AdminGetActiveSessionsRequest$Type;
+declare class AdminGetActiveSessionsResponse$Type extends MessageType<AdminGetActiveSessionsResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminGetActiveSessionsResponse>): AdminGetActiveSessionsResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminGetActiveSessionsResponse,
+  ): AdminGetActiveSessionsResponse;
+  internalBinaryWrite(
+    message: AdminGetActiveSessionsResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminGetActiveSessionsResponse
+ */
+export declare const AdminGetActiveSessionsResponse: AdminGetActiveSessionsResponse$Type;
+declare class AdminSetupMfaRequest$Type extends MessageType<AdminSetupMfaRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminSetupMfaRequest>): AdminSetupMfaRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminSetupMfaRequest,
+  ): AdminSetupMfaRequest;
+  internalBinaryWrite(
+    message: AdminSetupMfaRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminSetupMfaRequest
+ */
+export declare const AdminSetupMfaRequest: AdminSetupMfaRequest$Type;
+declare class AdminSetupMfaResponse$Type extends MessageType<AdminSetupMfaResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminSetupMfaResponse>): AdminSetupMfaResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminSetupMfaResponse,
+  ): AdminSetupMfaResponse;
+  internalBinaryWrite(
+    message: AdminSetupMfaResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminSetupMfaResponse
+ */
+export declare const AdminSetupMfaResponse: AdminSetupMfaResponse$Type;
+declare class AdminVerifyMfaRequest$Type extends MessageType<AdminVerifyMfaRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminVerifyMfaRequest>): AdminVerifyMfaRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminVerifyMfaRequest,
+  ): AdminVerifyMfaRequest;
+  internalBinaryWrite(
+    message: AdminVerifyMfaRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminVerifyMfaRequest
+ */
+export declare const AdminVerifyMfaRequest: AdminVerifyMfaRequest$Type;
+declare class AdminVerifyMfaResponse$Type extends MessageType<AdminVerifyMfaResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminVerifyMfaResponse>): AdminVerifyMfaResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminVerifyMfaResponse,
+  ): AdminVerifyMfaResponse;
+  internalBinaryWrite(
+    message: AdminVerifyMfaResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminVerifyMfaResponse
+ */
+export declare const AdminVerifyMfaResponse: AdminVerifyMfaResponse$Type;
+declare class AdminDisableMfaRequest$Type extends MessageType<AdminDisableMfaRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminDisableMfaRequest>): AdminDisableMfaRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminDisableMfaRequest,
+  ): AdminDisableMfaRequest;
+  internalBinaryWrite(
+    message: AdminDisableMfaRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminDisableMfaRequest
+ */
+export declare const AdminDisableMfaRequest: AdminDisableMfaRequest$Type;
+declare class AdminDisableMfaResponse$Type extends MessageType<AdminDisableMfaResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminDisableMfaResponse>): AdminDisableMfaResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminDisableMfaResponse,
+  ): AdminDisableMfaResponse;
+  internalBinaryWrite(
+    message: AdminDisableMfaResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminDisableMfaResponse
+ */
+export declare const AdminDisableMfaResponse: AdminDisableMfaResponse$Type;
+declare class AdminRegenerateBackupCodesRequest$Type extends MessageType<AdminRegenerateBackupCodesRequest> {
+  constructor();
+  create(
+    value?: PartialMessage<AdminRegenerateBackupCodesRequest>,
+  ): AdminRegenerateBackupCodesRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminRegenerateBackupCodesRequest,
+  ): AdminRegenerateBackupCodesRequest;
+  internalBinaryWrite(
+    message: AdminRegenerateBackupCodesRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRegenerateBackupCodesRequest
+ */
+export declare const AdminRegenerateBackupCodesRequest: AdminRegenerateBackupCodesRequest$Type;
+declare class AdminRegenerateBackupCodesResponse$Type extends MessageType<AdminRegenerateBackupCodesResponse> {
+  constructor();
+  create(
+    value?: PartialMessage<AdminRegenerateBackupCodesResponse>,
+  ): AdminRegenerateBackupCodesResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminRegenerateBackupCodesResponse,
+  ): AdminRegenerateBackupCodesResponse;
+  internalBinaryWrite(
+    message: AdminRegenerateBackupCodesResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRegenerateBackupCodesResponse
+ */
+export declare const AdminRegenerateBackupCodesResponse: AdminRegenerateBackupCodesResponse$Type;
+declare class AdminChangePasswordRequest$Type extends MessageType<AdminChangePasswordRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminChangePasswordRequest>): AdminChangePasswordRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminChangePasswordRequest,
+  ): AdminChangePasswordRequest;
+  internalBinaryWrite(
+    message: AdminChangePasswordRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminChangePasswordRequest
+ */
+export declare const AdminChangePasswordRequest: AdminChangePasswordRequest$Type;
+declare class AdminChangePasswordResponse$Type extends MessageType<AdminChangePasswordResponse> {
+  constructor();
+  create(value?: PartialMessage<AdminChangePasswordResponse>): AdminChangePasswordResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminChangePasswordResponse,
+  ): AdminChangePasswordResponse;
+  internalBinaryWrite(
+    message: AdminChangePasswordResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminChangePasswordResponse
+ */
+export declare const AdminChangePasswordResponse: AdminChangePasswordResponse$Type;
+declare class AdminForcePasswordChangeRequest$Type extends MessageType<AdminForcePasswordChangeRequest> {
+  constructor();
+  create(value?: PartialMessage<AdminForcePasswordChangeRequest>): AdminForcePasswordChangeRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminForcePasswordChangeRequest,
+  ): AdminForcePasswordChangeRequest;
+  internalBinaryWrite(
+    message: AdminForcePasswordChangeRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminForcePasswordChangeRequest
+ */
+export declare const AdminForcePasswordChangeRequest: AdminForcePasswordChangeRequest$Type;
+declare class AdminForcePasswordChangeResponse$Type extends MessageType<AdminForcePasswordChangeResponse> {
+  constructor();
+  create(
+    value?: PartialMessage<AdminForcePasswordChangeResponse>,
+  ): AdminForcePasswordChangeResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AdminForcePasswordChangeResponse,
+  ): AdminForcePasswordChangeResponse;
+  internalBinaryWrite(
+    message: AdminForcePasswordChangeResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminForcePasswordChangeResponse
+ */
+export declare const AdminForcePasswordChangeResponse: AdminForcePasswordChangeResponse$Type;
+declare class OperatorAssignment$Type extends MessageType<OperatorAssignment> {
+  constructor();
+  create(value?: PartialMessage<OperatorAssignment>): OperatorAssignment;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: OperatorAssignment,
+  ): OperatorAssignment;
+  internalBinaryWrite(
+    message: OperatorAssignment,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.OperatorAssignment
+ */
+export declare const OperatorAssignment: OperatorAssignment$Type;
+declare class AssignOperatorRequest$Type extends MessageType<AssignOperatorRequest> {
+  constructor();
+  create(value?: PartialMessage<AssignOperatorRequest>): AssignOperatorRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AssignOperatorRequest,
+  ): AssignOperatorRequest;
+  internalBinaryWrite(
+    message: AssignOperatorRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AssignOperatorRequest
+ */
+export declare const AssignOperatorRequest: AssignOperatorRequest$Type;
+declare class AssignOperatorResponse$Type extends MessageType<AssignOperatorResponse> {
+  constructor();
+  create(value?: PartialMessage<AssignOperatorResponse>): AssignOperatorResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: AssignOperatorResponse,
+  ): AssignOperatorResponse;
+  internalBinaryWrite(
+    message: AssignOperatorResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AssignOperatorResponse
+ */
+export declare const AssignOperatorResponse: AssignOperatorResponse$Type;
+declare class RevokeOperatorAssignmentRequest$Type extends MessageType<RevokeOperatorAssignmentRequest> {
+  constructor();
+  create(value?: PartialMessage<RevokeOperatorAssignmentRequest>): RevokeOperatorAssignmentRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: RevokeOperatorAssignmentRequest,
+  ): RevokeOperatorAssignmentRequest;
+  internalBinaryWrite(
+    message: RevokeOperatorAssignmentRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.RevokeOperatorAssignmentRequest
+ */
+export declare const RevokeOperatorAssignmentRequest: RevokeOperatorAssignmentRequest$Type;
+declare class RevokeOperatorAssignmentResponse$Type extends MessageType<RevokeOperatorAssignmentResponse> {
+  constructor();
+  create(
+    value?: PartialMessage<RevokeOperatorAssignmentResponse>,
+  ): RevokeOperatorAssignmentResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: RevokeOperatorAssignmentResponse,
+  ): RevokeOperatorAssignmentResponse;
+  internalBinaryWrite(
+    message: RevokeOperatorAssignmentResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.RevokeOperatorAssignmentResponse
+ */
+export declare const RevokeOperatorAssignmentResponse: RevokeOperatorAssignmentResponse$Type;
+declare class GetOperatorAssignmentRequest$Type extends MessageType<GetOperatorAssignmentRequest> {
+  constructor();
+  create(value?: PartialMessage<GetOperatorAssignmentRequest>): GetOperatorAssignmentRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetOperatorAssignmentRequest,
+  ): GetOperatorAssignmentRequest;
+  internalBinaryWrite(
+    message: GetOperatorAssignmentRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentRequest
+ */
+export declare const GetOperatorAssignmentRequest: GetOperatorAssignmentRequest$Type;
+declare class GetOperatorAssignmentResponse$Type extends MessageType<GetOperatorAssignmentResponse> {
+  constructor();
+  create(value?: PartialMessage<GetOperatorAssignmentResponse>): GetOperatorAssignmentResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetOperatorAssignmentResponse,
+  ): GetOperatorAssignmentResponse;
+  internalBinaryWrite(
+    message: GetOperatorAssignmentResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentResponse
+ */
+export declare const GetOperatorAssignmentResponse: GetOperatorAssignmentResponse$Type;
+declare class GetServiceOperatorAssignmentsRequest$Type extends MessageType<GetServiceOperatorAssignmentsRequest> {
+  constructor();
+  create(
+    value?: PartialMessage<GetServiceOperatorAssignmentsRequest>,
+  ): GetServiceOperatorAssignmentsRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetServiceOperatorAssignmentsRequest,
+  ): GetServiceOperatorAssignmentsRequest;
+  internalBinaryWrite(
+    message: GetServiceOperatorAssignmentsRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetServiceOperatorAssignmentsRequest
+ */
+export declare const GetServiceOperatorAssignmentsRequest: GetServiceOperatorAssignmentsRequest$Type;
+declare class GetServiceOperatorAssignmentsResponse$Type extends MessageType<GetServiceOperatorAssignmentsResponse> {
+  constructor();
+  create(
+    value?: PartialMessage<GetServiceOperatorAssignmentsResponse>,
+  ): GetServiceOperatorAssignmentsResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetServiceOperatorAssignmentsResponse,
+  ): GetServiceOperatorAssignmentsResponse;
+  internalBinaryWrite(
+    message: GetServiceOperatorAssignmentsResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetServiceOperatorAssignmentsResponse
+ */
+export declare const GetServiceOperatorAssignmentsResponse: GetServiceOperatorAssignmentsResponse$Type;
+declare class UpdateOperatorAssignmentPermissionsRequest$Type extends MessageType<UpdateOperatorAssignmentPermissionsRequest> {
+  constructor();
+  create(
+    value?: PartialMessage<UpdateOperatorAssignmentPermissionsRequest>,
+  ): UpdateOperatorAssignmentPermissionsRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UpdateOperatorAssignmentPermissionsRequest,
+  ): UpdateOperatorAssignmentPermissionsRequest;
+  internalBinaryWrite(
+    message: UpdateOperatorAssignmentPermissionsRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.UpdateOperatorAssignmentPermissionsRequest
+ */
+export declare const UpdateOperatorAssignmentPermissionsRequest: UpdateOperatorAssignmentPermissionsRequest$Type;
+declare class UpdateOperatorAssignmentPermissionsResponse$Type extends MessageType<UpdateOperatorAssignmentPermissionsResponse> {
+  constructor();
+  create(
+    value?: PartialMessage<UpdateOperatorAssignmentPermissionsResponse>,
+  ): UpdateOperatorAssignmentPermissionsResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: UpdateOperatorAssignmentPermissionsResponse,
+  ): UpdateOperatorAssignmentPermissionsResponse;
+  internalBinaryWrite(
+    message: UpdateOperatorAssignmentPermissionsResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.UpdateOperatorAssignmentPermissionsResponse
+ */
+export declare const UpdateOperatorAssignmentPermissionsResponse: UpdateOperatorAssignmentPermissionsResponse$Type;
+declare class GetOperatorAssignmentPermissionsRequest$Type extends MessageType<GetOperatorAssignmentPermissionsRequest> {
+  constructor();
+  create(
+    value?: PartialMessage<GetOperatorAssignmentPermissionsRequest>,
+  ): GetOperatorAssignmentPermissionsRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetOperatorAssignmentPermissionsRequest,
+  ): GetOperatorAssignmentPermissionsRequest;
+  internalBinaryWrite(
+    message: GetOperatorAssignmentPermissionsRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentPermissionsRequest
+ */
+export declare const GetOperatorAssignmentPermissionsRequest: GetOperatorAssignmentPermissionsRequest$Type;
+declare class GetOperatorAssignmentPermissionsResponse$Type extends MessageType<GetOperatorAssignmentPermissionsResponse> {
+  constructor();
+  create(
+    value?: PartialMessage<GetOperatorAssignmentPermissionsResponse>,
+  ): GetOperatorAssignmentPermissionsResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetOperatorAssignmentPermissionsResponse,
+  ): GetOperatorAssignmentPermissionsResponse;
+  internalBinaryWrite(
+    message: GetOperatorAssignmentPermissionsResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentPermissionsResponse
+ */
+export declare const GetOperatorAssignmentPermissionsResponse: GetOperatorAssignmentPermissionsResponse$Type;
 /**
  * @generated ServiceType for protobuf service auth.v1.AuthService
  */

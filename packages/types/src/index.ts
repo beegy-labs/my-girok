@@ -44,3 +44,6 @@ export {
 
 // Re-export identity module as namespace for full access
 export * as Identity from './identity/index.js';
+
+// Re-export audit proto enums for SSOT
+export * as Audit from './audit/index.js';

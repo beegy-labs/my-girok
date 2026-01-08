@@ -4,6 +4,44 @@
 // @ts-nocheck
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import type { ServiceInfo } from '@protobuf-ts/runtime-rpc';
+import type { GetOperatorAssignmentPermissionsResponse } from './auth_pb';
+import type { GetOperatorAssignmentPermissionsRequest } from './auth_pb';
+import type { UpdateOperatorAssignmentPermissionsResponse } from './auth_pb';
+import type { UpdateOperatorAssignmentPermissionsRequest } from './auth_pb';
+import type { GetServiceOperatorAssignmentsResponse } from './auth_pb';
+import type { GetServiceOperatorAssignmentsRequest } from './auth_pb';
+import type { GetOperatorAssignmentResponse } from './auth_pb';
+import type { GetOperatorAssignmentRequest } from './auth_pb';
+import type { RevokeOperatorAssignmentResponse } from './auth_pb';
+import type { RevokeOperatorAssignmentRequest } from './auth_pb';
+import type { AssignOperatorResponse } from './auth_pb';
+import type { AssignOperatorRequest } from './auth_pb';
+import type { AdminForcePasswordChangeResponse } from './auth_pb';
+import type { AdminForcePasswordChangeRequest } from './auth_pb';
+import type { AdminChangePasswordResponse } from './auth_pb';
+import type { AdminChangePasswordRequest } from './auth_pb';
+import type { AdminRegenerateBackupCodesResponse } from './auth_pb';
+import type { AdminRegenerateBackupCodesRequest } from './auth_pb';
+import type { AdminDisableMfaResponse } from './auth_pb';
+import type { AdminDisableMfaRequest } from './auth_pb';
+import type { AdminVerifyMfaResponse } from './auth_pb';
+import type { AdminVerifyMfaRequest } from './auth_pb';
+import type { AdminSetupMfaResponse } from './auth_pb';
+import type { AdminSetupMfaRequest } from './auth_pb';
+import type { AdminGetActiveSessionsResponse } from './auth_pb';
+import type { AdminGetActiveSessionsRequest } from './auth_pb';
+import type { AdminRevokeAllSessionsResponse } from './auth_pb';
+import type { AdminRevokeAllSessionsRequest } from './auth_pb';
+import type { AdminLogoutResponse } from './auth_pb';
+import type { AdminLogoutRequest } from './auth_pb';
+import type { AdminRefreshSessionResponse } from './auth_pb';
+import type { AdminRefreshSessionRequest } from './auth_pb';
+import type { AdminValidateSessionResponse } from './auth_pb';
+import type { AdminValidateSessionRequest } from './auth_pb';
+import type { AdminLoginMfaResponse } from './auth_pb';
+import type { AdminLoginMfaRequest } from './auth_pb';
+import type { AdminLoginResponse } from './auth_pb';
+import type { AdminLoginRequest } from './auth_pb';
 import type { GetActiveSanctionsResponse } from './auth_pb';
 import type { GetActiveSanctionsRequest } from './auth_pb';
 import type { CheckSanctionResponse } from './auth_pb';
@@ -67,7 +105,7 @@ export interface IAuthServiceClient {
     options?: RpcOptions,
   ): UnaryCall<GetRolesByOperatorRequest, GetRolesByOperatorResponse>;
   /**
-   * Operator operations
+   * Operator operations (legacy - use OperatorAssignment for new implementations)
    *
    * @generated from protobuf rpc: GetOperator
    */
@@ -98,6 +136,164 @@ export interface IAuthServiceClient {
     input: GetActiveSanctionsRequest,
     options?: RpcOptions,
   ): UnaryCall<GetActiveSanctionsRequest, GetActiveSanctionsResponse>;
+  /**
+   * Admin login - Step 1: Validate credentials (MFA challenge returned if enabled)
+   *
+   * @generated from protobuf rpc: AdminLogin
+   */
+  adminLogin(
+    input: AdminLoginRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminLoginRequest, AdminLoginResponse>;
+  /**
+   * Admin login - Step 2: Verify MFA code
+   *
+   * @generated from protobuf rpc: AdminLoginMfa
+   */
+  adminLoginMfa(
+    input: AdminLoginMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminLoginMfaRequest, AdminLoginMfaResponse>;
+  /**
+   * Admin session management
+   *
+   * @generated from protobuf rpc: AdminValidateSession
+   */
+  adminValidateSession(
+    input: AdminValidateSessionRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminValidateSessionRequest, AdminValidateSessionResponse>;
+  /**
+   * @generated from protobuf rpc: AdminRefreshSession
+   */
+  adminRefreshSession(
+    input: AdminRefreshSessionRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminRefreshSessionRequest, AdminRefreshSessionResponse>;
+  /**
+   * @generated from protobuf rpc: AdminLogout
+   */
+  adminLogout(
+    input: AdminLogoutRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminLogoutRequest, AdminLogoutResponse>;
+  /**
+   * @generated from protobuf rpc: AdminRevokeAllSessions
+   */
+  adminRevokeAllSessions(
+    input: AdminRevokeAllSessionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminRevokeAllSessionsRequest, AdminRevokeAllSessionsResponse>;
+  /**
+   * @generated from protobuf rpc: AdminGetActiveSessions
+   */
+  adminGetActiveSessions(
+    input: AdminGetActiveSessionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminGetActiveSessionsRequest, AdminGetActiveSessionsResponse>;
+  /**
+   * Admin MFA management
+   *
+   * @generated from protobuf rpc: AdminSetupMfa
+   */
+  adminSetupMfa(
+    input: AdminSetupMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminSetupMfaRequest, AdminSetupMfaResponse>;
+  /**
+   * @generated from protobuf rpc: AdminVerifyMfa
+   */
+  adminVerifyMfa(
+    input: AdminVerifyMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminVerifyMfaRequest, AdminVerifyMfaResponse>;
+  /**
+   * @generated from protobuf rpc: AdminDisableMfa
+   */
+  adminDisableMfa(
+    input: AdminDisableMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminDisableMfaRequest, AdminDisableMfaResponse>;
+  /**
+   * @generated from protobuf rpc: AdminRegenerateBackupCodes
+   */
+  adminRegenerateBackupCodes(
+    input: AdminRegenerateBackupCodesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminRegenerateBackupCodesRequest, AdminRegenerateBackupCodesResponse>;
+  /**
+   * Admin password management
+   *
+   * @generated from protobuf rpc: AdminChangePassword
+   */
+  adminChangePassword(
+    input: AdminChangePasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminChangePasswordRequest, AdminChangePasswordResponse>;
+  /**
+   * @generated from protobuf rpc: AdminForcePasswordChange
+   */
+  adminForcePasswordChange(
+    input: AdminForcePasswordChangeRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminForcePasswordChangeRequest, AdminForcePasswordChangeResponse>;
+  /**
+   * Assign operator role to a user account
+   *
+   * @generated from protobuf rpc: AssignOperator
+   */
+  assignOperator(
+    input: AssignOperatorRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AssignOperatorRequest, AssignOperatorResponse>;
+  /**
+   * Revoke operator assignment
+   *
+   * @generated from protobuf rpc: RevokeOperatorAssignment
+   */
+  revokeOperatorAssignment(
+    input: RevokeOperatorAssignmentRequest,
+    options?: RpcOptions,
+  ): UnaryCall<RevokeOperatorAssignmentRequest, RevokeOperatorAssignmentResponse>;
+  /**
+   * Get operator assignment for a user
+   *
+   * @generated from protobuf rpc: GetOperatorAssignment
+   */
+  getOperatorAssignment(
+    input: GetOperatorAssignmentRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetOperatorAssignmentRequest, GetOperatorAssignmentResponse>;
+  /**
+   * Get all operator assignments for a service
+   *
+   * @generated from protobuf rpc: GetServiceOperatorAssignments
+   */
+  getServiceOperatorAssignments(
+    input: GetServiceOperatorAssignmentsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetServiceOperatorAssignmentsRequest, GetServiceOperatorAssignmentsResponse>;
+  /**
+   * Update operator assignment permissions
+   *
+   * @generated from protobuf rpc: UpdateOperatorAssignmentPermissions
+   */
+  updateOperatorAssignmentPermissions(
+    input: UpdateOperatorAssignmentPermissionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<
+    UpdateOperatorAssignmentPermissionsRequest,
+    UpdateOperatorAssignmentPermissionsResponse
+  >;
+  /**
+   * Get operator assignment permissions
+   *
+   * @generated from protobuf rpc: GetOperatorAssignmentPermissions
+   */
+  getOperatorAssignmentPermissions(
+    input: GetOperatorAssignmentPermissionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetOperatorAssignmentPermissionsRequest, GetOperatorAssignmentPermissionsResponse>;
 }
 /**
  * AuthService provides authentication, authorization, and sanction operations
@@ -147,7 +343,7 @@ export declare class AuthServiceClient implements IAuthServiceClient, ServiceInf
     options?: RpcOptions,
   ): UnaryCall<GetRolesByOperatorRequest, GetRolesByOperatorResponse>;
   /**
-   * Operator operations
+   * Operator operations (legacy - use OperatorAssignment for new implementations)
    *
    * @generated from protobuf rpc: GetOperator
    */
@@ -178,4 +374,162 @@ export declare class AuthServiceClient implements IAuthServiceClient, ServiceInf
     input: GetActiveSanctionsRequest,
     options?: RpcOptions,
   ): UnaryCall<GetActiveSanctionsRequest, GetActiveSanctionsResponse>;
+  /**
+   * Admin login - Step 1: Validate credentials (MFA challenge returned if enabled)
+   *
+   * @generated from protobuf rpc: AdminLogin
+   */
+  adminLogin(
+    input: AdminLoginRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminLoginRequest, AdminLoginResponse>;
+  /**
+   * Admin login - Step 2: Verify MFA code
+   *
+   * @generated from protobuf rpc: AdminLoginMfa
+   */
+  adminLoginMfa(
+    input: AdminLoginMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminLoginMfaRequest, AdminLoginMfaResponse>;
+  /**
+   * Admin session management
+   *
+   * @generated from protobuf rpc: AdminValidateSession
+   */
+  adminValidateSession(
+    input: AdminValidateSessionRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminValidateSessionRequest, AdminValidateSessionResponse>;
+  /**
+   * @generated from protobuf rpc: AdminRefreshSession
+   */
+  adminRefreshSession(
+    input: AdminRefreshSessionRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminRefreshSessionRequest, AdminRefreshSessionResponse>;
+  /**
+   * @generated from protobuf rpc: AdminLogout
+   */
+  adminLogout(
+    input: AdminLogoutRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminLogoutRequest, AdminLogoutResponse>;
+  /**
+   * @generated from protobuf rpc: AdminRevokeAllSessions
+   */
+  adminRevokeAllSessions(
+    input: AdminRevokeAllSessionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminRevokeAllSessionsRequest, AdminRevokeAllSessionsResponse>;
+  /**
+   * @generated from protobuf rpc: AdminGetActiveSessions
+   */
+  adminGetActiveSessions(
+    input: AdminGetActiveSessionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminGetActiveSessionsRequest, AdminGetActiveSessionsResponse>;
+  /**
+   * Admin MFA management
+   *
+   * @generated from protobuf rpc: AdminSetupMfa
+   */
+  adminSetupMfa(
+    input: AdminSetupMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminSetupMfaRequest, AdminSetupMfaResponse>;
+  /**
+   * @generated from protobuf rpc: AdminVerifyMfa
+   */
+  adminVerifyMfa(
+    input: AdminVerifyMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminVerifyMfaRequest, AdminVerifyMfaResponse>;
+  /**
+   * @generated from protobuf rpc: AdminDisableMfa
+   */
+  adminDisableMfa(
+    input: AdminDisableMfaRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminDisableMfaRequest, AdminDisableMfaResponse>;
+  /**
+   * @generated from protobuf rpc: AdminRegenerateBackupCodes
+   */
+  adminRegenerateBackupCodes(
+    input: AdminRegenerateBackupCodesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminRegenerateBackupCodesRequest, AdminRegenerateBackupCodesResponse>;
+  /**
+   * Admin password management
+   *
+   * @generated from protobuf rpc: AdminChangePassword
+   */
+  adminChangePassword(
+    input: AdminChangePasswordRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminChangePasswordRequest, AdminChangePasswordResponse>;
+  /**
+   * @generated from protobuf rpc: AdminForcePasswordChange
+   */
+  adminForcePasswordChange(
+    input: AdminForcePasswordChangeRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AdminForcePasswordChangeRequest, AdminForcePasswordChangeResponse>;
+  /**
+   * Assign operator role to a user account
+   *
+   * @generated from protobuf rpc: AssignOperator
+   */
+  assignOperator(
+    input: AssignOperatorRequest,
+    options?: RpcOptions,
+  ): UnaryCall<AssignOperatorRequest, AssignOperatorResponse>;
+  /**
+   * Revoke operator assignment
+   *
+   * @generated from protobuf rpc: RevokeOperatorAssignment
+   */
+  revokeOperatorAssignment(
+    input: RevokeOperatorAssignmentRequest,
+    options?: RpcOptions,
+  ): UnaryCall<RevokeOperatorAssignmentRequest, RevokeOperatorAssignmentResponse>;
+  /**
+   * Get operator assignment for a user
+   *
+   * @generated from protobuf rpc: GetOperatorAssignment
+   */
+  getOperatorAssignment(
+    input: GetOperatorAssignmentRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetOperatorAssignmentRequest, GetOperatorAssignmentResponse>;
+  /**
+   * Get all operator assignments for a service
+   *
+   * @generated from protobuf rpc: GetServiceOperatorAssignments
+   */
+  getServiceOperatorAssignments(
+    input: GetServiceOperatorAssignmentsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetServiceOperatorAssignmentsRequest, GetServiceOperatorAssignmentsResponse>;
+  /**
+   * Update operator assignment permissions
+   *
+   * @generated from protobuf rpc: UpdateOperatorAssignmentPermissions
+   */
+  updateOperatorAssignmentPermissions(
+    input: UpdateOperatorAssignmentPermissionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<
+    UpdateOperatorAssignmentPermissionsRequest,
+    UpdateOperatorAssignmentPermissionsResponse
+  >;
+  /**
+   * Get operator assignment permissions
+   *
+   * @generated from protobuf rpc: GetOperatorAssignmentPermissions
+   */
+  getOperatorAssignmentPermissions(
+    input: GetOperatorAssignmentPermissionsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetOperatorAssignmentPermissionsRequest, GetOperatorAssignmentPermissionsResponse>;
 }

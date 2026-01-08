@@ -196,9 +196,10 @@ export class AdminController {
   @ApiOperation({ summary: 'Change admin password' })
   @ApiResponse({ status: 200, description: 'Password changed' })
   async changePassword(
+    @Req() req: Request,
     @CurrentSession() session: BffSession,
     @Body() dto: AdminChangePasswordDto,
   ): Promise<{ success: boolean; message: string }> {
-    return this.adminService.changePassword(session, dto.currentPassword, dto.newPassword);
+    return this.adminService.changePassword(req, session, dto.currentPassword, dto.newPassword);
   }
 }
