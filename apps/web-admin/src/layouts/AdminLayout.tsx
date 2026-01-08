@@ -18,7 +18,7 @@ const LANGUAGES = [
 
 export default function AdminLayout() {
   const { t, i18n } = useTranslation();
-  const { admin, clearAuth, refreshToken } = useAdminAuthStore();
+  const { admin, clearAuth } = useAdminAuthStore();
   const { resolvedTheme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -37,12 +37,10 @@ export default function AdminLayout() {
   };
 
   const handleLogout = async () => {
-    if (refreshToken) {
-      try {
-        await authApi.logout(refreshToken);
-      } catch {
-        // Ignore logout errors
-      }
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore logout errors
     }
     clearAuth();
     navigate('/login');
@@ -160,7 +158,7 @@ export default function AdminLayout() {
                   <div className="px-4 py-2 border-b border-theme-border-default">
                     <div className="text-sm text-theme-text-secondary">{admin?.email}</div>
                     <div className="text-xs text-theme-text-tertiary">
-                      {admin?.scope === 'SYSTEM' ? 'System Admin' : admin?.tenantSlug}
+                      {admin?.scope === 'SYSTEM' ? 'System Admin' : 'Tenant Admin'}
                     </div>
                   </div>
                   <button

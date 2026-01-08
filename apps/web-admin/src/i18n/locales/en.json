@@ -78,7 +78,21 @@
     "passwordPlaceholder": "Enter your password",
     "invalidCredentials": "Invalid email or password",
     "protectedArea": "Protected administrative area. Unauthorized access is prohibited.",
-    "sessionExpired": "Session expired. Please login again."
+    "sessionExpired": "Session expired. Please login again.",
+    "mfa": {
+      "title": "Two-Factor Authentication",
+      "subtitle": "Enter the verification code to continue",
+      "codeLabel": "Verification Code",
+      "backupCodeLabel": "Backup Code",
+      "codeHint": "Enter the 6-digit code from your authenticator app",
+      "backupCodeHint": "Enter one of your backup codes",
+      "methodTotp": "Authenticator",
+      "methodBackup": "Backup Code",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "invalidCode": "Invalid verification code",
+      "backToLogin": "Back to login"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
