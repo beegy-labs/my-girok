@@ -220,6 +220,65 @@ export const authProviderToProto: Record<AuthProvider, number> = {
 };
 
 /**
+ * Account type enumeration
+ * Defines the type of account for session management and access control
+ * Used across BFF, backend services, and frontend applications
+ */
+export enum AccountType {
+  /** Regular end-user account */
+  USER = 'USER',
+  /** Operator account (service-specific privileged user) */
+  OPERATOR = 'OPERATOR',
+  /** Administrator account (platform-wide admin) */
+  ADMIN = 'ADMIN',
+}
+
+/** Array of all account types for validation */
+export const ACCOUNT_TYPES = Object.values(AccountType) as AccountType[];
+
+/** Proto enum numeric values for AccountType */
+export const AccountTypeProto = {
+  UNSPECIFIED: 0,
+  USER: 1,
+  OPERATOR: 2,
+  ADMIN: 3,
+} as const;
+
+/** Map Proto numeric to TypeScript enum */
+export const protoToAccountType: Record<number, AccountType> = {
+  0: AccountType.USER,
+  1: AccountType.USER,
+  2: AccountType.OPERATOR,
+  3: AccountType.ADMIN,
+};
+
+/** Map TypeScript enum to Proto numeric */
+export const accountTypeToProto: Record<AccountType, number> = {
+  [AccountType.USER]: AccountTypeProto.USER,
+  [AccountType.OPERATOR]: AccountTypeProto.OPERATOR,
+  [AccountType.ADMIN]: AccountTypeProto.ADMIN,
+};
+
+/**
+ * OAuth provider type derived from AuthProvider enum
+ * Used for OAuth flow identification across frontend and backend
+ */
+export type OAuthProvider = Exclude<AuthProvider, AuthProvider.LOCAL>;
+
+/** Array of supported OAuth providers for validation and iteration */
+export const OAUTH_PROVIDERS: readonly OAuthProvider[] = [
+  AuthProvider.GOOGLE,
+  AuthProvider.KAKAO,
+  AuthProvider.NAVER,
+  AuthProvider.APPLE,
+] as const;
+
+/** Helper to check if a provider is an OAuth provider (not LOCAL) */
+export function isOAuthProvider(provider: AuthProvider): provider is OAuthProvider {
+  return provider !== AuthProvider.LOCAL;
+}
+
+/**
  * Sanction severity enumeration for Proto mapping
  * SSOT: Aligned with packages/proto/auth/v1/auth.proto
  */
