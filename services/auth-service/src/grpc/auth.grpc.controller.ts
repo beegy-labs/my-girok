@@ -1,8 +1,12 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller, Logger, Inject } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import * as bcrypt from 'bcrypt';
 import { Prisma } from '../../node_modules/.prisma/auth-client';
 import { PrismaService } from '../database/prisma.service';
+import { ID } from '@my-girok/nest-common';
 import {
   // Shared Proto enum utilities from SSOT
   toProtoTimestamp,
@@ -23,6 +27,11 @@ import {
   dbToProtoWithFallback,
 } from '@my-girok/nest-common';
 import { OperatorStatus, SanctionSubjectType } from '@my-girok/types';
+import { AdminSessionService } from '../admin/services/admin-session.service';
+import { AdminMfaService } from '../admin/services/admin-mfa.service';
+import { AdminPasswordService } from '../admin/services/admin-password.service';
+import { OperatorAssignmentService } from '../admin/services/operator-assignment.service';
+import { OutboxService } from '../common/outbox/outbox.service';
 
 // Proto enum values (re-exported for local use)
 const ProtoOperatorStatus = OperatorStatusProto;
@@ -229,11 +238,49 @@ interface SanctionRow {
   status: string;
 }
 
+// MFA Challenge TTL (5 minutes)
+const MFA_CHALLENGE_TTL_SECONDS = 300;
+const MFA_CHALLENGE_MAX_ATTEMPTS = 3;
+
+// Proto MfaMethod enum values
+const ProtoMfaMethod = {
+  UNSPECIFIED: 0,
+  TOTP: 1,
+  BACKUP_CODE: 2,
+} as const;
+
+// Proto OperatorAssignmentStatus enum values
+const ProtoOperatorAssignmentStatus = {
+  UNSPECIFIED: 0,
+  ACTIVE: 1,
+  SUSPENDED: 2,
+  REVOKED: 3,
+} as const;
+
+// MFA Challenge stored in cache
+interface MfaChallenge {
+  adminId: string;
+  email: string;
+  ipAddress: string;
+  userAgent: string;
+  deviceFingerprint?: string;
+  createdAt: string;
+  attempts: number;
+}
+
 @Controller()
 export class AuthGrpcController {
   private readonly logger = new Logger(AuthGrpcController.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly adminSessionService: AdminSessionService,
+    private readonly adminMfaService: AdminMfaService,
+    private readonly adminPasswordService: AdminPasswordService,
+    private readonly operatorAssignmentService: OperatorAssignmentService,
+    private readonly outboxService: OutboxService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+  ) {}
 
   /**
    * Map DB operator status to proto enum
@@ -1072,5 +1119,959 @@ export class AuthGrpcController {
         message: 'Internal error getting active sanctions',
       });
     }
+  }
+
+  // ============================================================
+  // Admin Authentication Operations
+  // ============================================================
+
+  @GrpcMethod('AuthService', 'AdminLogin')
+  async adminLogin(request: {
+    email: string;
+    password: string;
+    ipAddress: string;
+    userAgent: string;
+    deviceFingerprint?: string;
+  }): Promise<{
+    success: boolean;
+    mfaRequired: boolean;
+    challengeId?: string;
+    availableMethods: number[];
+    message: string;
+    admin?: unknown;
+    session?: unknown;
+    accessToken?: string;
+    refreshToken?: string;
+  }> {
+    this.logger.debug(`AdminLogin: email=${request.email}`);
+
+    try {
+      // Find admin by email
+      const admins = await this.prisma.$queryRaw<
+        {
+          id: string;
+          email: string;
+          password: string;
+          name: string;
+          scope: string;
+          roleId: string;
+          isActive: boolean;
+          mfaRequired: boolean;
+          forcePasswordChange: boolean;
+          failedLoginAttempts: number;
+          lockedUntil: Date | null;
+        }[]
+      >`
+        SELECT id, email, password, name, scope,
+               role_id as "roleId", is_active as "isActive",
+               mfa_required as "mfaRequired",
+               force_password_change as "forcePasswordChange",
+               failed_login_attempts as "failedLoginAttempts",
+               locked_until as "lockedUntil"
+        FROM admins
+        WHERE email = ${request.email} AND deleted_at IS NULL
+        LIMIT 1
+      `;
+
+      const admin = admins[0];
+
+      // Record login attempt
+      const recordAttempt = async (success: boolean, reason?: string, mfaAttempted = false) => {
+        const attemptId = ID.generate();
+        await this.prisma.$executeRaw`
+          INSERT INTO admin_login_attempts (
+            id, email, admin_id, ip_address, user_agent, device_fingerprint,
+            success, failure_reason, mfa_attempted, attempted_at
+          ) VALUES (
+            ${attemptId}::uuid, ${request.email}, ${admin?.id ?? null}::uuid,
+            ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
+            ${success}, ${reason}::admin_login_failure_reason, ${mfaAttempted}, NOW()
+          )
+        `;
+      };
+
+      if (!admin) {
+        await recordAttempt(false, 'INVALID_PASSWORD');
+        return {
+          success: false,
+          mfaRequired: false,
+          availableMethods: [],
+          message: 'Invalid credentials',
+        };
+      }
+
+      // Check if account is locked
+      if (admin.lockedUntil && new Date(admin.lockedUntil) > new Date()) {
+        await recordAttempt(false, 'ACCOUNT_LOCKED');
+        return {
+          success: false,
+          mfaRequired: false,
+          availableMethods: [],
+          message: `Account locked until ${admin.lockedUntil.toISOString()}`,
+        };
+      }
+
+      if (!admin.isActive) {
+        await recordAttempt(false, 'ACCOUNT_DISABLED');
+        return {
+          success: false,
+          mfaRequired: false,
+          availableMethods: [],
+          message: 'Account is disabled',
+        };
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(request.password, admin.password);
+      if (!isPasswordValid) {
+        // Increment failed attempts
+        const newAttempts = admin.failedLoginAttempts + 1;
+        const lockUntil = newAttempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null; // 15 min lock
+
+        await this.prisma.$executeRaw`
+          UPDATE admins
+          SET failed_login_attempts = ${newAttempts},
+              locked_until = ${lockUntil}
+          WHERE id = ${admin.id}::uuid
+        `;
+
+        await recordAttempt(false, 'INVALID_PASSWORD');
+        return {
+          success: false,
+          mfaRequired: false,
+          availableMethods: [],
+          message: 'Invalid credentials',
+        };
+      }
+
+      // Reset failed attempts on successful password
+      if (admin.failedLoginAttempts > 0) {
+        await this.prisma.$executeRaw`
+          UPDATE admins SET failed_login_attempts = 0, locked_until = NULL
+          WHERE id = ${admin.id}::uuid
+        `;
+      }
+
+      // Check if MFA is required
+      const mfaEnabled = await this.adminMfaService.isMfaEnabled(admin.id);
+
+      if (mfaEnabled) {
+        // Generate MFA challenge
+        const challengeId = ID.generate();
+        const challenge: MfaChallenge = {
+          adminId: admin.id,
+          email: admin.email,
+          ipAddress: request.ipAddress,
+          userAgent: request.userAgent,
+          deviceFingerprint: request.deviceFingerprint,
+          createdAt: new Date().toISOString(),
+          attempts: 0,
+        };
+
+        await this.cache.set(
+          `admin:mfa:challenge:${challengeId}`,
+          JSON.stringify(challenge),
+          MFA_CHALLENGE_TTL_SECONDS * 1000,
+        );
+
+        const availableMethods = await this.adminMfaService.getAvailableMethods(admin.id);
+        const protoMethods = availableMethods.map((m) =>
+          m === 'TOTP' ? ProtoMfaMethod.TOTP : ProtoMfaMethod.BACKUP_CODE,
+        );
+
+        await recordAttempt(false, 'MFA_REQUIRED', false);
+
+        return {
+          success: true,
+          mfaRequired: true,
+          challengeId,
+          availableMethods: protoMethods,
+          message: 'MFA verification required',
+        };
+      }
+
+      // No MFA - create session directly
+      const sessionResult = await this.adminSessionService.createSession(
+        admin.id,
+        {
+          ipAddress: request.ipAddress,
+          userAgent: request.userAgent,
+          deviceFingerprint: request.deviceFingerprint,
+        },
+        false, // mfaVerified
+      );
+
+      // Update last login
+      await this.prisma.$executeRaw`
+        UPDATE admins SET last_login_at = NOW() WHERE id = ${admin.id}::uuid
+      `;
+
+      await recordAttempt(true);
+
+      await this.outboxService.addEventDirect('ADMIN_LOGIN_SUCCESS', admin.id, {
+        adminId: admin.id,
+        sessionId: sessionResult.sessionId,
+        ipAddress: request.ipAddress,
+        mfaUsed: false,
+        timestamp: new Date().toISOString(),
+      });
+
+      return {
+        success: true,
+        mfaRequired: false,
+        availableMethods: [],
+        message: 'Login successful',
+        accessToken: sessionResult.accessToken,
+        refreshToken: sessionResult.refreshToken,
+      };
+    } catch (error) {
+      this.logger.error(`AdminLogin failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error during login',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminLoginMfa')
+  async adminLoginMfa(request: {
+    challengeId: string;
+    code: string;
+    method: number;
+    ipAddress: string;
+    userAgent: string;
+    deviceFingerprint?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    admin?: unknown;
+    session?: unknown;
+    accessToken?: string;
+    refreshToken?: string;
+  }> {
+    this.logger.debug(`AdminLoginMfa: challengeId=${request.challengeId}`);
+
+    try {
+      // Get challenge from cache
+      const challengeData = await this.cache.get<string>(
+        `admin:mfa:challenge:${request.challengeId}`,
+      );
+      if (!challengeData) {
+        return { success: false, message: 'Challenge expired or invalid' };
+      }
+
+      const challenge: MfaChallenge = JSON.parse(challengeData);
+
+      // Verify IP matches (security)
+      if (challenge.ipAddress !== request.ipAddress) {
+        this.logger.warn(
+          `MFA challenge IP mismatch: expected=${challenge.ipAddress}, got=${request.ipAddress}`,
+        );
+        await this.cache.del(`admin:mfa:challenge:${request.challengeId}`);
+        return { success: false, message: 'Security verification failed' };
+      }
+
+      // Check attempt limit
+      if (challenge.attempts >= MFA_CHALLENGE_MAX_ATTEMPTS) {
+        await this.cache.del(`admin:mfa:challenge:${request.challengeId}`);
+        return { success: false, message: 'Too many attempts' };
+      }
+
+      // Update attempt count
+      challenge.attempts++;
+      await this.cache.set(
+        `admin:mfa:challenge:${request.challengeId}`,
+        JSON.stringify(challenge),
+        MFA_CHALLENGE_TTL_SECONDS * 1000,
+      );
+
+      // Verify MFA code
+      let isValid = false;
+      const methodName = request.method === ProtoMfaMethod.TOTP ? 'TOTP' : 'BACKUP_CODE';
+
+      if (request.method === ProtoMfaMethod.TOTP) {
+        isValid = await this.adminMfaService.verifyTotpCode(challenge.adminId, request.code);
+      } else if (request.method === ProtoMfaMethod.BACKUP_CODE) {
+        isValid = await this.adminMfaService.verifyBackupCode(challenge.adminId, request.code);
+      }
+
+      if (!isValid) {
+        // Record failed MFA attempt
+        const attemptId = ID.generate();
+        await this.prisma.$executeRaw`
+          INSERT INTO admin_login_attempts (
+            id, email, admin_id, ip_address, user_agent, device_fingerprint,
+            success, failure_reason, mfa_attempted, mfa_method, attempted_at
+          ) VALUES (
+            ${attemptId}::uuid, ${challenge.email}, ${challenge.adminId}::uuid,
+            ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
+            false, 'INVALID_MFA_CODE'::admin_login_failure_reason, true, ${methodName}, NOW()
+          )
+        `;
+
+        return { success: false, message: 'Invalid MFA code' };
+      }
+
+      // Delete challenge
+      await this.cache.del(`admin:mfa:challenge:${request.challengeId}`);
+
+      // Create session with MFA verified
+      const sessionResult = await this.adminSessionService.createSession(
+        challenge.adminId,
+        {
+          ipAddress: request.ipAddress,
+          userAgent: request.userAgent,
+          deviceFingerprint: request.deviceFingerprint,
+        },
+        true, // mfaVerified
+        methodName,
+      );
+
+      // Update last login
+      await this.prisma.$executeRaw`
+        UPDATE admins SET last_login_at = NOW() WHERE id = ${challenge.adminId}::uuid
+      `;
+
+      // Record successful login
+      const attemptId = ID.generate();
+      await this.prisma.$executeRaw`
+        INSERT INTO admin_login_attempts (
+          id, email, admin_id, ip_address, user_agent, device_fingerprint,
+          success, mfa_attempted, mfa_method, attempted_at
+        ) VALUES (
+          ${attemptId}::uuid, ${challenge.email}, ${challenge.adminId}::uuid,
+          ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
+          true, true, ${methodName}, NOW()
+        )
+      `;
+
+      await this.outboxService.addEventDirect('ADMIN_LOGIN_SUCCESS', challenge.adminId, {
+        adminId: challenge.adminId,
+        sessionId: sessionResult.sessionId,
+        ipAddress: request.ipAddress,
+        mfaUsed: true,
+        mfaMethod: methodName,
+        timestamp: new Date().toISOString(),
+      });
+
+      return {
+        success: true,
+        message: 'Login successful',
+        accessToken: sessionResult.accessToken,
+        refreshToken: sessionResult.refreshToken,
+      };
+    } catch (error) {
+      this.logger.error(`AdminLoginMfa failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error during MFA verification',
+      });
+    }
+  }
+
+  // ============================================================
+  // Admin Session Operations
+  // ============================================================
+
+  @GrpcMethod('AuthService', 'AdminValidateSession')
+  async adminValidateSession(request: { tokenHash: string }): Promise<{
+    valid: boolean;
+    adminId?: string;
+    sessionId?: string;
+    mfaVerified?: boolean;
+    expiresAt?: { seconds: number; nanos: number };
+    message: string;
+  }> {
+    this.logger.debug('AdminValidateSession');
+
+    try {
+      const result = await this.adminSessionService.validateSession(request.tokenHash);
+
+      return {
+        valid: result.valid,
+        adminId: result.adminId,
+        sessionId: result.sessionId,
+        mfaVerified: result.mfaVerified,
+        expiresAt: result.expiresAt ? toProtoTimestamp(result.expiresAt) : undefined,
+        message: result.message,
+      };
+    } catch (error) {
+      this.logger.error(`AdminValidateSession failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error validating session',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminRefreshSession')
+  async adminRefreshSession(request: { refreshTokenHash: string }): Promise<{
+    success: boolean;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresAt?: { seconds: number; nanos: number };
+    message: string;
+  }> {
+    this.logger.debug('AdminRefreshSession');
+
+    try {
+      const result = await this.adminSessionService.refreshSession(request.refreshTokenHash);
+
+      return {
+        success: result.success,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresAt: result.expiresAt ? toProtoTimestamp(result.expiresAt) : undefined,
+        message: result.message,
+      };
+    } catch (error) {
+      this.logger.error(`AdminRefreshSession failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error refreshing session',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminLogout')
+  async adminLogout(request: { sessionId: string }): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    this.logger.debug(`AdminLogout: sessionId=${request.sessionId}`);
+
+    try {
+      const success = await this.adminSessionService.logout(request.sessionId);
+
+      if (success) {
+        await this.outboxService.addEventDirect('ADMIN_LOGOUT', request.sessionId, {
+          sessionId: request.sessionId,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      return {
+        success,
+        message: success ? 'Logged out successfully' : 'Session not found',
+      };
+    } catch (error) {
+      this.logger.error(`AdminLogout failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error during logout',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminRevokeAllSessions')
+  async adminRevokeAllSessions(request: {
+    adminId: string;
+    excludeSessionId?: string;
+    reason: string;
+  }): Promise<{
+    success: boolean;
+    revokedCount: number;
+    message: string;
+  }> {
+    this.logger.debug(`AdminRevokeAllSessions: adminId=${request.adminId}`);
+
+    try {
+      const revokedCount = await this.adminSessionService.revokeAllSessions(
+        request.adminId,
+        request.excludeSessionId,
+        request.reason,
+      );
+
+      return {
+        success: true,
+        revokedCount,
+        message: `Revoked ${revokedCount} sessions`,
+      };
+    } catch (error) {
+      this.logger.error(`AdminRevokeAllSessions failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error revoking sessions',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminGetActiveSessions')
+  async adminGetActiveSessions(request: { adminId: string }): Promise<{
+    sessions: unknown[];
+    totalCount: number;
+  }> {
+    this.logger.debug(`AdminGetActiveSessions: adminId=${request.adminId}`);
+
+    try {
+      const sessions = await this.adminSessionService.getActiveSessions(request.adminId);
+
+      const protoSessions = sessions.map((s) => ({
+        id: s.id,
+        adminId: s.adminId,
+        mfaVerified: s.mfaVerified,
+        mfaMethod: s.mfaMethod ?? '',
+        ipAddress: s.ipAddress ?? '',
+        userAgent: s.userAgent ?? '',
+        deviceFingerprint: s.deviceFingerprint ?? '',
+        isActive: s.isActive,
+        mfaVerifiedAt: s.mfaVerifiedAt ? toProtoTimestamp(s.mfaVerifiedAt) : undefined,
+        lastActivityAt: s.lastActivityAt ? toProtoTimestamp(s.lastActivityAt) : undefined,
+        expiresAt: toProtoTimestamp(s.expiresAt),
+        createdAt: toProtoTimestamp(s.createdAt),
+      }));
+
+      return {
+        sessions: protoSessions,
+        totalCount: sessions.length,
+      };
+    } catch (error) {
+      this.logger.error(`AdminGetActiveSessions failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error getting active sessions',
+      });
+    }
+  }
+
+  // ============================================================
+  // Admin MFA Operations
+  // ============================================================
+
+  @GrpcMethod('AuthService', 'AdminSetupMfa')
+  async adminSetupMfa(request: { adminId: string }): Promise<{
+    success: boolean;
+    secret?: string;
+    qrCodeUri?: string;
+    backupCodes: string[];
+    message: string;
+  }> {
+    this.logger.debug(`AdminSetupMfa: adminId=${request.adminId}`);
+
+    try {
+      // Get admin email for QR code
+      const admins = await this.prisma.$queryRaw<{ email: string }[]>`
+        SELECT email FROM admins WHERE id = ${request.adminId}::uuid LIMIT 1
+      `;
+
+      if (!admins.length) {
+        return { success: false, backupCodes: [], message: 'Admin not found' };
+      }
+
+      const result = await this.adminMfaService.setupMfa(request.adminId, admins[0].email);
+
+      return {
+        success: result.success,
+        secret: result.secret,
+        qrCodeUri: result.qrCodeUri,
+        backupCodes: result.backupCodes ?? [],
+        message: result.message,
+      };
+    } catch (error) {
+      this.logger.error(`AdminSetupMfa failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error setting up MFA',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminVerifyMfa')
+  async adminVerifyMfa(request: { adminId: string; code: string }): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    this.logger.debug(`AdminVerifyMfa: adminId=${request.adminId}`);
+
+    try {
+      const success = await this.adminMfaService.verifyMfaSetup(request.adminId, request.code);
+
+      return {
+        success,
+        message: success ? 'MFA enabled successfully' : 'Invalid verification code',
+      };
+    } catch (error) {
+      this.logger.error(`AdminVerifyMfa failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error verifying MFA',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminDisableMfa')
+  async adminDisableMfa(request: { adminId: string; password: string }): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    this.logger.debug(`AdminDisableMfa: adminId=${request.adminId}`);
+
+    try {
+      // Verify password first
+      const isPasswordValid = await this.adminPasswordService.verifyPassword(
+        request.adminId,
+        request.password,
+      );
+
+      if (!isPasswordValid) {
+        return { success: false, message: 'Invalid password' };
+      }
+
+      const success = await this.adminMfaService.disableMfa(request.adminId);
+
+      return {
+        success,
+        message: success ? 'MFA disabled' : 'MFA was not enabled',
+      };
+    } catch (error) {
+      this.logger.error(`AdminDisableMfa failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error disabling MFA',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminRegenerateBackupCodes')
+  async adminRegenerateBackupCodes(request: { adminId: string; password: string }): Promise<{
+    success: boolean;
+    backupCodes: string[];
+    message: string;
+  }> {
+    this.logger.debug(`AdminRegenerateBackupCodes: adminId=${request.adminId}`);
+
+    try {
+      // Verify password first
+      const isPasswordValid = await this.adminPasswordService.verifyPassword(
+        request.adminId,
+        request.password,
+      );
+
+      if (!isPasswordValid) {
+        return { success: false, backupCodes: [], message: 'Invalid password' };
+      }
+
+      const codes = await this.adminMfaService.regenerateBackupCodes(request.adminId);
+
+      if (!codes) {
+        return { success: false, backupCodes: [], message: 'MFA is not enabled' };
+      }
+
+      return {
+        success: true,
+        backupCodes: codes,
+        message: 'Backup codes regenerated',
+      };
+    } catch (error) {
+      this.logger.error(`AdminRegenerateBackupCodes failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error regenerating backup codes',
+      });
+    }
+  }
+
+  // ============================================================
+  // Admin Password Operations
+  // ============================================================
+
+  @GrpcMethod('AuthService', 'AdminChangePassword')
+  async adminChangePassword(request: {
+    adminId: string;
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    this.logger.debug(`AdminChangePassword: adminId=${request.adminId}`);
+
+    try {
+      const result = await this.adminPasswordService.changePassword(
+        request.adminId,
+        request.currentPassword,
+        request.newPassword,
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(`AdminChangePassword failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error changing password',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'AdminForcePasswordChange')
+  async adminForcePasswordChange(request: { adminId: string; requesterAdminId: string }): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    this.logger.debug(`AdminForcePasswordChange: adminId=${request.adminId}`);
+
+    try {
+      const result = await this.adminPasswordService.forcePasswordChange(
+        request.adminId,
+        request.requesterAdminId,
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(`AdminForcePasswordChange failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error forcing password change',
+      });
+    }
+  }
+
+  // ============================================================
+  // Operator Assignment Operations
+  // ============================================================
+
+  @GrpcMethod('AuthService', 'AssignOperator')
+  async assignOperator(request: {
+    accountId: string;
+    serviceId: string;
+    countryCode: string;
+    assignedBy: string;
+    permissionIds: string[];
+  }): Promise<{
+    success: boolean;
+    assignment?: unknown;
+    message: string;
+  }> {
+    this.logger.debug(
+      `AssignOperator: accountId=${request.accountId}, serviceId=${request.serviceId}`,
+    );
+
+    try {
+      const result = await this.operatorAssignmentService.assignOperator(
+        request.accountId,
+        request.serviceId,
+        request.countryCode,
+        request.assignedBy,
+        request.permissionIds ?? [],
+      );
+
+      return {
+        success: result.success,
+        assignment: result.assignment ? this.mapOperatorAssignment(result.assignment) : undefined,
+        message: result.message,
+      };
+    } catch (error) {
+      this.logger.error(`AssignOperator failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error assigning operator',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'RevokeOperatorAssignment')
+  async revokeOperatorAssignment(request: {
+    assignmentId: string;
+    revokedBy: string;
+    reason: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    this.logger.debug(`RevokeOperatorAssignment: assignmentId=${request.assignmentId}`);
+
+    try {
+      const result = await this.operatorAssignmentService.revokeAssignment(
+        request.assignmentId,
+        request.revokedBy,
+        request.reason,
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(`RevokeOperatorAssignment failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error revoking assignment',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'GetOperatorAssignment')
+  async getOperatorAssignment(request: {
+    accountId: string;
+    serviceId: string;
+    countryCode: string;
+  }): Promise<{
+    assignment?: unknown;
+    found: boolean;
+  }> {
+    this.logger.debug(`GetOperatorAssignment: accountId=${request.accountId}`);
+
+    try {
+      const assignment = await this.operatorAssignmentService.getAssignment(
+        request.accountId,
+        request.serviceId,
+        request.countryCode,
+      );
+
+      return {
+        assignment: assignment ? this.mapOperatorAssignment(assignment) : undefined,
+        found: !!assignment,
+      };
+    } catch (error) {
+      this.logger.error(`GetOperatorAssignment failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error getting assignment',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'GetServiceOperatorAssignments')
+  async getServiceOperatorAssignments(request: {
+    serviceId: string;
+    countryCode?: string;
+    status?: number;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{
+    assignments: unknown[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  }> {
+    this.logger.debug(`GetServiceOperatorAssignments: serviceId=${request.serviceId}`);
+
+    try {
+      const statusMap: Record<number, 'ACTIVE' | 'SUSPENDED' | 'REVOKED'> = {
+        [ProtoOperatorAssignmentStatus.ACTIVE]: 'ACTIVE',
+        [ProtoOperatorAssignmentStatus.SUSPENDED]: 'SUSPENDED',
+        [ProtoOperatorAssignmentStatus.REVOKED]: 'REVOKED',
+      };
+
+      const result = await this.operatorAssignmentService.getServiceAssignments(request.serviceId, {
+        countryCode: request.countryCode,
+        status: request.status ? statusMap[request.status] : undefined,
+        page: request.page ?? 1,
+        pageSize: request.pageSize ?? 20,
+      });
+
+      return {
+        assignments: result.assignments.map((a) => this.mapOperatorAssignment(a)),
+        totalCount: result.totalCount,
+        page: result.page,
+        pageSize: result.pageSize,
+      };
+    } catch (error) {
+      this.logger.error(`GetServiceOperatorAssignments failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error getting assignments',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'UpdateOperatorAssignmentPermissions')
+  async updateOperatorAssignmentPermissions(request: {
+    assignmentId: string;
+    permissionIds: string[];
+    updatedBy: string;
+  }): Promise<{
+    success: boolean;
+    assignment?: unknown;
+    message: string;
+  }> {
+    this.logger.debug(`UpdateOperatorAssignmentPermissions: assignmentId=${request.assignmentId}`);
+
+    try {
+      const result = await this.operatorAssignmentService.updatePermissions(
+        request.assignmentId,
+        request.permissionIds ?? [],
+        request.updatedBy,
+      );
+
+      return {
+        success: result.success,
+        assignment: result.assignment ? this.mapOperatorAssignment(result.assignment) : undefined,
+        message: result.message,
+      };
+    } catch (error) {
+      this.logger.error(`UpdateOperatorAssignmentPermissions failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error updating permissions',
+      });
+    }
+  }
+
+  @GrpcMethod('AuthService', 'GetOperatorAssignmentPermissions')
+  async getOperatorAssignmentPermissions(request: { assignmentId: string }): Promise<{
+    permissions: Permission[];
+  }> {
+    this.logger.debug(`GetOperatorAssignmentPermissions: assignmentId=${request.assignmentId}`);
+
+    try {
+      const permissions = await this.operatorAssignmentService.getPermissions(request.assignmentId);
+
+      return {
+        permissions: permissions.map((p) => ({
+          id: p.id,
+          resource: p.resource,
+          action: p.action,
+          category: p.category ?? '',
+          description: p.description ?? '',
+          isSystem: p.isSystem,
+        })),
+      };
+    } catch (error) {
+      this.logger.error(`GetOperatorAssignmentPermissions failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Internal error getting permissions',
+      });
+    }
+  }
+
+  // ============================================================
+  // Helper Methods for Admin Operations
+  // ============================================================
+
+  private mapOperatorAssignment(assignment: {
+    id: string;
+    accountId: string;
+    serviceId: string;
+    countryCode: string;
+    status: string;
+    assignedBy: string;
+    assignedAt: Date;
+    deactivatedAt: Date | null;
+    deactivatedBy?: string | null;
+    deactivationReason: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): unknown {
+    const statusMap: Record<string, number> = {
+      ACTIVE: ProtoOperatorAssignmentStatus.ACTIVE,
+      SUSPENDED: ProtoOperatorAssignmentStatus.SUSPENDED,
+      REVOKED: ProtoOperatorAssignmentStatus.REVOKED,
+    };
+
+    return {
+      id: assignment.id,
+      accountId: assignment.accountId,
+      serviceId: assignment.serviceId,
+      countryCode: assignment.countryCode,
+      status: statusMap[assignment.status] ?? ProtoOperatorAssignmentStatus.UNSPECIFIED,
+      assignedBy: assignment.assignedBy,
+      assignedAt: toProtoTimestamp(assignment.assignedAt),
+      deactivatedAt: assignment.deactivatedAt
+        ? toProtoTimestamp(assignment.deactivatedAt)
+        : undefined,
+      deactivationReason: assignment.deactivationReason ?? '',
+      createdAt: toProtoTimestamp(assignment.createdAt),
+      updatedAt: toProtoTimestamp(assignment.updatedAt),
+      permissions: [], // Permissions are fetched separately
+    };
   }
 }
