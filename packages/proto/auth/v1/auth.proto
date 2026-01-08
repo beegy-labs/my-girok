@@ -296,22 +296,42 @@ message GetActiveSanctionsResponse {
 // ============================================================
 // Admin Authentication Messages
 // ============================================================
+// Enterprise authentication for platform administrators.
+// Admins have separate authentication flow with mandatory MFA,
+// password rotation policies, and dedicated session management.
+// ============================================================
 
-// Admin represents a platform administrator
+// Admin represents a platform administrator.
+// Admins are privileged users with access to administrative functions.
+// Unlike regular users, admins require MFA and have stricter security policies.
 message Admin {
+  // Unique identifier for the admin (UUIDv7)
   string id = 1;
+  // Admin email address (used for login)
   string email = 2;
+  // Display name
   string name = 3;
+  // Authority scope (SYSTEM or TENANT level)
   AdminScope scope = 4;
+  // Associated role ID for RBAC
   string role_id = 5;
+  // Full role object with permissions
   Role role = 6;
+  // Whether the admin account is active
   bool is_active = 7;
+  // Whether MFA is required for this admin (always true for production)
   bool mfa_required = 8;
+  // Whether MFA has been set up and verified
   bool mfa_enabled = 9;
+  // Whether a password change is required on next login
   bool force_password_change = 10;
+  // Last successful login timestamp
   google.protobuf.Timestamp last_login_at = 11;
+  // Last password change timestamp (for rotation policy)
   google.protobuf.Timestamp password_changed_at = 12;
+  // Account creation timestamp
   google.protobuf.Timestamp created_at = 13;
+  // Last update timestamp
   google.protobuf.Timestamp updated_at = 14;
 }
 
@@ -322,19 +342,33 @@ enum AdminScope {
   ADMIN_SCOPE_TENANT = 2;   // Tenant-level access
 }
 
-// AdminSession represents an active admin session
+// AdminSession represents an active admin session.
+// Admin sessions are separate from user sessions for enhanced security.
+// Each session tracks MFA verification status and device information.
 message AdminSession {
+  // Unique session identifier (UUIDv7)
   string id = 1;
+  // Admin ID who owns this session
   string admin_id = 2;
+  // Whether MFA has been verified for this session
   bool mfa_verified = 3;
+  // MFA method used for verification (TOTP or BACKUP_CODE)
   string mfa_method = 4;
+  // Client IP address at session creation
   string ip_address = 5;
+  // Client user agent string
   string user_agent = 6;
+  // Device fingerprint for fraud detection
   string device_fingerprint = 7;
+  // Whether the session is currently active
   bool is_active = 8;
+  // When MFA was verified for this session
   google.protobuf.Timestamp mfa_verified_at = 9;
+  // Last activity timestamp (updated on each request)
   google.protobuf.Timestamp last_activity_at = 10;
+  // Session expiration timestamp
   google.protobuf.Timestamp expires_at = 11;
+  // Session creation timestamp
   google.protobuf.Timestamp created_at = 12;
 }
 
@@ -519,28 +553,51 @@ message AdminForcePasswordChangeResponse {
 // ============================================================
 // Operator Assignment Messages
 // ============================================================
+// User-based operator system that allows regular users to be
+// assigned operator privileges for specific services.
+// This replaces the legacy Operator model with a more flexible
+// approach where users can have operator access across multiple services.
+// ============================================================
 
-// OperatorAssignment represents an operator role assignment to a user
+// OperatorAssignment represents an operator role assignment to a user account.
+// A single user can have multiple operator assignments across different services.
+// The assignment is scoped by service_id and country_code.
 message OperatorAssignment {
+  // Unique assignment identifier (UUIDv7)
   string id = 1;
-  string account_id = 2;  // Reference to identity_db.accounts
+  // Reference to identity_db.accounts (cross-database reference)
+  string account_id = 2;
+  // Service this assignment applies to
   string service_id = 3;
+  // Country code for regional scoping (ISO 3166-1 alpha-2)
   string country_code = 4;
+  // Current status of the assignment
   OperatorAssignmentStatus status = 5;
-  string assigned_by = 6;  // Admin ID who assigned
+  // Admin ID who created this assignment
+  string assigned_by = 6;
+  // When the assignment was created
   google.protobuf.Timestamp assigned_at = 7;
+  // When the assignment was deactivated (if applicable)
   google.protobuf.Timestamp deactivated_at = 8;
+  // Reason for deactivation
   string deactivation_reason = 9;
+  // Record creation timestamp
   google.protobuf.Timestamp created_at = 10;
+  // Last update timestamp
   google.protobuf.Timestamp updated_at = 11;
-  repeated Permission permissions = 12;  // Assigned permissions
+  // Permissions granted to this operator assignment
+  repeated Permission permissions = 12;
 }
 
-// OperatorAssignmentStatus
+// OperatorAssignmentStatus represents the lifecycle of an operator assignment.
 enum OperatorAssignmentStatus {
+  // Default unspecified value
   OPERATOR_ASSIGNMENT_STATUS_UNSPECIFIED = 0;
+  // Assignment is active and the user has operator privileges
   OPERATOR_ASSIGNMENT_STATUS_ACTIVE = 1;
+  // Assignment is temporarily suspended
   OPERATOR_ASSIGNMENT_STATUS_SUSPENDED = 2;
+  // Assignment has been permanently revoked
   OPERATOR_ASSIGNMENT_STATUS_REVOKED = 3;
 }
 
