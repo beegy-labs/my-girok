@@ -5,13 +5,12 @@ import { register } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
 import { TextInput, Button } from '@my-girok/ui-components';
 import { AuthLayout } from '../layouts';
-import { Mail, Lock, User, AtSign, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, Lock, AtSign, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { ConsentType } from '@my-girok/types';
 import type { UserLocaleInfo } from '../utils/regionDetection';
 
 // Memoized icon components - extracted to module scope (2025 best practice)
 const ICONS = {
-  user: <User size={20} />,
   atSign: <AtSign size={20} />,
   mail: <Mail size={20} />,
   lock: <Lock size={20} />,
@@ -35,7 +34,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [consents, setConsents] = useState<ConsentState | null>(null);
@@ -97,20 +95,25 @@ export default function RegisterPage() {
           email,
           username,
           password,
-          name,
-          consents: Object.entries(consents)
-            .filter(([, agreed]) => agreed)
-            .map(([type]) => ({ type: type as ConsentType, agreed: true })),
-          // Include locale info for region-based consent policy
-          language: localeInfo?.language,
-          country: localeInfo?.country,
+          // Include locale info for region-based settings
+          locale: localeInfo?.language,
+          countryCode: localeInfo?.country,
           timezone: localeInfo?.timezone,
         });
+
+        if (!response.success) {
+          setError(response.message || t('errors.registrationFailed'));
+          return;
+        }
+
         // Clear stored data after successful registration
         sessionStorage.removeItem('registration_consents');
         sessionStorage.removeItem('registration_locale_info');
-        setAuth(response.user, response.accessToken, response.refreshToken);
-        navigate('/'); // Direct navigation (2025 best practice)
+
+        if (response.user) {
+          setAuth(response.user);
+          navigate('/'); // Direct navigation (2025 best practice)
+        }
       } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         setError(err.response?.data?.message || t('errors.registrationFailed'));
@@ -122,7 +125,6 @@ export default function RegisterPage() {
       email,
       username,
       password,
-      name,
       consents,
       localeInfo?.country,
       localeInfo?.language,
@@ -172,19 +174,6 @@ export default function RegisterPage() {
             {t('consent.modify', { defaultValue: 'Modify' })}
           </Link>
         </div>
-
-        <TextInput
-          id="name"
-          label={t('auth.name')}
-          type="text"
-          size="xl"
-          icon={ICONS.user}
-          value={name}
-          onChange={setName}
-          required
-          placeholder="John Doe"
-          autoComplete="name"
-        />
 
         <TextInput
           id="username"

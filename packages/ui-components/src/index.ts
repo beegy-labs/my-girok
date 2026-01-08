@@ -6,6 +6,7 @@ export * from './components/Card';
 export * from './components/CollapsibleSection';
 export * from './components/MenuCard';
 export * from './components/MenuRow';
+export * from './components/MfaForm';
 export * from './components/PageContainer';
 export * from './components/PageHeader';
 export * from './components/SelectInput';
@@ -37,6 +38,8 @@ export type {
   CollapsibleSectionProps,
   MenuCardProps,
   MenuRowProps,
+  MfaFormProps,
+  MfaMethod,
   TopWidgetProps,
   ViewToggleProps,
   ViewMode,

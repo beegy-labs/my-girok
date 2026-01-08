@@ -366,72 +366,26 @@ export interface UpdateShareLinkDto {
 
 const PERSONAL_API_URL = import.meta.env.VITE_PERSONAL_API_URL || 'http://localhost:4002';
 
-// Create personalApi using axios.create and copy interceptors from authApi
+// Create personalApi using axios.create with session-based auth
 export const personalApi = axios.create({
   baseURL: PERSONAL_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Enable cookies for session-based authentication
+  withCredentials: true,
 });
 
-// Flag to prevent multiple simultaneous refresh calls
-let isRefreshingPersonal = false;
-
-// Copy request interceptor from authApi to add JWT token and check for proactive refresh
-personalApi.interceptors.request.use(
-  async (config) => {
-    // Skip auth for public endpoints (no authentication required)
-    const isPublicEndpoint =
-      config.url?.includes('/share/public/') || config.url?.includes('/resume/public/');
-
-    if (isPublicEndpoint) {
-      return config;
-    }
-
-    const { accessToken, needsProactiveRefresh, refreshToken } = useAuthStore.getState();
-
-    // Add access token to headers
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-
-    // Proactive refresh: renew refresh token if it has 7 days or less remaining
-    if (!isRefreshingPersonal && needsProactiveRefresh() && refreshToken) {
-      isRefreshingPersonal = true;
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
-          refreshToken,
-        });
-
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
-        useAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
-
-        // Update current request with new token
-        config.headers.Authorization = `Bearer ${newAccessToken}`;
-      } catch (error) {
-        console.warn('Proactive token refresh failed:', error);
-        // Don't block the request if proactive refresh fails
-      } finally {
-        isRefreshingPersonal = false;
-      }
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-// Copy response interceptor for token refresh
+// Response interceptor for handling 401 errors
 personalApi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Skip auth retry for public endpoints
+    // Skip auth redirect for public endpoints
     const isPublicEndpoint =
-      originalRequest.url?.includes('/share/public/') ||
-      originalRequest.url?.includes('/resume/public/');
+      originalRequest?.url?.includes('/share/public/') ||
+      originalRequest?.url?.includes('/resume/public/');
 
     if (isPublicEndpoint) {
       return Promise.reject(error);
@@ -443,39 +397,15 @@ personalApi.interceptors.response.use(
         message: error.message,
         url: originalRequest?.url,
         method: originalRequest?.method,
-        // This helps debug iOS Safari CORS issues
         userAgent: navigator.userAgent,
       });
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const { refreshToken } = useAuthStore.getState();
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const response = await axios.post(`${API_URL}/v1/auth/refresh`, {
-          refreshToken,
-        });
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-        // Update both tokens (refresh endpoint returns new refresh token)
-        if (newRefreshToken) {
-          useAuthStore.getState().updateTokens(accessToken, newRefreshToken);
-        } else {
-          useAuthStore.getState().updateAccessToken(accessToken);
-        }
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return personalApi(originalRequest);
-      } catch (refreshError) {
-        console.error('[API Error] Token refresh failed:', refreshError);
-        useAuthStore.getState().clearAuth();
-        // Preserve current URL to redirect back after login
-        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/login?returnUrl=${returnUrl}`;
-        return Promise.reject(refreshError);
-      }
+    // On 401, clear auth and redirect to login
+    if (error.response?.status === 401) {
+      useAuthStore.getState().clearAuth();
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `/login?returnUrl=${returnUrl}`;
     }
 
     return Promise.reject(error);

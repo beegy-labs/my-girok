@@ -5,6 +5,7 @@ export * from './Card';
 export * from './CollapsibleSection';
 export * from './MenuCard';
 export * from './MenuRow';
+export * from './MfaForm';
 export * from './PageContainer';
 export * from './PageHeader';
 export * from './SelectInput';

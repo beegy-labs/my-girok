@@ -78,7 +78,21 @@
     "passwordPlaceholder": "비밀번호를 입력하세요",
     "invalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다",
     "protectedArea": "보호된 관리 영역입니다. 무단 접근은 금지되어 있습니다.",
-    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요."
+    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요.",
+    "mfa": {
+      "title": "2단계 인증",
+      "subtitle": "계속하려면 인증 코드를 입력하세요",
+      "codeLabel": "인증 코드",
+      "backupCodeLabel": "백업 코드",
+      "codeHint": "인증 앱의 6자리 코드를 입력하세요",
+      "backupCodeHint": "백업 코드 중 하나를 입력하세요",
+      "methodTotp": "인증 앱",
+      "methodBackup": "백업 코드",
+      "verify": "확인",
+      "verifying": "확인 중...",
+      "invalidCode": "인증 코드가 올바르지 않습니다",
+      "backToLogin": "로그인으로 돌아가기"
+    }
   },
   "dashboard": {
     "title": "대시보드",
