@@ -1,6 +1,13 @@
 import { Injectable, UnauthorizedException, ForbiddenException, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AuthGrpcClient, Admin, AdminSession, Permission } from '../grpc-clients';
+import {
+  AuthGrpcClient,
+  AuditGrpcClient,
+  Admin,
+  AdminSession,
+  Permission,
+  AccountType as AuditAccountType,
+} from '../grpc-clients';
 import { SessionService } from '../session/session.service';
 import { BffSession } from '../common/types';
 import {
@@ -17,6 +24,7 @@ export class AdminService {
 
   constructor(
     private readonly authClient: AuthGrpcClient,
+    private readonly auditClient: AuditGrpcClient,
     private readonly sessionService: SessionService,
   ) {}
 
@@ -73,6 +81,16 @@ export class AdminService {
           this.extractPermissions(response.admin.role?.permissions),
         );
 
+        // Log successful login
+        this.auditClient.logLoginSuccess({
+          accountId: response.admin.id,
+          accountType: AuditAccountType.ADMIN,
+          sessionId: response.session.id,
+          ipAddress: ip,
+          userAgent,
+          deviceFingerprint,
+        });
+
         return {
           success: true,
           admin: this.mapAdminToDto(response.admin),
@@ -83,6 +101,17 @@ export class AdminService {
       throw new UnauthorizedException('Login failed');
     } catch (error) {
       this.logger.error(`Admin login failed for ${dto.email}`, error);
+
+      // Log failed login (fire and forget)
+      this.auditClient.logLoginFailed({
+        accountId: dto.email,
+        accountType: AuditAccountType.ADMIN,
+        ipAddress: ip,
+        userAgent,
+        deviceFingerprint,
+        failureReason: error instanceof Error ? error.message : 'Unknown error',
+      });
+
       if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Login failed');
     }
@@ -123,6 +152,15 @@ export class AdminService {
         this.extractPermissions(response.admin.role?.permissions),
       );
 
+      // Log successful MFA verification
+      this.auditClient.logMfaVerified({
+        accountId: response.admin.id,
+        accountType: AuditAccountType.ADMIN,
+        ipAddress: ip,
+        userAgent,
+        method: dto.method,
+      });
+
       return {
         success: true,
         admin: this.mapAdminToDto(response.admin),
@@ -130,18 +168,40 @@ export class AdminService {
       };
     } catch (error) {
       this.logger.error('Admin MFA login failed', error);
+
+      // Log failed MFA attempt
+      this.auditClient.logMfaFailed({
+        accountId: dto.challengeId, // We don't have account ID here
+        accountType: AuditAccountType.ADMIN,
+        ipAddress: ip,
+        userAgent,
+        failureReason: error instanceof Error ? error.message : 'Unknown error',
+      });
+
       if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('MFA verification failed');
     }
   }
 
   async logout(req: Request, res: Response): Promise<{ success: boolean; message: string }> {
+    const ip = this.getClientIp(req);
+    const userAgent = req.headers['user-agent'] || 'unknown';
+
     try {
       const session = await this.sessionService.getSession(req);
 
       if (session) {
         // Revoke session in auth-service
         await this.authClient.adminLogout(session.id);
+
+        // Log logout event
+        this.auditClient.logLogout({
+          accountId: session.accountId,
+          accountType: AuditAccountType.ADMIN,
+          sessionId: session.id,
+          ipAddress: ip,
+          userAgent,
+        });
       }
 
       // Destroy BFF session
@@ -290,16 +350,31 @@ export class AdminService {
   }
 
   async changePassword(
+    req: Request,
     session: BffSession,
     currentPassword: string,
     newPassword: string,
   ): Promise<{ success: boolean; message: string }> {
+    const ip = this.getClientIp(req);
+    const userAgent = req.headers['user-agent'] || 'unknown';
+
     try {
       const response = await this.authClient.adminChangePassword(
         session.accountId,
         currentPassword,
         newPassword,
       );
+
+      if (response.success) {
+        // Log password change event
+        this.auditClient.logPasswordChanged({
+          accountId: session.accountId,
+          accountType: AuditAccountType.ADMIN,
+          ipAddress: ip,
+          userAgent,
+        });
+      }
+
       return { success: response.success, message: response.message };
     } catch (error) {
       this.logger.error('Failed to change password', error);

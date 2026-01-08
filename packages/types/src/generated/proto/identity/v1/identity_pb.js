@@ -11,6 +11,7 @@ import { WireType } from "@protobuf-ts/runtime";
 import { UnknownFieldHandler } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { MfaMethod } from "../../common/v1/common_pb";
 import { Timestamp } from "../../google/protobuf/timestamp_pb";
 /**
  * AccountStatus represents the current state of an account
@@ -72,6 +73,59 @@ export var AccountMode;
      */
     AccountMode[AccountMode["SERVICE"] = 4] = "SERVICE";
 })(AccountMode || (AccountMode = {}));
+/**
+ * SessionContext differentiates user vs operator sessions
+ *
+ * @generated from protobuf enum identity.v1.SessionContext
+ */
+export var SessionContext;
+(function (SessionContext) {
+    /**
+     * @generated from protobuf enum value: SESSION_CONTEXT_UNSPECIFIED = 0;
+     */
+    SessionContext[SessionContext["UNSPECIFIED"] = 0] = "UNSPECIFIED";
+    /**
+     * @generated from protobuf enum value: SESSION_CONTEXT_USER = 1;
+     */
+    SessionContext[SessionContext["USER"] = 1] = "USER";
+    /**
+     * @generated from protobuf enum value: SESSION_CONTEXT_OPERATOR = 2;
+     */
+    SessionContext[SessionContext["OPERATOR"] = 2] = "OPERATOR";
+})(SessionContext || (SessionContext = {}));
+// === Enums for Account CRUD ===
+/**
+ * AuthProvider represents authentication method
+ *
+ * @generated from protobuf enum identity.v1.AuthProvider
+ */
+export var AuthProvider;
+(function (AuthProvider) {
+    /**
+     * @generated from protobuf enum value: AUTH_PROVIDER_UNSPECIFIED = 0;
+     */
+    AuthProvider[AuthProvider["UNSPECIFIED"] = 0] = "UNSPECIFIED";
+    /**
+     * @generated from protobuf enum value: AUTH_PROVIDER_LOCAL = 1;
+     */
+    AuthProvider[AuthProvider["LOCAL"] = 1] = "LOCAL";
+    /**
+     * @generated from protobuf enum value: AUTH_PROVIDER_GOOGLE = 2;
+     */
+    AuthProvider[AuthProvider["GOOGLE"] = 2] = "GOOGLE";
+    /**
+     * @generated from protobuf enum value: AUTH_PROVIDER_APPLE = 3;
+     */
+    AuthProvider[AuthProvider["APPLE"] = 3] = "APPLE";
+    /**
+     * @generated from protobuf enum value: AUTH_PROVIDER_KAKAO = 4;
+     */
+    AuthProvider[AuthProvider["KAKAO"] = 4] = "KAKAO";
+    /**
+     * @generated from protobuf enum value: AUTH_PROVIDER_NAVER = 5;
+     */
+    AuthProvider[AuthProvider["NAVER"] = 5] = "NAVER";
+})(AuthProvider || (AuthProvider = {}));
 // @generated message type with reflection information, may provide speed optimized methods
 class Account$Type extends MessageType {
     constructor() {
@@ -454,7 +508,10 @@ class Session$Type extends MessageType {
             { no: 5, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "created_at", kind: "message", T: () => Timestamp },
             { no: 7, name: "expires_at", kind: "message", T: () => Timestamp },
-            { no: 8, name: "last_activity_at", kind: "message", T: () => Timestamp }
+            { no: 8, name: "last_activity_at", kind: "message", T: () => Timestamp },
+            { no: 9, name: "session_context", kind: "enum", T: () => ["identity.v1.SessionContext", SessionContext, "SESSION_CONTEXT_"] },
+            { no: 10, name: "service_id", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 11, name: "operator_assignment_id", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value) {
@@ -464,6 +521,7 @@ class Session$Type extends MessageType {
         message.deviceId = "";
         message.ipAddress = "";
         message.userAgent = "";
+        message.sessionContext = 0;
         if (value !== undefined)
             reflectionMergePartial(this, message, value);
         return message;
@@ -496,6 +554,15 @@ class Session$Type extends MessageType {
                     break;
                 case /* google.protobuf.Timestamp last_activity_at */ 8:
                     message.lastActivityAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.lastActivityAt);
+                    break;
+                case /* identity.v1.SessionContext session_context */ 9:
+                    message.sessionContext = reader.int32();
+                    break;
+                case /* optional string service_id */ 10:
+                    message.serviceId = reader.string();
+                    break;
+                case /* optional string operator_assignment_id */ 11:
+                    message.operatorAssignmentId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -533,6 +600,15 @@ class Session$Type extends MessageType {
         /* google.protobuf.Timestamp last_activity_at = 8; */
         if (message.lastActivityAt)
             Timestamp.internalBinaryWrite(message.lastActivityAt, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* identity.v1.SessionContext session_context = 9; */
+        if (message.sessionContext !== 0)
+            writer.tag(9, WireType.Varint).int32(message.sessionContext);
+        /* optional string service_id = 10; */
+        if (message.serviceId !== undefined)
+            writer.tag(10, WireType.LengthDelimited).string(message.serviceId);
+        /* optional string operator_assignment_id = 11; */
+        if (message.operatorAssignmentId !== undefined)
+            writer.tag(11, WireType.LengthDelimited).string(message.operatorAssignmentId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1707,6 +1783,2225 @@ class GetProfileResponse$Type extends MessageType {
  * @generated MessageType for protobuf message identity.v1.GetProfileResponse
  */
 export const GetProfileResponse = new GetProfileResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CreateAccountRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.CreateAccountRequest", [
+            { no: 1, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "password", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "provider", kind: "enum", T: () => ["identity.v1.AuthProvider", AuthProvider, "AUTH_PROVIDER_"] },
+            { no: 5, name: "provider_id", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "mode", kind: "enum", T: () => ["identity.v1.AccountMode", AccountMode, "ACCOUNT_MODE_"] },
+            { no: 7, name: "region", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "locale", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "timezone", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 10, name: "country_code", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.email = "";
+        message.username = "";
+        message.provider = 0;
+        message.mode = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string email */ 1:
+                    message.email = reader.string();
+                    break;
+                case /* string username */ 2:
+                    message.username = reader.string();
+                    break;
+                case /* optional string password */ 3:
+                    message.password = reader.string();
+                    break;
+                case /* identity.v1.AuthProvider provider */ 4:
+                    message.provider = reader.int32();
+                    break;
+                case /* optional string provider_id */ 5:
+                    message.providerId = reader.string();
+                    break;
+                case /* identity.v1.AccountMode mode */ 6:
+                    message.mode = reader.int32();
+                    break;
+                case /* optional string region */ 7:
+                    message.region = reader.string();
+                    break;
+                case /* optional string locale */ 8:
+                    message.locale = reader.string();
+                    break;
+                case /* optional string timezone */ 9:
+                    message.timezone = reader.string();
+                    break;
+                case /* optional string country_code */ 10:
+                    message.countryCode = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string email = 1; */
+        if (message.email !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.email);
+        /* string username = 2; */
+        if (message.username !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.username);
+        /* optional string password = 3; */
+        if (message.password !== undefined)
+            writer.tag(3, WireType.LengthDelimited).string(message.password);
+        /* identity.v1.AuthProvider provider = 4; */
+        if (message.provider !== 0)
+            writer.tag(4, WireType.Varint).int32(message.provider);
+        /* optional string provider_id = 5; */
+        if (message.providerId !== undefined)
+            writer.tag(5, WireType.LengthDelimited).string(message.providerId);
+        /* identity.v1.AccountMode mode = 6; */
+        if (message.mode !== 0)
+            writer.tag(6, WireType.Varint).int32(message.mode);
+        /* optional string region = 7; */
+        if (message.region !== undefined)
+            writer.tag(7, WireType.LengthDelimited).string(message.region);
+        /* optional string locale = 8; */
+        if (message.locale !== undefined)
+            writer.tag(8, WireType.LengthDelimited).string(message.locale);
+        /* optional string timezone = 9; */
+        if (message.timezone !== undefined)
+            writer.tag(9, WireType.LengthDelimited).string(message.timezone);
+        /* optional string country_code = 10; */
+        if (message.countryCode !== undefined)
+            writer.tag(10, WireType.LengthDelimited).string(message.countryCode);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateAccountRequest
+ */
+export const CreateAccountRequest = new CreateAccountRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CreateAccountResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.CreateAccountResponse", [
+            { no: 1, name: "account", kind: "message", T: () => Account }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* identity.v1.Account account */ 1:
+                    message.account = Account.internalBinaryRead(reader, reader.uint32(), options, message.account);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* identity.v1.Account account = 1; */
+        if (message.account)
+            Account.internalBinaryWrite(message.account, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateAccountResponse
+ */
+export const CreateAccountResponse = new CreateAccountResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UpdateAccountRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.UpdateAccountRequest", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "email", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "status", kind: "enum", opt: true, T: () => ["identity.v1.AccountStatus", AccountStatus, "ACCOUNT_STATUS_"] },
+            { no: 4, name: "mfa_enabled", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "region", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "locale", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "timezone", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "country_code", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.id = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                case /* optional string email */ 2:
+                    message.email = reader.string();
+                    break;
+                case /* optional identity.v1.AccountStatus status */ 3:
+                    message.status = reader.int32();
+                    break;
+                case /* optional bool mfa_enabled */ 4:
+                    message.mfaEnabled = reader.bool();
+                    break;
+                case /* optional string region */ 5:
+                    message.region = reader.string();
+                    break;
+                case /* optional string locale */ 6:
+                    message.locale = reader.string();
+                    break;
+                case /* optional string timezone */ 7:
+                    message.timezone = reader.string();
+                    break;
+                case /* optional string country_code */ 8:
+                    message.countryCode = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        /* optional string email = 2; */
+        if (message.email !== undefined)
+            writer.tag(2, WireType.LengthDelimited).string(message.email);
+        /* optional identity.v1.AccountStatus status = 3; */
+        if (message.status !== undefined)
+            writer.tag(3, WireType.Varint).int32(message.status);
+        /* optional bool mfa_enabled = 4; */
+        if (message.mfaEnabled !== undefined)
+            writer.tag(4, WireType.Varint).bool(message.mfaEnabled);
+        /* optional string region = 5; */
+        if (message.region !== undefined)
+            writer.tag(5, WireType.LengthDelimited).string(message.region);
+        /* optional string locale = 6; */
+        if (message.locale !== undefined)
+            writer.tag(6, WireType.LengthDelimited).string(message.locale);
+        /* optional string timezone = 7; */
+        if (message.timezone !== undefined)
+            writer.tag(7, WireType.LengthDelimited).string(message.timezone);
+        /* optional string country_code = 8; */
+        if (message.countryCode !== undefined)
+            writer.tag(8, WireType.LengthDelimited).string(message.countryCode);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UpdateAccountRequest
+ */
+export const UpdateAccountRequest = new UpdateAccountRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UpdateAccountResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.UpdateAccountResponse", [
+            { no: 1, name: "account", kind: "message", T: () => Account }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* identity.v1.Account account */ 1:
+                    message.account = Account.internalBinaryRead(reader, reader.uint32(), options, message.account);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* identity.v1.Account account = 1; */
+        if (message.account)
+            Account.internalBinaryWrite(message.account, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UpdateAccountResponse
+ */
+export const UpdateAccountResponse = new UpdateAccountResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeleteAccountRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.DeleteAccountRequest", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.id = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DeleteAccountRequest
+ */
+export const DeleteAccountRequest = new DeleteAccountRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeleteAccountResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.DeleteAccountResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DeleteAccountResponse
+ */
+export const DeleteAccountResponse = new DeleteAccountResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ValidatePasswordRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.ValidatePasswordRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.password = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string password */ 2:
+                    message.password = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string password = 2; */
+        if (message.password !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.password);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ValidatePasswordRequest
+ */
+export const ValidatePasswordRequest = new ValidatePasswordRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ValidatePasswordResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.ValidatePasswordResponse", [
+            { no: 1, name: "valid", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.valid = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool valid */ 1:
+                    message.valid = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool valid = 1; */
+        if (message.valid !== false)
+            writer.tag(1, WireType.Varint).bool(message.valid);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ValidatePasswordResponse
+ */
+export const ValidatePasswordResponse = new ValidatePasswordResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CreateSessionRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.CreateSessionRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "device_id", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "ip_address", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "user_agent", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "expires_in_ms", kind: "scalar", opt: true, T: 3 /*ScalarType.INT64*/ },
+            { no: 6, name: "session_context", kind: "enum", T: () => ["identity.v1.SessionContext", SessionContext, "SESSION_CONTEXT_"] },
+            { no: 7, name: "service_id", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "operator_assignment_id", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.sessionContext = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* optional string device_id */ 2:
+                    message.deviceId = reader.string();
+                    break;
+                case /* optional string ip_address */ 3:
+                    message.ipAddress = reader.string();
+                    break;
+                case /* optional string user_agent */ 4:
+                    message.userAgent = reader.string();
+                    break;
+                case /* optional int64 expires_in_ms */ 5:
+                    message.expiresInMs = reader.int64().toString();
+                    break;
+                case /* identity.v1.SessionContext session_context */ 6:
+                    message.sessionContext = reader.int32();
+                    break;
+                case /* optional string service_id */ 7:
+                    message.serviceId = reader.string();
+                    break;
+                case /* optional string operator_assignment_id */ 8:
+                    message.operatorAssignmentId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* optional string device_id = 2; */
+        if (message.deviceId !== undefined)
+            writer.tag(2, WireType.LengthDelimited).string(message.deviceId);
+        /* optional string ip_address = 3; */
+        if (message.ipAddress !== undefined)
+            writer.tag(3, WireType.LengthDelimited).string(message.ipAddress);
+        /* optional string user_agent = 4; */
+        if (message.userAgent !== undefined)
+            writer.tag(4, WireType.LengthDelimited).string(message.userAgent);
+        /* optional int64 expires_in_ms = 5; */
+        if (message.expiresInMs !== undefined)
+            writer.tag(5, WireType.Varint).int64(message.expiresInMs);
+        /* identity.v1.SessionContext session_context = 6; */
+        if (message.sessionContext !== 0)
+            writer.tag(6, WireType.Varint).int32(message.sessionContext);
+        /* optional string service_id = 7; */
+        if (message.serviceId !== undefined)
+            writer.tag(7, WireType.LengthDelimited).string(message.serviceId);
+        /* optional string operator_assignment_id = 8; */
+        if (message.operatorAssignmentId !== undefined)
+            writer.tag(8, WireType.LengthDelimited).string(message.operatorAssignmentId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateSessionRequest
+ */
+export const CreateSessionRequest = new CreateSessionRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CreateSessionResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.CreateSessionResponse", [
+            { no: 1, name: "session", kind: "message", T: () => Session },
+            { no: 2, name: "access_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "refresh_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accessToken = "";
+        message.refreshToken = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* identity.v1.Session session */ 1:
+                    message.session = Session.internalBinaryRead(reader, reader.uint32(), options, message.session);
+                    break;
+                case /* string access_token */ 2:
+                    message.accessToken = reader.string();
+                    break;
+                case /* string refresh_token */ 3:
+                    message.refreshToken = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* identity.v1.Session session = 1; */
+        if (message.session)
+            Session.internalBinaryWrite(message.session, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string access_token = 2; */
+        if (message.accessToken !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.accessToken);
+        /* string refresh_token = 3; */
+        if (message.refreshToken !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.refreshToken);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CreateSessionResponse
+ */
+export const CreateSessionResponse = new CreateSessionResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ChangePasswordRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.ChangePasswordRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "current_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "new_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.currentPassword = "";
+        message.newPassword = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string current_password */ 2:
+                    message.currentPassword = reader.string();
+                    break;
+                case /* string new_password */ 3:
+                    message.newPassword = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string current_password = 2; */
+        if (message.currentPassword !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.currentPassword);
+        /* string new_password = 3; */
+        if (message.newPassword !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.newPassword);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ChangePasswordRequest
+ */
+export const ChangePasswordRequest = new ChangePasswordRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ChangePasswordResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.ChangePasswordResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ChangePasswordResponse
+ */
+export const ChangePasswordResponse = new ChangePasswordResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ResetPasswordRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.ResetPasswordRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "new_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "reset_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.newPassword = "";
+        message.resetToken = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string new_password */ 2:
+                    message.newPassword = reader.string();
+                    break;
+                case /* string reset_token */ 3:
+                    message.resetToken = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string new_password = 2; */
+        if (message.newPassword !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.newPassword);
+        /* string reset_token = 3; */
+        if (message.resetToken !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.resetToken);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ResetPasswordRequest
+ */
+export const ResetPasswordRequest = new ResetPasswordRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ResetPasswordResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.ResetPasswordResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.ResetPasswordResponse
+ */
+export const ResetPasswordResponse = new ResetPasswordResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CheckPasswordHistoryRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.CheckPasswordHistoryRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password_hash", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "history_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.passwordHash = "";
+        message.historyCount = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string password_hash */ 2:
+                    message.passwordHash = reader.string();
+                    break;
+                case /* int32 history_count */ 3:
+                    message.historyCount = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string password_hash = 2; */
+        if (message.passwordHash !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.passwordHash);
+        /* int32 history_count = 3; */
+        if (message.historyCount !== 0)
+            writer.tag(3, WireType.Varint).int32(message.historyCount);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CheckPasswordHistoryRequest
+ */
+export const CheckPasswordHistoryRequest = new CheckPasswordHistoryRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CheckPasswordHistoryResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.CheckPasswordHistoryResponse", [
+            { no: 1, name: "is_reused", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.isReused = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool is_reused */ 1:
+                    message.isReused = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool is_reused = 1; */
+        if (message.isReused !== false)
+            writer.tag(1, WireType.Varint).bool(message.isReused);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.CheckPasswordHistoryResponse
+ */
+export const CheckPasswordHistoryResponse = new CheckPasswordHistoryResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RecordLoginAttemptRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.RecordLoginAttemptRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 6, name: "failure_reason", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.email = "";
+        message.ipAddress = "";
+        message.userAgent = "";
+        message.success = false;
+        message.failureReason = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string email */ 2:
+                    message.email = reader.string();
+                    break;
+                case /* string ip_address */ 3:
+                    message.ipAddress = reader.string();
+                    break;
+                case /* string user_agent */ 4:
+                    message.userAgent = reader.string();
+                    break;
+                case /* bool success */ 5:
+                    message.success = reader.bool();
+                    break;
+                case /* string failure_reason */ 6:
+                    message.failureReason = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string email = 2; */
+        if (message.email !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.email);
+        /* string ip_address = 3; */
+        if (message.ipAddress !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.ipAddress);
+        /* string user_agent = 4; */
+        if (message.userAgent !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.userAgent);
+        /* bool success = 5; */
+        if (message.success !== false)
+            writer.tag(5, WireType.Varint).bool(message.success);
+        /* string failure_reason = 6; */
+        if (message.failureReason !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.failureReason);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RecordLoginAttemptRequest
+ */
+export const RecordLoginAttemptRequest = new RecordLoginAttemptRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RecordLoginAttemptResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.RecordLoginAttemptResponse", [
+            { no: 1, name: "account_locked", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "failed_attempts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "max_attempts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "locked_until", kind: "message", T: () => Timestamp }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountLocked = false;
+        message.failedAttempts = 0;
+        message.maxAttempts = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool account_locked */ 1:
+                    message.accountLocked = reader.bool();
+                    break;
+                case /* int32 failed_attempts */ 2:
+                    message.failedAttempts = reader.int32();
+                    break;
+                case /* int32 max_attempts */ 3:
+                    message.maxAttempts = reader.int32();
+                    break;
+                case /* google.protobuf.Timestamp locked_until */ 4:
+                    message.lockedUntil = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.lockedUntil);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool account_locked = 1; */
+        if (message.accountLocked !== false)
+            writer.tag(1, WireType.Varint).bool(message.accountLocked);
+        /* int32 failed_attempts = 2; */
+        if (message.failedAttempts !== 0)
+            writer.tag(2, WireType.Varint).int32(message.failedAttempts);
+        /* int32 max_attempts = 3; */
+        if (message.maxAttempts !== 0)
+            writer.tag(3, WireType.Varint).int32(message.maxAttempts);
+        /* google.protobuf.Timestamp locked_until = 4; */
+        if (message.lockedUntil)
+            Timestamp.internalBinaryWrite(message.lockedUntil, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RecordLoginAttemptResponse
+ */
+export const RecordLoginAttemptResponse = new RecordLoginAttemptResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class LockAccountRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.LockAccountRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "duration_minutes", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "reason", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.durationMinutes = 0;
+        message.reason = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* int32 duration_minutes */ 2:
+                    message.durationMinutes = reader.int32();
+                    break;
+                case /* string reason */ 3:
+                    message.reason = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* int32 duration_minutes = 2; */
+        if (message.durationMinutes !== 0)
+            writer.tag(2, WireType.Varint).int32(message.durationMinutes);
+        /* string reason = 3; */
+        if (message.reason !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.reason);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.LockAccountRequest
+ */
+export const LockAccountRequest = new LockAccountRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class LockAccountResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.LockAccountResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "locked_until", kind: "message", T: () => Timestamp },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* google.protobuf.Timestamp locked_until */ 2:
+                    message.lockedUntil = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.lockedUntil);
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* google.protobuf.Timestamp locked_until = 2; */
+        if (message.lockedUntil)
+            Timestamp.internalBinaryWrite(message.lockedUntil, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.LockAccountResponse
+ */
+export const LockAccountResponse = new LockAccountResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UnlockAccountRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.UnlockAccountRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "unlocked_by", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.unlockedBy = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string unlocked_by */ 2:
+                    message.unlockedBy = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string unlocked_by = 2; */
+        if (message.unlockedBy !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.unlockedBy);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UnlockAccountRequest
+ */
+export const UnlockAccountRequest = new UnlockAccountRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UnlockAccountResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.UnlockAccountResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UnlockAccountResponse
+ */
+export const UnlockAccountResponse = new UnlockAccountResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SetupMfaRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.SetupMfaRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.SetupMfaRequest
+ */
+export const SetupMfaRequest = new SetupMfaRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SetupMfaResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.SetupMfaResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "secret", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "qr_code_uri", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "backup_codes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.secret = "";
+        message.qrCodeUri = "";
+        message.backupCodes = [];
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string secret */ 2:
+                    message.secret = reader.string();
+                    break;
+                case /* string qr_code_uri */ 3:
+                    message.qrCodeUri = reader.string();
+                    break;
+                case /* repeated string backup_codes */ 4:
+                    message.backupCodes.push(reader.string());
+                    break;
+                case /* string message */ 5:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string secret = 2; */
+        if (message.secret !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.secret);
+        /* string qr_code_uri = 3; */
+        if (message.qrCodeUri !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.qrCodeUri);
+        /* repeated string backup_codes = 4; */
+        for (let i = 0; i < message.backupCodes.length; i++)
+            writer.tag(4, WireType.LengthDelimited).string(message.backupCodes[i]);
+        /* string message = 5; */
+        if (message.message !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.SetupMfaResponse
+ */
+export const SetupMfaResponse = new SetupMfaResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class VerifyMfaSetupRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.VerifyMfaSetupRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.code = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string code */ 2:
+                    message.code = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string code = 2; */
+        if (message.code !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.code);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaSetupRequest
+ */
+export const VerifyMfaSetupRequest = new VerifyMfaSetupRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class VerifyMfaSetupResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.VerifyMfaSetupResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaSetupResponse
+ */
+export const VerifyMfaSetupResponse = new VerifyMfaSetupResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class VerifyMfaCodeRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.VerifyMfaCodeRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "method", kind: "enum", T: () => ["common.v1.MfaMethod", MfaMethod, "MFA_METHOD_"] }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.code = "";
+        message.method = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string code */ 2:
+                    message.code = reader.string();
+                    break;
+                case /* common.v1.MfaMethod method */ 3:
+                    message.method = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string code = 2; */
+        if (message.code !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.code);
+        /* common.v1.MfaMethod method = 3; */
+        if (message.method !== 0)
+            writer.tag(3, WireType.Varint).int32(message.method);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaCodeRequest
+ */
+export const VerifyMfaCodeRequest = new VerifyMfaCodeRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class VerifyMfaCodeResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.VerifyMfaCodeResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.VerifyMfaCodeResponse
+ */
+export const VerifyMfaCodeResponse = new VerifyMfaCodeResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DisableMfaRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.DisableMfaRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.password = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string password */ 2:
+                    message.password = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string password = 2; */
+        if (message.password !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.password);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DisableMfaRequest
+ */
+export const DisableMfaRequest = new DisableMfaRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DisableMfaResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.DisableMfaResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.DisableMfaResponse
+ */
+export const DisableMfaResponse = new DisableMfaResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetBackupCodesRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.GetBackupCodesRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.GetBackupCodesRequest
+ */
+export const GetBackupCodesRequest = new GetBackupCodesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetBackupCodesResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.GetBackupCodesResponse", [
+            { no: 1, name: "remaining_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "generated_at", kind: "message", T: () => Timestamp }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.remainingCount = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 remaining_count */ 1:
+                    message.remainingCount = reader.int32();
+                    break;
+                case /* google.protobuf.Timestamp generated_at */ 2:
+                    message.generatedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.generatedAt);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* int32 remaining_count = 1; */
+        if (message.remainingCount !== 0)
+            writer.tag(1, WireType.Varint).int32(message.remainingCount);
+        /* google.protobuf.Timestamp generated_at = 2; */
+        if (message.generatedAt)
+            Timestamp.internalBinaryWrite(message.generatedAt, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.GetBackupCodesResponse
+ */
+export const GetBackupCodesResponse = new GetBackupCodesResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RegenerateBackupCodesRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.RegenerateBackupCodesRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.password = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string password */ 2:
+                    message.password = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string password = 2; */
+        if (message.password !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.password);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RegenerateBackupCodesRequest
+ */
+export const RegenerateBackupCodesRequest = new RegenerateBackupCodesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RegenerateBackupCodesResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.RegenerateBackupCodesResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "backup_codes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.backupCodes = [];
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* repeated string backup_codes */ 2:
+                    message.backupCodes.push(reader.string());
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* repeated string backup_codes = 2; */
+        for (let i = 0; i < message.backupCodes.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.backupCodes[i]);
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.RegenerateBackupCodesResponse
+ */
+export const RegenerateBackupCodesResponse = new RegenerateBackupCodesResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UseBackupCodeRequest$Type extends MessageType {
+    constructor() {
+        super("identity.v1.UseBackupCodeRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.code = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string code */ 2:
+                    message.code = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string code = 2; */
+        if (message.code !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.code);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UseBackupCodeRequest
+ */
+export const UseBackupCodeRequest = new UseBackupCodeRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UseBackupCodeResponse$Type extends MessageType {
+    constructor() {
+        super("identity.v1.UseBackupCodeResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "remaining_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.remainingCount = 0;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* int32 remaining_count */ 2:
+                    message.remainingCount = reader.int32();
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* int32 remaining_count = 2; */
+        if (message.remainingCount !== 0)
+            writer.tag(2, WireType.Varint).int32(message.remainingCount);
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message identity.v1.UseBackupCodeResponse
+ */
+export const UseBackupCodeResponse = new UseBackupCodeResponse$Type();
 /**
  * @generated ServiceType for protobuf service identity.v1.IdentityService
  */
@@ -1715,6 +4010,24 @@ export const IdentityService = new ServiceType("identity.v1.IdentityService", [
     { name: "ValidateAccount", options: {}, I: ValidateAccountRequest, O: ValidateAccountResponse },
     { name: "GetAccountByEmail", options: {}, I: GetAccountByEmailRequest, O: GetAccountByEmailResponse },
     { name: "GetAccountByUsername", options: {}, I: GetAccountByUsernameRequest, O: GetAccountByUsernameResponse },
+    { name: "CreateAccount", options: {}, I: CreateAccountRequest, O: CreateAccountResponse },
+    { name: "UpdateAccount", options: {}, I: UpdateAccountRequest, O: UpdateAccountResponse },
+    { name: "DeleteAccount", options: {}, I: DeleteAccountRequest, O: DeleteAccountResponse },
+    { name: "ValidatePassword", options: {}, I: ValidatePasswordRequest, O: ValidatePasswordResponse },
+    { name: "ChangePassword", options: {}, I: ChangePasswordRequest, O: ChangePasswordResponse },
+    { name: "ResetPassword", options: {}, I: ResetPasswordRequest, O: ResetPasswordResponse },
+    { name: "CheckPasswordHistory", options: {}, I: CheckPasswordHistoryRequest, O: CheckPasswordHistoryResponse },
+    { name: "RecordLoginAttempt", options: {}, I: RecordLoginAttemptRequest, O: RecordLoginAttemptResponse },
+    { name: "LockAccount", options: {}, I: LockAccountRequest, O: LockAccountResponse },
+    { name: "UnlockAccount", options: {}, I: UnlockAccountRequest, O: UnlockAccountResponse },
+    { name: "SetupMfa", options: {}, I: SetupMfaRequest, O: SetupMfaResponse },
+    { name: "VerifyMfaSetup", options: {}, I: VerifyMfaSetupRequest, O: VerifyMfaSetupResponse },
+    { name: "VerifyMfaCode", options: {}, I: VerifyMfaCodeRequest, O: VerifyMfaCodeResponse },
+    { name: "DisableMfa", options: {}, I: DisableMfaRequest, O: DisableMfaResponse },
+    { name: "GetBackupCodes", options: {}, I: GetBackupCodesRequest, O: GetBackupCodesResponse },
+    { name: "RegenerateBackupCodes", options: {}, I: RegenerateBackupCodesRequest, O: RegenerateBackupCodesResponse },
+    { name: "UseBackupCode", options: {}, I: UseBackupCodeRequest, O: UseBackupCodeResponse },
+    { name: "CreateSession", options: {}, I: CreateSessionRequest, O: CreateSessionResponse },
     { name: "ValidateSession", options: {}, I: ValidateSessionRequest, O: ValidateSessionResponse },
     { name: "RevokeSession", options: {}, I: RevokeSessionRequest, O: RevokeSessionResponse },
     { name: "RevokeAllSessions", options: {}, I: RevokeAllSessionsRequest, O: RevokeAllSessionsResponse },

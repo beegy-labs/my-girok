@@ -11,6 +11,7 @@ import { WireType } from "@protobuf-ts/runtime";
 import { UnknownFieldHandler } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { MfaMethod } from "../../common/v1/common_pb";
 import { Timestamp } from "../../google/protobuf/timestamp_pb";
 /**
  * RoleScope defines where the role applies
@@ -176,6 +177,62 @@ export var SanctionStatus;
      */
     SanctionStatus[SanctionStatus["APPEALED"] = 4] = "APPEALED";
 })(SanctionStatus || (SanctionStatus = {}));
+/**
+ * AdminScope defines admin authority level
+ *
+ * @generated from protobuf enum auth.v1.AdminScope
+ */
+export var AdminScope;
+(function (AdminScope) {
+    /**
+     * @generated from protobuf enum value: ADMIN_SCOPE_UNSPECIFIED = 0;
+     */
+    AdminScope[AdminScope["UNSPECIFIED"] = 0] = "UNSPECIFIED";
+    /**
+     * Full platform access
+     *
+     * @generated from protobuf enum value: ADMIN_SCOPE_SYSTEM = 1;
+     */
+    AdminScope[AdminScope["SYSTEM"] = 1] = "SYSTEM";
+    /**
+     * Tenant-level access
+     *
+     * @generated from protobuf enum value: ADMIN_SCOPE_TENANT = 2;
+     */
+    AdminScope[AdminScope["TENANT"] = 2] = "TENANT";
+})(AdminScope || (AdminScope = {}));
+/**
+ * OperatorAssignmentStatus represents the lifecycle of an operator assignment.
+ *
+ * @generated from protobuf enum auth.v1.OperatorAssignmentStatus
+ */
+export var OperatorAssignmentStatus;
+(function (OperatorAssignmentStatus) {
+    /**
+     * Default unspecified value
+     *
+     * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_UNSPECIFIED = 0;
+     */
+    OperatorAssignmentStatus[OperatorAssignmentStatus["UNSPECIFIED"] = 0] = "UNSPECIFIED";
+    /**
+     * Assignment is active and the user has operator privileges
+     *
+     * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_ACTIVE = 1;
+     */
+    OperatorAssignmentStatus[OperatorAssignmentStatus["ACTIVE"] = 1] = "ACTIVE";
+    /**
+     * Assignment is temporarily suspended
+     *
+     * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_SUSPENDED = 2;
+     */
+    OperatorAssignmentStatus[OperatorAssignmentStatus["SUSPENDED"] = 2] = "SUSPENDED";
+    /**
+     * Assignment has been permanently revoked
+     *
+     * @generated from protobuf enum value: OPERATOR_ASSIGNMENT_STATUS_REVOKED = 3;
+     */
+    OperatorAssignmentStatus[OperatorAssignmentStatus["REVOKED"] = 3] = "REVOKED";
+})(OperatorAssignmentStatus || (OperatorAssignmentStatus = {}));
 // @generated message type with reflection information, may provide speed optimized methods
 class Permission$Type extends MessageType {
     constructor() {
@@ -1733,6 +1790,2804 @@ class GetActiveSanctionsResponse$Type extends MessageType {
  * @generated MessageType for protobuf message auth.v1.GetActiveSanctionsResponse
  */
 export const GetActiveSanctionsResponse = new GetActiveSanctionsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Admin$Type extends MessageType {
+    constructor() {
+        super("auth.v1.Admin", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "scope", kind: "enum", T: () => ["auth.v1.AdminScope", AdminScope, "ADMIN_SCOPE_"] },
+            { no: 5, name: "role_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "role", kind: "message", T: () => Role },
+            { no: 7, name: "is_active", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "mfa_required", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "mfa_enabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "force_password_change", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 11, name: "last_login_at", kind: "message", T: () => Timestamp },
+            { no: 12, name: "password_changed_at", kind: "message", T: () => Timestamp },
+            { no: 13, name: "created_at", kind: "message", T: () => Timestamp },
+            { no: 14, name: "updated_at", kind: "message", T: () => Timestamp }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.id = "";
+        message.email = "";
+        message.name = "";
+        message.scope = 0;
+        message.roleId = "";
+        message.isActive = false;
+        message.mfaRequired = false;
+        message.mfaEnabled = false;
+        message.forcePasswordChange = false;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                case /* string email */ 2:
+                    message.email = reader.string();
+                    break;
+                case /* string name */ 3:
+                    message.name = reader.string();
+                    break;
+                case /* auth.v1.AdminScope scope */ 4:
+                    message.scope = reader.int32();
+                    break;
+                case /* string role_id */ 5:
+                    message.roleId = reader.string();
+                    break;
+                case /* auth.v1.Role role */ 6:
+                    message.role = Role.internalBinaryRead(reader, reader.uint32(), options, message.role);
+                    break;
+                case /* bool is_active */ 7:
+                    message.isActive = reader.bool();
+                    break;
+                case /* bool mfa_required */ 8:
+                    message.mfaRequired = reader.bool();
+                    break;
+                case /* bool mfa_enabled */ 9:
+                    message.mfaEnabled = reader.bool();
+                    break;
+                case /* bool force_password_change */ 10:
+                    message.forcePasswordChange = reader.bool();
+                    break;
+                case /* google.protobuf.Timestamp last_login_at */ 11:
+                    message.lastLoginAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.lastLoginAt);
+                    break;
+                case /* google.protobuf.Timestamp password_changed_at */ 12:
+                    message.passwordChangedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.passwordChangedAt);
+                    break;
+                case /* google.protobuf.Timestamp created_at */ 13:
+                    message.createdAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.createdAt);
+                    break;
+                case /* google.protobuf.Timestamp updated_at */ 14:
+                    message.updatedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.updatedAt);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        /* string email = 2; */
+        if (message.email !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.email);
+        /* string name = 3; */
+        if (message.name !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.name);
+        /* auth.v1.AdminScope scope = 4; */
+        if (message.scope !== 0)
+            writer.tag(4, WireType.Varint).int32(message.scope);
+        /* string role_id = 5; */
+        if (message.roleId !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.roleId);
+        /* auth.v1.Role role = 6; */
+        if (message.role)
+            Role.internalBinaryWrite(message.role, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* bool is_active = 7; */
+        if (message.isActive !== false)
+            writer.tag(7, WireType.Varint).bool(message.isActive);
+        /* bool mfa_required = 8; */
+        if (message.mfaRequired !== false)
+            writer.tag(8, WireType.Varint).bool(message.mfaRequired);
+        /* bool mfa_enabled = 9; */
+        if (message.mfaEnabled !== false)
+            writer.tag(9, WireType.Varint).bool(message.mfaEnabled);
+        /* bool force_password_change = 10; */
+        if (message.forcePasswordChange !== false)
+            writer.tag(10, WireType.Varint).bool(message.forcePasswordChange);
+        /* google.protobuf.Timestamp last_login_at = 11; */
+        if (message.lastLoginAt)
+            Timestamp.internalBinaryWrite(message.lastLoginAt, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp password_changed_at = 12; */
+        if (message.passwordChangedAt)
+            Timestamp.internalBinaryWrite(message.passwordChangedAt, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp created_at = 13; */
+        if (message.createdAt)
+            Timestamp.internalBinaryWrite(message.createdAt, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp updated_at = 14; */
+        if (message.updatedAt)
+            Timestamp.internalBinaryWrite(message.updatedAt, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.Admin
+ */
+export const Admin = new Admin$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminSession$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminSession", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "mfa_verified", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "mfa_method", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "device_fingerprint", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "is_active", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "mfa_verified_at", kind: "message", T: () => Timestamp },
+            { no: 10, name: "last_activity_at", kind: "message", T: () => Timestamp },
+            { no: 11, name: "expires_at", kind: "message", T: () => Timestamp },
+            { no: 12, name: "created_at", kind: "message", T: () => Timestamp }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.id = "";
+        message.adminId = "";
+        message.mfaVerified = false;
+        message.mfaMethod = "";
+        message.ipAddress = "";
+        message.userAgent = "";
+        message.deviceFingerprint = "";
+        message.isActive = false;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                case /* string admin_id */ 2:
+                    message.adminId = reader.string();
+                    break;
+                case /* bool mfa_verified */ 3:
+                    message.mfaVerified = reader.bool();
+                    break;
+                case /* string mfa_method */ 4:
+                    message.mfaMethod = reader.string();
+                    break;
+                case /* string ip_address */ 5:
+                    message.ipAddress = reader.string();
+                    break;
+                case /* string user_agent */ 6:
+                    message.userAgent = reader.string();
+                    break;
+                case /* string device_fingerprint */ 7:
+                    message.deviceFingerprint = reader.string();
+                    break;
+                case /* bool is_active */ 8:
+                    message.isActive = reader.bool();
+                    break;
+                case /* google.protobuf.Timestamp mfa_verified_at */ 9:
+                    message.mfaVerifiedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.mfaVerifiedAt);
+                    break;
+                case /* google.protobuf.Timestamp last_activity_at */ 10:
+                    message.lastActivityAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.lastActivityAt);
+                    break;
+                case /* google.protobuf.Timestamp expires_at */ 11:
+                    message.expiresAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.expiresAt);
+                    break;
+                case /* google.protobuf.Timestamp created_at */ 12:
+                    message.createdAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.createdAt);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        /* string admin_id = 2; */
+        if (message.adminId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.adminId);
+        /* bool mfa_verified = 3; */
+        if (message.mfaVerified !== false)
+            writer.tag(3, WireType.Varint).bool(message.mfaVerified);
+        /* string mfa_method = 4; */
+        if (message.mfaMethod !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.mfaMethod);
+        /* string ip_address = 5; */
+        if (message.ipAddress !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.ipAddress);
+        /* string user_agent = 6; */
+        if (message.userAgent !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.userAgent);
+        /* string device_fingerprint = 7; */
+        if (message.deviceFingerprint !== "")
+            writer.tag(7, WireType.LengthDelimited).string(message.deviceFingerprint);
+        /* bool is_active = 8; */
+        if (message.isActive !== false)
+            writer.tag(8, WireType.Varint).bool(message.isActive);
+        /* google.protobuf.Timestamp mfa_verified_at = 9; */
+        if (message.mfaVerifiedAt)
+            Timestamp.internalBinaryWrite(message.mfaVerifiedAt, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp last_activity_at = 10; */
+        if (message.lastActivityAt)
+            Timestamp.internalBinaryWrite(message.lastActivityAt, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp expires_at = 11; */
+        if (message.expiresAt)
+            Timestamp.internalBinaryWrite(message.expiresAt, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp created_at = 12; */
+        if (message.createdAt)
+            Timestamp.internalBinaryWrite(message.createdAt, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminSession
+ */
+export const AdminSession = new AdminSession$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminLoginRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminLoginRequest", [
+            { no: 1, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "device_fingerprint", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.email = "";
+        message.password = "";
+        message.ipAddress = "";
+        message.userAgent = "";
+        message.deviceFingerprint = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string email */ 1:
+                    message.email = reader.string();
+                    break;
+                case /* string password */ 2:
+                    message.password = reader.string();
+                    break;
+                case /* string ip_address */ 3:
+                    message.ipAddress = reader.string();
+                    break;
+                case /* string user_agent */ 4:
+                    message.userAgent = reader.string();
+                    break;
+                case /* string device_fingerprint */ 5:
+                    message.deviceFingerprint = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string email = 1; */
+        if (message.email !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.email);
+        /* string password = 2; */
+        if (message.password !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.password);
+        /* string ip_address = 3; */
+        if (message.ipAddress !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.ipAddress);
+        /* string user_agent = 4; */
+        if (message.userAgent !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.userAgent);
+        /* string device_fingerprint = 5; */
+        if (message.deviceFingerprint !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.deviceFingerprint);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginRequest
+ */
+export const AdminLoginRequest = new AdminLoginRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminLoginResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminLoginResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "mfa_required", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "challenge_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "available_methods", kind: "enum", repeat: 1 /*RepeatType.PACKED*/, T: () => ["common.v1.MfaMethod", MfaMethod, "MFA_METHOD_"] },
+            { no: 5, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "admin", kind: "message", T: () => Admin },
+            { no: 7, name: "session", kind: "message", T: () => AdminSession },
+            { no: 8, name: "access_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "refresh_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.mfaRequired = false;
+        message.challengeId = "";
+        message.availableMethods = [];
+        message.message = "";
+        message.accessToken = "";
+        message.refreshToken = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* bool mfa_required */ 2:
+                    message.mfaRequired = reader.bool();
+                    break;
+                case /* string challenge_id */ 3:
+                    message.challengeId = reader.string();
+                    break;
+                case /* repeated common.v1.MfaMethod available_methods */ 4:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.availableMethods.push(reader.int32());
+                    else
+                        message.availableMethods.push(reader.int32());
+                    break;
+                case /* string message */ 5:
+                    message.message = reader.string();
+                    break;
+                case /* auth.v1.Admin admin */ 6:
+                    message.admin = Admin.internalBinaryRead(reader, reader.uint32(), options, message.admin);
+                    break;
+                case /* auth.v1.AdminSession session */ 7:
+                    message.session = AdminSession.internalBinaryRead(reader, reader.uint32(), options, message.session);
+                    break;
+                case /* string access_token */ 8:
+                    message.accessToken = reader.string();
+                    break;
+                case /* string refresh_token */ 9:
+                    message.refreshToken = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* bool mfa_required = 2; */
+        if (message.mfaRequired !== false)
+            writer.tag(2, WireType.Varint).bool(message.mfaRequired);
+        /* string challenge_id = 3; */
+        if (message.challengeId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.challengeId);
+        /* repeated common.v1.MfaMethod available_methods = 4; */
+        if (message.availableMethods.length) {
+            writer.tag(4, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.availableMethods.length; i++)
+                writer.int32(message.availableMethods[i]);
+            writer.join();
+        }
+        /* string message = 5; */
+        if (message.message !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.message);
+        /* auth.v1.Admin admin = 6; */
+        if (message.admin)
+            Admin.internalBinaryWrite(message.admin, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* auth.v1.AdminSession session = 7; */
+        if (message.session)
+            AdminSession.internalBinaryWrite(message.session, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* string access_token = 8; */
+        if (message.accessToken !== "")
+            writer.tag(8, WireType.LengthDelimited).string(message.accessToken);
+        /* string refresh_token = 9; */
+        if (message.refreshToken !== "")
+            writer.tag(9, WireType.LengthDelimited).string(message.refreshToken);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginResponse
+ */
+export const AdminLoginResponse = new AdminLoginResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminLoginMfaRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminLoginMfaRequest", [
+            { no: 1, name: "challenge_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "method", kind: "enum", T: () => ["common.v1.MfaMethod", MfaMethod, "MFA_METHOD_"] },
+            { no: 4, name: "ip_address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "device_fingerprint", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.challengeId = "";
+        message.code = "";
+        message.method = 0;
+        message.ipAddress = "";
+        message.userAgent = "";
+        message.deviceFingerprint = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string challenge_id */ 1:
+                    message.challengeId = reader.string();
+                    break;
+                case /* string code */ 2:
+                    message.code = reader.string();
+                    break;
+                case /* common.v1.MfaMethod method */ 3:
+                    message.method = reader.int32();
+                    break;
+                case /* string ip_address */ 4:
+                    message.ipAddress = reader.string();
+                    break;
+                case /* string user_agent */ 5:
+                    message.userAgent = reader.string();
+                    break;
+                case /* string device_fingerprint */ 6:
+                    message.deviceFingerprint = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string challenge_id = 1; */
+        if (message.challengeId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.challengeId);
+        /* string code = 2; */
+        if (message.code !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.code);
+        /* common.v1.MfaMethod method = 3; */
+        if (message.method !== 0)
+            writer.tag(3, WireType.Varint).int32(message.method);
+        /* string ip_address = 4; */
+        if (message.ipAddress !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.ipAddress);
+        /* string user_agent = 5; */
+        if (message.userAgent !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.userAgent);
+        /* string device_fingerprint = 6; */
+        if (message.deviceFingerprint !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.deviceFingerprint);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginMfaRequest
+ */
+export const AdminLoginMfaRequest = new AdminLoginMfaRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminLoginMfaResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminLoginMfaResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "admin", kind: "message", T: () => Admin },
+            { no: 4, name: "session", kind: "message", T: () => AdminSession },
+            { no: 5, name: "access_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "refresh_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        message.accessToken = "";
+        message.refreshToken = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                case /* auth.v1.Admin admin */ 3:
+                    message.admin = Admin.internalBinaryRead(reader, reader.uint32(), options, message.admin);
+                    break;
+                case /* auth.v1.AdminSession session */ 4:
+                    message.session = AdminSession.internalBinaryRead(reader, reader.uint32(), options, message.session);
+                    break;
+                case /* string access_token */ 5:
+                    message.accessToken = reader.string();
+                    break;
+                case /* string refresh_token */ 6:
+                    message.refreshToken = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        /* auth.v1.Admin admin = 3; */
+        if (message.admin)
+            Admin.internalBinaryWrite(message.admin, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* auth.v1.AdminSession session = 4; */
+        if (message.session)
+            AdminSession.internalBinaryWrite(message.session, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* string access_token = 5; */
+        if (message.accessToken !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.accessToken);
+        /* string refresh_token = 6; */
+        if (message.refreshToken !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.refreshToken);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLoginMfaResponse
+ */
+export const AdminLoginMfaResponse = new AdminLoginMfaResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminValidateSessionRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminValidateSessionRequest", [
+            { no: 1, name: "token_hash", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.tokenHash = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string token_hash */ 1:
+                    message.tokenHash = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string token_hash = 1; */
+        if (message.tokenHash !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tokenHash);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminValidateSessionRequest
+ */
+export const AdminValidateSessionRequest = new AdminValidateSessionRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminValidateSessionResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminValidateSessionResponse", [
+            { no: 1, name: "valid", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "session_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "mfa_verified", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "expires_at", kind: "message", T: () => Timestamp },
+            { no: 6, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.valid = false;
+        message.adminId = "";
+        message.sessionId = "";
+        message.mfaVerified = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool valid */ 1:
+                    message.valid = reader.bool();
+                    break;
+                case /* string admin_id */ 2:
+                    message.adminId = reader.string();
+                    break;
+                case /* string session_id */ 3:
+                    message.sessionId = reader.string();
+                    break;
+                case /* bool mfa_verified */ 4:
+                    message.mfaVerified = reader.bool();
+                    break;
+                case /* google.protobuf.Timestamp expires_at */ 5:
+                    message.expiresAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.expiresAt);
+                    break;
+                case /* string message */ 6:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool valid = 1; */
+        if (message.valid !== false)
+            writer.tag(1, WireType.Varint).bool(message.valid);
+        /* string admin_id = 2; */
+        if (message.adminId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.adminId);
+        /* string session_id = 3; */
+        if (message.sessionId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.sessionId);
+        /* bool mfa_verified = 4; */
+        if (message.mfaVerified !== false)
+            writer.tag(4, WireType.Varint).bool(message.mfaVerified);
+        /* google.protobuf.Timestamp expires_at = 5; */
+        if (message.expiresAt)
+            Timestamp.internalBinaryWrite(message.expiresAt, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* string message = 6; */
+        if (message.message !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminValidateSessionResponse
+ */
+export const AdminValidateSessionResponse = new AdminValidateSessionResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminRefreshSessionRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminRefreshSessionRequest", [
+            { no: 1, name: "refresh_token_hash", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.refreshTokenHash = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string refresh_token_hash */ 1:
+                    message.refreshTokenHash = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string refresh_token_hash = 1; */
+        if (message.refreshTokenHash !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.refreshTokenHash);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRefreshSessionRequest
+ */
+export const AdminRefreshSessionRequest = new AdminRefreshSessionRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminRefreshSessionResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminRefreshSessionResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "access_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "refresh_token", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "expires_at", kind: "message", T: () => Timestamp },
+            { no: 5, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.accessToken = "";
+        message.refreshToken = "";
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string access_token */ 2:
+                    message.accessToken = reader.string();
+                    break;
+                case /* string refresh_token */ 3:
+                    message.refreshToken = reader.string();
+                    break;
+                case /* google.protobuf.Timestamp expires_at */ 4:
+                    message.expiresAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.expiresAt);
+                    break;
+                case /* string message */ 5:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string access_token = 2; */
+        if (message.accessToken !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.accessToken);
+        /* string refresh_token = 3; */
+        if (message.refreshToken !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.refreshToken);
+        /* google.protobuf.Timestamp expires_at = 4; */
+        if (message.expiresAt)
+            Timestamp.internalBinaryWrite(message.expiresAt, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* string message = 5; */
+        if (message.message !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRefreshSessionResponse
+ */
+export const AdminRefreshSessionResponse = new AdminRefreshSessionResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminLogoutRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminLogoutRequest", [
+            { no: 1, name: "session_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.sessionId = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string session_id */ 1:
+                    message.sessionId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string session_id = 1; */
+        if (message.sessionId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.sessionId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLogoutRequest
+ */
+export const AdminLogoutRequest = new AdminLogoutRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminLogoutResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminLogoutResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminLogoutResponse
+ */
+export const AdminLogoutResponse = new AdminLogoutResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminRevokeAllSessionsRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminRevokeAllSessionsRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "exclude_session_id", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "reason", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        message.reason = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                case /* optional string exclude_session_id */ 2:
+                    message.excludeSessionId = reader.string();
+                    break;
+                case /* string reason */ 3:
+                    message.reason = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        /* optional string exclude_session_id = 2; */
+        if (message.excludeSessionId !== undefined)
+            writer.tag(2, WireType.LengthDelimited).string(message.excludeSessionId);
+        /* string reason = 3; */
+        if (message.reason !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.reason);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRevokeAllSessionsRequest
+ */
+export const AdminRevokeAllSessionsRequest = new AdminRevokeAllSessionsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminRevokeAllSessionsResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminRevokeAllSessionsResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "revoked_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.revokedCount = 0;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* int32 revoked_count */ 2:
+                    message.revokedCount = reader.int32();
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* int32 revoked_count = 2; */
+        if (message.revokedCount !== 0)
+            writer.tag(2, WireType.Varint).int32(message.revokedCount);
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRevokeAllSessionsResponse
+ */
+export const AdminRevokeAllSessionsResponse = new AdminRevokeAllSessionsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminGetActiveSessionsRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminGetActiveSessionsRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminGetActiveSessionsRequest
+ */
+export const AdminGetActiveSessionsRequest = new AdminGetActiveSessionsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminGetActiveSessionsResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminGetActiveSessionsResponse", [
+            { no: 1, name: "sessions", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => AdminSession },
+            { no: 2, name: "total_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.sessions = [];
+        message.totalCount = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated auth.v1.AdminSession sessions */ 1:
+                    message.sessions.push(AdminSession.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* int32 total_count */ 2:
+                    message.totalCount = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* repeated auth.v1.AdminSession sessions = 1; */
+        for (let i = 0; i < message.sessions.length; i++)
+            AdminSession.internalBinaryWrite(message.sessions[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* int32 total_count = 2; */
+        if (message.totalCount !== 0)
+            writer.tag(2, WireType.Varint).int32(message.totalCount);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminGetActiveSessionsResponse
+ */
+export const AdminGetActiveSessionsResponse = new AdminGetActiveSessionsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminSetupMfaRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminSetupMfaRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminSetupMfaRequest
+ */
+export const AdminSetupMfaRequest = new AdminSetupMfaRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminSetupMfaResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminSetupMfaResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "secret", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "qr_code_uri", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "backup_codes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.secret = "";
+        message.qrCodeUri = "";
+        message.backupCodes = [];
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string secret */ 2:
+                    message.secret = reader.string();
+                    break;
+                case /* string qr_code_uri */ 3:
+                    message.qrCodeUri = reader.string();
+                    break;
+                case /* repeated string backup_codes */ 4:
+                    message.backupCodes.push(reader.string());
+                    break;
+                case /* string message */ 5:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string secret = 2; */
+        if (message.secret !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.secret);
+        /* string qr_code_uri = 3; */
+        if (message.qrCodeUri !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.qrCodeUri);
+        /* repeated string backup_codes = 4; */
+        for (let i = 0; i < message.backupCodes.length; i++)
+            writer.tag(4, WireType.LengthDelimited).string(message.backupCodes[i]);
+        /* string message = 5; */
+        if (message.message !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminSetupMfaResponse
+ */
+export const AdminSetupMfaResponse = new AdminSetupMfaResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminVerifyMfaRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminVerifyMfaRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        message.code = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                case /* string code */ 2:
+                    message.code = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        /* string code = 2; */
+        if (message.code !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.code);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminVerifyMfaRequest
+ */
+export const AdminVerifyMfaRequest = new AdminVerifyMfaRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminVerifyMfaResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminVerifyMfaResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminVerifyMfaResponse
+ */
+export const AdminVerifyMfaResponse = new AdminVerifyMfaResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminDisableMfaRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminDisableMfaRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        message.password = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                case /* string password */ 2:
+                    message.password = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        /* string password = 2; */
+        if (message.password !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.password);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminDisableMfaRequest
+ */
+export const AdminDisableMfaRequest = new AdminDisableMfaRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminDisableMfaResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminDisableMfaResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminDisableMfaResponse
+ */
+export const AdminDisableMfaResponse = new AdminDisableMfaResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminRegenerateBackupCodesRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminRegenerateBackupCodesRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        message.password = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                case /* string password */ 2:
+                    message.password = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        /* string password = 2; */
+        if (message.password !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.password);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRegenerateBackupCodesRequest
+ */
+export const AdminRegenerateBackupCodesRequest = new AdminRegenerateBackupCodesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminRegenerateBackupCodesResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminRegenerateBackupCodesResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "backup_codes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.backupCodes = [];
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* repeated string backup_codes */ 2:
+                    message.backupCodes.push(reader.string());
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* repeated string backup_codes = 2; */
+        for (let i = 0; i < message.backupCodes.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.backupCodes[i]);
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminRegenerateBackupCodesResponse
+ */
+export const AdminRegenerateBackupCodesResponse = new AdminRegenerateBackupCodesResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminChangePasswordRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminChangePasswordRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "current_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "new_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        message.currentPassword = "";
+        message.newPassword = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                case /* string current_password */ 2:
+                    message.currentPassword = reader.string();
+                    break;
+                case /* string new_password */ 3:
+                    message.newPassword = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        /* string current_password = 2; */
+        if (message.currentPassword !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.currentPassword);
+        /* string new_password = 3; */
+        if (message.newPassword !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.newPassword);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminChangePasswordRequest
+ */
+export const AdminChangePasswordRequest = new AdminChangePasswordRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminChangePasswordResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminChangePasswordResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminChangePasswordResponse
+ */
+export const AdminChangePasswordResponse = new AdminChangePasswordResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminForcePasswordChangeRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminForcePasswordChangeRequest", [
+            { no: 1, name: "admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "requester_admin_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.adminId = "";
+        message.requesterAdminId = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string admin_id */ 1:
+                    message.adminId = reader.string();
+                    break;
+                case /* string requester_admin_id */ 2:
+                    message.requesterAdminId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string admin_id = 1; */
+        if (message.adminId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.adminId);
+        /* string requester_admin_id = 2; */
+        if (message.requesterAdminId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.requesterAdminId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminForcePasswordChangeRequest
+ */
+export const AdminForcePasswordChangeRequest = new AdminForcePasswordChangeRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AdminForcePasswordChangeResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AdminForcePasswordChangeResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AdminForcePasswordChangeResponse
+ */
+export const AdminForcePasswordChangeResponse = new AdminForcePasswordChangeResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class OperatorAssignment$Type extends MessageType {
+    constructor() {
+        super("auth.v1.OperatorAssignment", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "service_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "country_code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "status", kind: "enum", T: () => ["auth.v1.OperatorAssignmentStatus", OperatorAssignmentStatus, "OPERATOR_ASSIGNMENT_STATUS_"] },
+            { no: 6, name: "assigned_by", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "assigned_at", kind: "message", T: () => Timestamp },
+            { no: 8, name: "deactivated_at", kind: "message", T: () => Timestamp },
+            { no: 9, name: "deactivation_reason", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 10, name: "created_at", kind: "message", T: () => Timestamp },
+            { no: 11, name: "updated_at", kind: "message", T: () => Timestamp },
+            { no: 12, name: "permissions", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Permission }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.id = "";
+        message.accountId = "";
+        message.serviceId = "";
+        message.countryCode = "";
+        message.status = 0;
+        message.assignedBy = "";
+        message.deactivationReason = "";
+        message.permissions = [];
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                case /* string account_id */ 2:
+                    message.accountId = reader.string();
+                    break;
+                case /* string service_id */ 3:
+                    message.serviceId = reader.string();
+                    break;
+                case /* string country_code */ 4:
+                    message.countryCode = reader.string();
+                    break;
+                case /* auth.v1.OperatorAssignmentStatus status */ 5:
+                    message.status = reader.int32();
+                    break;
+                case /* string assigned_by */ 6:
+                    message.assignedBy = reader.string();
+                    break;
+                case /* google.protobuf.Timestamp assigned_at */ 7:
+                    message.assignedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.assignedAt);
+                    break;
+                case /* google.protobuf.Timestamp deactivated_at */ 8:
+                    message.deactivatedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.deactivatedAt);
+                    break;
+                case /* string deactivation_reason */ 9:
+                    message.deactivationReason = reader.string();
+                    break;
+                case /* google.protobuf.Timestamp created_at */ 10:
+                    message.createdAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.createdAt);
+                    break;
+                case /* google.protobuf.Timestamp updated_at */ 11:
+                    message.updatedAt = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.updatedAt);
+                    break;
+                case /* repeated auth.v1.Permission permissions */ 12:
+                    message.permissions.push(Permission.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        /* string account_id = 2; */
+        if (message.accountId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.accountId);
+        /* string service_id = 3; */
+        if (message.serviceId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.serviceId);
+        /* string country_code = 4; */
+        if (message.countryCode !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.countryCode);
+        /* auth.v1.OperatorAssignmentStatus status = 5; */
+        if (message.status !== 0)
+            writer.tag(5, WireType.Varint).int32(message.status);
+        /* string assigned_by = 6; */
+        if (message.assignedBy !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.assignedBy);
+        /* google.protobuf.Timestamp assigned_at = 7; */
+        if (message.assignedAt)
+            Timestamp.internalBinaryWrite(message.assignedAt, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp deactivated_at = 8; */
+        if (message.deactivatedAt)
+            Timestamp.internalBinaryWrite(message.deactivatedAt, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* string deactivation_reason = 9; */
+        if (message.deactivationReason !== "")
+            writer.tag(9, WireType.LengthDelimited).string(message.deactivationReason);
+        /* google.protobuf.Timestamp created_at = 10; */
+        if (message.createdAt)
+            Timestamp.internalBinaryWrite(message.createdAt, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* google.protobuf.Timestamp updated_at = 11; */
+        if (message.updatedAt)
+            Timestamp.internalBinaryWrite(message.updatedAt, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* repeated auth.v1.Permission permissions = 12; */
+        for (let i = 0; i < message.permissions.length; i++)
+            Permission.internalBinaryWrite(message.permissions[i], writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.OperatorAssignment
+ */
+export const OperatorAssignment = new OperatorAssignment$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AssignOperatorRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AssignOperatorRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "service_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "country_code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "assigned_by", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "permission_ids", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.serviceId = "";
+        message.countryCode = "";
+        message.assignedBy = "";
+        message.permissionIds = [];
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string service_id */ 2:
+                    message.serviceId = reader.string();
+                    break;
+                case /* string country_code */ 3:
+                    message.countryCode = reader.string();
+                    break;
+                case /* string assigned_by */ 4:
+                    message.assignedBy = reader.string();
+                    break;
+                case /* repeated string permission_ids */ 5:
+                    message.permissionIds.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string service_id = 2; */
+        if (message.serviceId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.serviceId);
+        /* string country_code = 3; */
+        if (message.countryCode !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.countryCode);
+        /* string assigned_by = 4; */
+        if (message.assignedBy !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.assignedBy);
+        /* repeated string permission_ids = 5; */
+        for (let i = 0; i < message.permissionIds.length; i++)
+            writer.tag(5, WireType.LengthDelimited).string(message.permissionIds[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AssignOperatorRequest
+ */
+export const AssignOperatorRequest = new AssignOperatorRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AssignOperatorResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.AssignOperatorResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "assignment", kind: "message", T: () => OperatorAssignment },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* auth.v1.OperatorAssignment assignment */ 2:
+                    message.assignment = OperatorAssignment.internalBinaryRead(reader, reader.uint32(), options, message.assignment);
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* auth.v1.OperatorAssignment assignment = 2; */
+        if (message.assignment)
+            OperatorAssignment.internalBinaryWrite(message.assignment, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.AssignOperatorResponse
+ */
+export const AssignOperatorResponse = new AssignOperatorResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RevokeOperatorAssignmentRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.RevokeOperatorAssignmentRequest", [
+            { no: 1, name: "assignment_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "revoked_by", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "reason", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.assignmentId = "";
+        message.revokedBy = "";
+        message.reason = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string assignment_id */ 1:
+                    message.assignmentId = reader.string();
+                    break;
+                case /* string revoked_by */ 2:
+                    message.revokedBy = reader.string();
+                    break;
+                case /* string reason */ 3:
+                    message.reason = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string assignment_id = 1; */
+        if (message.assignmentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.assignmentId);
+        /* string revoked_by = 2; */
+        if (message.revokedBy !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.revokedBy);
+        /* string reason = 3; */
+        if (message.reason !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.reason);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.RevokeOperatorAssignmentRequest
+ */
+export const RevokeOperatorAssignmentRequest = new RevokeOperatorAssignmentRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RevokeOperatorAssignmentResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.RevokeOperatorAssignmentResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.RevokeOperatorAssignmentResponse
+ */
+export const RevokeOperatorAssignmentResponse = new RevokeOperatorAssignmentResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetOperatorAssignmentRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.GetOperatorAssignmentRequest", [
+            { no: 1, name: "account_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "service_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "country_code", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.accountId = "";
+        message.serviceId = "";
+        message.countryCode = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string account_id */ 1:
+                    message.accountId = reader.string();
+                    break;
+                case /* string service_id */ 2:
+                    message.serviceId = reader.string();
+                    break;
+                case /* string country_code */ 3:
+                    message.countryCode = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string account_id = 1; */
+        if (message.accountId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.accountId);
+        /* string service_id = 2; */
+        if (message.serviceId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.serviceId);
+        /* string country_code = 3; */
+        if (message.countryCode !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.countryCode);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentRequest
+ */
+export const GetOperatorAssignmentRequest = new GetOperatorAssignmentRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetOperatorAssignmentResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.GetOperatorAssignmentResponse", [
+            { no: 1, name: "assignment", kind: "message", T: () => OperatorAssignment },
+            { no: 2, name: "found", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.found = false;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* auth.v1.OperatorAssignment assignment */ 1:
+                    message.assignment = OperatorAssignment.internalBinaryRead(reader, reader.uint32(), options, message.assignment);
+                    break;
+                case /* bool found */ 2:
+                    message.found = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* auth.v1.OperatorAssignment assignment = 1; */
+        if (message.assignment)
+            OperatorAssignment.internalBinaryWrite(message.assignment, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* bool found = 2; */
+        if (message.found !== false)
+            writer.tag(2, WireType.Varint).bool(message.found);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentResponse
+ */
+export const GetOperatorAssignmentResponse = new GetOperatorAssignmentResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetServiceOperatorAssignmentsRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.GetServiceOperatorAssignmentsRequest", [
+            { no: 1, name: "service_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "country_code", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "status", kind: "enum", opt: true, T: () => ["auth.v1.OperatorAssignmentStatus", OperatorAssignmentStatus, "OPERATOR_ASSIGNMENT_STATUS_"] },
+            { no: 4, name: "page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "page_size", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.serviceId = "";
+        message.page = 0;
+        message.pageSize = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string service_id */ 1:
+                    message.serviceId = reader.string();
+                    break;
+                case /* optional string country_code */ 2:
+                    message.countryCode = reader.string();
+                    break;
+                case /* optional auth.v1.OperatorAssignmentStatus status */ 3:
+                    message.status = reader.int32();
+                    break;
+                case /* int32 page */ 4:
+                    message.page = reader.int32();
+                    break;
+                case /* int32 page_size */ 5:
+                    message.pageSize = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string service_id = 1; */
+        if (message.serviceId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.serviceId);
+        /* optional string country_code = 2; */
+        if (message.countryCode !== undefined)
+            writer.tag(2, WireType.LengthDelimited).string(message.countryCode);
+        /* optional auth.v1.OperatorAssignmentStatus status = 3; */
+        if (message.status !== undefined)
+            writer.tag(3, WireType.Varint).int32(message.status);
+        /* int32 page = 4; */
+        if (message.page !== 0)
+            writer.tag(4, WireType.Varint).int32(message.page);
+        /* int32 page_size = 5; */
+        if (message.pageSize !== 0)
+            writer.tag(5, WireType.Varint).int32(message.pageSize);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetServiceOperatorAssignmentsRequest
+ */
+export const GetServiceOperatorAssignmentsRequest = new GetServiceOperatorAssignmentsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetServiceOperatorAssignmentsResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.GetServiceOperatorAssignmentsResponse", [
+            { no: 1, name: "assignments", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => OperatorAssignment },
+            { no: 2, name: "total_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "page_size", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.assignments = [];
+        message.totalCount = 0;
+        message.page = 0;
+        message.pageSize = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated auth.v1.OperatorAssignment assignments */ 1:
+                    message.assignments.push(OperatorAssignment.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* int32 total_count */ 2:
+                    message.totalCount = reader.int32();
+                    break;
+                case /* int32 page */ 3:
+                    message.page = reader.int32();
+                    break;
+                case /* int32 page_size */ 4:
+                    message.pageSize = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* repeated auth.v1.OperatorAssignment assignments = 1; */
+        for (let i = 0; i < message.assignments.length; i++)
+            OperatorAssignment.internalBinaryWrite(message.assignments[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* int32 total_count = 2; */
+        if (message.totalCount !== 0)
+            writer.tag(2, WireType.Varint).int32(message.totalCount);
+        /* int32 page = 3; */
+        if (message.page !== 0)
+            writer.tag(3, WireType.Varint).int32(message.page);
+        /* int32 page_size = 4; */
+        if (message.pageSize !== 0)
+            writer.tag(4, WireType.Varint).int32(message.pageSize);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetServiceOperatorAssignmentsResponse
+ */
+export const GetServiceOperatorAssignmentsResponse = new GetServiceOperatorAssignmentsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UpdateOperatorAssignmentPermissionsRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.UpdateOperatorAssignmentPermissionsRequest", [
+            { no: 1, name: "assignment_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "permission_ids", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "updated_by", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.assignmentId = "";
+        message.permissionIds = [];
+        message.updatedBy = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string assignment_id */ 1:
+                    message.assignmentId = reader.string();
+                    break;
+                case /* repeated string permission_ids */ 2:
+                    message.permissionIds.push(reader.string());
+                    break;
+                case /* string updated_by */ 3:
+                    message.updatedBy = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string assignment_id = 1; */
+        if (message.assignmentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.assignmentId);
+        /* repeated string permission_ids = 2; */
+        for (let i = 0; i < message.permissionIds.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.permissionIds[i]);
+        /* string updated_by = 3; */
+        if (message.updatedBy !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.updatedBy);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.UpdateOperatorAssignmentPermissionsRequest
+ */
+export const UpdateOperatorAssignmentPermissionsRequest = new UpdateOperatorAssignmentPermissionsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UpdateOperatorAssignmentPermissionsResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.UpdateOperatorAssignmentPermissionsResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "assignment", kind: "message", T: () => OperatorAssignment },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* auth.v1.OperatorAssignment assignment */ 2:
+                    message.assignment = OperatorAssignment.internalBinaryRead(reader, reader.uint32(), options, message.assignment);
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* auth.v1.OperatorAssignment assignment = 2; */
+        if (message.assignment)
+            OperatorAssignment.internalBinaryWrite(message.assignment, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.UpdateOperatorAssignmentPermissionsResponse
+ */
+export const UpdateOperatorAssignmentPermissionsResponse = new UpdateOperatorAssignmentPermissionsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetOperatorAssignmentPermissionsRequest$Type extends MessageType {
+    constructor() {
+        super("auth.v1.GetOperatorAssignmentPermissionsRequest", [
+            { no: 1, name: "assignment_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.assignmentId = "";
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string assignment_id */ 1:
+                    message.assignmentId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string assignment_id = 1; */
+        if (message.assignmentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.assignmentId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentPermissionsRequest
+ */
+export const GetOperatorAssignmentPermissionsRequest = new GetOperatorAssignmentPermissionsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetOperatorAssignmentPermissionsResponse$Type extends MessageType {
+    constructor() {
+        super("auth.v1.GetOperatorAssignmentPermissionsResponse", [
+            { no: 1, name: "permissions", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => Permission }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.permissions = [];
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated auth.v1.Permission permissions */ 1:
+                    message.permissions.push(Permission.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* repeated auth.v1.Permission permissions = 1; */
+        for (let i = 0; i < message.permissions.length; i++)
+            Permission.internalBinaryWrite(message.permissions[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message auth.v1.GetOperatorAssignmentPermissionsResponse
+ */
+export const GetOperatorAssignmentPermissionsResponse = new GetOperatorAssignmentPermissionsResponse$Type();
 /**
  * @generated ServiceType for protobuf service auth.v1.AuthService
  */
@@ -1745,5 +4600,24 @@ export const AuthService = new ServiceType("auth.v1.AuthService", [
     { name: "GetOperator", options: {}, I: GetOperatorRequest, O: GetOperatorResponse },
     { name: "ValidateOperator", options: {}, I: ValidateOperatorRequest, O: ValidateOperatorResponse },
     { name: "CheckSanction", options: {}, I: CheckSanctionRequest, O: CheckSanctionResponse },
-    { name: "GetActiveSanctions", options: {}, I: GetActiveSanctionsRequest, O: GetActiveSanctionsResponse }
+    { name: "GetActiveSanctions", options: {}, I: GetActiveSanctionsRequest, O: GetActiveSanctionsResponse },
+    { name: "AdminLogin", options: {}, I: AdminLoginRequest, O: AdminLoginResponse },
+    { name: "AdminLoginMfa", options: {}, I: AdminLoginMfaRequest, O: AdminLoginMfaResponse },
+    { name: "AdminValidateSession", options: {}, I: AdminValidateSessionRequest, O: AdminValidateSessionResponse },
+    { name: "AdminRefreshSession", options: {}, I: AdminRefreshSessionRequest, O: AdminRefreshSessionResponse },
+    { name: "AdminLogout", options: {}, I: AdminLogoutRequest, O: AdminLogoutResponse },
+    { name: "AdminRevokeAllSessions", options: {}, I: AdminRevokeAllSessionsRequest, O: AdminRevokeAllSessionsResponse },
+    { name: "AdminGetActiveSessions", options: {}, I: AdminGetActiveSessionsRequest, O: AdminGetActiveSessionsResponse },
+    { name: "AdminSetupMfa", options: {}, I: AdminSetupMfaRequest, O: AdminSetupMfaResponse },
+    { name: "AdminVerifyMfa", options: {}, I: AdminVerifyMfaRequest, O: AdminVerifyMfaResponse },
+    { name: "AdminDisableMfa", options: {}, I: AdminDisableMfaRequest, O: AdminDisableMfaResponse },
+    { name: "AdminRegenerateBackupCodes", options: {}, I: AdminRegenerateBackupCodesRequest, O: AdminRegenerateBackupCodesResponse },
+    { name: "AdminChangePassword", options: {}, I: AdminChangePasswordRequest, O: AdminChangePasswordResponse },
+    { name: "AdminForcePasswordChange", options: {}, I: AdminForcePasswordChangeRequest, O: AdminForcePasswordChangeResponse },
+    { name: "AssignOperator", options: {}, I: AssignOperatorRequest, O: AssignOperatorResponse },
+    { name: "RevokeOperatorAssignment", options: {}, I: RevokeOperatorAssignmentRequest, O: RevokeOperatorAssignmentResponse },
+    { name: "GetOperatorAssignment", options: {}, I: GetOperatorAssignmentRequest, O: GetOperatorAssignmentResponse },
+    { name: "GetServiceOperatorAssignments", options: {}, I: GetServiceOperatorAssignmentsRequest, O: GetServiceOperatorAssignmentsResponse },
+    { name: "UpdateOperatorAssignmentPermissions", options: {}, I: UpdateOperatorAssignmentPermissionsRequest, O: UpdateOperatorAssignmentPermissionsResponse },
+    { name: "GetOperatorAssignmentPermissions", options: {}, I: GetOperatorAssignmentPermissionsRequest, O: GetOperatorAssignmentPermissionsResponse }
 ]);

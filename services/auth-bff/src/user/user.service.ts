@@ -1,6 +1,11 @@
 import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { IdentityGrpcClient, Account } from '../grpc-clients';
+import {
+  IdentityGrpcClient,
+  AuditGrpcClient,
+  Account,
+  AccountType as AuditAccountType,
+} from '../grpc-clients';
 import { SessionService } from '../session/session.service';
 import { BffSession } from '../common/types';
 import { UserRegisterDto, UserLoginDto, UserInfoDto, UserLoginResponseDto } from './dto/user.dto';
@@ -47,6 +52,7 @@ export class UserService {
 
   constructor(
     private readonly identityClient: IdentityGrpcClient,
+    private readonly auditClient: AuditGrpcClient,
     private readonly sessionService: SessionService,
   ) {}
 
@@ -181,6 +187,16 @@ export class UserService {
       return this.completeLogin(req, res, account, ip, userAgent);
     } catch (error) {
       this.logger.error(`User login failed for ${dto.email}`, error);
+
+      // Log failed login to audit service
+      this.auditClient.logLoginFailed({
+        accountId: dto.email,
+        accountType: AuditAccountType.USER,
+        ipAddress: ip,
+        userAgent,
+        failureReason: error instanceof Error ? error.message : 'Unknown error',
+      });
+
       if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Login failed');
     }
@@ -272,6 +288,15 @@ export class UserService {
         '',
       );
 
+      // Log successful MFA verification to audit service
+      this.auditClient.logMfaVerified({
+        accountId: account.id,
+        accountType: AuditAccountType.USER,
+        ipAddress: ip,
+        userAgent,
+        method,
+      });
+
       return {
         success: true,
         user: this.mapAccountToDto(account),
@@ -279,13 +304,39 @@ export class UserService {
       };
     } catch (error) {
       this.logger.error('User MFA login failed', error);
+
+      // Log failed MFA to audit service
+      this.auditClient.logMfaFailed({
+        accountId: challengeId,
+        accountType: AuditAccountType.USER,
+        ipAddress: ip,
+        userAgent,
+        failureReason: error instanceof Error ? error.message : 'Unknown error',
+      });
+
       if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('MFA verification failed');
     }
   }
 
   async logout(req: Request, res: Response): Promise<{ success: boolean; message: string }> {
+    const ip = this.getClientIp(req);
+    const userAgent = req.headers['user-agent'] || 'unknown';
+
     try {
+      const session = await this.sessionService.getSession(req);
+
+      if (session) {
+        // Log logout event to audit service
+        this.auditClient.logLogout({
+          accountId: session.accountId,
+          accountType: AuditAccountType.USER,
+          sessionId: session.id,
+          ipAddress: ip,
+          userAgent,
+        });
+      }
+
       await this.sessionService.destroySession(req, res);
       return { success: true, message: 'Logged out successfully' };
     } catch (error) {
@@ -440,6 +491,14 @@ export class UserService {
       true,
       '',
     );
+
+    // Log successful login to audit service
+    this.auditClient.logLoginSuccess({
+      accountId: account.id,
+      accountType: AuditAccountType.USER,
+      ipAddress: ip,
+      userAgent,
+    });
 
     return {
       success: true,
