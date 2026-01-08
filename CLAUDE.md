@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-06
+> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-08
 
 **Manifest**: [.ai/manifest.yaml](.ai/manifest.yaml) | **Changelog**: [.ai/CHANGELOG.md](.ai/CHANGELOG.md)
 
@@ -30,8 +30,8 @@
 ### Backend Development
 
 **Working on authentication?**
-Read: `.ai/rules.md` + `.ai/services/auth-service.md`
-Future: `.ai/services/identity-service.md`
+Read: `.ai/rules.md` + `.ai/services/auth-bff.md` (BFF gateway)
+Backend: `.ai/services/auth-service.md` + `.ai/services/identity-service.md`
 
 **Working on Identity Platform (multi-app user management)?**
 Read: `.ai/services/identity-service.md` + `.ai/architecture.md`

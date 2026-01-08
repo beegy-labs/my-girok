@@ -5,7 +5,7 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/test'],
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.ts$': [
+    '^.+\\.(ts|js)$': [
       'ts-jest',
       {
         useESM: false,
@@ -13,6 +13,9 @@ module.exports = {
       },
     ],
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!@my-girok/types)',
+  ],
   collectCoverageFrom: [
     'src/**/*.(t|j)s',
     '!src/**/*.spec.ts',

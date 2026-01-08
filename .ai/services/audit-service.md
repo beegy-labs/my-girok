@@ -1,13 +1,13 @@
 # Audit Service
 
-> Compliance logging with ClickHouse (7-year retention) | **Last Updated**: 2026-01-06
+> Compliance logging with ClickHouse (7-year retention) | **Last Updated**: 2026-01-08
 
 ## Service Info
 
 | Property | Value                     |
 | -------- | ------------------------- |
-| REST     | :3010                     |
-| gRPC     | N/A                       |
+| REST     | :4002                     |
+| gRPC     | :50054                    |
 | Database | audit_db (ClickHouse)     |
 | Cache    | Valkey DB 3               |
 | Events   | N/A                       |
@@ -39,9 +39,19 @@ POST/GET  /v1/exports, /v1/exports/:id/download
 GET/PUT   /v1/retention/policies
 ```
 
-## gRPC Server
+## gRPC Server (:50054)
 
-N/A - REST only
+| Method                   | Description                |
+| ------------------------ | -------------------------- |
+| LogAuthEvent             | Log authentication event   |
+| GetAuthEvents            | Query auth events          |
+| LogSecurityEvent         | Log security event         |
+| GetSecurityEvents        | Query security events      |
+| LogAdminAction           | Log admin action           |
+| GetAdminAuditLog         | Query admin audit log      |
+| GenerateComplianceReport | Generate compliance report |
+
+**Proto**: `packages/proto/audit/v1/audit.proto`
 
 ## Database Tables
 

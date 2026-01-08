@@ -1,7 +1,8 @@
 # audit-service
 
 ```yaml
-port: 3003
+port: 4002
+grpc: 50054
 db: audit_db (ClickHouse)
 cache: Valkey DB 3
 codebase: services/audit-service/
@@ -31,6 +32,20 @@ GET /v1/audit/stats/overview
 POST/GET /v1/exports[/:id/download]
 GET/PUT /v1/retention/policies
 ```
+
+## gRPC (50054)
+
+| Method                   | Desc               |
+| ------------------------ | ------------------ |
+| LogAuthEvent             | Log auth event     |
+| GetAuthEvents            | Query auth events  |
+| LogSecurityEvent         | Log security event |
+| GetSecurityEvents        | Query security     |
+| LogAdminAction           | Log admin action   |
+| GetAdminAuditLog         | Query admin audit  |
+| GenerateComplianceReport | Generate report    |
+
+Proto: `packages/proto/audit/v1/audit.proto`
 
 ## Tables
 
