@@ -2,8 +2,8 @@
 # Machine-readable contract for LLM agents
 # Project: my-girok
 
-version: "1.0"
-last_updated: "2026-01-06"
+version: "1.1"
+last_updated: "2026-01-09"
 
 # 3-Tier Architecture Definition
 architecture:
@@ -12,7 +12,7 @@ architecture:
     files:
       - path: "CLAUDE.md"
         llm: "claude"
-        last_updated: "2026-01-05"
+        last_updated: "2026-01-09"
         features: ["task-based-navigation", "essential-reading"]
       - path: "GEMINI.md"
         llm: "gemini"
@@ -85,30 +85,34 @@ architecture:
         last_updated: "2025-12-30"
 
     services:
+      - path: "services/auth-bff.md"
+        purpose: "BFF gateway for authentication (REST + Session)"
+        last_updated: "2026-01-09"
+        details: "docs/llm/services/auth-bff.md"
       - path: "services/identity-service.md"
-        purpose: "Multi-app user platform (Future)"
+        purpose: "Multi-app user platform"
         last_updated: "2026-01-04"
-        details: "docs/services/IDENTITY_SERVICE.md"
+        details: "docs/llm/services/identity-service.md"
       - path: "services/auth-service.md"
-        purpose: "Authentication + RBAC"
+        purpose: "Authentication + RBAC (Operators/Admins)"
         last_updated: "2026-01-04"
-        details: "docs/services/AUTH_SERVICE.md"
+        details: "docs/llm/services/auth-service.md"
       - path: "services/legal-service.md"
         purpose: "Consents, DSR, compliance"
         last_updated: "2026-01-04"
-        details: "docs/services/LEGAL_SERVICE.md"
+        details: "docs/llm/services/legal-service.md"
       - path: "services/personal-service.md"
         purpose: "Resume, Profile API"
         last_updated: "2026-01-04"
-        details: "docs/services/PERSONAL_SERVICE.md"
+        details: "docs/llm/services/personal-service.md"
       - path: "services/audit-service.md"
         purpose: "Compliance logging (ClickHouse)"
         last_updated: "2026-01-04"
-        details: "docs/services/AUDIT_SERVICE.md"
+        details: "docs/llm/services/audit-service.md"
       - path: "services/analytics-service.md"
         purpose: "Business analytics (ClickHouse)"
         last_updated: "2026-01-04"
-        details: "docs/services/ANALYTICS_SERVICE.md"
+        details: "docs/llm/services/analytics-service.md"
 
     apps:
       - path: "apps/web-main.md"
@@ -188,7 +192,7 @@ bootstrap_chain:
 
 # Task-to-file routing
 task_routing:
-  authentication: [".ai/rules.md", ".ai/services/auth-service.md"]
+  authentication: [".ai/rules.md", ".ai/services/auth-bff.md", ".ai/services/auth-service.md"]
   identity_platform: [".ai/services/identity-service.md", ".ai/architecture.md"]
   resume_profile: [".ai/services/personal-service.md", ".ai/resume.md"]
   audit_compliance: [".ai/services/audit-service.md"]
