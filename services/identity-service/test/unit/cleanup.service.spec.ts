@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { CleanupService } from '../../src/common/scheduled/cleanup.service';
@@ -15,6 +16,7 @@ describe('CleanupService', () => {
   let mockOutboxEventDeleteMany: Mock;
   let mockPasswordHistoryDeleteMany: Mock;
   let mockGetCronJob: Mock;
+  let mockLoggerLog: Mock;
 
   beforeEach(async () => {
     mockSessionUpdateMany = vi.fn();
@@ -26,6 +28,10 @@ describe('CleanupService', () => {
     mockOutboxEventDeleteMany = vi.fn();
     mockPasswordHistoryDeleteMany = vi.fn();
     mockGetCronJob = vi.fn();
+    mockLoggerLog = vi.fn();
+
+    // Mock Logger.prototype.log
+    vi.spyOn(Logger.prototype, 'log').mockImplementation(mockLoggerLog);
 
     const mockPrisma = {
       session: {
@@ -69,7 +75,12 @@ describe('CleanupService', () => {
 
   describe('onModuleInit', () => {
     it('should log initialization message', () => {
-      // Just verify it doesn't throw
+      service.onModuleInit();
+
+      expect(mockLoggerLog).toHaveBeenCalledWith('Cleanup service initialized');
+    });
+
+    it('should not throw on initialization', () => {
       expect(() => service.onModuleInit()).not.toThrow();
     });
   });

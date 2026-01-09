@@ -163,6 +163,10 @@ describe('AccountDeletionService', () => {
   });
 
   describe('scheduleAccountDeletion', () => {
+    const DEFAULT_GRACE_PERIOD_DAYS = 30;
+    const CUSTOM_GRACE_PERIOD_DAYS = 7;
+    const ANOTHER_CUSTOM_GRACE_PERIOD_DAYS = 14;
+
     it('should schedule deletion with default grace period', async () => {
       outboxService.publishEvent.mockResolvedValue(mockOutboxEvent as never);
 
@@ -177,7 +181,7 @@ describe('AccountDeletionService', () => {
 
       // Should be scheduled for 30 days from now (default)
       const expectedDate = new Date();
-      expectedDate.setDate(expectedDate.getDate() + 30);
+      expectedDate.setDate(expectedDate.getDate() + DEFAULT_GRACE_PERIOD_DAYS);
       expect(result.scheduledDeletionDate?.getDate()).toBe(expectedDate.getDate());
     });
 
@@ -186,14 +190,14 @@ describe('AccountDeletionService', () => {
 
       const result = await service.scheduleAccountDeletion(
         { accountId: mockAccount.id, reason: 'User requested' },
-        7,
+        CUSTOM_GRACE_PERIOD_DAYS,
       );
 
       expect(result.success).toBe(true);
 
       // Should be scheduled for 7 days from now
       const expectedDate = new Date();
-      expectedDate.setDate(expectedDate.getDate() + 7);
+      expectedDate.setDate(expectedDate.getDate() + CUSTOM_GRACE_PERIOD_DAYS);
       expect(result.scheduledDeletionDate?.getDate()).toBe(expectedDate.getDate());
     });
 
@@ -202,7 +206,7 @@ describe('AccountDeletionService', () => {
 
       await service.scheduleAccountDeletion(
         { accountId: mockAccount.id, reason: 'User requested' },
-        14,
+        ANOTHER_CUSTOM_GRACE_PERIOD_DAYS,
       );
 
       expect(outboxService.publishEvent).toHaveBeenCalledWith(
@@ -210,7 +214,7 @@ describe('AccountDeletionService', () => {
           eventType: 'ACCOUNT_DELETION_SCHEDULED',
           payload: expect.objectContaining({
             accountId: mockAccount.id,
-            gracePeriodDays: 14,
+            gracePeriodDays: ANOTHER_CUSTOM_GRACE_PERIOD_DAYS,
           }),
         }),
       );
