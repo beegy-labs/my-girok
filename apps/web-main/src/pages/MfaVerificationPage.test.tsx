@@ -4,20 +4,12 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import MfaVerificationPage from './MfaVerificationPage';
 
 // Use vi.hoisted to define mock functions before vi.mock runs
-const { mockNavigate, mockSetAuth, mockClearMfaChallenge, mockLoginMfa, getMockMfaChallenge } =
-  vi.hoisted(() => {
-    let mfaChallenge: { challengeId: string; availableMethods: string[] } | null = null;
-    return {
-      mockNavigate: vi.fn(),
-      mockSetAuth: vi.fn(),
-      mockClearMfaChallenge: vi.fn(),
-      mockLoginMfa: vi.fn(),
-      getMockMfaChallenge: () => mfaChallenge,
-      setMockMfaChallenge: (val: { challengeId: string; availableMethods: string[] } | null) => {
-        mfaChallenge = val;
-      },
-    };
-  });
+const { mockNavigate, mockSetAuth, mockClearMfaChallenge, mockLoginMfa } = vi.hoisted(() => ({
+  mockNavigate: vi.fn(),
+  mockSetAuth: vi.fn(),
+  mockClearMfaChallenge: vi.fn(),
+  mockLoginMfa: vi.fn(),
+}));
 
 // Need to track mfaChallenge state outside hoisted for test manipulation
 let mockMfaChallenge: { challengeId: string; availableMethods: string[] } | null = null;
