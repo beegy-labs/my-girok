@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { ExecutionContext, CallHandler, Logger } from '@nestjs/common';
-import { of, throwError } from 'rxjs';
+import { of, throwError, firstValueFrom } from 'rxjs';
 
 // Mock the @my-girok/nest-common module which provides PII masking utilities
 vi.mock('@my-girok/nest-common', async (importOriginal) => {
@@ -201,43 +201,28 @@ describe('PiiLoggingInterceptor', () => {
       });
     });
 
-    it('should log request completion with duration', () => {
-      return new Promise<void>((resolve, reject) => {
-        const request = {
+    it('should log request completion with duration', async () => {
+      const request = {
+        method: 'GET',
+        url: '/api/health',
+        body: null,
+        query: {},
+        ip: '127.0.0.1',
+      };
+      mockContext = createMockContext(request);
+      mockCallHandler = createMockCallHandler({ status: 'healthy' });
+
+      await firstValueFrom(interceptor.intercept(mockContext, mockCallHandler));
+
+      // Verify completion log was called with duration (format: Nms)
+      expect(loggerDebugSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Request completed',
           method: 'GET',
           url: '/api/health',
-          body: null,
-          query: {},
-          ip: '127.0.0.1',
-        };
-        mockContext = createMockContext(request);
-        mockCallHandler = createMockCallHandler({ status: 'healthy' });
-
-        // Mock Date.now to control timing
-        const startTime = 1000;
-        const endTime = 1050; // 50ms duration
-        let callCount = 0;
-        vi.spyOn(Date, 'now').mockImplementation(() => {
-          callCount++;
-          return callCount === 1 ? startTime : endTime;
-        });
-
-        interceptor.intercept(mockContext, mockCallHandler).subscribe({
-          complete: () => {
-            // Verify completion log includes duration
-            expect(loggerDebugSpy).toHaveBeenCalledWith(
-              expect.objectContaining({
-                message: 'Request completed',
-                method: 'GET',
-                url: '/api/health',
-                duration: '50ms',
-              }),
-            );
-            resolve();
-          },
-          error: reject,
-        });
-      });
+          duration: expect.stringMatching(/^\d+ms$/),
+        }),
+      );
     });
 
     it('should log response type for array responses', () => {

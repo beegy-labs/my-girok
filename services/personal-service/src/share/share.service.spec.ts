@@ -1,11 +1,9 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ShareService } from './share.service';
 import { PrismaService } from '../database/prisma.service';
 import { ResumeService } from '../resume/resume.service';
-import {
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ShareDuration } from './dto/create-share-link.dto';
 
 describe('ShareService', () => {
@@ -13,18 +11,18 @@ describe('ShareService', () => {
 
   const mockPrismaService = {
     shareLink: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
   };
 
   const mockResumeService = {
-    findById: jest.fn(),
-    findByIdAndUserId: jest.fn(),
+    findById: vi.fn(),
+    findByIdAndUserId: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -40,7 +38,7 @@ describe('ShareService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('createForResume', () => {
@@ -74,11 +72,7 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.create.mockResolvedValue(mockShareLink);
 
       // Act
-      const result = await service.createForResume(
-        userId,
-        resumeId,
-        createDto,
-      );
+      const result = await service.createForResume(userId, resumeId, createDto);
 
       // Assert
       expect(result).toBeDefined();
@@ -124,11 +118,7 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.create.mockResolvedValue(mockShareLink);
 
       // Act
-      const result = await service.createForResume(
-        userId,
-        resumeId,
-        createDto,
-      );
+      const result = await service.createForResume(userId, resumeId, createDto);
 
       // Assert
       expect(result.expiresAt).toBeNull();
@@ -138,7 +128,6 @@ describe('ShareService', () => {
         }),
       });
     });
-
   });
 
   describe('getPublicResume', () => {
@@ -200,12 +189,8 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.findUnique.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.getPublicResume(token)).rejects.toThrow(
-        NotFoundException,
-      );
-      await expect(service.getPublicResume(token)).rejects.toThrow(
-        'Invalid share link',
-      );
+      await expect(service.getPublicResume(token)).rejects.toThrow(NotFoundException);
+      await expect(service.getPublicResume(token)).rejects.toThrow('Invalid share link');
     });
 
     it('should throw ForbiddenException for inactive share link', async () => {
@@ -224,12 +209,8 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.findUnique.mockResolvedValue(mockShareLink);
 
       // Act & Assert
-      await expect(service.getPublicResume(token)).rejects.toThrow(
-        ForbiddenException,
-      );
-      await expect(service.getPublicResume(token)).rejects.toThrow(
-        'Share link is deactivated',
-      );
+      await expect(service.getPublicResume(token)).rejects.toThrow(ForbiddenException);
+      await expect(service.getPublicResume(token)).rejects.toThrow('Share link is deactivated');
     });
 
     it('should throw ForbiddenException for expired share link', async () => {
@@ -248,12 +229,8 @@ describe('ShareService', () => {
       mockPrismaService.shareLink.findUnique.mockResolvedValue(mockShareLink);
 
       // Act & Assert
-      await expect(service.getPublicResume(token)).rejects.toThrow(
-        ForbiddenException,
-      );
-      await expect(service.getPublicResume(token)).rejects.toThrow(
-        'Share link has expired',
-      );
+      await expect(service.getPublicResume(token)).rejects.toThrow(ForbiddenException);
+      await expect(service.getPublicResume(token)).rejects.toThrow('Share link has expired');
     });
 
     it('should allow access to permanent share links without expiration', async () => {
@@ -333,6 +310,8 @@ describe('ShareService', () => {
       expect(mockPrismaService.shareLink.findMany).toHaveBeenCalledWith({
         where: { userId },
         orderBy: { createdAt: 'desc' },
+        take: 100,
+        skip: 0,
       });
     });
   });
@@ -359,17 +338,11 @@ describe('ShareService', () => {
         isActive: false,
       };
 
-      mockPrismaService.shareLink.findUnique.mockResolvedValue(
-        existingShareLink,
-      );
+      mockPrismaService.shareLink.findUnique.mockResolvedValue(existingShareLink);
       mockPrismaService.shareLink.update.mockResolvedValue(updatedShareLink);
 
       // Act
-      const result = await service.update(
-        shareLinkId,
-        userId,
-        updateDto,
-      );
+      const result = await service.update(shareLinkId, userId, updateDto);
 
       // Assert
       expect(result.isActive).toBe(false);
@@ -391,14 +364,12 @@ describe('ShareService', () => {
         isActive: false,
       };
 
-      mockPrismaService.shareLink.findUnique.mockResolvedValue(
-        existingShareLink,
-      );
+      mockPrismaService.shareLink.findUnique.mockResolvedValue(existingShareLink);
 
       // Act & Assert
-      await expect(
-        service.update(shareLinkId, userId, updateDto),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.update(shareLinkId, userId, updateDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -415,9 +386,7 @@ describe('ShareService', () => {
         shareUrl: 'http://localhost:3000/resume/token-xyz',
       };
 
-      mockPrismaService.shareLink.findUnique.mockResolvedValue(
-        existingShareLink,
-      );
+      mockPrismaService.shareLink.findUnique.mockResolvedValue(existingShareLink);
       mockPrismaService.shareLink.delete.mockResolvedValue(existingShareLink);
 
       // Act
@@ -440,14 +409,10 @@ describe('ShareService', () => {
         userId: 'different-user-789',
       };
 
-      mockPrismaService.shareLink.findUnique.mockResolvedValue(
-        existingShareLink,
-      );
+      mockPrismaService.shareLink.findUnique.mockResolvedValue(existingShareLink);
 
       // Act & Assert
-      await expect(
-        service.delete(shareLinkId, userId),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.delete(shareLinkId, userId)).rejects.toThrow(ForbiddenException);
     });
   });
 });

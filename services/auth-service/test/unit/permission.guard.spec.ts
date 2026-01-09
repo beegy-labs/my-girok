@@ -237,9 +237,11 @@ describe('PermissionGuard', () => {
 
     it('should handle multiple required permissions', () => {
       // Arrange
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(['content:read', 'content:create', 'content:delete']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue([
+        'content:read',
+        'content:create',
+        'content:delete',
+      ]);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -257,9 +259,11 @@ describe('PermissionGuard', () => {
 
     it('should fail if any required permission is missing', () => {
       // Arrange
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(['content:read', 'content:create', 'content:delete']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue([
+        'content:read',
+        'content:create',
+        'content:delete',
+      ]);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',

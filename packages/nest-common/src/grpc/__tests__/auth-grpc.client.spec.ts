@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { of, throwError } from 'rxjs';
 import { AuthGrpcClient } from '../auth-grpc.client';
@@ -6,19 +7,19 @@ import { OperatorStatus, RoleScope, SubjectType, SanctionSeverity } from '../grp
 
 describe('AuthGrpcClient', () => {
   let client: AuthGrpcClient;
-  let mockAuthService: Record<string, jest.Mock>;
+  let mockAuthService: Record<string, Mock>;
 
   beforeEach(async () => {
     mockAuthService = {
-      checkPermission: jest.fn(),
-      checkPermissions: jest.fn(),
-      getOperatorPermissions: jest.fn(),
-      getRole: jest.fn(),
-      getRolesByOperator: jest.fn(),
-      getOperator: jest.fn(),
-      validateOperator: jest.fn(),
-      checkSanction: jest.fn(),
-      getActiveSanctions: jest.fn(),
+      checkPermission: vi.fn(),
+      checkPermissions: vi.fn(),
+      getOperatorPermissions: vi.fn(),
+      getRole: vi.fn(),
+      getRolesByOperator: vi.fn(),
+      getOperator: vi.fn(),
+      validateOperator: vi.fn(),
+      checkSanction: vi.fn(),
+      getActiveSanctions: vi.fn(),
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -26,7 +27,7 @@ describe('AuthGrpcClient', () => {
         AuthGrpcClient,
         {
           provide: GRPC_SERVICES.AUTH,
-          useValue: { getService: jest.fn().mockReturnValue(mockAuthService) },
+          useValue: { getService: vi.fn().mockReturnValue(mockAuthService) },
         },
       ],
     }).compile();

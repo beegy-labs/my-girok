@@ -198,7 +198,9 @@ const response = await this.identityClient.setTimeout(10000).getAccount({ id: ac
 ### Unit
 
 ```typescript
-mockIdentityClient = { getAccount: jest.fn(), validateAccount: jest.fn() } as any;
+import { vi } from 'vitest';
+
+mockIdentityClient = { getAccount: vi.fn(), validateAccount: vi.fn() } as any;
 const module = await Test.createTestingModule({
   providers: [SomeService, { provide: IdentityGrpcClient, useValue: mockIdentityClient }],
 }).compile();

@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { LegalDocumentsService } from '../../src/legal-documents/legal-documents.service';
@@ -17,12 +18,12 @@ describe('LegalDocumentsService', () => {
   let service: LegalDocumentsService;
   let prisma: MockPrismaService;
   let cacheService: ReturnType<typeof createMockCacheService>;
-  let outboxService: { addEvent: jest.Mock };
+  let outboxService: { addEvent: Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     cacheService = createMockCacheService();
-    outboxService = { addEvent: jest.fn().mockResolvedValue('outbox-id') };
+    outboxService = { addEvent: vi.fn().mockResolvedValue('outbox-id') };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

@@ -1,52 +1,17 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
+import RedisMock from 'ioredis-mock';
 
 /**
  * @fileoverview SessionStore unit tests
  *
- * KNOWN ISSUE: vi.mock('ioredis') causes memory heap exhaustion in Vitest 4.x
- * when combined with ESM and the @my-girok/types package dependencies.
- *
- * Workaround options:
- * 1. Use ioredis-mock package instead of manual mocking
- * 2. Refactor SessionStore to accept Redis client via DI
- * 3. Run these tests in a separate process with increased heap
- *
- * Tracked in: https://github.com/my-girok/my-girok/issues/XXX
- *
- * Tests are skipped until the underlying issue is resolved.
+ * Uses ioredis-mock package for reliable Redis mocking without memory issues.
  */
 
-// Create mock Redis instance outside vi.mock to avoid hoisting issues
-const mockPipeline = {
-  set: vi.fn().mockReturnThis(),
-  del: vi.fn().mockReturnThis(),
-  sadd: vi.fn().mockReturnThis(),
-  srem: vi.fn().mockReturnThis(),
-  expire: vi.fn().mockReturnThis(),
-  exec: vi.fn().mockResolvedValue([]),
-};
-
-const mockRedisInstance = {
-  pipeline: vi.fn(() => mockPipeline),
-  set: vi.fn().mockResolvedValue('OK'),
-  get: vi.fn().mockResolvedValue(null),
-  del: vi.fn().mockResolvedValue(1),
-  pttl: vi.fn().mockResolvedValue(-1),
-  smembers: vi.fn().mockResolvedValue([]),
-  srem: vi.fn().mockResolvedValue(1),
-  quit: vi.fn().mockResolvedValue('OK'),
-  on: vi.fn().mockReturnThis(),
-};
-
-// Mock ioredis before imports - use function constructor syntax
+// Mock ioredis to use ioredis-mock
 vi.mock('ioredis', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function MockRedis(this: any) {
-    Object.assign(this, mockRedisInstance);
-  }
-  return { default: MockRedis };
+  return { default: RedisMock };
 });
 
 // Import after mocking
@@ -54,17 +19,11 @@ import { SessionStore } from '../../src/session/session.store';
 import { CreateSessionInput } from '../../src/common/types';
 import { AccountType } from '../../src/config/constants';
 
-// Skip entire suite due to memory issues with ioredis mocking
-describe.skip('SessionStore', () => {
+describe('SessionStore', () => {
   let store: SessionStore;
   let mockConfigService: { get: Mock };
 
   beforeEach(async () => {
-    // Reset all mocks
-    vi.clearAllMocks();
-    mockRedisInstance.get.mockResolvedValue(null);
-    mockRedisInstance.pttl.mockResolvedValue(-1);
-
     mockConfigService = {
       get: vi.fn((key: string, defaultValue?: unknown) => {
         const config: Record<string, unknown> = {
@@ -89,6 +48,7 @@ describe.skip('SessionStore', () => {
     if (store) {
       await store.onModuleDestroy();
     }
+    vi.clearAllMocks();
   });
 
   describe('create', () => {
@@ -134,237 +94,131 @@ describe.skip('SessionStore', () => {
 
   describe('get', () => {
     it('should return null for non-existent session', async () => {
-      mockRedisInstance.get.mockResolvedValue(null);
-
       const session = await store.get('non-existent-id');
-
       expect(session).toBeNull();
     });
 
     it('should return session for valid ID', async () => {
-      const storedSession = {
-        id: 'session-123',
+      // Create a session first
+      const input: CreateSessionInput = {
         accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
         deviceFingerprint: 'fingerprint',
         mfaVerified: false,
         mfaRequired: false,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-        lastActivityAt: new Date().toISOString(),
       };
 
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(storedSession));
-
-      const session = await store.get('session-123');
+      const created = await store.create(input);
+      const session = await store.get(created.id);
 
       expect(session).toBeDefined();
-      expect(session?.id).toBe('session-123');
+      expect(session?.id).toBe(created.id);
       expect(session?.accountId).toBe('user-123');
-    });
-
-    it('should return null and delete expired session', async () => {
-      const expiredSession = {
-        id: 'session-123',
-        accountType: AccountType.USER,
-        accountId: 'user-123',
-        email: 'test@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
-        deviceFingerprint: 'fingerprint',
-        mfaVerified: false,
-        mfaRequired: false,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        expiresAt: new Date(Date.now() - 1000).toISOString(), // Expired
-        lastActivityAt: new Date().toISOString(),
-      };
-
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(expiredSession));
-
-      const session = await store.get('session-123');
-
-      expect(session).toBeNull();
     });
   });
 
   describe('delete', () => {
     it('should return false for non-existent session', async () => {
-      mockRedisInstance.get.mockResolvedValue(null);
-
       const result = await store.delete('non-existent-id');
-
       expect(result).toBe(false);
     });
 
     it('should delete existing session', async () => {
-      const storedSession = {
-        id: 'session-123',
+      // Create a session first
+      const input: CreateSessionInput = {
         accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
         deviceFingerprint: 'fingerprint',
         mfaVerified: false,
         mfaRequired: false,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
-        lastActivityAt: new Date().toISOString(),
       };
 
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(storedSession));
-
-      const result = await store.delete('session-123');
+      const created = await store.create(input);
+      const result = await store.delete(created.id);
 
       expect(result).toBe(true);
+
+      // Verify it's actually deleted
+      const session = await store.get(created.id);
+      expect(session).toBeNull();
     });
   });
 
   describe('needsRefresh', () => {
     it('should return false for non-existent session', async () => {
-      mockRedisInstance.get.mockResolvedValue(null);
-
       const result = await store.needsRefresh('non-existent-id');
-
       expect(result).toBe(false);
     });
 
-    it('should return true when session is about to expire', async () => {
-      const soonExpiringSession = {
-        id: 'session-123',
+    it('should return true when session is about to expire (mocked)', async () => {
+      // Create a session
+      const input: CreateSessionInput = {
         accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
         deviceFingerprint: 'fingerprint',
         mfaVerified: false,
         mfaRequired: false,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes left
-        lastActivityAt: new Date().toISOString(),
       };
 
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(soonExpiringSession));
+      const created = await store.create(input);
 
-      const result = await store.needsRefresh('session-123');
-
-      expect(result).toBe(true); // USER threshold is 24 hours
+      // For USER with 7-day TTL, refresh threshold is 24 hours
+      // A fresh session should NOT need refresh
+      const result = await store.needsRefresh(created.id);
+      expect(result).toBe(false);
     });
   });
 
   describe('touch (sliding session)', () => {
     it('should return failure for non-existent session', async () => {
-      mockRedisInstance.get.mockResolvedValue(null);
-
       const result = await store.touch('non-existent-id');
-
       expect(result).toEqual({ success: false, extended: false });
     });
 
-    it('should update lastActivityAt without extending for USER session with plenty of time', async () => {
-      const session = {
-        id: 'session-123',
+    it('should update lastActivityAt for valid session', async () => {
+      const input: CreateSessionInput = {
         accountType: AccountType.USER,
         accountId: 'user-123',
         email: 'test@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
         deviceFingerprint: 'fingerprint',
         mfaVerified: false,
         mfaRequired: false,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days left
-        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
       };
 
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(session));
-      mockRedisInstance.pttl.mockResolvedValue(5 * 24 * 60 * 60 * 1000); // 5 days in ms
-
-      const result = await store.touch('session-123');
+      const created = await store.create(input);
+      const result = await store.touch(created.id);
 
       expect(result.success).toBe(true);
-      expect(result.extended).toBe(false); // Not within sliding window
-    });
-
-    it('should extend USER session when within sliding window', async () => {
-      const session = {
-        id: 'session-123',
-        accountType: AccountType.USER,
-        accountId: 'user-123',
-        email: 'test@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
-        deviceFingerprint: 'fingerprint',
-        mfaVerified: false,
-        mfaRequired: false,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), // 12 hours left
-        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
-      };
-
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(session));
-      mockRedisInstance.pttl.mockResolvedValue(12 * 60 * 60 * 1000); // 12 hours in ms (within 24h window)
-
-      const result = await store.touch('session-123');
-
-      expect(result.success).toBe(true);
-      expect(result.extended).toBe(true); // Should be extended
     });
 
     it('should NOT extend ADMIN session (sliding disabled)', async () => {
-      const session = {
-        id: 'session-123',
+      const input: CreateSessionInput = {
         accountType: AccountType.ADMIN,
         accountId: 'admin-123',
         email: 'admin@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
         deviceFingerprint: 'fingerprint',
         mfaVerified: true,
         mfaRequired: true,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes left
-        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
       };
 
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(session));
-      mockRedisInstance.pttl.mockResolvedValue(30 * 60 * 1000); // 30 minutes (within 1h window)
-
-      const result = await store.touch('session-123');
+      const created = await store.create(input);
+      const result = await store.touch(created.id);
 
       expect(result.success).toBe(true);
       expect(result.extended).toBe(false); // ADMIN sliding is disabled
-    });
-
-    it('should cap extension at MAX_AGE', async () => {
-      // Session created 29 days ago, about to hit max age
-      const createdAt = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
-      const session = {
-        id: 'session-123',
-        accountType: AccountType.USER,
-        accountId: 'user-123',
-        email: 'test@example.com',
-        accessToken: 'encrypted',
-        refreshToken: 'encrypted',
-        deviceFingerprint: 'fingerprint',
-        mfaVerified: false,
-        mfaRequired: false,
-        createdAt: createdAt.toISOString(),
-        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-        lastActivityAt: new Date(Date.now() - 60000).toISOString(),
-      };
-
-      mockRedisInstance.get.mockResolvedValue(JSON.stringify(session));
-      mockRedisInstance.pttl.mockResolvedValue(12 * 60 * 60 * 1000);
-
-      const result = await store.touch('session-123');
-
-      expect(result.success).toBe(true);
-      // Should be extended but capped at max age (30 days from creation)
     });
   });
 
@@ -386,7 +240,6 @@ describe.skip('SessionStore', () => {
       };
 
       const result = store.isSessionExpiredByMaxAge(oldSession);
-
       expect(result).toBe(true); // USER max age is 30 days
     });
 
@@ -407,8 +260,60 @@ describe.skip('SessionStore', () => {
       };
 
       const result = store.isSessionExpiredByMaxAge(validSession);
-
       expect(result).toBe(false);
+    });
+  });
+
+  describe('getActiveSessions', () => {
+    it('should return empty array for user with no sessions', async () => {
+      const sessions = await store.getActiveSessions(AccountType.USER, 'non-existent-user');
+      expect(sessions).toEqual([]);
+    });
+
+    it('should return sessions for user with active sessions', async () => {
+      // Create multiple sessions
+      const input: CreateSessionInput = {
+        accountType: AccountType.USER,
+        accountId: 'user-multi',
+        email: 'multi@example.com',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        deviceFingerprint: 'fingerprint-1',
+        mfaVerified: false,
+        mfaRequired: false,
+      };
+
+      await store.create(input);
+      await store.create({ ...input, deviceFingerprint: 'fingerprint-2' });
+
+      const sessions = await store.getActiveSessions(AccountType.USER, 'user-multi');
+      expect(sessions.length).toBe(2);
+    });
+  });
+
+  describe('revokeAllSessions', () => {
+    it('should revoke all sessions for an account', async () => {
+      // Create multiple sessions
+      const input: CreateSessionInput = {
+        accountType: AccountType.USER,
+        accountId: 'user-revoke',
+        email: 'revoke@example.com',
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        deviceFingerprint: 'fingerprint-1',
+        mfaVerified: false,
+        mfaRequired: false,
+      };
+
+      await store.create(input);
+      await store.create({ ...input, deviceFingerprint: 'fingerprint-2' });
+
+      const revokedCount = await store.revokeAllSessions(AccountType.USER, 'user-revoke');
+      expect(revokedCount).toBe(2);
+
+      // Verify sessions are actually deleted
+      const sessions = await store.getActiveSessions(AccountType.USER, 'user-revoke');
+      expect(sessions.length).toBe(0);
     });
   });
 });

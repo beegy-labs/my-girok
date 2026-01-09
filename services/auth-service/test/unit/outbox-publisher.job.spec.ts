@@ -331,9 +331,7 @@ describe('OutboxPublisherJob', () => {
       mockOutboxService.markAsFailed.mockResolvedValue(undefined);
 
       // Mock publishToRedpanda to fail
-      jest
-        .spyOn(job as any, 'publishToRedpanda')
-        .mockRejectedValue(new Error('Persistent failure'));
+      vi.spyOn(job as any, 'publishToRedpanda').mockRejectedValue(new Error('Persistent failure'));
 
       const errorSpy = vi.spyOn((job as any).logger, 'error');
 
@@ -382,8 +380,7 @@ describe('OutboxPublisherJob', () => {
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
 
       // First event fails, others succeed
-      jest
-        .spyOn(job as any, 'publishToRedpanda')
+      vi.spyOn(job as any, 'publishToRedpanda')
         .mockRejectedValueOnce(new Error('First failed'))
         .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce(undefined);

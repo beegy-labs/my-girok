@@ -80,7 +80,7 @@ describe('AuthGrpcController', () => {
     name: 'Admin',
     description: 'Administrator role',
     level: 100,
-    scope: 'GLOBAL',
+    scope: 'PLATFORM', // Maps to GLOBAL (1) in proto
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   };
@@ -721,7 +721,7 @@ describe('AuthGrpcController', () => {
   describe('Enum Mapping', () => {
     it('should map role scope correctly', async () => {
       const testCases = [
-        { scope: 'GLOBAL', expected: ProtoRoleScope.ROLE_SCOPE_GLOBAL },
+        { scope: 'PLATFORM', expected: ProtoRoleScope.ROLE_SCOPE_GLOBAL }, // PLATFORM -> GLOBAL
         { scope: 'SERVICE', expected: ProtoRoleScope.ROLE_SCOPE_SERVICE },
         { scope: 'TENANT', expected: ProtoRoleScope.ROLE_SCOPE_TENANT },
         { scope: 'UNKNOWN', expected: ProtoRoleScope.ROLE_SCOPE_UNSPECIFIED },

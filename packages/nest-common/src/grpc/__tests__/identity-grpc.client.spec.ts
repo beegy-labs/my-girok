@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { of, throwError } from 'rxjs';
 import { status as GrpcStatus } from '@grpc/grpc-js';
@@ -9,22 +10,22 @@ import { AuthProvider, AccountMode, AccountStatus } from '../grpc.types';
 describe('IdentityGrpcClient', () => {
   let client: IdentityGrpcClient;
   let mockIdentityService: {
-    getAccount: jest.Mock;
-    validateAccount: jest.Mock;
-    getAccountByEmail: jest.Mock;
-    getAccountByUsername: jest.Mock;
-    createAccount: jest.Mock;
-    updateAccount: jest.Mock;
-    deleteAccount: jest.Mock;
-    validatePassword: jest.Mock;
-    createSession: jest.Mock;
-    validateSession: jest.Mock;
-    revokeSession: jest.Mock;
-    revokeAllSessions: jest.Mock;
-    getAccountDevices: jest.Mock;
-    trustDevice: jest.Mock;
-    revokeDevice: jest.Mock;
-    getProfile: jest.Mock;
+    getAccount: Mock;
+    validateAccount: Mock;
+    getAccountByEmail: Mock;
+    getAccountByUsername: Mock;
+    createAccount: Mock;
+    updateAccount: Mock;
+    deleteAccount: Mock;
+    validatePassword: Mock;
+    createSession: Mock;
+    validateSession: Mock;
+    revokeSession: Mock;
+    revokeAllSessions: Mock;
+    getAccountDevices: Mock;
+    trustDevice: Mock;
+    revokeDevice: Mock;
+    getProfile: Mock;
   };
 
   const mockAccount = {
@@ -52,26 +53,26 @@ describe('IdentityGrpcClient', () => {
 
   beforeEach(async () => {
     mockIdentityService = {
-      getAccount: jest.fn(),
-      validateAccount: jest.fn(),
-      getAccountByEmail: jest.fn(),
-      getAccountByUsername: jest.fn(),
-      createAccount: jest.fn(),
-      updateAccount: jest.fn(),
-      deleteAccount: jest.fn(),
-      validatePassword: jest.fn(),
-      createSession: jest.fn(),
-      validateSession: jest.fn(),
-      revokeSession: jest.fn(),
-      revokeAllSessions: jest.fn(),
-      getAccountDevices: jest.fn(),
-      trustDevice: jest.fn(),
-      revokeDevice: jest.fn(),
-      getProfile: jest.fn(),
+      getAccount: vi.fn(),
+      validateAccount: vi.fn(),
+      getAccountByEmail: vi.fn(),
+      getAccountByUsername: vi.fn(),
+      createAccount: vi.fn(),
+      updateAccount: vi.fn(),
+      deleteAccount: vi.fn(),
+      validatePassword: vi.fn(),
+      createSession: vi.fn(),
+      validateSession: vi.fn(),
+      revokeSession: vi.fn(),
+      revokeAllSessions: vi.fn(),
+      getAccountDevices: vi.fn(),
+      trustDevice: vi.fn(),
+      revokeDevice: vi.fn(),
+      getProfile: vi.fn(),
     };
 
     const mockGrpcClient = {
-      getService: jest.fn().mockReturnValue(mockIdentityService),
+      getService: vi.fn().mockReturnValue(mockIdentityService),
     };
 
     const module: TestingModule = await Test.createTestingModule({

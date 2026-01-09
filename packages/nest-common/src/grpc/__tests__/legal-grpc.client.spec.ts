@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { of, throwError } from 'rxjs';
 import { LegalGrpcClient } from '../legal-grpc.client';
@@ -6,22 +7,22 @@ import { ConsentType, ConsentStatus, DocumentType, DsrType, DsrStatus } from '..
 
 describe('LegalGrpcClient', () => {
   let client: LegalGrpcClient;
-  let mockLegalService: Record<string, jest.Mock>;
+  let mockLegalService: Record<string, Mock>;
 
   beforeEach(async () => {
     mockLegalService = {
-      checkConsents: jest.fn(),
-      getAccountConsents: jest.fn(),
-      grantConsent: jest.fn(),
-      revokeConsent: jest.fn(),
-      getCurrentDocument: jest.fn(),
-      getDocumentVersion: jest.fn(),
-      listDocuments: jest.fn(),
-      getLawRequirements: jest.fn(),
-      getCountryCompliance: jest.fn(),
-      createDsrRequest: jest.fn(),
-      getDsrRequest: jest.fn(),
-      getDsrDeadline: jest.fn(),
+      checkConsents: vi.fn(),
+      getAccountConsents: vi.fn(),
+      grantConsent: vi.fn(),
+      revokeConsent: vi.fn(),
+      getCurrentDocument: vi.fn(),
+      getDocumentVersion: vi.fn(),
+      listDocuments: vi.fn(),
+      getLawRequirements: vi.fn(),
+      getCountryCompliance: vi.fn(),
+      createDsrRequest: vi.fn(),
+      getDsrRequest: vi.fn(),
+      getDsrDeadline: vi.fn(),
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -29,7 +30,7 @@ describe('LegalGrpcClient', () => {
         LegalGrpcClient,
         {
           provide: GRPC_SERVICES.LEGAL,
-          useValue: { getService: jest.fn().mockReturnValue(mockLegalService) },
+          useValue: { getService: vi.fn().mockReturnValue(mockLegalService) },
         },
       ],
     }).compile();

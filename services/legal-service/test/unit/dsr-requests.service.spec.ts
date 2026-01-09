@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { NotFoundException } from '@nestjs/common';
@@ -16,14 +17,14 @@ import { DsrRequestStatus } from '../../src/dsr-requests/dto/update-dsr-request.
 describe('DsrRequestsService', () => {
   let service: DsrRequestsService;
   let prisma: MockPrismaService;
-  let configService: { get: jest.Mock };
+  let configService: { get: Mock };
 
   const DEFAULT_DUE_DAYS = 30;
 
   beforeEach(async () => {
     prisma = createMockPrisma();
     configService = {
-      get: jest.fn((key: string, defaultValue: number) => {
+      get: vi.fn((key: string, defaultValue: number) => {
         if (key === 'DSR_DEFAULT_DUE_DAYS') return DEFAULT_DUE_DAYS;
         return defaultValue;
       }),

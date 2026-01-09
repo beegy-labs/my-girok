@@ -3,14 +3,16 @@ import { vi } from 'vitest';
 import * as nodeCrypto from 'crypto';
 
 // Polyfill globalThis.crypto with Node.js crypto for test environment
-// Node.js 20+ has globalThis.crypto (Web Crypto API), but some libs expect Node crypto methods
-if (typeof globalThis.crypto === 'undefined') {
-  Object.defineProperty(globalThis, 'crypto', {
-    value: nodeCrypto,
-    writable: true,
-    configurable: true,
-  });
-}
+// Node.js 20+ has globalThis.crypto (Web Crypto API), but some code expects Node crypto methods
+// Extend existing globalThis.crypto with Node.js crypto methods like randomBytes
+Object.defineProperty(globalThis, 'crypto', {
+  value: {
+    ...globalThis.crypto,
+    ...nodeCrypto,
+  },
+  writable: true,
+  configurable: true,
+});
 
 // Suppress console logs during tests unless debugging
 if (!process.env.DEBUG_TESTS) {
