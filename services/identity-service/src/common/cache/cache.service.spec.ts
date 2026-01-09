@@ -1,14 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { CacheService } from './cache.service';
 
 // Define a custom type for the mocked cache manager
 interface MockCacheManager {
-  get: jest.Mock;
-  set: jest.Mock;
-  del: jest.Mock;
+  get: Mock;
+  set: Mock;
+  del: Mock;
   store: {
-    keys: jest.Mock;
+    keys: Mock;
   };
 }
 
@@ -18,11 +19,11 @@ describe('CacheService', () => {
 
   beforeEach(async () => {
     const mockCacheManager: MockCacheManager = {
-      get: jest.fn(),
-      set: jest.fn(),
-      del: jest.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      del: vi.fn(),
       store: {
-        keys: jest.fn(),
+        keys: vi.fn(),
       },
     };
 
@@ -97,7 +98,7 @@ describe('CacheService', () => {
     it('should return cached value if exists', async () => {
       cacheManager.get.mockResolvedValue('cached-value');
 
-      const factory = jest.fn().mockResolvedValue('new-value');
+      const factory = vi.fn().mockResolvedValue('new-value');
       const result = await service.getOrSet('test-key', factory);
 
       expect(result).toBe('cached-value');
@@ -111,7 +112,7 @@ describe('CacheService', () => {
         .mockResolvedValueOnce(undefined); // Double-check after lock
       cacheManager.set.mockResolvedValue(undefined);
 
-      const factory = jest.fn().mockResolvedValue('new-value');
+      const factory = vi.fn().mockResolvedValue('new-value');
       const result = await service.getOrSet('test-key', factory, 60000);
 
       expect(result).toBe('new-value');

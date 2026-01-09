@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import {
@@ -8,18 +9,18 @@ import {
 import { AuditService } from '../services/audit.service';
 
 // Mock the @my-girok/nest-common module
-jest.mock('@my-girok/nest-common', () => ({
-  maskIpAddress: jest.fn((ip: string) => `masked-${ip}`),
-  maskUuid: jest.fn((uuid: string) => `masked-${uuid}`),
+vi.mock('@my-girok/nest-common', () => ({
+  maskIpAddress: vi.fn((ip: string) => `masked-${ip}`),
+  maskUuid: vi.fn((uuid: string) => `masked-${uuid}`),
 }));
 
 describe('PermissionAuditService', () => {
   let service: PermissionAuditService;
-  let loggerDebugSpy: jest.SpyInstance;
-  let loggerWarnSpy: jest.SpyInstance;
+  let loggerDebugSpy: ReturnType<typeof vi.spyOn>;
+  let loggerWarnSpy: ReturnType<typeof vi.spyOn>;
 
   const mockAuditService = {
-    log: jest.fn(),
+    log: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -30,12 +31,12 @@ describe('PermissionAuditService', () => {
     service = module.get<PermissionAuditService>(PermissionAuditService);
 
     // Spy on logger methods
-    loggerDebugSpy = jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    loggerDebugSpy = vi.spyOn(Logger.prototype, 'debug').mockImplementation();
+    loggerWarnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('logPermissionCheck', () => {

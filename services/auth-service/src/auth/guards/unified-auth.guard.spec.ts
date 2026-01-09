@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
@@ -8,7 +9,7 @@ describe('UnifiedAuthGuard', () => {
   let guard: UnifiedAuthGuard;
 
   const mockReflector = {
-    getAllAndOverride: jest.fn(),
+    getAllAndOverride: vi.fn(),
   };
 
   const createMockExecutionContext = (): ExecutionContext => {
@@ -16,8 +17,8 @@ describe('UnifiedAuthGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({}),
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     } as unknown as ExecutionContext;
   };
 
@@ -30,7 +31,7 @@ describe('UnifiedAuthGuard', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('canActivate', () => {
@@ -57,7 +58,7 @@ describe('UnifiedAuthGuard', () => {
 
       // The parent class AuthGuard('unified-jwt') will handle the actual validation
       // We can spy on the super.canActivate method
-      const superCanActivateSpy = jest.spyOn(
+      const superCanActivateSpy = vi.spyOn(
         Object.getPrototypeOf(Object.getPrototypeOf(guard)),
         'canActivate',
       );
@@ -76,7 +77,7 @@ describe('UnifiedAuthGuard', () => {
       mockReflector.getAllAndOverride.mockReturnValue(undefined);
       const context = createMockExecutionContext();
 
-      const superCanActivateSpy = jest.spyOn(
+      const superCanActivateSpy = vi.spyOn(
         Object.getPrototypeOf(Object.getPrototypeOf(guard)),
         'canActivate',
       );
@@ -91,8 +92,8 @@ describe('UnifiedAuthGuard', () => {
 
     it('should correctly check at handler and class level', () => {
       // Arrange
-      const handlerFn = jest.fn();
-      const classFn = jest.fn();
+      const handlerFn = vi.fn();
+      const classFn = vi.fn();
       mockReflector.getAllAndOverride.mockReturnValue(true);
 
       const context = {

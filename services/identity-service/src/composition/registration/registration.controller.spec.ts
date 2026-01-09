@@ -1,13 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { RegistrationController } from './registration.controller';
 import { RegistrationService } from './registration.service';
 import { RegisterUserDto, RegistrationResponseDto } from './dto/registration.dto';
 import { Request } from 'express';
 
+// Type for mocked RegistrationService
+type MockedRegistrationService = {
+  register: Mock;
+};
+
 describe('RegistrationController', () => {
   let controller: RegistrationController;
-  let registrationService: jest.Mocked<RegistrationService>;
+  let registrationService: MockedRegistrationService;
 
   const mockCreatedAt = new Date();
 
@@ -30,7 +36,7 @@ describe('RegistrationController', () => {
 
   beforeEach(async () => {
     const mockRegistrationService = {
-      register: jest.fn(),
+      register: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

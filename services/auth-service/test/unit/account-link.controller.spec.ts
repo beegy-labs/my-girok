@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { AccountLinkController } from '../../src/users/controllers/account-link.controller';
@@ -8,11 +9,11 @@ import { ConsentType } from '@my-girok/types';
 describe('AccountLinkController', () => {
   let controller: AccountLinkController;
   let mockAccountLinkingService: {
-    findLinkableAccounts: jest.Mock;
-    requestLink: jest.Mock;
-    acceptLink: jest.Mock;
-    getLinkedAccounts: jest.Mock;
-    unlinkAccount: jest.Mock;
+    findLinkableAccounts: Mock;
+    requestLink: Mock;
+    acceptLink: Mock;
+    getLinkedAccounts: Mock;
+    unlinkAccount: Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -29,11 +30,11 @@ describe('AccountLinkController', () => {
     resetTestCounter();
 
     mockAccountLinkingService = {
-      findLinkableAccounts: jest.fn(),
-      requestLink: jest.fn(),
-      acceptLink: jest.fn(),
-      getLinkedAccounts: jest.fn(),
-      unlinkAccount: jest.fn(),
+      findLinkableAccounts: vi.fn(),
+      requestLink: vi.fn(),
+      acceptLink: vi.fn(),
+      getLinkedAccounts: vi.fn(),
+      unlinkAccount: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -45,7 +46,7 @@ describe('AccountLinkController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('findLinkableAccounts', () => {

@@ -3,15 +3,29 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { JwtAuthGuard, JwtPayload } from '../../src/common/guards/jwt-auth.guard';
 import { CacheService } from '../../src/common/cache/cache.service';
 import { CircuitBreakerService } from '../../src/common/resilience/circuit-breaker.service';
 
+// Type for mocked services
+type MockedReflector = {
+  getAllAndOverride: Mock;
+};
+
+type MockedJwtService = {
+  verifyAsync: Mock;
+};
+
+type MockedCircuitBreaker = {
+  execute: Mock;
+};
+
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
-  let reflector: jest.Mocked<Reflector>;
-  let jwtService: jest.Mocked<JwtService>;
-  let circuitBreaker: jest.Mocked<CircuitBreakerService>;
+  let reflector: MockedReflector;
+  let jwtService: MockedJwtService;
+  let circuitBreaker: MockedCircuitBreaker;
 
   const mockPayload: JwtPayload = {
     sub: '123e4567-e89b-12d3-a456-426614174000',
@@ -44,15 +58,15 @@ describe('JwtAuthGuard', () => {
 
   beforeEach(async () => {
     const mockReflector = {
-      getAllAndOverride: jest.fn(),
+      getAllAndOverride: vi.fn(),
     };
 
     const mockJwtService = {
-      verifyAsync: jest.fn(),
+      verifyAsync: vi.fn(),
     };
 
     const mockConfigService = {
-      get: jest.fn((key: string, defaultValue?: unknown) => {
+      get: vi.fn((key: string, defaultValue?: unknown) => {
         const config: Record<string, unknown> = {
           JWT_SECRET: 'test-secret',
           JWT_PUBLIC_KEY: undefined,
@@ -66,11 +80,11 @@ describe('JwtAuthGuard', () => {
     };
 
     const mockCacheService = {
-      isTokenRevoked: jest.fn(),
+      isTokenRevoked: vi.fn(),
     };
 
     const mockCircuitBreaker = {
-      execute: jest.fn(),
+      execute: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -256,7 +270,7 @@ describe('JwtAuthGuard', () => {
   describe('FAIL-OPEN behavior in non-production', () => {
     beforeEach(async () => {
       const mockConfigNonProd = {
-        get: jest.fn((key: string, defaultValue?: unknown) => {
+        get: vi.fn((key: string, defaultValue?: unknown) => {
           const config: Record<string, unknown> = {
             JWT_SECRET: 'test-secret',
             JWT_PUBLIC_KEY: undefined,
@@ -272,11 +286,11 @@ describe('JwtAuthGuard', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           JwtAuthGuard,
-          { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
-          { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
+          { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
+          { provide: JwtService, useValue: { verifyAsync: vi.fn() } },
           { provide: ConfigService, useValue: mockConfigNonProd },
-          { provide: CacheService, useValue: { isTokenRevoked: jest.fn() } },
-          { provide: CircuitBreakerService, useValue: { execute: jest.fn() } },
+          { provide: CacheService, useValue: { isTokenRevoked: vi.fn() } },
+          { provide: CircuitBreakerService, useValue: { execute: vi.fn() } },
         ],
       }).compile();
 
@@ -306,12 +320,12 @@ describe('JwtAuthGuard', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           JwtAuthGuard,
-          { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
-          { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
+          { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
+          { provide: JwtService, useValue: { verifyAsync: vi.fn() } },
           {
             provide: ConfigService,
             useValue: {
-              get: jest.fn((key: string, defaultValue?: unknown) => {
+              get: vi.fn((key: string, defaultValue?: unknown) => {
                 const config: Record<string, unknown> = {
                   JWT_SECRET: 'test-secret',
                   JWT_ISSUER: 'test-issuer',
@@ -347,7 +361,7 @@ describe('JwtAuthGuard', () => {
   describe('RS256 algorithm configuration', () => {
     beforeEach(async () => {
       const mockConfigRS256 = {
-        get: jest.fn((key: string, defaultValue?: unknown) => {
+        get: vi.fn((key: string, defaultValue?: unknown) => {
           const config: Record<string, unknown> = {
             JWT_SECRET: undefined,
             JWT_PUBLIC_KEY: '-----BEGIN PUBLIC KEY-----\nMIIB...test\n-----END PUBLIC KEY-----',
@@ -363,11 +377,11 @@ describe('JwtAuthGuard', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           JwtAuthGuard,
-          { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
-          { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
+          { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
+          { provide: JwtService, useValue: { verifyAsync: vi.fn() } },
           { provide: ConfigService, useValue: mockConfigRS256 },
-          { provide: CacheService, useValue: { isTokenRevoked: jest.fn() } },
-          { provide: CircuitBreakerService, useValue: { execute: jest.fn() } },
+          { provide: CacheService, useValue: { isTokenRevoked: vi.fn() } },
+          { provide: CircuitBreakerService, useValue: { execute: vi.fn() } },
         ],
       }).compile();
 
@@ -428,7 +442,7 @@ describe('JwtAuthGuard', () => {
   describe('production configuration validation', () => {
     it('should require issuer and audience in production', async () => {
       const mockConfigNoIssuer = {
-        get: jest.fn((key: string, defaultValue?: unknown) => {
+        get: vi.fn((key: string, defaultValue?: unknown) => {
           const config: Record<string, unknown> = {
             JWT_SECRET: 'test-secret',
             JWT_ISSUER: undefined,
@@ -443,11 +457,11 @@ describe('JwtAuthGuard', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           JwtAuthGuard,
-          { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
-          { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
+          { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
+          { provide: JwtService, useValue: { verifyAsync: vi.fn() } },
           { provide: ConfigService, useValue: mockConfigNoIssuer },
-          { provide: CacheService, useValue: { isTokenRevoked: jest.fn() } },
-          { provide: CircuitBreakerService, useValue: { execute: jest.fn() } },
+          { provide: CacheService, useValue: { isTokenRevoked: vi.fn() } },
+          { provide: CircuitBreakerService, useValue: { execute: vi.fn() } },
         ],
       }).compile();
 
@@ -455,8 +469,8 @@ describe('JwtAuthGuard', () => {
       const testReflector = module.get<Reflector>(Reflector);
       const testJwtService = module.get<JwtService>(JwtService);
 
-      (testReflector.getAllAndOverride as jest.Mock).mockReturnValue(false);
-      (testJwtService.verifyAsync as jest.Mock).mockRejectedValue(
+      (testReflector.getAllAndOverride as Mock).mockReturnValue(false);
+      (testJwtService.verifyAsync as Mock).mockRejectedValue(
         new Error('JWT issuer/audience not configured'),
       );
 

@@ -1,6 +1,7 @@
 import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest';
 import { SessionGuard } from '../../src/common/guards/session.guard';
 import { SessionService } from '../../src/session/session.service';
 import { BffSession } from '../../src/common/types';
@@ -9,7 +10,7 @@ import { AccountType } from '../../src/config/constants';
 describe('SessionGuard', () => {
   let guard: SessionGuard;
   let reflector: Reflector;
-  let sessionService: jest.Mocked<SessionService>;
+  let sessionService: { validateSession: MockInstance };
 
   const mockSession: BffSession = {
     id: 'session-123',
@@ -31,8 +32,8 @@ describe('SessionGuard', () => {
       switchToHttp: () => ({
         getRequest: () => request,
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     }) as unknown as ExecutionContext;
 
   beforeEach(async () => {
@@ -42,13 +43,13 @@ describe('SessionGuard', () => {
         {
           provide: Reflector,
           useValue: {
-            getAllAndOverride: jest.fn(),
+            getAllAndOverride: vi.fn(),
           },
         },
         {
           provide: SessionService,
           useValue: {
-            validateSession: jest.fn(),
+            validateSession: vi.fn(),
           },
         },
       ],
@@ -65,7 +66,7 @@ describe('SessionGuard', () => {
 
   describe('canActivate', () => {
     it('should allow public routes', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValueOnce(true);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValueOnce(true);
 
       const context = createMockExecutionContext();
       const result = await guard.canActivate(context);
@@ -75,7 +76,7 @@ describe('SessionGuard', () => {
     });
 
     it('should throw UnauthorizedException when session is invalid', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
       sessionService.validateSession.mockResolvedValue({
         valid: false,
         error: 'No valid session found',
@@ -87,7 +88,7 @@ describe('SessionGuard', () => {
     });
 
     it('should allow valid session', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
       sessionService.validateSession.mockResolvedValue({
         valid: true,
         session: mockSession,
@@ -103,8 +104,7 @@ describe('SessionGuard', () => {
 
     it('should throw ForbiddenException when MFA required but not verified', async () => {
       const sessionWithoutMfa = { ...mockSession, mfaVerified: false };
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
+      vi.spyOn(reflector, 'getAllAndOverride')
         .mockReturnValueOnce(false) // isPublic
         .mockReturnValueOnce(true) // requireMfa
         .mockReturnValueOnce(null); // allowedTypes
@@ -120,8 +120,7 @@ describe('SessionGuard', () => {
     });
 
     it('should throw ForbiddenException for wrong account type', async () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
+      vi.spyOn(reflector, 'getAllAndOverride')
         .mockReturnValueOnce(false) // isPublic
         .mockReturnValueOnce(false) // requireMfa
         .mockReturnValueOnce(['ADMIN']); // allowedTypes
@@ -137,8 +136,7 @@ describe('SessionGuard', () => {
     });
 
     it('should allow correct account type', async () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
+      vi.spyOn(reflector, 'getAllAndOverride')
         .mockReturnValueOnce(false) // isPublic
         .mockReturnValueOnce(false) // requireMfa
         .mockReturnValueOnce(['USER', 'ADMIN']); // allowedTypes

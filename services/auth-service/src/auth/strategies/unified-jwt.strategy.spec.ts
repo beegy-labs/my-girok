@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -17,25 +18,25 @@ import {
 describe('UnifiedJwtStrategy', () => {
   let strategy: UnifiedJwtStrategy;
   let mockPrismaService: {
-    user: { findUnique: jest.Mock };
-    $queryRaw: jest.Mock;
+    user: { findUnique: Mock };
+    $queryRaw: Mock;
   };
-  let mockConfigService: { get: jest.Mock };
+  let mockConfigService: { get: Mock };
   let mockIdentityClient: {
-    getAccount: jest.Mock;
-    getProfile: jest.Mock;
+    getAccount: Mock;
+    getProfile: Mock;
   };
 
   beforeEach(async () => {
     mockPrismaService = {
       user: {
-        findUnique: jest.fn(),
+        findUnique: vi.fn(),
       },
-      $queryRaw: jest.fn(),
+      $queryRaw: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn((key: string) => {
+      get: vi.fn((key: string) => {
         if (key === 'JWT_SECRET') {
           return 'test-jwt-secret-key-for-testing';
         }
@@ -44,8 +45,8 @@ describe('UnifiedJwtStrategy', () => {
     };
 
     mockIdentityClient = {
-      getAccount: jest.fn(),
-      getProfile: jest.fn(),
+      getAccount: vi.fn(),
+      getProfile: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -61,13 +62,13 @@ describe('UnifiedJwtStrategy', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('constructor', () => {
     it('should throw error if JWT_SECRET is not configured', async () => {
       const noSecretConfigService = {
-        get: jest.fn().mockReturnValue(undefined),
+        get: vi.fn().mockReturnValue(undefined),
       };
 
       await expect(

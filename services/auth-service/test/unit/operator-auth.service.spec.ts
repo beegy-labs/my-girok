@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,17 +10,17 @@ import { PrismaService } from '../../src/database/prisma.service';
 import { createMockPrismaService, MockPrismaService } from '../utils/mock-prisma';
 import { generateTestId, resetTestCounter } from '../utils/test-factory';
 
-jest.mock('bcrypt');
+vi.mock('bcrypt');
 
 describe('OperatorAuthService', () => {
   let service: OperatorAuthService;
   let mockPrisma: MockPrismaService;
   let mockJwtService: {
-    verify: jest.Mock;
-    signAsync: jest.Mock;
+    verify: Mock;
+    signAsync: Mock;
   };
   let mockConfigService: {
-    get: jest.Mock;
+    get: Mock;
   };
 
   const operatorId = '00000000-0000-7000-0000-000000000001';
@@ -46,11 +47,11 @@ describe('OperatorAuthService', () => {
 
     mockPrisma = createMockPrismaService();
     mockJwtService = {
-      verify: jest.fn(),
-      signAsync: jest.fn().mockResolvedValue('mock-token'),
+      verify: vi.fn(),
+      signAsync: vi.fn().mockResolvedValue('mock-token'),
     };
     mockConfigService = {
-      get: jest.fn().mockReturnValue('1h'),
+      get: vi.fn().mockReturnValue('1h'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -66,7 +67,7 @@ describe('OperatorAuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('login', () => {
@@ -76,7 +77,7 @@ describe('OperatorAuthService', () => {
         .mockResolvedValueOnce([mockOperator]) // find operator
         .mockResolvedValueOnce([{ operatorId, resource: 'content', action: 'read' }]); // get permissions
 
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.compare as Mock).mockResolvedValue(true);
       mockPrisma.$executeRaw.mockResolvedValue(1);
 
       // Act
@@ -125,7 +126,7 @@ describe('OperatorAuthService', () => {
     it('should throw UnauthorizedException when password is invalid', async () => {
       // Arrange
       mockPrisma.$queryRaw.mockResolvedValueOnce([mockOperator]);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (bcrypt.compare as Mock).mockResolvedValue(false);
 
       // Act & Assert
       await expect(
@@ -155,12 +156,12 @@ describe('OperatorAuthService', () => {
       // Arrange
       mockPrisma.$queryRaw.mockResolvedValueOnce([mockInvitation]); // find invitation
 
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+      (bcrypt.hash as Mock).mockResolvedValue('hashed-password');
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const tx = {
-          $executeRaw: jest.fn().mockResolvedValue(1),
-          $queryRaw: jest.fn().mockResolvedValueOnce([
+          $executeRaw: vi.fn().mockResolvedValue(1),
+          $queryRaw: vi.fn().mockResolvedValueOnce([
             {
               ...mockOperator,
               email: mockInvitation.email,

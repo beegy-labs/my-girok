@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -27,8 +28,8 @@ describe('SanctionService', () => {
   let service: SanctionService;
   let mockPrisma: MockPrismaService;
   let mockCache: MockCacheManager;
-  let mockEventEmitter: { emit: jest.Mock };
-  let mockAuditLogService: { log: jest.Mock };
+  let mockEventEmitter: { emit: Mock };
+  let mockAuditLogService: { log: Mock };
 
   const serviceId = '00000000-0000-7000-0000-000000000001';
   const sanctionId = '00000000-0000-7000-0000-000000000002';
@@ -39,8 +40,8 @@ describe('SanctionService', () => {
 
     mockPrisma = createMockPrismaService();
     mockCache = createMockCacheManager();
-    mockEventEmitter = { emit: jest.fn() };
-    mockAuditLogService = { log: jest.fn().mockResolvedValue(undefined) };
+    mockEventEmitter = { emit: vi.fn() };
+    mockAuditLogService = { log: vi.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -56,7 +57,7 @@ describe('SanctionService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('list', () => {

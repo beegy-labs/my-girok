@@ -1,26 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { DevicesService } from '../../src/identity/devices/devices.service';
 import { IdentityPrismaService } from '../../src/database/identity-prisma.service';
 import { DeviceType, PushPlatform } from '.prisma/identity-client';
 
-// Type for mocked Prisma service with jest.fn() methods
+// Type for mocked Prisma service with vi.fn() methods
 type MockPrismaDevice = {
-  findUnique: jest.Mock;
-  findMany: jest.Mock;
-  upsert: jest.Mock;
-  update: jest.Mock;
-  delete: jest.Mock;
-  deleteMany: jest.Mock;
-  count: jest.Mock;
+  findUnique: Mock;
+  findMany: Mock;
+  upsert: Mock;
+  update: Mock;
+  delete: Mock;
+  deleteMany: Mock;
+  count: Mock;
 };
 
 type MockPrismaSession = {
-  updateMany: jest.Mock;
+  updateMany: Mock;
 };
 
 type MockPrismaAccount = {
-  findUnique: jest.Mock;
+  findUnique: Mock;
 };
 
 describe('DevicesService', () => {
@@ -29,7 +30,7 @@ describe('DevicesService', () => {
     account: MockPrismaAccount;
     device: MockPrismaDevice;
     session: MockPrismaSession;
-    $transaction: jest.Mock;
+    $transaction: Mock;
   };
 
   const mockAccount = {
@@ -61,24 +62,24 @@ describe('DevicesService', () => {
   beforeEach(async () => {
     const mockPrismaData = {
       account: {
-        findUnique: jest.fn(),
+        findUnique: vi.fn(),
       },
       device: {
-        findUnique: jest.fn(),
-        findMany: jest.fn(),
-        upsert: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        deleteMany: jest.fn(),
-        count: jest.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
+        upsert: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        deleteMany: vi.fn(),
+        count: vi.fn(),
       },
       session: {
-        updateMany: jest.fn(),
+        updateMany: vi.fn(),
       },
     };
     const mockPrisma = {
       ...mockPrismaData,
-      $transaction: jest.fn((fn: (prisma: typeof mockPrismaData) => unknown) => fn(mockPrismaData)),
+      $transaction: vi.fn((fn: (prisma: typeof mockPrismaData) => unknown) => fn(mockPrismaData)),
     };
 
     const module: TestingModule = await Test.createTestingModule({

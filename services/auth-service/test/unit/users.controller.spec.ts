@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 
@@ -8,10 +9,10 @@ import { resetTestCounter } from '../utils/test-factory';
 describe('UsersController', () => {
   let controller: UsersController;
   let mockUsersService: {
-    findById: jest.Mock;
-    findByUsername: jest.Mock;
-    updateProfile: jest.Mock;
-    changePassword: jest.Mock;
+    findById: Mock;
+    findByUsername: Mock;
+    updateProfile: Mock;
+    changePassword: Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -30,10 +31,10 @@ describe('UsersController', () => {
     resetTestCounter();
 
     mockUsersService = {
-      findById: jest.fn(),
-      findByUsername: jest.fn(),
-      updateProfile: jest.fn(),
-      changePassword: jest.fn(),
+      findById: vi.fn(),
+      findByUsername: vi.fn(),
+      updateProfile: vi.fn(),
+      changePassword: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -45,7 +46,7 @@ describe('UsersController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getUserByUsername', () => {

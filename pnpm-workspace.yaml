@@ -30,13 +30,14 @@ catalog:
   '@dnd-kit/sortable': ^10.0.0
   '@dnd-kit/utilities': ^3.2.2
 
-  # Testing (Frontend)
+  # Testing
   vitest: ^4.0.15
+  '@vitest/coverage-v8': ^4.0.15
   '@testing-library/react': ^16.3.0
   '@testing-library/jest-dom': ^6.9.1
   '@playwright/test': ^1.57.0
 
-  # Testing (Backend)
+  # Testing (Legacy - migrate to Vitest)
   jest: ^30.2.0
   '@types/jest': ^30.0.0
 

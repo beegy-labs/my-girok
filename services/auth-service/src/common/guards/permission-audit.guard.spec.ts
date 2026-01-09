@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext } from '@nestjs/common';
@@ -8,11 +9,11 @@ describe('PermissionAuditGuard', () => {
   let guard: PermissionAuditGuard;
 
   const mockReflector = {
-    getAllAndOverride: jest.fn(),
+    getAllAndOverride: vi.fn(),
   };
 
   const mockPermissionAuditService = {
-    logPermissionCheck: jest.fn(),
+    logPermissionCheck: vi.fn(),
   };
 
   const createMockUser = (overrides: Record<string, any> = {}) => ({
@@ -43,10 +44,10 @@ describe('PermissionAuditGuard', () => {
     handlerName = 'findOne',
     controllerName = 'LegalDocumentsController',
   ): ExecutionContext => {
-    const handler = jest.fn();
+    const handler = vi.fn();
     Object.defineProperty(handler, 'name', { value: handlerName });
 
-    const controller = jest.fn();
+    const controller = vi.fn();
     Object.defineProperty(controller, 'name', { value: controllerName });
 
     return {
@@ -71,7 +72,7 @@ describe('PermissionAuditGuard', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('canActivate', () => {

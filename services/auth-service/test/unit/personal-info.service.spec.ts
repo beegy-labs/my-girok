@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
@@ -52,7 +53,7 @@ describe('PersonalInfoService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getMyPersonalInfo', () => {

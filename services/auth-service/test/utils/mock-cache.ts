@@ -3,28 +3,29 @@
  * Provides a fully mocked cache service compatible with @nestjs/cache-manager
  */
 
+import { vi, Mock } from 'vitest';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 export interface MockCacheManager {
-  get: jest.Mock;
-  set: jest.Mock;
-  del: jest.Mock;
-  reset: jest.Mock;
-  mget: jest.Mock;
-  mset: jest.Mock;
-  mdel: jest.Mock;
-  ttl: jest.Mock;
-  wrap: jest.Mock;
-  disconnect: jest.Mock;
+  get: Mock;
+  set: Mock;
+  del: Mock;
+  reset: Mock;
+  mget: Mock;
+  mset: Mock;
+  mdel: Mock;
+  ttl: Mock;
+  wrap: Mock;
+  disconnect: Mock;
   store: {
-    get: jest.Mock;
-    set: jest.Mock;
-    del: jest.Mock;
-    keys: jest.Mock;
-    mget: jest.Mock;
-    mset: jest.Mock;
-    mdel: jest.Mock;
-    ttl: jest.Mock;
+    get: Mock;
+    set: Mock;
+    del: Mock;
+    keys: Mock;
+    mget: Mock;
+    mset: Mock;
+    mdel: Mock;
+    ttl: Mock;
   };
 }
 
@@ -33,25 +34,25 @@ export interface MockCacheManager {
  */
 export function createMockCacheManager(): MockCacheManager {
   const cache: MockCacheManager = {
-    get: jest.fn().mockResolvedValue(undefined),
-    set: jest.fn().mockResolvedValue(undefined),
-    del: jest.fn().mockResolvedValue(undefined),
-    reset: jest.fn().mockResolvedValue(undefined),
-    mget: jest.fn().mockResolvedValue([]),
-    mset: jest.fn().mockResolvedValue(undefined),
-    mdel: jest.fn().mockResolvedValue(undefined),
-    ttl: jest.fn().mockResolvedValue(-1),
-    wrap: jest.fn().mockImplementation(async (_key: string, fn: () => Promise<unknown>) => fn()),
-    disconnect: jest.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(undefined),
+    set: vi.fn().mockResolvedValue(undefined),
+    del: vi.fn().mockResolvedValue(undefined),
+    reset: vi.fn().mockResolvedValue(undefined),
+    mget: vi.fn().mockResolvedValue([]),
+    mset: vi.fn().mockResolvedValue(undefined),
+    mdel: vi.fn().mockResolvedValue(undefined),
+    ttl: vi.fn().mockResolvedValue(-1),
+    wrap: vi.fn().mockImplementation(async (_key: string, fn: () => Promise<unknown>) => fn()),
+    disconnect: vi.fn().mockResolvedValue(undefined),
     store: {
-      get: jest.fn().mockResolvedValue(undefined),
-      set: jest.fn().mockResolvedValue(undefined),
-      del: jest.fn().mockResolvedValue(undefined),
-      keys: jest.fn().mockResolvedValue([]),
-      mget: jest.fn().mockResolvedValue([]),
-      mset: jest.fn().mockResolvedValue(undefined),
-      mdel: jest.fn().mockResolvedValue(undefined),
-      ttl: jest.fn().mockResolvedValue(-1),
+      get: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockResolvedValue(undefined),
+      del: vi.fn().mockResolvedValue(undefined),
+      keys: vi.fn().mockResolvedValue([]),
+      mget: vi.fn().mockResolvedValue([]),
+      mset: vi.fn().mockResolvedValue(undefined),
+      mdel: vi.fn().mockResolvedValue(undefined),
+      ttl: vi.fn().mockResolvedValue(-1),
     },
   };
 

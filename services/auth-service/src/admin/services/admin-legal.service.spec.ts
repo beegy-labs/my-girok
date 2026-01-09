@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { AdminLegalService } from './admin-legal.service';
@@ -14,17 +15,17 @@ import {
 import { AdminPayload } from '../types/admin.types';
 
 // Mock ID.generate to return predictable UUIDs
-jest.mock('@my-girok/nest-common', () => ({
+vi.mock('@my-girok/nest-common', () => ({
   ID: {
-    generate: jest.fn(),
+    generate: vi.fn(),
   },
 }));
 
 describe('AdminLegalService', () => {
   let service: AdminLegalService;
   let mockPrismaService: {
-    $queryRaw: jest.Mock;
-    $executeRaw: jest.Mock;
+    $queryRaw: Mock;
+    $executeRaw: Mock;
   };
 
   const mockAdmin: AdminPayload = {
@@ -78,8 +79,8 @@ describe('AdminLegalService', () => {
 
   beforeEach(async () => {
     mockPrismaService = {
-      $queryRaw: jest.fn(),
-      $executeRaw: jest.fn(),
+      $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -89,11 +90,11 @@ describe('AdminLegalService', () => {
     service = module.get<AdminLegalService>(AdminLegalService);
 
     // Reset ID mock
-    (ID.generate as jest.Mock).mockReturnValue('550e8400-e29b-41d4-a716-446655440099');
+    (ID.generate as Mock).mockReturnValue('550e8400-e29b-41d4-a716-446655440099');
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================================

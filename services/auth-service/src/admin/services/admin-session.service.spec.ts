@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -7,9 +8,9 @@ import { OutboxService } from '../../common/outbox/outbox.service';
 
 describe('AdminSessionService', () => {
   let service: AdminSessionService;
-  let prismaService: jest.Mocked<PrismaService>;
-  let jwtService: jest.Mocked<JwtService>;
-  let outboxService: jest.Mocked<OutboxService>;
+  let prismaService: Mocked<PrismaService>;
+  let jwtService: Mocked<JwtService>;
+  let outboxService: Mocked<OutboxService>;
 
   const mockAdminId = '01935c6d-c2d0-7abc-8def-1234567890ab';
   const mockSessionId = '01935c6d-c2d0-7abc-8def-1234567890ac';
@@ -39,20 +40,20 @@ describe('AdminSessionService', () => {
 
   beforeEach(async () => {
     const mockPrismaService = {
-      $queryRaw: jest.fn(),
-      $executeRaw: jest.fn(),
+      $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
     };
 
     const mockJwtService = {
-      signAsync: jest.fn(),
+      signAsync: vi.fn(),
     };
 
     const mockConfigService = {
-      get: jest.fn((_key: string, defaultValue?: string) => defaultValue),
+      get: vi.fn((_key: string, defaultValue?: string) => defaultValue),
     };
 
     const mockOutboxService = {
-      addEventDirect: jest.fn(),
+      addEventDirect: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

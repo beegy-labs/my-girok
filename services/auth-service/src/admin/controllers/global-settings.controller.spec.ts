@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { GlobalSettingsController } from './global-settings.controller';
 import { GlobalSettingsService } from '../services/global-settings.service';
@@ -17,16 +18,16 @@ import {
 describe('GlobalSettingsController', () => {
   let controller: GlobalSettingsController;
   let mockGlobalSettingsService: {
-    listCountries: jest.Mock;
-    getCountry: jest.Mock;
-    createCountry: jest.Mock;
-    updateCountry: jest.Mock;
-    deleteCountry: jest.Mock;
-    listLocales: jest.Mock;
-    getLocale: jest.Mock;
-    createLocale: jest.Mock;
-    updateLocale: jest.Mock;
-    deleteLocale: jest.Mock;
+    listCountries: Mock;
+    getCountry: Mock;
+    createCountry: Mock;
+    updateCountry: Mock;
+    deleteCountry: Mock;
+    listLocales: Mock;
+    getLocale: Mock;
+    createLocale: Mock;
+    updateLocale: Mock;
+    deleteLocale: Mock;
   };
 
   const mockCountry: SupportedCountryResponse = {
@@ -55,23 +56,23 @@ describe('GlobalSettingsController', () => {
 
   beforeEach(async () => {
     mockGlobalSettingsService = {
-      listCountries: jest.fn(),
-      getCountry: jest.fn(),
-      createCountry: jest.fn(),
-      updateCountry: jest.fn(),
-      deleteCountry: jest.fn(),
-      listLocales: jest.fn(),
-      getLocale: jest.fn(),
-      createLocale: jest.fn(),
-      updateLocale: jest.fn(),
-      deleteLocale: jest.fn(),
+      listCountries: vi.fn(),
+      getCountry: vi.fn(),
+      createCountry: vi.fn(),
+      updateCountry: vi.fn(),
+      deleteCountry: vi.fn(),
+      listLocales: vi.fn(),
+      getLocale: vi.fn(),
+      createLocale: vi.fn(),
+      updateLocale: vi.fn(),
+      deleteLocale: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [GlobalSettingsController],
       providers: [
         { provide: GlobalSettingsService, useValue: mockGlobalSettingsService },
-        { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+        { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
       ],
     })
       .overrideGuard(PermissionGuard)
@@ -82,7 +83,7 @@ describe('GlobalSettingsController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================================

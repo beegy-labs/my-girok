@@ -2,15 +2,34 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { AccountsController } from '../../src/identity/accounts/accounts.controller';
 import { AccountsService } from '../../src/identity/accounts/accounts.service';
 import { AuthProvider } from '../../src/identity/accounts/dto/create-account.dto';
 import { AccountStatus } from '../../src/identity/accounts/dto/update-account.dto';
 import { ApiKeyGuard } from '../../src/common/guards/api-key.guard';
 
+// Type for mocked AccountsService
+type MockedAccountsService = {
+  create: Mock;
+  findAll: Mock;
+  findById: Mock;
+  findByExternalId: Mock;
+  findByEmail: Mock;
+  findByUsername: Mock;
+  update: Mock;
+  changePassword: Mock;
+  delete: Mock;
+  verifyEmail: Mock;
+  enableMfa: Mock;
+  verifyAndCompleteMfaSetup: Mock;
+  disableMfa: Mock;
+  updateStatus: Mock;
+};
+
 describe('AccountsController', () => {
   let controller: AccountsController;
-  let service: jest.Mocked<AccountsService>;
+  let service: MockedAccountsService;
 
   const mockAccount = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -45,24 +64,24 @@ describe('AccountsController', () => {
 
   beforeEach(async () => {
     const mockService = {
-      create: jest.fn(),
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      findByExternalId: jest.fn(),
-      findByEmail: jest.fn(),
-      findByUsername: jest.fn(),
-      update: jest.fn(),
-      changePassword: jest.fn(),
-      delete: jest.fn(),
-      verifyEmail: jest.fn(),
-      enableMfa: jest.fn(),
-      verifyAndCompleteMfaSetup: jest.fn(),
-      disableMfa: jest.fn(),
-      updateStatus: jest.fn(),
+      create: vi.fn(),
+      findAll: vi.fn(),
+      findById: vi.fn(),
+      findByExternalId: vi.fn(),
+      findByEmail: vi.fn(),
+      findByUsername: vi.fn(),
+      update: vi.fn(),
+      changePassword: vi.fn(),
+      delete: vi.fn(),
+      verifyEmail: vi.fn(),
+      enableMfa: vi.fn(),
+      verifyAndCompleteMfaSetup: vi.fn(),
+      disableMfa: vi.fn(),
+      updateStatus: vi.fn(),
     };
 
     const mockConfigService = {
-      get: jest.fn().mockReturnValue('test-api-key'),
+      get: vi.fn().mockReturnValue('test-api-key'),
     };
 
     const module: TestingModule = await Test.createTestingModule({

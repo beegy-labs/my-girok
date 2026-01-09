@@ -1,9 +1,10 @@
-// Jest setup file for auth-bff tests
+// Vitest setup file for auth-bff tests
+import { vi } from 'vitest';
 
 // Suppress console logs during tests unless debugging
 if (!process.env.DEBUG_TESTS) {
-  jest.spyOn(console, 'log').mockImplementation();
-  jest.spyOn(console, 'debug').mockImplementation();
+  vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(console, 'debug').mockImplementation(() => {});
 }
 
 // Set test environment variables

@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminServicesController } from './admin-services.controller';
 import { AdminServicesService } from '../services/admin-services.service';
@@ -24,21 +25,21 @@ import {
 describe('AdminServicesController', () => {
   let controller: AdminServicesController;
   let mockAdminServicesService: {
-    listServices: jest.Mock;
-    getServiceById: jest.Mock;
-    getServiceBySlug: jest.Mock;
-    listConsentRequirements: jest.Mock;
-    getConsentRequirement: jest.Mock;
-    createConsentRequirement: jest.Mock;
-    updateConsentRequirement: jest.Mock;
-    deleteConsentRequirement: jest.Mock;
-    bulkUpdateConsentRequirements: jest.Mock;
-    listServiceCountries: jest.Mock;
-    addServiceCountry: jest.Mock;
-    removeServiceCountry: jest.Mock;
-    listServiceLocales: jest.Mock;
-    addServiceLocale: jest.Mock;
-    removeServiceLocale: jest.Mock;
+    listServices: Mock;
+    getServiceById: Mock;
+    getServiceBySlug: Mock;
+    listConsentRequirements: Mock;
+    getConsentRequirement: Mock;
+    createConsentRequirement: Mock;
+    updateConsentRequirement: Mock;
+    deleteConsentRequirement: Mock;
+    bulkUpdateConsentRequirements: Mock;
+    listServiceCountries: Mock;
+    addServiceCountry: Mock;
+    removeServiceCountry: Mock;
+    listServiceLocales: Mock;
+    addServiceLocale: Mock;
+    removeServiceLocale: Mock;
   };
 
   const mockServiceId = '550e8400-e29b-41d4-a716-446655440001';
@@ -89,28 +90,28 @@ describe('AdminServicesController', () => {
 
   beforeEach(async () => {
     mockAdminServicesService = {
-      listServices: jest.fn(),
-      getServiceById: jest.fn(),
-      getServiceBySlug: jest.fn(),
-      listConsentRequirements: jest.fn(),
-      getConsentRequirement: jest.fn(),
-      createConsentRequirement: jest.fn(),
-      updateConsentRequirement: jest.fn(),
-      deleteConsentRequirement: jest.fn(),
-      bulkUpdateConsentRequirements: jest.fn(),
-      listServiceCountries: jest.fn(),
-      addServiceCountry: jest.fn(),
-      removeServiceCountry: jest.fn(),
-      listServiceLocales: jest.fn(),
-      addServiceLocale: jest.fn(),
-      removeServiceLocale: jest.fn(),
+      listServices: vi.fn(),
+      getServiceById: vi.fn(),
+      getServiceBySlug: vi.fn(),
+      listConsentRequirements: vi.fn(),
+      getConsentRequirement: vi.fn(),
+      createConsentRequirement: vi.fn(),
+      updateConsentRequirement: vi.fn(),
+      deleteConsentRequirement: vi.fn(),
+      bulkUpdateConsentRequirements: vi.fn(),
+      listServiceCountries: vi.fn(),
+      addServiceCountry: vi.fn(),
+      removeServiceCountry: vi.fn(),
+      listServiceLocales: vi.fn(),
+      addServiceLocale: vi.fn(),
+      removeServiceLocale: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminServicesController],
       providers: [
         { provide: AdminServicesService, useValue: mockAdminServicesService },
-        { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+        { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
       ],
     })
       .overrideGuard(PermissionGuard)
@@ -121,7 +122,7 @@ describe('AdminServicesController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('listServices', () => {

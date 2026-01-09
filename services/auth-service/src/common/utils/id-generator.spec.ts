@@ -1,3 +1,4 @@
+import { vi, describe, it, expect } from 'vitest';
 import {
   base62Encode,
   base62Decode,
@@ -29,7 +30,7 @@ describe('ID Generator', () => {
 
     it('should be reversible', () => {
       const numbers = [0, 1, 61, 62, 123, 1000, 999999, 10000000];
-      numbers.forEach(num => {
+      numbers.forEach((num) => {
         const encoded = base62Encode(num);
         const decoded = base62Decode(encoded);
         expect(decoded).toBe(num);
@@ -100,7 +101,7 @@ describe('ID Generator', () => {
       const id1 = generateExternalId();
 
       // Wait 10ms to ensure different timestamp
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const id2 = generateExternalId();
 
@@ -111,7 +112,7 @@ describe('ID Generator', () => {
 
   describe('generateUniqueExternalId', () => {
     it('should return ID if unique', async () => {
-      const checkUniqueness = jest.fn().mockResolvedValue(true);
+      const checkUniqueness = vi.fn().mockResolvedValue(true);
 
       const id = await generateUniqueExternalId(checkUniqueness);
 
@@ -122,7 +123,7 @@ describe('ID Generator', () => {
 
     it('should retry on collision', async () => {
       let attempt = 0;
-      const checkUniqueness = jest.fn().mockImplementation(async () => {
+      const checkUniqueness = vi.fn().mockImplementation(async () => {
         attempt++;
         return attempt > 1; // First attempt fails, second succeeds
       });
@@ -134,10 +135,10 @@ describe('ID Generator', () => {
     });
 
     it('should throw after max retries', async () => {
-      const checkUniqueness = jest.fn().mockResolvedValue(false); // Always collision
+      const checkUniqueness = vi.fn().mockResolvedValue(false); // Always collision
 
       await expect(generateUniqueExternalId(checkUniqueness)).rejects.toThrow(
-        'Failed to generate unique external ID after 3 attempts'
+        'Failed to generate unique external ID after 3 attempts',
       );
 
       expect(checkUniqueness).toHaveBeenCalledTimes(3);
@@ -193,7 +194,9 @@ describe('ID Generator', () => {
 
     it('should throw on invalid format', () => {
       expect(() => extractTimestampFromExternalId('short')).toThrow('Invalid external ID format');
-      expect(() => extractTimestampFromExternalId('toolongid123')).toThrow('Invalid external ID format');
+      expect(() => extractTimestampFromExternalId('toolongid123')).toThrow(
+        'Invalid external ID format',
+      );
     });
   });
 
@@ -250,11 +253,11 @@ describe('ID Generator', () => {
       for (let i = 0; i < 10; i++) {
         const id = generateExternalId();
         ids.push(id);
-        await new Promise(resolve => setTimeout(resolve, 10)); // Wait 10ms to ensure different timestamps
+        await new Promise((resolve) => setTimeout(resolve, 10)); // Wait 10ms to ensure different timestamps
       }
 
       // Extract timestamps from IDs and verify they are in ascending order
-      const timestamps = ids.map(id => {
+      const timestamps = ids.map((id) => {
         const timePart = id.substring(0, 8);
         return base62Decode(timePart);
       });
@@ -265,7 +268,7 @@ describe('ID Generator', () => {
       }
 
       // Also verify lexicographic sorting works for the time part
-      const timeParts = ids.map(id => id.substring(0, 8));
+      const timeParts = ids.map((id) => id.substring(0, 8));
       const sortedTimeParts = [...timeParts].sort();
       expect(sortedTimeParts).toEqual(timeParts);
     });

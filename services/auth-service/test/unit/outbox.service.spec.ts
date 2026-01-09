@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { OutboxService, OutboxEventInput } from '../../src/common/outbox/outbox.service';
@@ -8,7 +9,7 @@ import { createOutboxEvent, generateTestId, resetTestCounter } from '../utils/te
 describe('OutboxService', () => {
   let service: OutboxService;
   let mockPrisma: MockPrismaService;
-  let mockTx: { $executeRaw: jest.Mock };
+  let mockTx: { $executeRaw: Mock };
 
   beforeEach(async () => {
     resetTestCounter();
@@ -17,7 +18,7 @@ describe('OutboxService', () => {
 
     // Create a mock transaction client with $executeRaw
     mockTx = {
-      $executeRaw: jest.fn().mockResolvedValue(1),
+      $executeRaw: vi.fn().mockResolvedValue(1),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -28,7 +29,7 @@ describe('OutboxService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('addEvent', () => {

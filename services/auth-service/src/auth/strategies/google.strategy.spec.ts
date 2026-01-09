@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { GoogleStrategy } from './google.strategy';
@@ -6,16 +7,16 @@ import { AuthProvider, Role } from '@my-girok/types';
 
 describe('GoogleStrategy', () => {
   let strategy: GoogleStrategy;
-  let mockAuthService: { findOrCreateOAuthUser: jest.Mock };
-  let mockConfigService: { get: jest.Mock };
+  let mockAuthService: { findOrCreateOAuthUser: Mock };
+  let mockConfigService: { get: Mock };
 
   beforeEach(async () => {
     mockAuthService = {
-      findOrCreateOAuthUser: jest.fn(),
+      findOrCreateOAuthUser: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn((key: string) => {
+      get: vi.fn((key: string) => {
         const config: Record<string, string> = {
           GOOGLE_CLIENT_ID: 'test-google-client-id',
           GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
@@ -37,7 +38,7 @@ describe('GoogleStrategy', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validate', () => {
@@ -67,7 +68,7 @@ describe('GoogleStrategy', () => {
 
       mockAuthService.findOrCreateOAuthUser.mockResolvedValue(mockUser);
 
-      const mockDone = jest.fn();
+      const mockDone = vi.fn();
 
       // Act
       await strategy.validate(mockAccessToken, mockRefreshToken, mockProfile, mockDone);
@@ -106,7 +107,7 @@ describe('GoogleStrategy', () => {
 
       mockAuthService.findOrCreateOAuthUser.mockResolvedValue(mockUser);
 
-      const mockDone = jest.fn();
+      const mockDone = vi.fn();
 
       // Act
       await strategy.validate(mockAccessToken, mockRefreshToken, mockProfile, mockDone);
@@ -145,7 +146,7 @@ describe('GoogleStrategy', () => {
 
       mockAuthService.findOrCreateOAuthUser.mockResolvedValue(mockUser);
 
-      const mockDone = jest.fn();
+      const mockDone = vi.fn();
 
       // Act
       await strategy.validate(mockAccessToken, mockRefreshToken, mockProfile, mockDone);
@@ -186,7 +187,7 @@ describe('GoogleStrategy', () => {
 
       mockAuthService.findOrCreateOAuthUser.mockResolvedValue(mockUser);
 
-      const mockDone = jest.fn();
+      const mockDone = vi.fn();
 
       // Act
       await strategy.validate(mockAccessToken, mockRefreshToken, mockProfile, mockDone);
@@ -225,7 +226,7 @@ describe('GoogleStrategy', () => {
 
       mockAuthService.findOrCreateOAuthUser.mockResolvedValue(mockUser);
 
-      const mockDone = jest.fn();
+      const mockDone = vi.fn();
 
       // Act
       await strategy.validate(mockAccessToken, mockRefreshToken, mockProfile, mockDone);
@@ -246,7 +247,7 @@ describe('GoogleStrategy', () => {
 
       mockAuthService.findOrCreateOAuthUser.mockRejectedValue(new Error('Database error'));
 
-      const mockDone = jest.fn();
+      const mockDone = vi.fn();
 
       // Act & Assert
       await expect(
@@ -278,7 +279,7 @@ describe('GoogleStrategy', () => {
 
       mockAuthService.findOrCreateOAuthUser.mockResolvedValue(mockExistingUser);
 
-      const mockDone = jest.fn();
+      const mockDone = vi.fn();
 
       // Act
       await strategy.validate(mockAccessToken, mockRefreshToken, mockProfile, mockDone);

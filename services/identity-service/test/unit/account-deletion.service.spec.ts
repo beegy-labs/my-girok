@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { NotFoundException } from '@nestjs/common';
 import { AccountDeletionService } from '../../src/composition/account-deletion/account-deletion.service';
 import { AccountsService } from '../../src/identity/accounts/accounts.service';
@@ -11,9 +12,9 @@ import { SagaStatus, SagaStepStatus } from '../../src/common/saga/saga.types';
 
 describe('AccountDeletionService', () => {
   let service: AccountDeletionService;
-  let accountsService: jest.Mocked<AccountsService>;
-  let sagaOrchestrator: jest.Mocked<SagaOrchestratorService>;
-  let outboxService: jest.Mocked<OutboxService>;
+  let accountsService: Mocked<AccountsService>;
+  let sagaOrchestrator: Mocked<SagaOrchestratorService>;
+  let outboxService: Mocked<OutboxService>;
 
   const mockAccount = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -37,29 +38,29 @@ describe('AccountDeletionService', () => {
 
   beforeEach(async () => {
     const mockAccountsService = {
-      findById: jest.fn(),
-      delete: jest.fn(),
+      findById: vi.fn(),
+      delete: vi.fn(),
     };
 
     const mockSessionsService = {
-      revokeAllForAccount: jest.fn(),
+      revokeAllForAccount: vi.fn(),
     };
 
     const mockDevicesService = {
-      findAll: jest.fn(),
-      remove: jest.fn(),
+      findAll: vi.fn(),
+      remove: vi.fn(),
     };
 
     const mockProfilesService = {
-      delete: jest.fn(),
+      delete: vi.fn(),
     };
 
     const mockSagaOrchestrator = {
-      execute: jest.fn(),
+      execute: vi.fn(),
     };
 
     const mockOutboxService = {
-      publishEvent: jest.fn(),
+      publishEvent: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

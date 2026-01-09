@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { OperatorAuthController } from '../../src/operator/controllers/operator-auth.controller';
@@ -7,11 +8,11 @@ import { generateTestId, resetTestCounter } from '../utils/test-factory';
 describe('OperatorAuthController', () => {
   let controller: OperatorAuthController;
   let mockOperatorAuthService: {
-    login: jest.Mock;
-    acceptInvitation: jest.Mock;
-    refresh: jest.Mock;
-    logout: jest.Mock;
-    getProfile: jest.Mock;
+    login: Mock;
+    acceptInvitation: Mock;
+    refresh: Mock;
+    logout: Mock;
+    getProfile: Mock;
   };
 
   const operatorId = '00000000-0000-7000-0000-000000000001';
@@ -33,11 +34,11 @@ describe('OperatorAuthController', () => {
     resetTestCounter();
 
     mockOperatorAuthService = {
-      login: jest.fn(),
-      acceptInvitation: jest.fn(),
-      refresh: jest.fn(),
-      logout: jest.fn(),
-      getProfile: jest.fn(),
+      login: vi.fn(),
+      acceptInvitation: vi.fn(),
+      refresh: vi.fn(),
+      logout: vi.fn(),
+      getProfile: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -49,7 +50,7 @@ describe('OperatorAuthController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('login', () => {

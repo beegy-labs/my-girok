@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
@@ -9,7 +10,7 @@ describe('ServiceAccessGuard', () => {
   let guard: ServiceAccessGuard;
 
   const mockReflector = {
-    getAllAndOverride: jest.fn(),
+    getAllAndOverride: vi.fn(),
   };
 
   const createMockUser = (
@@ -61,8 +62,8 @@ describe('ServiceAccessGuard', () => {
           params,
         }),
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     } as unknown as ExecutionContext;
   };
 
@@ -75,7 +76,7 @@ describe('ServiceAccessGuard', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('canActivate', () => {
@@ -253,8 +254,8 @@ describe('ServiceAccessGuard', () => {
 
     it('should correctly check at handler and class level', () => {
       // Arrange
-      const handlerFn = jest.fn();
-      const classFn = jest.fn();
+      const handlerFn = vi.fn();
+      const classFn = vi.fn();
       mockReflector.getAllAndOverride.mockReturnValue('my-girok');
 
       const context = {

@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 
@@ -8,27 +9,27 @@ import { createOutboxEvent, resetTestCounter } from '../utils/test-factory';
 describe('OutboxPublisherJob', () => {
   let job: OutboxPublisherJob;
   let mockOutboxService: {
-    getPendingEvents: jest.Mock;
-    markAsPublished: jest.Mock;
-    markAsFailed: jest.Mock;
-    incrementRetryCount: jest.Mock;
-    cleanupPublishedEvents: jest.Mock;
+    getPendingEvents: Mock;
+    markAsPublished: Mock;
+    markAsFailed: Mock;
+    incrementRetryCount: Mock;
+    cleanupPublishedEvents: Mock;
   };
-  let mockConfigService: { get: jest.Mock };
+  let mockConfigService: { get: Mock };
 
   beforeEach(async () => {
     resetTestCounter();
 
     mockOutboxService = {
-      getPendingEvents: jest.fn(),
-      markAsPublished: jest.fn(),
-      markAsFailed: jest.fn(),
-      incrementRetryCount: jest.fn(),
-      cleanupPublishedEvents: jest.fn(),
+      getPendingEvents: vi.fn(),
+      markAsPublished: vi.fn(),
+      markAsFailed: vi.fn(),
+      incrementRetryCount: vi.fn(),
+      cleanupPublishedEvents: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn((key: string, defaultValue?: string) => {
+      get: vi.fn((key: string, defaultValue?: string) => {
         if (key === 'OUTBOX_PUBLISHER_ENABLED') {
           return defaultValue ?? 'true';
         }
@@ -48,7 +49,7 @@ describe('OutboxPublisherJob', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================================================
@@ -58,7 +59,7 @@ describe('OutboxPublisherJob', () => {
   describe('onModuleInit', () => {
     it('should log initialization message when enabled', () => {
       // Arrange
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       job.onModuleInit();
@@ -87,7 +88,7 @@ describe('OutboxPublisherJob', () => {
       }).compile();
 
       const disabledJob = module.get<OutboxPublisherJob>(OutboxPublisherJob);
-      const warnSpy = jest.spyOn((disabledJob as any).logger, 'warn');
+      const warnSpy = vi.spyOn((disabledJob as any).logger, 'warn');
 
       // Act
       disabledJob.onModuleInit();
@@ -106,7 +107,7 @@ describe('OutboxPublisherJob', () => {
   describe('onModuleDestroy', () => {
     it('should log shutdown messages when not processing', async () => {
       // Arrange
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.onModuleDestroy();
@@ -119,7 +120,7 @@ describe('OutboxPublisherJob', () => {
     it('should wait for processing to complete', async () => {
       // Arrange
       (job as any).isProcessing = true;
-      const warnSpy = jest.spyOn((job as any).logger, 'warn');
+      const warnSpy = vi.spyOn((job as any).logger, 'warn');
 
       // Simulate processing completing after 200ms
       setTimeout(() => {
@@ -139,23 +140,23 @@ describe('OutboxPublisherJob', () => {
     it('should timeout and warn if processing takes too long', async () => {
       // Arrange
       (job as any).isProcessing = true;
-      const warnSpy = jest.spyOn((job as any).logger, 'warn');
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const warnSpy = vi.spyOn((job as any).logger, 'warn');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Use fake timers to control time
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       // Start the shutdown process
       const shutdownPromise = job.onModuleDestroy();
 
       // Advance time past the 10 second timeout
-      await jest.advanceTimersByTimeAsync(10100);
+      await vi.advanceTimersByTimeAsync(10100);
 
       // Wait for the promise to resolve
       await shutdownPromise;
 
       // Restore real timers
-      jest.useRealTimers();
+      vi.useRealTimers();
 
       // Assert
       expect(logSpy).toHaveBeenCalledWith('OutboxPublisherJob shutting down...');
@@ -204,7 +205,7 @@ describe('OutboxPublisherJob', () => {
     it('should skip processing when already processing', async () => {
       // Arrange
       (job as any).isProcessing = true;
-      const debugSpy = jest.spyOn((job as any).logger, 'debug');
+      const debugSpy = vi.spyOn((job as any).logger, 'debug');
 
       // Act
       await job.publishPendingEvents();
@@ -250,7 +251,7 @@ describe('OutboxPublisherJob', () => {
       const events = [createOutboxEvent(), createOutboxEvent(), createOutboxEvent()];
       mockOutboxService.getPendingEvents.mockResolvedValue(events);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const debugSpy = jest.spyOn((job as any).logger, 'debug');
+      const debugSpy = vi.spyOn((job as any).logger, 'debug');
 
       // Act
       await job.publishPendingEvents();
@@ -285,7 +286,7 @@ describe('OutboxPublisherJob', () => {
       // Arrange
       const error = new Error('Database connection failed');
       mockOutboxService.getPendingEvents.mockRejectedValue(error);
-      const errorSpy = jest.spyOn((job as any).logger, 'error');
+      const errorSpy = vi.spyOn((job as any).logger, 'error');
 
       // Act
       await job.publishPendingEvents();
@@ -307,9 +308,9 @@ describe('OutboxPublisherJob', () => {
       mockOutboxService.incrementRetryCount.mockResolvedValue(3);
 
       // Mock publishToRedpanda to fail
-      jest.spyOn(job as any, 'publishToRedpanda').mockRejectedValue(new Error('Network error'));
+      vi.spyOn(job as any, 'publishToRedpanda').mockRejectedValue(new Error('Network error'));
 
-      const warnSpy = jest.spyOn((job as any).logger, 'warn');
+      const warnSpy = vi.spyOn((job as any).logger, 'warn');
 
       // Act
       await job.publishPendingEvents();
@@ -334,7 +335,7 @@ describe('OutboxPublisherJob', () => {
         .spyOn(job as any, 'publishToRedpanda')
         .mockRejectedValue(new Error('Persistent failure'));
 
-      const errorSpy = jest.spyOn((job as any).logger, 'error');
+      const errorSpy = vi.spyOn((job as any).logger, 'error');
 
       // Act
       await job.publishPendingEvents();
@@ -357,9 +358,9 @@ describe('OutboxPublisherJob', () => {
       mockOutboxService.incrementRetryCount.mockResolvedValue(1);
 
       // Mock publishToRedpanda to throw a non-Error object
-      jest.spyOn(job as any, 'publishToRedpanda').mockRejectedValue('String error');
+      vi.spyOn(job as any, 'publishToRedpanda').mockRejectedValue('String error');
 
-      const warnSpy = jest.spyOn((job as any).logger, 'warn');
+      const warnSpy = vi.spyOn((job as any).logger, 'warn');
 
       // Act
       await job.publishPendingEvents();
@@ -429,7 +430,7 @@ describe('OutboxPublisherJob', () => {
       // Arrange
       const error = new Error('Cleanup failed');
       mockOutboxService.cleanupPublishedEvents.mockRejectedValue(error);
-      const errorSpy = jest.spyOn((job as any).logger, 'error');
+      const errorSpy = vi.spyOn((job as any).logger, 'error');
 
       // Act
       await job.cleanupOldEvents();
@@ -452,7 +453,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -469,7 +470,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -486,7 +487,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -503,7 +504,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -520,7 +521,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -537,7 +538,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -554,7 +555,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -577,7 +578,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -673,7 +674,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();
@@ -690,7 +691,7 @@ describe('OutboxPublisherJob', () => {
       });
       mockOutboxService.getPendingEvents.mockResolvedValue([event]);
       mockOutboxService.markAsPublished.mockResolvedValue(undefined);
-      const logSpy = jest.spyOn((job as any).logger, 'log');
+      const logSpy = vi.spyOn((job as any).logger, 'log');
 
       // Act
       await job.publishPendingEvents();

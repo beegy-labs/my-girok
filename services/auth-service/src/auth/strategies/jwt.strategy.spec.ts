@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -7,8 +8,8 @@ import { JwtPayload, Role } from '@my-girok/types';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
-  let mockAuthService: { validateUser: jest.Mock };
-  let mockConfigService: { get: jest.Mock };
+  let mockAuthService: { validateUser: Mock };
+  let mockConfigService: { get: Mock };
 
   // New user structure after gRPC migration (no role, provider, name, avatar)
   const mockUser = {
@@ -21,11 +22,11 @@ describe('JwtStrategy', () => {
 
   beforeEach(async () => {
     mockAuthService = {
-      validateUser: jest.fn(),
+      validateUser: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn((key: string) => {
+      get: vi.fn((key: string) => {
         if (key === 'JWT_SECRET') {
           return 'test-jwt-secret-key-for-testing';
         }
@@ -45,7 +46,7 @@ describe('JwtStrategy', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validate', () => {
