@@ -9,6 +9,7 @@ import { Spinner } from './components/atoms/Spinner';
 
 // Lazy load all page components for code splitting
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const DocumentsPage = lazy(() => import('./pages/legal/DocumentsPage'));
 const DocumentEditPage = lazy(() => import('./pages/legal/DocumentEditPage'));
 const ConsentsPage = lazy(() => import('./pages/legal/ConsentsPage'));
@@ -195,7 +196,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'system/settings',
-            element: <div className="text-theme-text-primary">Settings page coming soon</div>,
+            element: <SettingsPage />,
           },
 
           // Legacy redirects for backward compatibility
