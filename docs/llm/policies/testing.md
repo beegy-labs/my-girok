@@ -99,6 +99,77 @@ const module = await Test.createTestingModule({
 | E2E  | `*.e2e-spec.ts`             |
 | gRPC | `*.grpc.controller.spec.ts` |
 
+## Controller Testing Policy
+
+### Thin Wrapper Controllers
+
+Controllers that purely delegate to services without business logic may be excluded from unit test coverage:
+
+```typescript
+// vitest.config.ts
+export default createNestJsConfig(__dirname, {
+  coverage: {
+    exclude: ['src/admin/admin.controller.ts', 'src/user/user.controller.ts'],
+  },
+});
+```
+
+**Criteria for exclusion:**
+
+- Controller only calls service methods (no transformation logic)
+- No branching or error handling beyond decorator-based validation
+- Service layer has 90%+ coverage
+
+**Important:** Excluded controllers MUST still have E2E test coverage.
+
+## Shared Test Utilities
+
+Use factory functions for consistent mock objects across tests:
+
+```typescript
+// test/utils/mock-factories.ts
+import { vi } from 'vitest';
+import { BffSession } from '../../src/common/types';
+
+export function createMockSession(options = {}): BffSession {
+  return {
+    id: options.id ?? 'session-123',
+    accountId: options.accountId ?? 'user-123',
+    // ... other defaults
+    ...options,
+  };
+}
+
+export function createMockRequest(options = {}): Request {
+  return {
+    cookies: options.cookies ?? {},
+    headers: { 'user-agent': 'Mozilla/5.0', ...options.headers },
+    socket: { remoteAddress: options.socket?.remoteAddress ?? '127.0.0.1' },
+  } as unknown as Request;
+}
+
+// gRPC error mocks
+export function createNetworkError(message = 'Network error') {
+  const error = new Error(message);
+  error.code = GrpcErrorCode.UNAVAILABLE;
+  return error;
+}
+```
+
+**Usage:**
+
+```typescript
+import { createMockSession, createMockRequest } from '../utils';
+
+describe('MyService', () => {
+  it('should handle session', () => {
+    const session = createMockSession({ mfaRequired: true });
+    const req = createMockRequest({ cookies: { sid: 'test' } });
+    // ...
+  });
+});
+```
+
 ## Parallel Execution
 
 Configuration is managed in `vitest.config.ts` files, which inherit from a shared workspace config.

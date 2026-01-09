@@ -8,6 +8,12 @@ import {
   AuditGrpcClient,
   AccountType as AuditAccountType,
 } from '../../src/grpc-clients/audit.client';
+import {
+  createNetworkError,
+  createTimeoutError,
+  createInternalError,
+  GrpcErrorCode,
+} from '../utils';
 
 // Mock @nestjs/microservices
 vi.mock('@nestjs/microservices', async () => {
@@ -240,6 +246,48 @@ describe('gRPC Clients', () => {
         expect(result).toEqual([{ id: 'p1' }]);
       });
     });
+
+    describe('Error Handling', () => {
+      it('should propagate network errors on adminLogin', async () => {
+        const networkError = createNetworkError('Connection refused');
+        mockAuthService.adminLogin.mockReturnValue(throwError(() => networkError));
+
+        await expect(
+          client.adminLogin({
+            email: 'admin@example.com',
+            password: 'password',
+            ipAddress: '127.0.0.1',
+            userAgent: 'test',
+            deviceFingerprint: 'fp',
+          }),
+        ).rejects.toThrow('Connection refused');
+      });
+
+      it('should propagate timeout errors on adminValidateSession', async () => {
+        const timeoutError = createTimeoutError('Request timeout');
+        mockAuthService.adminValidateSession.mockReturnValue(throwError(() => timeoutError));
+
+        await expect(client.adminValidateSession('token-hash')).rejects.toThrow('Request timeout');
+      });
+
+      it('should propagate internal errors on adminRefreshSession', async () => {
+        const internalError = createInternalError('Server crashed');
+        mockAuthService.adminRefreshSession.mockReturnValue(throwError(() => internalError));
+
+        await expect(client.adminRefreshSession('refresh-token-hash')).rejects.toThrow(
+          'Server crashed',
+        );
+      });
+
+      it('should handle gRPC unavailable errors on MFA operations', async () => {
+        const unavailableError = createNetworkError('Service unavailable');
+        mockAuthService.adminSetupMfa.mockReturnValue(throwError(() => unavailableError));
+
+        await expect(client.adminSetupMfa('admin-1')).rejects.toMatchObject({
+          code: GrpcErrorCode.UNAVAILABLE,
+        });
+      });
+    });
   });
 
   describe('IdentityGrpcClient', () => {
@@ -470,6 +518,59 @@ describe('gRPC Clients', () => {
         expect(result).toEqual(response);
       });
     });
+
+    describe('Error Handling', () => {
+      it('should return null on network error for getAccount', async () => {
+        const networkError = createNetworkError('Connection refused');
+        mockIdentityService.getAccount.mockReturnValue(throwError(() => networkError));
+
+        const result = await client.getAccount('user-1');
+
+        expect(result).toBeNull();
+      });
+
+      it('should return null on timeout error for getAccountByEmail', async () => {
+        const timeoutError = createTimeoutError('Deadline exceeded');
+        mockIdentityService.getAccountByEmail.mockReturnValue(throwError(() => timeoutError));
+
+        const result = await client.getAccountByEmail('user@example.com');
+
+        expect(result).toBeNull();
+      });
+
+      it('should propagate errors on createAccount', async () => {
+        const internalError = createInternalError('Database error');
+        mockIdentityService.createAccount.mockReturnValue(throwError(() => internalError));
+
+        await expect(
+          client.createAccount({
+            email: 'new@example.com',
+            username: 'newuser',
+            password: 'password',
+            provider: 1,
+            mode: 1,
+          }),
+        ).rejects.toThrow('Database error');
+      });
+
+      it('should propagate errors on validatePassword', async () => {
+        const unavailableError = createNetworkError('Service unavailable');
+        mockIdentityService.validatePassword.mockReturnValue(throwError(() => unavailableError));
+
+        await expect(client.validatePassword('user-1', 'password')).rejects.toMatchObject({
+          code: GrpcErrorCode.UNAVAILABLE,
+        });
+      });
+
+      it('should propagate errors on MFA operations', async () => {
+        const timeoutError = createTimeoutError('MFA service timeout');
+        mockIdentityService.setupMfa.mockReturnValue(throwError(() => timeoutError));
+
+        await expect(client.setupMfa('user-1')).rejects.toMatchObject({
+          code: GrpcErrorCode.DEADLINE_EXCEEDED,
+        });
+      });
+    });
   });
 
   describe('AuditGrpcClient', () => {
@@ -672,6 +773,60 @@ describe('gRPC Clients', () => {
           ipAddress: '127.0.0.1',
           userAgent: 'test',
         });
+
+        expect(mockAuditService.logAuthEvent).toHaveBeenCalled();
+      });
+    });
+
+    describe('Error Handling', () => {
+      it('should handle network errors gracefully and return failure response', async () => {
+        const networkError = createNetworkError('Connection to audit service failed');
+        mockAuditService.logAuthEvent.mockReturnValue(throwError(() => networkError));
+
+        const result = await client.logAuthEvent({
+          eventType: 1,
+          accountType: 1,
+          accountId: 'user-1',
+          ipAddress: '127.0.0.1',
+          userAgent: 'test',
+          result: 1,
+        });
+
+        expect(result.success).toBe(false);
+      });
+
+      it('should handle timeout errors gracefully on convenience methods', async () => {
+        const timeoutError = createTimeoutError('Audit service timeout');
+        mockAuditService.logAuthEvent.mockReturnValue(throwError(() => timeoutError));
+
+        // logLoginSuccess returns void, so we verify it doesn't throw
+        await expect(
+          client.logLoginSuccess({
+            accountId: 'user-1',
+            accountType: AuditAccountType.USER,
+            sessionId: 'session-1',
+            ipAddress: '127.0.0.1',
+            userAgent: 'test',
+          }),
+        ).resolves.toBeUndefined();
+
+        expect(mockAuditService.logAuthEvent).toHaveBeenCalled();
+      });
+
+      it('should handle internal server errors gracefully on convenience methods', async () => {
+        const internalError = createInternalError('Audit database error');
+        mockAuditService.logAuthEvent.mockReturnValue(throwError(() => internalError));
+
+        // logLogout returns void, so we verify it doesn't throw
+        await expect(
+          client.logLogout({
+            accountId: 'user-1',
+            accountType: AuditAccountType.USER,
+            sessionId: 'session-1',
+            ipAddress: '127.0.0.1',
+            userAgent: 'test',
+          }),
+        ).resolves.toBeUndefined();
 
         expect(mockAuditService.logAuthEvent).toHaveBeenCalled();
       });
