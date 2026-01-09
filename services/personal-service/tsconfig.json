@@ -24,6 +24,6 @@
       "@my-girok/types": ["../../packages/types/src"]
     }
   },
-  "include": ["src/**/*", "test/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/__tests__", "**/*.spec.ts", "**/*.test.ts"]
 }
