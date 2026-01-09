@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: [],
+    setupFiles: ['./src/test/setup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
 
     // Performance optimization: parallel execution
@@ -33,14 +33,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.config.*',
-        '**/*.d.ts',
-        '**/types.ts',
-        'e2e/',
-      ],
+      exclude: ['node_modules/', 'dist/', '**/*.config.*', '**/*.d.ts', '**/types.ts', 'e2e/'],
     },
   },
   resolve: {
