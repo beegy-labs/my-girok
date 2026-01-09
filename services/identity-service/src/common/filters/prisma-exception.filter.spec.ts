@@ -1,5 +1,6 @@
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
 import { Prisma } from '.prisma/identity-client';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import {
   PrismaClientExceptionFilter,
   PrismaValidationExceptionFilter,
@@ -9,8 +10,8 @@ import {
 describe('PrismaClientExceptionFilter', () => {
   let filter: PrismaClientExceptionFilter;
   let mockResponse: {
-    status: jest.Mock;
-    json: jest.Mock;
+    status: Mock;
+    json: Mock;
   };
   let mockHost: ArgumentsHost;
 
@@ -18,13 +19,13 @@ describe('PrismaClientExceptionFilter', () => {
     filter = new PrismaClientExceptionFilter();
 
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn(),
     };
 
     mockHost = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getResponse: jest.fn().mockReturnValue(mockResponse),
+      switchToHttp: vi.fn().mockReturnValue({
+        getResponse: vi.fn().mockReturnValue(mockResponse),
       }),
     } as unknown as ArgumentsHost;
   });
@@ -239,8 +240,8 @@ describe('PrismaClientExceptionFilter', () => {
 describe('PrismaValidationExceptionFilter', () => {
   let filter: PrismaValidationExceptionFilter;
   let mockResponse: {
-    status: jest.Mock;
-    json: jest.Mock;
+    status: Mock;
+    json: Mock;
   };
   let mockHost: ArgumentsHost;
 
@@ -248,13 +249,13 @@ describe('PrismaValidationExceptionFilter', () => {
     filter = new PrismaValidationExceptionFilter();
 
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn(),
     };
 
     mockHost = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getResponse: jest.fn().mockReturnValue(mockResponse),
+      switchToHttp: vi.fn().mockReturnValue({
+        getResponse: vi.fn().mockReturnValue(mockResponse),
       }),
     } as unknown as ArgumentsHost;
   });
@@ -278,8 +279,8 @@ describe('PrismaValidationExceptionFilter', () => {
 describe('PrismaInitializationExceptionFilter', () => {
   let filter: PrismaInitializationExceptionFilter;
   let mockResponse: {
-    status: jest.Mock;
-    json: jest.Mock;
+    status: Mock;
+    json: Mock;
   };
   let mockHost: ArgumentsHost;
 
@@ -287,13 +288,13 @@ describe('PrismaInitializationExceptionFilter', () => {
     filter = new PrismaInitializationExceptionFilter();
 
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn(),
     };
 
     mockHost = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getResponse: jest.fn().mockReturnValue(mockResponse),
+      switchToHttp: vi.fn().mockReturnValue({
+        getResponse: vi.fn().mockReturnValue(mockResponse),
       }),
     } as unknown as ArgumentsHost;
   });

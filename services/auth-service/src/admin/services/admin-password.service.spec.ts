@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -5,12 +6,12 @@ import { AdminPasswordService } from './admin-password.service';
 import { PrismaService } from '../../database/prisma.service';
 import { OutboxService } from '../../common/outbox/outbox.service';
 
-jest.mock('bcrypt');
+vi.mock('bcrypt');
 
 describe('AdminPasswordService', () => {
   let service: AdminPasswordService;
-  let prismaService: jest.Mocked<PrismaService>;
-  let outboxService: jest.Mocked<OutboxService>;
+  let prismaService: Mocked<PrismaService>;
+  let outboxService: Mocked<OutboxService>;
 
   const mockAdminId = '01935c6d-c2d0-7abc-8def-1234567890ab';
   const mockRequesterId = '01935c6d-c2d0-7abc-8def-1234567890ac';
@@ -18,15 +19,15 @@ describe('AdminPasswordService', () => {
   const validPassword = 'SecureP@ssw0rd123!';
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     const mockPrismaService = {
-      $queryRaw: jest.fn(),
-      $executeRaw: jest.fn(),
+      $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
     };
 
     const mockConfigService = {
-      get: jest.fn((key: string, defaultValue?: number) => {
+      get: vi.fn((key: string, defaultValue?: number) => {
         const config: Record<string, number> = {
           BCRYPT_ROUNDS: 12,
           PASSWORD_HISTORY_COUNT: 5,
@@ -37,7 +38,7 @@ describe('AdminPasswordService', () => {
     };
 
     const mockOutboxService = {
-      addEventDirect: jest.fn().mockResolvedValue('event-id'),
+      addEventDirect: vi.fn().mockResolvedValue('event-id'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -118,8 +119,8 @@ describe('AdminPasswordService', () => {
     };
 
     beforeEach(() => {
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('new_hash');
+      (bcrypt.compare as Mock).mockResolvedValue(true);
+      (bcrypt.hash as Mock).mockResolvedValue('new_hash');
     });
 
     it('should change password successfully', async () => {
@@ -151,7 +152,7 @@ describe('AdminPasswordService', () => {
 
     it('should fail if current password is incorrect', async () => {
       prismaService.$queryRaw.mockResolvedValue([mockAdmin]);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (bcrypt.compare as Mock).mockResolvedValue(false);
 
       const result = await service.changePassword(mockAdminId, 'wrongPassword', validPassword);
 
@@ -180,7 +181,7 @@ describe('AdminPasswordService', () => {
         .mockResolvedValueOnce([mockAdmin]) // getAdminPassword
         .mockResolvedValueOnce([historyEntry]); // checkPasswordHistory
 
-      (bcrypt.compare as jest.Mock)
+      (bcrypt.compare as Mock)
         .mockResolvedValueOnce(true) // current password check
         .mockResolvedValueOnce(true); // history check - matches
 
@@ -226,7 +227,7 @@ describe('AdminPasswordService', () => {
       };
 
       prismaService.$queryRaw.mockResolvedValue([mockAdmin]);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.compare as Mock).mockResolvedValue(true);
 
       const result = await service.verifyPassword(mockAdminId, 'correctPassword');
 
@@ -242,7 +243,7 @@ describe('AdminPasswordService', () => {
       };
 
       prismaService.$queryRaw.mockResolvedValue([mockAdmin]);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (bcrypt.compare as Mock).mockResolvedValue(false);
 
       const result = await service.verifyPassword(mockAdminId, 'wrongPassword');
 

@@ -1,27 +1,34 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { SessionsService } from './sessions.service';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CryptoService } from '../../common/crypto';
 
-// Type for mocked Prisma service with jest.fn() methods
+// Type for mocked Prisma service with vi.fn() methods
 type MockPrismaSession = {
-  findUnique: jest.Mock;
-  findFirst: jest.Mock;
-  findMany: jest.Mock;
-  create: jest.Mock;
-  update: jest.Mock;
-  updateMany: jest.Mock;
-  count: jest.Mock;
+  findUnique: Mock;
+  findFirst: Mock;
+  findMany: Mock;
+  create: Mock;
+  update: Mock;
+  updateMany: Mock;
+  count: Mock;
 };
 
 type MockPrismaAccount = {
-  findUnique: jest.Mock;
+  findUnique: Mock;
 };
 
 type MockPrismaDevice = {
-  findUnique: jest.Mock;
+  findUnique: Mock;
+};
+
+// Type for mocked CryptoService
+type MockedCryptoService = {
+  generateToken: Mock;
+  hash: Mock;
 };
 
 describe('SessionsService', () => {
@@ -31,7 +38,7 @@ describe('SessionsService', () => {
     session: MockPrismaSession;
     device: MockPrismaDevice;
   };
-  let cryptoService: jest.Mocked<CryptoService>;
+  let cryptoService: MockedCryptoService;
 
   const mockAccount = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -58,29 +65,29 @@ describe('SessionsService', () => {
   beforeEach(async () => {
     const mockPrisma = {
       account: {
-        findUnique: jest.fn(),
+        findUnique: vi.fn(),
       },
       session: {
-        findUnique: jest.fn(),
-        findFirst: jest.fn(),
-        findMany: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        updateMany: jest.fn(),
-        count: jest.fn(),
+        findUnique: vi.fn(),
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        updateMany: vi.fn(),
+        count: vi.fn(),
       },
       device: {
-        findUnique: jest.fn(),
+        findUnique: vi.fn(),
       },
     };
 
     const mockCryptoService = {
-      generateToken: jest.fn().mockReturnValue('random_token_32_bytes_long'),
-      hash: jest.fn().mockImplementation((token: string) => `hashed_${token}`),
+      generateToken: vi.fn().mockReturnValue('random_token_32_bytes_long'),
+      hash: vi.fn().mockImplementation((token: string) => `hashed_${token}`),
     };
 
     const mockConfigService = {
-      get: jest.fn((_key: string, defaultValue: unknown) => defaultValue),
+      get: vi.fn((_key: string, defaultValue: unknown) => defaultValue),
     };
 
     const module: TestingModule = await Test.createTestingModule({

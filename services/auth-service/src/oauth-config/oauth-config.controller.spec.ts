@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OAuthConfigController } from './oauth-config.controller';
 import { OAuthConfigService } from './oauth-config.service';
@@ -8,10 +9,10 @@ describe('OAuthConfigController', () => {
   let service: OAuthConfigService;
 
   const mockOAuthConfigService = {
-    getAllProviders: jest.fn(),
-    getProviderConfig: jest.fn(),
-    toggleProvider: jest.fn(),
-    isProviderEnabled: jest.fn(),
+    getAllProviders: vi.fn(),
+    getProviderConfig: vi.fn(),
+    toggleProvider: vi.fn(),
+    isProviderEnabled: vi.fn(),
   };
 
   const mockAdminUser = {
@@ -36,7 +37,7 @@ describe('OAuthConfigController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('GET /oauth-config', () => {
@@ -109,19 +110,11 @@ describe('OAuthConfigController', () => {
       mockOAuthConfigService.toggleProvider.mockResolvedValue(mockUpdatedConfig);
 
       // Act
-      const result = await controller.toggleProvider(
-        provider,
-        dto,
-        mockAdminUser,
-      );
+      const result = await controller.toggleProvider(provider, dto, mockAdminUser);
 
       // Assert
       expect(result).toEqual(mockUpdatedConfig);
-      expect(service.toggleProvider).toHaveBeenCalledWith(
-        provider,
-        true,
-        mockAdminUser.id,
-      );
+      expect(service.toggleProvider).toHaveBeenCalledWith(provider, true, mockAdminUser.id);
     });
 
     it('should disable a provider', async () => {
@@ -139,19 +132,11 @@ describe('OAuthConfigController', () => {
       mockOAuthConfigService.toggleProvider.mockResolvedValue(mockUpdatedConfig);
 
       // Act
-      const result = await controller.toggleProvider(
-        provider,
-        dto,
-        mockAdminUser,
-      );
+      const result = await controller.toggleProvider(provider, dto, mockAdminUser);
 
       // Assert
       expect(result).toEqual(mockUpdatedConfig);
-      expect(service.toggleProvider).toHaveBeenCalledWith(
-        provider,
-        false,
-        mockAdminUser.id,
-      );
+      expect(service.toggleProvider).toHaveBeenCalledWith(provider, false, mockAdminUser.id);
     });
   });
 

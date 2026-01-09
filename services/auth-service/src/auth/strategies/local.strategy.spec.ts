@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { LocalStrategy } from './local.strategy';
@@ -6,11 +7,11 @@ import { Role, AuthProvider } from '@my-girok/types';
 
 describe('LocalStrategy', () => {
   let strategy: LocalStrategy;
-  let mockAuthService: { login: jest.Mock };
+  let mockAuthService: { login: Mock };
 
   beforeEach(async () => {
     mockAuthService = {
-      login: jest.fn(),
+      login: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -21,7 +22,7 @@ describe('LocalStrategy', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validate', () => {

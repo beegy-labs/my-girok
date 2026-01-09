@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -6,7 +7,7 @@ import { PrismaService } from '../../src/database/prisma.service';
 
 describe('AdminServiceAccessGuard', () => {
   let guard: AdminServiceAccessGuard;
-  let mockPrismaService: { $queryRaw: jest.Mock };
+  let mockPrismaService: { $queryRaw: Mock };
 
   const mockService = {
     id: 'service-123',
@@ -30,7 +31,7 @@ describe('AdminServiceAccessGuard', () => {
 
   beforeEach(async () => {
     mockPrismaService = {
-      $queryRaw: jest.fn(),
+      $queryRaw: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -41,7 +42,7 @@ describe('AdminServiceAccessGuard', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   function createMockContext(

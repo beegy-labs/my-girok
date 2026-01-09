@@ -1,5 +1,6 @@
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { of, throwError } from 'rxjs';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { RequestContextInterceptor, RequestContext } from './request-context.interceptor';
 
 describe('RequestContextInterceptor', () => {
@@ -16,7 +17,7 @@ describe('RequestContextInterceptor', () => {
     context?: RequestContext;
   };
   let mockResponse: {
-    setHeader: jest.Mock;
+    setHeader: Mock;
     statusCode: number;
   };
 
@@ -31,193 +32,222 @@ describe('RequestContextInterceptor', () => {
     };
 
     mockResponse = {
-      setHeader: jest.fn(),
+      setHeader: vi.fn(),
       statusCode: 200,
     };
 
     mockExecutionContext = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getRequest: jest.fn().mockReturnValue(mockRequest),
-        getResponse: jest.fn().mockReturnValue(mockResponse),
+      switchToHttp: vi.fn().mockReturnValue({
+        getRequest: vi.fn().mockReturnValue(mockRequest),
+        getResponse: vi.fn().mockReturnValue(mockResponse),
       }),
     } as unknown as ExecutionContext;
 
     mockCallHandler = {
-      handle: jest.fn().mockReturnValue(of('response')),
+      handle: vi.fn().mockReturnValue(of('response')),
     };
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('intercept', () => {
-    it('should generate request ID and correlation ID if not provided', (done) => {
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context).toBeDefined();
-          expect(mockRequest.context?.requestId).toBeDefined();
-          expect(mockRequest.context?.correlationId).toBe(mockRequest.context?.requestId);
-          expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Request-Id', expect.any(String));
-          expect(mockResponse.setHeader).toHaveBeenCalledWith(
-            'X-Correlation-Id',
-            expect.any(String),
-          );
-          done();
-        },
+    it('should generate request ID and correlation ID if not provided', async () => {
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context).toBeDefined();
+            expect(mockRequest.context?.requestId).toBeDefined();
+            expect(mockRequest.context?.correlationId).toBe(mockRequest.context?.requestId);
+            expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Request-Id', expect.any(String));
+            expect(mockResponse.setHeader).toHaveBeenCalledWith(
+              'X-Correlation-Id',
+              expect.any(String),
+            );
+            resolve();
+          },
+        });
       });
     });
 
-    it('should use provided request ID from header', (done) => {
+    it('should use provided request ID from header', async () => {
       mockRequest.headers['x-request-id'] = 'custom-request-id';
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.requestId).toBe('custom-request-id');
-          expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Request-Id', 'custom-request-id');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.requestId).toBe('custom-request-id');
+            expect(mockResponse.setHeader).toHaveBeenCalledWith(
+              'X-Request-Id',
+              'custom-request-id',
+            );
+            resolve();
+          },
+        });
       });
     });
 
-    it('should use provided correlation ID from header', (done) => {
+    it('should use provided correlation ID from header', async () => {
       mockRequest.headers['x-request-id'] = 'request-id';
       mockRequest.headers['x-correlation-id'] = 'correlation-id';
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.requestId).toBe('request-id');
-          expect(mockRequest.context?.correlationId).toBe('correlation-id');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.requestId).toBe('request-id');
+            expect(mockRequest.context?.correlationId).toBe('correlation-id');
+            resolve();
+          },
+        });
       });
     });
 
-    it('should attach request context with correct properties', (done) => {
-      mockRequest.headers['user-agent'] = 'Jest Test Agent';
+    it('should attach request context with correct properties', async () => {
+      mockRequest.headers['user-agent'] = 'Test Agent';
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context).toMatchObject({
-            path: '/api/test',
-            method: 'GET',
-            userAgent: 'Jest Test Agent',
-            ip: '127.0.0.1',
-          });
-          expect(mockRequest.context?.timestamp).toBeInstanceOf(Date);
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context).toMatchObject({
+              path: '/api/test',
+              method: 'GET',
+              userAgent: 'Test Agent',
+              ip: '127.0.0.1',
+            });
+            expect(mockRequest.context?.timestamp).toBeInstanceOf(Date);
+            resolve();
+          },
+        });
       });
     });
 
-    it('should extract account ID from authenticated user', (done) => {
+    it('should extract account ID from authenticated user', async () => {
       mockRequest.user = { id: 'user-123' };
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.accountId).toBe('user-123');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.accountId).toBe('user-123');
+            resolve();
+          },
+        });
       });
     });
   });
 
   describe('getClientIp', () => {
-    it('should extract IP from x-forwarded-for header', (done) => {
+    it('should extract IP from x-forwarded-for header', async () => {
       mockRequest.headers['x-forwarded-for'] = '10.0.0.1, 10.0.0.2';
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.ip).toBe('10.0.0.1');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.ip).toBe('10.0.0.1');
+            resolve();
+          },
+        });
       });
     });
 
-    it('should handle x-forwarded-for as array', (done) => {
+    it('should handle x-forwarded-for as array', async () => {
       mockRequest.headers['x-forwarded-for'] = ['10.0.0.1', '10.0.0.2'];
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.ip).toBe('10.0.0.1');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.ip).toBe('10.0.0.1');
+            resolve();
+          },
+        });
       });
     });
 
-    it('should extract IP from x-real-ip header', (done) => {
+    it('should extract IP from x-real-ip header', async () => {
       mockRequest.headers['x-real-ip'] = '192.168.1.1';
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.ip).toBe('192.168.1.1');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.ip).toBe('192.168.1.1');
+            resolve();
+          },
+        });
       });
     });
 
-    it('should fallback to request.ip', (done) => {
+    it('should fallback to request.ip', async () => {
       mockRequest.ip = '127.0.0.1';
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.ip).toBe('127.0.0.1');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.ip).toBe('127.0.0.1');
+            resolve();
+          },
+        });
       });
     });
 
-    it('should fallback to socket.remoteAddress', (done) => {
+    it('should fallback to socket.remoteAddress', async () => {
       mockRequest.ip = undefined;
       mockRequest.socket = { remoteAddress: '::1' };
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(mockRequest.context?.ip).toBe('::1');
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(mockRequest.context?.ip).toBe('::1');
+            resolve();
+          },
+        });
       });
     });
   });
 
   describe('logging', () => {
-    it('should log successful requests', (done) => {
-      const logSpy = jest.spyOn((interceptor as any).logger, 'log');
+    it('should log successful requests', async () => {
+      const logSpy = vi.spyOn((interceptor as any).logger, 'log');
       mockResponse.statusCode = 200;
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(logSpy).toHaveBeenCalled();
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(logSpy).toHaveBeenCalled();
+            resolve();
+          },
+        });
       });
     });
 
-    it('should warn on 4xx responses', (done) => {
-      const warnSpy = jest.spyOn((interceptor as any).logger, 'warn');
+    it('should warn on 4xx responses', async () => {
+      const warnSpy = vi.spyOn((interceptor as any).logger, 'warn');
       mockResponse.statusCode = 404;
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        complete: () => {
-          expect(warnSpy).toHaveBeenCalled();
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          complete: () => {
+            expect(warnSpy).toHaveBeenCalled();
+            resolve();
+          },
+        });
       });
     });
 
-    it('should log errors on 5xx responses', (done) => {
-      const errorSpy = jest.spyOn((interceptor as any).logger, 'error');
+    it('should log errors on 5xx responses', async () => {
+      const errorSpy = vi.spyOn((interceptor as any).logger, 'error');
       mockResponse.statusCode = 500;
 
-      mockCallHandler.handle = jest
+      mockCallHandler.handle = vi
         .fn()
         .mockReturnValue(throwError(() => ({ status: 500, message: 'Internal error' })));
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        error: () => {
-          expect(errorSpy).toHaveBeenCalled();
-          done();
-        },
+      await new Promise<void>((resolve) => {
+        interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
+          error: () => {
+            expect(errorSpy).toHaveBeenCalled();
+            resolve();
+          },
+        });
       });
     });
   });

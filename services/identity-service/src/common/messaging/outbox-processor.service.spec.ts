@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { OutboxProcessorService } from './outbox-processor.service';
 import { OutboxService, OutboxEvent } from '../outbox/outbox.service';
 import { KafkaProducerService } from './kafka-producer.service';
@@ -6,15 +7,15 @@ import { KafkaProducerService } from './kafka-producer.service';
 describe('OutboxProcessorService', () => {
   let service: OutboxProcessorService;
   let mockOutboxService: {
-    getPendingEvents: jest.Mock;
-    markAsProcessing: jest.Mock;
-    markAsCompleted: jest.Mock;
-    markAsFailed: jest.Mock;
-    cleanupCompletedEvents: jest.Mock;
-    getStats: jest.Mock;
+    getPendingEvents: Mock;
+    markAsProcessing: Mock;
+    markAsCompleted: Mock;
+    markAsFailed: Mock;
+    cleanupCompletedEvents: Mock;
+    getStats: Mock;
   };
   let mockProducerService: {
-    publish: jest.Mock;
+    publish: Mock;
   };
 
   const mockOutboxEvent: OutboxEvent = {
@@ -32,16 +33,16 @@ describe('OutboxProcessorService', () => {
 
   beforeEach(async () => {
     mockOutboxService = {
-      getPendingEvents: jest.fn(),
-      markAsProcessing: jest.fn(),
-      markAsCompleted: jest.fn(),
-      markAsFailed: jest.fn(),
-      cleanupCompletedEvents: jest.fn(),
-      getStats: jest.fn(),
+      getPendingEvents: vi.fn(),
+      markAsProcessing: vi.fn(),
+      markAsCompleted: vi.fn(),
+      markAsFailed: vi.fn(),
+      cleanupCompletedEvents: vi.fn(),
+      getStats: vi.fn(),
     };
 
     mockProducerService = {
-      publish: jest.fn(),
+      publish: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -56,7 +57,7 @@ describe('OutboxProcessorService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('processOutbox', () => {

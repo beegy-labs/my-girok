@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
@@ -7,8 +8,8 @@ import { AdminAuthGuard } from '../../src/admin/guards/admin-auth.guard';
 
 describe('AdminAuthGuard', () => {
   let guard: AdminAuthGuard;
-  let mockJwtService: { verifyAsync: jest.Mock };
-  let mockConfigService: { get: jest.Mock };
+  let mockJwtService: { verifyAsync: Mock };
+  let mockConfigService: { get: Mock };
 
   const mockAdminPayload = {
     type: 'ADMIN_ACCESS',
@@ -20,10 +21,10 @@ describe('AdminAuthGuard', () => {
 
   beforeEach(async () => {
     mockJwtService = {
-      verifyAsync: jest.fn(),
+      verifyAsync: vi.fn(),
     };
     mockConfigService = {
-      get: jest.fn().mockReturnValue('test-jwt-secret'),
+      get: vi.fn().mockReturnValue('test-jwt-secret'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -38,7 +39,7 @@ describe('AdminAuthGuard', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   function createMockContext(authHeader?: string): ExecutionContext {

@@ -1,16 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { OutboxService } from '../../src/common/outbox/outbox.service';
 import { IdentityPrismaService } from '../../src/database/identity-prisma.service';
 
 describe('OutboxService', () => {
   let service: OutboxService;
-  let mockOutboxEventCreate: jest.Mock;
-  let mockOutboxEventFindUnique: jest.Mock;
-  let mockOutboxEventFindMany: jest.Mock;
-  let mockOutboxEventUpdate: jest.Mock;
-  let mockOutboxEventDeleteMany: jest.Mock;
-  let mockOutboxEventCount: jest.Mock;
-  let mockTransaction: jest.Mock;
+  let mockOutboxEventCreate: Mock;
+  let mockOutboxEventFindUnique: Mock;
+  let mockOutboxEventFindMany: Mock;
+  let mockOutboxEventUpdate: Mock;
+  let mockOutboxEventDeleteMany: Mock;
+  let mockOutboxEventCount: Mock;
+  let mockTransaction: Mock;
 
   const mockOutboxEvent = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -26,12 +27,12 @@ describe('OutboxService', () => {
   };
 
   beforeEach(async () => {
-    mockOutboxEventCreate = jest.fn();
-    mockOutboxEventFindUnique = jest.fn();
-    mockOutboxEventFindMany = jest.fn();
-    mockOutboxEventUpdate = jest.fn();
-    mockOutboxEventDeleteMany = jest.fn();
-    mockOutboxEventCount = jest.fn();
+    mockOutboxEventCreate = vi.fn();
+    mockOutboxEventFindUnique = vi.fn();
+    mockOutboxEventFindMany = vi.fn();
+    mockOutboxEventUpdate = vi.fn();
+    mockOutboxEventDeleteMany = vi.fn();
+    mockOutboxEventCount = vi.fn();
 
     const mockPrisma = {
       outboxEvent: {
@@ -42,10 +43,10 @@ describe('OutboxService', () => {
         deleteMany: mockOutboxEventDeleteMany,
         count: mockOutboxEventCount,
       },
-      $transaction: jest.fn(),
+      $transaction: vi.fn(),
     };
 
-    mockTransaction = mockPrisma.$transaction as jest.Mock;
+    mockTransaction = mockPrisma.$transaction as Mock;
     mockTransaction.mockImplementation((fn) => fn(mockPrisma));
 
     const module: TestingModule = await Test.createTestingModule({
@@ -94,7 +95,7 @@ describe('OutboxService', () => {
     it('should create event within existing transaction', async () => {
       const mockTx = {
         outboxEvent: {
-          create: jest.fn().mockResolvedValue(mockOutboxEvent),
+          create: vi.fn().mockResolvedValue(mockOutboxEvent),
         },
       };
 

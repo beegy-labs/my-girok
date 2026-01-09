@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { status as GrpcStatus } from '@grpc/grpc-js';
@@ -9,11 +10,11 @@ import { resetTestCounter } from '../utils/test-factory';
 describe('UsersService', () => {
   let service: UsersService;
   let mockIdentityClient: {
-    getAccount: jest.Mock;
-    getAccountByEmail: jest.Mock;
-    getAccountByUsername: jest.Mock;
-    updateAccount: jest.Mock;
-    validatePassword: jest.Mock;
+    getAccount: Mock;
+    getAccountByEmail: Mock;
+    getAccountByUsername: Mock;
+    updateAccount: Mock;
+    validatePassword: Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -32,11 +33,11 @@ describe('UsersService', () => {
     resetTestCounter();
 
     mockIdentityClient = {
-      getAccount: jest.fn(),
-      getAccountByEmail: jest.fn(),
-      getAccountByUsername: jest.fn(),
-      updateAccount: jest.fn(),
-      validatePassword: jest.fn(),
+      getAccount: vi.fn(),
+      getAccountByEmail: vi.fn(),
+      getAccountByUsername: vi.fn(),
+      updateAccount: vi.fn(),
+      validatePassword: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -47,7 +48,7 @@ describe('UsersService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('findById', () => {

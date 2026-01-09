@@ -12,10 +12,10 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "lint:check": "eslint \"{src,test}/**/*.ts\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./jest-e2e.config.js"
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "test:e2e": "vitest run --config ./vitest-e2e.config.ts"
   },
   "dependencies": {
     "@clickhouse/client": "^1.8.1",
@@ -45,20 +45,21 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@my-girok/vitest-config": "workspace:*",
     "@nestjs/cli": "catalog:",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "catalog:",
     "@types/express": "catalog:",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/passport-jwt": "^4.0.1",
     "@typescript-eslint/eslint-plugin": "catalog:",
     "@typescript-eslint/parser": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "globals": "^16.5.0",
-    "jest": "catalog:",
-    "ts-jest": "^29.4.6",
     "ts-loader": "^9.5.4",
+    "unplugin-swc": "^1.5.4",
+    "vitest": "catalog:",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "catalog:"

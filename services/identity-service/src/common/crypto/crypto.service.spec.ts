@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { CryptoService } from './crypto.service';
 
 describe('CryptoService', () => {
@@ -6,7 +7,7 @@ describe('CryptoService', () => {
 
   beforeEach(() => {
     // Reset environment for each test
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...originalEnv };
     delete process.env.ENCRYPTION_KEY;
     delete process.env.NODE_ENV;

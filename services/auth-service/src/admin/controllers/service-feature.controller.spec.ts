@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ServiceFeatureController } from './service-feature.controller';
 import { ServiceFeatureService } from '../services/service-feature.service';
@@ -20,15 +21,15 @@ import { AdminPayload } from '../types/admin.types';
 describe('ServiceFeatureController', () => {
   let controller: ServiceFeatureController;
   let mockFeatureService: {
-    list: jest.Mock;
-    findOne: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    delete: jest.Mock;
-    bulk: jest.Mock;
-    listPermissions: jest.Mock;
-    createPermission: jest.Mock;
-    deletePermission: jest.Mock;
+    list: Mock;
+    findOne: Mock;
+    create: Mock;
+    update: Mock;
+    delete: Mock;
+    bulk: Mock;
+    listPermissions: Mock;
+    createPermission: Mock;
+    deletePermission: Mock;
   };
 
   const mockServiceId = '550e8400-e29b-41d4-a716-446655440001';
@@ -86,22 +87,22 @@ describe('ServiceFeatureController', () => {
 
   beforeEach(async () => {
     mockFeatureService = {
-      list: jest.fn(),
-      findOne: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      bulk: jest.fn(),
-      listPermissions: jest.fn(),
-      createPermission: jest.fn(),
-      deletePermission: jest.fn(),
+      list: vi.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      bulk: vi.fn(),
+      listPermissions: vi.fn(),
+      createPermission: vi.fn(),
+      deletePermission: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ServiceFeatureController],
       providers: [
         { provide: ServiceFeatureService, useValue: mockFeatureService },
-        { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+        { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
       ],
     })
       .overrideGuard(PermissionGuard)
@@ -112,7 +113,7 @@ describe('ServiceFeatureController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('listFeatures', () => {

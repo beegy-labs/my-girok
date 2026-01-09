@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LawRegistryController } from './law-registry.controller';
 import { LawRegistryService } from '../services/law-registry.service';
@@ -16,13 +17,13 @@ import {
 describe('LawRegistryController', () => {
   let controller: LawRegistryController;
   let mockLawRegistryService: {
-    findAll: jest.Mock;
-    findByCode: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    delete: jest.Mock;
-    getConsentRequirements: jest.Mock;
-    seedDefaultLaws: jest.Mock;
+    findAll: Mock;
+    findByCode: Mock;
+    create: Mock;
+    update: Mock;
+    delete: Mock;
+    getConsentRequirements: Mock;
+    seedDefaultLaws: Mock;
   };
 
   const mockRequirements: LawRequirements = {
@@ -48,20 +49,20 @@ describe('LawRegistryController', () => {
 
   beforeEach(async () => {
     mockLawRegistryService = {
-      findAll: jest.fn(),
-      findByCode: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      getConsentRequirements: jest.fn(),
-      seedDefaultLaws: jest.fn(),
+      findAll: vi.fn(),
+      findByCode: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      getConsentRequirements: vi.fn(),
+      seedDefaultLaws: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [LawRegistryController],
       providers: [
         { provide: LawRegistryService, useValue: mockLawRegistryService },
-        { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+        { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
       ],
     })
       .overrideGuard(PermissionGuard)
@@ -72,7 +73,7 @@ describe('LawRegistryController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('findAll', () => {

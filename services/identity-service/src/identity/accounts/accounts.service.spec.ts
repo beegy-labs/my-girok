@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import * as bcrypt from 'bcrypt';
 import { AccountsService } from './accounts.service';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
@@ -8,24 +9,32 @@ import { CryptoService } from '../../common/crypto';
 import { AuthProvider } from './dto/create-account.dto';
 
 // Mock bcrypt
-jest.mock('bcrypt', () => ({
-  compare: jest.fn(),
-  hash: jest.fn(),
+vi.mock('bcrypt', () => ({
+  compare: vi.fn(),
+  hash: vi.fn(),
 }));
 
-// Type for mocked Prisma service with jest.fn() methods
+// Type for mocked Prisma service with vi.fn() methods
 type MockPrismaAccount = {
-  findUnique: jest.Mock;
-  findMany: jest.Mock;
-  create: jest.Mock;
-  update: jest.Mock;
-  count: jest.Mock;
+  findUnique: Mock;
+  findMany: Mock;
+  create: Mock;
+  update: Mock;
+  count: Mock;
+};
+
+// Type for mocked CryptoService
+type MockedCryptoService = {
+  generateTotpSecret: Mock;
+  encrypt: Mock;
+  decrypt: Mock;
+  hash: Mock;
 };
 
 describe('AccountsService', () => {
   let service: AccountsService;
   let prisma: { account: MockPrismaAccount };
-  let cryptoService: jest.Mocked<CryptoService>;
+  let cryptoService: MockedCryptoService;
 
   const mockAccount = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -61,23 +70,23 @@ describe('AccountsService', () => {
   beforeEach(async () => {
     const mockPrisma = {
       account: {
-        findUnique: jest.fn(),
-        findMany: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        count: jest.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        count: vi.fn(),
       },
     };
 
     const mockCryptoService = {
-      generateTotpSecret: jest.fn(),
-      encrypt: jest.fn(),
-      decrypt: jest.fn(),
-      hash: jest.fn(),
+      generateTotpSecret: vi.fn(),
+      encrypt: vi.fn(),
+      decrypt: vi.fn(),
+      hash: vi.fn(),
     };
 
     const mockConfigService = {
-      get: jest.fn((_key: string, defaultValue: unknown) => defaultValue),
+      get: vi.fn((_key: string, defaultValue: unknown) => defaultValue),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -536,8 +545,8 @@ describe('AccountsService', () => {
     it('should change password successfully', async () => {
       prisma.account.findUnique.mockResolvedValue(mockAccount as never);
       prisma.account.update.mockResolvedValue({} as never);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('new_hashed_password');
+      (bcrypt.compare as Mock).mockResolvedValue(true);
+      (bcrypt.hash as Mock).mockResolvedValue('new_hashed_password');
 
       await service.changePassword(mockAccount.id, {
         currentPassword: 'OldPassword123!',

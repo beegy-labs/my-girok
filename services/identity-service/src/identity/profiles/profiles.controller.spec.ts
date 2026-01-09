@@ -1,14 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { ProfilesController } from './profiles.controller';
 import { ProfilesService } from './profiles.service';
 import { UpdateProfileDto } from './dto';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
+// Type for mocked ProfilesService
+type MockedProfilesService = {
+  findByAccountId: Mock;
+  update: Mock;
+  create: Mock;
+  delete: Mock;
+};
+
 describe('ProfilesController', () => {
   let controller: ProfilesController;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let profilesService: jest.Mocked<any>;
+  let profilesService: MockedProfilesService;
 
   const mockProfile = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -37,10 +45,10 @@ describe('ProfilesController', () => {
 
   beforeEach(async () => {
     const mockProfilesService = {
-      findByAccountId: jest.fn(),
-      update: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
+      findByAccountId: vi.fn(),
+      update: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
@@ -12,7 +13,7 @@ describe('AccountTypeGuard', () => {
   let guard: AccountTypeGuard;
 
   const mockReflector = {
-    getAllAndOverride: jest.fn(),
+    getAllAndOverride: vi.fn(),
   };
 
   const createMockUser = (type: 'USER' | 'ADMIN' | 'OPERATOR'): AuthenticatedEntity => {
@@ -60,8 +61,8 @@ describe('AccountTypeGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({ user }),
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     } as unknown as ExecutionContext;
   };
 
@@ -74,7 +75,7 @@ describe('AccountTypeGuard', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('canActivate', () => {
@@ -194,8 +195,8 @@ describe('AccountTypeGuard', () => {
         switchToHttp: () => ({
           getRequest: () => ({ user: undefined }),
         }),
-        getHandler: () => jest.fn(),
-        getClass: () => jest.fn(),
+        getHandler: () => vi.fn(),
+        getClass: () => vi.fn(),
       } as unknown as ExecutionContext;
 
       // Act & Assert
@@ -204,8 +205,8 @@ describe('AccountTypeGuard', () => {
 
     it('should correctly check at handler and class level', () => {
       // Arrange
-      const handlerFn = jest.fn();
-      const classFn = jest.fn();
+      const handlerFn = vi.fn();
+      const classFn = vi.fn();
       mockReflector.getAllAndOverride.mockReturnValue(['USER'] as AccountType[]);
 
       const context = {

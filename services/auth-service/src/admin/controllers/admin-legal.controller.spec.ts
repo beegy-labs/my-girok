@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminLegalController } from './admin-legal.controller';
 import { AdminLegalService } from '../services/admin-legal.service';
@@ -20,13 +21,13 @@ import { AdminPayload } from '../types/admin.types';
 describe('AdminLegalController', () => {
   let controller: AdminLegalController;
   let mockAdminLegalService: {
-    listDocuments: jest.Mock;
-    getDocumentById: jest.Mock;
-    createDocument: jest.Mock;
-    updateDocument: jest.Mock;
-    deleteDocument: jest.Mock;
-    listConsents: jest.Mock;
-    getConsentStats: jest.Mock;
+    listDocuments: Mock;
+    getDocumentById: Mock;
+    createDocument: Mock;
+    updateDocument: Mock;
+    deleteDocument: Mock;
+    listConsents: Mock;
+    getConsentStats: Mock;
   };
 
   const mockAdmin: AdminPayload = {
@@ -83,20 +84,20 @@ describe('AdminLegalController', () => {
 
   beforeEach(async () => {
     mockAdminLegalService = {
-      listDocuments: jest.fn(),
-      getDocumentById: jest.fn(),
-      createDocument: jest.fn(),
-      updateDocument: jest.fn(),
-      deleteDocument: jest.fn(),
-      listConsents: jest.fn(),
-      getConsentStats: jest.fn(),
+      listDocuments: vi.fn(),
+      getDocumentById: vi.fn(),
+      createDocument: vi.fn(),
+      updateDocument: vi.fn(),
+      deleteDocument: vi.fn(),
+      listConsents: vi.fn(),
+      getConsentStats: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminLegalController],
       providers: [
         { provide: AdminLegalService, useValue: mockAdminLegalService },
-        { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+        { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
       ],
     })
       .overrideGuard(PermissionGuard)
@@ -107,7 +108,7 @@ describe('AdminLegalController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================================

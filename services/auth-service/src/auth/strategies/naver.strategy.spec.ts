@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { NaverStrategy } from './naver.strategy';
@@ -5,21 +6,21 @@ import { AuthService } from '../auth.service';
 import { AuthProvider, Role } from '@my-girok/types';
 
 // Mock global fetch
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('NaverStrategy', () => {
   let strategy: NaverStrategy;
-  let mockAuthService: { findOrCreateOAuthUser: jest.Mock };
-  let mockConfigService: { get: jest.Mock };
+  let mockAuthService: { findOrCreateOAuthUser: Mock };
+  let mockConfigService: { get: Mock };
 
   beforeEach(async () => {
     mockAuthService = {
-      findOrCreateOAuthUser: jest.fn(),
+      findOrCreateOAuthUser: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn((key: string) => {
+      get: vi.fn((key: string) => {
         const config: Record<string, string> = {
           NAVER_CLIENT_ID: 'test-naver-client-id',
           NAVER_CLIENT_SECRET: 'test-naver-client-secret',
@@ -41,7 +42,7 @@ describe('NaverStrategy', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validate', () => {
@@ -61,7 +62,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       const mockUser = {
@@ -111,7 +112,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       const mockUser = {
@@ -155,7 +156,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       const mockUser = {
@@ -202,7 +203,7 @@ describe('NaverStrategy', () => {
     it('should handle Naver API returning invalid JSON', async () => {
       // Arrange
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
+        json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
       });
 
       // Act & Assert
@@ -223,7 +224,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       mockAuthService.findOrCreateOAuthUser.mockRejectedValue(new Error('Database error'));
@@ -247,7 +248,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       const mockUser = {
@@ -287,7 +288,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       // Existing user with old data
@@ -324,7 +325,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       const mockUser = {
@@ -367,7 +368,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       const mockUser = {
@@ -411,7 +412,7 @@ describe('NaverStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(naverApiResponse),
+        json: vi.fn().mockResolvedValue(naverApiResponse),
       });
 
       const mockUser = {

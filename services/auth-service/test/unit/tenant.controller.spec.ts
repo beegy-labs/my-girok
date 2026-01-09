@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 
@@ -15,13 +16,13 @@ import { TenantType, TenantStatus } from '../../src/admin/types/admin.types';
 describe('TenantController', () => {
   let controller: TenantController;
   let mockTenantService: {
-    list: jest.Mock;
-    findById: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    updateStatus: jest.Mock;
-    getMyTenant: jest.Mock;
-    updateMyTenant: jest.Mock;
+    list: Mock;
+    findById: Mock;
+    create: Mock;
+    update: Mock;
+    updateStatus: Mock;
+    getMyTenant: Mock;
+    updateMyTenant: Mock;
   };
 
   const tenantId = '00000000-0000-7000-0000-000000000001';
@@ -44,13 +45,13 @@ describe('TenantController', () => {
     resetTestCounter();
 
     mockTenantService = {
-      list: jest.fn(),
-      findById: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateStatus: jest.fn(),
-      getMyTenant: jest.fn(),
-      updateMyTenant: jest.fn(),
+      list: vi.fn(),
+      findById: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateStatus: vi.fn(),
+      getMyTenant: vi.fn(),
+      updateMyTenant: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -65,7 +66,7 @@ describe('TenantController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('list', () => {

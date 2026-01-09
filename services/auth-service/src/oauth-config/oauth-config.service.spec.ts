@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OAuthConfigService } from './oauth-config.service';
 import { PrismaService } from '../database/prisma.service';
@@ -9,26 +10,23 @@ describe('OAuthConfigService', () => {
 
   const mockPrismaService = {
     oAuthProviderConfig: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      upsert: jest.fn(),
-      update: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn(),
     },
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        OAuthConfigService,
-        { provide: PrismaService, useValue: mockPrismaService },
-      ],
+      providers: [OAuthConfigService, { provide: PrismaService, useValue: mockPrismaService }],
     }).compile();
 
     service = module.get<OAuthConfigService>(OAuthConfigService);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('isProviderEnabled', () => {
@@ -230,9 +228,9 @@ describe('OAuthConfigService', () => {
       const adminUserId = 'admin-123';
 
       // Act & Assert
-      await expect(
-        service.toggleProvider(provider, false, adminUserId),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.toggleProvider(provider, false, adminUserId)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -265,9 +263,7 @@ describe('OAuthConfigService', () => {
       mockPrismaService.oAuthProviderConfig.findUnique.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.getProviderConfig(provider)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getProviderConfig(provider)).rejects.toThrow(NotFoundException);
     });
   });
 });

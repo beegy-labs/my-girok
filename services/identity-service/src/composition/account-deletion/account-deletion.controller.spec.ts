@@ -1,14 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { AccountDeletionController } from './account-deletion.controller';
 import { AccountDeletionService } from './account-deletion.service';
 import { DeleteAccountDto, AccountDeletionResponseDto } from './dto/account-deletion.dto';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
+// Type for mocked AccountDeletionService
+type MockedAccountDeletionService = {
+  deleteAccount: Mock;
+  scheduleAccountDeletion: Mock;
+};
+
 describe('AccountDeletionController', () => {
   let controller: AccountDeletionController;
-  let deletionService: jest.Mocked<AccountDeletionService>;
+  let deletionService: MockedAccountDeletionService;
 
   const mockDeletedAt = new Date();
   const mockScheduledDate = new Date();
@@ -37,8 +44,8 @@ describe('AccountDeletionController', () => {
 
   beforeEach(async () => {
     const mockDeletionService = {
-      deleteAccount: jest.fn(),
-      scheduleAccountDeletion: jest.fn(),
+      deleteAccount: vi.fn(),
+      scheduleAccountDeletion: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { DevicesController } from './devices.controller';
 import { DevicesService, DeviceResponse } from './devices.service';
 import { RegisterDeviceDto, DeviceType } from './dto/register-device.dto';
@@ -7,9 +8,25 @@ import { UpdateDeviceDto } from './dto/update-device.dto';
 import { PaginatedResponse } from '../../common/pagination';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 
+// Type for mocked DevicesService
+type MockedDevicesService = {
+  register: Mock;
+  findAll: Mock;
+  findById: Mock;
+  findByFingerprint: Mock;
+  update: Mock;
+  remove: Mock;
+  trust: Mock;
+  untrust: Mock;
+  updateActivity: Mock;
+  getDeviceCount: Mock;
+  getTrustedDeviceCount: Mock;
+  removeAllForAccount: Mock;
+};
+
 describe('DevicesController', () => {
   let controller: DevicesController;
-  let devicesService: jest.Mocked<DevicesService>;
+  let devicesService: MockedDevicesService;
 
   const mockDeviceResponse: DeviceResponse = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -46,18 +63,18 @@ describe('DevicesController', () => {
 
   beforeEach(async () => {
     const mockDevicesService = {
-      register: jest.fn(),
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      findByFingerprint: jest.fn(),
-      update: jest.fn(),
-      remove: jest.fn(),
-      trust: jest.fn(),
-      untrust: jest.fn(),
-      updateActivity: jest.fn(),
-      getDeviceCount: jest.fn(),
-      getTrustedDeviceCount: jest.fn(),
-      removeAllForAccount: jest.fn(),
+      register: vi.fn(),
+      findAll: vi.fn(),
+      findById: vi.fn(),
+      findByFingerprint: vi.fn(),
+      update: vi.fn(),
+      remove: vi.fn(),
+      trust: vi.fn(),
+      untrust: vi.fn(),
+      updateActivity: vi.fn(),
+      getDeviceCount: vi.fn(),
+      getTrustedDeviceCount: vi.fn(),
+      removeAllForAccount: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

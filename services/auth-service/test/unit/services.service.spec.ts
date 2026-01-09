@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -16,12 +17,12 @@ describe('ServicesService', () => {
   let mockPrisma: MockPrismaService;
   let mockCache: MockCacheManager;
   let mockAuthService: {
-    generateTokensWithServices: jest.Mock;
-    saveRefreshToken: jest.Mock;
+    generateTokensWithServices: Mock;
+    saveRefreshToken: Mock;
   };
   let mockIdentityClient: {
-    getAccount: jest.Mock;
-    getProfile: jest.Mock;
+    getAccount: Mock;
+    getProfile: Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -42,21 +43,21 @@ describe('ServicesService', () => {
     mockPrisma = createMockPrismaService();
     mockCache = createMockCacheManager();
     mockAuthService = {
-      generateTokensWithServices: jest.fn().mockResolvedValue({
+      generateTokensWithServices: vi.fn().mockResolvedValue({
         accessToken: 'mock-access-token',
         refreshToken: 'mock-refresh-token',
       }),
-      saveRefreshToken: jest.fn().mockResolvedValue(undefined),
+      saveRefreshToken: vi.fn().mockResolvedValue(undefined),
     };
     mockIdentityClient = {
-      getAccount: jest.fn().mockResolvedValue({
+      getAccount: vi.fn().mockResolvedValue({
         account: {
           id: userId,
           email: 'test@example.com',
           username: 'testuser',
         },
       }),
-      getProfile: jest.fn().mockResolvedValue({
+      getProfile: vi.fn().mockResolvedValue({
         profile: {
           account_id: userId,
           country_code: 'KR',
@@ -78,7 +79,7 @@ describe('ServicesService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getConsentRequirements', () => {
@@ -180,7 +181,7 @@ describe('ServicesService', () => {
       // Mock transaction
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         await callback({
-          $executeRaw: jest.fn().mockResolvedValue(1),
+          $executeRaw: vi.fn().mockResolvedValue(1),
         });
       });
 
@@ -279,7 +280,7 @@ describe('ServicesService', () => {
       mockIdentityClient.getAccount.mockResolvedValue({ account: null });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
-        await callback({ $executeRaw: jest.fn().mockResolvedValue(1) });
+        await callback({ $executeRaw: vi.fn().mockResolvedValue(1) });
       });
 
       // Act & Assert
@@ -322,7 +323,7 @@ describe('ServicesService', () => {
       });
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
-        await callback({ $executeRaw: jest.fn().mockResolvedValue(1) });
+        await callback({ $executeRaw: vi.fn().mockResolvedValue(1) });
       });
 
       // Act
@@ -522,7 +523,7 @@ describe('ServicesService', () => {
       mockPrisma.$queryRaw.mockResolvedValueOnce([mockService]);
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
-        await callback({ $executeRaw: jest.fn().mockResolvedValue(1) });
+        await callback({ $executeRaw: vi.fn().mockResolvedValue(1) });
       });
 
       // Act
@@ -538,7 +539,7 @@ describe('ServicesService', () => {
       mockPrisma.$queryRaw.mockResolvedValueOnce([mockService]);
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
-        await callback({ $executeRaw: jest.fn().mockResolvedValue(1) });
+        await callback({ $executeRaw: vi.fn().mockResolvedValue(1) });
       });
 
       // Act

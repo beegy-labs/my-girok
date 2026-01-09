@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
@@ -18,8 +19,8 @@ describe('UnifiedAuthGuard Logic', () => {
       switchToHttp: () => ({
         getRequest: () => ({ user: null }),
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     } as unknown as ExecutionContext;
   };
 
@@ -27,7 +28,7 @@ describe('UnifiedAuthGuard Logic', () => {
     it('should detect public routes using IS_PUBLIC_KEY metadata', () => {
       // Arrange
       const context = createMockExecutionContext();
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
 
       // Act
       const isPublic = reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -42,7 +43,7 @@ describe('UnifiedAuthGuard Logic', () => {
     it('should detect protected routes when IS_PUBLIC_KEY is false', () => {
       // Arrange
       const context = createMockExecutionContext();
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
 
       // Act
       const isPublic = reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -57,7 +58,7 @@ describe('UnifiedAuthGuard Logic', () => {
     it('should detect protected routes when IS_PUBLIC_KEY is undefined', () => {
       // Arrange
       const context = createMockExecutionContext();
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
 
       // Act
       const isPublic = reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -158,7 +159,7 @@ describe('UnifiedAuthGuard Logic', () => {
   describe('Integration scenarios', () => {
     it('should allow access to public health check endpoints', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
       const context = createMockExecutionContext();
 
       // Simulate the guard logic
@@ -173,7 +174,7 @@ describe('UnifiedAuthGuard Logic', () => {
 
     it('should require authentication for protected admin routes', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
       const context = createMockExecutionContext();
 
       // Simulate the guard logic

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SagaOrchestratorService } from './saga-orchestrator.service';
 import { SagaDefinition } from './saga.types';
 
@@ -21,7 +22,7 @@ describe('SagaOrchestratorService', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('execute', () => {

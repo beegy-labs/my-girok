@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
@@ -18,8 +19,8 @@ describe('PermissionGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({ user }),
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     } as unknown as ExecutionContext;
   };
 
@@ -28,15 +29,15 @@ describe('PermissionGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({ admin }),
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     } as unknown as ExecutionContext;
   };
 
   describe('canActivate', () => {
     it('should return true when no permissions are required', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
       const context = createMockExecutionContext({});
 
       // Act
@@ -48,7 +49,7 @@ describe('PermissionGuard', () => {
 
     it('should return true when required permissions is empty array', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([]);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue([]);
       const context = createMockExecutionContext({});
 
       // Act
@@ -60,7 +61,7 @@ describe('PermissionGuard', () => {
 
     it('should throw ForbiddenException when user is not found', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read']);
       const context = createMockExecutionContext(null);
 
       // Act & Assert
@@ -70,7 +71,7 @@ describe('PermissionGuard', () => {
 
     it('should throw ForbiddenException when user is not an admin', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read']);
       const user = { type: 'USER', id: 'user-123', email: 'user@test.com' };
       const context = createMockExecutionContext(user);
 
@@ -81,7 +82,7 @@ describe('PermissionGuard', () => {
 
     it('should return true for system super admin with wildcard permission', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:create']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:create']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -99,7 +100,7 @@ describe('PermissionGuard', () => {
 
     it('should return true when admin has all required permissions', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:create']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:create']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -117,7 +118,7 @@ describe('PermissionGuard', () => {
 
     it('should throw ForbiddenException when admin is missing required permissions', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:delete']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:delete']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -135,7 +136,7 @@ describe('PermissionGuard', () => {
 
     it('should support resource wildcard permission (resource:*)', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:create']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['legal:read', 'legal:create']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -153,7 +154,7 @@ describe('PermissionGuard', () => {
 
     it('should work with legacy request.admin property', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['audit:read']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['audit:read']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -171,7 +172,7 @@ describe('PermissionGuard', () => {
 
     it('should use PERMISSIONS_KEY for metadata lookup', () => {
       // Arrange
-      const getAllAndOverrideSpy = jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([]);
+      const getAllAndOverrideSpy = vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue([]);
       const context = createMockExecutionContext({});
 
       // Act
@@ -188,7 +189,7 @@ describe('PermissionGuard', () => {
   describe('permission matching', () => {
     it('should match exact permission', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['content:read']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['content:read']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -206,7 +207,7 @@ describe('PermissionGuard', () => {
 
     it('should not match different resource', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['content:read']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['content:read']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
@@ -221,7 +222,7 @@ describe('PermissionGuard', () => {
 
     it('should not match different action', () => {
       // Arrange
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['content:delete']);
+      vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['content:delete']);
       const admin = {
         type: 'ADMIN',
         id: 'admin-123',
