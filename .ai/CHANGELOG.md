@@ -8,6 +8,15 @@ Categories: `added`, `changed`, `removed`, `fixed`, `consolidated`
 
 ---
 
+## 2026-01-09
+
+- **added**: `docs/test-coverage.md` - Test coverage status tracking document
+- **changed**: `services/auth-bff.md` - Updated with Phase 6 test completion
+- **added**: Integration tests (61) for auth-bff gRPC communication
+- **added**: E2E tests (87) for authentication flows (Playwright)
+- **added**: Security tests (38) based on OWASP Top 10
+- **milestone**: Enterprise Auth System Epic (#496) completed - All 6 phases done
+
 ## 2026-01-06
 
 - **added**: `manifest.yaml` - Machine-readable document contract for LLM agents
