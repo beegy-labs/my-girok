@@ -363,4 +363,184 @@ describe('AccountDeletionService', () => {
       );
     });
   });
+
+  describe('saga step execution', () => {
+    let sessionsService: { revokeAllForAccount: Mock };
+    let devicesService: { findAll: Mock; remove: Mock };
+    let profilesService: { delete: Mock };
+    let capturedSagaDefinition: {
+      steps: Array<{
+        name: string;
+        execute: (ctx: unknown) => Promise<unknown>;
+        compensate: (ctx: unknown) => Promise<void>;
+      }>;
+    };
+
+    beforeEach(async () => {
+      sessionsService = { revokeAllForAccount: vi.fn() };
+      devicesService = { findAll: vi.fn(), remove: vi.fn() };
+      profilesService = { delete: vi.fn() };
+
+      const mockAccountsServiceNew = { findById: vi.fn(), delete: vi.fn() };
+      const mockOutboxServiceNew = { publishEvent: vi.fn() };
+      const mockSagaOrchestratorNew = {
+        execute: vi.fn().mockImplementation((definition) => {
+          capturedSagaDefinition = definition;
+          return {
+            success: true,
+            sagaId: 'saga-123',
+            status: SagaStatus.COMPLETED,
+            context: { accountId: mockAccount.id },
+            steps: [],
+          };
+        }),
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          AccountDeletionService,
+          { provide: AccountsService, useValue: mockAccountsServiceNew },
+          { provide: SessionsService, useValue: sessionsService },
+          { provide: DevicesService, useValue: devicesService },
+          { provide: ProfilesService, useValue: profilesService },
+          { provide: SagaOrchestratorService, useValue: mockSagaOrchestratorNew },
+          { provide: OutboxService, useValue: mockOutboxServiceNew },
+        ],
+      }).compile();
+
+      const newService = module.get<AccountDeletionService>(AccountDeletionService);
+      const newAccountsService = module.get(AccountsService) as { findById: Mock };
+      const newOutboxService = module.get(OutboxService) as { publishEvent: Mock };
+
+      newAccountsService.findById.mockResolvedValue(mockAccount);
+      newOutboxService.publishEvent.mockResolvedValue({});
+
+      await newService.deleteAccount({ accountId: mockAccount.id });
+    });
+
+    describe('RevokeSessions step', () => {
+      it('should revoke all sessions for account', async () => {
+        sessionsService.revokeAllForAccount.mockResolvedValue(undefined);
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'RevokeSessions');
+        const result = await step!.execute({ accountId: mockAccount.id });
+
+        expect(sessionsService.revokeAllForAccount).toHaveBeenCalledWith(mockAccount.id);
+        expect(result).toEqual({ accountId: mockAccount.id, sessionsRevoked: true });
+      });
+
+      it('should skip compensation for sessions', async () => {
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'RevokeSessions');
+        await expect(step!.compensate({ accountId: mockAccount.id })).resolves.not.toThrow();
+      });
+    });
+
+    describe('RemoveDevices step', () => {
+      it('should remove all devices for account', async () => {
+        const mockDevices = [{ id: 'device-1' }, { id: 'device-2' }];
+        devicesService.findAll.mockResolvedValue({ data: mockDevices });
+        devicesService.remove.mockResolvedValue(undefined);
+
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'RemoveDevices');
+        const result = await step!.execute({ accountId: mockAccount.id });
+
+        expect(devicesService.findAll).toHaveBeenCalledWith({ accountId: mockAccount.id });
+        expect(devicesService.remove).toHaveBeenCalledTimes(2);
+        expect(devicesService.remove).toHaveBeenCalledWith('device-1');
+        expect(devicesService.remove).toHaveBeenCalledWith('device-2');
+        expect(result).toEqual({ accountId: mockAccount.id, devicesRemoved: true });
+      });
+
+      it('should handle no devices', async () => {
+        devicesService.findAll.mockResolvedValue({ data: [] });
+
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'RemoveDevices');
+        const result = await step!.execute({ accountId: mockAccount.id });
+
+        expect(devicesService.remove).not.toHaveBeenCalled();
+        expect(result).toEqual({ accountId: mockAccount.id, devicesRemoved: true });
+      });
+
+      it('should skip compensation for devices', async () => {
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'RemoveDevices');
+        await expect(step!.compensate({ accountId: mockAccount.id })).resolves.not.toThrow();
+      });
+    });
+
+    describe('DeleteProfile step', () => {
+      it('should delete profile for account', async () => {
+        profilesService.delete.mockResolvedValue(undefined);
+
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'DeleteProfile');
+        const result = await step!.execute({ accountId: mockAccount.id });
+
+        expect(profilesService.delete).toHaveBeenCalledWith(mockAccount.id);
+        expect(result).toEqual({ accountId: mockAccount.id, profileDeleted: true });
+      });
+
+      it('should handle profile not found', async () => {
+        profilesService.delete.mockRejectedValue(new NotFoundException('Profile not found'));
+
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'DeleteProfile');
+        const result = await step!.execute({ accountId: mockAccount.id });
+
+        // Should not throw, should continue
+        expect(result).toEqual({ accountId: mockAccount.id, profileDeleted: true });
+      });
+
+      it('should skip compensation for profile deletion', async () => {
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'DeleteProfile');
+        await expect(step!.compensate({ accountId: mockAccount.id })).resolves.not.toThrow();
+      });
+    });
+
+    describe('DeleteAccount step', () => {
+      it('should soft delete account', async () => {
+        const module = await Test.createTestingModule({
+          providers: [
+            AccountDeletionService,
+            {
+              provide: AccountsService,
+              useValue: { findById: vi.fn().mockResolvedValue(mockAccount), delete: vi.fn() },
+            },
+            { provide: SessionsService, useValue: { revokeAllForAccount: vi.fn() } },
+            {
+              provide: DevicesService,
+              useValue: { findAll: vi.fn().mockResolvedValue({ data: [] }), remove: vi.fn() },
+            },
+            { provide: ProfilesService, useValue: { delete: vi.fn() } },
+            {
+              provide: SagaOrchestratorService,
+              useValue: {
+                execute: vi.fn().mockImplementation((def) => {
+                  capturedSagaDefinition = def;
+                  return {
+                    success: true,
+                    sagaId: 'test',
+                    status: SagaStatus.COMPLETED,
+                    context: {},
+                    steps: [],
+                  };
+                }),
+              },
+            },
+            { provide: OutboxService, useValue: { publishEvent: vi.fn().mockResolvedValue({}) } },
+          ],
+        }).compile();
+
+        const svc = module.get<AccountDeletionService>(AccountDeletionService);
+        const accSvc = module.get(AccountsService) as { delete: Mock };
+        await svc.deleteAccount({ accountId: mockAccount.id });
+
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'DeleteAccount');
+        await step!.execute({ accountId: mockAccount.id });
+
+        expect(accSvc.delete).toHaveBeenCalledWith(mockAccount.id);
+      });
+
+      it('should skip compensation for account deletion', async () => {
+        const step = capturedSagaDefinition.steps.find((s) => s.name === 'DeleteAccount');
+        await expect(step!.compensate({ accountId: mockAccount.id })).resolves.not.toThrow();
+      });
+    });
+  });
 });
