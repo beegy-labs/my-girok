@@ -89,9 +89,9 @@ jobs:
         run: |
           cd gitops && git pull --rebase
           case "${{ github.ref }}" in
-            refs/heads/main) FILE="clusters/home/values/common-personal-service-prod.yaml"; ENV="production" ;;
-            refs/heads/develop) FILE="clusters/home/values/common-personal-service-dev.yaml"; ENV="development" ;;
-            *) FILE="clusters/home/values/common-personal-service-release.yaml"; ENV="staging" ;;
+            refs/heads/main) FILE="clusters/home/values/my-girok-personal-service-prod.yaml"; ENV="production" ;;
+            refs/heads/develop) FILE="clusters/home/values/my-girok-personal-service-dev.yaml"; ENV="development" ;;
+            *) FILE="clusters/home/values/my-girok-personal-service-release.yaml"; ENV="staging" ;;
           esac
           sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
           git config user.name "GitHub Actions Bot"
