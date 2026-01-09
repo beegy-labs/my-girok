@@ -1,6 +1,6 @@
 # Test Coverage Status
 
-Last updated: 2025-01-02
+Last updated: 2026-01-09
 
 ## Requirements
 
@@ -16,6 +16,7 @@ Last updated: 2025-01-02
 | Service          | Statements | Branches | Functions | Lines  | Tests | Status |
 | ---------------- | ---------- | -------- | --------- | ------ | ----- | ------ |
 | auth-service     | 89.76%     | 81.68%   | 90.81%    | 89.63% | 967   | Pass   |
+| auth-bff         | 88.27%     | 79.45%   | 93.63%    | 88.32% | 251   | Pass   |
 | legal-service    | 98.58%     | 97.36%   | 98.30%    | 98.78% | 186   | Pass   |
 | identity-service | 81.00%     | 75.00%   | 83.00%    | 81.00% | 655   | Pass   |
 
@@ -45,6 +46,13 @@ Last updated: 2025-01-02
 | `**/decorators/*` | Metadata decorators |
 | `**/main.ts`      | Bootstrap           |
 | `**/*.module.ts`  | Module definitions  |
+
+### Service-Specific Exclusions
+
+| Service  | File                | Reason                                             |
+| -------- | ------------------- | -------------------------------------------------- |
+| auth-bff | admin.controller.ts | Thin wrapper, delegates to service (90%+ coverage) |
+| auth-bff | user.controller.ts  | Thin wrapper, delegates to service (90%+ coverage) |
 
 ## Commands
 
