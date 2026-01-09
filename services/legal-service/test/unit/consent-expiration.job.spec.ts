@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConsentExpirationJob } from '../../src/common/jobs/consent-expiration.job';
@@ -8,13 +9,13 @@ import { createMockPrisma, MockPrismaService } from '../utils/mock-prisma';
 describe('ConsentExpirationJob', () => {
   let job: ConsentExpirationJob;
   let prisma: MockPrismaService;
-  let eventEmitter: { emit: jest.Mock };
-  let outboxService: { addEvent: jest.Mock };
+  let eventEmitter: { emit: Mock };
+  let outboxService: { addEvent: Mock };
 
   beforeEach(async () => {
     prisma = createMockPrisma();
-    eventEmitter = { emit: jest.fn() };
-    outboxService = { addEvent: jest.fn().mockResolvedValue('outbox-id') };
+    eventEmitter = { emit: vi.fn() };
+    outboxService = { addEvent: vi.fn().mockResolvedValue('outbox-id') };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

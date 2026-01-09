@@ -316,7 +316,7 @@ describe('PII Masking Utilities', () => {
 
       const result = maskObject(input);
 
-      expect(result.createdAt).toBe(date);
+      expect(result.createdAt).toEqual(date);
     });
   });
 

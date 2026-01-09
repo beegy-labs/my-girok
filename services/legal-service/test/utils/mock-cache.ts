@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 /**
  * Mock Cache Service for legal-service tests
  *
@@ -6,39 +8,39 @@
 
 export const createMockCacheService = () => ({
   // Core cache methods
-  get: jest.fn().mockResolvedValue(undefined),
-  set: jest.fn().mockResolvedValue(undefined),
-  del: jest.fn().mockResolvedValue(undefined),
-  getOrSet: jest.fn(),
-  invalidatePattern: jest.fn().mockResolvedValue(0),
+  get: vi.fn().mockResolvedValue(undefined),
+  set: vi.fn().mockResolvedValue(undefined),
+  del: vi.fn().mockResolvedValue(undefined),
+  getOrSet: vi.fn(),
+  invalidatePattern: vi.fn().mockResolvedValue(0),
 
   // Law Registry methods
-  getLawById: jest.fn().mockResolvedValue(undefined),
-  setLawById: jest.fn().mockResolvedValue(undefined),
-  getLawByCode: jest.fn().mockResolvedValue(undefined),
-  setLawByCode: jest.fn().mockResolvedValue(undefined),
-  invalidateLaw: jest.fn().mockResolvedValue(undefined),
+  getLawById: vi.fn().mockResolvedValue(undefined),
+  setLawById: vi.fn().mockResolvedValue(undefined),
+  getLawByCode: vi.fn().mockResolvedValue(undefined),
+  setLawByCode: vi.fn().mockResolvedValue(undefined),
+  invalidateLaw: vi.fn().mockResolvedValue(undefined),
 
   // Legal Document methods
-  getDocumentById: jest.fn().mockResolvedValue(undefined),
-  setDocumentById: jest.fn().mockResolvedValue(undefined),
-  getLatestDocument: jest.fn().mockResolvedValue(undefined),
-  setLatestDocument: jest.fn().mockResolvedValue(undefined),
-  invalidateDocument: jest.fn().mockResolvedValue(undefined),
+  getDocumentById: vi.fn().mockResolvedValue(undefined),
+  setDocumentById: vi.fn().mockResolvedValue(undefined),
+  getLatestDocument: vi.fn().mockResolvedValue(undefined),
+  setLatestDocument: vi.fn().mockResolvedValue(undefined),
+  invalidateDocument: vi.fn().mockResolvedValue(undefined),
 
   // Consent methods
-  getConsentById: jest.fn().mockResolvedValue(undefined),
-  setConsentById: jest.fn().mockResolvedValue(undefined),
-  getConsentsByAccount: jest.fn().mockResolvedValue(undefined),
-  setConsentsByAccount: jest.fn().mockResolvedValue(undefined),
-  getConsentStatus: jest.fn().mockResolvedValue(undefined),
-  setConsentStatus: jest.fn().mockResolvedValue(undefined),
-  invalidateConsent: jest.fn().mockResolvedValue(undefined),
+  getConsentById: vi.fn().mockResolvedValue(undefined),
+  setConsentById: vi.fn().mockResolvedValue(undefined),
+  getConsentsByAccount: vi.fn().mockResolvedValue(undefined),
+  setConsentsByAccount: vi.fn().mockResolvedValue(undefined),
+  getConsentStatus: vi.fn().mockResolvedValue(undefined),
+  setConsentStatus: vi.fn().mockResolvedValue(undefined),
+  invalidateConsent: vi.fn().mockResolvedValue(undefined),
 
   // DSR Request methods
-  getDsrById: jest.fn().mockResolvedValue(undefined),
-  setDsrById: jest.fn().mockResolvedValue(undefined),
-  invalidateDsr: jest.fn().mockResolvedValue(undefined),
+  getDsrById: vi.fn().mockResolvedValue(undefined),
+  setDsrById: vi.fn().mockResolvedValue(undefined),
+  invalidateDsr: vi.fn().mockResolvedValue(undefined),
 });
 
 export type MockCacheService = ReturnType<typeof createMockCacheService>;
@@ -48,11 +50,11 @@ export type MockCacheService = ReturnType<typeof createMockCacheService>;
  * Used for lower-level cache testing
  */
 export const createMockCacheManager = () => ({
-  get: jest.fn().mockResolvedValue(undefined),
-  set: jest.fn().mockResolvedValue(undefined),
-  del: jest.fn().mockResolvedValue(undefined),
+  get: vi.fn().mockResolvedValue(undefined),
+  set: vi.fn().mockResolvedValue(undefined),
+  del: vi.fn().mockResolvedValue(undefined),
   store: {
-    keys: jest.fn().mockResolvedValue([]),
+    keys: vi.fn().mockResolvedValue([]),
   },
 });
 

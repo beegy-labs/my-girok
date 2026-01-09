@@ -1,3 +1,5 @@
+import { vi, Mock } from 'vitest';
+
 /**
  * Mock Prisma Service for legal-service tests
  *
@@ -7,15 +9,15 @@
 
 // Define the mock type explicitly to avoid circular reference
 export interface MockPrismaModel {
-  findUnique: jest.Mock;
-  findFirst: jest.Mock;
-  findMany: jest.Mock;
-  create: jest.Mock;
-  update: jest.Mock;
-  updateMany: jest.Mock;
-  delete: jest.Mock;
-  deleteMany: jest.Mock;
-  count: jest.Mock;
+  findUnique: Mock;
+  findFirst: Mock;
+  findMany: Mock;
+  create: Mock;
+  update: Mock;
+  updateMany: Mock;
+  delete: Mock;
+  deleteMany: Mock;
+  count: Mock;
 }
 
 export interface MockPrismaService {
@@ -24,79 +26,79 @@ export interface MockPrismaService {
   legalDocument: MockPrismaModel;
   lawRegistry: MockPrismaModel;
   outboxEvent: MockPrismaModel;
-  $transaction: jest.Mock;
-  $connect: jest.Mock;
-  $disconnect: jest.Mock;
+  $transaction: Mock;
+  $connect: Mock;
+  $disconnect: Mock;
 }
 
 export const createMockPrisma = (): MockPrismaService => ({
   // Consent model methods
   consent: {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    delete: jest.fn(),
-    deleteMany: jest.fn(),
-    count: jest.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
   },
 
   // DSR Request model methods
   dsrRequest: {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    delete: jest.fn(),
-    deleteMany: jest.fn(),
-    count: jest.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
   },
 
   // Legal Document model methods
   legalDocument: {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    delete: jest.fn(),
-    deleteMany: jest.fn(),
-    count: jest.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
   },
 
   // Law Registry model methods
   lawRegistry: {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    delete: jest.fn(),
-    deleteMany: jest.fn(),
-    count: jest.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
   },
 
   // Outbox Event model methods
   outboxEvent: {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    delete: jest.fn(),
-    deleteMany: jest.fn(),
-    count: jest.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
   },
 
   // Transaction support
-  $transaction: jest.fn((callback: unknown) => {
+  $transaction: vi.fn((callback: unknown) => {
     if (typeof callback === 'function') {
       // Create a mock transaction client with the same structure
       const txClient = createMockPrisma();
@@ -106,6 +108,6 @@ export const createMockPrisma = (): MockPrismaService => ({
   }),
 
   // Connection methods
-  $connect: jest.fn().mockResolvedValue(undefined),
-  $disconnect: jest.fn().mockResolvedValue(undefined),
+  $connect: vi.fn().mockResolvedValue(undefined),
+  $disconnect: vi.fn().mockResolvedValue(undefined),
 });

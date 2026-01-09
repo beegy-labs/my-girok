@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
@@ -11,22 +12,22 @@ import { DsrRequestsService } from '../dsr-requests/dsr-requests.service';
 describe('LegalGrpcController', () => {
   let controller: LegalGrpcController;
   let mockConsentsService: {
-    getConsentsForAccount: jest.Mock;
-    grantConsent: jest.Mock;
-    withdrawConsent: jest.Mock;
+    getConsentsForAccount: Mock;
+    grantConsent: Mock;
+    withdrawConsent: Mock;
   };
   let mockLegalDocumentsService: {
-    getActiveDocuments: jest.Mock;
-    findOneWithContent: jest.Mock;
-    findAll: jest.Mock;
+    getActiveDocuments: Mock;
+    findOneWithContent: Mock;
+    findAll: Mock;
   };
   let mockLawRegistryService: {
-    findAll: jest.Mock;
-    findOne: jest.Mock;
+    findAll: Mock;
+    findOne: Mock;
   };
   let mockDsrRequestsService: {
-    create: jest.Mock;
-    findOne: jest.Mock;
+    create: Mock;
+    findOne: Mock;
   };
 
   const mockConsent = {
@@ -78,25 +79,25 @@ describe('LegalGrpcController', () => {
 
   beforeEach(async () => {
     mockConsentsService = {
-      getConsentsForAccount: jest.fn(),
-      grantConsent: jest.fn(),
-      withdrawConsent: jest.fn(),
+      getConsentsForAccount: vi.fn(),
+      grantConsent: vi.fn(),
+      withdrawConsent: vi.fn(),
     };
 
     mockLegalDocumentsService = {
-      getActiveDocuments: jest.fn(),
-      findOneWithContent: jest.fn(),
-      findAll: jest.fn(),
+      getActiveDocuments: vi.fn(),
+      findOneWithContent: vi.fn(),
+      findAll: vi.fn(),
     };
 
     mockLawRegistryService = {
-      findAll: jest.fn(),
-      findOne: jest.fn(),
+      findAll: vi.fn(),
+      findOne: vi.fn(),
     };
 
     mockDsrRequestsService = {
-      create: jest.fn(),
-      findOne: jest.fn(),
+      create: vi.fn(),
+      findOne: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -113,7 +114,7 @@ describe('LegalGrpcController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Consent Operations', () => {
