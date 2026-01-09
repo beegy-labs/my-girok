@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import ThemeToggle from '../../components/settings/ThemeToggle';
 import SectionOrderManager from '../../components/settings/SectionOrderManager';
+import SecuritySettings from '../../components/settings/SecuritySettings';
 import { SectionBadge } from '@my-girok/ui-components';
 import Footer from '../../components/Footer';
 
@@ -30,6 +31,11 @@ export default function SettingsPage() {
             {/* Section Order Settings */}
             <section className="bg-theme-bg-card border border-theme-border-default rounded-soft p-8 sm:p-10">
               <SectionOrderManager />
+            </section>
+
+            {/* Security Settings */}
+            <section className="bg-theme-bg-card border border-theme-border-default rounded-soft p-8 sm:p-10">
+              <SecuritySettings />
             </section>
           </div>
         </div>

@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router';
 import { MainLayout, FullWidthLayout } from './layouts';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import MfaVerificationPage from './pages/MfaVerificationPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import ConsentPage from './pages/ConsentPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -14,6 +16,7 @@ import PublicResumePage from './pages/resume/PublicResumePage';
 import SharedResumePage from './pages/resume/SharedResumePage';
 import MyResumePage from './pages/resume/MyResumePage';
 import SettingsPage from './pages/settings/SettingsPage';
+import SessionsPage from './pages/settings/SessionsPage';
 // Placeholder pages for upcoming features
 import JournalPage from './pages/JournalPage';
 import SchedulePage from './pages/SchedulePage';
@@ -43,6 +46,14 @@ export const router = createBrowserRouter([
         element: <LoginPage />,
       },
       {
+        path: 'login/mfa',
+        element: <MfaVerificationPage />,
+      },
+      {
+        path: 'auth/callback',
+        element: <OAuthCallbackPage />,
+      },
+      {
         path: 'consent',
         element: <ConsentPage />,
       },
@@ -67,6 +78,14 @@ export const router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <SettingsPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: 'settings/sessions',
+        element: (
+          <PrivateRoute>
+            <SessionsPage />
           </PrivateRoute>
         ),
       },
