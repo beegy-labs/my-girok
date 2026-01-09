@@ -86,6 +86,8 @@ export function createNestJsConfig(dirname: string, options: NestJsConfigOptions
       environment: 'node',
       setupFiles: ['./test/setup.ts'],
       testTimeout,
+      clearMocks: true,
+      restoreMocks: true,
       ...poolConfig,
       deps: {
         inline: [/@my-girok\/types/, /@protobuf-ts/],
