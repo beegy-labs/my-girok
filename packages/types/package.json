@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r src/generated dist/",
     "dev": "tsc --watch",
     "clean": "rm -rf dist"
   },
