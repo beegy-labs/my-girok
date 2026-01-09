@@ -274,7 +274,7 @@ describe('AccountLinkingService', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const tx = {
           $executeRaw: vi.fn().mockResolvedValue(1),
-          $queryRaw: jest
+          $queryRaw: vi
             .fn()
             .mockResolvedValueOnce([]) // collectPlatformConsentTx - existing
             .mockResolvedValueOnce([
@@ -445,7 +445,7 @@ describe('AccountLinkingService', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const tx = {
           $executeRaw: vi.fn().mockResolvedValue(1),
-          $queryRaw: jest
+          $queryRaw: vi
             .fn()
             .mockResolvedValueOnce([{ count: BigInt(0) }]) // no other links for primary
             .mockResolvedValueOnce([{ count: BigInt(0) }]), // no other links for linked
@@ -483,7 +483,7 @@ describe('AccountLinkingService', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const tx = {
           $executeRaw: vi.fn().mockResolvedValue(1),
-          $queryRaw: jest
+          $queryRaw: vi
             .fn()
             .mockResolvedValueOnce([{ count: BigInt(1) }]) // has other links for primary
             .mockResolvedValueOnce([{ count: BigInt(1) }]), // has other links for linked

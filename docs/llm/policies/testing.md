@@ -26,16 +26,21 @@ RED -> GREEN -> REFACTOR
 
 ## Structure
 
+The project uses Vitest for testing. Mocks are automatically cleared after each test, as configured by `clearMocks: true` in the shared `vitest.config.ts`.
+
 ```typescript
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+
 describe('Service', () => {
   let service: Service;
+
   beforeEach(async () => {
+    // vi.clearAllMocks() is not needed due to global config.
     const module = await Test.createTestingModule({
       providers: [Service, { provide: Repo, useValue: mockRepo }],
     }).compile();
     service = module.get(Service);
   });
-  afterEach(() => jest.clearAllMocks());
 
   it('should work', async () => {
     // Arrange
@@ -68,7 +73,9 @@ process.env.DATABASE_URL = 'postgresql://test:test@localhost:5433/test_db';
 ### Consumer (mock client)
 
 ```typescript
-mockIdentityClient = { getAccount: jest.fn(), getProfile: jest.fn() };
+import { vi } from 'vitest';
+
+mockIdentityClient = { getAccount: vi.fn(), getProfile: vi.fn() };
 const module = await Test.createTestingModule({
   providers: [MyService, { provide: IdentityGrpcClient, useValue: mockIdentityClient }],
 }).compile();
@@ -94,9 +101,19 @@ const module = await Test.createTestingModule({
 
 ## Parallel Execution
 
-```javascript
-// jest.config.js
-{ maxWorkers: '50%', cache: true, testTimeout: 10000 }
+Configuration is managed in `vitest.config.ts` files, which inherit from a shared workspace config.
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    // Vitest runs tests in parallel by default
+    testTimeout: 10000,
+    clearMocks: true,
+  },
+});
 ```
 
 | Safe            | Unsafe       |

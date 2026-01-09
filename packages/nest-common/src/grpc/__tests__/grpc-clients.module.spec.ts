@@ -1,3 +1,4 @@
+import { vi, describe, it, expect } from 'vitest';
 import {
   GrpcClientsModule,
   IdentityGrpcClientModule,
@@ -6,18 +7,18 @@ import {
 } from '../grpc-clients.module';
 
 // Mock ClientsModule to avoid actual gRPC connections
-jest.mock('@nestjs/microservices', () => ({
+vi.mock('@nestjs/microservices', () => ({
   ClientsModule: {
-    register: jest.fn().mockReturnValue({
+    register: vi.fn().mockReturnValue({
       module: class MockClientsModule {},
       providers: [
-        { provide: 'IDENTITY_GRPC_SERVICE', useValue: { getService: jest.fn() } },
-        { provide: 'AUTH_GRPC_SERVICE', useValue: { getService: jest.fn() } },
-        { provide: 'LEGAL_GRPC_SERVICE', useValue: { getService: jest.fn() } },
+        { provide: 'IDENTITY_GRPC_SERVICE', useValue: { getService: vi.fn() } },
+        { provide: 'AUTH_GRPC_SERVICE', useValue: { getService: vi.fn() } },
+        { provide: 'LEGAL_GRPC_SERVICE', useValue: { getService: vi.fn() } },
       ],
       exports: ['IDENTITY_GRPC_SERVICE', 'AUTH_GRPC_SERVICE', 'LEGAL_GRPC_SERVICE'],
     }),
-    registerAsync: jest.fn().mockReturnValue({
+    registerAsync: vi.fn().mockReturnValue({
       module: class MockClientsModule {},
       providers: [],
       exports: [],

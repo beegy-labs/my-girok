@@ -872,13 +872,13 @@ Deliverables:
 
 ## 9. Success Criteria
 
-| Criteria            | Target        | Measurement          |
-| ------------------- | ------------- | -------------------- |
-| Login latency       | < 500ms (p99) | Prometheus metrics   |
-| Session validation  | < 50ms (p99)  | Prometheus metrics   |
-| Availability        | 99.9%         | Uptime monitoring    |
-| Test coverage       | > 80%         | Jest coverage report |
-| Security compliance | OWASP ASVS L2 | Security audit       |
+| Criteria            | Target        | Measurement            |
+| ------------------- | ------------- | ---------------------- |
+| Login latency       | < 500ms (p99) | Prometheus metrics     |
+| Session validation  | < 50ms (p99)  | Prometheus metrics     |
+| Availability        | 99.9%         | Uptime monitoring      |
+| Test coverage       | > 80%         | Vitest coverage report |
+| Security compliance | OWASP ASVS L2 | Security audit         |
 
 ---
 

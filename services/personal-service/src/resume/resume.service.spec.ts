@@ -1,9 +1,12 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ResumeService } from './resume.service';
 import { PrismaService } from '../database/prisma.service';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { StorageService } from '../storage/storage.service';
+import { FileCopyService } from '../queue/services/file-copy.service';
 import { NotFoundException } from '@nestjs/common';
 import { SectionType } from './dto/update-section-order.dto';
 import { of } from 'rxjs';
@@ -12,69 +15,81 @@ describe('ResumeService', () => {
   let service: ResumeService;
 
   const mockHttpService = {
-    get: jest.fn(() => of({ data: { id: 'user-123' } })),
+    get: vi.fn(() => of({ data: { id: 'user-123' } })),
   };
 
   const mockConfigService = {
-    get: jest.fn((key: string) => {
+    get: vi.fn((key: string) => {
       if (key === 'AUTH_SERVICE_URL') return 'http://auth-service:4001';
       return null;
     }),
   };
 
   const mockStorageService = {
-    uploadFile: jest.fn(),
-    deleteFile: jest.fn(),
-    getFileUrl: jest.fn(),
-    moveFromTemp: jest.fn(),
+    uploadFile: vi.fn(),
+    deleteFile: vi.fn(),
+    getFileUrl: vi.fn(),
+    moveFromTemp: vi.fn(),
+  };
+
+  const mockFileCopyService = {
+    enqueueCopyJob: vi.fn(),
+    getCopyStatus: vi.fn(),
+  };
+
+  const mockCacheManager = {
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    reset: vi.fn(),
   };
 
   const mockPrismaService = {
     resume: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-      delete: jest.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
     },
     resumeSection: {
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
-      update: jest.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
+      update: vi.fn(),
     },
     skill: {
-      create: jest.fn(),
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     experience: {
-      create: jest.fn(),
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     experienceProject: {
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     projectAchievement: {
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     project: {
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     education: {
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     certificate: {
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
-    $transaction: jest.fn(),
+    $transaction: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -85,6 +100,8 @@ describe('ResumeService', () => {
         { provide: HttpService, useValue: mockHttpService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: StorageService, useValue: mockStorageService },
+        { provide: FileCopyService, useValue: mockFileCopyService },
+        { provide: CACHE_MANAGER, useValue: mockCacheManager },
       ],
     }).compile();
 
@@ -92,7 +109,7 @@ describe('ResumeService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {
@@ -107,7 +124,14 @@ describe('ResumeService', () => {
         email: 'john@example.com',
         phone: '010-1234-5678',
         summary: 'Experienced developer',
-        skills: [{ category: 'Language', items: [{ name: 'TypeScript', description: 'Programming language' }], order: 0, visible: true }],
+        skills: [
+          {
+            category: 'Language',
+            items: [{ name: 'TypeScript', description: 'Programming language' }],
+            order: 0,
+            visible: true,
+          },
+        ],
         experiences: [],
         projects: [],
         educations: [],
@@ -251,7 +275,7 @@ describe('ResumeService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].isDefault).toBe(true);
       expect(mockPrismaService.resume.findMany).toHaveBeenCalledWith({
-        where: { userId },
+        where: { userId, deletedAt: null },
         include: expect.any(Object),
         orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
       });
@@ -295,9 +319,7 @@ describe('ResumeService', () => {
       mockPrismaService.resume.findFirst.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.findByIdAndUserId(resumeId, userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findByIdAndUserId(resumeId, userId)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -310,7 +332,14 @@ describe('ResumeService', () => {
         title: 'Updated Title',
         name: 'Updated Name',
         email: 'updated@example.com',
-        skills: [{ category: 'Framework', items: [{ name: 'React', description: 'JavaScript library' }], order: 0, visible: true }],
+        skills: [
+          {
+            category: 'Framework',
+            items: [{ name: 'React', description: 'JavaScript library' }],
+            order: 0,
+            visible: true,
+          },
+        ],
       };
 
       const existingResume = {
@@ -343,7 +372,11 @@ describe('ResumeService', () => {
       mockPrismaService.resume.update.mockResolvedValue(updatedResume);
       mockPrismaService.resume.findUnique.mockResolvedValue(updatedResume);
       mockPrismaService.skill.deleteMany.mockResolvedValue({ count: 0 });
-      mockPrismaService.skill.create.mockResolvedValue({ id: 'skill-1', resumeId, ...updateDto.skills[0] });
+      mockPrismaService.skill.create.mockResolvedValue({
+        id: 'skill-1',
+        resumeId,
+        ...updateDto.skills[0],
+      });
 
       // Act
       const result = await service.update(resumeId, userId, updateDto);
@@ -366,14 +399,12 @@ describe('ResumeService', () => {
       mockPrismaService.resume.findFirst.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.update(resumeId, userId, updateDto)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.update(resumeId, userId, updateDto)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('delete', () => {
-    it('should delete resume for valid user', async () => {
+    it('should soft delete resume for valid user', async () => {
       // Arrange
       const userId = 'user-123';
       const resumeId = 'resume-123';
@@ -383,14 +414,15 @@ describe('ResumeService', () => {
       };
 
       mockPrismaService.resume.findFirst.mockResolvedValue(mockResume);
-      mockPrismaService.resume.delete.mockResolvedValue(mockResume);
+      mockPrismaService.resume.update.mockResolvedValue({ ...mockResume, deletedAt: new Date() });
 
       // Act
       await service.delete(resumeId, userId);
 
       // Assert
-      expect(mockPrismaService.resume.delete).toHaveBeenCalledWith({
+      expect(mockPrismaService.resume.update).toHaveBeenCalledWith({
         where: { id: resumeId },
+        data: { deletedAt: expect.any(Date) },
       });
     });
 

@@ -9,71 +9,76 @@
  * 5. firstValueFrom usage with RxJS 8
  */
 
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+
 // Mock @my-girok/types module before any imports
-jest.mock('@my-girok/types', () => ({
+vi.mock('@my-girok/types', () => ({
   // Identity mappings
   AccountStatusProto: { ACTIVE: 2 },
   AccountModeProto: { USER: 1 },
-  protoToAccountStatus: jest.fn(),
-  protoToAccountMode: jest.fn(),
-  accountStatusToProto: jest.fn(),
-  accountModeToProto: jest.fn(),
+  protoToAccountStatus: vi.fn(),
+  protoToAccountMode: vi.fn(),
+  accountStatusToProto: vi.fn(),
+  accountModeToProto: vi.fn(),
   // Auth mappings
   RoleScopeProto: { GLOBAL: 1 },
-  protoToRoleScope: jest.fn(),
-  roleScopeToProto: jest.fn(),
+  protoToRoleScope: vi.fn(),
+  roleScopeToProto: vi.fn(),
   // Operator status mappings
   OperatorStatusProto: { ACTIVE: 2 },
-  protoToOperatorStatus: jest.fn(),
-  operatorStatusToProto: jest.fn(),
-  isActiveToOperatorStatus: jest.fn(),
-  operatorStatusToIsActive: jest.fn(),
+  protoToOperatorStatus: vi.fn(),
+  operatorStatusToProto: vi.fn(),
+  isActiveToOperatorStatus: vi.fn(),
+  operatorStatusToIsActive: vi.fn(),
   // Auth provider mappings
   AuthProviderProto: { LOCAL: 1 },
-  protoToAuthProvider: jest.fn(),
-  authProviderToProto: jest.fn(),
+  protoToAuthProvider: vi.fn(),
+  authProviderToProto: vi.fn(),
   // Sanction severity mappings
   SanctionSeverityProto: { LOW: 1 },
-  protoToSanctionSeverity: jest.fn(),
-  sanctionSeverityToProto: jest.fn(),
+  protoToSanctionSeverity: vi.fn(),
+  sanctionSeverityToProto: vi.fn(),
   // Legal mappings
   ConsentTypeProto: { TERMS_OF_SERVICE: 1 },
   ConsentStatusProto: { ACTIVE: 1 },
   DocumentTypeProto: { TERMS_OF_SERVICE: 1 },
   DsrTypeProto: { ACCESS: 1 },
   DsrStatusProto: { PENDING: 1 },
-  protoToConsentType: jest.fn(),
-  protoToConsentStatus: jest.fn(),
-  protoToDocumentType: jest.fn(),
-  protoToDsrType: jest.fn(),
-  protoToDsrStatus: jest.fn(),
-  consentTypeToProto: jest.fn(),
-  consentStatusToProto: jest.fn(),
-  documentTypeToProto: jest.fn(),
-  dsrTypeToProto: jest.fn(),
-  dsrStatusToProto: jest.fn(),
+  protoToConsentType: vi.fn(),
+  protoToConsentStatus: vi.fn(),
+  protoToDocumentType: vi.fn(),
+  protoToDsrType: vi.fn(),
+  protoToDsrStatus: vi.fn(),
+  consentTypeToProto: vi.fn(),
+  consentStatusToProto: vi.fn(),
+  documentTypeToProto: vi.fn(),
+  dsrTypeToProto: vi.fn(),
+  dsrStatusToProto: vi.fn(),
   // Sanction mappings
   SubjectTypeProto: { USER: 1 },
   SanctionTypeProto: { WARNING: 1 },
   SanctionStatusProto: { ACTIVE: 1 },
-  protoToSubjectType: jest.fn(),
-  protoToSanctionType: jest.fn(),
-  protoToSanctionStatus: jest.fn(),
-  subjectTypeToProto: jest.fn(),
-  sanctionTypeToProto: jest.fn(),
-  sanctionStatusToProto: jest.fn(),
+  protoToSubjectType: vi.fn(),
+  protoToSanctionType: vi.fn(),
+  protoToSanctionStatus: vi.fn(),
+  subjectTypeToProto: vi.fn(),
+  sanctionTypeToProto: vi.fn(),
+  sanctionStatusToProto: vi.fn(),
 }));
 
 // Mock @nestjs/common Logger
-jest.mock('@nestjs/common', () => ({
-  ...jest.requireActual('@nestjs/common'),
-  Logger: jest.fn().mockImplementation(() => ({
-    log: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-  })),
-}));
+vi.mock('@nestjs/common', async () => {
+  const actual = await vi.importActual<typeof import('@nestjs/common')>('@nestjs/common');
+  return {
+    ...actual,
+    Logger: class MockLogger {
+      log = vi.fn();
+      warn = vi.fn();
+      error = vi.fn();
+      debug = vi.fn();
+    },
+  };
+});
 
 import { status as GrpcStatus } from '@grpc/grpc-js';
 import { Observable, of, throwError, timer, firstValueFrom } from 'rxjs';
@@ -149,11 +154,11 @@ describe('grpc-resilience.util', () => {
 
     beforeEach(() => {
       circuitBreaker = new CircuitBreaker('TestService', config);
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     describe('Initial State (CLOSED)', () => {
@@ -216,7 +221,7 @@ describe('grpc-resilience.util', () => {
 
       it('should track lastFailureTime', () => {
         const now = Date.now();
-        jest.setSystemTime(now);
+        vi.setSystemTime(now);
 
         circuitBreaker.canExecute();
         circuitBreaker.onFailure(grpcError);
@@ -246,7 +251,7 @@ describe('grpc-resilience.util', () => {
 
       it('should transition to HALF_OPEN after reset timeout', () => {
         // Advance time past reset timeout
-        jest.advanceTimersByTime(config.resetTimeoutMs + 1);
+        vi.advanceTimersByTime(config.resetTimeoutMs + 1);
 
         expect(circuitBreaker.canExecute()).toBe(true);
         const metrics = circuitBreaker.getMetrics();
@@ -257,7 +262,7 @@ describe('grpc-resilience.util', () => {
         const initialMetrics = circuitBreaker.getMetrics();
         const initialStateChange = initialMetrics.lastStateChange;
 
-        jest.advanceTimersByTime(config.resetTimeoutMs + 100);
+        vi.advanceTimersByTime(config.resetTimeoutMs + 100);
         circuitBreaker.canExecute();
 
         const metrics = circuitBreaker.getMetrics();
@@ -277,7 +282,7 @@ describe('grpc-resilience.util', () => {
           circuitBreaker.canExecute();
           circuitBreaker.onFailure(grpcError);
         }
-        jest.advanceTimersByTime(config.resetTimeoutMs + 1);
+        vi.advanceTimersByTime(config.resetTimeoutMs + 1);
         circuitBreaker.canExecute(); // Transition to HALF_OPEN
       });
 
@@ -355,7 +360,7 @@ describe('grpc-resilience.util', () => {
         circuitBreaker.onFailure(grpcError);
 
         // Advance time past monitor window
-        jest.advanceTimersByTime(config.monitorWindowMs + 1000);
+        vi.advanceTimersByTime(config.monitorWindowMs + 1000);
 
         // Record another check which triggers cleanup
         circuitBreaker.canExecute();
@@ -373,7 +378,7 @@ describe('grpc-resilience.util', () => {
         circuitBreaker.onFailure(grpcError);
 
         // Advance time but stay within monitor window
-        jest.advanceTimersByTime(config.monitorWindowMs / 2);
+        vi.advanceTimersByTime(config.monitorWindowMs / 2);
 
         circuitBreaker.canExecute();
 
@@ -567,11 +572,11 @@ describe('grpc-resilience.util', () => {
     };
 
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should pass through successful observable', async () => {
@@ -600,8 +605,8 @@ describe('grpc-resilience.util', () => {
       const promise = firstValueFrom(result$);
 
       // Advance timers for retry delays
-      await jest.advanceTimersByTimeAsync(10); // First retry delay
-      await jest.advanceTimersByTimeAsync(20); // Second retry delay
+      await vi.advanceTimersByTimeAsync(10); // First retry delay
+      await vi.advanceTimersByTimeAsync(20); // Second retry delay
 
       const result = await promise;
       expect(result).toBe('success');
@@ -640,7 +645,7 @@ describe('grpc-resilience.util', () => {
 
       // Advance timers for all retry delays
       for (let i = 0; i < config.maxRetries; i++) {
-        await jest.advanceTimersByTimeAsync(config.maxDelayMs);
+        await vi.advanceTimersByTimeAsync(config.maxDelayMs);
       }
 
       await promise;
@@ -658,7 +663,7 @@ describe('grpc-resilience.util', () => {
   // ==========================================================================
   describe('Timeout handling', () => {
     it('should timeout slow observables', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const resilience = createGrpcResilience('TestService', {
         timeoutMs: 100,
@@ -676,14 +681,14 @@ describe('grpc-resilience.util', () => {
       });
 
       // Advance time past timeout
-      await jest.advanceTimersByTimeAsync(150);
+      await vi.advanceTimersByTimeAsync(150);
       await promise;
 
       expect(caughtError).toMatchObject({
         code: GrpcStatus.DEADLINE_EXCEEDED,
       });
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should complete before timeout', async () => {
@@ -699,7 +704,7 @@ describe('grpc-resilience.util', () => {
     });
 
     it('should allow custom timeout per call', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const resilience = createGrpcResilience('TestService', {
         timeoutMs: 1000, // Default 1 second
@@ -717,14 +722,14 @@ describe('grpc-resilience.util', () => {
         caughtError = error;
       });
 
-      await jest.advanceTimersByTimeAsync(100);
+      await vi.advanceTimersByTimeAsync(100);
       await promise;
 
       expect(caughtError).toMatchObject({
         code: GrpcStatus.DEADLINE_EXCEEDED,
       });
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 
@@ -733,11 +738,11 @@ describe('grpc-resilience.util', () => {
   // ==========================================================================
   describe('createGrpcResilience', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should create resilience wrapper with default config', () => {
@@ -950,9 +955,9 @@ describe('grpc-resilience.util', () => {
     });
 
     it('should include lastChecked timestamp', () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const now = Date.now();
-      jest.setSystemTime(now);
+      vi.setSystemTime(now);
 
       const resilience = createGrpcResilience('TestService');
       aggregator.register('TestService', resilience);
@@ -960,7 +965,7 @@ describe('grpc-resilience.util', () => {
       const status = aggregator.getHealthStatus();
       expect(status[0].lastChecked).toBe(now);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 
@@ -1001,7 +1006,7 @@ describe('grpc-resilience.util', () => {
     });
 
     it('should handle delayed observables', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const resilience = createGrpcResilience('TestService', {
         timeoutMs: 1000,
@@ -1011,12 +1016,12 @@ describe('grpc-resilience.util', () => {
 
       const promise = resilience.execute(delayedObservable);
 
-      await jest.advanceTimersByTimeAsync(100);
+      await vi.advanceTimersByTimeAsync(100);
 
       const result = await promise;
       expect(result).toBe('delayed result');
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should take first value from multi-value observables', async () => {
@@ -1107,7 +1112,7 @@ describe('grpc-resilience.util', () => {
     });
 
     it('should handle very small timeout', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const resilience = createGrpcResilience('TestService', {
         timeoutMs: 1, // 1ms timeout
@@ -1124,14 +1129,14 @@ describe('grpc-resilience.util', () => {
         caughtError = error;
       });
 
-      await jest.advanceTimersByTimeAsync(10);
+      await vi.advanceTimersByTimeAsync(10);
       await promise;
 
       expect(caughtError).toMatchObject({
         code: GrpcStatus.DEADLINE_EXCEEDED,
       });
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 });
