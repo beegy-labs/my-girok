@@ -37,7 +37,7 @@ catalog:
   '@testing-library/jest-dom': ^6.9.1
   '@playwright/test': ^1.57.0
 
-  # Testing (Legacy - migrate to Vitest)
+  # Testing (Legacy - remaining: personal-service, legal-service, analytics-service, nest-common)
   jest: ^30.2.0
   '@types/jest': ^30.0.0
 

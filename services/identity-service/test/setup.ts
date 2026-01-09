@@ -2,8 +2,9 @@
 import { vi } from 'vitest';
 import * as nodeCrypto from 'crypto';
 
-// Make Node.js crypto available as global crypto for Web Crypto API compatibility
-if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.randomBytes) {
+// Polyfill globalThis.crypto with Node.js crypto for test environment
+// Node.js 20+ has globalThis.crypto (Web Crypto API), but some libs expect Node crypto methods
+if (typeof globalThis.crypto === 'undefined') {
   Object.defineProperty(globalThis, 'crypto', {
     value: nodeCrypto,
     writable: true,

@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from 'vitest';
 import { ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { of, throwError, firstValueFrom } from 'rxjs';
 import { AuditInterceptor } from './audit.interceptor';
