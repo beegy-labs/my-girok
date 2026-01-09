@@ -1,8 +1,15 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RpcException } from '@nestjs/microservices';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { status as GrpcStatus } from '@grpc/grpc-js';
 import { AuthGrpcController } from './auth.grpc.controller';
 import { PrismaService } from '../database/prisma.service';
+import { AdminSessionService } from '../admin/services/admin-session.service';
+import { AdminMfaService } from '../admin/services/admin-mfa.service';
+import { AdminPasswordService } from '../admin/services/admin-password.service';
+import { OperatorAssignmentService } from '../admin/services/operator-assignment.service';
+import { OutboxService } from '../common/outbox/outbox.service';
 
 // Proto enum values (matching controller enums)
 enum ProtoOperatorStatus {
@@ -47,7 +54,7 @@ enum ProtoSanctionSeverity {
 describe('AuthGrpcController', () => {
   let controller: AuthGrpcController;
   let mockPrismaService: {
-    $queryRaw: jest.Mock;
+    $queryRaw: Mock;
   };
 
   // Mock data
@@ -103,19 +110,59 @@ describe('AuthGrpcController', () => {
 
   beforeEach(async () => {
     mockPrismaService = {
-      $queryRaw: jest.fn(),
+      $queryRaw: vi.fn(),
+    };
+
+    const mockAdminSessionService = {
+      validateSession: vi.fn(),
+      revokeSession: vi.fn(),
+      createSession: vi.fn(),
+    };
+
+    const mockAdminMfaService = {
+      generateChallenge: vi.fn(),
+      verifyChallenge: vi.fn(),
+    };
+
+    const mockAdminPasswordService = {
+      validatePassword: vi.fn(),
+      changePassword: vi.fn(),
+    };
+
+    const mockOperatorAssignmentService = {
+      assignOperator: vi.fn(),
+      unassignOperator: vi.fn(),
+    };
+
+    const mockOutboxService = {
+      addEvent: vi.fn(),
+      saveEvent: vi.fn(),
+    };
+
+    const mockCacheManager = {
+      get: vi.fn(),
+      set: vi.fn(),
+      del: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthGrpcController],
-      providers: [{ provide: PrismaService, useValue: mockPrismaService }],
+      providers: [
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: AdminSessionService, useValue: mockAdminSessionService },
+        { provide: AdminMfaService, useValue: mockAdminMfaService },
+        { provide: AdminPasswordService, useValue: mockAdminPasswordService },
+        { provide: OperatorAssignmentService, useValue: mockOperatorAssignmentService },
+        { provide: OutboxService, useValue: mockOutboxService },
+        { provide: CACHE_MANAGER, useValue: mockCacheManager },
+      ],
     }).compile();
 
     controller = module.get<AuthGrpcController>(AuthGrpcController);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Permission Operations', () => {

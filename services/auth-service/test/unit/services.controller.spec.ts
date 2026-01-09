@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { ServicesController } from '../../src/services/services.controller';
@@ -8,12 +9,12 @@ import { generateTestId, resetTestCounter } from '../utils/test-factory';
 describe('ServicesController', () => {
   let controller: ServicesController;
   let mockServicesService: {
-    getConsentRequirements: jest.Mock;
-    joinService: jest.Mock;
-    addCountryConsent: jest.Mock;
-    getMyConsents: jest.Mock;
-    updateConsent: jest.Mock;
-    withdrawService: jest.Mock;
+    getConsentRequirements: Mock;
+    joinService: Mock;
+    addCountryConsent: Mock;
+    getMyConsents: Mock;
+    updateConsent: Mock;
+    withdrawService: Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -34,12 +35,12 @@ describe('ServicesController', () => {
     resetTestCounter();
 
     mockServicesService = {
-      getConsentRequirements: jest.fn(),
-      joinService: jest.fn(),
-      addCountryConsent: jest.fn(),
-      getMyConsents: jest.fn(),
-      updateConsent: jest.fn(),
-      withdrawService: jest.fn(),
+      getConsentRequirements: vi.fn(),
+      joinService: vi.fn(),
+      addCountryConsent: vi.fn(),
+      getMyConsents: vi.fn(),
+      updateConsent: vi.fn(),
+      withdrawService: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -51,7 +52,7 @@ describe('ServicesController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getConsentRequirements', () => {

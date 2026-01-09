@@ -1,15 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { NotFoundException } from '@nestjs/common';
 import { ProfilesService } from '../../src/identity/profiles/profiles.service';
 import { IdentityPrismaService } from '../../src/database/identity-prisma.service';
 import { Gender } from '.prisma/identity-client';
 
-// Type for mocked Prisma service with jest.fn() methods
+// Type for mocked Prisma service with vi.fn() methods
 type MockPrismaProfile = {
-  findUnique: jest.Mock;
-  create: jest.Mock;
-  update: jest.Mock;
-  delete: jest.Mock;
+  findUnique: Mock;
+  create: Mock;
+  update: Mock;
+  delete: Mock;
 };
 
 describe('ProfilesService', () => {
@@ -40,10 +41,10 @@ describe('ProfilesService', () => {
   beforeEach(async () => {
     const mockPrisma = {
       profile: {
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
+        findUnique: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
       },
     };
 
@@ -152,7 +153,7 @@ describe('ProfilesService', () => {
         displayName: 'New Name',
       });
 
-      const callData = (prisma.profile.update as jest.Mock).mock.calls[0][0].data;
+      const callData = (prisma.profile.update as Mock).mock.calls[0][0].data;
       expect(callData.displayName).toBe('New Name');
       // undefined fields should not be in the update data
       expect('bio' in callData && callData.bio !== undefined).toBe(false);

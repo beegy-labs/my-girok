@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { KakaoStrategy } from './kakao.strategy';
@@ -5,21 +6,21 @@ import { AuthService } from '../auth.service';
 import { AuthProvider, Role } from '@my-girok/types';
 
 // Mock global fetch
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('KakaoStrategy', () => {
   let strategy: KakaoStrategy;
-  let mockAuthService: { findOrCreateOAuthUser: jest.Mock };
-  let mockConfigService: { get: jest.Mock };
+  let mockAuthService: { findOrCreateOAuthUser: Mock };
+  let mockConfigService: { get: Mock };
 
   beforeEach(async () => {
     mockAuthService = {
-      findOrCreateOAuthUser: jest.fn(),
+      findOrCreateOAuthUser: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn((key: string) => {
+      get: vi.fn((key: string) => {
         const config: Record<string, string> = {
           KAKAO_CLIENT_ID: 'test-kakao-client-id',
           KAKAO_CLIENT_SECRET: 'test-kakao-client-secret',
@@ -41,7 +42,7 @@ describe('KakaoStrategy', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validate', () => {
@@ -63,7 +64,7 @@ describe('KakaoStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(kakaoApiResponse),
+        json: vi.fn().mockResolvedValue(kakaoApiResponse),
       });
 
       const mockUser = {
@@ -112,7 +113,7 @@ describe('KakaoStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(kakaoApiResponse),
+        json: vi.fn().mockResolvedValue(kakaoApiResponse),
       });
 
       const mockUser = {
@@ -158,7 +159,7 @@ describe('KakaoStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(kakaoApiResponse),
+        json: vi.fn().mockResolvedValue(kakaoApiResponse),
       });
 
       const mockUser = {
@@ -203,7 +204,7 @@ describe('KakaoStrategy', () => {
     it('should handle Kakao API returning invalid JSON', async () => {
       // Arrange
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
+        json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
       });
 
       // Act & Assert
@@ -226,7 +227,7 @@ describe('KakaoStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(kakaoApiResponse),
+        json: vi.fn().mockResolvedValue(kakaoApiResponse),
       });
 
       mockAuthService.findOrCreateOAuthUser.mockRejectedValue(new Error('Database error'));
@@ -252,7 +253,7 @@ describe('KakaoStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(kakaoApiResponse),
+        json: vi.fn().mockResolvedValue(kakaoApiResponse),
       });
 
       const mockUser = {
@@ -294,7 +295,7 @@ describe('KakaoStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(kakaoApiResponse),
+        json: vi.fn().mockResolvedValue(kakaoApiResponse),
       });
 
       const mockUser = {
@@ -339,7 +340,7 @@ describe('KakaoStrategy', () => {
       };
 
       mockFetch.mockResolvedValue({
-        json: jest.fn().mockResolvedValue(kakaoApiResponse),
+        json: vi.fn().mockResolvedValue(kakaoApiResponse),
       });
 
       // Existing user with old data

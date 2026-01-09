@@ -1,42 +1,43 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { KafkaConsumerService, EventHandler, SubscriptionConfig } from './kafka-consumer.service';
 import { KafkaProducerService, EventMessage } from './kafka-producer.service';
 import { Kafka, EachMessagePayload } from 'kafkajs';
 
+// Create mock consumer outside the module mock for reference
+const mockConsumerMethods = {
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  subscribe: vi.fn(),
+  run: vi.fn(),
+  pause: vi.fn(),
+  resume: vi.fn(),
+};
+
 // Mock kafkajs
-jest.mock('kafkajs', () => ({
-  Kafka: jest.fn().mockImplementation(() => ({
-    consumer: jest.fn().mockReturnValue({
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      subscribe: jest.fn(),
-      run: jest.fn(),
-      pause: jest.fn(),
-      resume: jest.fn(),
-    }),
-  })),
-  logLevel: {
-    NOTHING: 0,
-    ERROR: 1,
-    WARN: 2,
-    INFO: 3,
-    DEBUG: 4,
-  },
-}));
+vi.mock('kafkajs', () => {
+  return {
+    Kafka: class MockKafka {
+      consumer() {
+        return mockConsumerMethods;
+      }
+    },
+    logLevel: {
+      NOTHING: 0,
+      ERROR: 1,
+      WARN: 2,
+      INFO: 3,
+      DEBUG: 4,
+    },
+  };
+});
 
 describe('KafkaConsumerService', () => {
   let service: KafkaConsumerService;
   let mockProducerService: {
-    sendToDLQ: jest.Mock;
+    sendToDLQ: Mock;
   };
-  let mockConsumer: {
-    connect: jest.Mock;
-    disconnect: jest.Mock;
-    subscribe: jest.Mock;
-    run: jest.Mock;
-    pause: jest.Mock;
-    resume: jest.Mock;
-  };
+  let mockConsumer: typeof mockConsumerMethods;
 
   const mockEvent: EventMessage = {
     id: 'event-123',
@@ -49,21 +50,15 @@ describe('KafkaConsumerService', () => {
 
   beforeEach(async () => {
     mockProducerService = {
-      sendToDLQ: jest.fn().mockResolvedValue(undefined),
+      sendToDLQ: vi.fn().mockResolvedValue(undefined),
     };
 
-    mockConsumer = {
-      connect: jest.fn().mockResolvedValue(undefined),
-      disconnect: jest.fn().mockResolvedValue(undefined),
-      subscribe: jest.fn().mockResolvedValue(undefined),
-      run: jest.fn().mockResolvedValue(undefined),
-      pause: jest.fn(),
-      resume: jest.fn(),
-    };
-
-    (Kafka as jest.Mock).mockImplementation(() => ({
-      consumer: jest.fn().mockReturnValue(mockConsumer),
-    }));
+    // Reset mock consumer methods
+    mockConsumer = mockConsumerMethods;
+    mockConsumer.connect.mockResolvedValue(undefined);
+    mockConsumer.disconnect.mockResolvedValue(undefined);
+    mockConsumer.subscribe.mockResolvedValue(undefined);
+    mockConsumer.run.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -76,12 +71,12 @@ describe('KafkaConsumerService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('registerHandler', () => {
     it('should register a handler for a topic', () => {
-      const handler: EventHandler = jest.fn();
+      const handler: EventHandler = vi.fn();
 
       service.registerHandler('identity.account.events' as any, handler);
 
@@ -90,8 +85,8 @@ describe('KafkaConsumerService', () => {
     });
 
     it('should allow multiple handlers for same topic', () => {
-      const handler1: EventHandler = jest.fn();
-      const handler2: EventHandler = jest.fn();
+      const handler1: EventHandler = vi.fn();
+      const handler2: EventHandler = vi.fn();
 
       service.registerHandler('identity.account.events' as any, handler1);
       service.registerHandler('identity.account.events' as any, handler2);
@@ -102,7 +97,7 @@ describe('KafkaConsumerService', () => {
 
   describe('subscribe', () => {
     it('should add subscription and register handler', async () => {
-      const handler: EventHandler = jest.fn();
+      const handler: EventHandler = vi.fn();
       const config: SubscriptionConfig = {
         topic: 'identity.account.events' as any,
         handler,
@@ -117,7 +112,7 @@ describe('KafkaConsumerService', () => {
 
   describe('connect', () => {
     it('should connect consumer and subscribe to topics', async () => {
-      const handler: EventHandler = jest.fn();
+      const handler: EventHandler = vi.fn();
       await service.subscribe({
         topic: 'identity.account.events' as any,
         handler,
@@ -148,7 +143,7 @@ describe('KafkaConsumerService', () => {
     });
 
     it('should subscribe with fromBeginning when specified', async () => {
-      const handler: EventHandler = jest.fn();
+      const handler: EventHandler = vi.fn();
       await service.subscribe({
         topic: 'identity.account.events' as any,
         handler,
@@ -180,7 +175,7 @@ describe('KafkaConsumerService', () => {
 
   describe('handleMessage', () => {
     it('should process message and call handlers', async () => {
-      const handler: EventHandler = jest.fn().mockResolvedValue(undefined);
+      const handler: EventHandler = vi.fn().mockResolvedValue(undefined);
       await service.subscribe({
         topic: 'identity.account.events' as any,
         handler,
@@ -208,8 +203,8 @@ describe('KafkaConsumerService', () => {
           offset: '100',
           attributes: 0,
         },
-        heartbeat: jest.fn(),
-        pause: jest.fn(),
+        heartbeat: vi.fn(),
+        pause: vi.fn(),
       };
 
       await eachMessageCallback!(payload);
@@ -218,7 +213,7 @@ describe('KafkaConsumerService', () => {
     });
 
     it('should handle empty message', async () => {
-      const handler: EventHandler = jest.fn();
+      const handler: EventHandler = vi.fn();
       await service.subscribe({
         topic: 'identity.account.events' as any,
         handler,
@@ -244,8 +239,8 @@ describe('KafkaConsumerService', () => {
           offset: '100',
           attributes: 0,
         },
-        heartbeat: jest.fn(),
-        pause: jest.fn(),
+        heartbeat: vi.fn(),
+        pause: vi.fn(),
       };
 
       await eachMessageCallback!(payload);
@@ -254,7 +249,7 @@ describe('KafkaConsumerService', () => {
     });
 
     it('should send to DLQ on handler error', async () => {
-      const handler: EventHandler = jest.fn().mockRejectedValue(new Error('Handler failed'));
+      const handler: EventHandler = vi.fn().mockRejectedValue(new Error('Handler failed'));
       await service.subscribe({
         topic: 'identity.account.events' as any,
         handler,
@@ -280,8 +275,8 @@ describe('KafkaConsumerService', () => {
           offset: '100',
           attributes: 0,
         },
-        heartbeat: jest.fn(),
-        pause: jest.fn(),
+        heartbeat: vi.fn(),
+        pause: vi.fn(),
       };
 
       await eachMessageCallback!(payload);

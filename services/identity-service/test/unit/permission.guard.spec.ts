@@ -1,19 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionGuard } from '../../src/common/guards/permission.guard';
 import { CacheService } from '../../src/common/cache/cache.service';
 import { IdentityPrismaService } from '../../src/database/identity-prisma.service';
 
-// Type for mocked Prisma service with jest.fn() methods
+// Type for mocked Prisma service with vi.fn() methods
 type MockPrismaAccount = {
-  findUnique: jest.Mock;
+  findUnique: Mock;
 };
 
 describe('PermissionGuard', () => {
   let guard: PermissionGuard;
-  let reflector: jest.Mocked<Reflector>;
-  let cacheService: jest.Mocked<CacheService>;
+  let reflector: Mocked<Reflector>;
+  let cacheService: Mocked<CacheService>;
   let prisma: { account: MockPrismaAccount };
 
   const mockUser = {
@@ -40,17 +41,17 @@ describe('PermissionGuard', () => {
 
   beforeEach(async () => {
     const mockReflector = {
-      getAllAndOverride: jest.fn(),
+      getAllAndOverride: vi.fn(),
     };
 
     const mockCacheService = {
-      getUserPermissions: jest.fn(),
-      setUserPermissions: jest.fn(),
+      getUserPermissions: vi.fn(),
+      setUserPermissions: vi.fn(),
     };
 
     const mockPrisma = {
       account: {
-        findUnique: jest.fn(),
+        findUnique: vi.fn(),
       },
     };
 
@@ -105,7 +106,7 @@ describe('PermissionGuard', () => {
 
     it('should throw ForbiddenException when user is not authenticated', async () => {
       // Set up mock to return permissions requiring authentication (for both assertions)
-      (reflector.getAllAndOverride as jest.Mock)
+      (reflector.getAllAndOverride as Mock)
         .mockReturnValueOnce(['accounts:read']) // PERMISSIONS_KEY - first call
         .mockReturnValueOnce(undefined) // ROLES_KEY - first call
         .mockReturnValueOnce(false) // REQUIRE_ANY_KEY - first call

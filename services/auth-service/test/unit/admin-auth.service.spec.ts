@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -11,18 +12,18 @@ import { createMockPrismaService, MockPrismaService } from '../utils/mock-prisma
 import { createMockCacheManager, MockCacheManager } from '../utils/mock-cache';
 import { generateTestId, resetTestCounter } from '../utils/test-factory';
 
-jest.mock('bcrypt');
+vi.mock('bcrypt');
 
 describe('AdminAuthService', () => {
   let service: AdminAuthService;
   let mockPrisma: MockPrismaService;
   let mockCache: MockCacheManager;
   let mockJwtService: {
-    verify: jest.Mock;
-    signAsync: jest.Mock;
+    verify: Mock;
+    signAsync: Mock;
   };
   let mockConfigService: {
-    get: jest.Mock;
+    get: Mock;
   };
 
   const adminId = '00000000-0000-7000-0000-000000000001';
@@ -55,11 +56,11 @@ describe('AdminAuthService', () => {
     mockPrisma = createMockPrismaService();
     mockCache = createMockCacheManager();
     mockJwtService = {
-      verify: jest.fn(),
-      signAsync: jest.fn().mockResolvedValue('mock-token'),
+      verify: vi.fn(),
+      signAsync: vi.fn().mockResolvedValue('mock-token'),
     };
     mockConfigService = {
-      get: jest.fn().mockReturnValue('1h'),
+      get: vi.fn().mockReturnValue('1h'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -76,7 +77,7 @@ describe('AdminAuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('login', () => {
@@ -88,7 +89,7 @@ describe('AdminAuthService', () => {
         .mockResolvedValueOnce([{ count: BigInt(5) }]) // allCount for wildcard check
         .mockResolvedValueOnce([]); // getAdminServices
 
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.compare as Mock).mockResolvedValue(true);
       mockPrisma.$executeRaw.mockResolvedValue(1);
       mockCache.get.mockResolvedValue(undefined);
 
@@ -134,7 +135,7 @@ describe('AdminAuthService', () => {
     it('should throw UnauthorizedException when password is invalid', async () => {
       // Arrange
       mockPrisma.$queryRaw.mockResolvedValueOnce([mockAdmin]);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (bcrypt.compare as Mock).mockResolvedValue(false);
 
       // Act & Assert
       await expect(
@@ -149,7 +150,7 @@ describe('AdminAuthService', () => {
       // Arrange
       mockPrisma.$queryRaw.mockResolvedValueOnce([mockAdmin]).mockResolvedValueOnce([]); // getAdminServices
 
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.compare as Mock).mockResolvedValue(true);
       mockPrisma.$executeRaw.mockResolvedValue(1);
       mockCache.get.mockResolvedValue(['admin:read', 'admin:write']);
 

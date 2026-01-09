@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 
@@ -6,7 +7,7 @@ import { PrismaService } from '../../src/database/prisma.service';
 
 describe('GlobalSettingsService', () => {
   let service: GlobalSettingsService;
-  let mockPrismaService: { $queryRaw: jest.Mock; $executeRaw: jest.Mock };
+  let mockPrismaService: { $queryRaw: Mock; $executeRaw: Mock };
 
   const mockCountry = {
     id: 'country-123',
@@ -34,8 +35,8 @@ describe('GlobalSettingsService', () => {
 
   beforeEach(async () => {
     mockPrismaService = {
-      $queryRaw: jest.fn(),
-      $executeRaw: jest.fn(),
+      $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -46,7 +47,7 @@ describe('GlobalSettingsService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('listCountries', () => {

@@ -3,48 +3,49 @@
  * Provides a fully mocked PrismaService with all query methods
  */
 
+import { vi, Mock } from 'vitest';
 import { PrismaService } from '../../src/database/prisma.service';
 
 export type MockPrismaService = {
   // Raw query methods
-  $queryRaw: jest.Mock;
-  $executeRaw: jest.Mock;
-  $transaction: jest.Mock;
-  $connect: jest.Mock;
-  $disconnect: jest.Mock;
+  $queryRaw: Mock;
+  $executeRaw: Mock;
+  $transaction: Mock;
+  $connect: Mock;
+  $disconnect: Mock;
 
   // Outbox events (Prisma model)
   outboxEvent: {
-    create: jest.Mock;
-    findMany: jest.Mock;
-    update: jest.Mock;
-    deleteMany: jest.Mock;
+    create: Mock;
+    findMany: Mock;
+    update: Mock;
+    deleteMany: Mock;
   };
 
   // User model
   user: {
-    findUnique: jest.Mock;
-    findMany: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    delete: jest.Mock;
+    findUnique: Mock;
+    findMany: Mock;
+    create: Mock;
+    update: Mock;
+    delete: Mock;
   };
 
   // Session model
   session: {
-    findUnique: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    delete: jest.Mock;
-    deleteMany: jest.Mock;
+    findUnique: Mock;
+    create: Mock;
+    update: Mock;
+    delete: Mock;
+    deleteMany: Mock;
   };
 
   // Admin model
   admin: {
-    findUnique: jest.Mock;
-    findMany: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
+    findUnique: Mock;
+    findMany: Mock;
+    create: Mock;
+    update: Mock;
   };
 };
 
@@ -53,43 +54,43 @@ export type MockPrismaService = {
  */
 export function createMockPrismaService(): MockPrismaService {
   return {
-    $queryRaw: jest.fn(),
-    $executeRaw: jest.fn(),
-    $transaction: jest.fn((callback: (tx: MockPrismaService) => Promise<unknown>) => {
+    $queryRaw: vi.fn(),
+    $executeRaw: vi.fn(),
+    $transaction: vi.fn((callback: (tx: MockPrismaService) => Promise<unknown>) => {
       // Execute the callback with the mock itself as the transaction client
       return callback(createMockPrismaService());
     }),
-    $connect: jest.fn().mockResolvedValue(undefined),
-    $disconnect: jest.fn().mockResolvedValue(undefined),
+    $connect: vi.fn().mockResolvedValue(undefined),
+    $disconnect: vi.fn().mockResolvedValue(undefined),
 
     outboxEvent: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      update: jest.fn(),
-      deleteMany: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
     },
 
     user: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
 
     session: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
 
     admin: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
   };
 }

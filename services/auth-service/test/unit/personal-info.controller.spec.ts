@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PersonalInfoController } from '../../src/users/controllers/personal-info.controller';
@@ -7,9 +8,9 @@ import { generateTestId, resetTestCounter } from '../utils/test-factory';
 describe('PersonalInfoController', () => {
   let controller: PersonalInfoController;
   let mockPersonalInfoService: {
-    getMyPersonalInfo: jest.Mock;
-    updatePersonalInfo: jest.Mock;
-    deletePersonalInfo: jest.Mock;
+    getMyPersonalInfo: Mock;
+    updatePersonalInfo: Mock;
+    deletePersonalInfo: Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -42,9 +43,9 @@ describe('PersonalInfoController', () => {
     resetTestCounter();
 
     mockPersonalInfoService = {
-      getMyPersonalInfo: jest.fn(),
-      updatePersonalInfo: jest.fn(),
-      deletePersonalInfo: jest.fn(),
+      getMyPersonalInfo: vi.fn(),
+      updatePersonalInfo: vi.fn(),
+      deletePersonalInfo: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -56,7 +57,7 @@ describe('PersonalInfoController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getMyPersonalInfo', () => {

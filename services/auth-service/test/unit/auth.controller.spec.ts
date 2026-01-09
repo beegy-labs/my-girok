@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 
@@ -8,16 +9,16 @@ import { resetTestCounter } from '../utils/test-factory';
 describe('AuthController', () => {
   let controller: AuthController;
   let mockAuthService: {
-    register: jest.Mock;
-    login: jest.Mock;
-    refreshToken: jest.Mock;
-    logout: jest.Mock;
-    generateTokens: jest.Mock;
-    saveRefreshToken: jest.Mock;
-    grantDomainAccess: jest.Mock;
+    register: Mock;
+    login: Mock;
+    refreshToken: Mock;
+    logout: Mock;
+    generateTokens: Mock;
+    saveRefreshToken: Mock;
+    grantDomainAccess: Mock;
   };
   let mockConfigService: {
-    get: jest.Mock;
+    get: Mock;
   };
 
   const userId = '00000000-0000-7000-0000-000000000001';
@@ -26,16 +27,16 @@ describe('AuthController', () => {
     resetTestCounter();
 
     mockAuthService = {
-      register: jest.fn(),
-      login: jest.fn(),
-      refreshToken: jest.fn(),
-      logout: jest.fn(),
-      generateTokens: jest.fn(),
-      saveRefreshToken: jest.fn(),
-      grantDomainAccess: jest.fn(),
+      register: vi.fn(),
+      login: vi.fn(),
+      refreshToken: vi.fn(),
+      logout: vi.fn(),
+      generateTokens: vi.fn(),
+      saveRefreshToken: vi.fn(),
+      grantDomainAccess: vi.fn(),
     };
     mockConfigService = {
-      get: jest.fn().mockReturnValue('http://localhost:3000'),
+      get: vi.fn().mockReturnValue('http://localhost:3000'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -50,7 +51,7 @@ describe('AuthController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('register', () => {
@@ -162,7 +163,7 @@ describe('AuthController', () => {
         user: mockUser,
       } as any;
       const mockRes = {
-        redirect: jest.fn(),
+        redirect: vi.fn(),
       } as any;
 
       mockAuthService.generateTokens.mockResolvedValue({
@@ -196,7 +197,7 @@ describe('AuthController', () => {
         role: 'USER',
       };
       const mockReq = { user: mockUser } as any;
-      const mockRes = { redirect: jest.fn() } as any;
+      const mockRes = { redirect: vi.fn() } as any;
 
       mockAuthService.generateTokens.mockResolvedValue({
         accessToken: 'kakao-access-token',
@@ -223,7 +224,7 @@ describe('AuthController', () => {
         role: 'USER',
       };
       const mockReq = { user: mockUser } as any;
-      const mockRes = { redirect: jest.fn() } as any;
+      const mockRes = { redirect: vi.fn() } as any;
 
       mockAuthService.generateTokens.mockResolvedValue({
         accessToken: 'naver-access-token',

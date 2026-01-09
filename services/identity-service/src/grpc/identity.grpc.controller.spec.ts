@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { status as GrpcStatus } from '@grpc/grpc-js';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { IdentityGrpcController } from './identity.grpc.controller';
 import { AccountsService } from '../identity/accounts/accounts.service';
 import { SessionsService } from '../identity/sessions/sessions.service';
@@ -9,10 +10,30 @@ import { DevicesService } from '../identity/devices/devices.service';
 import { ProfilesService } from '../identity/profiles/profiles.service';
 import { CryptoService } from '../common/crypto';
 
+// Type for mocked services
+type MockedAccountsService = {
+  findById: Mock;
+  findByEmail: Mock;
+  findByUsername: Mock;
+  create: Mock;
+  update: Mock;
+  delete: Mock;
+  validatePassword: Mock;
+  recordFailedLogin: Mock;
+  resetFailedLogins: Mock;
+};
+
+type MockedSessionsService = {
+  findByTokenHash: Mock;
+  revoke: Mock;
+  revokeAllForAccount: Mock;
+  create: Mock;
+};
+
 describe('IdentityGrpcController', () => {
   let controller: IdentityGrpcController;
-  let accountsService: jest.Mocked<AccountsService>;
-  let sessionsService: jest.Mocked<SessionsService>;
+  let accountsService: MockedAccountsService;
+  let sessionsService: MockedSessionsService;
 
   const mockAccount = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -48,37 +69,37 @@ describe('IdentityGrpcController', () => {
 
   beforeEach(async () => {
     const mockAccountsService = {
-      findById: jest.fn(),
-      findByEmail: jest.fn(),
-      findByUsername: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      validatePassword: jest.fn(),
-      recordFailedLogin: jest.fn(),
-      resetFailedLogins: jest.fn(),
+      findById: vi.fn(),
+      findByEmail: vi.fn(),
+      findByUsername: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      validatePassword: vi.fn(),
+      recordFailedLogin: vi.fn(),
+      resetFailedLogins: vi.fn(),
     };
 
     const mockSessionsService = {
-      findByTokenHash: jest.fn(),
-      revoke: jest.fn(),
-      revokeAllForAccount: jest.fn(),
-      create: jest.fn(),
+      findByTokenHash: vi.fn(),
+      revoke: vi.fn(),
+      revokeAllForAccount: vi.fn(),
+      create: vi.fn(),
     };
 
     const mockDevicesService = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      trust: jest.fn(),
-      remove: jest.fn(),
+      findAll: vi.fn(),
+      findById: vi.fn(),
+      trust: vi.fn(),
+      remove: vi.fn(),
     };
 
     const mockProfilesService = {
-      findByAccountId: jest.fn(),
+      findByAccountId: vi.fn(),
     };
 
     const mockCryptoService = {
-      hash: jest.fn().mockImplementation((val) => `hashed_${val}`),
+      hash: vi.fn().mockImplementation((val) => `hashed_${val}`),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -405,10 +426,10 @@ describe('IdentityGrpcController', () => {
   });
 
   describe('validateSession', () => {
-    let cryptoService: { hash: jest.Mock };
+    let cryptoService: { hash: Mock };
 
     beforeEach(() => {
-      cryptoService = { hash: jest.fn().mockImplementation((val) => `hashed_${val}`) };
+      cryptoService = { hash: vi.fn().mockImplementation((val) => `hashed_${val}`) };
       (controller as unknown as { cryptoService: typeof cryptoService }).cryptoService =
         cryptoService;
     });
@@ -555,10 +576,10 @@ describe('IdentityGrpcController', () => {
   });
 
   describe('getAccountDevices', () => {
-    let devicesService: { findAll: jest.Mock };
+    let devicesService: { findAll: Mock };
 
     beforeEach(() => {
-      devicesService = { findAll: jest.fn() };
+      devicesService = { findAll: vi.fn() };
       (controller as unknown as { devicesService: typeof devicesService }).devicesService =
         devicesService;
     });
@@ -624,10 +645,10 @@ describe('IdentityGrpcController', () => {
   });
 
   describe('getProfile', () => {
-    let profilesService: { findByAccountId: jest.Mock };
+    let profilesService: { findByAccountId: Mock };
 
     beforeEach(() => {
-      profilesService = { findByAccountId: jest.fn() };
+      profilesService = { findByAccountId: vi.fn() };
       (controller as unknown as { profilesService: typeof profilesService }).profilesService =
         profilesService;
     });

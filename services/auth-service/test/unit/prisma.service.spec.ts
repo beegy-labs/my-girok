@@ -1,10 +1,11 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../src/database/prisma.service';
 
 describe('PrismaService', () => {
   let service: PrismaService;
-  let connectSpy: jest.SpyInstance;
-  let disconnectSpy: jest.SpyInstance;
+  let connectSpy: ReturnType<typeof vi.spyOn>;
+  let disconnectSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -14,12 +15,12 @@ describe('PrismaService', () => {
     service = module.get<PrismaService>(PrismaService);
 
     // Mock $connect and $disconnect to avoid actual database calls
-    connectSpy = jest.spyOn(service, '$connect').mockResolvedValue();
-    disconnectSpy = jest.spyOn(service, '$disconnect').mockResolvedValue();
+    connectSpy = vi.spyOn(service, '$connect').mockResolvedValue();
+    disconnectSpy = vi.spyOn(service, '$disconnect').mockResolvedValue();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('onModuleInit', () => {

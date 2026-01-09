@@ -2,11 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { ApiKeyGuard } from '../../src/common/guards/api-key.guard';
+
+// Type for mocked Reflector
+type MockedReflector = {
+  getAllAndOverride: Mock;
+};
 
 describe('ApiKeyGuard', () => {
   let guard: ApiKeyGuard;
-  let reflector: jest.Mocked<Reflector>;
+  let reflector: MockedReflector;
 
   const createMockExecutionContext = (
     headers: Record<string, string | string[]> = {},
@@ -29,11 +35,11 @@ describe('ApiKeyGuard', () => {
 
   beforeEach(async () => {
     const mockReflector = {
-      getAllAndOverride: jest.fn(),
+      getAllAndOverride: vi.fn(),
     };
 
     const mockConfigService = {
-      get: jest.fn((key: string) => {
+      get: vi.fn((key: string) => {
         if (key === 'API_KEYS') {
           return 'test-api-key-1,test-api-key-2';
         }
@@ -177,12 +183,12 @@ describe('ApiKeyGuard', () => {
       process.env.API_KEYS = '';
 
       const mockConfigNoProd = {
-        get: jest.fn().mockReturnValue(''),
+        get: vi.fn().mockReturnValue(''),
       };
 
       expect(() => {
         new ApiKeyGuard(
-          { getAllAndOverride: jest.fn() } as unknown as Reflector,
+          { getAllAndOverride: vi.fn() } as unknown as Reflector,
           mockConfigNoProd as unknown as ConfigService,
         );
       }).toThrow('API_KEYS is required in production');
@@ -192,7 +198,7 @@ describe('ApiKeyGuard', () => {
   describe('edge cases', () => {
     it('should handle whitespace in API keys config', async () => {
       const mockConfigWithWhitespace = {
-        get: jest.fn().mockReturnValue('  key1  ,  key2  '),
+        get: vi.fn().mockReturnValue('  key1  ,  key2  '),
       };
 
       process.env.NODE_ENV = 'test';
@@ -200,7 +206,7 @@ describe('ApiKeyGuard', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           ApiKeyGuard,
-          { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+          { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
           { provide: ConfigService, useValue: mockConfigWithWhitespace },
         ],
       }).compile();
@@ -208,7 +214,7 @@ describe('ApiKeyGuard', () => {
       const testGuard = module.get<ApiKeyGuard>(ApiKeyGuard);
       const testReflector = module.get<Reflector>(Reflector);
 
-      (testReflector.getAllAndOverride as jest.Mock).mockReturnValue(false);
+      (testReflector.getAllAndOverride as Mock).mockReturnValue(false);
 
       const context = createMockExecutionContext({
         'x-api-key': 'key1',

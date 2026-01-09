@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { HealthController } from './health.controller';
 import { IdentityPrismaService } from '../../database/identity-prisma.service';
 import { CacheService } from '../cache';
@@ -7,30 +8,30 @@ import { CacheService } from '../cache';
 describe('HealthController', () => {
   let controller: HealthController;
   let mockPrismaService: {
-    $queryRaw: jest.Mock;
+    $queryRaw: Mock;
   };
   let mockCacheService: {
-    set: jest.Mock;
-    get: jest.Mock;
-    del: jest.Mock;
+    set: Mock;
+    get: Mock;
+    del: Mock;
   };
   let mockConfigService: {
-    get: jest.Mock;
+    get: Mock;
   };
 
   beforeEach(async () => {
     mockPrismaService = {
-      $queryRaw: jest.fn(),
+      $queryRaw: vi.fn(),
     };
 
     mockCacheService = {
-      set: jest.fn(),
-      get: jest.fn(),
-      del: jest.fn(),
+      set: vi.fn(),
+      get: vi.fn(),
+      del: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn().mockReturnValue('1.0.0'),
+      get: vi.fn().mockReturnValue('1.0.0'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -46,7 +47,7 @@ describe('HealthController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getHealth', () => {

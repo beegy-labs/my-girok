@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../database/prisma.service';
@@ -10,60 +11,60 @@ import { IdentityGrpcClient } from '@my-girok/nest-common';
 describe('AuthService', () => {
   let service: AuthService;
   let mockPrismaService: {
-    user: { findUnique: jest.Mock; findFirst: jest.Mock; create: jest.Mock };
+    user: { findUnique: Mock; findFirst: Mock; create: Mock };
     session: {
-      create: jest.Mock;
-      findUnique: jest.Mock;
-      delete: jest.Mock;
-      update: jest.Mock;
-      updateMany: jest.Mock;
+      create: Mock;
+      findUnique: Mock;
+      delete: Mock;
+      update: Mock;
+      updateMany: Mock;
     };
-    domainAccessToken: { create: jest.Mock };
-    $queryRaw: jest.Mock;
+    domainAccessToken: { create: Mock };
+    $queryRaw: Mock;
   };
-  let mockJwtService: { sign: jest.Mock; signAsync: jest.Mock; verify: jest.Mock };
-  let mockConfigService: { get: jest.Mock };
+  let mockJwtService: { sign: Mock; signAsync: Mock; verify: Mock };
+  let mockConfigService: { get: Mock };
   let mockIdentityGrpcClient: {
-    createAccount: jest.Mock;
-    getAccount: jest.Mock;
-    getAccountByEmail: jest.Mock;
-    updateAccount: jest.Mock;
-    validateCredentials: jest.Mock;
-    validatePassword: jest.Mock;
-    createSession: jest.Mock;
-    validateSession: jest.Mock;
-    revokeSession: jest.Mock;
+    createAccount: Mock;
+    getAccount: Mock;
+    getAccountByEmail: Mock;
+    updateAccount: Mock;
+    validateCredentials: Mock;
+    validatePassword: Mock;
+    createSession: Mock;
+    validateSession: Mock;
+    revokeSession: Mock;
   };
 
   beforeEach(async () => {
     // Create fresh mocks for each test
     mockPrismaService = {
       user: {
-        findUnique: jest.fn(),
-        findFirst: jest.fn(),
-        create: jest.fn(),
+        findUnique: vi.fn(),
+        findFirst: vi.fn(),
+        create: vi.fn(),
       },
       session: {
-        create: jest.fn(),
-        findUnique: jest.fn(),
-        delete: jest.fn(),
-        update: jest.fn(),
-        updateMany: jest.fn(),
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        delete: vi.fn(),
+        update: vi.fn(),
+        updateMany: vi.fn(),
       },
       domainAccessToken: {
-        create: jest.fn(),
+        create: vi.fn(),
       },
-      $queryRaw: jest.fn(),
+      $queryRaw: vi.fn(),
     };
 
     mockJwtService = {
-      sign: jest.fn(),
-      signAsync: jest.fn(),
-      verify: jest.fn(),
+      sign: vi.fn(),
+      signAsync: vi.fn(),
+      verify: vi.fn(),
     };
 
     mockConfigService = {
-      get: jest.fn((key: string, defaultValue?: string) => {
+      get: vi.fn((key: string, defaultValue?: string) => {
         const config: Record<string, string> = {
           JWT_SECRET: 'test-secret',
           JWT_REFRESH_SECRET: 'test-refresh-secret',
@@ -76,15 +77,15 @@ describe('AuthService', () => {
     };
 
     mockIdentityGrpcClient = {
-      createAccount: jest.fn(),
-      getAccount: jest.fn(),
-      getAccountByEmail: jest.fn(),
-      updateAccount: jest.fn(),
-      validateCredentials: jest.fn(),
-      validatePassword: jest.fn(),
-      createSession: jest.fn(),
-      validateSession: jest.fn(),
-      revokeSession: jest.fn(),
+      createAccount: vi.fn(),
+      getAccount: vi.fn(),
+      getAccountByEmail: vi.fn(),
+      updateAccount: vi.fn(),
+      validateCredentials: vi.fn(),
+      validatePassword: vi.fn(),
+      createSession: vi.fn(),
+      validateSession: vi.fn(),
+      revokeSession: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -101,7 +102,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('register', () => {

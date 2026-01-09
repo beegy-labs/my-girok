@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotFoundException,
@@ -14,13 +15,13 @@ import { createMockPrismaService, MockPrismaService } from '../utils/mock-prisma
 import { generateTestId, resetTestCounter } from '../utils/test-factory';
 import { ConsentType } from '@my-girok/types';
 
-jest.mock('bcrypt');
+vi.mock('bcrypt');
 
 describe('AccountLinkingService', () => {
   let service: AccountLinkingService;
   let mockPrisma: MockPrismaService;
   let mockAuthService: {
-    generateTokensWithServices: jest.Mock;
+    generateTokensWithServices: Mock;
   };
 
   const primaryUserId = '00000000-0000-7000-0000-000000000001';
@@ -50,7 +51,7 @@ describe('AccountLinkingService', () => {
 
     mockPrisma = createMockPrismaService();
     mockAuthService = {
-      generateTokensWithServices: jest.fn().mockResolvedValue({
+      generateTokensWithServices: vi.fn().mockResolvedValue({
         accessToken: 'mock-access-token',
         refreshToken: 'mock-refresh-token',
       }),
@@ -68,7 +69,7 @@ describe('AccountLinkingService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('findLinkableAccounts', () => {
@@ -268,11 +269,11 @@ describe('AccountLinkingService', () => {
       };
 
       mockPrisma.$queryRaw.mockResolvedValueOnce([mockLink]);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.compare as Mock).mockResolvedValue(true);
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const tx = {
-          $executeRaw: jest.fn().mockResolvedValue(1),
+          $executeRaw: vi.fn().mockResolvedValue(1),
           $queryRaw: jest
             .fn()
             .mockResolvedValueOnce([]) // collectPlatformConsentTx - existing
@@ -356,7 +357,7 @@ describe('AccountLinkingService', () => {
           linkedPassword: 'hashed-password',
         },
       ]);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (bcrypt.compare as Mock).mockResolvedValue(false);
 
       // Act & Assert
       await expect(
@@ -443,7 +444,7 @@ describe('AccountLinkingService', () => {
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const tx = {
-          $executeRaw: jest.fn().mockResolvedValue(1),
+          $executeRaw: vi.fn().mockResolvedValue(1),
           $queryRaw: jest
             .fn()
             .mockResolvedValueOnce([{ count: BigInt(0) }]) // no other links for primary
@@ -481,7 +482,7 @@ describe('AccountLinkingService', () => {
 
       mockPrisma.$transaction.mockImplementation(async (callback: any) => {
         const tx = {
-          $executeRaw: jest.fn().mockResolvedValue(1),
+          $executeRaw: vi.fn().mockResolvedValue(1),
           $queryRaw: jest
             .fn()
             .mockResolvedValueOnce([{ count: BigInt(1) }]) // has other links for primary

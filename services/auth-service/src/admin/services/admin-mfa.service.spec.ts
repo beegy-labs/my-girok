@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminMfaService, MfaConfigRow } from './admin-mfa.service';
 import { PrismaService } from '../../database/prisma.service';
@@ -5,13 +6,13 @@ import { CryptoService } from '../../common/crypto/crypto.service';
 import { OutboxService } from '../../common/outbox/outbox.service';
 import * as totpUtils from '../../common/utils/totp.utils';
 
-jest.mock('../../common/utils/totp.utils');
+vi.mock('../../common/utils/totp.utils');
 
 describe('AdminMfaService', () => {
   let service: AdminMfaService;
-  let prismaService: jest.Mocked<PrismaService>;
-  let cryptoService: jest.Mocked<CryptoService>;
-  let outboxService: jest.Mocked<OutboxService>;
+  let prismaService: Mocked<PrismaService>;
+  let cryptoService: Mocked<CryptoService>;
+  let outboxService: Mocked<OutboxService>;
 
   const mockAdminId = '01935c6d-c2d0-7abc-8def-1234567890ab';
   const mockAdminEmail = 'admin@example.com';
@@ -21,32 +22,32 @@ describe('AdminMfaService', () => {
   const mockBackupCodesHash = ['hash1', 'hash2', 'hash3'];
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup mocks for totpUtils
-    (totpUtils.generateTotpSecret as jest.Mock).mockReturnValue(mockSecret);
-    (totpUtils.generateQrCodeUri as jest.Mock).mockReturnValue(
+    (totpUtils.generateTotpSecret as Mock).mockReturnValue(mockSecret);
+    (totpUtils.generateQrCodeUri as Mock).mockReturnValue(
       `otpauth://totp/MyGirok%20Admin:${mockAdminEmail}?secret=${mockSecret}`,
     );
-    (totpUtils.generateBackupCodes as jest.Mock).mockReturnValue(mockBackupCodes);
-    (totpUtils.hashBackupCode as jest.Mock).mockImplementation(
+    (totpUtils.generateBackupCodes as Mock).mockReturnValue(mockBackupCodes);
+    (totpUtils.hashBackupCode as Mock).mockImplementation(
       (code) => `hash_${code.replace('-', '')}`,
     );
-    (totpUtils.verifyTotpCode as jest.Mock).mockReturnValue(true);
-    (totpUtils.verifyBackupCode as jest.Mock).mockReturnValue(-1);
+    (totpUtils.verifyTotpCode as Mock).mockReturnValue(true);
+    (totpUtils.verifyBackupCode as Mock).mockReturnValue(-1);
 
     const mockPrismaService = {
-      $queryRaw: jest.fn(),
-      $executeRaw: jest.fn(),
+      $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
     };
 
     const mockCryptoService = {
-      encrypt: jest.fn().mockReturnValue(mockEncryptedSecret),
-      decrypt: jest.fn().mockReturnValue(mockSecret),
+      encrypt: vi.fn().mockReturnValue(mockEncryptedSecret),
+      decrypt: vi.fn().mockReturnValue(mockSecret),
     };
 
     const mockOutboxService = {
-      addEventDirect: jest.fn().mockResolvedValue('event-id'),
+      addEventDirect: vi.fn().mockResolvedValue('event-id'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -141,7 +142,7 @@ describe('AdminMfaService', () => {
 
       prismaService.$queryRaw.mockResolvedValue([config]);
       prismaService.$executeRaw.mockResolvedValue(1);
-      (totpUtils.verifyTotpCode as jest.Mock).mockReturnValue(true);
+      (totpUtils.verifyTotpCode as Mock).mockReturnValue(true);
 
       const result = await service.verifyMfaSetup(mockAdminId, '123456');
 
@@ -195,7 +196,7 @@ describe('AdminMfaService', () => {
       };
 
       prismaService.$queryRaw.mockResolvedValue([config]);
-      (totpUtils.verifyTotpCode as jest.Mock).mockReturnValue(false);
+      (totpUtils.verifyTotpCode as Mock).mockReturnValue(false);
 
       const result = await service.verifyMfaSetup(mockAdminId, 'invalid');
 
@@ -218,7 +219,7 @@ describe('AdminMfaService', () => {
       };
 
       prismaService.$queryRaw.mockResolvedValue([config]);
-      (totpUtils.verifyTotpCode as jest.Mock).mockReturnValue(true);
+      (totpUtils.verifyTotpCode as Mock).mockReturnValue(true);
 
       const result = await service.verifyTotpCode(mockAdminId, '123456');
 
@@ -251,7 +252,7 @@ describe('AdminMfaService', () => {
 
       prismaService.$queryRaw.mockResolvedValue([config]);
       prismaService.$executeRaw.mockResolvedValue(1);
-      (totpUtils.verifyBackupCode as jest.Mock).mockReturnValue(1); // Match at index 1
+      (totpUtils.verifyBackupCode as Mock).mockReturnValue(1); // Match at index 1
 
       const result = await service.verifyBackupCode(mockAdminId, 'EFGH-5678');
 
@@ -273,7 +274,7 @@ describe('AdminMfaService', () => {
       };
 
       prismaService.$queryRaw.mockResolvedValue([config]);
-      (totpUtils.verifyBackupCode as jest.Mock).mockReturnValue(-1);
+      (totpUtils.verifyBackupCode as Mock).mockReturnValue(-1);
 
       const result = await service.verifyBackupCode(mockAdminId, 'INVALID');
 

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -8,7 +9,7 @@ import { ApiKeyGuard } from '../../src/common/guards/api-key.guard';
 
 describe('SessionsController', () => {
   let controller: SessionsController;
-  let service: jest.Mocked<SessionsService>;
+  let service: Mocked<SessionsService>;
 
   const mockSession = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -45,20 +46,20 @@ describe('SessionsController', () => {
 
   beforeEach(async () => {
     const mockService = {
-      create: jest.fn(),
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      refresh: jest.fn(),
-      revoke: jest.fn(),
-      revokeAllForAccount: jest.fn(),
-      touch: jest.fn(),
-      validateAccessToken: jest.fn(),
-      getActiveSessionCount: jest.fn(),
-      cleanupExpired: jest.fn(),
+      create: vi.fn(),
+      findAll: vi.fn(),
+      findById: vi.fn(),
+      refresh: vi.fn(),
+      revoke: vi.fn(),
+      revokeAllForAccount: vi.fn(),
+      touch: vi.fn(),
+      validateAccessToken: vi.fn(),
+      getActiveSessionCount: vi.fn(),
+      cleanupExpired: vi.fn(),
     };
 
     const mockConfigService = {
-      get: jest.fn().mockReturnValue('test-api-key'),
+      get: vi.fn().mockReturnValue('test-api-key'),
     };
 
     const module: TestingModule = await Test.createTestingModule({

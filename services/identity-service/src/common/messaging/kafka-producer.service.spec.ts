@@ -1,32 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock, MockedFunction } from 'vitest';
 import { KafkaProducerService, EventMessage } from './kafka-producer.service';
 import { Kafka, RecordMetadata } from 'kafkajs';
 
+// Create mock producer outside the module mock for reference
+const mockProducerMethods = {
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  send: vi.fn(),
+};
+
 // Mock kafkajs
-jest.mock('kafkajs', () => ({
-  Kafka: jest.fn().mockImplementation(() => ({
-    producer: jest.fn().mockReturnValue({
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      send: jest.fn(),
-    }),
-  })),
-  logLevel: {
-    NOTHING: 0,
-    ERROR: 1,
-    WARN: 2,
-    INFO: 3,
-    DEBUG: 4,
-  },
-}));
+vi.mock('kafkajs', () => {
+  return {
+    Kafka: class MockKafka {
+      producer() {
+        return mockProducerMethods;
+      }
+    },
+    logLevel: {
+      NOTHING: 0,
+      ERROR: 1,
+      WARN: 2,
+      INFO: 3,
+      DEBUG: 4,
+    },
+  };
+});
 
 describe('KafkaProducerService', () => {
   let service: KafkaProducerService;
-  let mockProducer: {
-    connect: jest.Mock;
-    disconnect: jest.Mock;
-    send: jest.Mock;
-  };
+  let mockProducer: typeof mockProducerMethods;
 
   const mockEvent: EventMessage = {
     id: 'event-123',
@@ -49,17 +53,11 @@ describe('KafkaProducerService', () => {
   ];
 
   beforeEach(async () => {
-    // Create mock producer
-    mockProducer = {
-      connect: jest.fn().mockResolvedValue(undefined),
-      disconnect: jest.fn().mockResolvedValue(undefined),
-      send: jest.fn().mockResolvedValue(mockMetadata),
-    };
-
-    // Override Kafka mock to return our producer
-    (Kafka as jest.Mock).mockImplementation(() => ({
-      producer: jest.fn().mockReturnValue(mockProducer),
-    }));
+    // Reset mock producer methods
+    mockProducer = mockProducerMethods;
+    mockProducer.connect.mockResolvedValue(undefined);
+    mockProducer.disconnect.mockResolvedValue(undefined);
+    mockProducer.send.mockResolvedValue(mockMetadata);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [KafkaProducerService],
@@ -69,7 +67,7 @@ describe('KafkaProducerService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('connect', () => {

@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext } from '@nestjs/common';
@@ -9,7 +10,7 @@ describe('RolesGuard', () => {
   let guard: RolesGuard;
 
   const mockReflector = {
-    getAllAndOverride: jest.fn(),
+    getAllAndOverride: vi.fn(),
   };
 
   const createMockExecutionContext = (user: any): ExecutionContext => {
@@ -17,8 +18,8 @@ describe('RolesGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({ user }),
       }),
-      getHandler: () => jest.fn(),
-      getClass: () => jest.fn(),
+      getHandler: () => vi.fn(),
+      getClass: () => vi.fn(),
     } as unknown as ExecutionContext;
   };
 
@@ -31,7 +32,7 @@ describe('RolesGuard', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('canActivate', () => {
@@ -137,8 +138,8 @@ describe('RolesGuard', () => {
 
     it('should correctly check role at handler level', () => {
       // Arrange
-      const handlerFn = jest.fn();
-      const classFn = jest.fn();
+      const handlerFn = vi.fn();
+      const classFn = vi.fn();
       mockReflector.getAllAndOverride.mockReturnValue([Role.USER]);
 
       const context = {

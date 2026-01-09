@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 
@@ -6,7 +7,7 @@ import { PrismaService } from '../../src/database/prisma.service';
 
 describe('AdminServicesService', () => {
   let service: AdminServicesService;
-  let mockPrismaService: { $queryRaw: jest.Mock; $executeRaw: jest.Mock };
+  let mockPrismaService: { $queryRaw: Mock; $executeRaw: Mock };
 
   const mockService = {
     id: 'service-123',
@@ -53,8 +54,8 @@ describe('AdminServicesService', () => {
 
   beforeEach(async () => {
     mockPrismaService = {
-      $queryRaw: jest.fn(),
-      $executeRaw: jest.fn(),
+      $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -65,7 +66,7 @@ describe('AdminServicesService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('listServices', () => {

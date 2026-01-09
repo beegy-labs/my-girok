@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OperatorAssignmentService, OperatorAssignmentRow } from './operator-assignment.service';
 import { PermissionRow } from '../../common/types/permission.types';
@@ -6,8 +7,8 @@ import { OutboxService } from '../../common/outbox/outbox.service';
 
 describe('OperatorAssignmentService', () => {
   let service: OperatorAssignmentService;
-  let prismaService: jest.Mocked<PrismaService>;
-  let outboxService: jest.Mocked<OutboxService>;
+  let prismaService: Mocked<PrismaService>;
+  let outboxService: Mocked<OutboxService>;
 
   const mockAccountId = '01935c6d-c2d0-7abc-8def-1234567890ab';
   const mockServiceId = '01935c6d-c2d0-7abc-8def-1234567890ac';
@@ -32,16 +33,16 @@ describe('OperatorAssignmentService', () => {
 
   beforeEach(async () => {
     const mockPrismaService = {
-      $queryRaw: jest.fn(),
-      $executeRaw: jest.fn(),
-      $transaction: jest.fn().mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
+      $transaction: vi.fn().mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
         // Execute the callback with the mock prisma service itself as the transaction client
         return fn(mockPrismaService);
       }),
     };
 
     const mockOutboxService = {
-      addEventDirect: jest.fn().mockResolvedValue('event-id'),
+      addEventDirect: vi.fn().mockResolvedValue('event-id'),
     };
 
     const module: TestingModule = await Test.createTestingModule({

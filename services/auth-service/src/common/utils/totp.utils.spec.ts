@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as OTPAuth from 'otpauth';
 import {
   generateTotpSecret,

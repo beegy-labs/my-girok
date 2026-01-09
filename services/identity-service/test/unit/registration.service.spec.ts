@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { ConflictException, BadRequestException } from '@nestjs/common';
 import { RegistrationService } from '../../src/composition/registration/registration.service';
 import { AccountsService } from '../../src/identity/accounts/accounts.service';
@@ -8,15 +9,15 @@ import { OutboxService } from '../../src/common/outbox/outbox.service';
 import { IdentityPrismaService } from '../../src/database/identity-prisma.service';
 import { SagaStatus, SagaStepStatus } from '../../src/common/saga/saga.types';
 
-// Type for mocked Prisma service with jest.fn() methods
+// Type for mocked Prisma service with vi.fn() methods
 type MockPrismaAccount = {
-  findUnique: jest.Mock;
+  findUnique: Mock;
 };
 
 describe('RegistrationService', () => {
   let service: RegistrationService;
-  let prisma: { account: MockPrismaAccount; $transaction: jest.Mock };
-  let sagaOrchestrator: jest.Mocked<SagaOrchestratorService>;
+  let prisma: { account: MockPrismaAccount; $transaction: Mock };
+  let sagaOrchestrator: Mocked<SagaOrchestratorService>;
 
   const mockAccount = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -34,27 +35,27 @@ describe('RegistrationService', () => {
   beforeEach(async () => {
     const mockPrisma = {
       account: {
-        findUnique: jest.fn(),
+        findUnique: vi.fn(),
       },
-      $transaction: jest.fn((fn) => fn()),
+      $transaction: vi.fn((fn) => fn()),
     };
 
     const mockAccountsService = {
-      create: jest.fn(),
-      delete: jest.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
     };
 
     const mockProfilesService = {
-      create: jest.fn(),
-      delete: jest.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
     };
 
     const mockSagaOrchestrator = {
-      execute: jest.fn(),
+      execute: vi.fn(),
     };
 
     const mockOutboxService = {
-      publishEvent: jest.fn(),
+      publishEvent: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -75,7 +76,7 @@ describe('RegistrationService', () => {
 
   describe('register', () => {
     it('should register a new user successfully', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',
@@ -113,7 +114,7 @@ describe('RegistrationService', () => {
     });
 
     it('should throw ConflictException if email already exists', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue({ id: 'existing-id' });
+      (prisma.account.findUnique as Mock).mockResolvedValue({ id: 'existing-id' });
 
       await expect(
         service.register(
@@ -129,7 +130,7 @@ describe('RegistrationService', () => {
     });
 
     it('should throw BadRequestException when saga fails', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: false,
         sagaId: 'saga-123',
@@ -153,7 +154,7 @@ describe('RegistrationService', () => {
     });
 
     it('should include locale and timezone when provided', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',
@@ -187,7 +188,7 @@ describe('RegistrationService', () => {
     });
 
     it('should use serializable isolation level for transaction', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',
@@ -215,7 +216,7 @@ describe('RegistrationService', () => {
     });
 
     it('should throw BadRequestException with saga error message', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: false,
         sagaId: 'saga-123',
@@ -237,7 +238,7 @@ describe('RegistrationService', () => {
 
     it('should return createdAt from saga context', async () => {
       const createdAt = new Date('2024-01-01T00:00:00Z');
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',
@@ -260,7 +261,7 @@ describe('RegistrationService', () => {
     });
 
     it('should generate default createdAt if not in context', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',
@@ -285,7 +286,7 @@ describe('RegistrationService', () => {
 
   describe('saga execution', () => {
     it('should execute saga with correct initial context', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',
@@ -329,7 +330,7 @@ describe('RegistrationService', () => {
     });
 
     it('should handle saga with compensation on failure', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: false,
         sagaId: 'saga-123',
@@ -357,7 +358,7 @@ describe('RegistrationService', () => {
 
   describe('email normalization', () => {
     it('should check for existing email with lowercase normalization', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',
@@ -382,7 +383,7 @@ describe('RegistrationService', () => {
 
   describe('error handling', () => {
     it('should handle transaction timeout', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       prisma.$transaction.mockRejectedValue(new Error('Transaction timeout'));
 
       await expect(
@@ -396,7 +397,7 @@ describe('RegistrationService', () => {
     });
 
     it('should handle database connection errors', async () => {
-      (prisma.account.findUnique as jest.Mock).mockRejectedValue(
+      (prisma.account.findUnique as Mock).mockRejectedValue(
         new Error('Database connection failed'),
       );
 
@@ -413,7 +414,7 @@ describe('RegistrationService', () => {
 
   describe('username generation', () => {
     it('should handle email with special characters', async () => {
-      (prisma.account.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.account.findUnique as Mock).mockResolvedValue(null);
       sagaOrchestrator.execute.mockResolvedValue({
         success: true,
         sagaId: 'saga-123',

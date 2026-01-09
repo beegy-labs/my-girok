@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ServiceConfigController } from './service-config.controller';
 import { ServiceConfigService } from '../services/service-config.service';
@@ -15,11 +16,11 @@ import { AdminPayload } from '../types/admin.types';
 describe('ServiceConfigController', () => {
   let controller: ServiceConfigController;
   let mockConfigService: {
-    getDomains: jest.Mock;
-    addDomain: jest.Mock;
-    removeDomain: jest.Mock;
-    getConfig: jest.Mock;
-    updateConfig: jest.Mock;
+    getDomains: Mock;
+    addDomain: Mock;
+    removeDomain: Mock;
+    getConfig: Mock;
+    updateConfig: Mock;
   };
 
   const mockServiceId = '550e8400-e29b-41d4-a716-446655440001';
@@ -64,18 +65,18 @@ describe('ServiceConfigController', () => {
 
   beforeEach(async () => {
     mockConfigService = {
-      getDomains: jest.fn(),
-      addDomain: jest.fn(),
-      removeDomain: jest.fn(),
-      getConfig: jest.fn(),
-      updateConfig: jest.fn(),
+      getDomains: vi.fn(),
+      addDomain: vi.fn(),
+      removeDomain: vi.fn(),
+      getConfig: vi.fn(),
+      updateConfig: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ServiceConfigController],
       providers: [
         { provide: ServiceConfigService, useValue: mockConfigService },
-        { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+        { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
       ],
     })
       .overrideGuard(PermissionGuard)
@@ -86,7 +87,7 @@ describe('ServiceConfigController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================================

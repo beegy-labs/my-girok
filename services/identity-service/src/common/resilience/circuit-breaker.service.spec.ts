@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { CircuitBreakerService, CircuitState } from './circuit-breaker.service';
 
 describe('CircuitBreakerService', () => {
@@ -13,7 +14,7 @@ describe('CircuitBreakerService', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('execute', () => {
@@ -25,7 +26,7 @@ describe('CircuitBreakerService', () => {
     };
 
     it('should execute function successfully when circuit is closed', async () => {
-      const mockFn = jest.fn().mockResolvedValue('success');
+      const mockFn = vi.fn().mockResolvedValue('success');
 
       const result = await service.execute(defaultOptions, mockFn);
 
@@ -34,7 +35,7 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should open circuit after failure threshold', async () => {
-      const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
+      const mockFn = vi.fn().mockRejectedValue(new Error('fail'));
 
       // Fail 3 times to open circuit
       for (let i = 0; i < 3; i++) {
@@ -46,7 +47,7 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should reject immediately when circuit is open', async () => {
-      const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
+      const mockFn = vi.fn().mockRejectedValue(new Error('fail'));
 
       // Open the circuit
       for (let i = 0; i < 3; i++) {
@@ -64,8 +65,8 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should transition to half-open after timeout', async () => {
-      jest.useFakeTimers();
-      const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
+      vi.useFakeTimers();
+      const mockFn = vi.fn().mockRejectedValue(new Error('fail'));
 
       // Open the circuit
       for (let i = 0; i < 3; i++) {
@@ -75,7 +76,7 @@ describe('CircuitBreakerService', () => {
       expect(service.getCircuitState('test-circuit')).toBe(CircuitState.OPEN);
 
       // Advance time past the timeout
-      jest.advanceTimersByTime(6000);
+      vi.advanceTimersByTime(6000);
 
       // Mock successful response
       mockFn.mockResolvedValue('success');
@@ -86,8 +87,8 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should close circuit after success threshold in half-open state', async () => {
-      jest.useFakeTimers();
-      const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
+      vi.useFakeTimers();
+      const mockFn = vi.fn().mockRejectedValue(new Error('fail'));
 
       // Open the circuit
       for (let i = 0; i < 3; i++) {
@@ -95,7 +96,7 @@ describe('CircuitBreakerService', () => {
       }
 
       // Advance time to transition to half-open
-      jest.advanceTimersByTime(6000);
+      vi.advanceTimersByTime(6000);
 
       // Mock successful responses
       mockFn.mockResolvedValue('success');
@@ -108,8 +109,8 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should reopen circuit if failure in half-open state', async () => {
-      jest.useFakeTimers();
-      const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
+      vi.useFakeTimers();
+      const mockFn = vi.fn().mockRejectedValue(new Error('fail'));
 
       // Open the circuit
       for (let i = 0; i < 3; i++) {
@@ -117,7 +118,7 @@ describe('CircuitBreakerService', () => {
       }
 
       // Advance time to transition to half-open
-      jest.advanceTimersByTime(6000);
+      vi.advanceTimersByTime(6000);
 
       // Fail again in half-open state
       await expect(service.execute(defaultOptions, mockFn)).rejects.toThrow('fail');
@@ -126,8 +127,8 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should use custom fallback when provided', async () => {
-      const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
-      const fallback = jest.fn().mockResolvedValue('fallback');
+      const mockFn = vi.fn().mockRejectedValue(new Error('fail'));
+      const fallback = vi.fn().mockResolvedValue('fallback');
 
       // Open the circuit
       for (let i = 0; i < 3; i++) {
@@ -152,7 +153,7 @@ describe('CircuitBreakerService', () => {
 
   describe('resetCircuit', () => {
     it('should reset circuit to closed state', async () => {
-      const mockFn = jest.fn().mockRejectedValue(new Error('fail'));
+      const mockFn = vi.fn().mockRejectedValue(new Error('fail'));
 
       // Open the circuit
       for (let i = 0; i < 3; i++) {
@@ -174,7 +175,7 @@ describe('CircuitBreakerService', () => {
 
   describe('getAllCircuitStates', () => {
     it('should return all circuit states', async () => {
-      const mockFn = jest.fn().mockResolvedValue('success');
+      const mockFn = vi.fn().mockResolvedValue('success');
 
       await service.execute(
         { name: 'stats-test', failureThreshold: 3, successThreshold: 2, resetTimeoutMs: 5000 },

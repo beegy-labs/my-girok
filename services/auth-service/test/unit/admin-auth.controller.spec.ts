@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { AdminAuthController } from '../../src/admin/controllers/admin-auth.controller';
@@ -7,10 +8,10 @@ import { generateTestId, resetTestCounter, createAdminPayload } from '../utils/t
 describe('AdminAuthController', () => {
   let controller: AdminAuthController;
   let mockAdminAuthService: {
-    login: jest.Mock;
-    refresh: jest.Mock;
-    getProfile: jest.Mock;
-    logout: jest.Mock;
+    login: Mock;
+    refresh: Mock;
+    getProfile: Mock;
+    logout: Mock;
   };
 
   const adminId = '00000000-0000-7000-0000-000000000001';
@@ -19,10 +20,10 @@ describe('AdminAuthController', () => {
     resetTestCounter();
 
     mockAdminAuthService = {
-      login: jest.fn(),
-      refresh: jest.fn(),
-      getProfile: jest.fn(),
-      logout: jest.fn(),
+      login: vi.fn(),
+      refresh: vi.fn(),
+      getProfile: vi.fn(),
+      logout: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -34,7 +35,7 @@ describe('AdminAuthController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('login', () => {

@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ServiceTesterController } from './service-tester.controller';
 import { ServiceTesterService } from '../services/service-tester.service';
@@ -19,14 +20,14 @@ import { AdminPayload } from '../types/admin.types';
 describe('ServiceTesterController', () => {
   let controller: ServiceTesterController;
   let mockTesterService: {
-    listUserTesters: jest.Mock;
-    getUserTester: jest.Mock;
-    createUserTester: jest.Mock;
-    updateUserTester: jest.Mock;
-    deleteUserTester: jest.Mock;
-    listAdminTesters: jest.Mock;
-    createAdminTester: jest.Mock;
-    deleteAdminTester: jest.Mock;
+    listUserTesters: Mock;
+    getUserTester: Mock;
+    createUserTester: Mock;
+    updateUserTester: Mock;
+    deleteUserTester: Mock;
+    listAdminTesters: Mock;
+    createAdminTester: Mock;
+    deleteAdminTester: Mock;
   };
 
   const mockServiceId = '550e8400-e29b-41d4-a716-446655440001';
@@ -88,21 +89,21 @@ describe('ServiceTesterController', () => {
 
   beforeEach(async () => {
     mockTesterService = {
-      listUserTesters: jest.fn(),
-      getUserTester: jest.fn(),
-      createUserTester: jest.fn(),
-      updateUserTester: jest.fn(),
-      deleteUserTester: jest.fn(),
-      listAdminTesters: jest.fn(),
-      createAdminTester: jest.fn(),
-      deleteAdminTester: jest.fn(),
+      listUserTesters: vi.fn(),
+      getUserTester: vi.fn(),
+      createUserTester: vi.fn(),
+      updateUserTester: vi.fn(),
+      deleteUserTester: vi.fn(),
+      listAdminTesters: vi.fn(),
+      createAdminTester: vi.fn(),
+      deleteAdminTester: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ServiceTesterController],
       providers: [
         { provide: ServiceTesterService, useValue: mockTesterService },
-        { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
+        { provide: Reflector, useValue: { getAllAndOverride: vi.fn() } },
       ],
     })
       .overrideGuard(PermissionGuard)
@@ -113,7 +114,7 @@ describe('ServiceTesterController', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ============================================================

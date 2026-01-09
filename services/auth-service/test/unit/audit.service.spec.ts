@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 
@@ -7,15 +8,15 @@ import { AuditEntry } from '../../src/common/types/audit.types';
 
 describe('AuditService', () => {
   let service: AuditService;
-  let mockPrismaService: { $executeRaw: jest.Mock };
-  let mockConfigService: { get: jest.Mock };
+  let mockPrismaService: { $executeRaw: Mock };
+  let mockConfigService: { get: Mock };
 
   beforeEach(async () => {
     mockPrismaService = {
-      $executeRaw: jest.fn(),
+      $executeRaw: vi.fn(),
     };
     mockConfigService = {
-      get: jest.fn().mockReturnValue('true'),
+      get: vi.fn().mockReturnValue('true'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -30,7 +31,7 @@ describe('AuditService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('log', () => {
