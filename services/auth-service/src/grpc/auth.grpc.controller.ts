@@ -1177,14 +1177,15 @@ export class AuthGrpcController {
       // Record login attempt
       const recordAttempt = async (success: boolean, reason?: string, mfaAttempted = false) => {
         const attemptId = ID.generate();
+        const adminIdValue = admin?.id ?? null;
         await this.prisma.$executeRaw`
           INSERT INTO admin_login_attempts (
             id, email, admin_id, ip_address, user_agent, device_fingerprint,
             success, failure_reason, mfa_attempted, attempted_at
           ) VALUES (
-            ${attemptId}::uuid, ${request.email}, ${admin?.id ?? null}::uuid,
+            CAST(${attemptId} AS UUID), ${request.email}, CAST(${adminIdValue} AS UUID),
             ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-            ${success}, ${reason}::admin_login_failure_reason, ${mfaAttempted}, NOW()
+            ${success}, CAST(${reason} AS admin_login_failure_reason), ${mfaAttempted}, NOW()
           )
         `;
       };
@@ -1231,7 +1232,7 @@ export class AuthGrpcController {
           UPDATE admins
           SET failed_login_attempts = ${newAttempts},
               locked_until = ${lockUntil}
-          WHERE id = ${admin.id}::uuid
+          WHERE id = CAST(${admin.id} AS UUID)
         `;
 
         await recordAttempt(false, 'INVALID_PASSWORD');
@@ -1247,7 +1248,7 @@ export class AuthGrpcController {
       if (admin.failedLoginAttempts > 0) {
         await this.prisma.$executeRaw`
           UPDATE admins SET failed_login_attempts = 0, locked_until = NULL
-          WHERE id = ${admin.id}::uuid
+          WHERE id = CAST(${admin.id} AS UUID)
         `;
       }
 
@@ -1302,7 +1303,7 @@ export class AuthGrpcController {
 
       // Update last login
       await this.prisma.$executeRaw`
-        UPDATE admins SET last_login_at = NOW() WHERE id = ${admin.id}::uuid
+        UPDATE admins SET last_login_at = NOW() WHERE id = CAST(${admin.id} AS UUID)
       `;
 
       await recordAttempt(true);
@@ -1410,9 +1411,9 @@ export class AuthGrpcController {
             id, email, admin_id, ip_address, user_agent, device_fingerprint,
             success, failure_reason, mfa_attempted, mfa_method, attempted_at
           ) VALUES (
-            ${attemptId}::uuid, ${challenge.email}, ${challenge.adminId}::uuid,
+            CAST(${attemptId} AS UUID), ${challenge.email}, CAST(${challenge.adminId} AS UUID),
             ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-            false, 'INVALID_MFA_CODE'::admin_login_failure_reason, true, ${methodName}, NOW()
+            false, CAST('INVALID_MFA_CODE' AS admin_login_failure_reason), true, ${methodName}, NOW()
           )
         `;
 
@@ -1436,7 +1437,7 @@ export class AuthGrpcController {
 
       // Update last login
       await this.prisma.$executeRaw`
-        UPDATE admins SET last_login_at = NOW() WHERE id = ${challenge.adminId}::uuid
+        UPDATE admins SET last_login_at = NOW() WHERE id = CAST(${challenge.adminId} AS UUID)
       `;
 
       // Record successful login
@@ -1446,7 +1447,7 @@ export class AuthGrpcController {
           id, email, admin_id, ip_address, user_agent, device_fingerprint,
           success, mfa_attempted, mfa_method, attempted_at
         ) VALUES (
-          ${attemptId}::uuid, ${challenge.email}, ${challenge.adminId}::uuid,
+          CAST(${attemptId} AS UUID), ${challenge.email}, CAST(${challenge.adminId} AS UUID),
           ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
           true, true, ${methodName}, NOW()
         )
