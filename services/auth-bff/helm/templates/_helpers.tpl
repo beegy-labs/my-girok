@@ -58,3 +58,10 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Vault path prefix based on environment
+*/}}
+{{- define "auth-bff.vaultPathPrefix" -}}
+secret/apps/my-girok/{{ .Values.externalSecrets.environment }}
+{{- end }}
