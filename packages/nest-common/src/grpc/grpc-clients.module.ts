@@ -86,13 +86,14 @@ export class GrpcClientsModule {
    */
   static forRoot(options?: GrpcClientsOptions): DynamicModule {
     const opts = options ?? { identity: true, auth: true, legal: true };
-    const { clientsModuleOptions, providers, exports } = this.buildConfiguration(opts);
+    const { clientsModuleOptions, providers } = this.buildConfiguration(opts);
 
     return {
       module: GrpcClientsModule,
+      global: true,
       imports: [ClientsModule.register(clientsModuleOptions)],
       providers,
-      exports: [...exports, ...providers],
+      exports: [ClientsModule, ...providers],
     };
   }
 
@@ -106,12 +107,13 @@ export class GrpcClientsModule {
 
     return {
       module: GrpcClientsModule,
+      global: true,
       imports: [
         ...(options.imports ?? []),
         ClientsModule.registerAsync(this.createClientsAsyncOptions(options)),
       ],
       providers: asyncProviders,
-      exports: asyncProviders,
+      exports: [ClientsModule, ...asyncProviders],
     };
   }
 

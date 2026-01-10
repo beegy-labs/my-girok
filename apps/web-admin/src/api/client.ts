@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
 
 // BFF API base URL - auth-bff handles all authentication
-const API_BASE_URL = import.meta.env.VITE_AUTH_BFF_URL || 'https://auth-bff.girok.dev';
+const API_BASE_URL = import.meta.env.VITE_AUTH_BFF_URL || 'https://auth-dev.girok.dev';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
