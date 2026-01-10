@@ -422,7 +422,7 @@ export class AuthGrpcController {
       const operators = await this.prisma.$queryRaw<OperatorRow[]>`
         SELECT id, is_active as "isActive"
         FROM operators
-        WHERE id = ${request.operatorId}::uuid
+        WHERE id = CAST(${request.operatorId} AS UUID)
         LIMIT 1
       `;
 
@@ -449,7 +449,7 @@ export class AuthGrpcController {
         SELECT p.id, p.resource, p.action
         FROM operator_permissions op
         JOIN permissions p ON op.permission_id = p.id
-        WHERE op.operator_id = ${request.operatorId}::uuid
+        WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
           AND p.resource = ${request.resource}
           AND p.action = ${request.action}
       `;
@@ -471,7 +471,7 @@ export class AuthGrpcController {
         JOIN roles r ON o.role_id = r.id
         JOIN role_permissions rp ON r.id = rp.role_id
         JOIN permissions p ON rp.permission_id = p.id
-        WHERE o.id = ${request.operatorId}::uuid
+        WHERE o.id = CAST(${request.operatorId} AS UUID)
           AND p.resource = ${request.resource}
           AND p.action = ${request.action}
       `;
@@ -491,7 +491,7 @@ export class AuthGrpcController {
         SELECT p.id, p.resource, p.action
         FROM operator_permissions op
         JOIN permissions p ON op.permission_id = p.id
-        WHERE op.operator_id = ${request.operatorId}::uuid
+        WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
           AND (
             (p.resource = ${request.resource} AND p.action = '*')
             OR (p.resource = '*' AND p.action = ${request.action})
@@ -503,7 +503,7 @@ export class AuthGrpcController {
         JOIN roles r ON o.role_id = r.id
         JOIN role_permissions rp ON r.id = rp.role_id
         JOIN permissions p ON rp.permission_id = p.id
-        WHERE o.id = ${request.operatorId}::uuid
+        WHERE o.id = CAST(${request.operatorId} AS UUID)
           AND (
             (p.resource = ${request.resource} AND p.action = '*')
             OR (p.resource = '*' AND p.action = ${request.action})
@@ -549,7 +549,7 @@ export class AuthGrpcController {
       const operators = await this.prisma.$queryRaw<{ id: string; isActive: boolean }[]>`
         SELECT id, is_active as "isActive"
         FROM operators
-        WHERE id = ${request.operatorId}::uuid
+        WHERE id = CAST(${request.operatorId} AS UUID)
         LIMIT 1
       `;
 
@@ -593,7 +593,7 @@ export class AuthGrpcController {
           SELECT p.resource, p.action, p.id as "permissionId", 'direct' as source
           FROM operator_permissions op
           JOIN permissions p ON op.permission_id = p.id
-          WHERE op.operator_id = ${request.operatorId}::uuid
+          WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
             AND (p.resource, p.action) IN (SELECT resource, action FROM requested_checks)
 
           UNION ALL
@@ -604,7 +604,7 @@ export class AuthGrpcController {
           JOIN roles r ON o.role_id = r.id
           JOIN role_permissions rp ON r.id = rp.role_id
           JOIN permissions p ON rp.permission_id = p.id
-          WHERE o.id = ${request.operatorId}::uuid
+          WHERE o.id = CAST(${request.operatorId} AS UUID)
             AND (p.resource, p.action) IN (SELECT resource, action FROM requested_checks)
 
           UNION ALL
@@ -614,7 +614,7 @@ export class AuthGrpcController {
           FROM requested_checks rc
           CROSS JOIN operator_permissions op
           JOIN permissions p ON op.permission_id = p.id
-          WHERE op.operator_id = ${request.operatorId}::uuid
+          WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
             AND (
               (p.resource = rc.resource AND p.action = '*')
               OR (p.resource = '*' AND p.action = rc.action)
@@ -630,7 +630,7 @@ export class AuthGrpcController {
           JOIN roles r ON o.role_id = r.id
           JOIN role_permissions rp ON r.id = rp.role_id
           JOIN permissions p ON rp.permission_id = p.id
-          WHERE o.id = ${request.operatorId}::uuid
+          WHERE o.id = CAST(${request.operatorId} AS UUID)
             AND (
               (p.resource = rc.resource AND p.action = '*')
               OR (p.resource = '*' AND p.action = rc.action)
@@ -704,7 +704,7 @@ export class AuthGrpcController {
         SELECT p.id, p.resource, p.action, p.category, p.description, p.is_system as "isSystem"
         FROM operator_permissions op
         JOIN permissions p ON op.permission_id = p.id
-        WHERE op.operator_id = ${request.operatorId}::uuid
+        WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
       `;
 
       const directPermissions = directRows.map((row) => this.mapPermission(row));
@@ -718,7 +718,7 @@ export class AuthGrpcController {
           JOIN roles r ON o.role_id = r.id
           JOIN role_permissions rp ON r.id = rp.role_id
           JOIN permissions p ON rp.permission_id = p.id
-          WHERE o.id = ${request.operatorId}::uuid
+          WHERE o.id = CAST(${request.operatorId} AS UUID)
         `;
         rolePermissions = roleRows.map((row) => this.mapPermission(row));
       }
@@ -760,7 +760,7 @@ export class AuthGrpcController {
       const roles = await this.prisma.$queryRaw<RoleRow[]>`
         SELECT id, name, description, level, scope, created_at as "createdAt", updated_at as "updatedAt"
         FROM roles
-        WHERE id = ${request.id}::uuid
+        WHERE id = CAST(${request.id} AS UUID)
         LIMIT 1
       `;
 
@@ -776,7 +776,7 @@ export class AuthGrpcController {
         SELECT p.id, p.resource, p.action, p.category, p.description, p.is_system as "isSystem"
         FROM role_permissions rp
         JOIN permissions p ON rp.permission_id = p.id
-        WHERE rp.role_id = ${request.id}::uuid
+        WHERE rp.role_id = CAST(${request.id} AS UUID)
       `;
 
       const permissions = permissionRows.map((row) => this.mapPermission(row));
@@ -830,7 +830,7 @@ export class AuthGrpcController {
         JOIN roles r ON o.role_id = r.id
         LEFT JOIN role_permissions rp ON r.id = rp.role_id
         LEFT JOIN permissions p ON rp.permission_id = p.id
-        WHERE o.id = ${request.operatorId}::uuid
+        WHERE o.id = CAST(${request.operatorId} AS UUID)
       `;
 
       if (!rows.length) {
@@ -906,7 +906,7 @@ export class AuthGrpcController {
           o.updated_at as "updatedAt",
           o.last_login_at as "lastLoginAt"
         FROM operators o
-        WHERE o.id = ${request.id}::uuid
+        WHERE o.id = CAST(${request.id} AS UUID)
         LIMIT 1
       `;
 
@@ -947,7 +947,7 @@ export class AuthGrpcController {
       const operators = await this.prisma.$queryRaw<{ id: string; isActive: boolean }[]>`
         SELECT id, is_active as "isActive"
         FROM operators
-        WHERE id = ${request.id}::uuid
+        WHERE id = CAST(${request.id} AS UUID)
         LIMIT 1
       `;
 
@@ -1010,10 +1010,10 @@ export class AuthGrpcController {
               type, severity, reason, evidence_urls as "evidenceUrls",
               issued_by as "issuedBy", start_at as "startAt", end_at as "endAt", status
             FROM sanctions
-            WHERE subject_id = ${request.subjectId}::uuid
-              AND subject_type = ${subjectType}::sanction_subject_type
+            WHERE subject_id = CAST(${request.subjectId} AS UUID)
+              AND subject_type = CAST(${subjectType} AS sanction_subject_type)
               AND status = 'ACTIVE'::sanction_status
-              AND type = ${sanctionType}::sanction_type
+              AND type = CAST(${sanctionType} AS sanction_type)
               AND (end_at IS NULL OR end_at > NOW())
             ORDER BY severity DESC, start_at DESC
           `,
@@ -1026,8 +1026,8 @@ export class AuthGrpcController {
               type, severity, reason, evidence_urls as "evidenceUrls",
               issued_by as "issuedBy", start_at as "startAt", end_at as "endAt", status
             FROM sanctions
-            WHERE subject_id = ${request.subjectId}::uuid
-              AND subject_type = ${subjectType}::sanction_subject_type
+            WHERE subject_id = CAST(${request.subjectId} AS UUID)
+              AND subject_type = CAST(${subjectType} AS sanction_subject_type)
               AND status = 'ACTIVE'::sanction_status
               AND (end_at IS NULL OR end_at > NOW())
             ORDER BY severity DESC, start_at DESC
@@ -1078,8 +1078,8 @@ export class AuthGrpcController {
             type, severity, reason, evidence_urls as "evidenceUrls",
             issued_by as "issuedBy", start_at as "startAt", end_at as "endAt", status
           FROM sanctions
-          WHERE subject_id = ${request.subjectId}::uuid
-            AND subject_type = ${subjectType}::sanction_subject_type
+          WHERE subject_id = CAST(${request.subjectId} AS UUID)
+            AND subject_type = CAST(${subjectType} AS sanction_subject_type)
             AND status = 'ACTIVE'::sanction_status
             AND (end_at IS NULL OR end_at > NOW())
           ORDER BY severity DESC, start_at DESC
@@ -1178,16 +1178,30 @@ export class AuthGrpcController {
       const recordAttempt = async (success: boolean, reason?: string, mfaAttempted = false) => {
         const attemptId = ID.generate();
         const adminIdValue = admin?.id ?? null;
-        await this.prisma.$executeRaw`
-          INSERT INTO admin_login_attempts (
-            id, email, admin_id, ip_address, user_agent, device_fingerprint,
-            success, failure_reason, mfa_attempted, attempted_at
-          ) VALUES (
-            CAST(${attemptId} AS UUID), ${request.email}, CAST(${adminIdValue} AS UUID),
-            ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-            ${success}, CAST(${reason} AS admin_login_failure_reason), ${mfaAttempted}, NOW()
-          )
-        `;
+        // Use conditional SQL for failure_reason - NULL when reason is undefined (successful login)
+        if (reason) {
+          await this.prisma.$executeRaw`
+            INSERT INTO admin_login_attempts (
+              id, email, admin_id, ip_address, user_agent, device_fingerprint,
+              success, failure_reason, mfa_attempted, attempted_at
+            ) VALUES (
+              CAST(${attemptId} AS UUID), ${request.email}, CAST(${adminIdValue} AS UUID),
+              ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
+              ${success}, CAST(${reason} AS admin_login_failure_reason), ${mfaAttempted}, NOW()
+            )
+          `;
+        } else {
+          await this.prisma.$executeRaw`
+            INSERT INTO admin_login_attempts (
+              id, email, admin_id, ip_address, user_agent, device_fingerprint,
+              success, failure_reason, mfa_attempted, attempted_at
+            ) VALUES (
+              CAST(${attemptId} AS UUID), ${request.email}, CAST(${adminIdValue} AS UUID),
+              ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
+              ${success}, NULL, ${mfaAttempted}, NOW()
+            )
+          `;
+        }
       };
 
       if (!admin) {
@@ -1659,7 +1673,7 @@ export class AuthGrpcController {
     try {
       // Get admin email for QR code
       const admins = await this.prisma.$queryRaw<{ email: string }[]>`
-        SELECT email FROM admins WHERE id = ${request.adminId}::uuid LIMIT 1
+        SELECT email FROM admins WHERE id = CAST(${request.adminId} AS UUID) LIMIT 1
       `;
 
       if (!admins.length) {
