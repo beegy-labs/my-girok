@@ -225,6 +225,33 @@ sealedSecrets:
   annotations:
     sealedsecrets.bitnami.com/managed: "true"
 
+# ============================================================================
+# External Secrets Configuration (Vault)
+# ============================================================================
+# Use this for GitOps deployments with Vault as secret backend
+# Vault paths: secret/apps/my-girok/{environment}/auth-bff/
+#
+# Required Vault secrets:
+#   - secret/apps/my-girok/dev/auth-bff/session
+#     - session_secret: 32+ character secure key
+#   - secret/apps/my-girok/dev/auth-bff/encryption
+#     - encryption_key: 32+ character secure key
+#   - secret/apps/my-girok/dev/auth-bff/valkey
+#     - password: Valkey password
+#   - secret/apps/my-girok/dev/auth-bff/oauth/google
+#     - client_id, client_secret
+#   - secret/apps/my-girok/dev/auth-bff/oauth/kakao
+#     - client_id, client_secret
+#   - secret/apps/my-girok/dev/auth-bff/oauth/naver
+#     - client_id, client_secret
+#   - secret/apps/my-girok/dev/auth-bff/oauth/apple
+#     - client_id, team_id, key_id, private_key
+#
+externalSecrets:
+  enabled: false  # Set to true for GitOps deployments
+  environment: dev  # dev, staging, prod
+  refreshInterval: 1h
+
 # Health checks
 livenessProbe:
   httpGet:
