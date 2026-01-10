@@ -107,6 +107,24 @@ app:
   clickhouse:
     port: 8123
     database: analytics_db
+    asyncInsert: true
+    waitForAsyncInsert: false
+
+  # Rate Limiting
+  rateLimit:
+    ttl: 60
+    max: 100
+
+# ============================================================================
+# Valkey (Redis-compatible) Configuration
+# ============================================================================
+valkey:
+  enabled: true
+  host: "valkey.example.com"
+  port: 6379
+  db: 4
+  secretName: "analytics-service-valkey"
+  secretKey: "password"
 
 # ============================================================================
 # Sealed Secrets Configuration

@@ -1,0 +1,21 @@
+apiVersion: v2
+name: web-admin
+description: Admin web application for My-Girok (user management, monitoring)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - react
+  - frontend
+  - web
+  - admin
+  - dashboard
+
+maintainers:
+  - name: My-Girok Team
+    email: your-team@example.com
+
+home: https://github.com/your-org/my-girok
+sources:
+  - https://github.com/your-org/my-girok

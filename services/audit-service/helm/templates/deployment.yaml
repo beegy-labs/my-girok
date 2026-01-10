@@ -66,6 +66,84 @@ spec:
             secretKeyRef:
               name: {{ include "audit-service.fullname" . }}-secret
               key: jwt-secret
+        - name: CLICKHOUSE_ASYNC_INSERT
+          value: {{ .Values.app.clickhouse.asyncInsert | quote }}
+        - name: CLICKHOUSE_WAIT_FOR_ASYNC_INSERT
+          value: {{ .Values.app.clickhouse.waitForAsyncInsert | quote }}
+        # PostgreSQL (for seed data / migrations)
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "audit-service.fullname" . }}-secret
+              key: database-url
+              optional: true
+        # Valkey (Redis-compatible) Configuration
+        {{- if .Values.valkey.enabled }}
+        - name: VALKEY_HOST
+          value: {{ .Values.valkey.host | quote }}
+        - name: VALKEY_PORT
+          value: {{ .Values.valkey.port | quote }}
+        - name: VALKEY_DB
+          value: {{ .Values.valkey.db | quote }}
+        {{- if .Values.valkey.secretName }}
+        - name: VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.valkey.secretName }}
+              key: {{ .Values.valkey.secretKey | default "password" }}
+              optional: true
+        {{- end }}
+        {{- end }}
+        # MinIO Configuration
+        - name: MINIO_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: endpoint
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: accessKey
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: secretKey
+        - name: MINIO_USE_SSL
+          value: {{ .Values.minio.useSSL | quote }}
+        - name: MINIO_EXPORT_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.minio.secretName }}
+              key: exportBucket
+        # Export S3 Configuration
+        - name: EXPORT_S3_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "audit-service.fullname" . }}-secret
+              key: export-s3-endpoint
+              optional: true
+        - name: EXPORT_S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "audit-service.fullname" . }}-secret
+              key: export-s3-access-key
+              optional: true
+        - name: EXPORT_S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "audit-service.fullname" . }}-secret
+              key: export-s3-secret-key
+              optional: true
+        - name: EXPORT_S3_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "audit-service.fullname" . }}-secret
+              key: export-s3-bucket
+              optional: true
+        - name: EXPORT_S3_REGION
+          value: {{ .Values.exportS3.region | quote }}
         {{- with .Values.livenessProbe }}
         livenessProbe:
           {{- toYaml . | nindent 12 }}

@@ -105,6 +105,8 @@ spec:
           value: {{ .Values.valkey.port | quote }}
         - name: VALKEY_DB
           value: {{ .Values.valkey.db | quote }}
+        - name: VALKEY_PREFIX
+          value: {{ .Values.valkey.prefix | quote }}
         {{- if .Values.valkey.secretName }}
         - name: VALKEY_PASSWORD
           valueFrom:

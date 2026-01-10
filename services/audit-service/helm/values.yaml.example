@@ -107,6 +107,32 @@ app:
   clickhouse:
     port: 8123
     database: audit_db
+    asyncInsert: true
+    waitForAsyncInsert: true
+
+# ============================================================================
+# Valkey (Redis-compatible) Configuration
+# ============================================================================
+valkey:
+  enabled: true
+  host: "valkey.example.com"
+  port: 6379
+  db: 3
+  secretName: "audit-service-valkey"
+  secretKey: "password"
+
+# ============================================================================
+# MinIO Configuration (S3-compatible storage for exports)
+# ============================================================================
+minio:
+  secretName: "audit-service-minio-credentials"
+  useSSL: "false"
+
+# ============================================================================
+# Export S3 Configuration
+# ============================================================================
+exportS3:
+  region: "auto"
 
 # ============================================================================
 # Sealed Secrets Configuration

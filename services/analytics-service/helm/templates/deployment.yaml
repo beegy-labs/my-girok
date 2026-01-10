@@ -66,6 +66,32 @@ spec:
             secretKeyRef:
               name: {{ include "analytics-service.fullname" . }}-secret
               key: jwt-secret
+        - name: CLICKHOUSE_ASYNC_INSERT
+          value: {{ .Values.app.clickhouse.asyncInsert | quote }}
+        - name: CLICKHOUSE_WAIT_FOR_ASYNC_INSERT
+          value: {{ .Values.app.clickhouse.waitForAsyncInsert | quote }}
+        # Valkey (Redis-compatible) Configuration
+        {{- if .Values.valkey.enabled }}
+        - name: VALKEY_HOST
+          value: {{ .Values.valkey.host | quote }}
+        - name: VALKEY_PORT
+          value: {{ .Values.valkey.port | quote }}
+        - name: VALKEY_DB
+          value: {{ .Values.valkey.db | quote }}
+        {{- if .Values.valkey.secretName }}
+        - name: VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.valkey.secretName }}
+              key: {{ .Values.valkey.secretKey | default "password" }}
+              optional: true
+        {{- end }}
+        {{- end }}
+        # Rate Limiting
+        - name: RATE_LIMIT_TTL
+          value: {{ .Values.app.rateLimit.ttl | quote }}
+        - name: RATE_LIMIT_MAX
+          value: {{ .Values.app.rateLimit.max | quote }}
         {{- with .Values.livenessProbe }}
         livenessProbe:
           {{- toYaml . | nindent 12 }}
