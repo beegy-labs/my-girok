@@ -171,13 +171,13 @@ describe('OutboxService', () => {
       // Arrange
       const eventId = generateTestId();
 
-      mockPrisma.$executeRaw.mockResolvedValue(1);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       await service.markAsPublished(eventId);
 
       // Assert
-      expect(mockPrisma.$executeRaw).toHaveBeenCalled();
+      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
     });
   });
 
@@ -187,13 +187,13 @@ describe('OutboxService', () => {
       const eventId = generateTestId();
       const errorMessage = 'Connection timeout to message broker';
 
-      mockPrisma.$executeRaw.mockResolvedValue(1);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       await service.markAsFailed(eventId, errorMessage);
 
       // Assert
-      expect(mockPrisma.$executeRaw).toHaveBeenCalled();
+      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
     });
   });
 
@@ -203,21 +203,21 @@ describe('OutboxService', () => {
       const eventId = generateTestId();
       const errorMessage = 'Temporary network error';
 
-      mockPrisma.$queryRaw.mockResolvedValue([{ retryCount: 3 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ retryCount: 3 }]);
 
       // Act
       const newRetryCount = await service.incrementRetryCount(eventId, errorMessage);
 
       // Assert
       expect(newRetryCount).toBe(3);
-      expect(mockPrisma.$queryRaw).toHaveBeenCalled();
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalled();
     });
 
     it('should return the new retry count', async () => {
       // Arrange
       const eventId = generateTestId();
 
-      mockPrisma.$queryRaw.mockResolvedValue([{ retryCount: 5 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ retryCount: 5 }]);
 
       // Act
       const result = await service.incrementRetryCount(eventId, 'Max retries reached');
@@ -230,19 +230,19 @@ describe('OutboxService', () => {
   describe('cleanupPublishedEvents', () => {
     it('should delete published events older than default 7 days', async () => {
       // Arrange
-      mockPrisma.$executeRaw.mockResolvedValue(10);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(10);
 
       // Act
       const result = await service.cleanupPublishedEvents();
 
       // Assert
       expect(result).toBe(10);
-      expect(mockPrisma.$executeRaw).toHaveBeenCalled();
+      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
     });
 
     it('should use custom retention period', async () => {
       // Arrange
-      mockPrisma.$executeRaw.mockResolvedValue(5);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(5);
 
       // Act
       const result = await service.cleanupPublishedEvents(30);
@@ -253,7 +253,7 @@ describe('OutboxService', () => {
 
     it('should return 0 when no events to cleanup', async () => {
       // Arrange
-      mockPrisma.$executeRaw.mockResolvedValue(0);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(0);
 
       // Act
       const result = await service.cleanupPublishedEvents();
