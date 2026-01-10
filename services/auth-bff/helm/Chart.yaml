@@ -1,0 +1,14 @@
+apiVersion: v2
+name: auth-bff
+description: Authentication BFF (Backend-For-Frontend) service for my-girok
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - authentication
+  - bff
+  - session
+  - oauth
+maintainers:
+  - name: my-girok
+    email: dev@my-girok.com
