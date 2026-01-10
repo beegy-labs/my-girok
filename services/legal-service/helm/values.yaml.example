@@ -121,12 +121,15 @@ app:
     name: legal_dev
     username: legal_dev
 
-  # JWT Configuration (for validation)
-  jwt:
-    accessExpiration: "15m"
-
   # Identity Service URL
   identityServiceUrl: "http://identity-service:3000"
+
+  # CORS Origins
+  corsOrigins: "https://app.example.com,https://admin.example.com"
+
+  # DSR (Data Subject Request) Settings
+  dsr:
+    defaultDueDays: 30
 
 # ============================================================================
 # Valkey (Redis-compatible) Configuration
@@ -140,13 +143,20 @@ valkey:
   secretKey: "password"
 
 # ============================================================================
-# External Secrets Configuration
+# Redpanda/Kafka Configuration (optional)
 # ============================================================================
-externalSecrets:
+redpanda:
+  enabled: false
+  # brokers: "redpanda.example.com:9092"
+  # secretName: "legal-service-redpanda"
+
+# ============================================================================
+# Sealed Secrets Configuration
+# ============================================================================
+sealedSecrets:
   enabled: true
-  secretStoreRef:
-    name: vault-backend
-    kind: ClusterSecretStore
+  annotations:
+    sealedsecrets.bitnami.com/managed: "true"
 
 # Health checks
 livenessProbe:

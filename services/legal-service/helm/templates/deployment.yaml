@@ -47,13 +47,33 @@ spec:
             secretKeyRef:
               name: {{ include "legal-service.fullname" . }}-secret
               key: database-url
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "legal-service.fullname" . }}-secret
-              key: jwt-secret
         - name: IDENTITY_SERVICE_URL
           value: {{ .Values.app.identityServiceUrl | quote }}
+        {{- if .Values.app.corsOrigins }}
+        - name: CORS_ORIGINS
+          value: {{ .Values.app.corsOrigins | quote }}
+        {{- end }}
+        - name: DSR_DEFAULT_DUE_DAYS
+          value: {{ .Values.app.dsr.defaultDueDays | quote }}
+        # Redpanda/Kafka Configuration (optional)
+        {{- if .Values.redpanda.enabled }}
+        - name: REDPANDA_BROKERS
+          value: {{ .Values.redpanda.brokers | quote }}
+        {{- if .Values.redpanda.secretName }}
+        - name: REDPANDA_SASL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.redpanda.secretName }}
+              key: username
+              optional: true
+        - name: REDPANDA_SASL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.redpanda.secretName }}
+              key: password
+              optional: true
+        {{- end }}
+        {{- end }}
         {{- if .Values.valkey.enabled }}
         - name: VALKEY_HOST
           value: {{ .Values.valkey.host | quote }}

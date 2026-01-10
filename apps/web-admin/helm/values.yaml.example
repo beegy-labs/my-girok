@@ -1,0 +1,236 @@
+# My-Girok Web Admin Application Helm Values Example
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install my-girok-web-admin . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit your actual configuration
+#   - Customize for your environment (development, staging, production)
+#   - This is the admin web application (user management, monitoring)
+
+# Number of replicas
+# Development: 1, Staging: 2, Production: 2-3
+replicaCount: 2
+
+image:
+  repository: harbor.girok.dev/my-girok/web-admin
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  # Development: "develop", Main branch: "release", Production: version tag (e.g., "v1.0.0")
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false  # Nginx needs write access to /var/cache, /var/log
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate limiting for static content
+    nginx.ingress.kubernetes.io/limit-rps: "200"
+  hosts:
+    # CHANGE THIS: Update with your domain
+    - host: admin.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: web-admin-tls
+      hosts:
+        - admin.example.com
+
+# Resource limits
+# Web apps typically need less resources than backend services
+# Development: Lower limits, Staging: Medium, Production: Higher
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Auto-scaling
+# Development: Disable, Staging/Production: Enable
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - web-admin
+          topologyKey: kubernetes.io/hostname
+
+# ============================================================================
+# Content Security Policy (CSP) Configuration
+# ============================================================================
+# CSP helps prevent XSS attacks by controlling which resources can be loaded
+# Customize these values based on your environment and third-party integrations
+
+csp:
+  # Default fallback for all resource types
+  defaultSrc: "'self'"
+
+  # JavaScript sources
+  # 'unsafe-inline' needed for some React patterns
+  scriptSrc: "'self' 'unsafe-inline'"
+
+  # CSS sources
+  # 'unsafe-inline' needed for styled-components/emotion
+  styleSrc: "'self' 'unsafe-inline'"
+
+  # Image sources
+  # data: for inline images, https: for external images
+  imgSrc: "'self' data: https:"
+
+  # Font sources
+  fontSrc: "'self' data:"
+
+  # API/WebSocket connections
+  # CHANGE THIS: Add your API domains
+  # Development: https://my-api-dev.girok.dev
+  # Production: https://my-api.girok.dev
+  connectSrc: "'self' https://my-api-dev.girok.dev"
+
+  # Embedding restrictions
+  frameAncestors: "'none'"
+
+  # Additional CSP directives (optional)
+  # Example: ["worker-src 'self'", "object-src 'none'"]
+  extraDirectives: []
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+app:
+  # API URL for unified API gateway - auth service
+  # CHANGE THIS: Point to your unified API gateway
+  # This is injected as VITE_API_URL during build time
+  # Format: https://<gateway-domain>/auth (without /v1, it's added in code)
+  apiUrl: "https://my-api.example.com/auth"
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# ============================================================================
+# ENVIRONMENT-SPECIFIC CONFIGURATIONS
+# ============================================================================
+#
+# DEVELOPMENT (develop branch):
+#   replicaCount: 1
+#   image.tag: "develop"
+#   autoscaling.enabled: false
+#   app.apiUrl: "https://my-api-dev.example.com/auth"
+#   resources.limits.cpu: 250m
+#   resources.limits.memory: 128Mi
+#   ingress.hosts[0].host: admin-dev.example.com
+#
+# MAIN BRANCH (release tag):
+#   replicaCount: 2
+#   image.tag: "release"
+#   autoscaling.enabled: true
+#   autoscaling.minReplicas: 2
+#   autoscaling.maxReplicas: 4
+#   app.apiUrl: "https://my-api.example.com/auth"
+#   resources.limits.cpu: 400m
+#   resources.limits.memory: 192Mi
+#   ingress.hosts[0].host: admin.example.com
+#
+# PRODUCTION (version tags):
+#   replicaCount: 3
+#   image.tag: "v1.0.0"
+#   autoscaling.enabled: true
+#   autoscaling.minReplicas: 2
+#   autoscaling.maxReplicas: 5
+#   app.apiUrl: "https://my-api.example.com/auth"
+#   resources.limits.cpu: 500m
+#   resources.limits.memory: 256Mi
+#   ingress.hosts[0].host: admin.example.com
+#   affinity.podAntiAffinity: requiredDuringSchedulingIgnoredDuringExecution
+#
+# ============================================================================
+# DEPLOYMENT TIPS
+# ============================================================================
+#
+# 1. Create separate values files for each environment:
+#    - values-dev.yaml (for development with "develop" tag)
+#    - values-main.yaml (for main branch with "release" tag)
+#    - values-prod.yaml (for production with version tags like "v1.0.0")
+#
+# 2. Install with specific values:
+#    helm install my-girok-web-admin . -f values.yaml -f values-prod.yaml
+#
+# 3. Harbor Registry:
+#    - Images are stored at harbor.girok.dev/my-girok/web-admin
+#    - Tag "develop" for develop branch deployments
+#    - Tag "release" for main branch deployments
+#    - Tag "v1.0.0" style for production releases
+#
+# 4. Frontend considerations:
+#    - Static files are served via Nginx
+#    - API URL is configured at build time (VITE_API_URL)
+#    - For multiple environments, build separate images
+#    - Consider using CDN for static assets in production
+#
+# ============================================================================
