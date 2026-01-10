@@ -1,0 +1,250 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "auth-bff.fullname" . }}
+  labels:
+    {{- include "auth-bff.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "auth-bff.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "auth-bff.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "auth-bff.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.app.port }}
+          protocol: TCP
+        env:
+        # ============================================================================
+        # Basic Configuration
+        # ============================================================================
+        - name: NODE_ENV
+          value: {{ .Values.app.nodeEnv | quote }}
+        - name: PORT
+          value: {{ .Values.app.port | quote }}
+
+        # ============================================================================
+        # Session Configuration (SECURITY CRITICAL)
+        # ============================================================================
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: session-secret
+        - name: SESSION_COOKIE_NAME
+          value: {{ .Values.app.session.cookieName | quote }}
+        - name: SESSION_MAX_AGE
+          value: {{ .Values.app.session.maxAge | quote }}
+        - name: SESSION_SAME_SITE
+          value: {{ .Values.app.session.sameSite | quote }}
+
+        # ============================================================================
+        # Encryption Key (SECURITY CRITICAL)
+        # ============================================================================
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: encryption-key
+
+        # ============================================================================
+        # Valkey/Redis Configuration
+        # ============================================================================
+        - name: VALKEY_HOST
+          value: {{ .Values.app.valkey.host | quote }}
+        - name: VALKEY_PORT
+          value: {{ .Values.app.valkey.port | quote }}
+        - name: VALKEY_DB
+          value: {{ .Values.app.valkey.db | quote }}
+        - name: VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: valkey-password
+              optional: true
+
+        # ============================================================================
+        # gRPC Service Endpoints
+        # ============================================================================
+        - name: IDENTITY_GRPC_HOST
+          value: {{ .Values.app.grpc.identity.host | quote }}
+        - name: IDENTITY_GRPC_PORT
+          value: {{ .Values.app.grpc.identity.port | quote }}
+        - name: AUTH_GRPC_HOST
+          value: {{ .Values.app.grpc.auth.host | quote }}
+        - name: AUTH_GRPC_PORT
+          value: {{ .Values.app.grpc.auth.port | quote }}
+        - name: LEGAL_GRPC_HOST
+          value: {{ .Values.app.grpc.legal.host | quote }}
+        - name: LEGAL_GRPC_PORT
+          value: {{ .Values.app.grpc.legal.port | quote }}
+        - name: AUDIT_GRPC_HOST
+          value: {{ .Values.app.grpc.audit.host | quote }}
+        - name: AUDIT_GRPC_PORT
+          value: {{ .Values.app.grpc.audit.port | quote }}
+
+        # ============================================================================
+        # CORS & Frontend URLs
+        # ============================================================================
+        - name: CORS_ORIGINS
+          value: {{ .Values.app.cors.origins | quote }}
+        - name: FRONTEND_URL
+          value: {{ .Values.app.frontendUrl | quote }}
+        - name: FRONTEND_ADMIN_URL
+          value: {{ .Values.app.frontendAdminUrl | quote }}
+
+        # ============================================================================
+        # OAuth - Google
+        # ============================================================================
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: google-client-id
+              optional: true
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: google-client-secret
+              optional: true
+        - name: GOOGLE_CALLBACK_URL
+          value: {{ .Values.app.oauth.google.callbackUrl | quote }}
+
+        # ============================================================================
+        # OAuth - Kakao
+        # ============================================================================
+        - name: KAKAO_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: kakao-client-id
+              optional: true
+        - name: KAKAO_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: kakao-client-secret
+              optional: true
+        - name: KAKAO_CALLBACK_URL
+          value: {{ .Values.app.oauth.kakao.callbackUrl | quote }}
+
+        # ============================================================================
+        # OAuth - Naver
+        # ============================================================================
+        - name: NAVER_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: naver-client-id
+              optional: true
+        - name: NAVER_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: naver-client-secret
+              optional: true
+        - name: NAVER_CALLBACK_URL
+          value: {{ .Values.app.oauth.naver.callbackUrl | quote }}
+
+        # ============================================================================
+        # OAuth - Apple
+        # ============================================================================
+        - name: APPLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: apple-client-id
+              optional: true
+        - name: APPLE_TEAM_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: apple-team-id
+              optional: true
+        - name: APPLE_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: apple-key-id
+              optional: true
+        - name: APPLE_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "auth-bff.fullname" . }}-secret
+              key: apple-private-key
+              optional: true
+        - name: APPLE_CALLBACK_URL
+          value: {{ .Values.app.oauth.apple.callbackUrl | quote }}
+
+        # ============================================================================
+        # Rate Limiting
+        # ============================================================================
+        - name: RATE_LIMIT_LOGIN_IP
+          value: {{ .Values.app.rateLimit.login.ip | quote }}
+        - name: RATE_LIMIT_LOGIN_IP_TTL
+          value: {{ .Values.app.rateLimit.login.ipTtl | quote }}
+        - name: RATE_LIMIT_LOGIN_ACCOUNT
+          value: {{ .Values.app.rateLimit.login.account | quote }}
+        - name: RATE_LIMIT_LOGIN_ACCOUNT_TTL
+          value: {{ .Values.app.rateLimit.login.accountTtl | quote }}
+        - name: RATE_LIMIT_MFA_IP
+          value: {{ .Values.app.rateLimit.mfa.ip | quote }}
+        - name: RATE_LIMIT_MFA_IP_TTL
+          value: {{ .Values.app.rateLimit.mfa.ipTtl | quote }}
+        - name: RATE_LIMIT_REGISTER_IP
+          value: {{ .Values.app.rateLimit.register.ip | quote }}
+        - name: RATE_LIMIT_REGISTER_IP_TTL
+          value: {{ .Values.app.rateLimit.register.ipTtl | quote }}
+
+        {{- with .Values.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
