@@ -1257,12 +1257,12 @@ export class AuthGrpcController {
         const newAttempts = admin.failedLoginAttempts + 1;
         const lockUntil = newAttempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null; // 15 min lock
 
-        await this.prisma.$executeRaw`
-          UPDATE admins
-          SET failed_login_attempts = ${newAttempts},
-              locked_until = ${lockUntil}
-          WHERE id = CAST(${admin.id} AS UUID)
-        `;
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE admins SET failed_login_attempts = $1, locked_until = $2 WHERE id = $3::uuid`,
+          newAttempts,
+          lockUntil,
+          admin.id,
+        );
 
         await recordAttempt(false, 'INVALID_PASSWORD');
         return {
@@ -1275,10 +1275,10 @@ export class AuthGrpcController {
 
       // Reset failed attempts on successful password
       if (admin.failedLoginAttempts > 0) {
-        await this.prisma.$executeRaw`
-          UPDATE admins SET failed_login_attempts = 0, locked_until = NULL
-          WHERE id = CAST(${admin.id} AS UUID)
-        `;
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE admins SET failed_login_attempts = 0, locked_until = NULL WHERE id = $1::uuid`,
+          admin.id,
+        );
       }
 
       // Check if MFA is required
@@ -1331,9 +1331,10 @@ export class AuthGrpcController {
       );
 
       // Update last login
-      await this.prisma.$executeRaw`
-        UPDATE admins SET last_login_at = NOW() WHERE id = CAST(${admin.id} AS UUID)
-      `;
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE admins SET last_login_at = NOW() WHERE id = $1::uuid`,
+        admin.id,
+      );
 
       await recordAttempt(true);
 
@@ -1435,16 +1436,21 @@ export class AuthGrpcController {
       if (!isValid) {
         // Record failed MFA attempt
         const attemptId = ID.generate();
-        await this.prisma.$executeRaw`
-          INSERT INTO admin_login_attempts (
+        await this.prisma.$executeRawUnsafe(
+          `INSERT INTO admin_login_attempts (
             id, email, admin_id, ip_address, user_agent, device_fingerprint,
             success, failure_reason, mfa_attempted, mfa_method, attempted_at
           ) VALUES (
-            CAST(${attemptId} AS UUID), ${challenge.email}, CAST(${challenge.adminId} AS UUID),
-            ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-            false, CAST('INVALID_MFA_CODE' AS admin_login_failure_reason), true, ${methodName}, NOW()
-          )
-        `;
+            $1::uuid, $2, $3::uuid, $4, $5, $6, false, 'INVALID_MFA_CODE'::admin_login_failure_reason, true, $7, NOW()
+          )`,
+          attemptId,
+          challenge.email,
+          challenge.adminId,
+          request.ipAddress,
+          request.userAgent,
+          request.deviceFingerprint ?? null,
+          methodName,
+        );
 
         return { success: false, message: 'Invalid MFA code' };
       }
@@ -1465,22 +1471,28 @@ export class AuthGrpcController {
       );
 
       // Update last login
-      await this.prisma.$executeRaw`
-        UPDATE admins SET last_login_at = NOW() WHERE id = CAST(${challenge.adminId} AS UUID)
-      `;
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE admins SET last_login_at = NOW() WHERE id = $1::uuid`,
+        challenge.adminId,
+      );
 
       // Record successful login
       const attemptId = ID.generate();
-      await this.prisma.$executeRaw`
-        INSERT INTO admin_login_attempts (
+      await this.prisma.$executeRawUnsafe(
+        `INSERT INTO admin_login_attempts (
           id, email, admin_id, ip_address, user_agent, device_fingerprint,
           success, mfa_attempted, mfa_method, attempted_at
         ) VALUES (
-          CAST(${attemptId} AS UUID), ${challenge.email}, CAST(${challenge.adminId} AS UUID),
-          ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-          true, true, ${methodName}, NOW()
-        )
-      `;
+          $1::uuid, $2, $3::uuid, $4, $5, $6, true, true, $7, NOW()
+        )`,
+        attemptId,
+        challenge.email,
+        challenge.adminId,
+        request.ipAddress,
+        request.userAgent,
+        request.deviceFingerprint ?? null,
+        methodName,
+      );
 
       await this.outboxService.addEventDirect('ADMIN_LOGIN_SUCCESS', challenge.adminId, {
         adminId: challenge.adminId,
