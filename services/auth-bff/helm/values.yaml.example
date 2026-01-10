@@ -1,0 +1,272 @@
+# My-Girok Auth BFF Helm Values Example
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install my-girok-auth-bff . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit your actual configuration
+#   - Use Sealed Secrets for sensitive data in production
+
+replicaCount: 2
+
+image:
+  repository: your-registry.io/my-girok/auth-bff
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 4005
+  targetPort: 4005
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Session affinity for sticky sessions
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "auth-bff-affinity"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+  hosts:
+    - host: auth.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: auth-bff-tls
+      hosts:
+        - auth.example.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - auth-bff
+          topologyKey: kubernetes.io/hostname
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+app:
+  nodeEnv: production
+  port: 4005
+
+  # ============================================================================
+  # Session Configuration
+  # ============================================================================
+  session:
+    cookieName: "girok_session"
+    maxAge: 604800000  # 7 days in milliseconds
+    sameSite: "strict"
+    # SESSION_SECRET is in Sealed Secret
+
+  # ============================================================================
+  # gRPC Service Endpoints
+  # ============================================================================
+  grpc:
+    identity:
+      host: identity-service.default.svc.cluster.local
+      port: 50051
+    auth:
+      host: auth-service.default.svc.cluster.local
+      port: 50052
+    legal:
+      host: legal-service.default.svc.cluster.local
+      port: 50053
+    audit:
+      host: audit-service.default.svc.cluster.local
+      port: 50054
+
+  # ============================================================================
+  # Valkey (Redis-compatible) Configuration
+  # ============================================================================
+  valkey:
+    host: valkey.default.svc.cluster.local
+    port: 6379
+    db: 3
+    # VALKEY_PASSWORD is in Sealed Secret
+
+  # ============================================================================
+  # CORS Configuration
+  # ============================================================================
+  cors:
+    origins: "https://example.com,https://admin.example.com"
+
+  # ============================================================================
+  # Frontend URLs
+  # ============================================================================
+  frontendUrl: "https://example.com"
+  frontendAdminUrl: "https://admin.example.com"
+
+  # ============================================================================
+  # OAuth Callback URLs
+  # ============================================================================
+  oauth:
+    google:
+      callbackUrl: "https://auth.example.com/oauth/google/callback"
+    kakao:
+      callbackUrl: "https://auth.example.com/oauth/kakao/callback"
+    naver:
+      callbackUrl: "https://auth.example.com/oauth/naver/callback"
+    apple:
+      callbackUrl: "https://auth.example.com/oauth/apple/callback"
+
+  # ============================================================================
+  # Rate Limiting Configuration
+  # ============================================================================
+  rateLimit:
+    login:
+      ip: 5          # requests per IP
+      ipTtl: 60000   # 1 minute
+      account: 10    # requests per account
+      accountTtl: 3600000  # 1 hour
+    mfa:
+      ip: 5
+      ipTtl: 60000
+    register:
+      ip: 3
+      ipTtl: 60000
+
+# ============================================================================
+# Sealed Secrets Configuration
+# ============================================================================
+# Use kubeseal to encrypt secrets before committing
+#
+# Required secrets:
+#   - session-secret: 32+ character secure session key
+#   - encryption-key: 32+ character encryption key for sensitive data
+#   - valkey-password: Redis/Valkey password
+#   - google-client-id: Google OAuth client ID
+#   - google-client-secret: Google OAuth client secret
+#   - kakao-client-id: Kakao OAuth client ID
+#   - kakao-client-secret: Kakao OAuth client secret
+#   - naver-client-id: Naver OAuth client ID
+#   - naver-client-secret: Naver OAuth client secret
+#   - apple-client-id: Apple OAuth client ID (Service ID)
+#   - apple-team-id: Apple Team ID
+#   - apple-key-id: Apple Key ID
+#   - apple-private-key: Apple Private Key (PEM format)
+#
+# Example:
+#   kubectl create secret generic my-girok-auth-bff-secret \
+#     --from-literal=session-secret="your-32-char-session-secret-key" \
+#     --from-literal=encryption-key="your-32-char-encryption-key-here" \
+#     --from-literal=valkey-password="your-redis-password" \
+#     --from-literal=google-client-id="your-google-client-id" \
+#     --from-literal=google-client-secret="your-google-secret" \
+#     --from-literal=kakao-client-id="your-kakao-client-id" \
+#     --from-literal=kakao-client-secret="your-kakao-secret" \
+#     --from-literal=naver-client-id="your-naver-client-id" \
+#     --from-literal=naver-client-secret="your-naver-secret" \
+#     --from-literal=apple-client-id="com.example.service" \
+#     --from-literal=apple-team-id="TEAMID123" \
+#     --from-literal=apple-key-id="KEYID123" \
+#     --from-file=apple-private-key=./AuthKey.p8 \
+#     --dry-run=client -o yaml | \
+#   kubeseal --format yaml > sealed-secret.yaml
+
+sealedSecrets:
+  enabled: true
+  annotations:
+    sealedsecrets.bitnami.com/managed: "true"
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# ============================================================================
+# ENVIRONMENT-SPECIFIC CONFIGURATIONS
+# ============================================================================
+#
+# DEVELOPMENT:
+#   replicaCount: 1
+#   autoscaling.enabled: false
+#   app.nodeEnv: development
+#   app.cors.origins: "http://localhost:3000,http://localhost:3001"
+#   app.frontendUrl: "http://localhost:3000"
+#
+# STAGING:
+#   replicaCount: 2
+#   autoscaling.minReplicas: 2
+#   autoscaling.maxReplicas: 5
+#   app.nodeEnv: staging
+#   ingress.hosts[0].host: auth-staging.example.com
+#
+# PRODUCTION:
+#   replicaCount: 3
+#   autoscaling.minReplicas: 3
+#   autoscaling.maxReplicas: 10
+#   app.nodeEnv: production
+#   ingress.hosts[0].host: auth.example.com
+#
+# ============================================================================
