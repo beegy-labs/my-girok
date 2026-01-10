@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsString, IsNotEmpty, MinLength, IsIn } from 'class-validator';
+import { AdminInfoDto } from './admin-info.dto';
+
+export { AdminInfoDto };
 
 export class AdminLoginDto {
   @ApiProperty({ description: 'Admin email address' })
@@ -79,38 +82,15 @@ export class AdminLoginResponseDto {
   @ApiPropertyOptional({ description: 'Available MFA methods' })
   availableMethods?: string[];
 
-  @ApiPropertyOptional({ description: 'Admin info if login complete' })
+  @ApiPropertyOptional({ description: 'Admin info if login complete', type: () => AdminInfoDto })
   admin?: AdminInfoDto;
 
   @ApiProperty({ description: 'Response message' })
   message!: string;
 }
 
-export class AdminInfoDto {
-  @ApiProperty({ description: 'Admin ID' })
-  id!: string;
-
-  @ApiProperty({ description: 'Admin email' })
-  email!: string;
-
-  @ApiProperty({ description: 'Admin display name' })
-  name!: string;
-
-  @ApiProperty({ description: 'Admin scope', enum: ['SYSTEM', 'TENANT'] })
-  scope!: string;
-
-  @ApiProperty({ description: 'Whether MFA is enabled' })
-  mfaEnabled!: boolean;
-
-  @ApiPropertyOptional({ description: 'Role name' })
-  roleName?: string;
-
-  @ApiPropertyOptional({ description: 'Permissions' })
-  permissions?: string[];
-}
-
 export class AdminMeResponseDto {
-  @ApiProperty({ description: 'Admin information' })
+  @ApiProperty({ description: 'Admin information', type: () => AdminInfoDto })
   admin!: AdminInfoDto;
 }
 

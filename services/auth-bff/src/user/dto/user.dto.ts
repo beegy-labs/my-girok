@@ -8,6 +8,9 @@ import {
   Matches,
   IsIn,
 } from 'class-validator';
+import { UserInfoDto } from './user-info.dto';
+
+export { UserInfoDto };
 
 export class UserRegisterDto {
   @ApiProperty({ description: 'User email address' })
@@ -122,32 +125,15 @@ export class UserLoginResponseDto {
   @ApiPropertyOptional({ description: 'Available MFA methods' })
   availableMethods?: string[];
 
-  @ApiPropertyOptional({ description: 'User info if login complete' })
+  @ApiPropertyOptional({ description: 'User info if login complete', type: () => UserInfoDto })
   user?: UserInfoDto;
 
   @ApiProperty({ description: 'Response message' })
   message!: string;
 }
 
-export class UserInfoDto {
-  @ApiProperty({ description: 'User ID' })
-  id!: string;
-
-  @ApiProperty({ description: 'User email' })
-  email!: string;
-
-  @ApiProperty({ description: 'Username' })
-  username!: string;
-
-  @ApiProperty({ description: 'Whether email is verified' })
-  emailVerified!: boolean;
-
-  @ApiProperty({ description: 'Whether MFA is enabled' })
-  mfaEnabled!: boolean;
-}
-
 export class UserMeResponseDto {
-  @ApiProperty({ description: 'User information' })
+  @ApiProperty({ description: 'User information', type: () => UserInfoDto })
   user!: UserInfoDto;
 }
 

@@ -13,7 +13,8 @@
  * });
  * ```
  */
-import { defineConfig, mergeConfig, type UserConfig } from 'vitest/config';
+import type { UserConfig } from 'vitest/config';
+import { defineConfig, mergeConfig } from 'vitest/config';
 import swc from 'unplugin-swc';
 import path from 'node:path';
 

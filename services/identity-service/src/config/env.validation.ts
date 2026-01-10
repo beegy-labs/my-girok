@@ -46,7 +46,7 @@ export const envValidationSchema = Joi.object({
   ACCOUNT_LOCK_THRESHOLD: Joi.number().min(3).max(10).default(5),
   ACCOUNT_LOCK_DURATION_MINUTES: Joi.number().min(5).max(60).default(15),
   MFA_BACKUP_CODES_COUNT: Joi.number().min(5).max(20).default(10),
-  ENCRYPTION_KEY: Joi.string().length(32).when('NODE_ENV', {
+  ENCRYPTION_KEY: Joi.string().min(43).max(44).when('NODE_ENV', {
     is: 'production',
     then: Joi.required(),
     otherwise: Joi.optional(),

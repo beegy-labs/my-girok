@@ -11,8 +11,8 @@ import { WireType } from "@protobuf-ts/runtime";
 import { UnknownFieldHandler } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { MfaMethod } from "../../common/v1/common_pb";
-import { Timestamp } from "../../google/protobuf/timestamp_pb";
+import { MfaMethod } from "../../common/v1/common_pb.js";
+import { Timestamp } from "../../google/protobuf/timestamp_pb.js";
 /**
  * RoleScope defines where the role applies
  *

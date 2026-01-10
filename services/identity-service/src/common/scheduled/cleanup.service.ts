@@ -97,74 +97,6 @@ export class CleanupService implements OnModuleInit {
   }
 
   /**
-   * Clean up expired idempotency records
-   * Runs daily at 3 AM UTC
-   */
-  @Cron('0 3 * * *', { name: 'cleanup-idempotency' })
-  async cleanupExpiredIdempotencyRecords(): Promise<void> {
-    const startTime = Date.now();
-
-    try {
-      const result = await this.prisma.idempotencyRecord.deleteMany({
-        where: {
-          expiresAt: { lt: new Date() },
-        },
-      });
-
-      if (result.count > 0) {
-        this.logger.log(
-          `Deleted ${result.count} expired idempotency records in ${Date.now() - startTime}ms`,
-        );
-      }
-    } catch (error) {
-      this.logger.error(`Failed to cleanup expired idempotency records: ${error}`);
-    }
-  }
-
-  /**
-   * Clean up timed out saga states
-   * Runs daily at 4 AM UTC
-   */
-  @Cron('0 4 * * *', { name: 'cleanup-sagas' })
-  async cleanupTimedOutSagas(): Promise<void> {
-    const startTime = Date.now();
-
-    try {
-      // Mark timed out sagas as TIMED_OUT
-      const timedOutResult = await this.prisma.sagaState.updateMany({
-        where: {
-          status: { in: ['PENDING', 'IN_PROGRESS', 'COMPENSATING'] },
-          timeoutAt: { lt: new Date() },
-        },
-        data: {
-          status: 'TIMED_OUT',
-          completedAt: new Date(),
-          error: 'Saga timed out during scheduled cleanup',
-        },
-      });
-
-      // Delete completed/failed sagas older than 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const deletedResult = await this.prisma.sagaState.deleteMany({
-        where: {
-          status: { in: ['COMPLETED', 'FAILED', 'COMPENSATED', 'TIMED_OUT'] },
-          completedAt: { lt: thirtyDaysAgo },
-        },
-      });
-
-      if (timedOutResult.count > 0 || deletedResult.count > 0) {
-        this.logger.log(
-          `Saga cleanup: ${timedOutResult.count} timed out, ${deletedResult.count} deleted in ${Date.now() - startTime}ms`,
-        );
-      }
-    } catch (error) {
-      this.logger.error(`Failed to cleanup saga states: ${error}`);
-    }
-  }
-
-  /**
    * Clean up old dead letter events
    * Runs weekly on Sunday at 4 AM UTC
    */
@@ -262,8 +194,6 @@ export class CleanupService implements OnModuleInit {
     const jobs = [
       'cleanup-sessions',
       'cleanup-revoked-tokens',
-      'cleanup-idempotency',
-      'cleanup-sagas',
       'cleanup-dead-letters',
       'cleanup-outbox',
       'cleanup-password-history',

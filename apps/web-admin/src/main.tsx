@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router';
 import { HelmetProvider } from 'react-helmet-async';
 import { router } from './router';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { initOtel } from './lib/otel';
 import './index.css';
 import './i18n/config';
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HelmetProvider>
       <ThemeProvider>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </ThemeProvider>
     </HelmetProvider>
   </React.StrictMode>,

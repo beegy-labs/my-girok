@@ -10,71 +10,83 @@ import { AuthProvider, AccountMode } from '../identity/accounts/dto/create-accou
 import { AccountStatus } from '../identity/accounts/dto/update-account.dto';
 import {
   // Shared Proto enum utilities from SSOT
-  toProtoTimestamp,
-  AccountStatusProto,
-  AccountModeProto,
-  AuthProviderProto,
+  AccountStatus as AccountStatusProto,
+  AccountMode as AccountModeProto,
+  AuthProvider as AuthProviderProto,
+  ProtoTimestamp,
 } from '@my-girok/nest-common';
 
 /**
+ * Convert Date to ProtoTimestamp
+ */
+function toProtoTimestamp(date: Date | null | undefined): ProtoTimestamp | undefined {
+  if (!date) return undefined;
+  const ms = date.getTime();
+  return {
+    seconds: Math.floor(ms / 1000),
+    nanos: (ms % 1000) * 1_000_000,
+  };
+}
+
+/**
  * Proto enum mappings for AccountStatus
- * Uses SSOT from @my-girok/types
+ * Uses SSOT from @my-girok/nest-common
  */
 const AccountStatusMap: Record<string, number> = {
-  PENDING_VERIFICATION: AccountStatusProto.PENDING,
-  ACTIVE: AccountStatusProto.ACTIVE,
-  SUSPENDED: AccountStatusProto.SUSPENDED,
-  DELETED: AccountStatusProto.DELETED,
-  LOCKED: AccountStatusProto.LOCKED,
+  PENDING_VERIFICATION: AccountStatusProto.ACCOUNT_STATUS_PENDING,
+  ACTIVE: AccountStatusProto.ACCOUNT_STATUS_ACTIVE,
+  SUSPENDED: AccountStatusProto.ACCOUNT_STATUS_SUSPENDED,
+  DELETED: AccountStatusProto.ACCOUNT_STATUS_DELETED,
+  LOCKED: AccountStatusProto.ACCOUNT_STATUS_LOCKED,
 };
 
 /**
  * Proto enum mappings for AccountMode
- * Uses SSOT from @my-girok/types
+ * Uses SSOT from @my-girok/nest-common
  */
 const AccountModeMap: Record<string, number> = {
-  USER: AccountModeProto.USER,
-  ADMIN: AccountModeProto.ADMIN,
-  OPERATOR: AccountModeProto.OPERATOR,
-  SERVICE: AccountModeProto.SERVICE,
-  UNIFIED: AccountModeProto.USER, // Map UNIFIED to USER for proto compatibility
+  USER: AccountModeProto.ACCOUNT_MODE_USER,
+  ADMIN: AccountModeProto.ACCOUNT_MODE_ADMIN,
+  OPERATOR: AccountModeProto.ACCOUNT_MODE_OPERATOR,
+  SERVICE: AccountModeProto.ACCOUNT_MODE_SERVICE,
+  UNIFIED: AccountModeProto.ACCOUNT_MODE_USER, // Map UNIFIED to USER for proto compatibility
 };
 
 /**
  * Proto enum mappings for AuthProvider
- * Uses SSOT from @my-girok/types
+ * Uses SSOT from @my-girok/nest-common
  */
 const AuthProviderMap: Record<number, AuthProvider> = {
-  [AuthProviderProto.UNSPECIFIED]: AuthProvider.LOCAL,
-  [AuthProviderProto.LOCAL]: AuthProvider.LOCAL,
-  [AuthProviderProto.GOOGLE]: AuthProvider.GOOGLE,
-  [AuthProviderProto.APPLE]: AuthProvider.APPLE,
-  [AuthProviderProto.KAKAO]: AuthProvider.KAKAO,
-  [AuthProviderProto.NAVER]: AuthProvider.NAVER,
+  [AuthProviderProto.AUTH_PROVIDER_UNSPECIFIED]: AuthProvider.LOCAL,
+  [AuthProviderProto.AUTH_PROVIDER_LOCAL]: AuthProvider.LOCAL,
+  [AuthProviderProto.AUTH_PROVIDER_GOOGLE]: AuthProvider.GOOGLE,
+  [AuthProviderProto.AUTH_PROVIDER_APPLE]: AuthProvider.APPLE,
+  [AuthProviderProto.AUTH_PROVIDER_KAKAO]: AuthProvider.KAKAO,
+  [AuthProviderProto.AUTH_PROVIDER_NAVER]: AuthProvider.NAVER,
 };
 
 /**
  * Proto to AccountMode mapping
- * Uses SSOT from @my-girok/types
+ * Uses SSOT from @my-girok/nest-common
  */
 const ProtoToAccountModeMap: Record<number, AccountMode> = {
-  [AccountModeProto.UNSPECIFIED]: AccountMode.UNIFIED,
-  [AccountModeProto.USER]: AccountMode.UNIFIED,
-  [AccountModeProto.ADMIN]: AccountMode.UNIFIED,
-  [AccountModeProto.OPERATOR]: AccountMode.UNIFIED,
-  [AccountModeProto.SERVICE]: AccountMode.SERVICE,
+  [AccountModeProto.ACCOUNT_MODE_UNSPECIFIED]: AccountMode.UNIFIED,
+  [AccountModeProto.ACCOUNT_MODE_USER]: AccountMode.UNIFIED,
+  [AccountModeProto.ACCOUNT_MODE_ADMIN]: AccountMode.UNIFIED,
+  [AccountModeProto.ACCOUNT_MODE_OPERATOR]: AccountMode.UNIFIED,
+  [AccountModeProto.ACCOUNT_MODE_SERVICE]: AccountMode.SERVICE,
 };
 
 /**
  * Proto to AccountStatus mapping
- * Uses SSOT from @my-girok/types
+ * Uses SSOT from @my-girok/nest-common
  */
 const ProtoToAccountStatusMap: Record<number, AccountStatus> = {
-  [AccountStatusProto.PENDING]: AccountStatus.PENDING_VERIFICATION,
-  [AccountStatusProto.ACTIVE]: AccountStatus.ACTIVE,
-  [AccountStatusProto.SUSPENDED]: AccountStatus.SUSPENDED,
-  [AccountStatusProto.DELETED]: AccountStatus.DELETED,
-  [AccountStatusProto.LOCKED]: AccountStatus.SUSPENDED, // LOCKED -> SUSPENDED (no LOCKED in Prisma)
+  [AccountStatusProto.ACCOUNT_STATUS_PENDING]: AccountStatus.PENDING_VERIFICATION,
+  [AccountStatusProto.ACCOUNT_STATUS_ACTIVE]: AccountStatus.ACTIVE,
+  [AccountStatusProto.ACCOUNT_STATUS_SUSPENDED]: AccountStatus.SUSPENDED,
+  [AccountStatusProto.ACCOUNT_STATUS_DELETED]: AccountStatus.DELETED,
+  [AccountStatusProto.ACCOUNT_STATUS_LOCKED]: AccountStatus.SUSPENDED, // LOCKED -> SUSPENDED (no LOCKED in Prisma)
 };
 
 /**

@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { of, throwError, firstValueFrom } from 'rxjs';
 
@@ -280,7 +280,7 @@ describe('PiiLoggingInterceptor', () => {
     });
 
     it('should log error with duration on request failure', () => {
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<void>((resolve, _reject) => {
         const request = {
           method: 'POST',
           url: '/api/auth/login',

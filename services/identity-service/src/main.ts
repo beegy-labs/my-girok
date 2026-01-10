@@ -64,6 +64,7 @@ async function bootstrap() {
         enums: String,
         defaults: true,
         oneofs: true,
+        includeDirs: [join(__dirname, '../../../packages/proto')],
       },
     },
   });

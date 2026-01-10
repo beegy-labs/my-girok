@@ -16,6 +16,7 @@ import { CreateAccountDto, AuthProvider, AccountMode } from './dto/create-accoun
 import { UpdateAccountDto, AccountStatus, ChangePasswordDto } from './dto/update-account.dto';
 import { AccountEntity } from './entities/account.entity';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import * as OTPAuth from 'otpauth';
 
 /**

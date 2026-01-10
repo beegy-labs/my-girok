@@ -6,7 +6,7 @@ import { Resource } from '@opentelemetry/resources';
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
-  ATTR_DEPLOYMENT_ENVIRONMENT,
+  SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
 } from '@opentelemetry/semantic-conventions';
 import { SimpleSpanProcessor, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -63,7 +63,7 @@ export class TelemetryService implements OnModuleInit, OnModuleDestroy {
       const resource = new Resource({
         [ATTR_SERVICE_NAME]: this.serviceName,
         [ATTR_SERVICE_VERSION]: version,
-        [ATTR_DEPLOYMENT_ENVIRONMENT]: environment,
+        [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]: environment,
       });
 
       // Create trace exporter
@@ -77,16 +77,18 @@ export class TelemetryService implements OnModuleInit, OnModuleDestroy {
       });
 
       // Use batch processor in production, simple in development
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (environment === 'production') {
         this.provider.addSpanProcessor(
           new BatchSpanProcessor(exporter, {
             maxQueueSize: 2048,
             maxExportBatchSize: 512,
             scheduledDelayMillis: 5000,
-          }),
+          }) as any,
         );
       } else {
-        this.provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.provider.addSpanProcessor(new SimpleSpanProcessor(exporter) as any);
       }
 
       // Register provider
