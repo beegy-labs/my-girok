@@ -9,7 +9,9 @@ import { PrismaService } from '../../src/database/prisma.service';
 export type MockPrismaService = {
   // Raw query methods
   $queryRaw: Mock;
+  $queryRawUnsafe: Mock;
   $executeRaw: Mock;
+  $executeRawUnsafe: Mock;
   $transaction: Mock;
   $connect: Mock;
   $disconnect: Mock;
@@ -55,7 +57,9 @@ export type MockPrismaService = {
 export function createMockPrismaService(): MockPrismaService {
   return {
     $queryRaw: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
     $executeRaw: vi.fn(),
+    $executeRawUnsafe: vi.fn(),
     $transaction: vi.fn((callback: (tx: MockPrismaService) => Promise<unknown>) => {
       // Execute the callback with the mock itself as the transaction client
       return callback(createMockPrismaService());
@@ -111,7 +115,9 @@ export function getMockPrismaProvider() {
  */
 export function resetMockPrisma(mockPrisma: MockPrismaService): void {
   mockPrisma.$queryRaw.mockReset();
+  mockPrisma.$queryRawUnsafe.mockReset();
   mockPrisma.$executeRaw.mockReset();
+  mockPrisma.$executeRawUnsafe.mockReset();
   mockPrisma.$transaction.mockReset();
   mockPrisma.$connect.mockReset();
   mockPrisma.$disconnect.mockReset();

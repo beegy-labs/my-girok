@@ -9,16 +9,17 @@ import { createOutboxEvent, generateTestId, resetTestCounter } from '../utils/te
 describe('OutboxService', () => {
   let service: OutboxService;
   let mockPrisma: MockPrismaService;
-  let mockTx: { $executeRaw: Mock };
+  let mockTx: { $executeRaw: Mock; $executeRawUnsafe: Mock };
 
   beforeEach(async () => {
     resetTestCounter();
 
     mockPrisma = createMockPrismaService();
 
-    // Create a mock transaction client with $executeRaw
+    // Create a mock transaction client with $executeRaw and $executeRawUnsafe
     mockTx = {
       $executeRaw: vi.fn().mockResolvedValue(1),
+      $executeRawUnsafe: vi.fn().mockResolvedValue(1),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -39,19 +40,19 @@ describe('OutboxService', () => {
       const aggregateId = generateTestId();
       const payload = { roleId: aggregateId, name: 'Test Role' };
 
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const result = await service.addEvent(mockTx as any, eventType, aggregateId, payload);
 
       // Assert
       expect(result).toBeDefined();
-      expect(mockTx.$executeRaw).toHaveBeenCalled();
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalled();
     });
 
     it('should generate a unique ID for each event', async () => {
       // Arrange
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const id1 = await service.addEvent(mockTx as any, 'TEST', 'agg-1', {});
@@ -61,7 +62,7 @@ describe('OutboxService', () => {
       expect(id1).toBeDefined();
       expect(id2).toBeDefined();
       expect(id1).not.toBe(id2);
-      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(2);
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -74,14 +75,14 @@ describe('OutboxService', () => {
         payload: { email: 'test@example.com' },
       };
 
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const result = await service.saveEvent(mockTx as any, event);
 
       // Assert
       expect(result).toBeDefined();
-      expect(mockTx.$executeRaw).toHaveBeenCalled();
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalled();
     });
   });
 
@@ -101,14 +102,14 @@ describe('OutboxService', () => {
         },
       ];
 
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const result = await service.saveEvents(mockTx as any, events);
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(2);
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalledTimes(2);
     });
 
     it('should return empty array for empty input', async () => {
@@ -117,7 +118,7 @@ describe('OutboxService', () => {
 
       // Assert
       expect(result).toHaveLength(0);
-      expect(mockTx.$executeRaw).not.toHaveBeenCalled();
+      expect(mockTx.$executeRawUnsafe).not.toHaveBeenCalled();
     });
   });
 

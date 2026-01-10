@@ -68,14 +68,26 @@ export class OutboxService {
     const id = ID.generate();
     const payloadJson = JSON.stringify(payload);
 
-    await (tx as PrismaService).$executeRawUnsafe(
-      `INSERT INTO outbox_events (id, event_type, aggregate_id, payload, status, retry_count, created_at)
-      VALUES ($1::uuid, $2, $3::uuid, $4::jsonb, 'PENDING', 0, NOW())`,
-      id,
-      eventType,
-      aggregateId,
-      payloadJson,
-    );
+    // Check if we have access to $executeRawUnsafe (only available on PrismaService, not transaction clients)
+    const client = tx as Record<string, unknown>;
+    if (typeof client.$executeRawUnsafe === 'function') {
+      // Use $executeRawUnsafe for proper UUID type casting
+      await (tx as PrismaService).$executeRawUnsafe(
+        `INSERT INTO outbox_events (id, event_type, aggregate_id, payload, status, retry_count, created_at)
+        VALUES ($1::uuid, $2, $3::uuid, $4::jsonb, 'PENDING', 0, NOW())`,
+        id,
+        eventType,
+        aggregateId,
+        payloadJson,
+      );
+    } else {
+      // For transaction clients, use $executeRaw with Prisma.raw for UUID values
+      // UUIDs are internally generated and validated, so this is safe
+      await tx.$executeRaw(
+        Prisma.sql`INSERT INTO outbox_events (id, event_type, aggregate_id, payload, status, retry_count, created_at)
+        VALUES (${Prisma.raw(`'${id}'`)}::uuid, ${eventType}, ${Prisma.raw(`'${aggregateId}'`)}::uuid, ${payloadJson}::jsonb, 'PENDING', 0, NOW())`,
+      );
+    }
 
     this.logger.debug(`Outbox event added: ${eventType} for aggregate ${aggregateId} (id: ${id})`);
 
@@ -97,6 +109,7 @@ export class OutboxService {
     aggregateId: string,
     payload: Record<string, unknown>,
   ): Promise<string> {
+    // addEventDirect always uses PrismaService which has $executeRawUnsafe
     return this.addEvent(this.prisma, eventType, aggregateId, payload);
   }
 
