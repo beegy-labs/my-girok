@@ -1174,38 +1174,47 @@ export class AuthGrpcController {
 
       const admin = admins[0];
 
-      // Record login attempt
+      // Record login attempt using raw SQL with explicit type casting
       const recordAttempt = async (success: boolean, reason?: string, mfaAttempted = false) => {
         const attemptId = ID.generate();
         const adminIdValue = admin?.id ?? null;
         const deviceFingerprint = request.deviceFingerprint ?? null;
 
-        // Use Prisma.sql for complex INSERT with conditional enum casting
+        // Build values array and use $executeRawUnsafe for proper UUID handling
         if (reason) {
-          await this.prisma.$executeRaw(
-            Prisma.sql`
-              INSERT INTO admin_login_attempts (
-                id, email, admin_id, ip_address, user_agent, device_fingerprint,
-                success, failure_reason, mfa_attempted, attempted_at
-              ) VALUES (
-                CAST(${attemptId} AS UUID), ${request.email}, CAST(${adminIdValue} AS UUID),
-                ${request.ipAddress}, ${request.userAgent}, ${deviceFingerprint},
-                ${success}, CAST(${reason} AS admin_login_failure_reason), ${mfaAttempted}, NOW()
-              )
-            `,
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO admin_login_attempts (
+              id, email, admin_id, ip_address, user_agent, device_fingerprint,
+              success, failure_reason, mfa_attempted, attempted_at
+            ) VALUES (
+              $1::uuid, $2, $3::uuid, $4, $5, $6, $7, $8::admin_login_failure_reason, $9, NOW()
+            )`,
+            attemptId,
+            request.email,
+            adminIdValue,
+            request.ipAddress,
+            request.userAgent,
+            deviceFingerprint,
+            success,
+            reason,
+            mfaAttempted,
           );
         } else {
-          await this.prisma.$executeRaw(
-            Prisma.sql`
-              INSERT INTO admin_login_attempts (
-                id, email, admin_id, ip_address, user_agent, device_fingerprint,
-                success, failure_reason, mfa_attempted, attempted_at
-              ) VALUES (
-                CAST(${attemptId} AS UUID), ${request.email}, CAST(${adminIdValue} AS UUID),
-                ${request.ipAddress}, ${request.userAgent}, ${deviceFingerprint},
-                ${success}, NULL, ${mfaAttempted}, NOW()
-              )
-            `,
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO admin_login_attempts (
+              id, email, admin_id, ip_address, user_agent, device_fingerprint,
+              success, failure_reason, mfa_attempted, attempted_at
+            ) VALUES (
+              $1::uuid, $2, $3::uuid, $4, $5, $6, $7, NULL, $8, NOW()
+            )`,
+            attemptId,
+            request.email,
+            adminIdValue,
+            request.ipAddress,
+            request.userAgent,
+            deviceFingerprint,
+            success,
+            mfaAttempted,
           );
         }
       };
