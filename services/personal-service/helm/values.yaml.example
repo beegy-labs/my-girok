@@ -158,6 +158,9 @@ valkey:
   port: 6379
   # Database number (0-15, my-girok uses DB 1)
   db: 1
+  # Key prefix for BullMQ queues
+  # Development: "local:", Staging: "staging:", Production: "prod:"
+  prefix: "prod:"
   # Name of the Kubernetes secret containing Valkey password
   secretName: "valkey-2-password"
   # Key in the secret containing the password

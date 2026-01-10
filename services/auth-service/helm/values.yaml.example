@@ -133,10 +133,17 @@ app:
   jwt:
     accessExpiration: "15m"
     refreshExpiration: "7d"
+    domainAccessExpiration: "72h"
 
   # Frontend URL
   # CHANGE THIS
   frontendUrl: "https://example.com"
+
+  # gRPC Configuration (Identity Service)
+  grpc:
+    identity:
+      host: "identity-service.default.svc.cluster.local"
+      port: 50051
 
 # ============================================================================
 # Sealed Secrets Configuration

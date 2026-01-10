@@ -67,6 +67,13 @@ spec:
           value: {{ .Values.app.jwt.refreshExpiration | quote }}
         - name: FRONTEND_URL
           value: {{ .Values.app.frontendUrl | quote }}
+        - name: JWT_DOMAIN_ACCESS_EXPIRATION
+          value: {{ .Values.app.jwt.domainAccessExpiration | quote }}
+        # gRPC Configuration (Identity Service)
+        - name: IDENTITY_GRPC_HOST
+          value: {{ .Values.app.grpc.identity.host | quote }}
+        - name: IDENTITY_GRPC_PORT
+          value: {{ .Values.app.grpc.identity.port | quote }}
         - name: GOOGLE_CLIENT_ID
           valueFrom:
             secretKeyRef:

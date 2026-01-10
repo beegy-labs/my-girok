@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "web-admin.fullname" . }}-nginx-config
+  labels:
+    {{- include "web-admin.labels" . | nindent 4 }}
+data:
+  nginx.conf: |
+    server {
+        listen 3000;
+        server_name localhost;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Security headers (SECURITY.md)
+        # HSTS: Force HTTPS for 1 year, include subdomains, preload
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+        # Prevent clickjacking
+        add_header X-Frame-Options "DENY" always;
+
+        # Prevent MIME type sniffing
+        add_header X-Content-Type-Options "nosniff" always;
+
+        # XSS Protection (legacy browsers)
+        add_header X-XSS-Protection "1; mode=block" always;
+
+        # Referrer Policy
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        # Content Security Policy (configurable via Helm values)
+        {{- $csp := .Values.csp }}
+        {{- $cspParts := list }}
+        {{- $cspParts = append $cspParts (printf "default-src %s" $csp.defaultSrc) }}
+        {{- $cspParts = append $cspParts (printf "script-src %s" $csp.scriptSrc) }}
+        {{- $cspParts = append $cspParts (printf "style-src %s" $csp.styleSrc) }}
+        {{- $cspParts = append $cspParts (printf "img-src %s" $csp.imgSrc) }}
+        {{- $cspParts = append $cspParts (printf "font-src %s" $csp.fontSrc) }}
+        {{- $cspParts = append $cspParts (printf "connect-src %s" $csp.connectSrc) }}
+        {{- $cspParts = append $cspParts (printf "frame-ancestors %s" $csp.frameAncestors) }}
+        {{- if $csp.workerSrc }}
+        {{- $cspParts = append $cspParts (printf "worker-src %s" $csp.workerSrc) }}
+        {{- end }}
+        {{- if $csp.extraDirectives }}
+        {{- range $csp.extraDirectives }}
+        {{- $cspParts = append $cspParts . }}
+        {{- end }}
+        {{- end }}
+        add_header Content-Security-Policy "{{ join "; " $cspParts }};" always;
+
+        # Permissions Policy (Feature Policy)
+        add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()" always;
+
+        # Gzip compression
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # React Router support - serve index.html for all routes
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Health check endpoint
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+    }
