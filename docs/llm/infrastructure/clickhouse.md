@@ -1,41 +1,92 @@
 # ClickHouse Infrastructure
 
-High-performance analytics database for audit and analytics services
+High-performance analytics database for observability, audit, and analytics
 
 ## Databases
 
-| Database       | Owner             | Purpose            | Retention |
-| -------------- | ----------------- | ------------------ | --------- |
-| `audit_db`     | audit-service     | Compliance logging | 5 years   |
-| `analytics_db` | analytics-service | Business analytics | 90d - 1yr |
+| Database       | Owner               | Purpose               | Retention  |
+| -------------- | ------------------- | --------------------- | ---------- |
+| `otel_db`      | platform-monitoring | Traces, metrics, logs | 30-90 days |
+| `audit_db`     | audit-service       | Compliance logging    | 5-7 years  |
+| `analytics_db` | analytics-service   | Business analytics    | 90d - 1yr  |
 
 ## Architecture
 
 ```
-my_cluster (2 shards x 2 replicas)
-  Shard 1: replica-01 (primary), replica-02 (standby)
-  Shard 2: replica-01 (primary), replica-02 (standby)
-         ↓
-  Distributed Tables (Query Router)
+                    ┌─────────────────────────────────────────┐
+                    │           Data Ingestion                │
+                    └─────────────────────────────────────────┘
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        │                             │                             │
+        ▼                             ▼                             ▼
+┌───────────────┐          ┌───────────────────┐          ┌───────────────┐
+│   Services    │          │  OTEL Collector   │          │   Browser     │
+│  (NestJS)     │          │  (traces/metrics) │          │   SDK         │
+└───────────────┘          └───────────────────┘          └───────────────┘
+        │                             │                             │
+        │                             ▼                             │
+        │                   ┌───────────────────┐                   │
+        │                   │      Kafka        │                   │
+        │                   │   (Redpanda)      │                   │
+        │                   │  Buffer Layer     │                   │
+        │                   └───────────────────┘                   │
+        │                             │                             │
+        │         ┌───────────────────┼───────────────────┐         │
+        │         │                   │                   │         │
+        ▼         ▼                   ▼                   ▼         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        ClickHouse Cluster                           │
+│   ┌──────────┐     ┌──────────┐     ┌─────────────┐                │
+│   │ otel_db  │     │ audit_db │     │analytics_db │                │
+│   └──────────┘     └──────────┘     └─────────────┘                │
+└─────────────────────────────────────────────────────────────────────┘
 ```
+
+## Kafka Topics
+
+| Topic              | Consumer Group       | Target Database | Purpose            |
+| ------------------ | -------------------- | --------------- | ------------------ |
+| `otel-traces`      | clickhouse-traces    | otel_db         | Distributed traces |
+| `otel-metrics`     | clickhouse-metrics   | otel_db         | OTEL metrics       |
+| `otel-logs`        | clickhouse-logs      | otel_db         | Application logs   |
+| `otel-audit`       | clickhouse-audit     | audit_db        | Admin audit logs   |
+| `analytics-events` | clickhouse-analytics | analytics_db    | User events        |
 
 ## Schema Files
 
 ```
 infrastructure/clickhouse/schemas/
-  01-audit_db.sql        # Audit tables
-  02-analytics_db.sql    # Analytics tables
-  03-materialized_views.sql
+  01-audit_db.sql           # Audit tables (5-7yr retention)
+  02-analytics_db.sql       # Analytics tables
+  03-materialized_views.sql # Pre-aggregated views
+  04-otel_db.sql            # OTEL traces/metrics/logs
+  05-kafka_engine.sql       # Kafka consumers + MVs
 ```
+
+## otel_db Tables
+
+| Table                | Purpose            | TTL     | Source       |
+| -------------------- | ------------------ | ------- | ------------ |
+| traces               | Distributed traces | 30 days | Kafka Engine |
+| metrics              | OTEL metrics       | 90 days | Kafka Engine |
+| logs                 | Application logs   | 30 days | Kafka Engine |
+| service_dependencies | Service map (agg)  | 90 days | MV           |
+| service_error_rates  | Error rates (agg)  | 30 days | MV           |
+| log_error_summary    | Log errors (agg)   | 7 days  | MV           |
 
 ## audit_db Tables
 
-| Table           | Purpose              | TTL     | Partitioning |
-| --------------- | -------------------- | ------- | ------------ |
-| access_logs     | API access history   | 5 years | Monthly      |
-| consent_history | Consent changes      | 5 years | Monthly      |
-| admin_actions   | Admin activity audit | 5 years | Monthly      |
-| data_exports    | GDPR export tracking | 5 years | Monthly      |
+| Table            | Purpose              | TTL     | Partitioning |
+| ---------------- | -------------------- | ------- | ------------ |
+| access_logs      | API access history   | 5 years | Monthly      |
+| consent_history  | Consent changes      | 5 years | Monthly      |
+| admin_actions    | Admin activity audit | 5 years | Monthly      |
+| data_exports     | GDPR export tracking | 5 years | Monthly      |
+| admin_ui_events  | Admin UI tracking    | 7 years | Monthly      |
+| admin_api_logs   | Admin API requests   | 7 years | Monthly      |
+| admin_audit_logs | Data change audit    | 7 years | Monthly      |
+| admin_sessions   | Admin sessions       | 2 years | Monthly      |
 
 ## analytics_db Tables
 
