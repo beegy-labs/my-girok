@@ -65,15 +65,42 @@ legal-service (legal_db)
 | audit     | ClickHouse | 5yr retention |
 | analytics | ClickHouse | Analytics     |
 
-## URLs
+## URLs (External)
 
-| URL                       | Service          |
-| ------------------------- | ---------------- |
-| my.girok.dev              | web-main         |
-| admin.girok.dev           | web-admin        |
-| my-api.girok.dev/identity | identity-service |
-| my-api.girok.dev/auth     | auth-service     |
-| my-api.girok.dev/legal    | legal-service    |
+| URL                 | Service      |
+| ------------------- | ------------ |
+| my-dev.girok.dev    | web-main     |
+| admin-dev.girok.dev | web-admin    |
+| auth-dev.girok.dev  | auth-bff     |
+| grpc-dev.girok.dev  | gRPC Gateway |
+
+## Service Discovery (CoreDNS)
+
+Multi-cluster ready domain structure:
+
+| Pattern  | Example                      | Use Case                    |
+| -------- | ---------------------------- | --------------------------- |
+| External | `grpc-dev.girok.dev`         | Developer gRPC (L7 routing) |
+| Internal | `identity.svc-dev.girok.dev` | Pod-to-Pod gRPC             |
+
+### Internal gRPC Domains (Pod-to-Pod)
+
+| Domain                     | Service                       | Port  |
+| -------------------------- | ----------------------------- | ----- |
+| identity.svc-dev.girok.dev | platform-dev-identity-service | 50051 |
+| auth.svc-dev.girok.dev     | auth-service                  | 50052 |
+| legal.svc-dev.girok.dev    | platform-dev-legal-service    | 50053 |
+| audit.svc-dev.girok.dev    | platform-dev-audit-service    | 50054 |
+
+### gRPC Gateway (Developer Access)
+
+```
+grpc-dev.girok.dev:443
+├── /identity.* → identity-service:50051
+├── /auth.*     → auth-service:50052
+├── /legal.*    → legal-service:50053
+└── /audit.*    → audit-service:50054
+```
 
 ## Token Types
 
