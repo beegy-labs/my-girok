@@ -2,7 +2,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle, Shield, Key, ArrowLeft } from 'lucide-react';
-import { authApi } from '../api';
+import { authApi, resetRedirectFlag } from '../api';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
 import type { MfaMethod } from '@my-girok/types';
 
@@ -52,6 +52,7 @@ export default function MfaPage() {
       }
 
       if (response.admin) {
+        resetRedirectFlag(); // Reset the redirect flag after successful login
         setAuth(response.admin);
         const from =
           (location.state as { from?: { from?: Location } })?.from?.from?.pathname || '/';

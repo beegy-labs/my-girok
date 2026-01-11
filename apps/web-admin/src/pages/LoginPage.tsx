@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle, Globe, Languages, Sun, Moon } from 'lucide-react';
-import { authApi } from '../api';
+import { authApi, resetRedirectFlag } from '../api';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -78,6 +78,7 @@ export default function LoginPage() {
 
       // Login complete
       if (response.admin) {
+        resetRedirectFlag(); // Reset the redirect flag after successful login
         setAuth(response.admin);
         const from = (location.state as { from?: Location })?.from?.pathname || '/';
         navigate(from, { replace: true });
