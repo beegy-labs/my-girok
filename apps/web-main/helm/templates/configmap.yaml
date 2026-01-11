@@ -66,10 +66,6 @@ data:
         # React Router support - serve index.html for all routes
         location / {
             try_files $uri $uri/ /index.html;
-
-            # Replace RYBBIT_SITE_ID placeholder with actual value from Helm values
-            sub_filter "__RYBBIT_SITE_ID__" "{{ .Values.app.rybbitSiteId }}";
-            sub_filter_once off;
         }
 
         # Health check endpoint

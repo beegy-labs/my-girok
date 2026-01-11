@@ -45,8 +45,6 @@ spec:
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
         env:
-        - name: RYBBIT_SITE_ID
-          value: {{ .Values.app.rybbitSiteId | quote }}
         - name: K8S_CONFIG_MOUNTED
           value: "true"
         volumeMounts:
