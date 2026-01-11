@@ -48,6 +48,4 @@
 ❌ Features beyond requirements
 ```
 
----
-
-**Full guide**: `docs/policies/BEST_PRACTICES_2026.md`
+**SSOT**: `docs/llm/best-practices.md`

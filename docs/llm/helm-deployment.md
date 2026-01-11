@@ -1,6 +1,6 @@
 # Helm Deployment
 
-Helm + ArgoCD + Sealed Secrets
+Helm + ArgoCD + Sealed Secrets + OTEL + Vault (Updated 2026-01-11)
 
 ## Structure
 
@@ -12,8 +12,9 @@ services/<service>/helm/
   templates/
     deployment.yaml
     service.yaml
-    migration-job.yaml # ArgoCD PreSync
+    migration-job.yaml     # ArgoCD PreSync
     sealed-secret.yaml
+    externalsecrets.yaml   # Vault integration (optional)
 ```
 
 ## Workflow
@@ -51,3 +52,41 @@ kubectl logs job/<service>-migrate -n dev-my-girok
 | Dev         | values-dev.yaml     | 1        |
 | Staging     | values-staging.yaml | 2        |
 | Production  | values-prod.yaml    | 3+       |
+
+## OpenTelemetry (Added 2026-01-11)
+
+```yaml
+otel:
+  enabled: true
+  endpoint: 'http://otel-collector.observability:4318'
+  protocol: 'http/protobuf'
+  tracesEnabled: true
+  metricsEnabled: true
+  logsEnabled: true
+```
+
+Deployment env vars:
+
+- OTEL_EXPORTER_OTLP_ENDPOINT
+- OTEL_SERVICE_NAME
+- OTEL_RESOURCE_ATTRIBUTES
+- OTEL_TRACES/METRICS/LOGS_EXPORTER
+
+## ExternalSecrets (Vault)
+
+```yaml
+externalSecrets:
+  enabled: true
+  refreshInterval: '1h'
+```
+
+Vault paths (auth-bff):
+
+```
+secret/apps/my-girok/{env}/auth-bff/session
+secret/apps/my-girok/{env}/auth-bff/encryption
+secret/apps/my-girok/{env}/auth-bff/valkey
+secret/apps/my-girok/{env}/auth-bff/oauth/{provider}
+```
+
+Uses `ClusterSecretStore: vault-backend`.

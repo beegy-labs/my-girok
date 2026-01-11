@@ -39,6 +39,4 @@ DROP TABLE IF EXISTS features;
 | TIMESTAMPTZ(6)           | TIMESTAMP        |
 | Include `-- +goose Down` | Skip rollback    |
 
----
-
-**Full guide**: `docs/policies/DATABASE.md`
+**SSOT**: `docs/llm/database.md`

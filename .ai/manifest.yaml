@@ -2,10 +2,10 @@
 # Machine-readable contract for LLM agents
 # Project: my-girok
 
-version: "1.1"
-last_updated: "2026-01-09"
+version: "1.2"
+last_updated: "2026-01-11"
 
-# 3-Tier Architecture Definition
+# 4-Tier Architecture Definition
 architecture:
   tier1_indicate:
     description: "LLM entry points - task-based navigation"
@@ -20,7 +20,7 @@ architecture:
         features: ["task-based-navigation", "essential-reading"]
 
   tier2_abstract:
-    description: "LLM-optimized context (token-efficient, 30-50 lines max)"
+    description: "LLM-optimized context (token-efficient, 50 lines max)"
     base_path: ".ai/"
     token_budget: "~2K tokens"
 
@@ -29,13 +29,13 @@ architecture:
         purpose: "Navigation hub for all AI documentation"
         required: true
         priority: 0
-        last_updated: "2026-01-04"
+        last_updated: "2026-01-11"
       - path: "rules.md"
         purpose: "Core DO/DON'T rules (CRITICAL)"
         required: true
         priority: 1
-        last_updated: "2026-01-05"
-        is_ssot_for: "docs/policies/LLM_GUIDELINES.md"
+        last_updated: "2026-01-11"
+        is_ssot_for: "docs/llm/rules.md"
       - path: "best-practices.md"
         purpose: "2026 Best Practices checklist"
         required: true
@@ -45,44 +45,44 @@ architecture:
         purpose: "System patterns and routing"
         required: true
         priority: 3
-        last_updated: "2026-01-02"
+        last_updated: "2026-01-06"
       - path: "ssot.md"
         purpose: "Single Source of Truth strategy"
         required: false
         priority: 4
-        last_updated: "2026-01-01"
+        last_updated: "2026-01-11"
 
     infrastructure:
       - path: "database.md"
         purpose: "goose + Prisma migrations"
         last_updated: "2026-01-04"
-        details: "docs/policies/DATABASE.md"
+        details: "docs/llm/policies/database.md"
       - path: "caching.md"
         purpose: "Valkey/Redis patterns"
         last_updated: "2026-01-04"
-        details: "docs/policies/CACHING.md"
+        details: "docs/llm/policies/caching.md"
       - path: "ci-cd.md"
         purpose: "GitHub Actions + ArgoCD"
         last_updated: "2026-01-04"
-        details: "docs/CI_CD.md"
+        details: "docs/llm/ci-cd.md"
       - path: "helm-deployment.md"
         purpose: "Kubernetes/Helm deployment"
-        last_updated: "2026-01-04"
-        details: "docs/policies/DEPLOYMENT.md"
+        last_updated: "2026-01-11"
+        details: "docs/llm/helm-deployment.md"
       - path: "docker-deployment.md"
         purpose: "Docker Compose quick ref"
         last_updated: "2025-11-06"
-        details: "docs/DOCKER_DEPLOYMENT.md"
+        details: "docs/llm/docker-deployment.md"
       - path: "testing.md"
         purpose: "TDD guidelines (80% coverage)"
         last_updated: "2026-01-04"
-        details: "docs/policies/TESTING.md"
+        details: "docs/llm/policies/testing.md"
       - path: "git-flow.md"
         purpose: "GitFlow branching strategy"
-        last_updated: "2026-01-04"
+        last_updated: "2026-01-11"
       - path: "otel.md"
         purpose: "OpenTelemetry observability"
-        last_updated: "2025-12-30"
+        last_updated: "2026-01-11"
 
     services:
       - path: "services/auth-bff.md"
@@ -117,44 +117,64 @@ architecture:
     apps:
       - path: "apps/web-main.md"
         purpose: "React 19 web app"
-        last_updated: "2025-12-25"
-        details: "docs/apps/WEB_MAIN.md"
+        last_updated: "2026-01-11"
+        details: "docs/llm/apps/web-main.md"
       - path: "apps/web-admin.md"
         purpose: "Admin dashboard"
-        last_updated: "2025-12-30"
+        last_updated: "2026-01-11"
+        details: "docs/llm/apps/web-admin.md"
       - path: "apps/storybook.md"
         purpose: "Component library"
-        last_updated: "2025-12-24"
+        last_updated: "2026-01-11"
+        details: "docs/llm/apps/storybook.md"
 
     packages:
       - path: "packages/design-tokens.md"
         purpose: "WCAG 2.1 AAA design tokens (SSOT)"
-        last_updated: "2026-01-05"
-        details: "docs/DESIGN_SYSTEM.md"
+        last_updated: "2026-01-11"
+        details: "docs/llm/packages/design-tokens.md"
       - path: "packages/nest-common.md"
         purpose: "NestJS utilities, guards, decorators"
-        last_updated: "2026-01-02"
-        details: "docs/packages/nest-common.md"
+        last_updated: "2026-01-11"
+        details: "docs/llm/packages/nest-common.md"
       - path: "packages/types.md"
         purpose: "TypeScript + Protobuf types"
-        last_updated: "2026-01-02"
-        details: "docs/packages/TYPES.md"
+        last_updated: "2026-01-11"
+        details: "docs/llm/packages/types.md"
       - path: "packages/ui-components.md"
         purpose: "React UI components"
-        last_updated: "2025-12-24"
+        last_updated: "2026-01-11"
+        details: "docs/llm/packages/ui-components.md"
+      - path: "packages/auth-utils.md"
+        purpose: "Frontend auth utilities (Zustand + Axios)"
+        last_updated: "2026-01-11"
+        details: "docs/llm/packages/auth-utils.md"
+      - path: "packages/proto.md"
+        purpose: "Protocol Buffers definitions"
+        last_updated: "2026-01-11"
+        details: "docs/llm/packages/proto.md"
+      - path: "packages/vitest-config.md"
+        purpose: "Shared Vitest configuration"
+        last_updated: "2026-01-11"
+        details: "docs/llm/packages/vitest-config.md"
 
     features:
       - path: "resume.md"
         purpose: "Resume feature documentation"
-        last_updated: "2025-12-26"
-        details: "docs/guides/RESUME.md"
+        last_updated: "2026-01-11"
+        details: "docs/llm/resume.md"
       - path: "i18n-locale.md"
         purpose: "Internationalization system"
-        last_updated: "2025-12-24"
-        details: "docs/I18N.md"
+        last_updated: "2026-01-11"
+        details: "docs/llm/i18n-locale.md"
       - path: "user-preferences.md"
         purpose: "User preferences API"
-        last_updated: "2025-12-24"
+        last_updated: "2026-01-11"
+        details: "docs/llm/user-preferences.md"
+      - path: "project-setup.md"
+        purpose: "Quick start guide"
+        last_updated: "2026-01-11"
+        details: "docs/llm/project-setup.md"
 
     templates:
       - path: "templates/service.md"
@@ -163,24 +183,27 @@ architecture:
 
   tier3_concrete:
     description: "Human-readable detailed documentation"
-    base_path: "docs/"
-    token_budget: "~73K tokens"
+    base_path: "docs/llm/"
+    token_budget: "~30K tokens"
     subdirectories:
       - path: "policies/"
         purpose: "Detailed governance and policies"
-        file_count: 12
+        file_count: 13
       - path: "guides/"
         purpose: "Step-by-step tutorials"
         file_count: 10
       - path: "services/"
         purpose: "Service specifications"
-        file_count: 6
+        file_count: 7
       - path: "packages/"
         purpose: "Package documentation"
-        file_count: 2
+        file_count: 7
+      - path: "apps/"
+        purpose: "Application documentation"
+        file_count: 3
       - path: "reports/"
         purpose: "Analysis and review reports"
-        file_count: 3
+        file_count: 5
 
 # Bootstrap chain for LLM agents
 bootstrap_chain:
@@ -208,14 +231,14 @@ task_routing:
 # Cross-reference rules
 linking:
   direction: "tier2 -> tier3"
-  pattern: "**Full guide**: `docs/path/FILE.md`"
+  pattern: "**SSOT**: `docs/llm/path/FILE.md`"
   bidirectional_allowed: true
   explicit_required: true
 
 # SSOT consolidations
 ssot_consolidations:
   - source: ".ai/rules.md"
-    replaces: "docs/policies/LLM_GUIDELINES.md"
+    replaces: "docs/llm/rules.md"
     reason: "Avoid duplication of core rules"
 
 # Multi-LLM extensibility

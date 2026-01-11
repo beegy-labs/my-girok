@@ -43,6 +43,4 @@ pnpm test:e2e       # E2E tests
 | Mock external deps      | Use real APIs       |
 | Clean up after tests    | Share state         |
 
----
-
-**Full guide**: `docs/policies/TESTING.md`
+**SSOT**: `docs/llm/testing.md`
