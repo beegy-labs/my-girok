@@ -8,6 +8,5 @@ import { DsrRequestsModule } from '../dsr-requests/dsr-requests.module';
 @Module({
   imports: [ConsentsModule, LegalDocumentsModule, LawRegistryModule, DsrRequestsModule],
   controllers: [LegalGrpcController],
-  exports: [LegalGrpcController],
 })
 export class GrpcModule {}
