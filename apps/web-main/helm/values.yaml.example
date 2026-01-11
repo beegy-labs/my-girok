@@ -116,8 +116,8 @@ csp:
   defaultSrc: "'self'"
 
   # JavaScript sources
-  # 'unsafe-inline' needed for some React patterns, rybbit for analytics
-  scriptSrc: "'self' 'unsafe-inline' https://rybbit.girok.dev"
+  # 'unsafe-inline' needed for some React patterns
+  scriptSrc: "'self' 'unsafe-inline'"
 
   # CSS sources
   # 'unsafe-inline' needed for styled-components/emotion
@@ -131,10 +131,10 @@ csp:
   fontSrc: "'self' data:"
 
   # API/WebSocket connections
-  # CHANGE THIS: Add your API domains and any analytics/tracking services
+  # CHANGE THIS: Add your API domains
   # Development: https://my-api-dev.girok.dev
   # Production: https://my-api.girok.dev
-  connectSrc: "'self' https://my-api-dev.girok.dev https://rybbit.girok.dev"
+  connectSrc: "'self' https://my-api-dev.girok.dev"
 
   # Embedding restrictions
   frameAncestors: "'none'"
@@ -150,7 +150,7 @@ csp:
 app:
   # API URL for unified API gateway - auth service
   # CHANGE THIS: Point to your unified API gateway
-  # This is injected as VITE_API_URL during build time
+  # This is injected as VITE_AUTH_BFF_URL during build time
   # Format: https://<gateway-domain>/auth (without /v1, it's added in code)
   apiUrl: "https://my-api.example.com/auth"
 
@@ -159,10 +159,6 @@ app:
   # This is injected as VITE_PERSONAL_API_URL during build time
   # Format: https://<gateway-domain>/personal (without /v1, it's added in code)
   personalApiUrl: "https://my-api.example.com/personal"
-
-  # Rybbit Analytics Site ID (CRITICAL - Never remove)
-  # Development: 4bc4e6b821e8
-  rybbitSiteId: "4bc4e6b821e8"
 
 # Health checks
 livenessProbe:

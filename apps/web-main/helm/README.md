@@ -26,6 +26,7 @@ nano values.yaml
 ```
 
 Update the following:
+
 - `image.repository` - Harbor registry path (harbor.girok.dev/my-girok/web-main)
 - `image.tag` - Image version (develop/release/v1.0.0)
 - `ingress.hosts` - Your domain
@@ -61,23 +62,22 @@ helm install web-main . \
 
 ### Key Configuration Options
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `replicaCount` | Number of replicas | `2` |
-| `image.repository` | Image repository | `harbor.girok.dev/my-girok/web-main` |
-| `image.tag` | Image tag (develop/release/v1.0.0) | Chart appVersion |
-| `service.port` | Service port | `80` |
-| `service.targetPort` | Container port | `3000` |
-| `ingress.enabled` | Enable ingress | `true` |
-| `ingress.hosts` | Ingress hosts | `app.example.com` |
-| `autoscaling.enabled` | Enable HPA | `true` |
-| `autoscaling.minReplicas` | Min replicas | `2` |
-| `autoscaling.maxReplicas` | Max replicas | `5` |
-| `resources.limits.cpu` | CPU limit | `500m` |
-| `resources.limits.memory` | Memory limit | `256Mi` |
-| `app.apiUrl` | Unified API gateway URL for auth | `https://my-api.example.com/auth` |
-| `app.personalApiUrl` | Unified API gateway URL for personal | `https://my-api.example.com/personal` |
-| `app.rybbitSiteId` | Rybbit Analytics Site ID | `4bc4e6b821e8` |
+| Parameter                 | Description                          | Default                               |
+| ------------------------- | ------------------------------------ | ------------------------------------- |
+| `replicaCount`            | Number of replicas                   | `2`                                   |
+| `image.repository`        | Image repository                     | `harbor.girok.dev/my-girok/web-main`  |
+| `image.tag`               | Image tag (develop/release/v1.0.0)   | Chart appVersion                      |
+| `service.port`            | Service port                         | `80`                                  |
+| `service.targetPort`      | Container port                       | `3000`                                |
+| `ingress.enabled`         | Enable ingress                       | `true`                                |
+| `ingress.hosts`           | Ingress hosts                        | `app.example.com`                     |
+| `autoscaling.enabled`     | Enable HPA                           | `true`                                |
+| `autoscaling.minReplicas` | Min replicas                         | `2`                                   |
+| `autoscaling.maxReplicas` | Max replicas                         | `5`                                   |
+| `resources.limits.cpu`    | CPU limit                            | `500m`                                |
+| `resources.limits.memory` | Memory limit                         | `256Mi`                               |
+| `app.apiUrl`              | Unified API gateway URL for auth     | `https://my-api.example.com/auth`     |
+| `app.personalApiUrl`      | Unified API gateway URL for personal | `https://my-api.example.com/personal` |
 
 ### Environment-Specific Configuration
 
@@ -182,6 +182,7 @@ helm uninstall web-main --namespace my-girok-prod
 ### Pod Security
 
 The chart includes:
+
 - Non-root user (UID 1000)
 - Dropped capabilities
 - No privilege escalation
@@ -200,15 +201,15 @@ spec:
     matchLabels:
       app.kubernetes.io/name: web-main
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          name: ingress-nginx
-    ports:
-    - protocol: TCP
-      port: 3000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 3000
 ```
 
 ## Monitoring
@@ -272,6 +273,7 @@ kubectl create secret docker-registry regcred \
 #### 2. 502 Bad Gateway
 
 Check if:
+
 - Pods are running: `kubectl get pods -n my-girok-prod`
 - Readiness probe is passing
 - Service is correctly configured
@@ -440,6 +442,7 @@ jobs:
 ### 1. Multi-Stage Deployment
 
 Deploy to environments in order:
+
 1. Development (automatic on push to develop)
 2. Staging (manual promotion or automatic on release branch)
 3. Production (manual promotion with approval)
@@ -453,14 +456,15 @@ Deploy to environments in order:
 ### 3. Resource Allocation
 
 | Environment | Replicas | CPU Limit | Memory Limit |
-|-------------|----------|-----------|--------------|
-| Development | 1 | 250m | 128Mi |
-| Staging | 2 | 400m | 192Mi |
-| Production | 2-3 | 500m | 256Mi |
+| ----------- | -------- | --------- | ------------ |
+| Development | 1        | 250m      | 128Mi        |
+| Staging     | 2        | 400m      | 192Mi        |
+| Production  | 2-3      | 500m      | 256Mi        |
 
 ### 4. Monitoring
 
 Set up monitoring for:
+
 - Pod availability
 - Response times
 - HTTP error rates
@@ -469,5 +473,6 @@ Set up monitoring for:
 ## Support
 
 For issues and questions:
+
 - GitHub Issues: https://github.com/your-org/my-girok/issues
 - Documentation: https://docs.example.com
