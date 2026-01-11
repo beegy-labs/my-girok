@@ -422,7 +422,7 @@ export class AuthGrpcController {
       const operators = await this.prisma.$queryRaw<OperatorRow[]>`
         SELECT id, is_active as "isActive"
         FROM operators
-        WHERE id = ${request.operatorId}::uuid
+        WHERE id = CAST(${request.operatorId} AS UUID)
         LIMIT 1
       `;
 
@@ -449,7 +449,7 @@ export class AuthGrpcController {
         SELECT p.id, p.resource, p.action
         FROM operator_permissions op
         JOIN permissions p ON op.permission_id = p.id
-        WHERE op.operator_id = ${request.operatorId}::uuid
+        WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
           AND p.resource = ${request.resource}
           AND p.action = ${request.action}
       `;
@@ -471,7 +471,7 @@ export class AuthGrpcController {
         JOIN roles r ON o.role_id = r.id
         JOIN role_permissions rp ON r.id = rp.role_id
         JOIN permissions p ON rp.permission_id = p.id
-        WHERE o.id = ${request.operatorId}::uuid
+        WHERE o.id = CAST(${request.operatorId} AS UUID)
           AND p.resource = ${request.resource}
           AND p.action = ${request.action}
       `;
@@ -491,7 +491,7 @@ export class AuthGrpcController {
         SELECT p.id, p.resource, p.action
         FROM operator_permissions op
         JOIN permissions p ON op.permission_id = p.id
-        WHERE op.operator_id = ${request.operatorId}::uuid
+        WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
           AND (
             (p.resource = ${request.resource} AND p.action = '*')
             OR (p.resource = '*' AND p.action = ${request.action})
@@ -503,7 +503,7 @@ export class AuthGrpcController {
         JOIN roles r ON o.role_id = r.id
         JOIN role_permissions rp ON r.id = rp.role_id
         JOIN permissions p ON rp.permission_id = p.id
-        WHERE o.id = ${request.operatorId}::uuid
+        WHERE o.id = CAST(${request.operatorId} AS UUID)
           AND (
             (p.resource = ${request.resource} AND p.action = '*')
             OR (p.resource = '*' AND p.action = ${request.action})
@@ -549,7 +549,7 @@ export class AuthGrpcController {
       const operators = await this.prisma.$queryRaw<{ id: string; isActive: boolean }[]>`
         SELECT id, is_active as "isActive"
         FROM operators
-        WHERE id = ${request.operatorId}::uuid
+        WHERE id = CAST(${request.operatorId} AS UUID)
         LIMIT 1
       `;
 
@@ -593,7 +593,7 @@ export class AuthGrpcController {
           SELECT p.resource, p.action, p.id as "permissionId", 'direct' as source
           FROM operator_permissions op
           JOIN permissions p ON op.permission_id = p.id
-          WHERE op.operator_id = ${request.operatorId}::uuid
+          WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
             AND (p.resource, p.action) IN (SELECT resource, action FROM requested_checks)
 
           UNION ALL
@@ -604,7 +604,7 @@ export class AuthGrpcController {
           JOIN roles r ON o.role_id = r.id
           JOIN role_permissions rp ON r.id = rp.role_id
           JOIN permissions p ON rp.permission_id = p.id
-          WHERE o.id = ${request.operatorId}::uuid
+          WHERE o.id = CAST(${request.operatorId} AS UUID)
             AND (p.resource, p.action) IN (SELECT resource, action FROM requested_checks)
 
           UNION ALL
@@ -614,7 +614,7 @@ export class AuthGrpcController {
           FROM requested_checks rc
           CROSS JOIN operator_permissions op
           JOIN permissions p ON op.permission_id = p.id
-          WHERE op.operator_id = ${request.operatorId}::uuid
+          WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
             AND (
               (p.resource = rc.resource AND p.action = '*')
               OR (p.resource = '*' AND p.action = rc.action)
@@ -630,7 +630,7 @@ export class AuthGrpcController {
           JOIN roles r ON o.role_id = r.id
           JOIN role_permissions rp ON r.id = rp.role_id
           JOIN permissions p ON rp.permission_id = p.id
-          WHERE o.id = ${request.operatorId}::uuid
+          WHERE o.id = CAST(${request.operatorId} AS UUID)
             AND (
               (p.resource = rc.resource AND p.action = '*')
               OR (p.resource = '*' AND p.action = rc.action)
@@ -701,10 +701,10 @@ export class AuthGrpcController {
     try {
       // Get direct permissions
       const directRows = await this.prisma.$queryRaw<PermissionRow[]>`
-        SELECT p.id, p.resource, p.action, p.category, p.description, p.is_system as "isSystem"
+        SELECT p.id, p.resource, p.action, p.category, p.description, false as "isSystem"
         FROM operator_permissions op
         JOIN permissions p ON op.permission_id = p.id
-        WHERE op.operator_id = ${request.operatorId}::uuid
+        WHERE op.operator_id = CAST(${request.operatorId} AS UUID)
       `;
 
       const directPermissions = directRows.map((row) => this.mapPermission(row));
@@ -713,12 +713,12 @@ export class AuthGrpcController {
       if (request.includeRolePermissions) {
         // Get role permissions
         const roleRows = await this.prisma.$queryRaw<PermissionRow[]>`
-          SELECT DISTINCT p.id, p.resource, p.action, p.category, p.description, p.is_system as "isSystem"
+          SELECT DISTINCT p.id, p.resource, p.action, p.category, p.description, false as "isSystem"
           FROM operators o
           JOIN roles r ON o.role_id = r.id
           JOIN role_permissions rp ON r.id = rp.role_id
           JOIN permissions p ON rp.permission_id = p.id
-          WHERE o.id = ${request.operatorId}::uuid
+          WHERE o.id = CAST(${request.operatorId} AS UUID)
         `;
         rolePermissions = roleRows.map((row) => this.mapPermission(row));
       }
@@ -760,7 +760,7 @@ export class AuthGrpcController {
       const roles = await this.prisma.$queryRaw<RoleRow[]>`
         SELECT id, name, description, level, scope, created_at as "createdAt", updated_at as "updatedAt"
         FROM roles
-        WHERE id = ${request.id}::uuid
+        WHERE id = CAST(${request.id} AS UUID)
         LIMIT 1
       `;
 
@@ -773,10 +773,10 @@ export class AuthGrpcController {
 
       // Get role permissions
       const permissionRows = await this.prisma.$queryRaw<PermissionRow[]>`
-        SELECT p.id, p.resource, p.action, p.category, p.description, p.is_system as "isSystem"
+        SELECT p.id, p.resource, p.action, p.category, p.description, false as "isSystem"
         FROM role_permissions rp
         JOIN permissions p ON rp.permission_id = p.id
-        WHERE rp.role_id = ${request.id}::uuid
+        WHERE rp.role_id = CAST(${request.id} AS UUID)
       `;
 
       const permissions = permissionRows.map((row) => this.mapPermission(row));
@@ -825,12 +825,12 @@ export class AuthGrpcController {
           p.action as "permissionAction",
           p.category as "permissionCategory",
           p.description as "permissionDescription",
-          p.is_system as "permissionIsSystem"
+          false as "permissionIsSystem"
         FROM operators o
         JOIN roles r ON o.role_id = r.id
         LEFT JOIN role_permissions rp ON r.id = rp.role_id
         LEFT JOIN permissions p ON rp.permission_id = p.id
-        WHERE o.id = ${request.operatorId}::uuid
+        WHERE o.id = CAST(${request.operatorId} AS UUID)
       `;
 
       if (!rows.length) {
@@ -906,7 +906,7 @@ export class AuthGrpcController {
           o.updated_at as "updatedAt",
           o.last_login_at as "lastLoginAt"
         FROM operators o
-        WHERE o.id = ${request.id}::uuid
+        WHERE o.id = CAST(${request.id} AS UUID)
         LIMIT 1
       `;
 
@@ -947,7 +947,7 @@ export class AuthGrpcController {
       const operators = await this.prisma.$queryRaw<{ id: string; isActive: boolean }[]>`
         SELECT id, is_active as "isActive"
         FROM operators
-        WHERE id = ${request.id}::uuid
+        WHERE id = CAST(${request.id} AS UUID)
         LIMIT 1
       `;
 
@@ -1010,10 +1010,10 @@ export class AuthGrpcController {
               type, severity, reason, evidence_urls as "evidenceUrls",
               issued_by as "issuedBy", start_at as "startAt", end_at as "endAt", status
             FROM sanctions
-            WHERE subject_id = ${request.subjectId}::uuid
-              AND subject_type = ${subjectType}::sanction_subject_type
+            WHERE subject_id = CAST(${request.subjectId} AS UUID)
+              AND subject_type = CAST(${subjectType} AS sanction_subject_type)
               AND status = 'ACTIVE'::sanction_status
-              AND type = ${sanctionType}::sanction_type
+              AND type = CAST(${sanctionType} AS sanction_type)
               AND (end_at IS NULL OR end_at > NOW())
             ORDER BY severity DESC, start_at DESC
           `,
@@ -1026,8 +1026,8 @@ export class AuthGrpcController {
               type, severity, reason, evidence_urls as "evidenceUrls",
               issued_by as "issuedBy", start_at as "startAt", end_at as "endAt", status
             FROM sanctions
-            WHERE subject_id = ${request.subjectId}::uuid
-              AND subject_type = ${subjectType}::sanction_subject_type
+            WHERE subject_id = CAST(${request.subjectId} AS UUID)
+              AND subject_type = CAST(${subjectType} AS sanction_subject_type)
               AND status = 'ACTIVE'::sanction_status
               AND (end_at IS NULL OR end_at > NOW())
             ORDER BY severity DESC, start_at DESC
@@ -1078,8 +1078,8 @@ export class AuthGrpcController {
             type, severity, reason, evidence_urls as "evidenceUrls",
             issued_by as "issuedBy", start_at as "startAt", end_at as "endAt", status
           FROM sanctions
-          WHERE subject_id = ${request.subjectId}::uuid
-            AND subject_type = ${subjectType}::sanction_subject_type
+          WHERE subject_id = CAST(${request.subjectId} AS UUID)
+            AND subject_type = CAST(${subjectType} AS sanction_subject_type)
             AND status = 'ACTIVE'::sanction_status
             AND (end_at IS NULL OR end_at > NOW())
           ORDER BY severity DESC, start_at DESC
@@ -1174,19 +1174,49 @@ export class AuthGrpcController {
 
       const admin = admins[0];
 
-      // Record login attempt
+      // Record login attempt using raw SQL with explicit type casting
       const recordAttempt = async (success: boolean, reason?: string, mfaAttempted = false) => {
         const attemptId = ID.generate();
-        await this.prisma.$executeRaw`
-          INSERT INTO admin_login_attempts (
-            id, email, admin_id, ip_address, user_agent, device_fingerprint,
-            success, failure_reason, mfa_attempted, attempted_at
-          ) VALUES (
-            ${attemptId}::uuid, ${request.email}, ${admin?.id ?? null}::uuid,
-            ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-            ${success}, ${reason}::admin_login_failure_reason, ${mfaAttempted}, NOW()
-          )
-        `;
+        const adminIdValue = admin?.id ?? null;
+        const deviceFingerprint = request.deviceFingerprint ?? null;
+
+        // Build values array and use $executeRawUnsafe for proper UUID handling
+        if (reason) {
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO admin_login_attempts (
+              id, email, admin_id, ip_address, user_agent, device_fingerprint,
+              success, failure_reason, mfa_attempted, attempted_at
+            ) VALUES (
+              $1::uuid, $2, $3::uuid, $4, $5, $6, $7, $8::admin_login_failure_reason, $9, NOW()
+            )`,
+            attemptId,
+            request.email,
+            adminIdValue,
+            request.ipAddress,
+            request.userAgent,
+            deviceFingerprint,
+            success,
+            reason,
+            mfaAttempted,
+          );
+        } else {
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO admin_login_attempts (
+              id, email, admin_id, ip_address, user_agent, device_fingerprint,
+              success, failure_reason, mfa_attempted, attempted_at
+            ) VALUES (
+              $1::uuid, $2, $3::uuid, $4, $5, $6, $7, NULL, $8, NOW()
+            )`,
+            attemptId,
+            request.email,
+            adminIdValue,
+            request.ipAddress,
+            request.userAgent,
+            deviceFingerprint,
+            success,
+            mfaAttempted,
+          );
+        }
       };
 
       if (!admin) {
@@ -1227,12 +1257,12 @@ export class AuthGrpcController {
         const newAttempts = admin.failedLoginAttempts + 1;
         const lockUntil = newAttempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null; // 15 min lock
 
-        await this.prisma.$executeRaw`
-          UPDATE admins
-          SET failed_login_attempts = ${newAttempts},
-              locked_until = ${lockUntil}
-          WHERE id = ${admin.id}::uuid
-        `;
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE admins SET failed_login_attempts = $1, locked_until = $2 WHERE id = $3::uuid`,
+          newAttempts,
+          lockUntil,
+          admin.id,
+        );
 
         await recordAttempt(false, 'INVALID_PASSWORD');
         return {
@@ -1245,10 +1275,10 @@ export class AuthGrpcController {
 
       // Reset failed attempts on successful password
       if (admin.failedLoginAttempts > 0) {
-        await this.prisma.$executeRaw`
-          UPDATE admins SET failed_login_attempts = 0, locked_until = NULL
-          WHERE id = ${admin.id}::uuid
-        `;
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE admins SET failed_login_attempts = 0, locked_until = NULL WHERE id = $1::uuid`,
+          admin.id,
+        );
       }
 
       // Check if MFA is required
@@ -1301,9 +1331,10 @@ export class AuthGrpcController {
       );
 
       // Update last login
-      await this.prisma.$executeRaw`
-        UPDATE admins SET last_login_at = NOW() WHERE id = ${admin.id}::uuid
-      `;
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE admins SET last_login_at = NOW() WHERE id = $1::uuid`,
+        admin.id,
+      );
 
       await recordAttempt(true);
 
@@ -1315,11 +1346,29 @@ export class AuthGrpcController {
         timestamp: new Date().toISOString(),
       });
 
+      // Fetch admin with role and permissions for response
+      const adminWithRole = await this.getAdminWithRole(admin.id);
+      const now = new Date();
+
       return {
         success: true,
         mfaRequired: false,
         availableMethods: [],
         message: 'Login successful',
+        admin: adminWithRole,
+        session: {
+          id: sessionResult.sessionId,
+          adminId: admin.id,
+          mfaVerified: false,
+          mfaMethod: '',
+          ipAddress: request.ipAddress,
+          userAgent: request.userAgent,
+          deviceFingerprint: request.deviceFingerprint ?? '',
+          isActive: true,
+          lastActivityAt: toProtoTimestamp(now),
+          expiresAt: toProtoTimestamp(sessionResult.expiresAt),
+          createdAt: toProtoTimestamp(now),
+        },
         accessToken: sessionResult.accessToken,
         refreshToken: sessionResult.refreshToken,
       };
@@ -1405,16 +1454,21 @@ export class AuthGrpcController {
       if (!isValid) {
         // Record failed MFA attempt
         const attemptId = ID.generate();
-        await this.prisma.$executeRaw`
-          INSERT INTO admin_login_attempts (
+        await this.prisma.$executeRawUnsafe(
+          `INSERT INTO admin_login_attempts (
             id, email, admin_id, ip_address, user_agent, device_fingerprint,
             success, failure_reason, mfa_attempted, mfa_method, attempted_at
           ) VALUES (
-            ${attemptId}::uuid, ${challenge.email}, ${challenge.adminId}::uuid,
-            ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-            false, 'INVALID_MFA_CODE'::admin_login_failure_reason, true, ${methodName}, NOW()
-          )
-        `;
+            $1::uuid, $2, $3::uuid, $4, $5, $6, false, 'INVALID_MFA_CODE'::admin_login_failure_reason, true, $7, NOW()
+          )`,
+          attemptId,
+          challenge.email,
+          challenge.adminId,
+          request.ipAddress,
+          request.userAgent,
+          request.deviceFingerprint ?? null,
+          methodName,
+        );
 
         return { success: false, message: 'Invalid MFA code' };
       }
@@ -1435,22 +1489,28 @@ export class AuthGrpcController {
       );
 
       // Update last login
-      await this.prisma.$executeRaw`
-        UPDATE admins SET last_login_at = NOW() WHERE id = ${challenge.adminId}::uuid
-      `;
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE admins SET last_login_at = NOW() WHERE id = $1::uuid`,
+        challenge.adminId,
+      );
 
       // Record successful login
       const attemptId = ID.generate();
-      await this.prisma.$executeRaw`
-        INSERT INTO admin_login_attempts (
+      await this.prisma.$executeRawUnsafe(
+        `INSERT INTO admin_login_attempts (
           id, email, admin_id, ip_address, user_agent, device_fingerprint,
           success, mfa_attempted, mfa_method, attempted_at
         ) VALUES (
-          ${attemptId}::uuid, ${challenge.email}, ${challenge.adminId}::uuid,
-          ${request.ipAddress}, ${request.userAgent}, ${request.deviceFingerprint ?? null},
-          true, true, ${methodName}, NOW()
-        )
-      `;
+          $1::uuid, $2, $3::uuid, $4, $5, $6, true, true, $7, NOW()
+        )`,
+        attemptId,
+        challenge.email,
+        challenge.adminId,
+        request.ipAddress,
+        request.userAgent,
+        request.deviceFingerprint ?? null,
+        methodName,
+      );
 
       await this.outboxService.addEventDirect('ADMIN_LOGIN_SUCCESS', challenge.adminId, {
         adminId: challenge.adminId,
@@ -1461,9 +1521,28 @@ export class AuthGrpcController {
         timestamp: new Date().toISOString(),
       });
 
+      // Fetch admin with role and permissions for response
+      const adminWithRole = await this.getAdminWithRole(challenge.adminId);
+      const now = new Date();
+
       return {
         success: true,
         message: 'Login successful',
+        admin: adminWithRole,
+        session: {
+          id: sessionResult.sessionId,
+          adminId: challenge.adminId,
+          mfaVerified: true,
+          mfaMethod: methodName,
+          ipAddress: request.ipAddress,
+          userAgent: request.userAgent,
+          deviceFingerprint: request.deviceFingerprint ?? '',
+          isActive: true,
+          mfaVerifiedAt: toProtoTimestamp(now),
+          lastActivityAt: toProtoTimestamp(now),
+          expiresAt: toProtoTimestamp(sessionResult.expiresAt),
+          createdAt: toProtoTimestamp(now),
+        },
         accessToken: sessionResult.accessToken,
         refreshToken: sessionResult.refreshToken,
       };
@@ -1658,7 +1737,7 @@ export class AuthGrpcController {
     try {
       // Get admin email for QR code
       const admins = await this.prisma.$queryRaw<{ email: string }[]>`
-        SELECT email FROM admins WHERE id = ${request.adminId}::uuid LIMIT 1
+        SELECT email FROM admins WHERE id = CAST(${request.adminId} AS UUID) LIMIT 1
       `;
 
       if (!admins.length) {
@@ -2079,6 +2158,76 @@ export class AuthGrpcController {
       createdAt: toProtoTimestamp(assignment.createdAt),
       updatedAt: toProtoTimestamp(assignment.updatedAt),
       permissions: [], // Permissions are fetched separately
+    };
+  }
+
+  /**
+   * Get admin with role and permissions for gRPC response
+   */
+  private async getAdminWithRole(adminId: string): Promise<unknown> {
+    const admins = await this.prisma.$queryRaw<
+      {
+        id: string;
+        email: string;
+        name: string;
+        scope: string;
+        roleId: string;
+        isActive: boolean;
+        mfaRequired: boolean;
+        forcePasswordChange: boolean;
+        lastLoginAt: Date | null;
+        passwordChangedAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+      }[]
+    >`
+      SELECT
+        id, email, name, scope,
+        role_id as "roleId", is_active as "isActive",
+        mfa_required as "mfaRequired",
+        force_password_change as "forcePasswordChange",
+        last_login_at as "lastLoginAt",
+        password_changed_at as "passwordChangedAt",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM admins
+      WHERE id = CAST(${adminId} AS UUID)
+      LIMIT 1
+    `;
+
+    if (!admins.length) {
+      return null;
+    }
+
+    const admin = admins[0];
+
+    // Get role with permissions
+    let role: Role | undefined;
+    if (admin.roleId) {
+      const roleResponse = await this.getRole({ id: admin.roleId });
+      role = roleResponse.role;
+    }
+
+    // Check if MFA is enabled from AdminMfaConfig
+    const mfaEnabled = await this.adminMfaService.isMfaEnabled(adminId);
+
+    return {
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      scope: this.mapRoleScope(admin.scope),
+      roleId: admin.roleId,
+      role,
+      isActive: admin.isActive,
+      mfaRequired: admin.mfaRequired,
+      mfaEnabled,
+      forcePasswordChange: admin.forcePasswordChange,
+      lastLoginAt: admin.lastLoginAt ? toProtoTimestamp(admin.lastLoginAt) : undefined,
+      passwordChangedAt: admin.passwordChangedAt
+        ? toProtoTimestamp(admin.passwordChangedAt)
+        : undefined,
+      createdAt: toProtoTimestamp(admin.createdAt),
+      updatedAt: toProtoTimestamp(admin.updatedAt),
     };
   }
 

@@ -87,9 +87,7 @@ export interface IdentityServiceClient {
     request: ValidatePasswordRequest,
   ): Observable<{ valid: boolean; message: string }>;
   createSession(request: CreateSessionRequest): Observable<CreateSessionResponse>;
-  validateSession(request: {
-    tokenHash: string;
-  }): Observable<{
+  validateSession(request: { tokenHash: string }): Observable<{
     valid: boolean;
     accountId: string;
     sessionId: string;
@@ -144,11 +142,7 @@ export interface IdentityServiceClient {
     maxAttempts: number;
     lockedUntil?: { seconds: number; nanos: number };
   }>;
-  lockAccount(request: {
-    accountId: string;
-    durationMinutes: number;
-    reason: string;
-  }): Observable<{
+  lockAccount(request: { accountId: string; durationMinutes: number; reason: string }): Observable<{
     success: boolean;
     lockedUntil: { seconds: number; nanos: number };
     message: string;
@@ -173,12 +167,14 @@ export class IdentityGrpcClient implements OnModuleInit {
     const port = this.configService.get<number>('grpc.identity.port', 50051);
 
     // Dynamic client creation
+    // Use process.cwd() for Docker compatibility (webpack bundles change __dirname)
+    const protoBasePath = join(process.cwd(), '../../packages/proto');
     const { ClientProxyFactory } = require('@nestjs/microservices');
     this.client = ClientProxyFactory.create({
       transport: Transport.GRPC,
       options: {
         package: 'identity.v1',
-        protoPath: join(__dirname, '../../../../packages/proto/identity/v1/identity.proto'),
+        protoPath: join(protoBasePath, 'identity/v1/identity.proto'),
         url: `${host}:${port}`,
         loader: {
           keepCase: false,
@@ -186,7 +182,7 @@ export class IdentityGrpcClient implements OnModuleInit {
           enums: Number,
           defaults: true,
           oneofs: true,
-          includeDirs: [join(__dirname, '../../../../packages/proto')],
+          includeDirs: [protoBasePath],
         },
       },
     });

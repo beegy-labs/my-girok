@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { OutboxService, OutboxEventInput } from '../../src/common/outbox/outbox.service';
@@ -9,16 +9,17 @@ import { createOutboxEvent, generateTestId, resetTestCounter } from '../utils/te
 describe('OutboxService', () => {
   let service: OutboxService;
   let mockPrisma: MockPrismaService;
-  let mockTx: { $executeRaw: Mock };
+  let mockTx: { $executeRaw: Mock; $executeRawUnsafe: Mock };
 
   beforeEach(async () => {
     resetTestCounter();
 
     mockPrisma = createMockPrismaService();
 
-    // Create a mock transaction client with $executeRaw
+    // Create a mock transaction client with $executeRaw and $executeRawUnsafe
     mockTx = {
       $executeRaw: vi.fn().mockResolvedValue(1),
+      $executeRawUnsafe: vi.fn().mockResolvedValue(1),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -39,19 +40,19 @@ describe('OutboxService', () => {
       const aggregateId = generateTestId();
       const payload = { roleId: aggregateId, name: 'Test Role' };
 
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const result = await service.addEvent(mockTx as any, eventType, aggregateId, payload);
 
       // Assert
       expect(result).toBeDefined();
-      expect(mockTx.$executeRaw).toHaveBeenCalled();
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalled();
     });
 
     it('should generate a unique ID for each event', async () => {
       // Arrange
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const id1 = await service.addEvent(mockTx as any, 'TEST', 'agg-1', {});
@@ -61,7 +62,7 @@ describe('OutboxService', () => {
       expect(id1).toBeDefined();
       expect(id2).toBeDefined();
       expect(id1).not.toBe(id2);
-      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(2);
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -74,14 +75,14 @@ describe('OutboxService', () => {
         payload: { email: 'test@example.com' },
       };
 
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const result = await service.saveEvent(mockTx as any, event);
 
       // Assert
       expect(result).toBeDefined();
-      expect(mockTx.$executeRaw).toHaveBeenCalled();
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalled();
     });
   });
 
@@ -101,14 +102,14 @@ describe('OutboxService', () => {
         },
       ];
 
-      mockTx.$executeRaw.mockResolvedValue(1);
+      mockTx.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       const result = await service.saveEvents(mockTx as any, events);
 
       // Assert
       expect(result).toHaveLength(2);
-      expect(mockTx.$executeRaw).toHaveBeenCalledTimes(2);
+      expect(mockTx.$executeRawUnsafe).toHaveBeenCalledTimes(2);
     });
 
     it('should return empty array for empty input', async () => {
@@ -117,7 +118,7 @@ describe('OutboxService', () => {
 
       // Assert
       expect(result).toHaveLength(0);
-      expect(mockTx.$executeRaw).not.toHaveBeenCalled();
+      expect(mockTx.$executeRawUnsafe).not.toHaveBeenCalled();
     });
   });
 
@@ -170,13 +171,13 @@ describe('OutboxService', () => {
       // Arrange
       const eventId = generateTestId();
 
-      mockPrisma.$executeRaw.mockResolvedValue(1);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       await service.markAsPublished(eventId);
 
       // Assert
-      expect(mockPrisma.$executeRaw).toHaveBeenCalled();
+      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
     });
   });
 
@@ -186,13 +187,13 @@ describe('OutboxService', () => {
       const eventId = generateTestId();
       const errorMessage = 'Connection timeout to message broker';
 
-      mockPrisma.$executeRaw.mockResolvedValue(1);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(1);
 
       // Act
       await service.markAsFailed(eventId, errorMessage);
 
       // Assert
-      expect(mockPrisma.$executeRaw).toHaveBeenCalled();
+      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
     });
   });
 
@@ -202,21 +203,21 @@ describe('OutboxService', () => {
       const eventId = generateTestId();
       const errorMessage = 'Temporary network error';
 
-      mockPrisma.$queryRaw.mockResolvedValue([{ retryCount: 3 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ retryCount: 3 }]);
 
       // Act
       const newRetryCount = await service.incrementRetryCount(eventId, errorMessage);
 
       // Assert
       expect(newRetryCount).toBe(3);
-      expect(mockPrisma.$queryRaw).toHaveBeenCalled();
+      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalled();
     });
 
     it('should return the new retry count', async () => {
       // Arrange
       const eventId = generateTestId();
 
-      mockPrisma.$queryRaw.mockResolvedValue([{ retryCount: 5 }]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ retryCount: 5 }]);
 
       // Act
       const result = await service.incrementRetryCount(eventId, 'Max retries reached');
@@ -229,19 +230,19 @@ describe('OutboxService', () => {
   describe('cleanupPublishedEvents', () => {
     it('should delete published events older than default 7 days', async () => {
       // Arrange
-      mockPrisma.$executeRaw.mockResolvedValue(10);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(10);
 
       // Act
       const result = await service.cleanupPublishedEvents();
 
       // Assert
       expect(result).toBe(10);
-      expect(mockPrisma.$executeRaw).toHaveBeenCalled();
+      expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
     });
 
     it('should use custom retention period', async () => {
       // Arrange
-      mockPrisma.$executeRaw.mockResolvedValue(5);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(5);
 
       // Act
       const result = await service.cleanupPublishedEvents(30);
@@ -252,7 +253,7 @@ describe('OutboxService', () => {
 
     it('should return 0 when no events to cleanup', async () => {
       // Arrange
-      mockPrisma.$executeRaw.mockResolvedValue(0);
+      mockPrisma.$executeRawUnsafe.mockResolvedValue(0);
 
       // Act
       const result = await service.cleanupPublishedEvents();

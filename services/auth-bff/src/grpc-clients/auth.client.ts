@@ -114,9 +114,7 @@ export interface AuthServiceClient {
   // Admin Auth
   adminLogin(request: AdminLoginRequest): Observable<AdminLoginResponse>;
   adminLoginMfa(request: AdminLoginMfaRequest): Observable<AdminLoginMfaResponse>;
-  adminValidateSession(request: {
-    tokenHash: string;
-  }): Observable<{
+  adminValidateSession(request: { tokenHash: string }): Observable<{
     valid: boolean;
     adminId: string;
     sessionId: string;
@@ -124,9 +122,7 @@ export interface AuthServiceClient {
     expiresAt: { seconds: number; nanos: number };
     message: string;
   }>;
-  adminRefreshSession(request: {
-    refreshTokenHash: string;
-  }): Observable<{
+  adminRefreshSession(request: { refreshTokenHash: string }): Observable<{
     success: boolean;
     accessToken: string;
     refreshToken: string;
@@ -144,9 +140,7 @@ export interface AuthServiceClient {
   }): Observable<{ sessions: AdminSession[]; totalCount: number }>;
 
   // Admin MFA
-  adminSetupMfa(request: {
-    adminId: string;
-  }): Observable<{
+  adminSetupMfa(request: { adminId: string }): Observable<{
     success: boolean;
     secret: string;
     qrCodeUri: string;
@@ -216,12 +210,14 @@ export class AuthGrpcClient implements OnModuleInit {
     const host = this.configService.get<string>('grpc.auth.host', 'localhost');
     const port = this.configService.get<number>('grpc.auth.port', 50052);
 
+    // Use process.cwd() for Docker compatibility (webpack bundles change __dirname)
+    const protoBasePath = join(process.cwd(), '../../packages/proto');
     const { ClientProxyFactory } = require('@nestjs/microservices');
     this.client = ClientProxyFactory.create({
       transport: Transport.GRPC,
       options: {
         package: 'auth.v1',
-        protoPath: join(__dirname, '../../../../packages/proto/auth/v1/auth.proto'),
+        protoPath: join(protoBasePath, 'auth/v1/auth.proto'),
         url: `${host}:${port}`,
         loader: {
           keepCase: false,
@@ -229,7 +225,7 @@ export class AuthGrpcClient implements OnModuleInit {
           enums: Number,
           defaults: true,
           oneofs: true,
-          includeDirs: [join(__dirname, '../../../../packages/proto')],
+          includeDirs: [protoBasePath],
         },
       },
     });
@@ -247,9 +243,7 @@ export class AuthGrpcClient implements OnModuleInit {
     return firstValueFrom(this.authService.adminLoginMfa(request));
   }
 
-  async adminValidateSession(
-    tokenHash: string,
-  ): Promise<{
+  async adminValidateSession(tokenHash: string): Promise<{
     valid: boolean;
     adminId: string;
     sessionId: string;

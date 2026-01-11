@@ -68,10 +68,26 @@ export class OutboxService {
     const id = ID.generate();
     const payloadJson = JSON.stringify(payload);
 
-    await (tx as PrismaService).$executeRaw`
-      INSERT INTO outbox_events (id, event_type, aggregate_id, payload, status, retry_count, created_at)
-      VALUES (${id}, ${eventType}, ${aggregateId}, ${payloadJson}::jsonb, 'PENDING', 0, NOW())
-    `;
+    // Check if we have access to $executeRawUnsafe (only available on PrismaService, not transaction clients)
+    const client = tx as Record<string, unknown>;
+    if (typeof client.$executeRawUnsafe === 'function') {
+      // Use $executeRawUnsafe for proper UUID type casting
+      await (tx as PrismaService).$executeRawUnsafe(
+        `INSERT INTO outbox_events (id, event_type, aggregate_id, payload, status, retry_count, created_at)
+        VALUES ($1::uuid, $2, $3::uuid, $4::jsonb, 'PENDING', 0, NOW())`,
+        id,
+        eventType,
+        aggregateId,
+        payloadJson,
+      );
+    } else {
+      // For transaction clients, use $executeRaw with Prisma.raw for UUID values
+      // UUIDs are internally generated and validated, so this is safe
+      await tx.$executeRaw(
+        Prisma.sql`INSERT INTO outbox_events (id, event_type, aggregate_id, payload, status, retry_count, created_at)
+        VALUES (${Prisma.raw(`'${id}'`)}::uuid, ${eventType}, ${Prisma.raw(`'${aggregateId}'`)}::uuid, ${payloadJson}::jsonb, 'PENDING', 0, NOW())`,
+      );
+    }
 
     this.logger.debug(`Outbox event added: ${eventType} for aggregate ${aggregateId} (id: ${id})`);
 
@@ -93,6 +109,7 @@ export class OutboxService {
     aggregateId: string,
     payload: Record<string, unknown>,
   ): Promise<string> {
+    // addEventDirect always uses PrismaService which has $executeRawUnsafe
     return this.addEvent(this.prisma, eventType, aggregateId, payload);
   }
 
@@ -163,11 +180,10 @@ export class OutboxService {
    * @param eventId - The outbox event ID
    */
   async markAsPublished(eventId: string): Promise<void> {
-    await this.prisma.$executeRaw`
-      UPDATE outbox_events
-      SET status = 'PUBLISHED', published_at = NOW()
-      WHERE id = ${eventId}
-    `;
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE outbox_events SET status = 'PUBLISHED', published_at = NOW() WHERE id = $1::uuid`,
+      eventId,
+    );
 
     this.logger.debug(`Outbox event published: ${eventId}`);
   }
@@ -179,11 +195,11 @@ export class OutboxService {
    * @param errorMessage - The error message from the last attempt
    */
   async markAsFailed(eventId: string, errorMessage: string): Promise<void> {
-    await this.prisma.$executeRaw`
-      UPDATE outbox_events
-      SET status = 'FAILED', error_message = ${errorMessage}
-      WHERE id = ${eventId}
-    `;
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE outbox_events SET status = 'FAILED', error_message = $1 WHERE id = $2::uuid`,
+      errorMessage,
+      eventId,
+    );
 
     this.logger.warn(`Outbox event failed permanently: ${eventId}`);
   }
@@ -196,12 +212,11 @@ export class OutboxService {
    * @returns The new retry count
    */
   async incrementRetryCount(eventId: string, errorMessage: string): Promise<number> {
-    const result = await this.prisma.$queryRaw<{ retryCount: number }[]>`
-      UPDATE outbox_events
-      SET retry_count = retry_count + 1, error_message = ${errorMessage}
-      WHERE id = ${eventId}
-      RETURNING retry_count AS "retryCount"
-    `;
+    const result = await this.prisma.$queryRawUnsafe<{ retryCount: number }[]>(
+      `UPDATE outbox_events SET retry_count = retry_count + 1, error_message = $1 WHERE id = $2::uuid RETURNING retry_count AS "retryCount"`,
+      errorMessage,
+      eventId,
+    );
 
     return result[0]?.retryCount ?? 0;
   }
@@ -217,10 +232,10 @@ export class OutboxService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
-    const result = await this.prisma.$executeRaw`
-      DELETE FROM outbox_events
-      WHERE status = 'PUBLISHED' AND published_at < ${cutoffDate}
-    `;
+    const result = await this.prisma.$executeRawUnsafe(
+      `DELETE FROM outbox_events WHERE status = 'PUBLISHED' AND published_at < $1`,
+      cutoffDate,
+    );
 
     if (result > 0) {
       this.logger.log(`Cleaned up ${result} old outbox events`);

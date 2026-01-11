@@ -247,6 +247,7 @@ export function createIdentityGrpcOptions(config?: GrpcClientConfig): ClientOpti
         enums: Number,
         defaults: true,
         oneofs: true,
+        includeDirs: getProtoIncludeDirs(),
       },
     },
   };
@@ -276,6 +277,7 @@ export function createAuthGrpcOptions(config?: GrpcClientConfig): ClientOptions 
         enums: Number,
         defaults: true,
         oneofs: true,
+        includeDirs: getProtoIncludeDirs(),
       },
     },
   };
@@ -306,6 +308,7 @@ export function createLegalGrpcOptions(config?: GrpcClientConfig): ClientOptions
         enums: Number,
         defaults: true,
         oneofs: true,
+        includeDirs: getProtoIncludeDirs(),
       },
     },
   };
@@ -316,18 +319,23 @@ export function createLegalGrpcOptions(config?: GrpcClientConfig): ClientOptions
  * Assumes standard monorepo structure: packages/proto/<path>
  */
 function getDefaultProtoPath(relativePath: string): string {
-  // Try multiple possible locations
-  const possiblePaths = [
-    // From services directory (e.g., services/some-service/dist)
-    join(__dirname, '../../../../packages/proto', relativePath),
-    // From packages directory (e.g., packages/nest-common/dist)
-    join(__dirname, '../../../proto', relativePath),
-    // Direct path (for development)
-    join(process.cwd(), 'packages/proto', relativePath),
-  ];
+  // From services directory (e.g., services/some-service/dist)
+  return join(__dirname, '../../../../packages/proto', relativePath);
+}
 
-  // Return the first path (caller should ensure proto files exist at deployment)
-  return possiblePaths[0];
+/**
+ * Get proto include directories for resolving imports
+ * Returns the root proto directory so imports like "common/v1/common.proto" resolve correctly
+ */
+function getProtoIncludeDirs(): string[] {
+  return [
+    // From services directory (e.g., services/some-service/dist)
+    join(__dirname, '../../../../packages/proto'),
+    // From packages directory (e.g., packages/nest-common/dist)
+    join(__dirname, '../../../proto'),
+    // Direct path (for development)
+    join(process.cwd(), 'packages/proto'),
+  ];
 }
 
 /**

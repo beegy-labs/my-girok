@@ -76,7 +76,7 @@ export const authApi = {
    * Revoke all other sessions
    */
   revokeAllSessions: async (): Promise<SessionRevokeResponse> => {
-    const response = await apiClient.delete<SessionRevokeResponse>('/admin/sessions');
+    const response = await apiClient.post<SessionRevokeResponse>('/admin/sessions/revoke-all');
     return response.data;
   },
 
@@ -84,7 +84,7 @@ export const authApi = {
    * Setup MFA - returns QR code and backup codes
    */
   setupMfa: async (): Promise<AdminMfaSetupResponse> => {
-    const response = await apiClient.post<AdminMfaSetupResponse>('/admin/mfa/setup');
+    const response = await apiClient.get<AdminMfaSetupResponse>('/admin/mfa/setup');
     return response.data;
   },
 
@@ -100,7 +100,7 @@ export const authApi = {
    * Disable MFA
    */
   disableMfa: async (password: string): Promise<BffBaseResponse> => {
-    const response = await apiClient.post<BffBaseResponse>('/admin/mfa/disable', { password });
+    const response = await apiClient.delete<BffBaseResponse>('/admin/mfa', { data: { password } });
     return response.data;
   },
 
@@ -108,9 +108,12 @@ export const authApi = {
    * Regenerate backup codes
    */
   regenerateBackupCodes: async (password: string): Promise<BackupCodesResponse> => {
-    const response = await apiClient.post<BackupCodesResponse>('/admin/mfa/backup-codes', {
-      password,
-    });
+    const response = await apiClient.post<BackupCodesResponse>(
+      '/admin/mfa/backup-codes/regenerate',
+      {
+        password,
+      },
+    );
     return response.data;
   },
 
@@ -118,7 +121,7 @@ export const authApi = {
    * Change password
    */
   changePassword: async (data: AdminChangePasswordRequest): Promise<BffBaseResponse> => {
-    const response = await apiClient.post<BffBaseResponse>('/admin/password', data);
+    const response = await apiClient.post<BffBaseResponse>('/admin/password/change', data);
     return response.data;
   },
 };

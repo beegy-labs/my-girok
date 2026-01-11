@@ -342,7 +342,7 @@ export class OperatorAssignmentService {
     return this.prisma.$queryRaw<PermissionRow[]>`
       SELECT
         p.id, p.resource, p.action, p.category, p.description,
-        p.is_system as "isSystem"
+        false as "isSystem"
       FROM operator_assignment_permissions oap
       JOIN permissions p ON oap.permission_id = p.id
       WHERE oap.assignment_id = ${assignmentId}::uuid
