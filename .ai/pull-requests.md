@@ -26,3 +26,5 @@ This document outlines the conventions for creating Pull Requests (PRs) for AI a
 2.  **Create the PR**:
     - Construct your PR title and body to match the project's conventions discovered in the previous step.
     - Use the `gh pr create` command to create the pull request.
+
+**SSOT**: `docs/llm/pull-requests.md`

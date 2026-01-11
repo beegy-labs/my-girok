@@ -1,6 +1,6 @@
 # Web Main (Extended)
 
-Public React web application - Extended documentation
+Public React web application - Extended documentation (Updated 2026-01-11)
 
 ## Stack
 
@@ -120,6 +120,42 @@ const LANGUAGES = [{ code: 'ko' }] as const;
 VITE_API_URL=https://auth.girok.dev
 VITE_PERSONAL_API_URL=https://my.girok.dev
 ```
+
+## Auth Routes (Added 2026-01-11)
+
+| Path                 | Description                    |
+| -------------------- | ------------------------------ |
+| `/login/mfa`         | MFA verification (TOTP/backup) |
+| `/auth/callback`     | OAuth callback handler         |
+| `/settings`          | Security settings (MFA setup)  |
+| `/settings/sessions` | Active sessions management     |
+
+## OAuth Callback Flow
+
+```
+BFF redirect → /auth/callback?provider=xxx&status=xxx
+├── success       → Fetch user, redirect
+├── mfa_required  → Store challenge, /login/mfa
+├── error         → Show error
+└── not_implemented → Provider unavailable
+```
+
+## MFA Support
+
+- TOTP: 6-digit code from authenticator
+- Backup Code: XXXX-XXXX format recovery
+
+## Security Settings
+
+`/settings`:
+
+- MFA enable/disable (QR code)
+- Backup codes view/regenerate
+
+`/settings/sessions`:
+
+- Current device info
+- Revoke all other sessions
 
 ## Commands
 

@@ -39,3 +39,5 @@ docker compose down
 - Health checks included
 - Minimal production image
 - Security: read-only filesystem, dropped capabilities
+
+**SSOT**: `docs/llm/docker-deployment.md`

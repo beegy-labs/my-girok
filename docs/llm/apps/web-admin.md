@@ -31,20 +31,37 @@ src/config/
   menu.config.ts     # Sidebar menu
 ```
 
-## Routes
+## Routes (Updated 2026-01-11)
 
-| Path                   | Permission     | Component         |
-| ---------------------- | -------------- | ----------------- |
-| `/`                    | -              | DashboardPage     |
-| `/legal/documents`     | legal:read     | DocumentsPage     |
-| `/legal/documents/new` | legal:create   | DocumentEditPage  |
-| `/legal/documents/:id` | legal:update   | DocumentEditPage  |
-| `/legal/consents`      | legal:read     | ConsentsPage      |
-| `/tenants`             | tenant:read    | TenantsPage       |
-| `/tenants/:id`         | tenant:\*      | TenantEditPage    |
-| `/audit-logs`          | audit:read     | AuditLogsPage     |
-| `/services`            | service:read   | ServicesPage      |
-| `/services/:id`        | service:update | ServiceDetailPage |
+### Main Routes
+
+| Path                         | Permission    | Component              |
+| ---------------------------- | ------------- | ---------------------- |
+| `/`                          | -             | DashboardPage          |
+| `/login`                     | -             | LoginPage              |
+| `/login/mfa`                 | -             | MfaPage                |
+| `/services`                  | service:read  | ServicesPage           |
+| `/services/:id`              | service:read  | ServiceDetailPage      |
+| `/services/:id/consents`     | service:read  | ServiceConsentsPage    |
+| `/compliance/documents`      | legal:read    | DocumentsPage          |
+| `/compliance/documents/new`  | legal:create  | DocumentEditPage       |
+| `/compliance/documents/:id`  | legal:read    | DocumentEditPage       |
+| `/compliance/consents`       | legal:read    | ConsentsPage           |
+| `/compliance/analytics`      | legal:read    | ConsentStatsPage       |
+| `/compliance/regions`        | legal:read    | ConsentExamplesPage    |
+| `/organization/partners`     | tenant:read   | TenantsPage            |
+| `/organization/partners/:id` | tenant:read   | TenantEditPage         |
+| `/system/countries`          | settings:read | SupportedCountriesPage |
+| `/system/locales`            | settings:read | SupportedLocalesPage   |
+| `/system/audit-logs`         | audit:read    | AuditLogsPage          |
+| `/system/settings`           | -             | SettingsPage           |
+
+### Settings Page (MFA & Sessions)
+
+- MFA Setup: QR code + manual secret
+- MFA Verification: 6-digit TOTP validation
+- Backup Codes: Display, copy, regenerate
+- Active Sessions: List + revocation
 
 ## Security
 
