@@ -20,6 +20,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY packages/types ./packages/types
 COPY packages/nest-common ./packages/nest-common
+COPY packages/proto ./packages/proto
 COPY services/identity-service ./services/identity-service
 
 # Build shared packages first
@@ -67,6 +68,9 @@ COPY --chown=node:node --from=builder /app/services/identity-service/dist ./serv
 
 # Copy goose migrations
 COPY --chown=node:node --from=builder /app/services/identity-service/migrations ./services/identity-service/migrations
+
+# Copy proto files for gRPC
+COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
 
 # Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production

@@ -9,9 +9,6 @@ describe('CleanupService', () => {
   let service: CleanupService;
   let mockSessionUpdateMany: Mock;
   let mockRevokedTokenDeleteMany: Mock;
-  let mockIdempotencyRecordDeleteMany: Mock;
-  let mockSagaStateUpdateMany: Mock;
-  let mockSagaStateDeleteMany: Mock;
   let mockDeadLetterEventDeleteMany: Mock;
   let mockOutboxEventDeleteMany: Mock;
   let mockPasswordHistoryDeleteMany: Mock;
@@ -21,9 +18,6 @@ describe('CleanupService', () => {
   beforeEach(async () => {
     mockSessionUpdateMany = vi.fn();
     mockRevokedTokenDeleteMany = vi.fn();
-    mockIdempotencyRecordDeleteMany = vi.fn();
-    mockSagaStateUpdateMany = vi.fn();
-    mockSagaStateDeleteMany = vi.fn();
     mockDeadLetterEventDeleteMany = vi.fn();
     mockOutboxEventDeleteMany = vi.fn();
     mockPasswordHistoryDeleteMany = vi.fn();
@@ -39,13 +33,6 @@ describe('CleanupService', () => {
       },
       revokedToken: {
         deleteMany: mockRevokedTokenDeleteMany,
-      },
-      idempotencyRecord: {
-        deleteMany: mockIdempotencyRecordDeleteMany,
-      },
-      sagaState: {
-        updateMany: mockSagaStateUpdateMany,
-        deleteMany: mockSagaStateDeleteMany,
       },
       deadLetterEvent: {
         deleteMany: mockDeadLetterEventDeleteMany,
@@ -165,78 +152,6 @@ describe('CleanupService', () => {
     });
   });
 
-  describe('cleanupExpiredIdempotencyRecords', () => {
-    it('should delete expired idempotency records', async () => {
-      mockIdempotencyRecordDeleteMany.mockResolvedValue({ count: 20 });
-
-      await service.cleanupExpiredIdempotencyRecords();
-
-      expect(mockIdempotencyRecordDeleteMany).toHaveBeenCalledWith({
-        where: {
-          expiresAt: { lt: expect.any(Date) },
-        },
-      });
-    });
-
-    it('should handle zero expired records', async () => {
-      mockIdempotencyRecordDeleteMany.mockResolvedValue({ count: 0 });
-
-      await service.cleanupExpiredIdempotencyRecords();
-
-      expect(mockIdempotencyRecordDeleteMany).toHaveBeenCalled();
-    });
-
-    it('should handle database errors gracefully', async () => {
-      mockIdempotencyRecordDeleteMany.mockRejectedValue(new Error('Database error'));
-
-      await expect(service.cleanupExpiredIdempotencyRecords()).resolves.not.toThrow();
-    });
-  });
-
-  describe('cleanupTimedOutSagas', () => {
-    it('should mark timed out sagas and delete old ones', async () => {
-      mockSagaStateUpdateMany.mockResolvedValue({ count: 3 });
-      mockSagaStateDeleteMany.mockResolvedValue({ count: 7 });
-
-      await service.cleanupTimedOutSagas();
-
-      expect(mockSagaStateUpdateMany).toHaveBeenCalledWith({
-        where: {
-          status: { in: ['PENDING', 'IN_PROGRESS', 'COMPENSATING'] },
-          timeoutAt: { lt: expect.any(Date) },
-        },
-        data: {
-          status: 'TIMED_OUT',
-          completedAt: expect.any(Date),
-          error: 'Saga timed out during scheduled cleanup',
-        },
-      });
-
-      expect(mockSagaStateDeleteMany).toHaveBeenCalledWith({
-        where: {
-          status: { in: ['COMPLETED', 'FAILED', 'COMPENSATED', 'TIMED_OUT'] },
-          completedAt: { lt: expect.any(Date) },
-        },
-      });
-    });
-
-    it('should handle zero sagas', async () => {
-      mockSagaStateUpdateMany.mockResolvedValue({ count: 0 });
-      mockSagaStateDeleteMany.mockResolvedValue({ count: 0 });
-
-      await service.cleanupTimedOutSagas();
-
-      expect(mockSagaStateUpdateMany).toHaveBeenCalled();
-      expect(mockSagaStateDeleteMany).toHaveBeenCalled();
-    });
-
-    it('should handle database errors gracefully', async () => {
-      mockSagaStateUpdateMany.mockRejectedValue(new Error('Database error'));
-
-      await expect(service.cleanupTimedOutSagas()).resolves.not.toThrow();
-    });
-  });
-
   describe('cleanupOldDeadLetterEvents', () => {
     it('should delete resolved/ignored dead letter events older than 90 days', async () => {
       mockDeadLetterEventDeleteMany.mockResolvedValue({ count: 15 });
@@ -337,8 +252,6 @@ describe('CleanupService', () => {
 
       expect(status).toHaveProperty('cleanup-sessions');
       expect(status).toHaveProperty('cleanup-revoked-tokens');
-      expect(status).toHaveProperty('cleanup-idempotency');
-      expect(status).toHaveProperty('cleanup-sagas');
       expect(status).toHaveProperty('cleanup-dead-letters');
       expect(status).toHaveProperty('cleanup-outbox');
       expect(status).toHaveProperty('cleanup-password-history');
@@ -389,27 +302,6 @@ describe('CleanupService', () => {
   });
 
   describe('date calculations', () => {
-    it('should use correct 30-day threshold for saga cleanup', async () => {
-      mockSagaStateUpdateMany.mockResolvedValue({ count: 0 });
-      mockSagaStateDeleteMany.mockResolvedValue({ count: 0 });
-
-      const now = Date.now();
-      vi.spyOn(Date, 'now').mockReturnValue(now);
-
-      await service.cleanupTimedOutSagas();
-
-      const deleteCall = mockSagaStateDeleteMany.mock.calls[0][0];
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      // The date should be approximately 30 days ago
-      const calledDate = deleteCall.where.completedAt.lt as Date;
-      const timeDiff = Math.abs(calledDate.getTime() - thirtyDaysAgo.getTime());
-      expect(timeDiff).toBeLessThan(1000); // Within 1 second
-
-      vi.restoreAllMocks();
-    });
-
     it('should use correct 90-day threshold for dead letter cleanup', async () => {
       mockDeadLetterEventDeleteMany.mockResolvedValue({ count: 0 });
 

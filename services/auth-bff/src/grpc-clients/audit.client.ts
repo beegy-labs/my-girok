@@ -49,12 +49,14 @@ export class AuditGrpcClient implements OnModuleInit {
     const port = this.configService.get<number>('grpc.audit.port', 50054);
 
     try {
+      // Use process.cwd() for Docker compatibility (webpack bundles change __dirname)
+      const protoBasePath = join(process.cwd(), '../../packages/proto');
       const { ClientProxyFactory } = require('@nestjs/microservices');
       this.client = ClientProxyFactory.create({
         transport: Transport.GRPC,
         options: {
           package: 'audit.v1',
-          protoPath: join(__dirname, '../../../../packages/proto/audit/v1/audit.proto'),
+          protoPath: join(protoBasePath, 'audit/v1/audit.proto'),
           url: `${host}:${port}`,
           loader: {
             keepCase: false,
@@ -62,7 +64,7 @@ export class AuditGrpcClient implements OnModuleInit {
             enums: Number,
             defaults: true,
             oneofs: true,
-            includeDirs: [join(__dirname, '../../../../packages/proto')],
+            includeDirs: [protoBasePath],
           },
         },
       });

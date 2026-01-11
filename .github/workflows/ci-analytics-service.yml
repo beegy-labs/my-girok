@@ -37,8 +37,10 @@ jobs:
             packages/nest-common/node_modules
           key: ${{ runner.os }}-pnpm-analytics-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile --prefer-offline
-      - run: pnpm --filter @my-girok/types build & pnpm --filter @my-girok/nest-common build & wait
-      - run: cd services/analytics-service && pnpm test & pnpm lint & wait
+      - run: pnpm --filter @my-girok/types build
+      - run: pnpm --filter @my-girok/analytics-service prisma:generate
+      - run: pnpm --filter @my-girok/nest-common build
+      - run: cd services/analytics-service && pnpm test && pnpm lint
 
   build:
     name: Build

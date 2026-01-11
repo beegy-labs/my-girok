@@ -203,7 +203,7 @@ export class AdminPasswordService {
       errors.push('Password must contain at least one number');
     }
 
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
       errors.push('Password must contain at least one special character');
     }
 
@@ -224,7 +224,7 @@ export class AdminPasswordService {
     if (/[A-Z]/.test(password)) score += 15;
     if (/[a-z]/.test(password)) score += 15;
     if (/[0-9]/.test(password)) score += 15;
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20;
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) score += 20;
     return Math.min(score, 100);
   }
 

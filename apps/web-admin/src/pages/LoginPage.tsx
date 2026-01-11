@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle, Globe, Languages, Sun, Moon } from 'lucide-react';
 import { authApi } from '../api';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
+import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { REGIONS, type SupportedRegion } from '../config/region.config';
 
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setAuth, setMfaChallenge, isAuthenticated } = useAdminAuthStore();
+  const { isInitializing } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
 
   const [email, setEmail] = useState('');
@@ -44,8 +46,8 @@ export default function LoginPage() {
     localStorage.setItem('admin-region', regionCode);
   };
 
-  // Redirect if already authenticated
-  if (isAuthenticated) {
+  // Redirect if already authenticated (but wait for initialization)
+  if (!isInitializing && isAuthenticated) {
     const from = (location.state as { from?: Location })?.from?.pathname || '/';
     navigate(from, { replace: true });
     return null;

@@ -103,7 +103,7 @@ export class AuditService {
       );
 
       // Publish to outbox for async processing
-      await this.outboxService.publish({
+      await this.outboxService.publishEvent({
         aggregateType: 'audit',
         aggregateId: entry.targetId,
         eventType: `identity.${entry.action.toLowerCase()}`,

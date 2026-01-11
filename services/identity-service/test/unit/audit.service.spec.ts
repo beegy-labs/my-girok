@@ -23,7 +23,7 @@ describe('AuditService', () => {
         {
           provide: OutboxService,
           useValue: {
-            publish: mockOutboxPublish,
+            publishEvent: mockOutboxPublish,
           },
         },
         {
