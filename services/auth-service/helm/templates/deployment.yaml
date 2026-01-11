@@ -110,6 +110,31 @@ spec:
               name: {{ include "auth-service.fullname" . }}-secret
               key: naver-client-secret
               optional: true
+        # ============================================================================
+        # OpenTelemetry Configuration
+        # ============================================================================
+        {{- if .Values.otel.enabled }}
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.otel.endpoint | quote }}
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: {{ .Values.otel.protocol | default "http/protobuf" | quote }}
+        - name: OTEL_SERVICE_NAME
+          value: {{ .Values.otel.serviceName | default (include "auth-service.fullname" .) | quote }}
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: {{ printf "service.namespace=%s,deployment.environment=%s" .Release.Namespace (.Values.app.nodeEnv | default "production") | quote }}
+        {{- if .Values.otel.tracesEnabled }}
+        - name: OTEL_TRACES_EXPORTER
+          value: "otlp"
+        {{- end }}
+        {{- if .Values.otel.metricsEnabled }}
+        - name: OTEL_METRICS_EXPORTER
+          value: "otlp"
+        {{- end }}
+        {{- if .Values.otel.logsEnabled }}
+        - name: OTEL_LOGS_EXPORTER
+          value: "otlp"
+        {{- end }}
+        {{- end }}
         {{- with .Values.livenessProbe }}
         livenessProbe:
           {{- toYaml . | nindent 12 }}
