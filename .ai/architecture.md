@@ -19,6 +19,15 @@
 | BFF/Service → Service | gRPC     |
 | Async Events          | Redpanda |
 
+## Service Discovery (CoreDNS)
+
+| Pattern  | Domain                | Use Case              |
+| -------- | --------------------- | --------------------- |
+| External | `grpc-dev.girok.dev`  | Developer gRPC access |
+| Internal | `*.svc-dev.girok.dev` | Pod-to-Pod gRPC       |
+
+> Multi-cluster ready: CoreDNS enables cross-cluster routing
+
 ## Architecture Layers
 
 ```
