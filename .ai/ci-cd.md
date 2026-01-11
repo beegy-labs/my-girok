@@ -32,6 +32,4 @@
 docker build -t test/auth-service:local -f services/auth-service/Dockerfile .
 ```
 
----
-
-**Full guide**: `docs/CI_CD.md`
+**SSOT**: `docs/llm/ci-cd.md`

@@ -41,6 +41,4 @@ async handle({ roleId }) {
 }
 ```
 
----
-
-**Full guide**: `docs/policies/CACHING.md`
+**SSOT**: `docs/llm/caching.md`
