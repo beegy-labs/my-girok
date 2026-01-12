@@ -14,8 +14,11 @@ import {
   UseGuards,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { SessionRecordingsService } from './session-recordings.service';
 import { randomBytes } from 'crypto';
@@ -40,10 +43,15 @@ interface ShareLink {
 @Controller('admin/session-recordings')
 @UseGuards(JwtAuthGuard)
 export class SessionRecordingsExportController {
-  // In-memory store for share links (in production, use Redis or database)
-  private shareLinks = new Map<string, ShareLink>();
+  // Share link cache key prefix
+  private readonly SHARE_LINK_PREFIX = 'session_share_link';
+  // Share link TTL: 30 days (maximum expiration)
+  private readonly SHARE_LINK_MAX_TTL = 30 * 24 * 60 * 60 * 1000;
 
-  constructor(private readonly sessionRecordingsService: SessionRecordingsService) {}
+  constructor(
+    private readonly sessionRecordingsService: SessionRecordingsService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   /**
    * Export session recording in specified format
@@ -106,7 +114,7 @@ export class SessionRecordingsExportController {
       }
     }
 
-    // Store share link
+    // Store share link in Redis/Valkey
     const shareLink: ShareLink = {
       token,
       sessionId,
@@ -114,7 +122,11 @@ export class SessionRecordingsExportController {
       createdAt: new Date(),
     };
 
-    this.shareLinks.set(token, shareLink);
+    // Calculate TTL for Redis (in milliseconds)
+    const ttl = expiresAt ? expiresAt.getTime() - Date.now() : this.SHARE_LINK_MAX_TTL;
+    const cacheKey = `${this.SHARE_LINK_PREFIX}:${token}`;
+
+    await this.cacheManager.set(cacheKey, shareLink, ttl);
 
     // Generate share URL
     const baseUrl = process.env.AUTH_BFF_URL || 'https://auth-dev.girok.dev';
@@ -132,15 +144,16 @@ export class SessionRecordingsExportController {
    */
   @Get('shared/:token')
   async getSharedSession(@Param('token') token: string) {
-    const shareLink = this.shareLinks.get(token);
+    const cacheKey = `${this.SHARE_LINK_PREFIX}:${token}`;
+    const shareLink = await this.cacheManager.get<ShareLink>(cacheKey);
 
     if (!shareLink) {
       throw new NotFoundException('Share link not found or expired');
     }
 
-    // Check expiration
+    // Check expiration (Redis TTL should handle this, but double-check)
     if (shareLink.expiresAt && shareLink.expiresAt < new Date()) {
-      this.shareLinks.delete(token);
+      await this.cacheManager.del(cacheKey);
       throw new NotFoundException('Share link expired');
     }
 
@@ -219,14 +232,7 @@ export class SessionRecordingsExportController {
   }
 
   /**
-   * Cleanup expired share links periodically
+   * Note: Cleanup of expired share links is automatically handled by Redis/Valkey TTL.
+   * No manual cleanup is required as expired keys are automatically removed.
    */
-  private cleanupExpiredLinks() {
-    const now = new Date();
-    for (const [token, link] of this.shareLinks.entries()) {
-      if (link.expiresAt && link.expiresAt < now) {
-        this.shareLinks.delete(token);
-      }
-    }
-  }
 }

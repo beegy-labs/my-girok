@@ -123,7 +123,10 @@ export function SessionExport({ sessionId, onClose }: SessionExportProps) {
                     : 'border-theme-border-default hover:bg-theme-background-secondary'
                 }`}
               >
-                Video (MP4)
+                <div>
+                  Video (MP4)
+                  <span className="block text-xs text-theme-text-tertiary mt-0.5">Coming soon</span>
+                </div>
               </button>
               <button
                 onClick={() => setExportFormat('pdf')}
@@ -133,7 +136,10 @@ export function SessionExport({ sessionId, onClose }: SessionExportProps) {
                     : 'border-theme-border-default hover:bg-theme-background-secondary'
                 }`}
               >
-                PDF Report
+                <div>
+                  PDF Report
+                  <span className="block text-xs text-theme-text-tertiary mt-0.5">Coming soon</span>
+                </div>
               </button>
             </div>
           </div>
@@ -162,10 +168,19 @@ export function SessionExport({ sessionId, onClose }: SessionExportProps) {
             </div>
           )}
 
+          {/* Unimplemented Format Notice */}
+          {(exportFormat === 'video' || exportFormat === 'pdf') && (
+            <div className="p-3 bg-theme-status-warning-background text-theme-status-warning-text rounded-lg text-sm">
+              {exportFormat === 'video'
+                ? 'Video export feature is not yet implemented. This feature will render session replay as MP4 video.'
+                : 'PDF export feature is not yet implemented. This feature will generate a detailed session report in PDF format.'}
+            </div>
+          )}
+
           {/* Export Button */}
           <button
             onClick={handleExport}
-            disabled={exporting}
+            disabled={exporting || exportFormat === 'video' || exportFormat === 'pdf'}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
           >
             <Download className="w-4 h-4" />

@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Plus, X, Save } from 'lucide-react';
 import { Card } from './atoms/Card';
+import { PRIVACY_PRESET_RULES } from '../config/privacy-rules.config';
 
 export interface PrivacyRule {
   id: string;
@@ -69,16 +70,6 @@ export function PrivacyControls({
     }
   };
 
-  const presetRules: Array<{ label: string; selector: string; maskType: PrivacyRule['maskType'] }> =
-    [
-      { label: 'All Inputs', selector: 'input', maskType: 'redact' },
-      { label: 'Passwords', selector: 'input[type="password"]', maskType: 'block' },
-      { label: 'Email Fields', selector: 'input[type="email"]', maskType: 'redact' },
-      { label: 'Credit Card Fields', selector: 'input[data-card]', maskType: 'block' },
-      { label: 'SSN Fields', selector: 'input[data-ssn]', maskType: 'block' },
-      { label: 'Phone Numbers', selector: 'input[type="tel"]', maskType: 'redact' },
-    ];
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -103,7 +94,7 @@ export function PrivacyControls({
       <Card>
         <h3 className="text-sm font-medium text-theme-text-primary mb-3">Quick Presets</h3>
         <div className="flex flex-wrap gap-2">
-          {presetRules.map((preset) => (
+          {PRIVACY_PRESET_RULES.map((preset) => (
             <button
               key={preset.selector}
               onClick={() => {
@@ -225,9 +216,9 @@ export function PrivacyControls({
                   className="text-theme-text-tertiary hover:text-theme-text-primary"
                 >
                   {rule.enabled ? (
-                    <Eye className="w-5 h-5 text-green-600" />
+                    <Eye className="w-5 h-5 text-theme-status-success-text" />
                   ) : (
-                    <EyeOff className="w-5 h-5 text-red-600" />
+                    <EyeOff className="w-5 h-5 text-theme-status-error-text" />
                   )}
                 </button>
 

@@ -31,7 +31,6 @@
     "@tiptap/extension-placeholder": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@types/diff": "^8.0.0",
     "axios": "^1.13.2",
     "diff": "^8.0.2",
     "i18next": "^25.7.2",

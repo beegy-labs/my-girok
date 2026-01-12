@@ -25,15 +25,15 @@ export function ModelDiff({ oldContent, newContent, oldLabel, newLabel }: ModelD
     const isUnchanged = !isAdded && !isRemoved;
 
     const bgColor = isAdded
-      ? 'bg-green-100 dark:bg-green-900/30'
+      ? 'bg-theme-status-success-background'
       : isRemoved
-        ? 'bg-red-100 dark:bg-red-900/30'
+        ? 'bg-theme-status-error-background'
         : 'bg-theme-background-primary';
 
     const textColor = isAdded
-      ? 'text-green-800 dark:text-green-300'
+      ? 'text-theme-status-success-text'
       : isRemoved
-        ? 'text-red-800 dark:text-red-300'
+        ? 'text-theme-status-error-text'
         : 'text-theme-text-primary';
 
     const prefix = isAdded ? '+ ' : isRemoved ? '- ' : '  ';
@@ -102,11 +102,11 @@ export function DiffSummary({ oldContent, newContent }: DiffSummaryProps) {
   return (
     <div className="flex items-center gap-4 text-sm">
       <div className="flex items-center gap-1">
-        <span className="text-green-600 dark:text-green-400">+{stats.additions}</span>
+        <span className="text-theme-status-success-text">+{stats.additions}</span>
         <span className="text-theme-text-tertiary">additions</span>
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-red-600 dark:text-red-400">-{stats.deletions}</span>
+        <span className="text-theme-status-error-text">-{stats.deletions}</span>
         <span className="text-theme-text-tertiary">deletions</span>
       </div>
     </div>

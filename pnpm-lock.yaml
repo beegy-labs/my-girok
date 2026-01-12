@@ -208,9 +208,6 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^2.11.5
         version: 2.27.1
-      '@types/diff':
-        specifier: ^8.0.0
-        version: 8.0.0
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -5221,10 +5218,6 @@ packages:
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
-
-  '@types/diff@8.0.0':
-    resolution: {integrity: sha512-o7jqJM04gfaYrdCecCVMbZhNdG6T1MHg/oQoRFdERLV+4d+V7FijhiEAbFu0Usww84Yijk9yH58U4Jk4HbtzZw==}
-    deprecated: This is a stub types definition. diff provides its own type definitions, so you do not need this installed.
 
   '@types/doctrine@0.0.9':
     resolution: {integrity: sha512-eOIHzCUSH7SMfonMG1LsC2f8vxBFtho6NGBznK41R84YzPuvSBzrhEps33IsQiOW9+VL6NQ9DbjQJznk/S4uRA==}
@@ -13533,10 +13526,6 @@ snapshots:
   '@types/d3-timer@3.0.2': {}
 
   '@types/deep-eql@4.0.2': {}
-
-  '@types/diff@8.0.0':
-    dependencies:
-      diff: 8.0.2
 
   '@types/doctrine@0.0.9': {}
 
