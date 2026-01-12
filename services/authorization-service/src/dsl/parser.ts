@@ -445,14 +445,6 @@ export class Parser {
   }
 
   /**
-   * Get next token without advancing
-   */
-  private peekNext(): Token | undefined {
-    if (this.current + 1 >= this.tokens.length) return undefined;
-    return this.tokens[this.current + 1];
-  }
-
-  /**
    * Advance to next token
    */
   private advance(): Token {

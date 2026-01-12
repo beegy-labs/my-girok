@@ -33,7 +33,7 @@ import {
   IntersectionRewriteAST,
   ExclusionRewriteAST,
 } from './ast.types';
-import { parse, ParseResult } from './parser';
+import { parse } from './parser';
 
 /**
  * Compilation result

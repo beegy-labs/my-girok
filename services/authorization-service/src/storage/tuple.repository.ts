@@ -5,10 +5,11 @@
  * Implements soft-delete using transaction IDs for consistency.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ulid } from 'ulid';
-import { TupleKey, TupleUtils, RelationTuple, ParsedUser, ParsedObject } from '../types';
+import { TupleKey, TupleUtils, RelationTuple } from '../types';
 
 /**
  * Options for finding tuples
@@ -37,8 +38,6 @@ export interface WriteResult {
 
 @Injectable()
 export class TupleRepository {
-  private readonly logger = new Logger(TupleRepository.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -47,7 +46,7 @@ export class TupleRepository {
   async write(writes: TupleKey[], deletes: TupleKey[] = []): Promise<WriteResult> {
     const txid = await this.getCurrentTxid();
 
-    return await this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       let writtenCount = 0;
       let deletedCount = 0;
 
