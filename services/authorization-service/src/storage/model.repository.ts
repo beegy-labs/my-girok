@@ -29,8 +29,8 @@ interface PrismaModel {
   dslSource: string;
   compiledModel: unknown;
   typeDefinitions: unknown;
-  isActive: boolean;
-  createdAt: Date;
+  isActive: boolean | null;
+  createdAt: Date | null;
 }
 
 @Injectable()
@@ -236,8 +236,8 @@ export class ModelRepository {
       schemaVersion: model.schemaVersion,
       dslSource: model.dslSource,
       types: model.compiledModel as Record<string, TypeDefinition>,
-      isActive: model.isActive,
-      createdAt: model.createdAt,
+      isActive: model.isActive ?? false,
+      createdAt: model.createdAt ?? new Date(),
     };
   }
 }

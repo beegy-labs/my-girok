@@ -5,7 +5,7 @@ import { TerminusModule } from '@nestjs/terminus';
 
 import configuration from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
-import { TupleRepository, ModelRepository, ChangelogRepository } from './storage';
+import { TupleRepository, ModelRepository, TeamRepository, ChangelogRepository } from './storage';
 import { CheckEngine } from './engine';
 import { PermissionCache } from './cache';
 import { AuthorizationGrpcController } from './grpc';
@@ -26,6 +26,7 @@ import { HealthController } from './health/health.controller';
     // Storage
     TupleRepository,
     ModelRepository,
+    TeamRepository,
     ChangelogRepository,
 
     // Engine
@@ -34,6 +35,6 @@ import { HealthController } from './health/health.controller';
     // Cache
     PermissionCache,
   ],
-  exports: [TupleRepository, ModelRepository, CheckEngine, PermissionCache],
+  exports: [TupleRepository, ModelRepository, TeamRepository, CheckEngine, PermissionCache],
 })
 export class AppModule {}

@@ -7,7 +7,7 @@
 import { Controller, Logger } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { CheckEngine } from '../engine';
-import { TupleRepository, ModelRepository } from '../storage';
+import { TupleRepository, ModelRepository, TeamRepository } from '../storage';
 import { TupleKey, TupleUtils, CheckRequest as InternalCheckRequest } from '../types';
 
 // gRPC message types (matching proto definitions)
@@ -127,6 +127,107 @@ interface ActivateModelResponse {
   message?: string;
 }
 
+interface ListModelsRequest {
+  pageSize?: number;
+  pageToken?: string;
+}
+
+interface ListModelsResponse {
+  models: Array<{
+    modelId: string;
+    versionId: string;
+    isActive: boolean;
+    createdAt: string;
+  }>;
+  nextPageToken?: string;
+}
+
+interface GetTeamRequest {
+  teamId: string;
+}
+
+interface GetTeamResponse {
+  team: {
+    id: string;
+    name: string;
+    displayName: string;
+    serviceId?: string;
+    description?: string;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+interface ListTeamsRequest {
+  page: number;
+  limit: number;
+  search?: string;
+}
+
+interface ListTeamsResponse {
+  teams: Array<{
+    id: string;
+    name: string;
+    displayName: string;
+    serviceId?: string;
+    description?: string;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface CreateTeamRequest {
+  name: string;
+  description?: string;
+  serviceId?: string;
+  createdBy: string;
+}
+
+interface CreateTeamResponse {
+  team: {
+    id: string;
+    name: string;
+    displayName: string;
+    serviceId?: string;
+    description?: string;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+interface UpdateTeamRequest {
+  teamId: string;
+  name?: string;
+  description?: string;
+}
+
+interface UpdateTeamResponse {
+  team: {
+    id: string;
+    name: string;
+    displayName: string;
+    serviceId?: string;
+    description?: string;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+interface DeleteTeamRequest {
+  teamId: string;
+}
+
+interface DeleteTeamResponse {
+  success: boolean;
+}
+
 @Controller()
 export class AuthorizationGrpcController {
   private readonly logger = new Logger(AuthorizationGrpcController.name);
@@ -135,6 +236,7 @@ export class AuthorizationGrpcController {
     private readonly checkEngine: CheckEngine,
     private readonly tupleRepository: TupleRepository,
     private readonly modelRepository: ModelRepository,
+    private readonly teamRepository: TeamRepository,
   ) {}
 
   /**
@@ -419,6 +521,174 @@ export class AuthorizationGrpcController {
       };
     } catch (error) {
       this.logger.error(`ActivateModel failed: ${error}`);
+      throw new RpcException((error as Error).message);
+    }
+  }
+
+  /**
+   * List all authorization models
+   */
+  @GrpcMethod('AuthorizationService', 'ListModels')
+  async listModels(request: ListModelsRequest): Promise<ListModelsResponse> {
+    try {
+      const limit = request.pageSize || 100;
+      const offset = request.pageToken ? parseInt(request.pageToken, 10) : 0;
+
+      const models = await this.modelRepository.list({ limit: limit + 1, offset });
+
+      const hasNext = models.length > limit;
+      const resultModels = hasNext ? models.slice(0, limit) : models;
+
+      return {
+        models: resultModels.map((m) => ({
+          modelId: m.id,
+          versionId: m.versionId,
+          isActive: m.isActive,
+          createdAt: m.createdAt.toISOString(),
+        })),
+        nextPageToken: hasNext ? (offset + limit).toString() : undefined,
+      };
+    } catch (error) {
+      this.logger.error(`ListModels failed: ${error}`);
+      throw new RpcException((error as Error).message);
+    }
+  }
+
+  /**
+   * Get team by ID
+   */
+  @GrpcMethod('AuthorizationService', 'GetTeam')
+  async getTeam(request: GetTeamRequest): Promise<GetTeamResponse> {
+    try {
+      const team = await this.teamRepository.getById(request.teamId);
+
+      if (!team) {
+        throw new Error(`Team with ID ${request.teamId} not found`);
+      }
+
+      return {
+        team: {
+          id: team.id,
+          name: team.name,
+          displayName: team.displayName,
+          serviceId: team.serviceId || undefined,
+          description: team.description || undefined,
+          createdBy: team.createdBy,
+          createdAt: (team.createdAt ?? new Date()).toISOString(),
+          updatedAt: (team.updatedAt ?? new Date()).toISOString(),
+        },
+      };
+    } catch (error) {
+      this.logger.error(`GetTeam failed: ${error}`);
+      throw new RpcException((error as Error).message);
+    }
+  }
+
+  /**
+   * List teams with pagination and search
+   */
+  @GrpcMethod('AuthorizationService', 'ListTeams')
+  async listTeams(request: ListTeamsRequest): Promise<ListTeamsResponse> {
+    try {
+      const { teams, total } = await this.teamRepository.list({
+        page: request.page,
+        limit: request.limit,
+        search: request.search,
+      });
+
+      const totalPages = Math.ceil(total / request.limit);
+
+      return {
+        teams: teams.map((t) => ({
+          id: t.id,
+          name: t.name,
+          displayName: t.displayName,
+          serviceId: t.serviceId || undefined,
+          description: t.description || undefined,
+          createdBy: t.createdBy,
+          createdAt: (t.createdAt ?? new Date()).toISOString(),
+          updatedAt: (t.updatedAt ?? new Date()).toISOString(),
+        })),
+        total,
+        page: request.page,
+        totalPages,
+      };
+    } catch (error) {
+      this.logger.error(`ListTeams failed: ${error}`);
+      throw new RpcException((error as Error).message);
+    }
+  }
+
+  /**
+   * Create a new team
+   */
+  @GrpcMethod('AuthorizationService', 'CreateTeam')
+  async createTeam(request: CreateTeamRequest): Promise<CreateTeamResponse> {
+    try {
+      const team = await this.teamRepository.create({
+        name: request.name,
+        description: request.description,
+        serviceId: request.serviceId,
+        createdBy: request.createdBy,
+      });
+
+      return {
+        team: {
+          id: team.id,
+          name: team.name,
+          displayName: team.displayName,
+          serviceId: team.serviceId || undefined,
+          description: team.description || undefined,
+          createdBy: team.createdBy,
+          createdAt: (team.createdAt ?? new Date()).toISOString(),
+          updatedAt: (team.updatedAt ?? new Date()).toISOString(),
+        },
+      };
+    } catch (error) {
+      this.logger.error(`CreateTeam failed: ${error}`);
+      throw new RpcException((error as Error).message);
+    }
+  }
+
+  /**
+   * Update team
+   */
+  @GrpcMethod('AuthorizationService', 'UpdateTeam')
+  async updateTeam(request: UpdateTeamRequest): Promise<UpdateTeamResponse> {
+    try {
+      const team = await this.teamRepository.update(request.teamId, {
+        name: request.name,
+        description: request.description,
+      });
+
+      return {
+        team: {
+          id: team.id,
+          name: team.name,
+          displayName: team.displayName,
+          serviceId: team.serviceId || undefined,
+          description: team.description || undefined,
+          createdBy: team.createdBy,
+          createdAt: (team.createdAt ?? new Date()).toISOString(),
+          updatedAt: (team.updatedAt ?? new Date()).toISOString(),
+        },
+      };
+    } catch (error) {
+      this.logger.error(`UpdateTeam failed: ${error}`);
+      throw new RpcException((error as Error).message);
+    }
+  }
+
+  /**
+   * Delete team
+   */
+  @GrpcMethod('AuthorizationService', 'DeleteTeam')
+  async deleteTeam(request: DeleteTeamRequest): Promise<DeleteTeamResponse> {
+    try {
+      const success = await this.teamRepository.delete(request.teamId);
+      return { success };
+    } catch (error) {
+      this.logger.error(`DeleteTeam failed: ${error}`);
       throw new RpcException((error as Error).message);
     }
   }
