@@ -6,6 +6,11 @@ import { analyticsApi, type UserOverviewItem } from '../../api/analytics';
 import { Card } from '../../components/atoms/Card';
 import { LocationBadge } from '../system/session-recordings/components/LocationBadge';
 
+// Pure helper function moved outside component for better performance
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleString();
+}
+
 export default function UsersOverviewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -53,10 +58,6 @@ export default function UsersOverviewPage() {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
   };
 
   return (

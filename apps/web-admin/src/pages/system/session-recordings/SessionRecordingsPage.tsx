@@ -23,6 +23,41 @@ import {
 import { SessionPlayer } from '@my-girok/tracking-sdk/react';
 import { LocationBadge } from './components/LocationBadge';
 
+// Pure helper functions moved outside component for better performance
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleString();
+}
+
+function getDeviceIcon(type: string) {
+  switch (type) {
+    case 'mobile':
+      return <Smartphone className="w-4 h-4" />;
+    case 'tablet':
+      return <Tablet className="w-4 h-4" />;
+    default:
+      return <Monitor className="w-4 h-4" />;
+  }
+}
+
+function getStatusColor(status: string): string {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+    case 'recording':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'error':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  }
+}
+
 export default function SessionRecordingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -83,40 +118,6 @@ export default function SessionRecordingsPage() {
 
   const handleViewDetail = (sessionId: string) => {
     navigate(`/system/session-recordings/${sessionId}`);
-  };
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getDeviceIcon = (type: string) => {
-    switch (type) {
-      case 'mobile':
-        return <Smartphone className="w-4 h-4" />;
-      case 'tablet':
-        return <Tablet className="w-4 h-4" />;
-      default:
-        return <Monitor className="w-4 h-4" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'recording':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'error':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-    }
   };
 
   const totalPages = Math.ceil(total / limit);

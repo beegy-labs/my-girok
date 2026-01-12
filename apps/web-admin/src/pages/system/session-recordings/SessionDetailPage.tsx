@@ -22,6 +22,41 @@ import { EventTimeline } from './components/EventTimeline';
 import { Card } from '../../../components/atoms/Card';
 import { Badge } from '../../../components/atoms/Badge';
 
+// Pure helper functions moved outside component for better performance
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleString();
+}
+
+function getDeviceIcon(type: string) {
+  switch (type) {
+    case 'mobile':
+      return <Smartphone className="w-5 h-5" />;
+    case 'tablet':
+      return <Tablet className="w-5 h-5" />;
+    default:
+      return <Monitor className="w-5 h-5" />;
+  }
+}
+
+function getStatusVariant(status: string): 'success' | 'info' | 'error' | 'default' {
+  switch (status) {
+    case 'completed':
+      return 'success';
+    case 'recording':
+      return 'info';
+    case 'error':
+      return 'error';
+    default:
+      return 'default';
+  }
+}
+
 export default function SessionDetailPage() {
   const { t } = useTranslation();
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -47,40 +82,6 @@ export default function SessionDetailPage() {
   useEffect(() => {
     fetchSession();
   }, [fetchSession]);
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getDeviceIcon = (type: string) => {
-    switch (type) {
-      case 'mobile':
-        return <Smartphone className="w-5 h-5" />;
-      case 'tablet':
-        return <Tablet className="w-5 h-5" />;
-      default:
-        return <Monitor className="w-5 h-5" />;
-    }
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'success';
-      case 'recording':
-        return 'info';
-      case 'error':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
 
   if (loading) {
     return (
