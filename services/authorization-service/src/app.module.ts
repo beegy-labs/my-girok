@@ -9,6 +9,7 @@ import { TupleRepository, ModelRepository, ChangelogRepository } from './storage
 import { CheckEngine } from './engine';
 import { PermissionCache } from './cache';
 import { AuthorizationGrpcController } from './grpc';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { AuthorizationGrpcController } from './grpc';
     TerminusModule,
     PrismaModule,
   ],
-  controllers: [AuthorizationGrpcController],
+  controllers: [AuthorizationGrpcController, HealthController],
   providers: [
     // Storage
     TupleRepository,
