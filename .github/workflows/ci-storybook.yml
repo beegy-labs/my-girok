@@ -146,3 +146,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Deploy via GitOps" >> $GITHUB_STEP_SUMMARY
           echo "Update \`platform-gitops\` repository to deploy this version." >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup
+        env: { GITEA_TOKEN: "${{ secrets.GITEA_TOKEN }}" }
+        run: |
+          [[ "${{ github.ref }}" == refs/tags/* ]] && P="" || P="develop"
+          curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/storybook" | \
+            jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \
+            while IFS='|' read -r _ v; do curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/storybook/${v}"; done

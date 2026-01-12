@@ -64,6 +64,8 @@
     "supportedCountries": "Supported Countries",
     "supportedLocales": "Supported Locales",
     "auditLogs": "Audit Logs",
+    "loginHistory": "Login History",
+    "sessionRecordings": "Session Recordings",
     "settings": "Settings"
   },
   "auth": {
@@ -209,6 +211,56 @@
     "logDetail": "Log Detail",
     "noLogs": "No audit logs found",
     "resourcePlaceholder": "Filter by resource"
+  },
+  "loginHistory": {
+    "title": "Login History",
+    "subtitle": "{{total}} total events",
+    "description": "Track authentication events and session connections",
+    "loadFailed": "Failed to load login history",
+    "noEvents": "No login history found",
+    "eventDetail": "Event Detail",
+    "eventId": "Event ID",
+    "timestamp": "Timestamp",
+    "accountType": "Account Type",
+    "accountId": "Account ID",
+    "eventType": "Event Type",
+    "result": "Result",
+    "ipAddress": "IP Address",
+    "country": "Country",
+    "sessionId": "Session ID",
+    "deviceFingerprint": "Device Fingerprint",
+    "userAgent": "User Agent",
+    "failureReason": "Failure Reason",
+    "metadata": "Metadata",
+    "details": "Details",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "accountTypes": {
+      "user": "User",
+      "operator": "Operator",
+      "admin": "Admin"
+    },
+    "eventTypes": {
+      "loginSuccess": "Login Success",
+      "loginFailed": "Login Failed",
+      "loginBlocked": "Login Blocked",
+      "logout": "Logout",
+      "sessionExpired": "Session Expired",
+      "sessionRevoked": "Session Revoked",
+      "mfaSetup": "MFA Setup",
+      "mfaVerified": "MFA Verified",
+      "mfaFailed": "MFA Failed",
+      "mfaDisabled": "MFA Disabled",
+      "passwordChanged": "Password Changed",
+      "passwordReset": "Password Reset",
+      "tokenRefreshed": "Token Refreshed",
+      "tokenRevoked": "Token Revoked"
+    },
+    "results": {
+      "success": "Success",
+      "failure": "Failure",
+      "blocked": "Blocked"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -436,6 +488,19 @@
     "adminId": "Admin ID",
     "auditLogs": "Audit Logs",
     "auditLogsDesc": "View all changes and actions for this service"
+  },
+  "sessionRecordings": {
+    "title": "Session Recordings",
+    "subtitle": "{{total}} sessions total",
+    "noSessions": "No recorded sessions",
+    "deviceType": "Device Type",
+    "desktop": "Desktop",
+    "mobile": "Mobile",
+    "tablet": "Tablet",
+    "pageViews": "pages",
+    "clicks": "clicks",
+    "replay": "Replay",
+    "sessionReplay": "Session Replay"
   },
   "tenants": {
     "title": "Partner Management",

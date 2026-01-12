@@ -10,12 +10,23 @@ commits: en
 
 ## Doc Structure
 
-| Path      | Type       | Edit |
-| --------- | ---------- | ---- |
-| .ai/      | Indicate   | Yes  |
-| docs/llm/ | SSOT       | Yes  |
-| docs/en/  | Generated  | No   |
-| docs/kr/  | Translated | No   |
+| Path      | Type       | LLM Edit |
+| --------- | ---------- | -------- |
+| .ai/      | Indicator  | **YES**  |
+| docs/llm/ | SSOT       | **YES**  |
+| docs/en/  | Generated  | **NO**   |
+| docs/kr/  | Translated | **NO**   |
+
+```yaml
+LLM_DOC_RULE:
+  EDIT: [.ai/*, docs/llm/*]
+  NEVER: [docs/en/*, docs/kr/*]
+  GENERATION:
+    trigger: Manual admin action only
+    en: pnpm docs:generate # llm/ → en/
+    kr: pnpm docs:translate # en/ → kr/
+    NOT: Auto-sync, CI/CD, or LLM
+```
 
 ## NEVER
 

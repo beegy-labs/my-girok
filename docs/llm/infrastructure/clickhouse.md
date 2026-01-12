@@ -45,13 +45,14 @@ High-performance analytics database for observability, audit, and analytics
 
 ## Kafka Topics
 
-| Topic              | Consumer Group       | Target Database | Purpose            |
-| ------------------ | -------------------- | --------------- | ------------------ |
-| `otel-traces`      | clickhouse-traces    | otel_db         | Distributed traces |
-| `otel-metrics`     | clickhouse-metrics   | otel_db         | OTEL metrics       |
-| `otel-logs`        | clickhouse-logs      | otel_db         | Application logs   |
-| `otel-audit`       | clickhouse-audit     | audit_db        | Admin audit logs   |
-| `analytics-events` | clickhouse-analytics | analytics_db    | User events        |
+| Topic                | Consumer Group        | Target Database | Purpose              |
+| -------------------- | --------------------- | --------------- | -------------------- |
+| `otel-traces`        | clickhouse-traces     | otel_db         | Distributed traces   |
+| `otel-metrics`       | clickhouse-metrics    | otel_db         | OTEL metrics         |
+| `otel-logs`          | clickhouse-logs       | otel_db         | Application logs     |
+| `otel-audit`         | clickhouse-audit      | audit_db        | Admin audit logs     |
+| `analytics-events`   | clickhouse-analytics  | analytics_db    | User events          |
+| `session-recordings` | clickhouse-recordings | analytics_db    | rrweb session replay |
 
 ## Schema Files
 
@@ -62,6 +63,12 @@ infrastructure/clickhouse/schemas/
   03-materialized_views.sql # Pre-aggregated views
   04-otel_db.sql            # OTEL traces/metrics/logs
   05-kafka_engine.sql       # Kafka consumers + MVs
+
+infrastructure/clickhouse/migrations/
+  001_create_otel_db.sql              # OTEL database setup
+  002_create_otel_kafka_engine.sql    # Kafka consumers for OTEL
+  003_create_otel_materialized_views.sql # OTEL aggregation views
+  004_create_session_recordings.sql   # rrweb session replay tables
 ```
 
 ## otel_db Tables
@@ -90,14 +97,16 @@ infrastructure/clickhouse/schemas/
 
 ## analytics_db Tables
 
-| Table         | Purpose              | TTL     |
-| ------------- | -------------------- | ------- |
-| sessions      | User sessions        | 1 year  |
-| events        | User events          | 90 days |
-| page_views    | Page views + CWV     | 90 days |
-| funnel_events | Funnel tracking      | 90 days |
-| user_profiles | Aggregated user data | None    |
-| errors        | Frontend errors      | 30 days |
+| Table                      | Purpose                  | TTL     |
+| -------------------------- | ------------------------ | ------- |
+| sessions                   | User sessions            | 1 year  |
+| events                     | User events              | 90 days |
+| page_views                 | Page views + CWV         | 90 days |
+| funnel_events              | Funnel tracking          | 90 days |
+| user_profiles              | Aggregated user data     | None    |
+| errors                     | Frontend errors          | 30 days |
+| session_recordings         | rrweb event batches      | 90 days |
+| session_recording_metadata | Session-level aggregates | 90 days |
 
 ## Materialized Views
 
