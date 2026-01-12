@@ -31,7 +31,7 @@ RUN pnpm build
 
 # Generate Prisma client and build authorization service
 WORKDIR /app/services/authorization-service
-RUN pnpm prisma:generate
+RUN pnpm db:generate
 RUN pnpm build
 
 # Production stage
@@ -74,7 +74,7 @@ RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 WORKDIR /app/services/authorization-service
 
 # Generate Prisma Client
-RUN pnpm prisma:generate
+RUN pnpm db:generate
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp

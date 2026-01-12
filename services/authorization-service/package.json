@@ -32,7 +32,7 @@
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/microservices": "catalog:",
     "@nestjs/platform-express": "catalog:",
-    "@nestjs/schedule": "^5.0.1",
+    "@nestjs/schedule": "catalog:",
     "@nestjs/swagger": "catalog:",
     "@nestjs/terminus": "^11.0.0",
     "@prisma/client": "catalog:",
