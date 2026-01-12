@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-09
+> **AI Assistant Entry Point for my-girok project** | **Last Updated**: 2026-01-12
 
 **Manifest**: [.ai/manifest.yaml](.ai/manifest.yaml) | **Changelog**: [.ai/CHANGELOG.md](.ai/CHANGELOG.md)
 
@@ -47,6 +47,10 @@ Full guide: `docs/en/services/audit-service.md`
 **Working on analytics/business intelligence?**
 Read: `.ai/rules.md` + `.ai/services/analytics-service.md`
 Full guide: `docs/en/services/analytics-service.md`
+
+**Working on authorization/permissions (ReBAC)?**
+Read: `.ai/services/authorization-service.md`
+Full guide: `docs/llm/services/authorization-service.md`
 
 ### Frontend Development
 

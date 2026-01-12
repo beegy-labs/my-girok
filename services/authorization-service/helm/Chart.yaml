@@ -1,0 +1,21 @@
+apiVersion: v2
+name: authorization-service
+description: Zanzibar-style ReBAC Authorization Service for My-Girok
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - authorization
+  - rebac
+  - zanzibar
+  - permissions
+  - grpc
+
+maintainers:
+  - name: Beegy Team
+    email: dev@beegy.net
+
+home: https://github.com/beegy/my-girok
+sources:
+  - https://github.com/beegy/my-girok
