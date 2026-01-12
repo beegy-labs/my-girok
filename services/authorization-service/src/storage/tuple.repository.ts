@@ -292,7 +292,7 @@ export class TupleRepository {
     conditionContext: unknown;
     createdTxid: bigint;
     deletedTxid: bigint | null;
-    createdAt: Date;
+    createdAt: Date | null;
   }): RelationTuple {
     return {
       id: tuple.id,
@@ -306,7 +306,7 @@ export class TupleRepository {
       conditionContext: tuple.conditionContext as Record<string, unknown> | undefined,
       createdTxid: tuple.createdTxid,
       deletedTxid: tuple.deletedTxid ?? undefined,
-      createdAt: tuple.createdAt,
+      createdAt: tuple.createdAt ?? new Date(),
     };
   }
 }

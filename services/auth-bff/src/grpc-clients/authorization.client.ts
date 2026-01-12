@@ -78,12 +78,96 @@ export interface ListUsersResponse {
   nextPageToken?: string;
 }
 
+export interface ListModelsRequest {
+  pageSize?: number;
+  pageToken?: string;
+}
+
+export interface ModelSummary {
+  modelId: string;
+  versionId: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface ListModelsResponse {
+  models: ModelSummary[];
+  nextPageToken?: string;
+}
+
+export interface GetTeamRequest {
+  teamId: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  displayName: string;
+  serviceId?: string;
+  description?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetTeamResponse {
+  team: Team;
+}
+
+export interface ListTeamsRequest {
+  page: number;
+  limit: number;
+  search?: string;
+}
+
+export interface ListTeamsResponse {
+  teams: Team[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface CreateTeamRequest {
+  name: string;
+  description?: string;
+  serviceId?: string;
+  createdBy: string;
+}
+
+export interface CreateTeamResponse {
+  team: Team;
+}
+
+export interface UpdateTeamRequest {
+  teamId: string;
+  name?: string;
+  description?: string;
+}
+
+export interface UpdateTeamResponse {
+  team: Team;
+}
+
+export interface DeleteTeamRequest {
+  teamId: string;
+}
+
+export interface DeleteTeamResponse {
+  success: boolean;
+}
+
 interface AuthorizationServiceClient {
   check(request: CheckRequest): Observable<CheckResponse>;
   batchCheck(request: BatchCheckRequest): Observable<BatchCheckResponse>;
   write(request: WriteRequest): Observable<WriteResponse>;
   listObjects(request: ListObjectsRequest): Observable<ListObjectsResponse>;
   listUsers(request: ListUsersRequest): Observable<ListUsersResponse>;
+  listModels(request: ListModelsRequest): Observable<ListModelsResponse>;
+  getTeam(request: GetTeamRequest): Observable<GetTeamResponse>;
+  listTeams(request: ListTeamsRequest): Observable<ListTeamsResponse>;
+  createTeam(request: CreateTeamRequest): Observable<CreateTeamResponse>;
+  updateTeam(request: UpdateTeamRequest): Observable<UpdateTeamResponse>;
+  deleteTeam(request: DeleteTeamRequest): Observable<DeleteTeamResponse>;
 }
 
 @Injectable()
@@ -292,6 +376,156 @@ export class AuthorizationGrpcClient implements OnModuleInit {
     } catch (error) {
       this.logger.warn(`ListUsers failed: ${error}`);
       return [];
+    }
+  }
+
+  /**
+   * List all authorization models
+   */
+  async listModels(pageSize?: number, pageToken?: string): Promise<ListModelsResponse | null> {
+    if (!this.isConnected || !this.authzService) {
+      this.logger.warn('Authorization service not connected');
+      return null;
+    }
+
+    try {
+      return await firstValueFrom(
+        this.authzService.listModels({ pageSize, pageToken }).pipe(
+          catchError((error) => {
+            this.logger.warn(`ListModels failed: ${error.message}`);
+            return of(null as any);
+          }),
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(`ListModels failed: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get team by ID
+   */
+  async getTeam(teamId: string): Promise<Team | null> {
+    if (!this.isConnected || !this.authzService) {
+      this.logger.warn('Authorization service not connected');
+      return null;
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.authzService.getTeam({ teamId }).pipe(
+          catchError((error) => {
+            this.logger.warn(`GetTeam failed: ${error.message}`);
+            return of(null as any);
+          }),
+        ),
+      );
+      return response?.team || null;
+    } catch (error) {
+      this.logger.warn(`GetTeam failed: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * List teams with pagination and search
+   */
+  async listTeams(page: number, limit: number, search?: string): Promise<ListTeamsResponse | null> {
+    if (!this.isConnected || !this.authzService) {
+      this.logger.warn('Authorization service not connected');
+      return null;
+    }
+
+    try {
+      return await firstValueFrom(
+        this.authzService.listTeams({ page, limit, search }).pipe(
+          catchError((error) => {
+            this.logger.warn(`ListTeams failed: ${error.message}`);
+            return of(null as any);
+          }),
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(`ListTeams failed: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * Create a new team
+   */
+  async createTeam(
+    name: string,
+    createdBy: string,
+    description?: string,
+    serviceId?: string,
+  ): Promise<Team | null> {
+    if (!this.isConnected || !this.authzService) {
+      throw new Error('Authorization service not connected');
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.authzService.createTeam({ name, description, serviceId, createdBy }).pipe(
+          catchError((error) => {
+            this.logger.error(`CreateTeam failed: ${error.message}`);
+            throw error;
+          }),
+        ),
+      );
+      return response.team;
+    } catch (error) {
+      this.logger.error(`CreateTeam failed: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Update team
+   */
+  async updateTeam(teamId: string, name?: string, description?: string): Promise<Team | null> {
+    if (!this.isConnected || !this.authzService) {
+      throw new Error('Authorization service not connected');
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.authzService.updateTeam({ teamId, name, description }).pipe(
+          catchError((error) => {
+            this.logger.error(`UpdateTeam failed: ${error.message}`);
+            throw error;
+          }),
+        ),
+      );
+      return response.team;
+    } catch (error) {
+      this.logger.error(`UpdateTeam failed: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete team
+   */
+  async deleteTeam(teamId: string): Promise<boolean> {
+    if (!this.isConnected || !this.authzService) {
+      throw new Error('Authorization service not connected');
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.authzService.deleteTeam({ teamId }).pipe(
+          catchError((error) => {
+            this.logger.error(`DeleteTeam failed: ${error.message}`);
+            throw error;
+          }),
+        ),
+      );
+      return response.success;
+    } catch (error) {
+      this.logger.error(`DeleteTeam failed: ${error}`);
+      throw error;
     }
   }
 

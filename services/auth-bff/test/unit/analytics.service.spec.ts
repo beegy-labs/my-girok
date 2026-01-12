@@ -1,14 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest';
 import { AnalyticsService } from '../../src/admin/analytics/analytics.service';
-import { ClickHouseService } from '../../src/common/services/clickhouse.service';
+import { AnalyticsGrpcClient } from '../../src/grpc-clients/analytics.client';
 
 describe('AnalyticsService', () => {
   let service: AnalyticsService;
-  let clickhouseService: {
-    query: MockInstance;
-    queryOne: MockInstance;
-    isClientConnected: MockInstance;
+  let analyticsClient: {
+    getUserSummary: MockInstance;
+    getUserSessions: MockInstance;
+    getUserLocations: MockInstance;
+    getTopUsers: MockInstance;
+    getUsersOverview: MockInstance;
   };
 
   beforeEach(async () => {
@@ -16,18 +18,20 @@ describe('AnalyticsService', () => {
       providers: [
         AnalyticsService,
         {
-          provide: ClickHouseService,
+          provide: AnalyticsGrpcClient,
           useValue: {
-            query: vi.fn(),
-            queryOne: vi.fn(),
-            isClientConnected: vi.fn().mockReturnValue(true),
+            getUserSummary: vi.fn(),
+            getUserSessions: vi.fn(),
+            getUserLocations: vi.fn(),
+            getTopUsers: vi.fn(),
+            getUsersOverview: vi.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<AnalyticsService>(AnalyticsService);
-    clickhouseService = module.get(ClickHouseService);
+    analyticsClient = module.get(AnalyticsGrpcClient);
   });
 
   it('should be defined', () => {
@@ -35,23 +39,20 @@ describe('AnalyticsService', () => {
   });
 
   describe('getUserSummary', () => {
-    it('should return user summary statistics', async () => {
-      const mockSummary = {
-        total_sessions: 10,
-        total_duration: 3600,
-        total_page_views: 50,
-        total_clicks: 100,
-        last_session_at: '2026-01-12T10:00:00Z',
-        first_session_at: '2026-01-01T10:00:00Z',
+    it('should return user summary statistics from gRPC', async () => {
+      const mockResponse = {
+        userId: 'user-123',
+        totalSessions: 10,
+        totalDuration: 3600,
+        totalPageViews: 50,
+        totalClicks: 100,
+        lastSessionAt: '2026-01-12T10:00:00Z',
+        firstSessionAt: '2026-01-01T10:00:00Z',
+        countries: ['US', 'KR'],
+        devices: ['Chrome / Windows', 'Safari / macOS'],
       };
 
-      const mockCountries = [{ country_code: 'US' }, { country_code: 'KR' }];
-      const mockDevices = [{ device: 'Chrome / Windows' }, { device: 'Safari / macOS' }];
-
-      clickhouseService.queryOne.mockResolvedValueOnce(mockSummary);
-      clickhouseService.query
-        .mockResolvedValueOnce(mockCountries)
-        .mockResolvedValueOnce(mockDevices);
+      analyticsClient.getUserSummary.mockResolvedValueOnce(mockResponse);
 
       const result = await service.getUserSummary('user-123');
 
@@ -64,8 +65,8 @@ describe('AnalyticsService', () => {
       expect(result.devices).toEqual(['Chrome / Windows', 'Safari / macOS']);
     });
 
-    it('should return empty summary when no data found', async () => {
-      clickhouseService.queryOne.mockResolvedValueOnce(null);
+    it('should return empty summary when gRPC returns null', async () => {
+      analyticsClient.getUserSummary.mockResolvedValueOnce(null);
 
       const result = await service.getUserSummary('user-123');
 
@@ -75,8 +76,8 @@ describe('AnalyticsService', () => {
       expect(result.devices).toEqual([]);
     });
 
-    it('should handle query errors gracefully', async () => {
-      clickhouseService.queryOne.mockRejectedValueOnce(new Error('ClickHouse error'));
+    it('should handle gRPC errors gracefully', async () => {
+      analyticsClient.getUserSummary.mockRejectedValueOnce(new Error('gRPC error'));
 
       const result = await service.getUserSummary('user-123');
 
@@ -85,28 +86,32 @@ describe('AnalyticsService', () => {
   });
 
   describe('getUserSessions', () => {
-    it('should return paginated user sessions', async () => {
-      const mockSessions = [
-        {
-          session_id: 'session-1',
-          actor_email: 'user@example.com',
-          service_slug: 'web-app',
-          started_at: '2026-01-12T10:00:00Z',
-          ended_at: '2026-01-12T11:00:00Z',
-          duration_seconds: 3600,
-          page_views: 10,
-          clicks: 20,
-          entry_page: '/home',
-          browser: 'Chrome',
-          os: 'Windows',
-          device_type: 'desktop',
-          country_code: 'US',
-          status: 'completed',
-        },
-      ];
+    it('should return paginated user sessions from gRPC', async () => {
+      const mockResponse = {
+        sessions: [
+          {
+            sessionId: 'session-1',
+            actorEmail: 'user@example.com',
+            serviceSlug: 'web-app',
+            startedAt: '2026-01-12T10:00:00Z',
+            endedAt: '2026-01-12T11:00:00Z',
+            durationSeconds: 3600,
+            pageViews: 10,
+            clicks: 20,
+            entryPage: '/home',
+            browser: 'Chrome',
+            os: 'Windows',
+            deviceType: 'desktop',
+            countryCode: 'US',
+            status: 'completed',
+          },
+        ],
+        total: 1,
+        page: 1,
+        totalPages: 1,
+      };
 
-      clickhouseService.query.mockResolvedValueOnce(mockSessions);
-      clickhouseService.queryOne.mockResolvedValueOnce({ total: 1 });
+      analyticsClient.getUserSessions.mockResolvedValueOnce(mockResponse);
 
       const result = await service.getUserSessions('user-123', { page: 1, limit: 20 });
 
@@ -116,9 +121,15 @@ describe('AnalyticsService', () => {
       expect(result.data[0].actorEmail).toBe('user@example.com');
     });
 
-    it('should apply date filters', async () => {
-      clickhouseService.query.mockResolvedValueOnce([]);
-      clickhouseService.queryOne.mockResolvedValueOnce({ total: 0 });
+    it('should pass date filters to gRPC', async () => {
+      const mockResponse = {
+        sessions: [],
+        total: 0,
+        page: 1,
+        totalPages: 0,
+      };
+
+      analyticsClient.getUserSessions.mockResolvedValueOnce(mockResponse);
 
       await service.getUserSessions('user-123', {
         page: 1,
@@ -127,14 +138,17 @@ describe('AnalyticsService', () => {
         endDate: '2026-01-12',
       });
 
-      expect(clickhouseService.query).toHaveBeenCalledWith(
-        expect.stringContaining('started_at >= {startDate:DateTime}'),
-        expect.objectContaining({ startDate: '2026-01-01' }),
+      expect(analyticsClient.getUserSessions).toHaveBeenCalledWith(
+        'user-123',
+        1,
+        20,
+        '2026-01-01',
+        '2026-01-12',
       );
     });
 
-    it('should handle errors and return empty results', async () => {
-      clickhouseService.query.mockRejectedValueOnce(new Error('Query error'));
+    it('should handle gRPC errors and return empty results', async () => {
+      analyticsClient.getUserSessions.mockRejectedValueOnce(new Error('gRPC error'));
 
       const result = await service.getUserSessions('user-123', { page: 1, limit: 20 });
 
@@ -144,13 +158,13 @@ describe('AnalyticsService', () => {
   });
 
   describe('getUserLocations', () => {
-    it('should return user location statistics', async () => {
+    it('should return user location statistics from gRPC', async () => {
       const mockLocations = [
-        { country_code: 'US', session_count: 10, total_duration: 7200 },
-        { country_code: 'KR', session_count: 5, total_duration: 3600 },
+        { countryCode: 'US', sessionCount: 10, totalDuration: 7200 },
+        { countryCode: 'KR', sessionCount: 5, totalDuration: 3600 },
       ];
 
-      clickhouseService.query.mockResolvedValueOnce(mockLocations);
+      analyticsClient.getUserLocations.mockResolvedValueOnce(mockLocations);
 
       const result = await service.getUserLocations('user-123');
 
@@ -160,8 +174,8 @@ describe('AnalyticsService', () => {
       expect(result[1].countryCode).toBe('KR');
     });
 
-    it('should return empty array on error', async () => {
-      clickhouseService.query.mockRejectedValueOnce(new Error('Error'));
+    it('should return empty array on gRPC error', async () => {
+      analyticsClient.getUserLocations.mockRejectedValueOnce(new Error('gRPC error'));
 
       const result = await service.getUserLocations('user-123');
 
@@ -170,23 +184,26 @@ describe('AnalyticsService', () => {
   });
 
   describe('getTopUsers', () => {
-    it('should return top active users', async () => {
-      const mockUsers = [
-        {
-          actor_id: 'user-1',
-          actor_email: 'user1@example.com',
-          session_count: 100,
-          last_active: '2026-01-12T10:00:00Z',
-        },
-        {
-          actor_id: 'user-2',
-          actor_email: 'user2@example.com',
-          session_count: 50,
-          last_active: '2026-01-12T09:00:00Z',
-        },
-      ];
+    it('should return top active users from gRPC', async () => {
+      const mockResponse = {
+        users: [
+          {
+            userId: 'user-1',
+            email: 'user1@example.com',
+            sessionCount: 100,
+            lastActive: '2026-01-12T10:00:00Z',
+          },
+          {
+            userId: 'user-2',
+            email: 'user2@example.com',
+            sessionCount: 50,
+            lastActive: '2026-01-12T09:00:00Z',
+          },
+        ],
+        total: 2,
+      };
 
-      clickhouseService.query.mockResolvedValueOnce(mockUsers);
+      analyticsClient.getTopUsers.mockResolvedValueOnce(mockResponse);
 
       const result = await service.getTopUsers(10);
 
@@ -196,8 +213,8 @@ describe('AnalyticsService', () => {
       expect(result.total).toBe(2);
     });
 
-    it('should handle errors', async () => {
-      clickhouseService.query.mockRejectedValueOnce(new Error('Error'));
+    it('should handle gRPC errors', async () => {
+      analyticsClient.getTopUsers.mockRejectedValueOnce(new Error('gRPC error'));
 
       const result = await service.getTopUsers(10);
 
@@ -207,18 +224,22 @@ describe('AnalyticsService', () => {
   });
 
   describe('getUsersOverview', () => {
-    it('should return paginated users overview', async () => {
-      const mockUsers = [
-        {
-          actor_id: 'user-1',
-          actor_email: 'user1@example.com',
-          session_count: 10,
-          last_active: '2026-01-12T10:00:00Z',
-        },
-      ];
+    it('should return paginated users overview from gRPC', async () => {
+      const mockResponse = {
+        users: [
+          {
+            userId: 'user-1',
+            email: 'user1@example.com',
+            sessionCount: 10,
+            lastActive: '2026-01-12T10:00:00Z',
+          },
+        ],
+        total: 50,
+        page: 1,
+        totalPages: 3,
+      };
 
-      clickhouseService.query.mockResolvedValueOnce(mockUsers);
-      clickhouseService.queryOne.mockResolvedValueOnce({ total: 50 });
+      analyticsClient.getUsersOverview.mockResolvedValueOnce(mockResponse);
 
       const result = await service.getUsersOverview({ page: 1, limit: 20 });
 
@@ -228,20 +249,23 @@ describe('AnalyticsService', () => {
       expect(result.page).toBe(1);
     });
 
-    it('should apply search filter', async () => {
-      clickhouseService.query.mockResolvedValueOnce([]);
-      clickhouseService.queryOne.mockResolvedValueOnce({ total: 0 });
+    it('should pass search filter to gRPC', async () => {
+      const mockResponse = {
+        users: [],
+        total: 0,
+        page: 1,
+        totalPages: 0,
+      };
+
+      analyticsClient.getUsersOverview.mockResolvedValueOnce(mockResponse);
 
       await service.getUsersOverview({ page: 1, limit: 20, search: 'john' });
 
-      expect(clickhouseService.query).toHaveBeenCalledWith(
-        expect.stringContaining('actor_email LIKE {search:String}'),
-        expect.objectContaining({ search: '%john%' }),
-      );
+      expect(analyticsClient.getUsersOverview).toHaveBeenCalledWith(1, 20, 'john');
     });
 
-    it('should handle errors', async () => {
-      clickhouseService.query.mockRejectedValueOnce(new Error('Error'));
+    it('should handle gRPC errors', async () => {
+      analyticsClient.getUsersOverview.mockRejectedValueOnce(new Error('gRPC error'));
 
       const result = await service.getUsersOverview({ page: 1, limit: 20 });
 

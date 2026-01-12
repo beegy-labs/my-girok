@@ -1,5 +1,4 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaAuthzService } from '../../common/services/prisma-authz.service';
 import { AuthorizationGrpcClient } from '../../grpc-clients/authorization.client';
 
 interface CreateTeamDto {
@@ -23,55 +22,38 @@ interface ListTeamsQuery {
 export class TeamsService {
   private readonly logger = new Logger(TeamsService.name);
 
-  constructor(
-    private readonly prisma: PrismaAuthzService,
-    private readonly authzClient: AuthorizationGrpcClient,
-  ) {}
+  constructor(private readonly authzClient: AuthorizationGrpcClient) {}
 
   /**
    * List all teams
    */
   async listTeams(query: ListTeamsQuery) {
     try {
-      const skip = (query.page - 1) * query.limit;
+      const result = await this.authzClient.listTeams(query.page, query.limit, query.search);
 
-      const where = query.search
-        ? {
-            OR: [
-              { name: { contains: query.search, mode: 'insensitive' as const } },
-              { displayName: { contains: query.search, mode: 'insensitive' as const } },
-            ],
-          }
-        : {};
-
-      const [teams, total] = await Promise.all([
-        this.prisma.team.findMany({
-          where,
-          skip,
-          take: query.limit,
-          orderBy: {
-            createdAt: 'desc',
-          },
-        }),
-        this.prisma.team.count({ where }),
-      ]);
-
-      const totalPages = Math.ceil(total / query.limit);
+      if (!result) {
+        return {
+          data: [],
+          total: 0,
+          page: query.page,
+          totalPages: 0,
+        };
+      }
 
       return {
-        data: teams.map((team) => ({
+        data: result.teams.map((team) => ({
           id: team.id,
           name: team.name,
           displayName: team.displayName,
           serviceId: team.serviceId,
           description: team.description,
           createdBy: team.createdBy,
-          createdAt: team.createdAt?.toISOString() || new Date().toISOString(),
-          updatedAt: team.updatedAt?.toISOString() || new Date().toISOString(),
+          createdAt: team.createdAt,
+          updatedAt: team.updatedAt,
         })),
-        total,
-        page: query.page,
-        totalPages,
+        total: result.total,
+        page: result.page,
+        totalPages: result.totalPages,
       };
     } catch (error) {
       this.logger.error(`Failed to list teams: ${error}`);
@@ -89,9 +71,7 @@ export class TeamsService {
    */
   async getTeam(id: string) {
     try {
-      const team = await this.prisma.team.findUnique({
-        where: { id },
-      });
+      const team = await this.authzClient.getTeam(id);
 
       if (!team) {
         throw new NotFoundException(`Team with ID ${id} not found`);
@@ -115,8 +95,8 @@ export class TeamsService {
         description: team.description,
         createdBy: team.createdBy,
         members,
-        createdAt: team.createdAt?.toISOString() || new Date().toISOString(),
-        updatedAt: team.updatedAt?.toISOString() || new Date().toISOString(),
+        createdAt: team.createdAt,
+        updatedAt: team.updatedAt,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -132,14 +112,11 @@ export class TeamsService {
    */
   async createTeam(data: CreateTeamDto, createdBy: string = 'system') {
     try {
-      const team = await this.prisma.team.create({
-        data: {
-          name: data.name,
-          displayName: data.name,
-          description: data.description,
-          createdBy,
-        },
-      });
+      const team = await this.authzClient.createTeam(data.name, createdBy, data.description);
+
+      if (!team) {
+        throw new Error('Failed to create team');
+      }
 
       if (data.members && data.members.length > 0) {
         for (const member of data.members) {
@@ -157,8 +134,8 @@ export class TeamsService {
         description: team.description,
         createdBy: team.createdBy,
         members: members.map((m) => ({ userId: m.userId, role: m.role })),
-        createdAt: team.createdAt?.toISOString() || new Date().toISOString(),
-        updatedAt: team.updatedAt?.toISOString() || new Date().toISOString(),
+        createdAt: team.createdAt,
+        updatedAt: team.updatedAt,
       };
     } catch (error) {
       this.logger.error(`Failed to create team: ${error}`);
@@ -171,14 +148,11 @@ export class TeamsService {
    */
   async updateTeam(id: string, data: UpdateTeamDto) {
     try {
-      const team = await this.prisma.team.update({
-        where: { id },
-        data: {
-          name: data.name,
-          displayName: data.name,
-          description: data.description,
-        },
-      });
+      const team = await this.authzClient.updateTeam(id, data.name, data.description);
+
+      if (!team) {
+        throw new NotFoundException(`Team with ID ${id} not found`);
+      }
 
       return {
         id: team.id,
@@ -188,8 +162,8 @@ export class TeamsService {
         description: team.description,
         createdBy: team.createdBy,
         members: [],
-        createdAt: team.createdAt?.toISOString() || new Date().toISOString(),
-        updatedAt: team.updatedAt?.toISOString() || new Date().toISOString(),
+        createdAt: team.createdAt,
+        updatedAt: team.updatedAt,
       };
     } catch (error) {
       this.logger.error(`Failed to update team: ${error}`);
@@ -223,11 +197,9 @@ export class TeamsService {
         }
       }
 
-      await this.prisma.team.delete({
-        where: { id },
-      });
+      const success = await this.authzClient.deleteTeam(id);
 
-      return { success: true };
+      return { success };
     } catch (error) {
       this.logger.error(`Failed to delete team: ${error}`);
       throw error;

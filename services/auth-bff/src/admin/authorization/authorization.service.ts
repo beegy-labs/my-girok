@@ -1,15 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuthorizationGrpcClient } from '../../grpc-clients/authorization.client';
-import { PrismaAuthzService } from '../../common/services/prisma-authz.service';
 
 @Injectable()
 export class AuthorizationService {
   private readonly logger = new Logger(AuthorizationService.name);
 
-  constructor(
-    private readonly authzClient: AuthorizationGrpcClient,
-    private readonly prisma: PrismaAuthzService,
-  ) {}
+  constructor(private readonly authzClient: AuthorizationGrpcClient) {}
 
   /**
    * Check permission
@@ -58,16 +54,9 @@ export class AuthorizationService {
    */
   async getModel() {
     try {
-      const model = await this.prisma.authorizationModel.findFirst({
-        where: {
-          isActive: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+      const models = await this.authzClient.listModels(1);
 
-      if (!model) {
+      if (!models || models.models.length === 0) {
         return {
           id: '',
           version: 0,
@@ -78,12 +67,14 @@ export class AuthorizationService {
         };
       }
 
+      const activeModel = models.models.find((m) => m.isActive) || models.models[0];
+
       return {
-        id: model.id,
-        version: parseInt(model.versionId, 10) || 0,
-        content: model.dslSource,
-        isActive: model.isActive || false,
-        createdAt: model.createdAt?.toISOString() || new Date().toISOString(),
+        id: activeModel.modelId,
+        version: parseInt(activeModel.versionId, 10) || 0,
+        content: '',
+        isActive: activeModel.isActive,
+        createdAt: activeModel.createdAt,
         createdBy: 'system',
       };
     } catch (error) {
@@ -104,20 +95,17 @@ export class AuthorizationService {
    */
   async getModelVersions() {
     try {
-      const models = await this.prisma.authorizationModel.findMany({
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: 50,
-      });
+      const result = await this.authzClient.listModels(100);
 
-      return models.map((model) => ({
-        id: model.id,
-        version: parseInt(model.versionId, 10) || 0,
-        content: model.dslSource,
-        isActive: model.isActive || false,
-        createdAt: model.createdAt?.toISOString() || new Date().toISOString(),
-        createdBy: 'system',
+      if (!result) {
+        return [];
+      }
+
+      return result.models.map((m) => ({
+        id: m.modelId,
+        version: parseInt(m.versionId, 10) || 0,
+        isActive: m.isActive,
+        createdAt: m.createdAt,
       }));
     } catch (error) {
       this.logger.error(`Failed to get model versions: ${error}`);
@@ -126,44 +114,22 @@ export class AuthorizationService {
   }
 
   /**
-   * Create new model version
-   * Note: Model creation should be done through authorization-service gRPC
-   * This is a placeholder for future implementation
+   * Create a new model
    */
-  async createModel(content: string) {
-    try {
-      const model = await this.prisma.authorizationModel.create({
-        data: {
-          versionId: Date.now().toString(),
-          schemaVersion: '1.0',
-          dslSource: content,
-          compiledModel: {},
-          typeDefinitions: {},
-          isActive: false,
-        },
-      });
-
-      return {
-        id: model.id,
-        version: parseInt(model.versionId, 10) || 0,
-        content: model.dslSource,
-        isActive: model.isActive || false,
-        createdAt: model.createdAt?.toISOString() || new Date().toISOString(),
-        createdBy: 'admin',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to create model: ${error}`);
-      throw error;
-    }
+  async createModel(_dslSource: string) {
+    // Model creation is handled by authorization-service via WriteModel gRPC
+    // This is a placeholder - actual implementation would need WriteModel support
+    this.logger.warn('createModel not fully implemented - requires WriteModel gRPC method');
+    throw new Error('Model creation not supported via auth-bff');
   }
 
   /**
-   * Validate model syntax
-   * Note: Validation should be done by authorization-service
-   * This is a placeholder that accepts all models
+   * Validate a model
    */
-  async validateModel(content: string) {
-    if (!content || content.trim().length === 0) {
+  async validateModel(dslSource: string) {
+    // Model validation is handled by authorization-service
+    // This is a simple validation
+    if (!dslSource || dslSource.trim().length === 0) {
       return {
         valid: false,
         errors: ['Model content cannot be empty'],
@@ -177,52 +143,13 @@ export class AuthorizationService {
   }
 
   /**
-   * Activate model version
+   * Activate a model
    */
-  async activateModel(id: string) {
-    try {
-      await this.prisma.$transaction(async (tx) => {
-        await tx.authorizationModel.updateMany({
-          where: {
-            isActive: true,
-          },
-          data: {
-            isActive: false,
-          },
-        });
-
-        await tx.authorizationModel.update({
-          where: {
-            id,
-          },
-          data: {
-            isActive: true,
-          },
-        });
-      });
-
-      const model = await this.prisma.authorizationModel.findUnique({
-        where: {
-          id,
-        },
-      });
-
-      if (!model) {
-        throw new Error('Model not found after activation');
-      }
-
-      return {
-        id: model.id,
-        version: parseInt(model.versionId, 10) || 0,
-        content: model.dslSource,
-        isActive: model.isActive || false,
-        createdAt: model.createdAt?.toISOString() || new Date().toISOString(),
-        createdBy: 'admin',
-      };
-    } catch (error) {
-      this.logger.error(`Failed to activate model: ${error}`);
-      throw error;
-    }
+  async activateModel(_id: string) {
+    // Model activation is handled by authorization-service via ActivateModel gRPC
+    // This is a placeholder - actual implementation would need ActivateModel support
+    this.logger.warn('activateModel not fully implemented - requires ActivateModel gRPC method');
+    throw new Error('Model activation not supported via auth-bff');
   }
 
   /**
@@ -252,7 +179,7 @@ export class AuthorizationService {
   }
 
   /**
-   * List objects user can access
+   * List objects a user can access
    */
   async listObjects(user: string, relation: string, objectType: string) {
     try {
@@ -275,7 +202,7 @@ export class AuthorizationService {
   }
 
   /**
-   * List users who can access object
+   * List users with access to an object
    */
   async listUsers(object: string, relation: string) {
     try {

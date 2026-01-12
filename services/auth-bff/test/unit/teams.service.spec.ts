@@ -2,24 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest';
 import { TeamsService } from '../../src/admin/teams/teams.service';
-import { PrismaAuthzService } from '../../src/common/services/prisma-authz.service';
 import { AuthorizationGrpcClient } from '../../src/grpc-clients/authorization.client';
 
 describe('TeamsService', () => {
   let service: TeamsService;
-  let prismaService: {
-    team: {
-      findMany: MockInstance;
-      findUnique: MockInstance;
-      count: MockInstance;
-      create: MockInstance;
-      update: MockInstance;
-      delete: MockInstance;
-    };
-  };
   let authzClient: {
+    getTeam: MockInstance;
+    listTeams: MockInstance;
+    createTeam: MockInstance;
+    updateTeam: MockInstance;
+    deleteTeam: MockInstance;
     grant: MockInstance;
-    revoke: MockInstance;
     write: MockInstance;
     listUsers: MockInstance;
   };
@@ -31,8 +24,8 @@ describe('TeamsService', () => {
     serviceId: 'web-app',
     description: 'Engineering team',
     createdBy: 'admin-123',
-    createdAt: new Date('2026-01-12'),
-    updatedAt: new Date('2026-01-12'),
+    createdAt: '2026-01-12T10:00:00Z',
+    updatedAt: '2026-01-12T10:00:00Z',
   };
 
   beforeEach(async () => {
@@ -40,23 +33,14 @@ describe('TeamsService', () => {
       providers: [
         TeamsService,
         {
-          provide: PrismaAuthzService,
-          useValue: {
-            team: {
-              findMany: vi.fn(),
-              findUnique: vi.fn(),
-              count: vi.fn(),
-              create: vi.fn(),
-              update: vi.fn(),
-              delete: vi.fn(),
-            },
-          },
-        },
-        {
           provide: AuthorizationGrpcClient,
           useValue: {
+            getTeam: vi.fn(),
+            listTeams: vi.fn(),
+            createTeam: vi.fn(),
+            updateTeam: vi.fn(),
+            deleteTeam: vi.fn(),
             grant: vi.fn(),
-            revoke: vi.fn(),
             write: vi.fn(),
             listUsers: vi.fn(),
           },
@@ -65,7 +49,6 @@ describe('TeamsService', () => {
     }).compile();
 
     service = module.get<TeamsService>(TeamsService);
-    prismaService = module.get(PrismaAuthzService);
     authzClient = module.get(AuthorizationGrpcClient);
   });
 
@@ -74,11 +57,15 @@ describe('TeamsService', () => {
   });
 
   describe('listTeams', () => {
-    it('should return paginated teams', async () => {
-      const mockTeams = [mockTeam];
+    it('should return paginated teams from gRPC', async () => {
+      const mockResponse = {
+        teams: [mockTeam],
+        total: 1,
+        page: 1,
+        totalPages: 1,
+      };
 
-      prismaService.team.findMany.mockResolvedValue(mockTeams);
-      prismaService.team.count.mockResolvedValue(1);
+      authzClient.listTeams.mockResolvedValue(mockResponse);
 
       const result = await service.listTeams({ page: 1, limit: 20 });
 
@@ -88,23 +75,23 @@ describe('TeamsService', () => {
       expect(result.data[0].id).toBe('team-123');
     });
 
-    it('should apply search filter', async () => {
-      prismaService.team.findMany.mockResolvedValue([]);
-      prismaService.team.count.mockResolvedValue(0);
+    it('should pass search filter to gRPC', async () => {
+      const mockResponse = {
+        teams: [],
+        total: 0,
+        page: 1,
+        totalPages: 0,
+      };
+
+      authzClient.listTeams.mockResolvedValue(mockResponse);
 
       await service.listTeams({ page: 1, limit: 20, search: 'engineering' });
 
-      expect(prismaService.team.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            OR: expect.any(Array),
-          }),
-        }),
-      );
+      expect(authzClient.listTeams).toHaveBeenCalledWith(1, 20, 'engineering');
     });
 
-    it('should handle errors', async () => {
-      prismaService.team.findMany.mockRejectedValue(new Error('DB error'));
+    it('should handle gRPC errors', async () => {
+      authzClient.listTeams.mockRejectedValue(new Error('gRPC error'));
 
       const result = await service.listTeams({ page: 1, limit: 20 });
 
@@ -114,8 +101,8 @@ describe('TeamsService', () => {
   });
 
   describe('getTeam', () => {
-    it('should return team with members', async () => {
-      prismaService.team.findUnique.mockResolvedValue(mockTeam);
+    it('should return team with members from gRPC', async () => {
+      authzClient.getTeam.mockResolvedValue(mockTeam);
       authzClient.listUsers
         .mockResolvedValueOnce(['user:1', 'user:2'])
         .mockResolvedValueOnce(['user:3'])
@@ -131,21 +118,21 @@ describe('TeamsService', () => {
     });
 
     it('should throw NotFoundException when team not found', async () => {
-      prismaService.team.findUnique.mockResolvedValue(null);
+      authzClient.getTeam.mockResolvedValue(null);
 
       await expect(service.getTeam('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
-    it('should handle errors', async () => {
-      prismaService.team.findUnique.mockRejectedValue(new Error('DB error'));
+    it('should handle gRPC errors', async () => {
+      authzClient.getTeam.mockRejectedValue(new Error('gRPC error'));
 
-      await expect(service.getTeam('team-123')).rejects.toThrow('DB error');
+      await expect(service.getTeam('team-123')).rejects.toThrow('gRPC error');
     });
   });
 
   describe('createTeam', () => {
-    it('should create team without members', async () => {
-      prismaService.team.create.mockResolvedValue(mockTeam);
+    it('should create team without members via gRPC', async () => {
+      authzClient.createTeam.mockResolvedValue(mockTeam);
 
       const result = await service.createTeam(
         {
@@ -158,10 +145,15 @@ describe('TeamsService', () => {
       expect(result.id).toBe('team-123');
       expect(result.name).toBe('Engineering');
       expect(result.members).toEqual([]);
+      expect(authzClient.createTeam).toHaveBeenCalledWith(
+        'Engineering',
+        'admin-123',
+        'Engineering team',
+      );
     });
 
-    it('should create team with members', async () => {
-      prismaService.team.create.mockResolvedValue(mockTeam);
+    it('should create team with members via gRPC', async () => {
+      authzClient.createTeam.mockResolvedValue(mockTeam);
       authzClient.grant.mockResolvedValue('token-123');
 
       const result = await service.createTeam(
@@ -181,8 +173,8 @@ describe('TeamsService', () => {
       expect(authzClient.grant).toHaveBeenCalledWith('user:user-1', 'owner', 'team:team-123');
     });
 
-    it('should handle errors', async () => {
-      prismaService.team.create.mockRejectedValue(new Error('Create failed'));
+    it('should handle gRPC errors', async () => {
+      authzClient.createTeam.mockRejectedValue(new Error('Create failed'));
 
       await expect(
         service.createTeam({ name: 'Engineering', description: 'Test' }),
@@ -191,7 +183,7 @@ describe('TeamsService', () => {
   });
 
   describe('updateTeam', () => {
-    it('should update team', async () => {
+    it('should update team via gRPC', async () => {
       const updatedTeam = {
         ...mockTeam,
         name: 'Updated Team',
@@ -199,7 +191,7 @@ describe('TeamsService', () => {
         description: 'Updated description',
       };
 
-      prismaService.team.update.mockResolvedValue(updatedTeam);
+      authzClient.updateTeam.mockResolvedValue(updatedTeam);
 
       const result = await service.updateTeam('team-123', {
         name: 'Updated Team',
@@ -208,10 +200,15 @@ describe('TeamsService', () => {
 
       expect(result.name).toBe('Updated Team');
       expect(result.description).toBe('Updated description');
+      expect(authzClient.updateTeam).toHaveBeenCalledWith(
+        'team-123',
+        'Updated Team',
+        'Updated description',
+      );
     });
 
-    it('should handle errors', async () => {
-      prismaService.team.update.mockRejectedValue(new Error('Update failed'));
+    it('should handle gRPC errors', async () => {
+      authzClient.updateTeam.mockRejectedValue(new Error('Update failed'));
 
       await expect(service.updateTeam('team-123', { name: 'Updated' })).rejects.toThrow(
         'Update failed',
@@ -227,22 +224,22 @@ describe('TeamsService', () => {
         .mockResolvedValueOnce(['user:3']);
 
       authzClient.write.mockResolvedValue('token-123');
-      prismaService.team.delete.mockResolvedValue(mockTeam);
+      authzClient.deleteTeam.mockResolvedValue(true);
 
       const result = await service.deleteTeam('team-123');
 
       expect(result.success).toBe(true);
       expect(authzClient.write).toHaveBeenCalledTimes(3);
-      expect(prismaService.team.delete).toHaveBeenCalledWith({ where: { id: 'team-123' } });
+      expect(authzClient.deleteTeam).toHaveBeenCalledWith('team-123');
     });
 
-    it('should handle errors', async () => {
+    it('should handle gRPC errors', async () => {
       authzClient.listUsers
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([]);
 
-      prismaService.team.delete.mockRejectedValue(new Error('Delete failed'));
+      authzClient.deleteTeam.mockRejectedValue(new Error('Delete failed'));
 
       await expect(service.deleteTeam('team-123')).rejects.toThrow('Delete failed');
     });
@@ -251,7 +248,7 @@ describe('TeamsService', () => {
   describe('addMember', () => {
     it('should add member to team', async () => {
       authzClient.grant.mockResolvedValue('token-123');
-      prismaService.team.findUnique.mockResolvedValue(mockTeam);
+      authzClient.getTeam.mockResolvedValue(mockTeam);
       authzClient.listUsers
         .mockResolvedValueOnce(['user:2'])
         .mockResolvedValueOnce([])
@@ -263,7 +260,7 @@ describe('TeamsService', () => {
       expect(result.id).toBe('team-123');
     });
 
-    it('should handle errors', async () => {
+    it('should handle gRPC errors', async () => {
       authzClient.grant.mockRejectedValue(new Error('Grant failed'));
 
       await expect(
@@ -275,7 +272,7 @@ describe('TeamsService', () => {
   describe('removeMember', () => {
     it('should remove member from team', async () => {
       authzClient.write.mockResolvedValue('token-123');
-      prismaService.team.findUnique.mockResolvedValue(mockTeam);
+      authzClient.getTeam.mockResolvedValue(mockTeam);
       authzClient.listUsers
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
@@ -294,7 +291,7 @@ describe('TeamsService', () => {
       expect(result.id).toBe('team-123');
     });
 
-    it('should handle errors', async () => {
+    it('should handle gRPC errors', async () => {
       authzClient.write.mockRejectedValue(new Error('Write failed'));
 
       await expect(service.removeMember('team-123', 'user-1')).rejects.toThrow('Write failed');
@@ -304,7 +301,7 @@ describe('TeamsService', () => {
   describe('updateMemberRole', () => {
     it('should update member role', async () => {
       authzClient.write.mockResolvedValue('token-123');
-      prismaService.team.findUnique.mockResolvedValue(mockTeam);
+      authzClient.getTeam.mockResolvedValue(mockTeam);
       authzClient.listUsers
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce(['user:1'])
@@ -323,7 +320,7 @@ describe('TeamsService', () => {
       expect(result.id).toBe('team-123');
     });
 
-    it('should handle errors', async () => {
+    it('should handle gRPC errors', async () => {
       authzClient.write.mockRejectedValue(new Error('Write failed'));
 
       await expect(service.updateMemberRole('team-123', 'user-1', 'admin')).rejects.toThrow(

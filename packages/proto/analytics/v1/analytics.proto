@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+package analytics.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/analytics/v1";
+
+// AnalyticsService provides user activity analytics and insights
+service AnalyticsService {
+  // User Analytics
+  rpc GetUserSummary(GetUserSummaryRequest) returns (GetUserSummaryResponse);
+  rpc GetUserSessions(GetUserSessionsRequest) returns (GetUserSessionsResponse);
+  rpc GetUserLocations(GetUserLocationsRequest) returns (GetUserLocationsResponse);
+
+  // Platform Analytics
+  rpc GetTopUsers(GetTopUsersRequest) returns (GetTopUsersResponse);
+  rpc GetUsersOverview(GetUsersOverviewRequest) returns (GetUsersOverviewResponse);
+}
+
+// ============================================================
+// User Summary
+// ============================================================
+
+message GetUserSummaryRequest {
+  string user_id = 1;
+}
+
+message GetUserSummaryResponse {
+  string user_id = 1;
+  int32 total_sessions = 2;
+  int64 total_duration = 3;
+  int32 total_page_views = 4;
+  int32 total_clicks = 5;
+  optional string last_session_at = 6;
+  optional string first_session_at = 7;
+  repeated string countries = 8;
+  repeated string devices = 9;
+}
+
+// ============================================================
+// User Sessions
+// ============================================================
+
+message GetUserSessionsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  optional string start_date = 4;
+  optional string end_date = 5;
+}
+
+message UserSession {
+  string session_id = 1;
+  string actor_email = 2;
+  string service_slug = 3;
+  string started_at = 4;
+  optional string ended_at = 5;
+  int32 duration_seconds = 6;
+  int32 page_views = 7;
+  int32 clicks = 8;
+  string entry_page = 9;
+  string browser = 10;
+  string os = 11;
+  string device_type = 12;
+  string country_code = 13;
+  string status = 14;
+}
+
+message GetUserSessionsResponse {
+  repeated UserSession sessions = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 total_pages = 4;
+}
+
+// ============================================================
+// User Locations
+// ============================================================
+
+message GetUserLocationsRequest {
+  string user_id = 1;
+}
+
+message UserLocation {
+  string country_code = 1;
+  int32 session_count = 2;
+  int64 total_duration = 3;
+}
+
+message GetUserLocationsResponse {
+  repeated UserLocation locations = 1;
+}
+
+// ============================================================
+// Top Users
+// ============================================================
+
+message GetTopUsersRequest {
+  int32 limit = 1;
+}
+
+message TopUser {
+  string user_id = 1;
+  string email = 2;
+  int32 session_count = 3;
+  string last_active = 4;
+}
+
+message GetTopUsersResponse {
+  repeated TopUser users = 1;
+  int32 total = 2;
+}
+
+// ============================================================
+// Users Overview
+// ============================================================
+
+message GetUsersOverviewRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string search = 3;
+}
+
+message UserOverview {
+  string user_id = 1;
+  string email = 2;
+  int32 session_count = 3;
+  string last_active = 4;
+}
+
+message GetUsersOverviewResponse {
+  repeated UserOverview users = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 total_pages = 4;
+}

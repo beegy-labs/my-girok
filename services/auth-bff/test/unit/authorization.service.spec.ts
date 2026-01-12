@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest';
 import { AuthorizationService } from '../../src/admin/authorization/authorization.service';
 import { AuthorizationGrpcClient } from '../../src/grpc-clients/authorization.client';
-import { PrismaAuthzService } from '../../src/common/services/prisma-authz.service';
 
 describe('AuthorizationService', () => {
   let service: AuthorizationService;
@@ -13,17 +12,7 @@ describe('AuthorizationService', () => {
     revoke: MockInstance;
     listObjects: MockInstance;
     listUsers: MockInstance;
-  };
-  let prismaService: {
-    authorizationModel: {
-      findFirst: MockInstance;
-      findMany: MockInstance;
-      findUnique: MockInstance;
-      create: MockInstance;
-      update: MockInstance;
-      updateMany: MockInstance;
-    };
-    $transaction: MockInstance;
+    listModels: MockInstance;
   };
 
   beforeEach(async () => {
@@ -39,20 +28,7 @@ describe('AuthorizationService', () => {
             revoke: vi.fn(),
             listObjects: vi.fn(),
             listUsers: vi.fn(),
-          },
-        },
-        {
-          provide: PrismaAuthzService,
-          useValue: {
-            authorizationModel: {
-              findFirst: vi.fn(),
-              findMany: vi.fn(),
-              findUnique: vi.fn(),
-              create: vi.fn(),
-              update: vi.fn(),
-              updateMany: vi.fn(),
-            },
-            $transaction: vi.fn(),
+            listModels: vi.fn(),
           },
         },
       ],
@@ -60,7 +36,6 @@ describe('AuthorizationService', () => {
 
     service = module.get<AuthorizationService>(AuthorizationService);
     authzClient = module.get(AuthorizationGrpcClient);
-    prismaService = module.get(PrismaAuthzService);
   });
 
   it('should be defined', () => {
@@ -126,29 +101,31 @@ describe('AuthorizationService', () => {
   });
 
   describe('getModel', () => {
-    it('should return active authorization model', async () => {
-      const mockModel = {
-        id: 'model-123',
-        versionId: '1234567890',
-        schemaVersion: '1.0',
-        dslSource: 'model session_recording {}',
-        compiledModel: {},
-        typeDefinitions: {},
-        isActive: true,
-        createdAt: new Date('2026-01-12'),
+    it('should return active authorization model from gRPC', async () => {
+      const mockResponse = {
+        models: [
+          {
+            modelId: 'model-123',
+            versionId: '1234567890',
+            isActive: true,
+            createdAt: '2026-01-12T10:00:00Z',
+          },
+        ],
+        nextPageToken: undefined,
       };
 
-      prismaService.authorizationModel.findFirst.mockResolvedValue(mockModel);
+      authzClient.listModels.mockResolvedValue(mockResponse);
 
       const result = await service.getModel();
 
       expect(result.id).toBe('model-123');
-      expect(result.content).toBe('model session_recording {}');
+      expect(result.version).toBe(1234567890);
       expect(result.isActive).toBe(true);
+      expect(result.createdAt).toBe('2026-01-12T10:00:00Z');
     });
 
     it('should return empty model when none found', async () => {
-      prismaService.authorizationModel.findFirst.mockResolvedValue(null);
+      authzClient.listModels.mockResolvedValue({ models: [], nextPageToken: undefined });
 
       const result = await service.getModel();
 
@@ -158,7 +135,7 @@ describe('AuthorizationService', () => {
     });
 
     it('should handle errors', async () => {
-      prismaService.authorizationModel.findFirst.mockRejectedValue(new Error('DB error'));
+      authzClient.listModels.mockRejectedValue(new Error('gRPC error'));
 
       const result = await service.getModel();
 
@@ -167,31 +144,26 @@ describe('AuthorizationService', () => {
   });
 
   describe('getModelVersions', () => {
-    it('should return all model versions', async () => {
-      const mockModels = [
-        {
-          id: 'model-1',
-          versionId: '1234567890',
-          schemaVersion: '1.0',
-          dslSource: 'model v2 {}',
-          compiledModel: {},
-          typeDefinitions: {},
-          isActive: true,
-          createdAt: new Date('2026-01-12'),
-        },
-        {
-          id: 'model-2',
-          versionId: '1234567880',
-          schemaVersion: '1.0',
-          dslSource: 'model v1 {}',
-          compiledModel: {},
-          typeDefinitions: {},
-          isActive: false,
-          createdAt: new Date('2026-01-11'),
-        },
-      ];
+    it('should return all model versions from gRPC', async () => {
+      const mockResponse = {
+        models: [
+          {
+            modelId: 'model-1',
+            versionId: '1234567890',
+            isActive: true,
+            createdAt: '2026-01-12T10:00:00Z',
+          },
+          {
+            modelId: 'model-2',
+            versionId: '1234567880',
+            isActive: false,
+            createdAt: '2026-01-11T10:00:00Z',
+          },
+        ],
+        nextPageToken: undefined,
+      };
 
-      prismaService.authorizationModel.findMany.mockResolvedValue(mockModels);
+      authzClient.listModels.mockResolvedValue(mockResponse);
 
       const result = await service.getModelVersions();
 
@@ -203,7 +175,7 @@ describe('AuthorizationService', () => {
     });
 
     it('should handle errors', async () => {
-      prismaService.authorizationModel.findMany.mockRejectedValue(new Error('Error'));
+      authzClient.listModels.mockRejectedValue(new Error('gRPC error'));
 
       const result = await service.getModelVersions();
 
@@ -212,31 +184,10 @@ describe('AuthorizationService', () => {
   });
 
   describe('createModel', () => {
-    it('should create a new model', async () => {
-      const mockModel = {
-        id: 'model-new',
-        versionId: '1234567890',
-        schemaVersion: '1.0',
-        dslSource: 'model new {}',
-        compiledModel: {},
-        typeDefinitions: {},
-        isActive: false,
-        createdAt: new Date('2026-01-12'),
-      };
-
-      prismaService.authorizationModel.create.mockResolvedValue(mockModel);
-
-      const result = await service.createModel('model new {}');
-
-      expect(result.id).toBe('model-new');
-      expect(result.content).toBe('model new {}');
-      expect(result.isActive).toBe(false);
-    });
-
-    it('should throw error on failure', async () => {
-      prismaService.authorizationModel.create.mockRejectedValue(new Error('Create failed'));
-
-      await expect(service.createModel('model new {}')).rejects.toThrow('Create failed');
+    it('should throw not supported error', async () => {
+      await expect(service.createModel('model new {}')).rejects.toThrow(
+        'Model creation not supported via auth-bff',
+      );
     });
   });
 
@@ -257,43 +208,9 @@ describe('AuthorizationService', () => {
   });
 
   describe('activateModel', () => {
-    it('should activate a model', async () => {
-      const mockModel = {
-        id: 'model-123',
-        versionId: '1234567890',
-        schemaVersion: '1.0',
-        dslSource: 'model active {}',
-        compiledModel: {},
-        typeDefinitions: {},
-        isActive: true,
-        createdAt: new Date('2026-01-12'),
-      };
-
-      prismaService.$transaction.mockImplementation(async (callback) => {
-        return callback(prismaService);
-      });
-
-      prismaService.authorizationModel.updateMany.mockResolvedValue({ count: 1 });
-      prismaService.authorizationModel.update.mockResolvedValue(mockModel);
-      prismaService.authorizationModel.findUnique.mockResolvedValue(mockModel);
-
-      const result = await service.activateModel('model-123');
-
-      expect(result.id).toBe('model-123');
-      expect(result.isActive).toBe(true);
-    });
-
-    it('should throw error when model not found after activation', async () => {
-      prismaService.$transaction.mockImplementation(async (callback) => {
-        return callback(prismaService);
-      });
-
-      prismaService.authorizationModel.updateMany.mockResolvedValue({ count: 1 });
-      prismaService.authorizationModel.update.mockResolvedValue({} as any);
-      prismaService.authorizationModel.findUnique.mockResolvedValue(null);
-
+    it('should throw not supported error', async () => {
       await expect(service.activateModel('model-123')).rejects.toThrow(
-        'Model not found after activation',
+        'Model activation not supported via auth-bff',
       );
     });
   });

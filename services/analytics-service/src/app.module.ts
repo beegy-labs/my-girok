@@ -10,6 +10,7 @@ import { IngestionModule } from './ingestion/ingestion.module';
 import { BehaviorModule } from './behavior/behavior.module';
 import { FunnelModule } from './funnel/funnel.module';
 import { SessionModule } from './session/session.module';
+import { UserAnalyticsModule } from './user-analytics/user-analytics.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -54,6 +55,7 @@ import configuration from './config/configuration';
     BehaviorModule,
     FunnelModule,
     SessionModule,
+    UserAnalyticsModule,
   ],
 })
 export class AppModule {}

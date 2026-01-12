@@ -22,7 +22,15 @@ service AuthorizationService {
   // Model Management
   rpc WriteModel(WriteModelRequest) returns (WriteModelResponse);
   rpc ReadModel(ReadModelRequest) returns (ReadModelResponse);
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
   rpc ActivateModel(ActivateModelRequest) returns (ActivateModelResponse);
+
+  // Team Management
+  rpc GetTeam(GetTeamRequest) returns (GetTeamResponse);
+  rpc ListTeams(ListTeamsRequest) returns (ListTeamsResponse);
+  rpc CreateTeam(CreateTeamRequest) returns (CreateTeamResponse);
+  rpc UpdateTeam(UpdateTeamRequest) returns (UpdateTeamResponse);
+  rpc DeleteTeam(DeleteTeamRequest) returns (DeleteTeamResponse);
 }
 
 // ============================================================
@@ -332,4 +340,87 @@ message ActivateModelRequest {
 message ActivateModelResponse {
   bool success = 1;
   string message = 2;
+}
+
+message ListModelsRequest {
+  // Pagination
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListModelsResponse {
+  repeated ModelSummary models = 1;
+  string next_page_token = 2;
+}
+
+message ModelSummary {
+  string model_id = 1;
+  string version_id = 2;
+  bool is_active = 3;
+  string created_at = 4;
+}
+
+// ============================================================
+// Team API
+// ============================================================
+
+message GetTeamRequest {
+  string team_id = 1;
+}
+
+message GetTeamResponse {
+  Team team = 1;
+}
+
+message ListTeamsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string search = 3;
+}
+
+message ListTeamsResponse {
+  repeated Team teams = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 total_pages = 4;
+}
+
+message CreateTeamRequest {
+  string name = 1;
+  optional string description = 2;
+  optional string service_id = 3;
+  string created_by = 4;
+}
+
+message CreateTeamResponse {
+  Team team = 1;
+}
+
+message UpdateTeamRequest {
+  string team_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+}
+
+message UpdateTeamResponse {
+  Team team = 1;
+}
+
+message DeleteTeamRequest {
+  string team_id = 1;
+}
+
+message DeleteTeamResponse {
+  bool success = 1;
+}
+
+message Team {
+  string id = 1;
+  string name = 2;
+  string display_name = 3;
+  optional string service_id = 4;
+  optional string description = 5;
+  string created_by = 6;
+  string created_at = 7;
+  string updated_at = 8;
 }
