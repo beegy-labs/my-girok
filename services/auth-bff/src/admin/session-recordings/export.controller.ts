@@ -16,6 +16,7 @@ import {
   BadRequestException,
   Inject,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
@@ -43,15 +44,24 @@ interface ShareLink {
 @Controller('admin/session-recordings')
 @UseGuards(JwtAuthGuard)
 export class SessionRecordingsExportController {
-  // Share link cache key prefix
-  private readonly SHARE_LINK_PREFIX = 'session_share_link';
-  // Share link TTL: 30 days (maximum expiration)
-  private readonly SHARE_LINK_MAX_TTL = 30 * 24 * 60 * 60 * 1000;
+  private readonly shareLinkPrefix: string;
+  private readonly shareLinkMaxTtl: number;
 
   constructor(
     private readonly sessionRecordingsService: SessionRecordingsService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // Load configuration from ConfigService
+    this.shareLinkPrefix = this.configService.get<string>(
+      'sessionRecordings.shareLink.prefix',
+      'session_share_link',
+    );
+    this.shareLinkMaxTtl = this.configService.get<number>(
+      'sessionRecordings.shareLink.maxTtl',
+      2592000000,
+    ); // 30 days
+  }
 
   /**
    * Export session recording in specified format
@@ -123,8 +133,8 @@ export class SessionRecordingsExportController {
     };
 
     // Calculate TTL for Redis (in milliseconds)
-    const ttl = expiresAt ? expiresAt.getTime() - Date.now() : this.SHARE_LINK_MAX_TTL;
-    const cacheKey = `${this.SHARE_LINK_PREFIX}:${token}`;
+    const ttl = expiresAt ? expiresAt.getTime() - Date.now() : this.shareLinkMaxTtl;
+    const cacheKey = `${this.shareLinkPrefix}:${token}`;
 
     await this.cacheManager.set(cacheKey, shareLink, ttl);
 
@@ -144,7 +154,7 @@ export class SessionRecordingsExportController {
    */
   @Get('shared/:token')
   async getSharedSession(@Param('token') token: string) {
-    const cacheKey = `${this.SHARE_LINK_PREFIX}:${token}`;
+    const cacheKey = `${this.shareLinkPrefix}:${token}`;
     const shareLink = await this.cacheManager.get<ShareLink>(cacheKey);
 
     if (!shareLink) {
