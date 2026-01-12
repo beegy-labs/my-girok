@@ -8,6 +8,7 @@
 | Cookie auth         | auth-service (50052)     |
 | Token encryption    | audit-service (50054)    |
 | OAuth orchestration |                          |
+| GeoIP location      | MaxMind GeoLite2         |
 
 ## Endpoints (Summary)
 
@@ -18,3 +19,4 @@
 ```
 
 **SSOT**: `docs/llm/services/auth-bff.md`
+**GeoIP Setup**: `docs/llm/GEOIP_SETUP.md`

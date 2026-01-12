@@ -18,6 +18,16 @@ export interface GeoIPResult {
   longitude?: number;
 }
 
+export interface GeoIPDatabaseInfo {
+  isInitialized: boolean;
+  databaseType?: string;
+  buildDate?: Date;
+  description?: string;
+  ipVersion?: number;
+  nodeCount?: number;
+  recordSize?: number;
+}
+
 @Injectable()
 export class GeoIPService implements OnModuleInit {
   private readonly logger = new Logger(GeoIPService.name);
@@ -120,7 +130,21 @@ export class GeoIPService implements OnModuleInit {
   /**
    * Get database metadata
    */
-  getDatabaseInfo(): boolean {
-    return this.isInitialized;
+  getDatabaseInfo(): GeoIPDatabaseInfo {
+    if (!this.isInitialized || !this.reader) {
+      return { isInitialized: false };
+    }
+
+    const metadata = this.reader.metadata;
+
+    return {
+      isInitialized: true,
+      databaseType: metadata.databaseType,
+      buildDate: new Date(metadata.buildEpoch * 1000),
+      description: metadata.description?.en,
+      ipVersion: metadata.ipVersion,
+      nodeCount: metadata.nodeCount,
+      recordSize: metadata.recordSize,
+    };
   }
 }

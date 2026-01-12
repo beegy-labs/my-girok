@@ -17,7 +17,14 @@ describe('GeoIPService', () => {
 
   const mockReader = {
     city: vi.fn(),
-    metadata: {},
+    metadata: {
+      databaseType: 'GeoLite2-City',
+      buildEpoch: 1704067200, // 2024-01-01
+      description: { en: 'GeoLite2 City database' },
+      ipVersion: 6,
+      nodeCount: 1000000,
+      recordSize: 28,
+    },
   };
 
   beforeEach(async () => {
@@ -177,20 +184,28 @@ describe('GeoIPService', () => {
   });
 
   describe('getDatabaseInfo', () => {
-    it('should return true when service is initialized', () => {
+    it('should return detailed metadata when service is initialized', () => {
+      (service as any).reader = mockReader;
       (service as any).isInitialized = true;
 
       const result = service.getDatabaseInfo();
 
-      expect(result).toBe(true);
+      expect(result.isInitialized).toBe(true);
+      expect(result.databaseType).toBe('GeoLite2-City');
+      expect(result.buildDate).toEqual(new Date(1704067200 * 1000));
+      expect(result.description).toBe('GeoLite2 City database');
+      expect(result.ipVersion).toBe(6);
+      expect(result.nodeCount).toBe(1000000);
+      expect(result.recordSize).toBe(28);
     });
 
-    it('should return false when service is not initialized', () => {
+    it('should return only isInitialized false when service is not initialized', () => {
       (service as any).isInitialized = false;
+      (service as any).reader = undefined;
 
       const result = service.getDatabaseInfo();
 
-      expect(result).toBe(false);
+      expect(result).toEqual({ isInitialized: false });
     });
   });
 });
