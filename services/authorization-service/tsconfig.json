@@ -1,19 +1,29 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "baseUrl": "./",
     "declaration": true,
-    "declarationMap": true,
+    "removeComments": true,
     "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "incremental": true,
+    "skipLibCheck": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": ["src/*"],
+      "@my-girok/types": ["../../packages/types/src"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test"]
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

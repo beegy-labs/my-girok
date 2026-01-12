@@ -6,7 +6,6 @@
  */
 
 import { TupleKey } from '../types';
-import { Rewrite } from '../types';
 
 /**
  * Context for permission check evaluation

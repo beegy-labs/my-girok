@@ -96,7 +96,6 @@ export class Lexer {
   private column: number = 1;
   private indentStack: number[] = [0];
   private tokens: Token[] = [];
-  private pendingDedents: number = 0;
 
   constructor(source: string) {
     this.source = source;
@@ -111,7 +110,6 @@ export class Lexer {
     this.line = 1;
     this.column = 1;
     this.indentStack = [0];
-    this.pendingDedents = 0;
 
     while (!this.isAtEnd()) {
       this.scanToken();

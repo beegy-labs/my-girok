@@ -2,14 +2,15 @@
 
 ## Services
 
-| Service           | REST | gRPC  | DB          | Tables |
-| ----------------- | ---- | ----- | ----------- | ------ |
-| identity-service  | 3000 | 50051 | identity_db | ~8     |
-| auth-service      | 3001 | 50052 | auth_db     | ~12    |
-| legal-service     | 3005 | 50053 | legal_db    | ~10    |
-| personal-service  | 3002 | -     | personal_db | -      |
-| audit-service     | 3010 | -     | ClickHouse  | -      |
-| analytics-service | 3011 | -     | ClickHouse  | -      |
+| Service               | REST | gRPC  | DB               | Tables |
+| --------------------- | ---- | ----- | ---------------- | ------ |
+| identity-service      | 3000 | 50051 | identity_db      | ~8     |
+| auth-service          | 3001 | 50052 | auth_db          | ~12    |
+| legal-service         | 3005 | 50053 | legal_db         | ~10    |
+| personal-service      | 3002 | -     | personal_db      | -      |
+| audit-service         | 3010 | -     | ClickHouse       | -      |
+| analytics-service     | 3011 | -     | ClickHouse       | -      |
+| authorization-service | 3012 | 50055 | authorization_db | ~5     |
 
 ## Communication
 
@@ -85,21 +86,23 @@ Multi-cluster ready domain structure:
 
 ### Internal gRPC Domains (Pod-to-Pod)
 
-| Domain                     | Service                       | Port  |
-| -------------------------- | ----------------------------- | ----- |
-| identity.svc-dev.girok.dev | platform-dev-identity-service | 50051 |
-| auth.svc-dev.girok.dev     | auth-service                  | 50052 |
-| legal.svc-dev.girok.dev    | platform-dev-legal-service    | 50053 |
-| audit.svc-dev.girok.dev    | platform-dev-audit-service    | 50054 |
+| Domain                     | Service                            | Port  |
+| -------------------------- | ---------------------------------- | ----- |
+| identity.svc-dev.girok.dev | platform-dev-identity-service      | 50051 |
+| auth.svc-dev.girok.dev     | auth-service                       | 50052 |
+| legal.svc-dev.girok.dev    | platform-dev-legal-service         | 50053 |
+| audit.svc-dev.girok.dev    | platform-dev-audit-service         | 50054 |
+| authz.svc-dev.girok.dev    | my-girok-dev-authorization-service | 50055 |
 
 ### gRPC Gateway (Developer Access)
 
 ```
 grpc-dev.girok.dev:443
-├── /identity.* → identity-service:50051
-├── /auth.*     → auth-service:50052
-├── /legal.*    → legal-service:50053
-└── /audit.*    → audit-service:50054
+├── /identity.*      → identity-service:50051
+├── /auth.*          → auth-service:50052
+├── /legal.*         → legal-service:50053
+├── /audit.*         → audit-service:50054
+└── /authorization.* → authorization-service:50055
 ```
 
 ## Token Types
