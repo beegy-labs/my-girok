@@ -95,6 +95,28 @@ export default () => ({
       host: process.env.AUDIT_GRPC_HOST || 'localhost',
       port: parseInt(process.env.AUDIT_GRPC_PORT || '50054', 10),
     },
+    authorization: {
+      host: process.env.AUTHORIZATION_GRPC_HOST || 'localhost',
+      port: parseInt(process.env.AUTHORIZATION_GRPC_PORT || '50055', 10),
+    },
+  },
+
+  clickhouse: {
+    host: process.env.CLICKHOUSE_HOST || 'localhost',
+    port: parseInt(process.env.CLICKHOUSE_PORT || '8123', 10),
+    database: process.env.CLICKHOUSE_DATABASE || 'analytics_db',
+    username: process.env.CLICKHOUSE_USERNAME || 'default',
+    password: process.env.CLICKHOUSE_PASSWORD || '',
+  },
+
+  authorizationDb: {
+    url:
+      process.env.AUTHORIZATION_DATABASE_URL ||
+      'postgresql://postgres:postgres@localhost:5432/authorization_service',
+  },
+
+  geoip: {
+    databasePath: process.env.GEOIP_DATABASE_PATH || '/data/geoip/GeoLite2-Country.mmdb',
   },
 
   cors: {

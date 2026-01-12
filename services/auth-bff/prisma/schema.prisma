@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Stores compiled authorization models (DSL)
+model AuthorizationModel {
+  id              String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  versionId       String    @map("version_id") @db.VarChar(26)
+  schemaVersion   String    @map("schema_version") @db.VarChar(10)
+  dslSource       String    @map("dsl_source")
+  compiledModel   Json      @map("compiled_model")
+  typeDefinitions Json      @map("type_definitions")
+  isActive        Boolean?  @default(false) @map("is_active")
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([isActive], map: "idx_authorization_models_active")
+  @@index([versionId], map: "idx_authorization_models_version")
+  @@map("authorization_models")
+}
+
+/// Team/Policy set metadata for grouping permissions
+model Team {
+  id          String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name        String    @db.VarChar(128)
+  displayName String    @map("display_name") @db.VarChar(256)
+  serviceId   String?   @map("service_id") @db.VarChar(64)
+  description String?
+  createdBy   String    @map("created_by") @db.VarChar(256)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([serviceId], map: "idx_teams_service")
+  @@map("teams")
+}
