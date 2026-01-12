@@ -133,16 +133,16 @@ export class ChangelogRepository {
     operation: string;
     tupleId: string;
     txid: bigint;
-    timestamp: Date;
-    processed: boolean;
+    timestamp: Date | null;
+    processed: boolean | null;
   }): ChangelogEntry {
     return {
       id: entry.id,
       operation: entry.operation as 'WRITE' | 'DELETE',
       tupleId: entry.tupleId,
       txid: entry.txid,
-      timestamp: entry.timestamp,
-      processed: entry.processed,
+      timestamp: entry.timestamp ?? new Date(),
+      processed: entry.processed ?? false,
     };
   }
 }
