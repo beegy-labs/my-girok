@@ -13,20 +13,35 @@ const GRPC_PORT = parseInt(process.env.GRPC_PORT || '50054', 10);
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const protoBasePath = join(__dirname, '../../../packages/proto');
+  const grpcLoaderOptions = {
+    keepCase: false,
+    longs: Number,
+    enums: Number,
+    defaults: true,
+    oneofs: true,
+    includeDirs: [protoBasePath],
+  };
+
   // Configure gRPC microservice for audit events
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
     options: {
       package: 'audit.v1',
-      protoPath: join(__dirname, '../../../packages/proto/audit/v1/audit.proto'),
+      protoPath: join(protoBasePath, 'audit/v1/audit.proto'),
       url: `0.0.0.0:${GRPC_PORT}`,
-      loader: {
-        keepCase: false,
-        longs: Number,
-        enums: Number,
-        defaults: true,
-        oneofs: true,
-      },
+      loader: grpcLoaderOptions,
+    },
+  });
+
+  // Configure gRPC microservice for session recordings
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'session_recording.v1',
+      protoPath: join(protoBasePath, 'session-recording/v1/session-recording.proto'),
+      url: `0.0.0.0:${GRPC_PORT}`,
+      loader: grpcLoaderOptions,
     },
   });
 

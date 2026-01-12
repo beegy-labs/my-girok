@@ -127,6 +127,9 @@ storybook-static/
 *.local
 apps/web-admin/.vite-cache/
 
+# Task planning (local only)
+.tasks/
+
 # Documentation generation failed files
 .docs-generate-failed.json
 .docs-translate-failed.json

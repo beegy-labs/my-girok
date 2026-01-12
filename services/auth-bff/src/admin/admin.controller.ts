@@ -7,6 +7,7 @@ import {
   Req,
   Res,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -28,6 +29,8 @@ import {
   AdminSessionListDto,
   AdminMfaSetupResponseDto,
   AdminBackupCodesResponseDto,
+  LoginHistoryQueryDto,
+  LoginHistoryResponseDto,
 } from './dto/admin.dto';
 
 @ApiTags('admin')
@@ -201,5 +204,14 @@ export class AdminController {
     @Body() dto: AdminChangePasswordDto,
   ): Promise<{ success: boolean; message: string }> {
     return this.adminService.changePassword(req, session, dto.currentPassword, dto.newPassword);
+  }
+
+  // Login History
+  @Get('login-history')
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Get login history from audit service' })
+  @ApiResponse({ status: 200, type: LoginHistoryResponseDto })
+  async getLoginHistory(@Query() query: LoginHistoryQueryDto): Promise<LoginHistoryResponseDto> {
+    return this.adminService.getLoginHistory(query);
   }
 }

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@my-girok/design-tokens": "workspace:*",
+    "@my-girok/tracking-sdk": "workspace:*",
     "@my-girok/types": "workspace:*",
     "@my-girok/ui-components": "workspace:*",
     "@opentelemetry/api": "^1.9.0",
