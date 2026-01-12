@@ -6,6 +6,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthorizationModel, TypeDefinition } from '../types';
 import { compile, CompilationResult } from '../dsl';
@@ -54,7 +55,7 @@ export class ModelRepository {
     const model = result.model;
 
     // Store in database
-    const created = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
+    const created = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // If activating, deactivate all other models
       if (options.activate) {
         await tx.authorizationModel.updateMany({
@@ -145,7 +146,7 @@ export class ModelRepository {
    * Activate a specific model
    */
   async activate(id: string): Promise<AuthorizationModel | null> {
-    const model = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
+    const model = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Check if model exists
       const existing = await tx.authorizationModel.findUnique({
         where: { id },

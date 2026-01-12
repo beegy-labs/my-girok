@@ -6,6 +6,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ulid } from 'ulid';
 import { TupleKey, TupleUtils, RelationTuple } from '../types';
@@ -45,7 +46,7 @@ export class TupleRepository {
   async write(writes: TupleKey[], deletes: TupleKey[] = []): Promise<WriteResult> {
     const txid = await this.getCurrentTxid();
 
-    return await this.prisma.$transaction(async (tx: typeof this.prisma) => {
+    return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       let writtenCount = 0;
       let deletedCount = 0;
 
