@@ -9,12 +9,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   CheckRequest,
   CheckResult,
-  ResolutionNode,
-  TupleKey,
   TupleUtils,
   AuthorizationModel,
-  TypeDefinition,
-  RelationDefinition,
   Rewrite,
   DirectRewrite,
   ComputedRewrite,
@@ -245,8 +241,12 @@ export class CheckEngine {
         const usersetObject = TupleUtils.buildObject(tuple.userType, tuple.userId);
         const childCtx = ctx.child();
 
+        const activeModel = await this.modelRepository.getActive();
+        if (!activeModel) {
+          return false;
+        }
         const isMember = await this.evaluate(
-          await this.modelRepository.getActive()!,
+          activeModel,
           tuple.userRelation,
           usersetObject,
           childCtx,

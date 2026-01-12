@@ -5,9 +5,8 @@
  * Only one model can be active at a time.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ulid } from 'ulid';
 import { AuthorizationModel, TypeDefinition } from '../types';
 import { compile, CompilationResult } from '../dsl';
 
@@ -35,7 +34,6 @@ interface PrismaModel {
 
 @Injectable()
 export class ModelRepository {
-  private readonly logger = new Logger(ModelRepository.name);
   private cachedActiveModel: AuthorizationModel | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
@@ -56,7 +54,7 @@ export class ModelRepository {
     const model = result.model;
 
     // Store in database
-    const created = await this.prisma.$transaction(async (tx) => {
+    const created = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
       // If activating, deactivate all other models
       if (options.activate) {
         await tx.authorizationModel.updateMany({
@@ -71,8 +69,8 @@ export class ModelRepository {
           versionId: model.versionId,
           schemaVersion: model.schemaVersion,
           dslSource: model.dslSource,
-          compiledModel: model.types as unknown,
-          typeDefinitions: model.types as unknown,
+          compiledModel: JSON.parse(JSON.stringify(model.types)),
+          typeDefinitions: JSON.parse(JSON.stringify(model.types)),
           isActive: options.activate ?? false,
         },
       });
@@ -147,7 +145,7 @@ export class ModelRepository {
    * Activate a specific model
    */
   async activate(id: string): Promise<AuthorizationModel | null> {
-    const model = await this.prisma.$transaction(async (tx) => {
+    const model = await this.prisma.$transaction(async (tx: typeof this.prisma) => {
       // Check if model exists
       const existing = await tx.authorizationModel.findUnique({
         where: { id },

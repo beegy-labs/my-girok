@@ -5,7 +5,7 @@
  * Used for cache invalidation and event propagation.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -22,8 +22,6 @@ export interface ChangelogEntry {
 
 @Injectable()
 export class ChangelogRepository {
-  private readonly logger = new Logger(ChangelogRepository.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   /**
