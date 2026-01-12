@@ -2,21 +2,28 @@ name: CI - Web Main
 
 on:
   push:
-    branches: [develop, 'release/**', main]
+    branches: [develop, release, main]
     paths:
       - 'apps/web-main/**'
-      - 'packages/types/**'
-      - 'packages/ui-components/**'
-      - 'packages/design-tokens/**'
-      - '.github/workflows/ci-web-main.yml'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   pull_request:
-    branches: [develop, 'release/**', main]
+    branches: [develop, release, main]
     paths:
       - 'apps/web-main/**'
-      - 'packages/types/**'
-      - 'packages/ui-components/**'
-      - 'packages/design-tokens/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy environment'
+        required: false
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - release
+          - main
 
 env:
   REGISTRY: gitea.girok.dev
