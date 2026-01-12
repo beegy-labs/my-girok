@@ -1,6 +1,18 @@
 name: CI - Legal Service
 
 on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'services/legal-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'services/legal-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       deploy_env:

@@ -9,19 +9,30 @@ on:
   push:
     tags:
       - 'ui-v*'
-    branches:
-      - develop
+    branches: [develop, release, main]
     paths:
       - 'packages/ui-components/**'
       - 'packages/design-tokens/**'
       - 'apps/storybook/**'
-      - '.github/workflows/ci-storybook.yml'
+      - 'pnpm-lock.yaml'
   pull_request:
+    branches: [develop, release, main]
     paths:
       - 'packages/ui-components/**'
       - 'packages/design-tokens/**'
       - 'apps/storybook/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy environment'
+        required: false
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - release
+          - main
 
 # Cancel in-progress runs for the same branch
 concurrency:

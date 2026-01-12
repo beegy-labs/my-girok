@@ -1,6 +1,18 @@
 name: CI - Analytics Service
 
 on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'services/analytics-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'services/analytics-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       deploy_env:
@@ -38,7 +50,6 @@ jobs:
           key: ${{ runner.os }}-pnpm-analytics-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile --prefer-offline
       - run: pnpm --filter @my-girok/types build
-      - run: pnpm --filter @my-girok/analytics-service prisma:generate
       - run: pnpm --filter @my-girok/nest-common build
       - run: cd services/analytics-service && pnpm test && pnpm lint
 
