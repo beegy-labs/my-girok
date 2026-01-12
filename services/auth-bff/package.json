@@ -21,6 +21,7 @@
     "@grpc/grpc-js": "^1.12.5",
     "@grpc/proto-loader": "^0.7.13",
     "@keyv/redis": "^5.1.5",
+    "@maxmind/geoip2-node": "^6.3.4",
     "@my-girok/nest-common": "workspace:*",
     "@my-girok/types": "workspace:*",
     "@nestjs/cache-manager": "^3.1.0",

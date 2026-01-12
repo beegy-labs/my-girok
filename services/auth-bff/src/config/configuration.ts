@@ -155,4 +155,8 @@ export default () => ({
       perIpTtl: parseInt(process.env.RATE_LIMIT_REGISTER_IP_TTL || '60000', 10),
     },
   },
+
+  geoip: {
+    databasePath: process.env.GEOIP_DATABASE_PATH || '/var/lib/GeoIP/GeoLite2-City.mmdb',
+  },
 });
