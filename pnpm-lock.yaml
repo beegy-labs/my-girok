@@ -211,6 +211,9 @@ importers:
       axios:
         specifier: ^1.13.2
         version: 1.13.2
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
       i18next:
         specifier: ^25.7.2
         version: 25.7.2(typescript@5.9.3)
@@ -6436,6 +6439,10 @@ packages:
 
   diff@4.0.2:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
+    engines: {node: '>=0.3.1'}
+
+  diff@8.0.2:
+    resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
     engines: {node: '>=0.3.1'}
 
   diffie-hellman@5.0.3:
@@ -14957,6 +14964,8 @@ snapshots:
   dfa@1.2.0: {}
 
   diff@4.0.2: {}
+
+  diff@8.0.2: {}
 
   diffie-hellman@5.0.3:
     dependencies:

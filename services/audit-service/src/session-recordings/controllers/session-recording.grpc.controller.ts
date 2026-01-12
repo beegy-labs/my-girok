@@ -137,33 +137,6 @@ interface GetSessionEventsResponse {
   events: Buffer;
 }
 
-// Device type enum mapping
-const DeviceTypeMap: Record<string, number> = {
-  desktop: 1,
-  mobile: 2,
-  tablet: 3,
-};
-
-const DeviceTypeReverseMap: Record<number, string> = {
-  0: 'desktop',
-  1: 'desktop',
-  2: 'mobile',
-  3: 'tablet',
-};
-
-// Actor type enum mapping
-const ActorTypeMap: Record<string, number> = {
-  USER: 1,
-  OPERATOR: 2,
-  ADMIN: 3,
-};
-
-// Session status enum mapping
-const SessionStatusMap = {
-  active: 1,
-  ended: 2,
-};
-
 @Controller()
 export class SessionRecordingGrpcController {
   private readonly logger = new Logger(SessionRecordingGrpcController.name);
@@ -230,7 +203,9 @@ export class SessionRecordingGrpcController {
           serviceSlug: metadata.serviceSlug,
           browser: metadata.browser,
           os: metadata.os,
-          deviceType: DeviceTypeReverseMap[metadata.deviceType] as 'desktop' | 'mobile' | 'tablet',
+          deviceType: this.sessionRecordingService.convertDeviceTypeToString(
+            metadata.deviceType,
+          ) as 'desktop' | 'mobile' | 'tablet',
           screenResolution: metadata.screenResolution,
           timezone: metadata.timezone,
           language: metadata.language,
@@ -336,7 +311,9 @@ export class SessionRecordingGrpcController {
       const result = await this.sessionRecordingService.listSessions({
         serviceSlug: request.serviceSlug,
         actorId: request.actorId,
-        deviceType: request.deviceType ? DeviceTypeReverseMap[request.deviceType] : undefined,
+        deviceType: request.deviceType
+          ? this.sessionRecordingService.convertDeviceTypeToString(request.deviceType)
+          : undefined,
         startDate: request.startDate
           ? new Date(request.startDate.seconds * 1000).toISOString()
           : undefined,
@@ -350,7 +327,9 @@ export class SessionRecordingGrpcController {
       const sessions: SessionSummary[] = result.data.map((s) => ({
         sessionId: s.sessionId,
         actorId: s.actorId,
-        actorType: s.actorType ? ActorTypeMap[s.actorType] || 0 : 0,
+        actorType: s.actorType
+          ? this.sessionRecordingService.convertActorTypeToNumber(s.actorType)
+          : 0,
         actorEmail: s.actorEmail,
         serviceSlug: s.serviceSlug,
         startedAt: { seconds: Math.floor(new Date(s.startedAt).getTime() / 1000), nanos: 0 },
@@ -365,9 +344,9 @@ export class SessionRecordingGrpcController {
         exitPage: s.exitPage,
         browser: s.browser,
         os: s.os,
-        deviceType: DeviceTypeMap[s.deviceType] || 0,
+        deviceType: this.sessionRecordingService.convertDeviceTypeToNumber(s.deviceType),
         countryCode: s.countryCode,
-        status: s.status === 'active' ? SessionStatusMap.active : SessionStatusMap.ended,
+        status: this.sessionRecordingService.convertStatusToNumber(s.status),
       }));
 
       return {
@@ -404,7 +383,9 @@ export class SessionRecordingGrpcController {
       const sessionSummary: SessionSummary = {
         sessionId: metadata.sessionId,
         actorId: metadata.actorId,
-        actorType: metadata.actorType ? ActorTypeMap[metadata.actorType] || 0 : 0,
+        actorType: metadata.actorType
+          ? this.sessionRecordingService.convertActorTypeToNumber(metadata.actorType)
+          : 0,
         actorEmail: metadata.actorEmail,
         serviceSlug: metadata.serviceSlug,
         startedAt: { seconds: Math.floor(new Date(metadata.startedAt).getTime() / 1000), nanos: 0 },
@@ -419,9 +400,9 @@ export class SessionRecordingGrpcController {
         exitPage: metadata.exitPage,
         browser: metadata.browser,
         os: metadata.os,
-        deviceType: DeviceTypeMap[metadata.deviceType] || 0,
+        deviceType: this.sessionRecordingService.convertDeviceTypeToNumber(metadata.deviceType),
         countryCode: metadata.countryCode,
-        status: metadata.status === 'active' ? SessionStatusMap.active : SessionStatusMap.ended,
+        status: this.sessionRecordingService.convertStatusToNumber(metadata.status),
       };
 
       return {

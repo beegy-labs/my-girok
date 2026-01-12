@@ -433,4 +433,130 @@ describe('SessionRecordingService', () => {
       expect(result?.events[4]).toEqual({ seq: 5 });
     });
   });
+
+  describe('Enum Conversion Methods', () => {
+    describe('convertDeviceTypeToNumber', () => {
+      it('should convert desktop to 1', () => {
+        expect(service.convertDeviceTypeToNumber('desktop')).toBe(1);
+      });
+
+      it('should convert mobile to 2', () => {
+        expect(service.convertDeviceTypeToNumber('mobile')).toBe(2);
+      });
+
+      it('should convert tablet to 3', () => {
+        expect(service.convertDeviceTypeToNumber('tablet')).toBe(3);
+      });
+
+      it('should return 0 for unknown device type', () => {
+        expect(service.convertDeviceTypeToNumber('unknown')).toBe(0);
+        expect(service.convertDeviceTypeToNumber('')).toBe(0);
+      });
+    });
+
+    describe('convertDeviceTypeToString', () => {
+      it('should convert 0 to desktop', () => {
+        expect(service.convertDeviceTypeToString(0)).toBe('desktop');
+      });
+
+      it('should convert 1 to desktop', () => {
+        expect(service.convertDeviceTypeToString(1)).toBe('desktop');
+      });
+
+      it('should convert 2 to mobile', () => {
+        expect(service.convertDeviceTypeToString(2)).toBe('mobile');
+      });
+
+      it('should convert 3 to tablet', () => {
+        expect(service.convertDeviceTypeToString(3)).toBe('tablet');
+      });
+
+      it('should return desktop for unknown numbers', () => {
+        expect(service.convertDeviceTypeToString(99)).toBe('desktop');
+        expect(service.convertDeviceTypeToString(-1)).toBe('desktop');
+      });
+    });
+
+    describe('convertActorTypeToNumber', () => {
+      it('should convert USER to 1', () => {
+        expect(service.convertActorTypeToNumber('USER')).toBe(1);
+      });
+
+      it('should convert OPERATOR to 2', () => {
+        expect(service.convertActorTypeToNumber('OPERATOR')).toBe(2);
+      });
+
+      it('should convert ADMIN to 3', () => {
+        expect(service.convertActorTypeToNumber('ADMIN')).toBe(3);
+      });
+
+      it('should return 0 for unknown actor type', () => {
+        expect(service.convertActorTypeToNumber('UNKNOWN')).toBe(0);
+        expect(service.convertActorTypeToNumber('')).toBe(0);
+      });
+    });
+
+    describe('convertActorTypeToString', () => {
+      it('should convert 1 to USER', () => {
+        expect(service.convertActorTypeToString(1)).toBe('USER');
+      });
+
+      it('should convert 2 to OPERATOR', () => {
+        expect(service.convertActorTypeToString(2)).toBe('OPERATOR');
+      });
+
+      it('should convert 3 to ADMIN', () => {
+        expect(service.convertActorTypeToString(3)).toBe('ADMIN');
+      });
+
+      it('should return USER for unknown numbers', () => {
+        expect(service.convertActorTypeToString(0)).toBe('USER');
+        expect(service.convertActorTypeToString(99)).toBe('USER');
+        expect(service.convertActorTypeToString(-1)).toBe('USER');
+      });
+    });
+
+    describe('convertStatusToNumber', () => {
+      it('should convert active to 1', () => {
+        expect(service.convertStatusToNumber('active')).toBe(1);
+      });
+
+      it('should convert recording to 1', () => {
+        expect(service.convertStatusToNumber('recording')).toBe(1);
+      });
+
+      it('should convert ended to 2', () => {
+        expect(service.convertStatusToNumber('ended')).toBe(2);
+      });
+
+      it('should convert completed to 2', () => {
+        expect(service.convertStatusToNumber('completed')).toBe(2);
+      });
+
+      it('should return 0 for unknown status', () => {
+        expect(service.convertStatusToNumber('unknown')).toBe(0);
+        expect(service.convertStatusToNumber('')).toBe(0);
+      });
+    });
+
+    describe('Round-trip conversions', () => {
+      it('should maintain device type through round-trip conversion', () => {
+        const deviceTypes = ['desktop', 'mobile', 'tablet'];
+        deviceTypes.forEach((type) => {
+          const num = service.convertDeviceTypeToNumber(type);
+          const converted = service.convertDeviceTypeToString(num);
+          expect(converted).toBe(type);
+        });
+      });
+
+      it('should maintain actor type through round-trip conversion', () => {
+        const actorTypes = ['USER', 'OPERATOR', 'ADMIN'];
+        actorTypes.forEach((type) => {
+          const num = service.convertActorTypeToNumber(type);
+          const converted = service.convertActorTypeToString(num);
+          expect(converted).toBe(type);
+        });
+      });
+    });
+  });
 });
