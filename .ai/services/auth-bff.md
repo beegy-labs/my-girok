@@ -19,4 +19,4 @@
 ```
 
 **SSOT**: `docs/llm/services/auth-bff.md`
-**GeoIP Setup**: `docs/llm/GEOIP_SETUP.md`
+**GeoIP**: `.ai/services/geoip.md`

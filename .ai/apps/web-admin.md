@@ -45,4 +45,4 @@ pnpm --filter @my-girok/web-admin build  # Build
 ```
 
 **SSOT**: `docs/llm/apps/web-admin.md`
-**Error Handling**: `docs/llm/ERROR_HANDLING.md`
+**Error Handling**: `docs/llm/guides/frontend-error-handling.md`
