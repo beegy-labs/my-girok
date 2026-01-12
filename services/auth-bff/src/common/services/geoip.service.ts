@@ -7,7 +7,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Reader from '@maxmind/geoip2-node/dist/src/reader';
-import ReaderModel from '@maxmind/geoip2-node/dist/src/readerModel';
 import { existsSync } from 'fs';
 
 export interface GeoIPResult {
@@ -31,7 +30,7 @@ export interface GeoIPDatabaseInfo {
 @Injectable()
 export class GeoIPService implements OnModuleInit {
   private readonly logger = new Logger(GeoIPService.name);
-  private reader?: ReaderModel;
+  private reader?: any; // ReaderModel doesn't have metadata property, use any for now
   private isInitialized = false;
 
   constructor(private readonly configService: ConfigService) {}

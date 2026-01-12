@@ -20,7 +20,15 @@ import {
   type SessionRecordingMetadata,
   type SessionRecordingEvents,
 } from '../../../api/recordings';
-import { SessionPlayer } from '@my-girok/tracking-sdk/react';
+// TODO: Replace with @my-girok/tracking-sdk/react when available
+const SessionPlayer = ({ events }: { events: any }) => (
+  <div className="p-8 bg-theme-background-secondary rounded-lg text-center text-theme-text-secondary">
+    Session Player (Coming Soon)
+    <br />
+    <span className="text-sm">{events?.length || 0} events recorded</span>
+  </div>
+);
+
 import { LocationBadge } from './components/LocationBadge';
 
 // Pure helper functions moved outside component for better performance
@@ -333,13 +341,7 @@ export default function SessionRecordingsPage() {
               </button>
             </div>
             <div className="p-4 flex justify-center bg-gray-900">
-              <SessionPlayer
-                events={selectedSession.events as never[]}
-                width={1024}
-                height={576}
-                autoPlay={false}
-                showController={true}
-              />
+              <SessionPlayer events={selectedSession.events as never[]} />
             </div>
           </div>
         </div>

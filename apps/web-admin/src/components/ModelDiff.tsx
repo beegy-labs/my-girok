@@ -22,7 +22,6 @@ export function ModelDiff({ oldContent, newContent, oldLabel, newLabel }: ModelD
   const renderLine = (change: Change, index: number) => {
     const isAdded = change.added;
     const isRemoved = change.removed;
-    const isUnchanged = !isAdded && !isRemoved;
 
     const bgColor = isAdded
       ? 'bg-theme-status-success-background'

@@ -1,7 +1,7 @@
 # Legal Service Dockerfile
 # Multi-stage build for optimized production image
 
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -38,7 +38,7 @@ RUN pnpm prisma:generate
 RUN pnpm build
 
 # Production stage
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 
 # Install security updates and goose for migrations
 RUN apk upgrade --no-cache && \

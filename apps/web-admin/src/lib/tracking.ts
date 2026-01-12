@@ -1,4 +1,24 @@
-import type { TrackingConfig } from '@my-girok/tracking-sdk';
+// TODO: Replace with @my-girok/tracking-sdk when available
+interface TrackingConfig {
+  endpoint: string;
+  service: {
+    slug: string;
+    version: string;
+  };
+  privacy: {
+    maskTextInput: boolean;
+    maskInputSelectors: string[];
+    blockSelectors: string[];
+    ignoreSelectors: string[];
+    anonymizeIp: boolean;
+  };
+  batching: {
+    maxEvents: number;
+    flushInterval: number;
+    compress: boolean;
+  };
+  debug: boolean;
+}
 
 /**
  * Get tracking configuration based on environment

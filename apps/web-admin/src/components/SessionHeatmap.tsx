@@ -27,7 +27,6 @@ export function SessionHeatmap({
   height = 600,
   radius = 30,
   maxIntensity,
-  colorStops = ['rgba(0, 255, 0, 0)', 'rgba(255, 255, 0, 0.5)', 'rgba(255, 0, 0, 1)'],
 }: SessionHeatmapProps) {
   const canvas = useMemo(() => {
     if (typeof document === 'undefined') return null;
@@ -70,7 +69,7 @@ export function SessionHeatmap({
 
   return (
     <div className="relative" style={{ width, height }}>
-      {imageDataUrl ? (
+      {imageDataUrl && points.length > 0 ? (
         <img
           src={imageDataUrl}
           alt="Session heatmap"
@@ -168,7 +167,7 @@ export interface ScrollDepthProps {
   pageHeight: number;
 }
 
-export function ScrollDepthHeatmap({ depths, pageHeight }: ScrollDepthProps) {
+export function ScrollDepthHeatmap({ depths }: ScrollDepthProps) {
   const buckets = useMemo(() => {
     const bucketCount = 20;
     const buckets = new Array(bucketCount).fill(0);
@@ -219,7 +218,10 @@ export function ScrollDepthHeatmap({ depths, pageHeight }: ScrollDepthProps) {
         </div>
         <div className="p-3 bg-theme-background-secondary rounded-lg">
           <div className="text-2xl font-bold text-theme-text-primary">
-            {(depths.reduce((sum, d) => sum + d, 0) / depths.length || 0).toFixed(1)}%
+            {depths.length > 0
+              ? (depths.reduce((sum, d) => sum + d, 0) / depths.length).toFixed(1)
+              : '0.0'}
+            %
           </div>
           <div className="text-sm text-theme-text-secondary">Avg Scroll Depth</div>
         </div>

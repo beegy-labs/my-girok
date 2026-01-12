@@ -16,7 +16,15 @@ import {
   Globe,
 } from 'lucide-react';
 import { recordingsApi, type SessionRecordingEvents } from '../../../api/recordings';
-import { SessionPlayer } from '@my-girok/tracking-sdk/react';
+// TODO: Replace with @my-girok/tracking-sdk/react when available
+const SessionPlayer = ({ events }: { events: any }) => (
+  <div className="p-8 bg-theme-background-secondary rounded-lg text-center text-theme-text-secondary">
+    Session Player (Coming Soon)
+    <br />
+    <span className="text-sm">{events?.length || 0} events recorded</span>
+  </div>
+);
+
 import { LocationBadge } from './components/LocationBadge';
 import { EventTimeline } from './components/EventTimeline';
 import { Card } from '../../../components/atoms/Card';
@@ -129,13 +137,7 @@ export default function SessionDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           <Card padding="none">
             <div className="bg-gray-900 flex items-center justify-center p-4">
-              <SessionPlayer
-                events={events as never[]}
-                width={1024}
-                height={576}
-                autoPlay={false}
-                showController={true}
-              />
+              <SessionPlayer events={events as never[]} />
             </div>
           </Card>
 

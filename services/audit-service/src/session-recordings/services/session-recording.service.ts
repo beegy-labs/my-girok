@@ -40,7 +40,7 @@ export class SessionRecordingService {
   };
 
   // Session status enum mapping
-  private readonly SessionStatusMap = {
+  private readonly SessionStatusMap: Record<string, number> = {
     active: 1,
     ended: 2,
     recording: 1,

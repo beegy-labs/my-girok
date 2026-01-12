@@ -4,25 +4,11 @@
  * Real-time monitoring of active user sessions
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Activity, Users, Eye, Clock, MapPin, Monitor, Loader2 } from 'lucide-react';
+import { Activity, Users, Eye, Clock, MapPin, Monitor } from 'lucide-react';
 import { Card } from '../../../components/atoms/Card';
 import { useRealTimeSessionsWebSocket } from '../../../hooks/useRealTimeSessions';
-
-interface LiveSession {
-  sessionId: string;
-  actorId?: string;
-  actorEmail?: string;
-  serviceSlug: string;
-  startedAt: string;
-  currentPage: string;
-  location: string;
-  deviceType: string;
-  browser: string;
-  eventCount: number;
-  lastEventAt: string;
-}
 
 export default function LiveSessionsPage() {
   const { t } = useTranslation();
