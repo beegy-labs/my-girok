@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { AnalyticsGrpcClient } from '../../grpc-clients/analytics.client';
 
 interface UserSessionsQuery {
   page: number;
@@ -15,79 +16,198 @@ interface UsersOverviewQuery {
 
 @Injectable()
 export class AnalyticsService {
+  private readonly logger = new Logger(AnalyticsService.name);
+
+  constructor(private readonly analyticsClient: AnalyticsGrpcClient) {}
+
   /**
    * Get user summary statistics
-   * TODO: Implement using analytics-service gRPC client or ClickHouse direct query
    */
   async getUserSummary(userId: string) {
-    // TODO: Query ClickHouse analytics_db.session_recording_metadata
-    // Aggregate: total sessions, duration, page views, clicks, countries, devices
-    return {
-      userId,
-      email: 'user@example.com',
-      totalSessions: 0,
-      totalDuration: 0,
-      totalPageViews: 0,
-      totalClicks: 0,
-      countries: [],
-      devices: [],
-      lastSessionAt: new Date().toISOString(),
-      firstSessionAt: new Date().toISOString(),
-    };
+    try {
+      const result = await this.analyticsClient.getUserSummary(userId);
+
+      if (!result) {
+        return {
+          userId,
+          email: '',
+          totalSessions: 0,
+          totalDuration: 0,
+          totalPageViews: 0,
+          totalClicks: 0,
+          countries: [],
+          devices: [],
+          lastSessionAt: new Date().toISOString(),
+          firstSessionAt: new Date().toISOString(),
+        };
+      }
+
+      return {
+        userId: result.userId,
+        email: '',
+        totalSessions: result.totalSessions,
+        totalDuration: result.totalDuration,
+        totalPageViews: result.totalPageViews,
+        totalClicks: result.totalClicks,
+        countries: result.countries,
+        devices: result.devices,
+        lastSessionAt: result.lastSessionAt || new Date().toISOString(),
+        firstSessionAt: result.firstSessionAt || new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get user summary: ${error}`);
+      return {
+        userId,
+        email: '',
+        totalSessions: 0,
+        totalDuration: 0,
+        totalPageViews: 0,
+        totalClicks: 0,
+        countries: [],
+        devices: [],
+        lastSessionAt: new Date().toISOString(),
+        firstSessionAt: new Date().toISOString(),
+      };
+    }
   }
 
   /**
    * Get user sessions with pagination
-   * TODO: Implement using audit-service gRPC client
    */
-  async getUserSessions(_userId: string, _query: UserSessionsQuery) {
-    // TODO: Query ClickHouse analytics_db.session_recording_metadata
-    // Filter by userId, startDate, endDate
-    // Paginate results
-    return {
-      data: [],
-      total: 0,
-    };
+  async getUserSessions(userId: string, query: UserSessionsQuery) {
+    try {
+      const result = await this.analyticsClient.getUserSessions(
+        userId,
+        query.page,
+        query.limit,
+        query.startDate,
+        query.endDate,
+      );
+
+      if (!result) {
+        return {
+          data: [],
+          total: 0,
+        };
+      }
+
+      return {
+        data: result.sessions.map((s) => ({
+          sessionId: s.sessionId,
+          actorEmail: s.actorEmail,
+          serviceSlug: s.serviceSlug,
+          startedAt: s.startedAt,
+          endedAt: s.endedAt || null,
+          durationSeconds: s.durationSeconds,
+          pageViews: s.pageViews,
+          clicks: s.clicks,
+          entryPage: s.entryPage,
+          browser: s.browser,
+          os: s.os,
+          deviceType: s.deviceType,
+          countryCode: s.countryCode,
+          status: s.status,
+        })),
+        total: result.total,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get user sessions: ${error}`);
+      return {
+        data: [],
+        total: 0,
+      };
+    }
   }
 
   /**
    * Get user location statistics
-   * TODO: Implement using ClickHouse aggregation
    */
-  async getUserLocations(_userId: string) {
-    // TODO: Query ClickHouse analytics_db.session_recording_metadata
-    // GROUP BY country_code, COUNT sessions, SUM duration
-    return [];
+  async getUserLocations(userId: string) {
+    try {
+      const results = await this.analyticsClient.getUserLocations(userId);
+
+      return results.map((r) => ({
+        countryCode: r.countryCode,
+        sessionCount: r.sessionCount,
+        totalDuration: r.totalDuration,
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get user locations: ${error}`);
+      return [];
+    }
   }
 
   /**
    * Get top active users
-   * TODO: Implement using ClickHouse aggregation
    */
-  async getTopUsers(_limit: number) {
-    // TODO: Query ClickHouse analytics_db.session_recording_metadata
-    // GROUP BY actor_id, COUNT sessions, MAX last_active
-    // ORDER BY session_count DESC LIMIT N
-    return {
-      data: [],
-      total: 0,
-    };
+  async getTopUsers(limit: number) {
+    try {
+      const result = await this.analyticsClient.getTopUsers(limit);
+
+      if (!result) {
+        return {
+          data: [],
+          total: 0,
+        };
+      }
+
+      return {
+        data: result.users.map((u) => ({
+          userId: u.userId,
+          email: u.email,
+          sessionCount: u.sessionCount,
+          lastActive: u.lastActive,
+        })),
+        total: result.total,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get top users: ${error}`);
+      return {
+        data: [],
+        total: 0,
+      };
+    }
   }
 
   /**
    * Get users overview with search and pagination
-   * TODO: Implement using ClickHouse aggregation + identity-service lookup
    */
   async getUsersOverview(query: UsersOverviewQuery) {
-    // TODO: Query ClickHouse analytics_db.session_recording_metadata
-    // GROUP BY actor_id
-    // If search provided, join with identity-service to filter by email
-    // Paginate results
-    return {
-      data: [],
-      total: 0,
-      page: query.page,
-      totalPages: 0,
-    };
+    try {
+      const result = await this.analyticsClient.getUsersOverview(
+        query.page,
+        query.limit,
+        query.search,
+      );
+
+      if (!result) {
+        return {
+          data: [],
+          total: 0,
+          page: query.page,
+          totalPages: 0,
+        };
+      }
+
+      return {
+        data: result.users.map((u) => ({
+          userId: u.userId,
+          email: u.email,
+          sessionCount: u.sessionCount,
+          lastActive: u.lastActive,
+        })),
+        total: result.total,
+        page: result.page,
+        totalPages: result.totalPages,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get users overview: ${error}`);
+      return {
+        data: [],
+        total: 0,
+        page: query.page,
+        totalPages: 0,
+      };
+    }
   }
 }

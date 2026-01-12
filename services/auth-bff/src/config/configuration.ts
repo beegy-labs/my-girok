@@ -95,6 +95,14 @@ export default () => ({
       host: process.env.AUDIT_GRPC_HOST || 'localhost',
       port: parseInt(process.env.AUDIT_GRPC_PORT || '50054', 10),
     },
+    authorization: {
+      host: process.env.AUTHORIZATION_GRPC_HOST || 'localhost',
+      port: parseInt(process.env.AUTHORIZATION_GRPC_PORT || '50055', 10),
+    },
+    analytics: {
+      host: process.env.ANALYTICS_GRPC_HOST || 'localhost',
+      port: parseInt(process.env.ANALYTICS_GRPC_PORT || '50056', 10),
+    },
   },
 
   cors: {
