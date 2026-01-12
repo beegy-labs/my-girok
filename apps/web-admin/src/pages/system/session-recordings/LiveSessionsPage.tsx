@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Activity, Users, Eye, Clock, MapPin, Monitor, Loader2 } from 'lucide-react';
 import { Card } from '../../../components/atoms/Card';
-import { useRealTimeSessions } from '../../../hooks/useRealTimeSessions';
+import { useRealTimeSessionsWebSocket } from '../../../hooks/useRealTimeSessions';
 
 interface LiveSession {
   sessionId: string;
@@ -26,7 +26,11 @@ interface LiveSession {
 
 export default function LiveSessionsPage() {
   const { t } = useTranslation();
-  const { sessions, isConnected, connectionError } = useRealTimeSessions();
+
+  // WebSocket URL from environment variable with fallback
+  const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/admin/sessions/live';
+
+  const { sessions, isConnected, connectionError } = useRealTimeSessionsWebSocket(wsUrl);
   const [filter, setFilter] = useState<{
     service?: string;
     deviceType?: string;
