@@ -1,6 +1,18 @@
 name: CI - Auth Service
 
 on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'services/auth-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'services/auth-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       deploy_env:

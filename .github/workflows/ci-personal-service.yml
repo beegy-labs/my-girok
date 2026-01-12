@@ -2,12 +2,28 @@ name: CI - Personal Service
 
 on:
   push:
-    branches: [develop, 'release/**', main]
-    paths: ['services/personal-service/**', 'packages/types/**', 'packages/nest-common/**', '.github/workflows/ci-personal-service.yml']
+    branches: [develop, release, main]
+    paths:
+      - 'services/personal-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   pull_request:
-    branches: [develop, 'release/**', main]
-    paths: ['services/personal-service/**', 'packages/types/**', 'packages/nest-common/**']
+    branches: [develop, release, main]
+    paths:
+      - 'services/personal-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy environment'
+        required: false
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - release
+          - main
 
 env:
   REGISTRY: gitea.girok.dev

@@ -1,6 +1,18 @@
 name: CI - Authorization Service
 
 on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'services/authorization-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'services/authorization-service/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       deploy_env:
@@ -18,7 +30,32 @@ env:
   IMAGE_NAME: beegy-labs/authorization-service
 
 jobs:
+  check:
+    name: Check
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/pnpm/store
+            node_modules
+            services/authorization-service/node_modules
+            packages/types/node_modules
+            packages/nest-common/node_modules
+          key: ${{ runner.os }}-pnpm-authorization-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm --filter @my-girok/types build
+      - run: pnpm --filter @my-girok/authorization-service prisma:generate
+      - run: pnpm --filter @my-girok/nest-common build
+      - run: cd services/authorization-service && pnpm test && pnpm lint
+
   build:
+    needs: check
     name: Build
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 10

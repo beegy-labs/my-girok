@@ -1,6 +1,18 @@
 name: CI - Auth BFF
 
 on:
+  push:
+    branches: [develop, release, main]
+    paths:
+      - 'services/auth-bff/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [develop, release, main]
+    paths:
+      - 'services/auth-bff/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       deploy_env:
@@ -38,7 +50,6 @@ jobs:
           key: ${{ runner.os }}-pnpm-auth-bff-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile --prefer-offline
       - run: pnpm --filter @my-girok/types build
-      - run: pnpm --filter @my-girok/auth-service prisma:generate
       - run: pnpm --filter @my-girok/nest-common build
       - run: cd services/auth-bff && pnpm test && pnpm lint
 
