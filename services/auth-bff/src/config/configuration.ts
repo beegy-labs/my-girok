@@ -159,4 +159,11 @@ export default () => ({
   geoip: {
     databasePath: process.env.GEOIP_DATABASE_PATH || '/var/lib/GeoIP/GeoLite2-City.mmdb',
   },
+
+  sessionRecordings: {
+    shareLink: {
+      prefix: process.env.SESSION_SHARE_LINK_PREFIX || 'session_share_link',
+      maxTtl: parseInt(process.env.SESSION_SHARE_LINK_MAX_TTL || '2592000000', 10), // 30 days in ms
+    },
+  },
 });
