@@ -3,7 +3,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { StorageService } from './storage.service';
-import * as Minio from 'minio';
 
 // Mock MinIO Client instance methods
 const mockMinioClient = {
@@ -30,7 +29,7 @@ vi.mock('minio', () => {
     return {};
   };
 
-  const Client = function (config: any) {
+  const Client = function (_config: any) {
     return mockMinioClient;
   };
 

@@ -31,7 +31,7 @@ describe('ResumeService', () => {
   let httpService: {
     get: MockInstance;
   };
-  let configService: {
+  let _configService: {
     get: MockInstance;
   };
   let storageService: {
@@ -185,7 +185,7 @@ describe('ResumeService', () => {
     service = module.get<ResumeService>(ResumeService);
     prisma = module.get(PrismaService);
     httpService = module.get(HttpService);
-    configService = module.get(ConfigService);
+    _configService = module.get(ConfigService);
     storageService = module.get(StorageService);
     fileCopyService = module.get(FileCopyService);
     cache = module.get(CACHE_MANAGER);
@@ -502,13 +502,11 @@ describe('ResumeService', () => {
       prisma.$transaction.mockImplementation(async (callback: any) => {
         return await callback({
           resume: {
-            create: vi
-              .fn()
-              .mockResolvedValue({
-                ...mockResume,
-                id: 'resume-456',
-                copyStatus: CopyStatus.PENDING,
-              }),
+            create: vi.fn().mockResolvedValue({
+              ...mockResume,
+              id: 'resume-456',
+              copyStatus: CopyStatus.PENDING,
+            }),
           },
           resumeSection: { createMany: vi.fn() },
           skill: { create: vi.fn() },
