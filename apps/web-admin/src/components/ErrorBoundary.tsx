@@ -51,7 +51,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
         this.props.fallback || (
           <Card className="flex flex-col items-center gap-4 py-12">
             <AlertTriangle size={48} className="text-theme-status-error-text" aria-hidden="true" />
-            <div className="text-center">
+            <div className="text-center max-w-md">
               <h2 className="text-lg font-semibold text-theme-text-primary">
                 {t('common.somethingWentWrong')}
               </h2>
@@ -60,6 +60,16 @@ class ErrorBoundaryComponent extends Component<Props, State> {
                   ? this.state.error.message
                   : t('common.unexpectedError')}
               </p>
+              {import.meta.env.DEV && this.state.error?.stack && (
+                <details className="mt-4 text-left">
+                  <summary className="text-xs text-theme-text-tertiary cursor-pointer hover:text-theme-text-secondary">
+                    Stack trace
+                  </summary>
+                  <pre className="mt-2 text-xs text-theme-text-tertiary font-mono whitespace-pre-wrap break-words p-3 bg-theme-background-secondary rounded border border-theme-border-default max-h-48 overflow-auto">
+                    {this.state.error.stack}
+                  </pre>
+                </details>
+              )}
             </div>
             <Button onClick={this.handleReset} icon={RefreshCw}>
               {t('common.tryAgain')}
