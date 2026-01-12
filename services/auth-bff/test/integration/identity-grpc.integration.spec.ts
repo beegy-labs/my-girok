@@ -13,12 +13,7 @@ import { UserService } from '../../src/user/user.service';
 import { AuditGrpcClient } from '../../src/grpc-clients';
 import { SessionService } from '../../src/session/session.service';
 import { Request, Response } from 'express';
-import {
-  createNetworkError,
-  createTimeoutError,
-  createNotFoundError,
-  createInternalError,
-} from '../utils';
+import { createNetworkError, createNotFoundError } from '../utils';
 
 // Mock @nestjs/microservices for gRPC client creation
 vi.mock('@nestjs/microservices', async () => {
