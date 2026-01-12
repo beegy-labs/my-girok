@@ -1387,6 +1387,9 @@ importers:
       lru-cache:
         specifier: ^11.0.2
         version: 11.2.4
+      prisma:
+        specifier: 'catalog:'
+        version: 6.19.1(typescript@5.9.3)
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -1433,9 +1436,6 @@ importers:
       ioredis-mock:
         specifier: ^8.13.1
         version: 8.13.1(@types/ioredis-mock@8.2.6(ioredis@5.8.2))(ioredis@5.8.2)
-      prisma:
-        specifier: 'catalog:'
-        version: 6.19.1(typescript@5.9.3)
       ts-loader:
         specifier: ^9.5.4
         version: 9.5.4(typescript@5.9.3)(webpack@5.103.0(@swc/core@1.15.8(@swc/helpers@0.5.17)))

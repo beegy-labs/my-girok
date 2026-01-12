@@ -71,11 +71,10 @@ COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
 ENV NODE_ENV=production
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
-# Copy generated Prisma client from builder (prisma is a devDependency)
-COPY --chown=node:node --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --chown=node:node --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
-
 WORKDIR /app/services/authorization-service
+
+# Generate Prisma Client
+RUN pnpm db:generate
 
 # Create temp directory with proper permissions
 RUN mkdir -p /tmp && chown -R node:node /tmp
