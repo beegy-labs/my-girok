@@ -8,7 +8,7 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientGrpc, Transport } from '@nestjs/microservices';
 import { join } from 'path';
-import { Observable, firstValueFrom, catchError, of } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 
 // Request/Response types
 export interface GetUserSummaryRequest {
@@ -162,23 +162,10 @@ export class AnalyticsGrpcClient implements OnModuleInit {
 
   async getUserSummary(userId: string): Promise<GetUserSummaryResponse | null> {
     if (!this.isConnected || !this.analyticsService) {
-      this.logger.warn('Analytics service not connected');
-      return null;
+      throw new Error('Analytics service not connected');
     }
 
-    try {
-      return await firstValueFrom(
-        this.analyticsService.getUserSummary({ userId }).pipe(
-          catchError((error) => {
-            this.logger.warn(`GetUserSummary failed: ${error.message}`);
-            return of(null as any);
-          }),
-        ),
-      );
-    } catch (error) {
-      this.logger.warn(`GetUserSummary failed: ${error}`);
-      return null;
-    }
+    return await firstValueFrom(this.analyticsService.getUserSummary({ userId }));
   }
 
   async getUserSessions(
@@ -189,66 +176,29 @@ export class AnalyticsGrpcClient implements OnModuleInit {
     endDate?: string,
   ): Promise<GetUserSessionsResponse | null> {
     if (!this.isConnected || !this.analyticsService) {
-      this.logger.warn('Analytics service not connected');
-      return null;
+      throw new Error('Analytics service not connected');
     }
 
-    try {
-      return await firstValueFrom(
-        this.analyticsService.getUserSessions({ userId, page, limit, startDate, endDate }).pipe(
-          catchError((error) => {
-            this.logger.warn(`GetUserSessions failed: ${error.message}`);
-            return of(null as any);
-          }),
-        ),
-      );
-    } catch (error) {
-      this.logger.warn(`GetUserSessions failed: ${error}`);
-      return null;
-    }
+    return await firstValueFrom(
+      this.analyticsService.getUserSessions({ userId, page, limit, startDate, endDate }),
+    );
   }
 
   async getUserLocations(userId: string): Promise<UserLocation[]> {
     if (!this.isConnected || !this.analyticsService) {
-      this.logger.warn('Analytics service not connected');
-      return [];
+      throw new Error('Analytics service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.analyticsService.getUserLocations({ userId }).pipe(
-          catchError((error) => {
-            this.logger.warn(`GetUserLocations failed: ${error.message}`);
-            return of({ locations: [] });
-          }),
-        ),
-      );
-      return response.locations;
-    } catch (error) {
-      this.logger.warn(`GetUserLocations failed: ${error}`);
-      return [];
-    }
+    const response = await firstValueFrom(this.analyticsService.getUserLocations({ userId }));
+    return response.locations;
   }
 
   async getTopUsers(limit: number): Promise<GetTopUsersResponse | null> {
     if (!this.isConnected || !this.analyticsService) {
-      this.logger.warn('Analytics service not connected');
-      return null;
+      throw new Error('Analytics service not connected');
     }
 
-    try {
-      return await firstValueFrom(
-        this.analyticsService.getTopUsers({ limit }).pipe(
-          catchError((error) => {
-            this.logger.warn(`GetTopUsers failed: ${error.message}`);
-            return of(null as any);
-          }),
-        ),
-      );
-    } catch (error) {
-      this.logger.warn(`GetTopUsers failed: ${error}`);
-      return null;
-    }
+    return await firstValueFrom(this.analyticsService.getTopUsers({ limit }));
   }
 
   async getUsersOverview(
@@ -257,23 +207,10 @@ export class AnalyticsGrpcClient implements OnModuleInit {
     search?: string,
   ): Promise<GetUsersOverviewResponse | null> {
     if (!this.isConnected || !this.analyticsService) {
-      this.logger.warn('Analytics service not connected');
-      return null;
+      throw new Error('Analytics service not connected');
     }
 
-    try {
-      return await firstValueFrom(
-        this.analyticsService.getUsersOverview({ page, limit, search }).pipe(
-          catchError((error) => {
-            this.logger.warn(`GetUsersOverview failed: ${error.message}`);
-            return of(null as any);
-          }),
-        ),
-      );
-    } catch (error) {
-      this.logger.warn(`GetUsersOverview failed: ${error}`);
-      return null;
-    }
+    return await firstValueFrom(this.analyticsService.getUsersOverview({ page, limit, search }));
   }
 
   isServiceConnected(): boolean {

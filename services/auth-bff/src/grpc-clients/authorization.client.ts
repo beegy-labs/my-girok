@@ -9,7 +9,7 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientGrpc, Transport } from '@nestjs/microservices';
 import { join } from 'path';
-import { Observable, firstValueFrom, catchError, of } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 
 // Request/Response types
 export interface TupleKey {
@@ -219,24 +219,11 @@ export class AuthorizationGrpcClient implements OnModuleInit {
    */
   async check(user: string, relation: string, object: string): Promise<boolean> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return false;
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.check({ user, relation, object }).pipe(
-          catchError((error) => {
-            this.logger.warn(`Check failed: ${error.message}`);
-            return of({ allowed: false });
-          }),
-        ),
-      );
-      return response.allowed;
-    } catch (error) {
-      this.logger.warn(`Check failed: ${error}`);
-      return false;
-    }
+    const response = await firstValueFrom(this.authzService.check({ user, relation, object }));
+    return response.allowed;
   }
 
   /**
@@ -249,24 +236,13 @@ export class AuthorizationGrpcClient implements OnModuleInit {
     contextualTuples: TupleKey[],
   ): Promise<boolean> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return false;
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.check({ user, relation, object, contextualTuples }).pipe(
-          catchError((error) => {
-            this.logger.warn(`CheckWithContext failed: ${error.message}`);
-            return of({ allowed: false });
-          }),
-        ),
-      );
-      return response.allowed;
-    } catch (error) {
-      this.logger.warn(`CheckWithContext failed: ${error}`);
-      return false;
-    }
+    const response = await firstValueFrom(
+      this.authzService.check({ user, relation, object, contextualTuples }),
+    );
+    return response.allowed;
   }
 
   /**
@@ -276,24 +252,11 @@ export class AuthorizationGrpcClient implements OnModuleInit {
     checks: Array<{ user: string; relation: string; object: string }>,
   ): Promise<boolean[]> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return checks.map(() => false);
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.batchCheck({ checks }).pipe(
-          catchError((error) => {
-            this.logger.warn(`BatchCheck failed: ${error.message}`);
-            return of({ results: checks.map(() => ({ allowed: false })) });
-          }),
-        ),
-      );
-      return response.results.map((r) => r.allowed);
-    } catch (error) {
-      this.logger.warn(`BatchCheck failed: ${error}`);
-      return checks.map(() => false);
-    }
+    const response = await firstValueFrom(this.authzService.batchCheck({ checks }));
+    return response.results.map((r) => r.allowed);
   }
 
   /**
@@ -304,14 +267,7 @@ export class AuthorizationGrpcClient implements OnModuleInit {
       throw new Error('Authorization service not connected');
     }
 
-    const response = await firstValueFrom(
-      this.authzService.write({ writes, deletes }).pipe(
-        catchError((error) => {
-          this.logger.error(`Write failed: ${error.message}`);
-          throw error;
-        }),
-      ),
-    );
+    const response = await firstValueFrom(this.authzService.write({ writes, deletes }));
     return response.consistencyToken;
   }
 
@@ -334,24 +290,11 @@ export class AuthorizationGrpcClient implements OnModuleInit {
    */
   async listObjects(user: string, relation: string, type: string): Promise<string[]> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return [];
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.listObjects({ user, relation, type }).pipe(
-          catchError((error) => {
-            this.logger.warn(`ListObjects failed: ${error.message}`);
-            return of({ objects: [] });
-          }),
-        ),
-      );
-      return response.objects;
-    } catch (error) {
-      this.logger.warn(`ListObjects failed: ${error}`);
-      return [];
-    }
+    const response = await firstValueFrom(this.authzService.listObjects({ user, relation, type }));
+    return response.objects;
   }
 
   /**
@@ -359,24 +302,13 @@ export class AuthorizationGrpcClient implements OnModuleInit {
    */
   async listUsers(object: string, relation: string, userTypes?: string[]): Promise<string[]> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return [];
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.listUsers({ object, relation, userTypes }).pipe(
-          catchError((error) => {
-            this.logger.warn(`ListUsers failed: ${error.message}`);
-            return of({ users: [] });
-          }),
-        ),
-      );
-      return response.users;
-    } catch (error) {
-      this.logger.warn(`ListUsers failed: ${error}`);
-      return [];
-    }
+    const response = await firstValueFrom(
+      this.authzService.listUsers({ object, relation, userTypes }),
+    );
+    return response.users;
   }
 
   /**
@@ -384,23 +316,10 @@ export class AuthorizationGrpcClient implements OnModuleInit {
    */
   async listModels(pageSize?: number, pageToken?: string): Promise<ListModelsResponse | null> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return null;
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      return await firstValueFrom(
-        this.authzService.listModels({ pageSize, pageToken }).pipe(
-          catchError((error) => {
-            this.logger.warn(`ListModels failed: ${error.message}`);
-            return of(null as any);
-          }),
-        ),
-      );
-    } catch (error) {
-      this.logger.warn(`ListModels failed: ${error}`);
-      return null;
-    }
+    return await firstValueFrom(this.authzService.listModels({ pageSize, pageToken }));
   }
 
   /**
@@ -408,24 +327,11 @@ export class AuthorizationGrpcClient implements OnModuleInit {
    */
   async getTeam(teamId: string): Promise<Team | null> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return null;
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.getTeam({ teamId }).pipe(
-          catchError((error) => {
-            this.logger.warn(`GetTeam failed: ${error.message}`);
-            return of(null as any);
-          }),
-        ),
-      );
-      return response?.team || null;
-    } catch (error) {
-      this.logger.warn(`GetTeam failed: ${error}`);
-      return null;
-    }
+    const response = await firstValueFrom(this.authzService.getTeam({ teamId }));
+    return response?.team || null;
   }
 
   /**
@@ -433,23 +339,10 @@ export class AuthorizationGrpcClient implements OnModuleInit {
    */
   async listTeams(page: number, limit: number, search?: string): Promise<ListTeamsResponse | null> {
     if (!this.isConnected || !this.authzService) {
-      this.logger.warn('Authorization service not connected');
-      return null;
+      throw new Error('Authorization service not connected');
     }
 
-    try {
-      return await firstValueFrom(
-        this.authzService.listTeams({ page, limit, search }).pipe(
-          catchError((error) => {
-            this.logger.warn(`ListTeams failed: ${error.message}`);
-            return of(null as any);
-          }),
-        ),
-      );
-    } catch (error) {
-      this.logger.warn(`ListTeams failed: ${error}`);
-      return null;
-    }
+    return await firstValueFrom(this.authzService.listTeams({ page, limit, search }));
   }
 
   /**
@@ -465,20 +358,10 @@ export class AuthorizationGrpcClient implements OnModuleInit {
       throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.createTeam({ name, description, serviceId, createdBy }).pipe(
-          catchError((error) => {
-            this.logger.error(`CreateTeam failed: ${error.message}`);
-            throw error;
-          }),
-        ),
-      );
-      return response.team;
-    } catch (error) {
-      this.logger.error(`CreateTeam failed: ${error}`);
-      throw error;
-    }
+    const response = await firstValueFrom(
+      this.authzService.createTeam({ name, description, serviceId, createdBy }),
+    );
+    return response.team;
   }
 
   /**
@@ -489,20 +372,10 @@ export class AuthorizationGrpcClient implements OnModuleInit {
       throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.updateTeam({ teamId, name, description }).pipe(
-          catchError((error) => {
-            this.logger.error(`UpdateTeam failed: ${error.message}`);
-            throw error;
-          }),
-        ),
-      );
-      return response.team;
-    } catch (error) {
-      this.logger.error(`UpdateTeam failed: ${error}`);
-      throw error;
-    }
+    const response = await firstValueFrom(
+      this.authzService.updateTeam({ teamId, name, description }),
+    );
+    return response.team;
   }
 
   /**
@@ -513,20 +386,8 @@ export class AuthorizationGrpcClient implements OnModuleInit {
       throw new Error('Authorization service not connected');
     }
 
-    try {
-      const response = await firstValueFrom(
-        this.authzService.deleteTeam({ teamId }).pipe(
-          catchError((error) => {
-            this.logger.error(`DeleteTeam failed: ${error.message}`);
-            throw error;
-          }),
-        ),
-      );
-      return response.success;
-    } catch (error) {
-      this.logger.error(`DeleteTeam failed: ${error}`);
-      throw error;
-    }
+    const response = await firstValueFrom(this.authzService.deleteTeam({ teamId }));
+    return response.success;
   }
 
   /**
