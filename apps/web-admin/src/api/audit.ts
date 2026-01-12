@@ -7,6 +7,43 @@ import type {
   AuditStatsResponse,
 } from '@my-girok/types';
 
+// Login History types (from auth-bff)
+export interface LoginHistoryQuery {
+  accountId?: string;
+  accountType?: 'USER' | 'OPERATOR' | 'ADMIN';
+  eventType?: string;
+  result?: 'SUCCESS' | 'FAILURE' | 'BLOCKED';
+  ipAddress?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface LoginHistoryEvent {
+  id: string;
+  eventType: string;
+  accountType: string;
+  accountId: string;
+  sessionId?: string;
+  ipAddress: string;
+  userAgent: string;
+  deviceFingerprint?: string;
+  countryCode?: string;
+  result: string;
+  failureReason?: string;
+  metadata?: Record<string, string>;
+  timestamp: string;
+}
+
+export interface LoginHistoryResponse {
+  data: LoginHistoryEvent[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const auditApi = {
   /**
    * List audit logs with filters and pagination
@@ -67,6 +104,25 @@ export const auditApi = {
     const response = await apiClient.get(`/audit/logs/export?${params}`, {
       responseType: 'blob',
     });
+    return response.data;
+  },
+
+  /**
+   * Get login history from audit-service via auth-bff gRPC
+   */
+  getLoginHistory: async (query?: LoginHistoryQuery): Promise<LoginHistoryResponse> => {
+    const params = new URLSearchParams();
+    if (query?.accountId) params.append('accountId', query.accountId);
+    if (query?.accountType) params.append('accountType', query.accountType);
+    if (query?.eventType) params.append('eventType', query.eventType);
+    if (query?.result) params.append('result', query.result);
+    if (query?.ipAddress) params.append('ipAddress', query.ipAddress);
+    if (query?.startDate) params.append('startDate', query.startDate);
+    if (query?.endDate) params.append('endDate', query.endDate);
+    if (query?.page) params.append('page', query.page.toString());
+    if (query?.limit) params.append('limit', query.limit.toString());
+
+    const response = await apiClient.get<LoginHistoryResponse>(`/admin/login-history?${params}`);
     return response.data;
   },
 };

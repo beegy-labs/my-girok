@@ -15,6 +15,9 @@ import {
   AdminLoginMfaDto,
   AdminInfoDto,
   AdminSessionListDto,
+  LoginHistoryQueryDto,
+  LoginHistoryResponseDto,
+  LoginHistoryEventDto,
 } from './dto/admin.dto';
 import { AccountType } from '../config/constants';
 
@@ -488,5 +491,137 @@ export class AdminService {
       return Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0].trim();
     }
     return req.socket.remoteAddress || 'unknown';
+  }
+
+  async getLoginHistory(query: LoginHistoryQueryDto): Promise<LoginHistoryResponseDto> {
+    try {
+      // Convert query params to gRPC request format
+      const request = {
+        accountId: query.accountId,
+        accountType: query.accountType ? this.accountTypeToProto(query.accountType) : undefined,
+        eventType: query.eventType ? this.eventTypeToProto(query.eventType) : undefined,
+        result: query.result ? this.resultToProto(query.result) : undefined,
+        ipAddress: query.ipAddress,
+        startTime: query.startDate
+          ? { seconds: Math.floor(new Date(query.startDate).getTime() / 1000), nanos: 0 }
+          : undefined,
+        endTime: query.endDate
+          ? { seconds: Math.floor(new Date(query.endDate).getTime() / 1000), nanos: 0 }
+          : undefined,
+        page: query.page ?? 1,
+        pageSize: query.limit ?? 20,
+        descending: true,
+      };
+
+      const response = await this.auditClient.getAuthEvents(request);
+
+      const data: LoginHistoryEventDto[] = response.events.map((event) => ({
+        id: event.id,
+        eventType: this.protoToEventType(event.eventType),
+        accountType: this.protoToAccountType(event.accountType),
+        accountId: event.accountId,
+        sessionId: event.sessionId || undefined,
+        ipAddress: event.ipAddress,
+        userAgent: event.userAgent,
+        deviceFingerprint: event.deviceFingerprint || undefined,
+        countryCode: event.countryCode || undefined,
+        result: this.protoToResult(event.result),
+        failureReason: event.failureReason || undefined,
+        metadata: event.metadata,
+        timestamp: new Date(event.timestamp.seconds * 1000).toISOString(),
+      }));
+
+      const totalPages = Math.ceil(response.totalCount / (query.limit ?? 20));
+
+      return {
+        data,
+        total: response.totalCount,
+        page: response.page,
+        limit: response.pageSize,
+        totalPages,
+      };
+    } catch (error) {
+      this.logger.error('Failed to get login history', error);
+      return {
+        data: [],
+        total: 0,
+        page: query.page ?? 1,
+        limit: query.limit ?? 20,
+        totalPages: 0,
+      };
+    }
+  }
+
+  // Proto enum conversion helpers
+  private accountTypeToProto(type: string): number {
+    const map: Record<string, number> = {
+      USER: AuditAccountType.USER,
+      OPERATOR: AuditAccountType.OPERATOR,
+      ADMIN: AuditAccountType.ADMIN,
+    };
+    return map[type] ?? 0;
+  }
+
+  private protoToAccountType(proto: number): string {
+    const map: Record<number, string> = {
+      [AuditAccountType.USER]: 'USER',
+      [AuditAccountType.OPERATOR]: 'OPERATOR',
+      [AuditAccountType.ADMIN]: 'ADMIN',
+    };
+    return map[proto] ?? 'UNSPECIFIED';
+  }
+
+  private eventTypeToProto(type: string): number {
+    const { AuthEventType } = require('../grpc-clients');
+    const map: Record<string, number> = {
+      LOGIN_SUCCESS: AuthEventType.LOGIN_SUCCESS,
+      LOGIN_FAILED: AuthEventType.LOGIN_FAILED,
+      LOGIN_BLOCKED: AuthEventType.LOGIN_BLOCKED,
+      LOGOUT: AuthEventType.LOGOUT,
+      MFA_VERIFIED: AuthEventType.MFA_VERIFIED,
+      MFA_FAILED: AuthEventType.MFA_FAILED,
+    };
+    return map[type] ?? 0;
+  }
+
+  private protoToEventType(proto: number): string {
+    const { AuthEventType } = require('../grpc-clients');
+    const map: Record<number, string> = {
+      [AuthEventType.LOGIN_SUCCESS]: 'LOGIN_SUCCESS',
+      [AuthEventType.LOGIN_FAILED]: 'LOGIN_FAILED',
+      [AuthEventType.LOGIN_BLOCKED]: 'LOGIN_BLOCKED',
+      [AuthEventType.LOGOUT]: 'LOGOUT',
+      [AuthEventType.SESSION_EXPIRED]: 'SESSION_EXPIRED',
+      [AuthEventType.SESSION_REVOKED]: 'SESSION_REVOKED',
+      [AuthEventType.MFA_SETUP]: 'MFA_SETUP',
+      [AuthEventType.MFA_VERIFIED]: 'MFA_VERIFIED',
+      [AuthEventType.MFA_FAILED]: 'MFA_FAILED',
+      [AuthEventType.MFA_DISABLED]: 'MFA_DISABLED',
+      [AuthEventType.PASSWORD_CHANGED]: 'PASSWORD_CHANGED',
+      [AuthEventType.PASSWORD_RESET]: 'PASSWORD_RESET',
+      [AuthEventType.TOKEN_REFRESHED]: 'TOKEN_REFRESHED',
+      [AuthEventType.TOKEN_REVOKED]: 'TOKEN_REVOKED',
+    };
+    return map[proto] ?? 'UNSPECIFIED';
+  }
+
+  private resultToProto(result: string): number {
+    const { AuthEventResult } = require('../grpc-clients');
+    const map: Record<string, number> = {
+      SUCCESS: AuthEventResult.SUCCESS,
+      FAILURE: AuthEventResult.FAILURE,
+      BLOCKED: AuthEventResult.BLOCKED,
+    };
+    return map[result] ?? 0;
+  }
+
+  private protoToResult(proto: number): string {
+    const { AuthEventResult } = require('../grpc-clients');
+    const map: Record<number, string> = {
+      [AuthEventResult.SUCCESS]: 'SUCCESS',
+      [AuthEventResult.FAILURE]: 'FAILURE',
+      [AuthEventResult.BLOCKED]: 'BLOCKED',
+    };
+    return map[proto] ?? 'UNSPECIFIED';
   }
 }

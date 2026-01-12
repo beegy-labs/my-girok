@@ -64,6 +64,8 @@
     "supportedCountries": "지원 국가",
     "supportedLocales": "지원 언어",
     "auditLogs": "감사 로그",
+    "loginHistory": "로그인 이력",
+    "sessionRecordings": "세션 녹화",
     "settings": "설정"
   },
   "auth": {
@@ -250,6 +252,56 @@
     "noLogs": "감사 로그가 없습니다",
     "resourcePlaceholder": "리소스로 필터링"
   },
+  "loginHistory": {
+    "title": "로그인 이력",
+    "subtitle": "총 {{total}}개 이벤트",
+    "description": "인증 이벤트 및 세션 연결 이력 추적",
+    "loadFailed": "로그인 이력을 불러오는데 실패했습니다",
+    "noEvents": "로그인 이력이 없습니다",
+    "eventDetail": "이벤트 상세",
+    "eventId": "이벤트 ID",
+    "timestamp": "시간",
+    "accountType": "계정 유형",
+    "accountId": "계정 ID",
+    "eventType": "이벤트 유형",
+    "result": "결과",
+    "ipAddress": "IP 주소",
+    "country": "국가",
+    "sessionId": "세션 ID",
+    "deviceFingerprint": "기기 지문",
+    "userAgent": "사용자 에이전트",
+    "failureReason": "실패 사유",
+    "metadata": "메타데이터",
+    "details": "상세",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "accountTypes": {
+      "user": "사용자",
+      "operator": "운영자",
+      "admin": "관리자"
+    },
+    "eventTypes": {
+      "loginSuccess": "로그인 성공",
+      "loginFailed": "로그인 실패",
+      "loginBlocked": "로그인 차단",
+      "logout": "로그아웃",
+      "sessionExpired": "세션 만료",
+      "sessionRevoked": "세션 취소",
+      "mfaSetup": "MFA 설정",
+      "mfaVerified": "MFA 인증 성공",
+      "mfaFailed": "MFA 인증 실패",
+      "mfaDisabled": "MFA 비활성화",
+      "passwordChanged": "비밀번호 변경",
+      "passwordReset": "비밀번호 재설정",
+      "tokenRefreshed": "토큰 갱신",
+      "tokenRevoked": "토큰 취소"
+    },
+    "results": {
+      "success": "성공",
+      "failure": "실패",
+      "blocked": "차단"
+    }
+  },
   "settings": {
     "title": "설정",
     "language": "언어",
@@ -432,6 +484,19 @@
     "adminId": "관리자 ID",
     "auditLogs": "감사 로그",
     "auditLogsDesc": "이 서비스의 모든 변경 및 작업 보기"
+  },
+  "sessionRecordings": {
+    "title": "세션 녹화",
+    "subtitle": "총 {{total}}개 세션",
+    "noSessions": "녹화된 세션이 없습니다",
+    "deviceType": "기기 유형",
+    "desktop": "데스크탑",
+    "mobile": "모바일",
+    "tablet": "태블릿",
+    "pageViews": "페이지",
+    "clicks": "클릭",
+    "replay": "재생",
+    "sessionReplay": "세션 재생"
   },
   "tenants": {
     "title": "파트너 관리",

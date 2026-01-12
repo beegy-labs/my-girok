@@ -9,6 +9,7 @@ import { ClickHouseModule } from './shared/clickhouse/clickhouse.module';
 import { AuditModule } from './audit/audit.module';
 import { AdminAuditModule } from './admin-audit/admin-audit.module';
 import { RetentionModule } from './retention/retention.module';
+import { SessionRecordingsModule } from './session-recordings/session-recordings.module';
 import { AuditGrpcController, AuthEventService } from './grpc';
 import configuration from './config/configuration';
 
@@ -47,6 +48,7 @@ import configuration from './config/configuration';
     AuditModule,
     AdminAuditModule,
     RetentionModule,
+    SessionRecordingsModule,
   ],
   controllers: [AuditGrpcController],
   providers: [AuthEventService],

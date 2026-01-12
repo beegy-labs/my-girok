@@ -14,6 +14,10 @@ import {
   ClipboardCheck,
   Cog,
   Languages,
+  History,
+  Video,
+  UserCircle,
+  Key,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -125,10 +129,36 @@ export const MENU_CONFIG: MenuItem[] = [
     ],
   },
   {
+    id: 'users',
+    icon: UserCircle,
+    labelKey: 'menu.users',
+    permission: 'audit:read',
+    order: 4,
+    parentId: null,
+    children: [
+      {
+        id: 'users-overview',
+        path: '/users',
+        icon: Users,
+        labelKey: 'menu.usersOverview',
+        order: 0,
+      },
+    ],
+  },
+  {
+    id: 'authorization',
+    path: '/authorization',
+    icon: Key,
+    labelKey: 'menu.authorization',
+    permission: 'authorization:manage',
+    order: 5,
+    parentId: null,
+  },
+  {
     id: 'system',
     icon: Settings2,
     labelKey: 'menu.system',
-    order: 4,
+    order: 6,
     parentId: null,
     children: [
       {
@@ -156,11 +186,27 @@ export const MENU_CONFIG: MenuItem[] = [
         order: 2,
       },
       {
+        id: 'system-login-history',
+        path: '/system/login-history',
+        icon: History,
+        labelKey: 'menu.loginHistory',
+        permission: 'audit:read',
+        order: 3,
+      },
+      {
+        id: 'system-session-recordings',
+        path: '/system/session-recordings',
+        icon: Video,
+        labelKey: 'menu.sessionRecordings',
+        permission: 'audit:read',
+        order: 4,
+      },
+      {
         id: 'system-settings',
         path: '/system/settings',
         icon: Cog,
         labelKey: 'menu.settings',
-        order: 3,
+        order: 5,
       },
     ],
   },

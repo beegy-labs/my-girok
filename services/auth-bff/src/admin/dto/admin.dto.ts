@@ -1,5 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsNotEmpty, MinLength, IsIn } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsNotEmpty,
+  MinLength,
+  IsIn,
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsDateString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { AdminInfoDto } from './admin-info.dto';
 
 export { AdminInfoDto };
@@ -134,4 +146,131 @@ export class AdminMfaSetupResponseDto {
 export class AdminBackupCodesResponseDto {
   @ApiProperty({ description: 'Remaining backup codes count' })
   remainingCount!: number;
+}
+
+// Login History DTOs
+export class LoginHistoryQueryDto {
+  @ApiPropertyOptional({ description: 'Filter by account ID (UUID)' })
+  @IsOptional()
+  @IsString()
+  accountId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by account type',
+    enum: ['USER', 'OPERATOR', 'ADMIN'],
+  })
+  @IsOptional()
+  @IsIn(['USER', 'OPERATOR', 'ADMIN'])
+  accountType?: 'USER' | 'OPERATOR' | 'ADMIN';
+
+  @ApiPropertyOptional({
+    description: 'Filter by event type',
+    enum: [
+      'LOGIN_SUCCESS',
+      'LOGIN_FAILED',
+      'LOGIN_BLOCKED',
+      'LOGOUT',
+      'MFA_VERIFIED',
+      'MFA_FAILED',
+    ],
+  })
+  @IsOptional()
+  @IsString()
+  eventType?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by result',
+    enum: ['SUCCESS', 'FAILURE', 'BLOCKED'],
+  })
+  @IsOptional()
+  @IsIn(['SUCCESS', 'FAILURE', 'BLOCKED'])
+  result?: 'SUCCESS' | 'FAILURE' | 'BLOCKED';
+
+  @ApiPropertyOptional({ description: 'Filter by IP address' })
+  @IsOptional()
+  @IsString()
+  ipAddress?: string;
+
+  @ApiPropertyOptional({ description: 'Start date (ISO 8601)' })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @ApiPropertyOptional({ description: 'End date (ISO 8601)' })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @ApiPropertyOptional({ description: 'Page number', default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number = 1;
+
+  @ApiPropertyOptional({ description: 'Items per page', default: 20 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number = 20;
+}
+
+export class LoginHistoryEventDto {
+  @ApiProperty({ description: 'Event ID' })
+  id!: string;
+
+  @ApiProperty({ description: 'Event type' })
+  eventType!: string;
+
+  @ApiProperty({ description: 'Account type' })
+  accountType!: string;
+
+  @ApiProperty({ description: 'Account ID' })
+  accountId!: string;
+
+  @ApiPropertyOptional({ description: 'Session ID' })
+  sessionId?: string;
+
+  @ApiProperty({ description: 'IP address' })
+  ipAddress!: string;
+
+  @ApiProperty({ description: 'User agent' })
+  userAgent!: string;
+
+  @ApiPropertyOptional({ description: 'Device fingerprint' })
+  deviceFingerprint?: string;
+
+  @ApiPropertyOptional({ description: 'Country code (ISO 3166-1 alpha-2)' })
+  countryCode?: string;
+
+  @ApiProperty({ description: 'Result' })
+  result!: string;
+
+  @ApiPropertyOptional({ description: 'Failure reason' })
+  failureReason?: string;
+
+  @ApiPropertyOptional({ description: 'Additional metadata' })
+  metadata?: Record<string, string>;
+
+  @ApiProperty({ description: 'Event timestamp' })
+  timestamp!: string;
+}
+
+export class LoginHistoryResponseDto {
+  @ApiProperty({ description: 'Login history events', type: [LoginHistoryEventDto] })
+  data!: LoginHistoryEventDto[];
+
+  @ApiProperty({ description: 'Total count' })
+  total!: number;
+
+  @ApiProperty({ description: 'Current page' })
+  page!: number;
+
+  @ApiProperty({ description: 'Items per page' })
+  limit!: number;
+
+  @ApiProperty({ description: 'Total pages' })
+  totalPages!: number;
 }

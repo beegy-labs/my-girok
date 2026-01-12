@@ -17,6 +17,10 @@ import { OAuthModule } from './oauth/oauth.module';
 import { GrpcClientsModule } from './grpc-clients/grpc-clients.module';
 import { CommonModule } from './common/common.module';
 import { HealthModule } from './health/health.module';
+import { SessionRecordingsModule } from './session-recordings/session-recordings.module';
+import { AnalyticsModule } from './admin/analytics/analytics.module';
+import { AuthorizationModule as AdminAuthorizationModule } from './admin/authorization/authorization.module';
+import { TeamsModule } from './admin/teams/teams.module';
 import { SessionGuard } from './common/guards/session.guard';
 
 @Module({
@@ -63,6 +67,10 @@ import { SessionGuard } from './common/guards/session.guard';
     OperatorModule,
     OAuthModule,
     HealthModule,
+    SessionRecordingsModule,
+    AnalyticsModule,
+    AdminAuthorizationModule,
+    TeamsModule,
   ],
   providers: [
     {
