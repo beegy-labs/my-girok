@@ -22,7 +22,7 @@ export default defineConfig({
         singleThread: false,
         isolate: true,
         minThreads: 1,
-        maxThreads: 4,
+        maxThreads: 8, // Increase from 4 to 8 for faster parallel execution
       },
     },
     deps: {

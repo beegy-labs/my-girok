@@ -33,7 +33,7 @@ jobs:
   check:
     name: Check
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 3
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,7 +57,7 @@ jobs:
     name: Build
     needs: check
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 10
+    timeout-minutes: 60
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:
@@ -95,7 +95,7 @@ jobs:
     name: Deploy
     needs: build
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 5
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:

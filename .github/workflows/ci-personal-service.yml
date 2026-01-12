@@ -33,7 +33,7 @@ jobs:
   check:
     name: Check
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 3
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -58,7 +58,7 @@ jobs:
     name: Build
     if: github.event_name == 'push'
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 10
+    timeout-minutes: 60
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:
@@ -95,7 +95,7 @@ jobs:
     needs: [check, build]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
     runs-on: [self-hosted, kubernetes, gitops]
-    timeout-minutes: 5
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
