@@ -29,6 +29,7 @@
 | Config     | SSOT in `src/config/` (legal, tenant, region, status) |
 | Auth       | Token refresh with queue, MFA support                 |
 | Styling    | theme-\* classes, NO hardcoded colors                 |
+| Errors     | Centralized handler with retry, classification        |
 
 ## Settings Page Features
 
@@ -44,3 +45,4 @@ pnpm --filter @my-girok/web-admin build  # Build
 ```
 
 **SSOT**: `docs/llm/apps/web-admin.md`
+**Error Handling**: `docs/llm/guides/frontend-error-handling.md`

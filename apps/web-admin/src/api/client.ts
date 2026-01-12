@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
 import { logger } from '../utils/logger';
+import { handleApiError } from '../lib/error-handler';
 
 // BFF API base URL - auth-bff handles all authentication
 const API_BASE_URL = import.meta.env.VITE_AUTH_BFF_URL || 'https://auth-dev.girok.dev';
@@ -71,7 +72,7 @@ const refreshSession = async (): Promise<boolean> => {
   }
 };
 
-// Response interceptor: handle 401 errors with token refresh
+// Response interceptor: handle errors with centralized error handling
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -82,8 +83,12 @@ apiClient.interceptors.response.use(
 
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Only handle 401 errors
+    // Handle and log all errors
+    handleApiError(error, originalRequest.url);
+
+    // Special handling for 401 errors (authentication)
     if (error.response?.status !== 401) {
+      // For non-401 errors, just reject with enhanced error info
       return Promise.reject(error);
     }
 
