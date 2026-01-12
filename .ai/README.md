@@ -19,15 +19,17 @@
 | -------------------------------------- | --------------- |
 | [rules.md](rules.md)                   | DO/DON'T rules  |
 | [architecture.md](architecture.md)     | System patterns |
+| [authorization.md](authorization.md)   | ReBAC + OpenFGA |
 | [best-practices.md](best-practices.md) | 2026 checklist  |
 
 ## Services
 
-| Service          | Port | File                                                         |
-| ---------------- | ---- | ------------------------------------------------------------ |
-| identity-service | 3005 | [services/identity-service.md](services/identity-service.md) |
-| auth-service     | 3001 | [services/auth-service.md](services/auth-service.md)         |
-| personal-service | 4002 | [services/personal-service.md](services/personal-service.md) |
+| Service               | Port | File                                                                   |
+| --------------------- | ---- | ---------------------------------------------------------------------- |
+| authorization-service | 3012 | [services/authorization-service.md](services/authorization-service.md) |
+| identity-service      | 3005 | [services/identity-service.md](services/identity-service.md)           |
+| auth-service          | 3001 | [services/auth-service.md](services/auth-service.md)                   |
+| personal-service      | 4002 | [services/personal-service.md](services/personal-service.md)           |
 
 ## Packages
 

@@ -31,8 +31,48 @@ export interface LogAuthEventResponse {
   message: string;
 }
 
+// GetAuthEvents interfaces
+export interface GetAuthEventsRequest {
+  accountId?: string;
+  accountType?: number;
+  eventType?: number;
+  result?: number;
+  ipAddress?: string;
+  sessionId?: string;
+  startTime?: { seconds: number; nanos: number };
+  endTime?: { seconds: number; nanos: number };
+  page?: number;
+  pageSize?: number;
+  orderBy?: string;
+  descending?: boolean;
+}
+
+export interface AuthEvent {
+  id: string;
+  eventType: number;
+  accountType: number;
+  accountId: string;
+  sessionId: string;
+  ipAddress: string;
+  userAgent: string;
+  deviceFingerprint: string;
+  countryCode: string;
+  result: number;
+  failureReason: string;
+  metadata: Record<string, string>;
+  timestamp: { seconds: number; nanos: number };
+}
+
+export interface GetAuthEventsResponse {
+  events: AuthEvent[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
 interface AuditServiceClient {
   logAuthEvent(request: LogAuthEventRequest): Observable<LogAuthEventResponse>;
+  getAuthEvents(request: GetAuthEventsRequest): Observable<GetAuthEventsResponse>;
 }
 
 @Injectable()
@@ -100,6 +140,45 @@ export class AuditGrpcClient implements OnModuleInit {
     } catch (error) {
       this.logger.warn(`Failed to log auth event: ${error}`);
       return { success: false, eventId: '', message: `Failed: ${error}` };
+    }
+  }
+
+  /**
+   * Query authentication events (login history) from the audit service.
+   */
+  async getAuthEvents(request: GetAuthEventsRequest): Promise<GetAuthEventsResponse> {
+    if (!this.isConnected || !this.auditService) {
+      this.logger.debug('Audit service not connected, returning empty result');
+      return {
+        events: [],
+        totalCount: 0,
+        page: request.page ?? 1,
+        pageSize: request.pageSize ?? 20,
+      };
+    }
+
+    try {
+      return await firstValueFrom(
+        this.auditService.getAuthEvents(request).pipe(
+          catchError((error) => {
+            this.logger.warn(`Failed to get auth events: ${error.message}`);
+            return of({
+              events: [],
+              totalCount: 0,
+              page: request.page ?? 1,
+              pageSize: request.pageSize ?? 20,
+            });
+          }),
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to get auth events: ${error}`);
+      return {
+        events: [],
+        totalCount: 0,
+        page: request.page ?? 1,
+        pageSize: request.pageSize ?? 20,
+      };
     }
   }
 

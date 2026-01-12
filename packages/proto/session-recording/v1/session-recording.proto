@@ -1,0 +1,226 @@
+syntax = "proto3";
+
+package session_recording.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/session_recording/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// SessionRecordingService handles session recording for replay functionality
+service SessionRecordingService {
+  // Event Batches
+  rpc SaveEventBatch(SaveEventBatchRequest) returns (SaveEventBatchResponse);
+
+  // Session Lifecycle
+  rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
+
+  // Page Views
+  rpc SavePageView(SavePageViewRequest) returns (SavePageViewResponse);
+
+  // Custom Events
+  rpc SaveCustomEvent(SaveCustomEventRequest) returns (SaveCustomEventResponse);
+
+  // Session Queries
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc GetSessionEvents(GetSessionEventsRequest) returns (GetSessionEventsResponse);
+}
+
+// ============================================================
+// Device & Actor Types
+// ============================================================
+
+enum DeviceType {
+  DEVICE_TYPE_UNSPECIFIED = 0;
+  DEVICE_TYPE_DESKTOP = 1;
+  DEVICE_TYPE_MOBILE = 2;
+  DEVICE_TYPE_TABLET = 3;
+}
+
+enum ActorType {
+  ACTOR_TYPE_UNSPECIFIED = 0;
+  ACTOR_TYPE_USER = 1;
+  ACTOR_TYPE_OPERATOR = 2;
+  ACTOR_TYPE_ADMIN = 3;
+}
+
+enum SessionStatus {
+  SESSION_STATUS_UNSPECIFIED = 0;
+  SESSION_STATUS_ACTIVE = 1;
+  SESSION_STATUS_ENDED = 2;
+}
+
+// ============================================================
+// Event Batch Messages
+// ============================================================
+
+message SaveEventBatchRequest {
+  string session_id = 1;
+  int32 sequence_start = 2;
+  int32 sequence_end = 3;
+  bytes events = 4;  // JSON-encoded rrweb events
+  google.protobuf.Timestamp timestamp = 5;
+  map<string, string> metadata = 6;
+}
+
+message SaveEventBatchResponse {
+  bool success = 1;
+  string batch_id = 2;
+  string message = 3;
+}
+
+// ============================================================
+// Session Lifecycle Messages
+// ============================================================
+
+message SessionMetadata {
+  string session_id = 1;
+
+  // Actor information
+  optional string actor_id = 2;
+  optional ActorType actor_type = 3;
+  optional string actor_email = 4;
+
+  // Service context
+  optional string service_slug = 5;
+
+  // Device information
+  string browser = 6;
+  string os = 7;
+  DeviceType device_type = 8;
+  string screen_resolution = 9;
+  string timezone = 10;
+  string language = 11;
+  string user_agent = 12;
+  string device_fingerprint = 13;
+
+  // Request context
+  optional string ip_address = 14;
+  optional string country_code = 15;
+}
+
+message StartSessionRequest {
+  SessionMetadata metadata = 1;
+}
+
+message StartSessionResponse {
+  bool success = 1;
+  string session_id = 2;
+  string message = 3;
+}
+
+message EndSessionRequest {
+  string session_id = 1;
+  google.protobuf.Timestamp ended_at = 2;
+  int64 duration_ms = 3;
+}
+
+message EndSessionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================
+// Page View Messages
+// ============================================================
+
+message SavePageViewRequest {
+  string session_id = 1;
+  string path = 2;
+  string title = 3;
+  optional string referrer = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  optional string actor_id = 6;
+  optional string service_slug = 7;
+}
+
+message SavePageViewResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================
+// Custom Event Messages
+// ============================================================
+
+message SaveCustomEventRequest {
+  string session_id = 1;
+  bytes event_data = 2;  // JSON-encoded custom event
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message SaveCustomEventResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================
+// Query Messages
+// ============================================================
+
+message ListSessionsRequest {
+  // Filters
+  optional string service_slug = 1;
+  optional string actor_id = 2;
+  optional DeviceType device_type = 3;
+  optional google.protobuf.Timestamp start_date = 4;
+  optional google.protobuf.Timestamp end_date = 5;
+  optional SessionStatus status = 6;
+
+  // Pagination
+  int32 page = 7;
+  int32 limit = 8;
+}
+
+message SessionSummary {
+  string session_id = 1;
+
+  // Actor
+  optional string actor_id = 2;
+  optional ActorType actor_type = 3;
+  optional string actor_email = 4;
+
+  // Service
+  string service_slug = 5;
+
+  // Timing
+  google.protobuf.Timestamp started_at = 6;
+  optional google.protobuf.Timestamp ended_at = 7;
+  int32 duration_seconds = 8;
+
+  // Stats
+  int32 total_events = 9;
+  int32 page_views = 10;
+  int32 clicks = 11;
+
+  // Pages
+  string entry_page = 12;
+  optional string exit_page = 13;
+
+  // Device
+  string browser = 14;
+  string os = 15;
+  DeviceType device_type = 16;
+  string country_code = 17;
+
+  // Status
+  SessionStatus status = 18;
+}
+
+message ListSessionsResponse {
+  repeated SessionSummary sessions = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  int32 total_pages = 5;
+}
+
+message GetSessionEventsRequest {
+  string session_id = 1;
+}
+
+message GetSessionEventsResponse {
+  string session_id = 1;
+  SessionSummary metadata = 2;
+  bytes events = 3;  // JSON-encoded rrweb events array
+}

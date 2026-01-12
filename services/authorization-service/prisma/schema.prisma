@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// NOTE: This schema is READ-ONLY. All migrations must be done via goose.
-// To sync schema: pnpm prisma db pull && pnpm prisma generate
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,133 +7,100 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// Authorization Tuples
-// ============================================
-
 /// Stores relationship tuples in the format (user, relation, object)
 /// This is the core data structure for Zanzibar-style ReBAC
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model AuthorizationTuple {
-  id String @id @db.Text
+  id               String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userType         String    @map("user_type") @db.VarChar(64)
+  userId           String    @map("user_id") @db.VarChar(256)
+  userRelation     String?   @map("user_relation") @db.VarChar(64)
+  relation         String    @db.VarChar(64)
+  objectType       String    @map("object_type") @db.VarChar(64)
+  objectId         String    @map("object_id") @db.VarChar(256)
+  conditionName    String?   @map("condition_name") @db.VarChar(128)
+  conditionContext Json?     @map("condition_context")
+  createdTxid      BigInt    @map("created_txid")
+  deletedTxid      BigInt?   @map("deleted_txid")
+  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  // User/Subject of the relationship
-  userType     String  @map("user_type") @db.VarChar(64)
-  userId       String  @map("user_id") @db.VarChar(256)
-  userRelation String? @map("user_relation") @db.VarChar(64)
-
-  // Relation
-  relation String @db.VarChar(64)
-
-  // Object/Resource of the relationship
-  objectType String @map("object_type") @db.VarChar(64)
-  objectId   String @map("object_id") @db.VarChar(256)
-
-  // Conditional tuple support
-  conditionName    String? @map("condition_name") @db.VarChar(128)
-  conditionContext Json?   @map("condition_context")
-
-  // Transaction tracking for consistency (Zookie)
-  createdTxid BigInt  @map("created_txid")
-  deletedTxid BigInt? @map("deleted_txid")
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  @@unique([userType, userId, userRelation, relation, objectType, objectId, deletedTxid], name: "unique_tuple")
-  @@index([userType, userId, relation, objectType])
-  @@index([objectType, objectId, relation])
-  @@index([objectType, objectId])
-  @@index([createdTxid])
-  @@index([deletedTxid])
+  @@index([createdTxid], map: "idx_authorization_tuples_created_txid")
+  @@index([deletedTxid], map: "idx_authorization_tuples_deleted_txid")
+  @@index([objectType, objectId], map: "idx_authorization_tuples_object")
+  @@index([objectType, objectId, relation], map: "idx_authorization_tuples_object_relation")
+  @@index([userType, userId, relation, objectType], map: "idx_authorization_tuples_user")
   @@map("authorization_tuples")
 }
 
-// ============================================
-// Authorization Models (DSL)
-// ============================================
-
 /// Stores compiled authorization models (DSL)
 model AuthorizationModel {
-  id String @id @db.Text
+  id              String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  versionId       String    @map("version_id") @db.VarChar(26)
+  schemaVersion   String    @map("schema_version") @db.VarChar(10)
+  dslSource       String    @map("dsl_source")
+  compiledModel   Json      @map("compiled_model")
+  typeDefinitions Json      @map("type_definitions")
+  isActive        Boolean?  @default(false) @map("is_active")
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  versionId       String @map("version_id") @db.VarChar(26)
-  schemaVersion   String @map("schema_version") @db.VarChar(10)
-  dslSource       String @map("dsl_source") @db.Text
-  compiledModel   Json   @map("compiled_model")
-  typeDefinitions Json   @map("type_definitions")
-  isActive        Boolean @default(false) @map("is_active")
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  @@index([isActive])
-  @@index([versionId])
+  @@index([isActive], map: "idx_authorization_models_active")
+  @@index([versionId], map: "idx_authorization_models_version")
   @@map("authorization_models")
 }
 
-// ============================================
-// Changelog for Cache Invalidation
-// ============================================
-
 /// Tracks changes to tuples for cache invalidation and sync
 model AuthorizationChangelog {
-  id BigInt @id @default(autoincrement())
-
-  operation String @db.VarChar(10)
-  tupleId   String @map("tuple_id") @db.Text
+  id        BigInt    @id @default(autoincrement())
+  operation String    @db.VarChar(10)
+  tupleId   String    @map("tuple_id")
   txid      BigInt
+  timestamp DateTime? @default(now()) @db.Timestamptz(6)
+  processed Boolean?  @default(false)
 
-  timestamp DateTime @default(now()) @db.Timestamptz(6)
-  processed Boolean  @default(false)
-
-  @@index([processed, timestamp])
-  @@index([txid])
+  @@index([txid], map: "idx_authorization_changelog_txid")
+  @@index([processed, timestamp], map: "idx_authorization_changelog_unprocessed")
   @@map("authorization_changelog")
 }
 
-// ============================================
-// Permission Audit Log
-// ============================================
-
 /// Audit log for permission changes
 model PermissionAuditLog {
-  id String @id @db.Text
+  id            String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  actorType     String    @map("actor_type") @db.VarChar(32)
+  actorId       String    @map("actor_id") @db.VarChar(256)
+  action        String    @db.VarChar(32)
+  tupleUser     String    @map("tuple_user") @db.VarChar(320)
+  tupleRelation String    @map("tuple_relation") @db.VarChar(64)
+  tupleObject   String    @map("tuple_object") @db.VarChar(320)
+  reason        String?
+  ipAddress     String?   @map("ip_address") @db.VarChar(45)
+  userAgent     String?   @map("user_agent")
+  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  actorType     String  @map("actor_type") @db.VarChar(32)
-  actorId       String  @map("actor_id") @db.VarChar(256)
-  action        String  @db.VarChar(32)
-  tupleUser     String  @map("tuple_user") @db.VarChar(320)
-  tupleRelation String  @map("tuple_relation") @db.VarChar(64)
-  tupleObject   String  @map("tuple_object") @db.VarChar(320)
-  reason        String? @db.Text
-  ipAddress     String? @map("ip_address") @db.VarChar(45)
-  userAgent     String? @map("user_agent") @db.Text
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  @@index([actorType, actorId])
-  @@index([tupleObject])
-  @@index([createdAt])
+  @@index([actorType, actorId], map: "idx_permission_audit_logs_actor")
+  @@index([createdAt], map: "idx_permission_audit_logs_created")
+  @@index([tupleObject], map: "idx_permission_audit_logs_object")
   @@map("permission_audit_logs")
 }
 
-// ============================================
-// Teams (Application Metadata)
-// ============================================
-
 /// Team/Policy set metadata for grouping permissions
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model Team {
-  id String @id @db.Text
+  id          String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name        String    @db.VarChar(128)
+  displayName String    @map("display_name") @db.VarChar(256)
+  serviceId   String?   @map("service_id") @db.VarChar(64)
+  description String?
+  createdBy   String    @map("created_by") @db.VarChar(256)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  name        String  @db.VarChar(128)
-  displayName String  @map("display_name") @db.VarChar(256)
-  serviceId   String? @map("service_id") @db.VarChar(64)
-  description String? @db.Text
-  createdBy   String  @map("created_by") @db.VarChar(256)
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  @@unique([name, serviceId])
-  @@index([serviceId])
+  @@index([serviceId], map: "idx_teams_service")
   @@map("teams")
+}
+
+model goose_db_version {
+  id         Int      @id @default(autoincrement())
+  version_id BigInt
+  is_applied Boolean
+  tstamp     DateTime @default(now()) @db.Timestamp(6)
 }

@@ -18,11 +18,19 @@ const ConsentExamplesPage = lazy(() => import('./pages/legal/ConsentExamplesPage
 const TenantsPage = lazy(() => import('./pages/tenants/TenantsPage'));
 const TenantEditPage = lazy(() => import('./pages/tenants/TenantEditPage'));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogsPage'));
+const LoginHistoryPage = lazy(() => import('./pages/LoginHistoryPage'));
 const ServicesPage = lazy(() => import('./pages/services/ServicesPage'));
 const ServiceDetailPage = lazy(() => import('./pages/services/ServiceDetailPage'));
 const ServiceConsentsPage = lazy(() => import('./pages/services/ServiceConsentsPage'));
 const SupportedCountriesPage = lazy(() => import('./pages/system/SupportedCountriesPage'));
 const SupportedLocalesPage = lazy(() => import('./pages/system/SupportedLocalesPage'));
+const SessionRecordingsPage = lazy(
+  () => import('./pages/system/session-recordings/SessionRecordingsPage'),
+);
+const SessionDetailPage = lazy(() => import('./pages/system/session-recordings/SessionDetailPage'));
+const UsersOverviewPage = lazy(() => import('./pages/users/UsersOverviewPage'));
+const UserActivityPage = lazy(() => import('./pages/users/UserActivityPage'));
+const AuthorizationPage = lazy(() => import('./pages/authorization/AuthorizationPage'));
 
 // Page wrapper with Suspense and Error Boundary
 function PageWrapper() {
@@ -195,8 +203,60 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'system/login-history',
+            element: (
+              <PrivateRoute permission="audit:read">
+                <LoginHistoryPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/session-recordings',
+            element: (
+              <PrivateRoute permission="audit:read">
+                <SessionRecordingsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/session-recordings/:sessionId',
+            element: (
+              <PrivateRoute permission="audit:read">
+                <SessionDetailPage />
+              </PrivateRoute>
+            ),
+          },
+          {
             path: 'system/settings',
             element: <SettingsPage />,
+          },
+
+          // Users
+          {
+            path: 'users',
+            element: (
+              <PrivateRoute permission="audit:read">
+                <UsersOverviewPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'users/:userId',
+            element: (
+              <PrivateRoute permission="audit:read">
+                <UserActivityPage />
+              </PrivateRoute>
+            ),
+          },
+
+          // Authorization
+          {
+            path: 'authorization',
+            element: (
+              <PrivateRoute permission="authorization:manage">
+                <AuthorizationPage />
+              </PrivateRoute>
+            ),
           },
 
           // Legacy redirects for backward compatibility
