@@ -199,7 +199,7 @@ describe('ScrollDepthHeatmap', () => {
     render(<ScrollDepthHeatmap depths={[]} pageHeight={2000} />);
 
     expect(screen.getByText('0')).toBeInTheDocument();
-    expect(screen.getByText('NaN%')).toBeInTheDocument(); // Average of empty array
+    expect(screen.getByText('0.0%')).toBeInTheDocument(); // Average of empty array handled gracefully
   });
 
   it('should bucket scroll depths into 20 segments', () => {

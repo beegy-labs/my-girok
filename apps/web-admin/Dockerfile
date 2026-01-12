@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Build arguments for environment variables
 ARG VITE_ADMIN_API_URL

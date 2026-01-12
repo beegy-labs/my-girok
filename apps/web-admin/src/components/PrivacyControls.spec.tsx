@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { PrivacyControls, type PrivacyRule } from './PrivacyControls';
-import { PRIVACY_PRESET_RULES } from '../config/privacy-rules.config';
 
 describe('PrivacyControls', () => {
   const mockOnSave = vi.fn();

@@ -344,11 +344,12 @@ export class Compiler {
         }
         break;
 
-      case 'ExclusionRewrite':
+      case 'ExclusionRewrite': {
         const exclusion = rewriteAst as ExclusionRewriteAST;
         this.validateRewrite(typeName, relationName, exclusion.base, definedRelations);
         this.validateRewrite(typeName, relationName, exclusion.subtract, definedRelations);
         break;
+      }
     }
   }
 
