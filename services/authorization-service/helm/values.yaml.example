@@ -1,0 +1,196 @@
+# My-Girok Authorization Service Helm Values Example
+#
+# USAGE:
+#   1. Copy this file: cp values.yaml.example values.yaml
+#   2. Edit values.yaml with your settings
+#   3. Install: helm install my-girok-authorization . -f values.yaml
+#
+# IMPORTANT:
+#   - values.yaml is gitignored - never commit your actual configuration
+#   - Customize for your environment (development, staging, production)
+#   - Use Sealed Secrets for sensitive data in production
+
+# Number of replicas
+# Development: 1, Staging: 2, Production: 2+
+replicaCount: 2
+
+image:
+  repository: your-registry.io/my-girok/authorization-service
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+
+# ============================================================================
+# Service Configuration
+# ============================================================================
+service:
+  type: ClusterIP
+  # HTTP port for REST API and health checks
+  httpPort: 3012
+  # gRPC port for internal service communication
+  grpcPort: 50055
+
+# Ingress is typically disabled for internal authorization service
+# Access is via gRPC from other services
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: authorization-api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: authorization-api-tls
+      hosts:
+        - authorization-api.example.com
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - authorization-service
+          topologyKey: kubernetes.io/hostname
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+app:
+  nodeEnv: production
+  httpPort: 3012
+  grpcPort: 50055
+
+  # Check Engine Configuration
+  check:
+    maxDepth: 25
+
+  # Cache Configuration
+  cache:
+    l1MaxItems: 10000
+    l1TtlMs: 30000      # 30 seconds
+    l2TtlSec: 300       # 5 minutes
+    bloomExpectedItems: 100000
+    bloomFalsePositiveRate: 0.01
+
+# ============================================================================
+# PostgreSQL Configuration
+# ============================================================================
+postgresql:
+  # Database URL is stored in secret
+  secretName: "authorization-service-secret"
+  secretKey: "database-url"
+
+# ============================================================================
+# Valkey (Redis-compatible) Configuration
+# ============================================================================
+valkey:
+  enabled: true
+  host: "valkey.example.com"
+  port: 6379
+  db: 4
+  secretName: "authorization-service-valkey"
+  secretKey: "password"
+
+# ============================================================================
+# OpenTelemetry Configuration
+# ============================================================================
+otel:
+  enabled: false
+  endpoint: "http://otel-collector:4318"
+  protocol: "http/protobuf"
+  serviceName: ""
+  tracesEnabled: true
+  metricsEnabled: true
+  logsEnabled: false
+
+# ============================================================================
+# External Secrets Operator (ESO) Configuration
+# ============================================================================
+# ESO syncs secrets from external providers (Vault, AWS SM, etc.)
+#
+# Prerequisites:
+#   1. Install ESO: helm install external-secrets external-secrets/external-secrets
+#   2. Create ClusterSecretStore pointing to your Vault instance
+#
+# Vault path should contain:
+#   - database-url: PostgreSQL connection string
+#   - valkey-password: Valkey/Redis password (if valkey.enabled)
+
+externalSecrets:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: "vault-backend"
+    kind: "ClusterSecretStore"
+  vault:
+    path: "secret/data/my-girok/authorization-service"
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3

@@ -1,0 +1,335 @@
+syntax = "proto3";
+
+package authorization.v1;
+
+option go_package = "github.com/beegy-labs/my-girok/gen/authorization/v1";
+
+// AuthorizationService provides Zanzibar-style ReBAC permission checking
+service AuthorizationService {
+  // Permission Check
+  rpc Check(CheckRequest) returns (CheckResponse);
+  rpc BatchCheck(BatchCheckRequest) returns (BatchCheckResponse);
+
+  // Tuple Management
+  rpc Write(WriteRequest) returns (WriteResponse);
+  rpc Read(ReadRequest) returns (ReadResponse);
+
+  // Query
+  rpc ListObjects(ListObjectsRequest) returns (ListObjectsResponse);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc Expand(ExpandRequest) returns (ExpandResponse);
+
+  // Model Management
+  rpc WriteModel(WriteModelRequest) returns (WriteModelResponse);
+  rpc ReadModel(ReadModelRequest) returns (ReadModelResponse);
+  rpc ActivateModel(ActivateModelRequest) returns (ActivateModelResponse);
+}
+
+// ============================================================
+// Core Types
+// ============================================================
+
+// TupleKey represents a relationship tuple (user, relation, object)
+message TupleKey {
+  // The user/subject of the relationship
+  // Format: "type:id" or "type:id#relation" for userset
+  // Examples: "user:alice", "team:dev#member"
+  string user = 1;
+
+  // The relation connecting user to object
+  // Examples: "viewer", "admin", "member"
+  string relation = 2;
+
+  // The object/resource of the relationship
+  // Format: "type:id"
+  // Examples: "session_recording:service-a", "team:cs-korea"
+  string object = 3;
+}
+
+// ResolutionTrace shows how a permission was evaluated (for debugging)
+message ResolutionTrace {
+  string node_type = 1;
+  bool result = 2;
+  repeated ResolutionTrace children = 3;
+  int64 duration_us = 4;
+  map<string, string> context = 5;
+}
+
+// ============================================================
+// Check API
+// ============================================================
+
+message CheckRequest {
+  // The user to check
+  string user = 1;
+
+  // The relation to check
+  string relation = 2;
+
+  // The object to check against
+  string object = 3;
+
+  // Optional contextual tuples for this request only
+  repeated TupleKey contextual_tuples = 4;
+
+  // Whether to include resolution trace
+  bool trace = 5;
+
+  // Consistency token for read-after-write
+  string consistency_token = 6;
+}
+
+message CheckResponse {
+  // Whether the permission is granted
+  bool allowed = 1;
+
+  // Resolution trace (if requested)
+  ResolutionTrace resolution = 2;
+
+  // Consistency token
+  string consistency_token = 3;
+}
+
+message BatchCheckRequest {
+  repeated CheckRequestItem checks = 1;
+}
+
+message CheckRequestItem {
+  string user = 1;
+  string relation = 2;
+  string object = 3;
+}
+
+message BatchCheckResponse {
+  repeated CheckResponseItem results = 1;
+}
+
+message CheckResponseItem {
+  bool allowed = 1;
+  string error = 2;
+}
+
+// ============================================================
+// Write API
+// ============================================================
+
+message WriteRequest {
+  // Tuples to create
+  repeated TupleKey writes = 1;
+
+  // Tuples to delete
+  repeated TupleKey deletes = 2;
+}
+
+message WriteResponse {
+  // Consistency token for subsequent reads
+  string consistency_token = 1;
+
+  // Number of tuples written
+  int32 written_count = 2;
+
+  // Number of tuples deleted
+  int32 deleted_count = 3;
+}
+
+// ============================================================
+// Read API
+// ============================================================
+
+message ReadRequest {
+  // Filter by user (optional)
+  optional string user = 1;
+
+  // Filter by relation (optional)
+  optional string relation = 2;
+
+  // Filter by object (optional)
+  optional string object = 3;
+
+  // Pagination
+  int32 page_size = 4;
+  string page_token = 5;
+}
+
+message ReadResponse {
+  repeated TupleKey tuples = 1;
+  string next_page_token = 2;
+}
+
+// ============================================================
+// ListObjects API
+// ============================================================
+
+message ListObjectsRequest {
+  // The user to check
+  string user = 1;
+
+  // The relation to check
+  string relation = 2;
+
+  // The type of objects to list
+  string type = 3;
+
+  // Pagination
+  int32 page_size = 4;
+  string page_token = 5;
+}
+
+message ListObjectsResponse {
+  // List of object IDs the user has the relation to
+  repeated string objects = 1;
+  string next_page_token = 2;
+}
+
+// ============================================================
+// ListUsers API
+// ============================================================
+
+message ListUsersRequest {
+  // The object to check
+  string object = 1;
+
+  // The relation to check
+  string relation = 2;
+
+  // Filter by user types (optional)
+  repeated string user_types = 3;
+
+  // Pagination
+  int32 page_size = 4;
+  string page_token = 5;
+}
+
+message ListUsersResponse {
+  // List of users with the relation to the object
+  repeated string users = 1;
+  string next_page_token = 2;
+}
+
+// ============================================================
+// Expand API
+// ============================================================
+
+message ExpandRequest {
+  // The object to expand
+  string object = 1;
+
+  // The relation to expand
+  string relation = 2;
+}
+
+message ExpandResponse {
+  UsersetTree tree = 1;
+}
+
+// UsersetTree represents the expanded permission tree
+message UsersetTree {
+  oneof node {
+    LeafNode leaf = 1;
+    ComputedNode computed = 2;
+    TupleToUsersetNode tuple_to_userset = 3;
+    UnionNode union = 4;
+    IntersectionNode intersection = 5;
+    ExclusionNode exclusion = 6;
+  }
+}
+
+message LeafNode {
+  repeated string users = 1;
+}
+
+message ComputedNode {
+  string relation = 1;
+  repeated UsersetTree children = 2;
+}
+
+message TupleToUsersetNode {
+  string tupleset_relation = 1;
+  string computed_relation = 2;
+  repeated UsersetTree children = 3;
+}
+
+message UnionNode {
+  repeated UsersetTree children = 1;
+}
+
+message IntersectionNode {
+  repeated UsersetTree children = 1;
+}
+
+message ExclusionNode {
+  UsersetTree base = 1;
+  UsersetTree subtract = 2;
+}
+
+// ============================================================
+// Model API
+// ============================================================
+
+message WriteModelRequest {
+  // The DSL source code
+  string dsl_source = 1;
+
+  // Whether to activate this model immediately
+  bool activate = 2;
+}
+
+message WriteModelResponse {
+  // Whether the model was successfully created
+  bool success = 1;
+
+  // Model ID
+  string model_id = 2;
+
+  // Version ID (ULID)
+  string version_id = 3;
+
+  // Validation errors (if any)
+  repeated ModelValidationError errors = 4;
+
+  // Validation warnings (if any)
+  repeated ModelValidationWarning warnings = 5;
+}
+
+message ModelValidationError {
+  string type = 1;
+  string relation = 2;
+  string message = 3;
+  int32 line = 4;
+  int32 column = 5;
+}
+
+message ModelValidationWarning {
+  string type = 1;
+  string relation = 2;
+  string message = 3;
+}
+
+message ReadModelRequest {
+  // Read a specific version (optional, defaults to active)
+  optional string version_id = 1;
+}
+
+message ReadModelResponse {
+  // The DSL source code
+  string dsl_source = 1;
+
+  // Model ID
+  string model_id = 2;
+
+  // Version ID
+  string version_id = 3;
+
+  // Whether this model is active
+  bool is_active = 4;
+}
+
+message ActivateModelRequest {
+  // Model ID to activate
+  string model_id = 1;
+}
+
+message ActivateModelResponse {
+  bool success = 1;
+  string message = 2;
+}

@@ -1,0 +1,166 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "authorization-service.fullname" . }}
+  labels:
+    {{- include "authorization-service.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "authorization-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "authorization-service.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "authorization-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.app.httpPort }}
+          protocol: TCP
+        - name: grpc
+          containerPort: {{ .Values.app.grpcPort }}
+          protocol: TCP
+        env:
+        # ============================================================================
+        # Basic Configuration
+        # ============================================================================
+        - name: NODE_ENV
+          value: {{ .Values.app.nodeEnv | quote }}
+        - name: HTTP_PORT
+          value: {{ .Values.app.httpPort | quote }}
+        - name: GRPC_PORT
+          value: {{ .Values.app.grpcPort | quote }}
+
+        # ============================================================================
+        # PostgreSQL Configuration
+        # ============================================================================
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.externalSecrets.enabled }}
+              name: {{ include "authorization-service.fullname" . }}-secret
+              key: database-url
+              {{- else }}
+              name: {{ .Values.postgresql.secretName }}
+              key: {{ .Values.postgresql.secretKey }}
+              {{- end }}
+
+        # ============================================================================
+        # Check Engine Configuration
+        # ============================================================================
+        - name: CHECK_MAX_DEPTH
+          value: {{ .Values.app.check.maxDepth | quote }}
+
+        # ============================================================================
+        # Cache Configuration
+        # ============================================================================
+        - name: CACHE_L1_MAX_ITEMS
+          value: {{ .Values.app.cache.l1MaxItems | quote }}
+        - name: CACHE_L1_TTL_MS
+          value: {{ .Values.app.cache.l1TtlMs | quote }}
+        - name: CACHE_L2_TTL_SEC
+          value: {{ .Values.app.cache.l2TtlSec | quote }}
+        - name: CACHE_BLOOM_EXPECTED_ITEMS
+          value: {{ .Values.app.cache.bloomExpectedItems | quote }}
+        - name: CACHE_BLOOM_FPR
+          value: {{ .Values.app.cache.bloomFalsePositiveRate | quote }}
+
+        # ============================================================================
+        # Valkey (Redis-compatible) Configuration
+        # ============================================================================
+        {{- if .Values.valkey.enabled }}
+        - name: VALKEY_HOST
+          value: {{ .Values.valkey.host | quote }}
+        - name: VALKEY_PORT
+          value: {{ .Values.valkey.port | quote }}
+        - name: VALKEY_DB
+          value: {{ .Values.valkey.db | quote }}
+        - name: VALKEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.externalSecrets.enabled }}
+              name: {{ include "authorization-service.fullname" . }}-secret
+              key: valkey-password
+              {{- else }}
+              name: {{ .Values.valkey.secretName }}
+              key: {{ .Values.valkey.secretKey | default "password" }}
+              {{- end }}
+              optional: true
+        - name: VALKEY_URL
+          value: "redis://$(VALKEY_HOST):$(VALKEY_PORT)/$(VALKEY_DB)"
+        {{- end }}
+
+        # ============================================================================
+        # OpenTelemetry Configuration
+        # ============================================================================
+        {{- if .Values.otel.enabled }}
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.otel.endpoint | quote }}
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: {{ .Values.otel.protocol | default "http/protobuf" | quote }}
+        - name: OTEL_SERVICE_NAME
+          value: {{ .Values.otel.serviceName | default (include "authorization-service.fullname" .) | quote }}
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: {{ printf "service.namespace=%s,deployment.environment=%s" .Release.Namespace (.Values.app.nodeEnv | default "production") | quote }}
+        {{- if .Values.otel.tracesEnabled }}
+        - name: OTEL_TRACES_EXPORTER
+          value: "otlp"
+        {{- end }}
+        {{- if .Values.otel.metricsEnabled }}
+        - name: OTEL_METRICS_EXPORTER
+          value: "otlp"
+        {{- end }}
+        {{- if .Values.otel.logsEnabled }}
+        - name: OTEL_LOGS_EXPORTER
+          value: "otlp"
+        {{- end }}
+        {{- end }}
+
+        {{- with .Values.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
