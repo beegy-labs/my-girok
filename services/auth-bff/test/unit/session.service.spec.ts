@@ -21,7 +21,7 @@ describe('SessionService', () => {
     needsRefresh: MockInstance;
     getWithTokens: MockInstance;
   };
-  let configService: {
+  let _configService: {
     get: MockInstance;
   };
 
@@ -100,7 +100,7 @@ describe('SessionService', () => {
 
     service = module.get<SessionService>(SessionService);
     sessionStore = module.get(SessionStore);
-    configService = module.get(ConfigService);
+    _configService = module.get(ConfigService);
   });
 
   it('should be defined', () => {

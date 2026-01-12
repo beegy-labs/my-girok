@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { AuthzCheckGuard, AUTHZ_CHECK_KEY, AuthzCheckOptions } from './authz-check.guard';
+import { AuthzCheckGuard, AuthzCheckOptions } from './authz-check.guard';
 import { AuthorizationGrpcClient } from '../../grpc-clients';
 
 describe('AuthzCheckGuard', () => {
