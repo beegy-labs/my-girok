@@ -116,19 +116,45 @@ export class AuthorizationService {
   /**
    * Create a new model
    */
-  async createModel(_dslSource: string) {
-    // Model creation is handled by authorization-service via WriteModel gRPC
-    // This is a placeholder - actual implementation would need WriteModel support
-    this.logger.warn('createModel not fully implemented - requires WriteModel gRPC method');
-    throw new Error('Model creation not supported via auth-bff');
+  async createModel(dslSource: string, activate?: boolean) {
+    try {
+      const result = await this.authzClient.writeModel(dslSource, activate);
+
+      if (!result) {
+        throw new Error('Failed to create model: No response from server');
+      }
+
+      if (!result.success) {
+        return {
+          success: false,
+          errors: result.errors || [],
+        };
+      }
+
+      return {
+        success: true,
+        modelId: result.modelId,
+        versionId: result.versionId,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to create model: ${error}`);
+      throw error;
+    }
   }
 
   /**
-   * Validate a model
+   * Validate a model (BFF-level basic validation only)
+   *
+   * NOTE: This function performs only basic, BFF-level validation (empty check).
+   * Full DSL syntax parsing, semantic validation, and type checking are handled
+   * by the authorization-service gRPC backend when createModel() is called.
+   *
+   * For comprehensive validation results including syntax errors, type errors,
+   * and relation validations, use createModel() which delegates to the backend.
    */
   async validateModel(dslSource: string) {
-    // Model validation is handled by authorization-service
-    // This is a simple validation
+    // BFF-level validation: basic empty check only
+    // Full DSL syntax analysis is performed by authorization-service
     if (!dslSource || dslSource.trim().length === 0) {
       return {
         valid: false,
@@ -145,11 +171,26 @@ export class AuthorizationService {
   /**
    * Activate a model
    */
-  async activateModel(_id: string) {
-    // Model activation is handled by authorization-service via ActivateModel gRPC
-    // This is a placeholder - actual implementation would need ActivateModel support
-    this.logger.warn('activateModel not fully implemented - requires ActivateModel gRPC method');
-    throw new Error('Model activation not supported via auth-bff');
+  async activateModel(id: string) {
+    try {
+      const result = await this.authzClient.activateModel(id);
+
+      if (!result) {
+        throw new Error('Failed to activate model: No response from server');
+      }
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to activate model');
+      }
+
+      return {
+        success: true,
+        message: result.message || 'Model activated successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Failed to activate model: ${error}`);
+      throw error;
+    }
   }
 
   /**

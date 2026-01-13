@@ -15,6 +15,7 @@ import {
   AppError,
   RetryConfig,
 } from '../lib/error-handler';
+import { showErrorToast } from '../lib/toast';
 
 export interface UseApiErrorOptions {
   /**
@@ -31,6 +32,11 @@ export interface UseApiErrorOptions {
    * Context for error logging
    */
   context?: string;
+
+  /**
+   * Show error toast automatically (default: true)
+   */
+  showToast?: boolean;
 
   /**
    * Callback when error occurs
@@ -87,6 +93,12 @@ export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorResult
       } catch (err) {
         const appError = handleApiError(err, options.context);
         setError(appError);
+
+        // Show error toast by default (unless explicitly disabled)
+        if (options.showToast !== false) {
+          showErrorToast(appError);
+        }
+
         options.onError?.(appError);
         return null;
       }
