@@ -1,0 +1,168 @@
+name: Reusable Service CI
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        description: 'Service name (e.g., auth-bff, identity-service)'
+        required: true
+        type: string
+      service_path:
+        description: 'Service directory path relative to repo root (e.g., services/auth-bff)'
+        required: true
+        type: string
+      image_name:
+        description: 'Docker image name (e.g., beegy-labs/auth-bff)'
+        required: true
+        type: string
+      gitops_file_prefix:
+        description: 'GitOps file prefix (e.g., my-girok-auth-bff, platform-identity-service)'
+        required: true
+        type: string
+      needs_prisma:
+        description: 'Whether service needs Prisma generation'
+        required: false
+        type: boolean
+        default: false
+      pnpm_filter:
+        description: 'pnpm filter name (e.g., @my-girok/auth-bff)'
+        required: true
+        type: string
+    secrets:
+      GITEA_USERNAME:
+        required: true
+      GITEA_TOKEN:
+        required: true
+      GITOPS_PAT:
+        required: true
+
+env:
+  REGISTRY: gitea.girok.dev
+
+jobs:
+  check:
+    name: Check
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/pnpm/store
+            node_modules
+            ${{ inputs.service_path }}/node_modules
+            packages/types/node_modules
+            packages/nest-common/node_modules
+          key: ${{ runner.os }}-pnpm-${{ inputs.service_name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ inputs.service_name }}-
+            ${{ runner.os }}-pnpm-
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm --filter @my-girok/types build
+      - name: Generate Prisma client
+        if: inputs.needs_prisma
+        run: pnpm --filter ${{ inputs.pnpm_filter }} prisma:generate
+      - run: pnpm --filter @my-girok/nest-common build
+      - name: Test and lint
+        working-directory: ${{ inputs.service_path }}
+        run: pnpm test && pnpm lint
+
+  build:
+    name: Build
+    if: github.event_name == 'push' && contains(fromJSON('["develop", "release", "main"]'), github.ref_name)
+    needs: check
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 60
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      skipped: ${{ steps.check_image.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.GITEA_USERNAME }}
+          password: ${{ secrets.GITEA_TOKEN }}
+      - name: Meta
+        id: meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          case "${{ github.ref_name }}" in
+            main) TAG="${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:${TAG},${{ env.REGISTRY }}/${{ inputs.image_name }}:latest" ;;
+            develop) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:${TAG},${{ env.REGISTRY }}/${{ inputs.image_name }}:develop" ;;
+            release) TAG="release-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:${TAG},${{ env.REGISTRY }}/${{ inputs.image_name }}:release" ;;
+            *) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:${TAG}" ;;
+          esac
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+      - name: Check if image exists
+        id: check_image
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            "${{ env.REGISTRY }}/api/v1/packages/beegy-labs/container/${{ inputs.service_name }}/${TAG}")
+          if [ "$RESPONSE" = "200" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Image ${TAG} already exists, skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "🔨 Image ${TAG} not found, proceeding with build"
+          fi
+      - uses: docker/build-push-action@v5
+        if: steps.check_image.outputs.exists != 'true'
+        with:
+          context: .
+          file: ./${{ inputs.service_path }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ inputs.image_name }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ inputs.image_name }}:buildcache,mode=max
+
+  deploy:
+    name: Deploy
+    if: always() && needs.build.result == 'success'
+    needs: build
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: beegy-labs/platform-gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          path: gitops
+      - name: Update & Push
+        run: |
+          cd gitops && git pull --rebase
+          case "${{ github.ref_name }}" in
+            main) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-prod.yaml"; ENV="production" ;;
+            develop) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-dev.yaml"; ENV="development" ;;
+            release) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-staging.yaml"; ENV="staging" ;;
+            *) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-dev.yaml"; ENV="development" ;;
+          esac
+          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${FILE}
+          git diff --staged --quiet || git commit -m "chore(${ENV}): update ${{ inputs.service_name }} to ${{ needs.build.outputs.tag }}"
+          for i in 1 2 3; do git push && break || { sleep 3; git pull --rebase; }; done
+      - name: Cleanup
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          case "${{ github.ref_name }}" in
+            main) P="" ;;
+            develop) P="develop-" ;;
+            release) P="release-" ;;
+            *) P="develop-" ;;
+          esac
+          curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/${{ inputs.service_name }}" | \
+            jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \
+            while IFS='|' read -r _ v; do curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/${{ inputs.service_name }}/${v}"; done

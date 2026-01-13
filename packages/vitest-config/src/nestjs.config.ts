@@ -61,8 +61,10 @@ export function createNestJsConfig(dirname: string, options: NestJsConfigOptions
         pool: 'forks' as const,
         poolOptions: {
           forks: {
-            singleFork: true,
+            singleFork: false, // Enable parallel execution
             isolate: false,
+            minForks: 1,
+            maxForks: 8, // Allow more parallel forks
           },
         },
       }
@@ -73,7 +75,7 @@ export function createNestJsConfig(dirname: string, options: NestJsConfigOptions
             singleThread: false,
             isolate: true,
             minThreads: 1,
-            maxThreads: 4,
+            maxThreads: 8, // Increase from 4 to 8 for faster parallel execution
           },
         },
       };
