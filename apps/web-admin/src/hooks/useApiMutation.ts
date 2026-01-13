@@ -7,6 +7,7 @@
 
 import { useState, useCallback } from 'react';
 import { handleApiError, withRetry, AppError, RetryConfig } from '../lib/error-handler';
+import { showErrorToast, showSuccessToast } from '../lib/toast';
 
 export interface UseApiMutationOptions<TData, TVariables> {
   /**
@@ -28,6 +29,16 @@ export interface UseApiMutationOptions<TData, TVariables> {
    * Context for error logging
    */
   context?: string;
+
+  /**
+   * Show error toast automatically (default: true)
+   */
+  showErrorToast?: boolean;
+
+  /**
+   * Success toast message (string or function returning string)
+   */
+  successToast?: string | ((data: TData) => string);
 
   /**
    * Callback on success
@@ -120,12 +131,28 @@ export function useApiMutation<TData = unknown, TVariables = void>(
 
         const result = await executor();
         setData(result);
+
+        // Show success toast if configured
+        if (options.successToast) {
+          const message =
+            typeof options.successToast === 'function'
+              ? options.successToast(result)
+              : options.successToast;
+          showSuccessToast(message);
+        }
+
         options.onSuccess?.(result, variables);
         options.onSettled?.(result, null, variables);
         return result;
       } catch (err) {
         const appError = handleApiError(err, options.context);
         setError(appError);
+
+        // Show error toast by default (unless explicitly disabled)
+        if (options.showErrorToast !== false) {
+          showErrorToast(appError);
+        }
+
         options.onError?.(appError, variables);
         options.onSettled?.(null, appError, variables);
         throw err;
