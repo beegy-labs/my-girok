@@ -1,20 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, RefreshCw, ChevronLeft, ChevronRight, Eye, X, Filter } from 'lucide-react';
+import { Download, ChevronLeft, ChevronRight, Eye, X, Filter } from 'lucide-react';
 import {
   auditApi,
   type AuditLogResponse,
   type AuditLogListQuery,
   type AuditLogFilterOptions,
 } from '../api/audit';
-import { logger } from '../utils/logger';
+import { useApiError } from '../hooks/useApiError';
 
 export default function AuditLogsPage() {
   const { t } = useTranslation();
   const [logs, setLogs] = useState<AuditLogResponse[]>([]);
   const [filterOptions, setFilterOptions] = useState<AuditLogFilterOptions | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLogResponse | null>(null);
 
@@ -27,30 +25,30 @@ export default function AuditLogsPage() {
   // Filters
   const [filters, setFilters] = useState<AuditLogListQuery>({});
 
+  const { executeWithErrorHandling } = useApiError({
+    context: 'AuditLogsPage.fetchLogs',
+    retry: true,
+  });
+
   const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await auditApi.listLogs({ ...filters, page, limit });
+    const response = await executeWithErrorHandling(async () => {
+      return await auditApi.listLogs({ ...filters, page, limit });
+    });
+    if (response) {
       setLogs(response.data);
       setTotalPages(response.meta.totalPages);
       setTotal(response.meta.total);
-    } catch (err) {
-      setError(t('common.error'));
-      logger.error('Failed to fetch audit logs', err);
-    } finally {
-      setLoading(false);
     }
-  }, [filters, page, t]);
+  }, [filters, page, executeWithErrorHandling]);
 
   const fetchFilterOptions = useCallback(async () => {
-    try {
-      const options = await auditApi.getFilterOptions();
+    const options = await executeWithErrorHandling(async () => {
+      return await auditApi.getFilterOptions();
+    });
+    if (options) {
       setFilterOptions(options);
-    } catch (err) {
-      logger.error('Failed to fetch filter options', err);
     }
-  }, []);
+  }, [executeWithErrorHandling]);
 
   useEffect(() => {
     fetchLogs();
@@ -61,18 +59,18 @@ export default function AuditLogsPage() {
   }, [fetchFilterOptions]);
 
   const handleExport = useCallback(async () => {
-    try {
-      const blob = await auditApi.exportCsv(filters);
+    const blob = await executeWithErrorHandling(async () => {
+      return await auditApi.exportCsv(filters);
+    });
+    if (blob) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      logger.error('Failed to export audit logs', err);
     }
-  }, [filters]);
+  }, [filters, executeWithErrorHandling]);
 
   const handleFilterChange = useCallback((key: keyof AuditLogListQuery, value: string) => {
     setFilters((prev) => ({
@@ -109,28 +107,6 @@ export default function AuditLogsPage() {
     if (action.includes('login')) return 'bg-theme-level-3-bg text-theme-level-3-text';
     return 'bg-theme-bg-secondary text-theme-text-secondary';
   }, []);
-
-  if (loading && logs.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="animate-spin text-theme-primary" size={32} />
-      </div>
-    );
-  }
-
-  if (error && logs.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-theme-status-error-text">{error}</p>
-        <button
-          onClick={fetchLogs}
-          className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors"
-        >
-          {t('common.refresh')}
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

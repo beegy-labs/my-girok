@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -19,6 +18,8 @@ import { Card } from '../../components/atoms/Card';
 import { Modal } from '../../components/molecules/Modal';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { useAuditEvent } from '../../hooks';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 interface ServiceFeaturesTabProps {
   serviceId: string;
@@ -32,14 +33,17 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
 
   const [features, setFeatures] = useState<ServiceFeature[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingFeature, setEditingFeature] = useState<ServiceFeature | null>(null);
   const [deletingFeature, setDeletingFeature] = useState<ServiceFeature | null>(null);
-  const [saving, setSaving] = useState(false);
+
+  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+    context: 'ServiceFeaturesTab',
+    showToast: false,
+  });
 
   // Form state
   const [formData, setFormData] = useState<CreateServiceFeatureDto>({
@@ -53,21 +57,61 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
 
   const fetchFeatures = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
-    try {
-      const result = await servicesApi.listServiceFeatures(serviceId, {
+    const result = await executeWithErrorHandling(() =>
+      servicesApi.listServiceFeatures(serviceId, {
         includeInactive: true,
         includeChildren: true,
-      });
+      }),
+    );
+
+    if (result) {
       setFeatures(result.data);
-    } catch (err) {
-      setError(t('services.loadFeaturesFailed'));
-      logger.error('Failed to fetch service features', { serviceId, error: err });
-    } finally {
-      setLoading(false);
     }
-  }, [serviceId, t]);
+    setLoading(false);
+  }, [serviceId, executeWithErrorHandling]);
+
+  const createMutation = useApiMutation({
+    mutationFn: (data: CreateServiceFeatureDto) =>
+      servicesApi.createServiceFeature(serviceId, data),
+    successToast: 'Feature created successfully',
+    onSuccess: () => {
+      setShowModal(false);
+      fetchFeatures();
+    },
+    context: 'CreateServiceFeature',
+  });
+
+  const updateMutation = useApiMutation({
+    mutationFn: (data: { id: string; update: any }) =>
+      servicesApi.updateServiceFeature(serviceId, data.id, data.update),
+    successToast: 'Feature updated successfully',
+    onSuccess: () => {
+      setShowModal(false);
+      fetchFeatures();
+    },
+    context: 'UpdateServiceFeature',
+  });
+
+  const deleteMutation = useApiMutation({
+    mutationFn: (id: string) => servicesApi.deleteServiceFeature(serviceId, id),
+    successToast: 'Feature deleted successfully',
+    onSuccess: () => {
+      setDeletingFeature(null);
+      fetchFeatures();
+    },
+    context: 'DeleteServiceFeature',
+  });
+
+  const toggleActiveMutation = useApiMutation({
+    mutationFn: (data: { id: string; isActive: boolean }) =>
+      servicesApi.updateServiceFeature(serviceId, data.id, { isActive: data.isActive }),
+    successToast: 'Feature status updated successfully',
+    onSuccess: fetchFeatures,
+    context: 'ToggleServiceFeature',
+  });
+
+  const saving = createMutation.isLoading || updateMutation.isLoading;
 
   useEffect(() => {
     fetchFeatures();
@@ -115,12 +159,10 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      if (editingFeature) {
-        await servicesApi.updateServiceFeature(serviceId, editingFeature.id, {
+    if (editingFeature) {
+      await updateMutation.mutate({
+        id: editingFeature.id,
+        update: {
           name: formData.name,
           description: formData.description,
           category: formData.category,
@@ -129,58 +171,22 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
           isDefault: formData.isDefault,
           icon: formData.icon,
           color: formData.color,
-        });
-        trackFormSubmit('ServiceFeatureForm', 'update', true);
-      } else {
-        await servicesApi.createServiceFeature(serviceId, formData);
-        trackFormSubmit('ServiceFeatureForm', 'create', true);
-      }
-      setShowModal(false);
-      fetchFeatures();
-    } catch (err) {
-      setError(t('services.saveFeatureFailed'));
-      trackFormSubmit('ServiceFeatureForm', editingFeature ? 'update' : 'create', false);
-      logger.error('Failed to save service feature', {
-        serviceId,
-        featureId: editingFeature?.id,
-        error: err,
+        },
       });
-    } finally {
-      setSaving(false);
+      trackFormSubmit('ServiceFeatureForm', 'update', !updateMutation.isError);
+    } else {
+      await createMutation.mutate(formData);
+      trackFormSubmit('ServiceFeatureForm', 'create', !createMutation.isError);
     }
   };
 
   const handleDelete = async () => {
     if (!deletingFeature) return;
-
-    try {
-      await servicesApi.deleteServiceFeature(serviceId, deletingFeature.id);
-      setDeletingFeature(null);
-      fetchFeatures();
-    } catch (err) {
-      setError(t('services.deleteFeatureFailed'));
-      logger.error('Failed to delete service feature', {
-        serviceId,
-        featureId: deletingFeature.id,
-        error: err,
-      });
-    }
+    await deleteMutation.mutate(deletingFeature.id);
   };
 
   const handleToggleActive = async (feature: ServiceFeature) => {
-    try {
-      await servicesApi.updateServiceFeature(serviceId, feature.id, {
-        isActive: !feature.isActive,
-      });
-      fetchFeatures();
-    } catch (err) {
-      setError(t('services.updateFeatureFailed'));
-      logger.error('Failed to toggle feature status', {
-        serviceId,
-        featureId: feature.id,
-        error: err,
-      });
-    }
+    await toggleActiveMutation.mutate({ id: feature.id, isActive: !feature.isActive });
   };
 
   const renderFeature = (feature: ServiceFeature, depth = 0): React.ReactNode => {
@@ -277,7 +283,7 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 

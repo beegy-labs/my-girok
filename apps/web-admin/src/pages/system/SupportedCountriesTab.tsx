@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import {
   Globe,
   Plus,
@@ -19,6 +18,8 @@ import {
   CreateSupportedCountryDto,
 } from '../../api/globalSettings';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 export default function SupportedCountriesTab() {
   const { t } = useTranslation();
@@ -27,8 +28,6 @@ export default function SupportedCountriesTab() {
 
   const [countries, setCountries] = useState<SupportedCountry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -42,36 +41,29 @@ export default function SupportedCountriesTab() {
     displayOrder: 0,
   });
 
+  // API hooks
+  const { executeWithErrorHandling, error } = useApiError({
+    context: 'SupportedCountriesTab.fetchCountries',
+    retry: true,
+  });
+
   const fetchCountries = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
-    try {
-      const result = await globalSettingsApi.listCountries();
+    const result = await executeWithErrorHandling(async () => {
+      return await globalSettingsApi.listCountries();
+    });
+
+    if (result) {
       setCountries(result.data);
-    } catch (err) {
-      setError(t('settings.loadCountriesFailed'));
-      logger.error('Failed to fetch supported countries', err);
-    } finally {
-      setLoading(false);
     }
-  }, [t]);
+    setLoading(false);
+  }, [executeWithErrorHandling]);
 
-  useEffect(() => {
-    fetchCountries();
-  }, [fetchCountries]);
-
-  const handleAdd = async () => {
-    if (!formData.code || !formData.name) return;
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.createCountry({
-        ...formData,
-        code: formData.code.toUpperCase(),
-      });
+  const createMutation = useApiMutation({
+    mutationFn: (data: CreateSupportedCountryDto) => globalSettingsApi.createCountry(data),
+    context: 'SupportedCountriesTab.createCountry',
+    onSuccess: () => {
       setShowAddForm(false);
       setFormData({
         code: '',
@@ -82,68 +74,65 @@ export default function SupportedCountriesTab() {
         displayOrder: 0,
       });
       fetchCountries();
-    } catch (err) {
-      setError(t('settings.saveCountryFailed'));
-      logger.error('Failed to create country', { code: formData.code, error: err });
-    } finally {
-      setSaving(false);
-    }
+    },
+  });
+
+  const updateMutation = useApiMutation({
+    mutationFn: ({ code, data }: { code: string; data: Partial<CreateSupportedCountryDto> }) =>
+      globalSettingsApi.updateCountry(code, data),
+    context: 'SupportedCountriesTab.updateCountry',
+    onSuccess: () => {
+      setEditingCode(null);
+      fetchCountries();
+    },
+  });
+
+  const deleteMutation = useApiMutation({
+    mutationFn: (code: string) => globalSettingsApi.deleteCountry(code),
+    context: 'SupportedCountriesTab.deleteCountry',
+    onSuccess: () => {
+      fetchCountries();
+    },
+  });
+
+  useEffect(() => {
+    fetchCountries();
+  }, [fetchCountries]);
+
+  const handleAdd = async () => {
+    if (!formData.code || !formData.name) return;
+
+    await createMutation.mutate({
+      ...formData,
+      code: formData.code.toUpperCase(),
+    });
   };
 
   const handleUpdate = async (code: string) => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.updateCountry(code, {
+    await updateMutation.mutate({
+      code,
+      data: {
         name: formData.name,
         nativeName: formData.nativeName || undefined,
         flagEmoji: formData.flagEmoji || undefined,
         isActive: formData.isActive,
         displayOrder: formData.displayOrder,
-      });
-      setEditingCode(null);
-      fetchCountries();
-    } catch (err) {
-      setError(t('settings.saveCountryFailed'));
-      logger.error('Failed to update country', { code, error: err });
-    } finally {
-      setSaving(false);
-    }
+      },
+    });
   };
 
   const handleDelete = async (code: string) => {
     if (!confirm(t('settings.deleteCountryConfirm'))) return;
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.deleteCountry(code);
-      fetchCountries();
-    } catch (err) {
-      setError(t('settings.deleteCountryFailed'));
-      logger.error('Failed to delete country', { code, error: err });
-    } finally {
-      setSaving(false);
-    }
+    await deleteMutation.mutate(code);
   };
 
   const handleToggleActive = async (country: SupportedCountry) => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.updateCountry(country.code, {
+    await updateMutation.mutate({
+      code: country.code,
+      data: {
         isActive: !country.isActive,
-      });
-      fetchCountries();
-    } catch (err) {
-      setError(t('settings.saveCountryFailed'));
-      logger.error('Failed to toggle country status', { code: country.code, error: err });
-    } finally {
-      setSaving(false);
-    }
+      },
+    });
   };
 
   const startEditing = (country: SupportedCountry) => {
@@ -157,6 +146,9 @@ export default function SupportedCountriesTab() {
       displayOrder: country.displayOrder,
     });
   };
+
+  const saving = createMutation.isLoading || updateMutation.isLoading || deleteMutation.isLoading;
+  const errorMessage = error?.userMessage || null;
 
   if (loading) {
     return (
@@ -182,10 +174,10 @@ export default function SupportedCountriesTab() {
       )}
 
       {/* Error */}
-      {error && (
+      {errorMessage && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 

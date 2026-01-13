@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import { Plus, X, Loader2, AlertCircle, Languages } from 'lucide-react';
 import { servicesApi, ServiceLocale } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { LOCALES } from '../../config/legal.config';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 interface ServiceLocalesTabProps {
   serviceId: string;
@@ -17,25 +18,43 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
 
   const [locales, setLocales] = useState<ServiceLocale[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [removing, setRemoving] = useState<string | null>(null);
   const [selectedLocale, setSelectedLocale] = useState('');
+
+  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+    context: 'ServiceLocalesTab',
+    showToast: false,
+  });
 
   const fetchLocales = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
-    try {
-      const result = await servicesApi.listServiceLocales(serviceId);
+    const result = await executeWithErrorHandling(() => servicesApi.listServiceLocales(serviceId));
+
+    if (result) {
       setLocales(result.data);
-    } catch (err) {
-      setError(t('services.loadLocalesFailed'));
-      logger.error('Failed to fetch service locales', { serviceId, error: err });
-    } finally {
-      setLoading(false);
     }
-  }, [serviceId, t]);
+    setLoading(false);
+  }, [serviceId, executeWithErrorHandling]);
+
+  const addLocaleMutation = useApiMutation({
+    mutationFn: (locale: string) => servicesApi.addServiceLocale(serviceId, locale),
+    successToast: 'Locale added successfully',
+    onSuccess: () => {
+      setSelectedLocale('');
+      fetchLocales();
+    },
+    context: 'AddServiceLocale',
+  });
+
+  const removeLocaleMutation = useApiMutation({
+    mutationFn: (locale: string) => servicesApi.removeServiceLocale(serviceId, locale),
+    successToast: 'Locale removed successfully',
+    onSuccess: fetchLocales,
+    context: 'RemoveServiceLocale',
+  });
+
+  const adding = addLocaleMutation.isLoading;
+  const isRemoving = removeLocaleMutation.isLoading;
 
   useEffect(() => {
     fetchLocales();
@@ -43,39 +62,11 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
 
   const handleAddLocale = async () => {
     if (!selectedLocale) return;
-
-    setAdding(true);
-    setError(null);
-
-    try {
-      await servicesApi.addServiceLocale(serviceId, selectedLocale);
-      setSelectedLocale('');
-      fetchLocales();
-    } catch (err) {
-      setError(t('services.addLocaleFailed'));
-      logger.error('Failed to add service locale', {
-        serviceId,
-        locale: selectedLocale,
-        error: err,
-      });
-    } finally {
-      setAdding(false);
-    }
+    await addLocaleMutation.mutate(selectedLocale);
   };
 
   const handleRemoveLocale = async (locale: string) => {
-    setRemoving(locale);
-    setError(null);
-
-    try {
-      await servicesApi.removeServiceLocale(serviceId, locale);
-      fetchLocales();
-    } catch (err) {
-      setError(t('services.removeLocaleFailed'));
-      logger.error('Failed to remove service locale', { serviceId, locale, error: err });
-    } finally {
-      setRemoving(null);
-    }
+    await removeLocaleMutation.mutate(locale);
   };
 
   // Filter out already added locales
@@ -105,7 +96,7 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 
@@ -166,15 +157,11 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
                 {canEdit && (
                   <button
                     onClick={() => handleRemoveLocale(locale.locale)}
-                    disabled={removing === locale.locale}
+                    disabled={isRemoving}
                     className="ml-1 p-1 text-theme-text-tertiary hover:text-theme-status-error-text rounded transition-colors disabled:opacity-50"
                     title={t('common.remove')}
                   >
-                    {removing === locale.locale ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <X size={14} />
-                    )}
+                    {isRemoving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
                   </button>
                 )}
               </div>

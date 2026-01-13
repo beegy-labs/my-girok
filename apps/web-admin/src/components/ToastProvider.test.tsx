@@ -228,13 +228,13 @@ describe('ToastProvider', () => {
       );
 
       const lastCall = vi.mocked(Toaster).mock.calls[vi.mocked(Toaster).mock.calls.length - 1];
-      const toastOptions = lastCall[0].toastOptions;
+      const toastOptions = lastCall[0]?.toastOptions;
 
       // Verify theme classes are used
-      expect(toastOptions.classNames.toast).toContain('bg-theme-bg-card');
-      expect(toastOptions.classNames.toast).toContain('border-theme-border-default');
-      expect(toastOptions.classNames.title).toContain('text-theme-text-primary');
-      expect(toastOptions.classNames.description).toContain('text-theme-text-secondary');
+      expect(toastOptions?.classNames?.toast).toContain('bg-theme-bg-card');
+      expect(toastOptions?.classNames?.toast).toContain('border-theme-border-default');
+      expect(toastOptions?.classNames?.title).toContain('text-theme-text-primary');
+      expect(toastOptions?.classNames?.description).toContain('text-theme-text-secondary');
     });
 
     it('should use status-specific CSS classes', () => {
@@ -245,13 +245,13 @@ describe('ToastProvider', () => {
       );
 
       const lastCall = vi.mocked(Toaster).mock.calls[vi.mocked(Toaster).mock.calls.length - 1];
-      const toastOptions = lastCall[0].toastOptions;
+      const toastOptions = lastCall[0]?.toastOptions;
 
       // Verify status-specific classes
-      expect(toastOptions.classNames.error).toContain('bg-theme-status-error-bg');
-      expect(toastOptions.classNames.success).toContain('bg-theme-status-success-bg');
-      expect(toastOptions.classNames.warning).toContain('bg-theme-status-warning-bg');
-      expect(toastOptions.classNames.info).toContain('bg-theme-status-info-bg');
+      expect(toastOptions?.classNames?.error).toContain('bg-theme-status-error-bg');
+      expect(toastOptions?.classNames?.success).toContain('bg-theme-status-success-bg');
+      expect(toastOptions?.classNames?.warning).toContain('bg-theme-status-warning-bg');
+      expect(toastOptions?.classNames?.info).toContain('bg-theme-status-info-bg');
     });
   });
 

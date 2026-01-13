@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import { Download, RefreshCw } from 'lucide-react';
 import {
   BarChart,
@@ -18,6 +17,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { legalApi } from '../../api/legal';
+import { useApiError } from '../../hooks/useApiError';
 
 type DateRange = '7d' | '30d' | '90d';
 
@@ -63,22 +63,20 @@ export default function ConsentStatsPage() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<ConsentStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>('30d');
+
+  const { executeWithErrorHandling } = useApiError({
+    context: 'ConsentStatsPage.fetchStats',
+  });
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    try {
-      const response = await legalApi.getConsentStats(dateRange);
+    const response = await executeWithErrorHandling(() => legalApi.getConsentStats(dateRange));
+    if (response) {
       setStats(response);
-    } catch (err) {
-      setError(t('common.error'));
-      logger.error('Failed to fetch consent stats:', err);
-    } finally {
-      setLoading(false);
     }
-  }, [dateRange, t]);
+    setLoading(false);
+  }, [dateRange, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchStats();
@@ -141,18 +139,8 @@ export default function ConsentStatsPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-theme-status-error-text">{error}</p>
-        <button
-          onClick={fetchStats}
-          className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors"
-        >
-          {t('common.refresh')}
-        </button>
-      </div>
-    );
+  if (!stats) {
+    return null;
   }
 
   return (

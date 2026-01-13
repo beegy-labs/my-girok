@@ -4,6 +4,8 @@ import { Save, Check, X, Loader2, History, Eye, RotateCcw, AlertCircle } from 'l
 import { authorizationApi, type AuthorizationModel } from '../../../api/authorization';
 import { Card } from '../../../components/atoms/Card';
 import { ModelDiff } from '../../../components/ModelDiff';
+import { useApiError } from '../../../hooks/useApiError';
+import { useApiMutation } from '../../../hooks/useApiMutation';
 
 export default function PoliciesTab() {
   const { t } = useTranslation();
@@ -11,8 +13,6 @@ export default function PoliciesTab() {
   const [activeModel, setActiveModel] = useState<AuthorizationModel | null>(null);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [validationResult, setValidationResult] = useState<{
     valid: boolean;
     errors?: string[];
@@ -20,52 +20,71 @@ export default function PoliciesTab() {
   const [selectedVersion, setSelectedVersion] = useState<AuthorizationModel | null>(null);
   const [showDiff, setShowDiff] = useState(false);
 
+  const { executeWithErrorHandling } = useApiError({
+    context: 'PoliciesTab.fetchModel',
+  });
+
   const fetchModel = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    const result = await executeWithErrorHandling(async () => {
       const [active, modelVersions] = await Promise.all([
         authorizationApi.getModel(),
         authorizationApi.getModelVersions(),
       ]);
-      setActiveModel(active);
-      setVersions(modelVersions);
-      setContent(active.content);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch model');
-    } finally {
-      setLoading(false);
+      return { active, modelVersions };
+    });
+
+    if (result) {
+      setActiveModel(result.active);
+      setVersions(result.modelVersions);
+      setContent(result.active.content);
     }
-  }, []);
+    setLoading(false);
+  }, [executeWithErrorHandling]);
 
   useEffect(() => {
     fetchModel();
   }, [fetchModel]);
 
-  const handleValidate = async () => {
-    try {
-      const result = await authorizationApi.validateModel(content);
+  const { mutate: validateModel } = useApiMutation({
+    mutationFn: () => authorizationApi.validateModel(content),
+    context: 'PoliciesTab.validateModel',
+    showErrorToast: true,
+    onSuccess: (result) => {
       setValidationResult(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Validation failed');
-    }
+    },
+  });
+
+  const handleValidate = () => {
+    validateModel();
   };
 
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      setError(null);
-      await authorizationApi.createModel(content);
-      await fetchModel();
+  const { mutate: saveModel, isLoading: isSaving } = useApiMutation({
+    mutationFn: () => authorizationApi.createModel(content),
+    context: 'PoliciesTab.saveModel',
+    successToast: t('authorization.modelSavedSuccess', 'Model saved successfully'),
+    onSuccess: () => {
+      fetchModel();
       setValidationResult(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save model');
-    } finally {
-      setSaving(false);
-    }
+    },
+  });
+
+  const handleSave = () => {
+    saveModel();
   };
 
-  const handleActivate = async (modelId: string) => {
+  const { mutate: activateModel } = useApiMutation({
+    mutationFn: (modelId: string) => authorizationApi.activateModel(modelId),
+    context: 'PoliciesTab.activateModel',
+    successToast: t('authorization.modelActivatedSuccess', 'Model activated successfully'),
+    onSuccess: () => {
+      fetchModel();
+      setSelectedVersion(null);
+      setShowDiff(false);
+    },
+  });
+
+  const handleActivate = (modelId: string) => {
     if (
       !confirm(
         t('authorization.confirmActivate', 'Are you sure you want to activate this model version?'),
@@ -74,14 +93,7 @@ export default function PoliciesTab() {
       return;
     }
 
-    try {
-      await authorizationApi.activateModel(modelId);
-      await fetchModel();
-      setSelectedVersion(null);
-      setShowDiff(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to activate model');
-    }
+    activateModel(modelId);
   };
 
   const handleViewDiff = (version: AuthorizationModel) => {
@@ -89,7 +101,7 @@ export default function PoliciesTab() {
     setShowDiff(true);
   };
 
-  const handleRollback = async (version: AuthorizationModel) => {
+  const handleRollback = (version: AuthorizationModel) => {
     if (
       !confirm(
         t(
@@ -101,11 +113,7 @@ export default function PoliciesTab() {
       return;
     }
 
-    try {
-      await handleActivate(version.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to rollback');
-    }
+    handleActivate(version.id);
   };
 
   if (loading) {
@@ -180,11 +188,11 @@ export default function PoliciesTab() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving || (validationResult !== null && !validationResult.valid)}
+                  disabled={isSaving || (validationResult !== null && !validationResult.valid)}
                   className="flex items-center gap-2 px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  {saving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+                  {isSaving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
                 </button>
               </div>
             </div>
@@ -220,13 +228,6 @@ export default function PoliciesTab() {
                     </div>
                   </>
                 )}
-              </div>
-            )}
-
-            {/* Error */}
-            {error && (
-              <div className="mb-4 p-3 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-                {error}
               </div>
             )}
 

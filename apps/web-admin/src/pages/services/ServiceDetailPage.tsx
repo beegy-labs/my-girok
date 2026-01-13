@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import {
   ArrowLeft,
   Loader2,
@@ -30,6 +29,7 @@ import ServiceFeaturesTab from './ServiceFeaturesTab';
 import ServiceTestersTab from './ServiceTestersTab';
 import ServiceAuditTab from './ServiceAuditTab';
 import { useAuditEvent } from '../../hooks';
+import { useApiError } from '../../hooks/useApiError';
 
 type TabType =
   | 'countries'
@@ -48,8 +48,12 @@ export default function ServiceDetailPage() {
   const { trackTabChange } = useAuditEvent();
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('countries');
+
+  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+    context: 'ServiceDetailPage',
+    showToast: false,
+  });
 
   const handleTabChange = (tab: TabType) => {
     trackTabChange(tab, activeTab);
@@ -60,18 +64,14 @@ export default function ServiceDetailPage() {
     if (!serviceId) return;
 
     setLoading(true);
-    setError(null);
 
-    try {
-      const result = await servicesApi.getService(serviceId);
+    const result = await executeWithErrorHandling(() => servicesApi.getService(serviceId));
+
+    if (result) {
       setService(result);
-    } catch (err) {
-      setError(t('services.loadFailed'));
-      logger.error('Failed to fetch service details', { serviceId, error: err });
-    } finally {
-      setLoading(false);
     }
-  }, [serviceId, t]);
+    setLoading(false);
+  }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchService();
@@ -89,7 +89,7 @@ export default function ServiceDetailPage() {
     return (
       <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
         <AlertCircle size={20} />
-        <span>{error || t('services.notFound')}</span>
+        <span>{errorMessage || t('services.notFound')}</span>
       </div>
     );
   }

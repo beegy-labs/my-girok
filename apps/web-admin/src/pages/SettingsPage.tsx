@@ -14,8 +14,9 @@ import {
 } from 'lucide-react';
 import { authApi } from '../api/auth';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
-import { logger } from '../utils/logger';
 import type { AdminSession } from '@my-girok/types';
+import { useApiError } from '../hooks/useApiError';
+import { useApiMutation } from '../hooks/useApiMutation';
 
 type MfaStep = 'idle' | 'setup' | 'verify' | 'backup' | 'disable' | 'regenerate';
 
@@ -34,124 +35,116 @@ export default function SettingsPage() {
   const [disablePassword, setDisablePassword] = useState('');
   const [regeneratePassword, setRegeneratePassword] = useState('');
   const [newBackupCodes, setNewBackupCodes] = useState<string[]>([]);
-  const [mfaError, setMfaError] = useState<string | null>(null);
-  const [mfaLoading, setMfaLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Sessions State
   const [sessions, setSessions] = useState<AdminSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
-  const [sessionsError, setSessionsError] = useState<string | null>(null);
-  const [revokingSession, setRevokingSession] = useState<string | null>(null);
-  const [revokingAll, setRevokingAll] = useState(false);
+
+  // API hooks for Sessions
+  const { executeWithErrorHandling: executeSessionsFetch, error: sessionsError } = useApiError({
+    context: 'SettingsPage.fetchSessions',
+    retry: true,
+  });
+
+  // MFA Mutations
+  const setupMfaMutation = useApiMutation({
+    mutationFn: () => authApi.setupMfa(),
+    context: 'SettingsPage.setupMfa',
+    onSuccess: (data) => {
+      setMfaSetupData(data);
+      setMfaStep('setup');
+    },
+  });
+
+  const verifyMfaMutation = useApiMutation({
+    mutationFn: (code: string) => authApi.verifyMfaSetup(code),
+    context: 'SettingsPage.verifyMfa',
+    onSuccess: async (result) => {
+      if (result.success) {
+        setMfaStep('backup');
+        const updatedAdmin = await authApi.getMe();
+        setAuth(updatedAdmin);
+      }
+    },
+  });
+
+  const disableMfaMutation = useApiMutation({
+    mutationFn: (password: string) => authApi.disableMfa(password),
+    context: 'SettingsPage.disableMfa',
+    onSuccess: async (result) => {
+      if (result.success) {
+        setMfaStep('idle');
+        setDisablePassword('');
+        const updatedAdmin = await authApi.getMe();
+        setAuth(updatedAdmin);
+      }
+    },
+  });
+
+  const regenerateBackupCodesMutation = useApiMutation({
+    mutationFn: (password: string) => authApi.regenerateBackupCodes(password),
+    context: 'SettingsPage.regenerateBackupCodes',
+    onSuccess: (result) => {
+      setNewBackupCodes(result.backupCodes);
+      setMfaStep('backup');
+      setRegeneratePassword('');
+    },
+  });
+
+  // Session Mutations
+  const revokeSessionMutation = useApiMutation({
+    mutationFn: (sessionId: string) => authApi.revokeSession(sessionId),
+    context: 'SettingsPage.revokeSession',
+    onSuccess: (_, sessionId) => {
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    },
+  });
+
+  const revokeAllSessionsMutation = useApiMutation({
+    mutationFn: () => authApi.revokeAllSessions(),
+    context: 'SettingsPage.revokeAllSessions',
+    onSuccess: () => {
+      setSessions((prev) => prev.filter((s) => s.isCurrent));
+    },
+  });
+
+  const fetchSessions = async () => {
+    setSessionsLoading(true);
+
+    const result = await executeSessionsFetch(async () => {
+      return await authApi.getSessions();
+    });
+
+    if (result) {
+      setSessions(result);
+    }
+    setSessionsLoading(false);
+  };
 
   // Fetch sessions on mount
   useEffect(() => {
     fetchSessions();
   }, []);
 
-  const fetchSessions = async () => {
-    setSessionsLoading(true);
-    setSessionsError(null);
-    try {
-      const data = await authApi.getSessions();
-      setSessions(data);
-    } catch (err) {
-      setSessionsError(t('settings.security.loadSessionsFailed'));
-      logger.error('Failed to fetch sessions', err);
-    } finally {
-      setSessionsLoading(false);
-    }
-  };
-
   // MFA Handlers
   const handleSetupMfa = async () => {
-    setMfaLoading(true);
-    setMfaError(null);
-    try {
-      const data = await authApi.setupMfa();
-      setMfaSetupData(data);
-      setMfaStep('setup');
-    } catch (err) {
-      setMfaError(t('settings.security.setupFailed'));
-      logger.error('Failed to setup MFA', err);
-    } finally {
-      setMfaLoading(false);
-    }
+    await setupMfaMutation.mutate();
   };
 
   const handleVerifyMfa = async () => {
-    if (!verifyCode.trim()) {
-      setMfaError(t('settings.security.codeRequired'));
-      return;
-    }
-
-    setMfaLoading(true);
-    setMfaError(null);
-    try {
-      const result = await authApi.verifyMfaSetup(verifyCode);
-      if (result.success) {
-        setMfaStep('backup');
-        // Refresh admin info
-        const updatedAdmin = await authApi.getMe();
-        setAuth(updatedAdmin);
-      } else {
-        setMfaError(result.message || t('settings.security.invalidCode'));
-      }
-    } catch (err) {
-      setMfaError(t('settings.security.verifyFailed'));
-      logger.error('Failed to verify MFA', err);
-    } finally {
-      setMfaLoading(false);
-    }
+    if (!verifyCode.trim()) return;
+    await verifyMfaMutation.mutate(verifyCode);
   };
 
   const handleDisableMfa = async () => {
-    if (!disablePassword.trim()) {
-      setMfaError(t('settings.security.passwordRequired'));
-      return;
-    }
-
-    setMfaLoading(true);
-    setMfaError(null);
-    try {
-      const result = await authApi.disableMfa(disablePassword);
-      if (result.success) {
-        setMfaStep('idle');
-        setDisablePassword('');
-        // Refresh admin info
-        const updatedAdmin = await authApi.getMe();
-        setAuth(updatedAdmin);
-      } else {
-        setMfaError(result.message || t('settings.security.wrongPassword'));
-      }
-    } catch (err) {
-      setMfaError(t('settings.security.disableFailed'));
-      logger.error('Failed to disable MFA', err);
-    } finally {
-      setMfaLoading(false);
-    }
+    if (!disablePassword.trim()) return;
+    await disableMfaMutation.mutate(disablePassword);
   };
 
   const handleRegenerateBackupCodes = async () => {
-    if (!regeneratePassword.trim()) {
-      setMfaError(t('settings.security.passwordRequired'));
-      return;
-    }
-
-    setMfaLoading(true);
-    setMfaError(null);
-    try {
-      const result = await authApi.regenerateBackupCodes(regeneratePassword);
-      setNewBackupCodes(result.backupCodes);
-      setMfaStep('backup');
-      setRegeneratePassword('');
-    } catch (err) {
-      setMfaError(t('settings.security.regenerateFailed'));
-      logger.error('Failed to regenerate backup codes', err);
-    } finally {
-      setMfaLoading(false);
-    }
+    if (!regeneratePassword.trim()) return;
+    await regenerateBackupCodesMutation.mutate(regeneratePassword);
   };
 
   const copyToClipboard = useCallback(async (text: string) => {
@@ -160,7 +153,7 @@ export default function SettingsPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      logger.error('Failed to copy to clipboard', err);
+      // Silent fail for clipboard
     }
   }, []);
 
@@ -171,28 +164,11 @@ export default function SettingsPage() {
 
   // Session Handlers
   const handleRevokeSession = async (sessionId: string) => {
-    setRevokingSession(sessionId);
-    try {
-      await authApi.revokeSession(sessionId);
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    } catch (err) {
-      logger.error('Failed to revoke session', err);
-    } finally {
-      setRevokingSession(null);
-    }
+    await revokeSessionMutation.mutate(sessionId);
   };
 
   const handleRevokeAllSessions = async () => {
-    setRevokingAll(true);
-    try {
-      await authApi.revokeAllSessions();
-      // Keep only current session
-      setSessions((prev) => prev.filter((s) => s.isCurrent));
-    } catch (err) {
-      logger.error('Failed to revoke all sessions', err);
-    } finally {
-      setRevokingAll(false);
-    }
+    await revokeAllSessionsMutation.mutate();
   };
 
   const formatDate = (dateStr: string) => {
@@ -206,6 +182,18 @@ export default function SettingsPage() {
   };
 
   const backupCodesToShow = mfaSetupData?.backupCodes || newBackupCodes;
+  const mfaLoading =
+    setupMfaMutation.isLoading ||
+    verifyMfaMutation.isLoading ||
+    disableMfaMutation.isLoading ||
+    regenerateBackupCodesMutation.isLoading;
+  const mfaError =
+    setupMfaMutation.errorMessage ||
+    verifyMfaMutation.errorMessage ||
+    disableMfaMutation.errorMessage ||
+    regenerateBackupCodesMutation.errorMessage;
+  const revokingSession = revokeSessionMutation.isLoading;
+  const revokingAll = revokeAllSessionsMutation.isLoading;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -335,7 +323,6 @@ export default function SettingsPage() {
                 onClick={() => {
                   setMfaStep('idle');
                   setMfaSetupData(null);
-                  setMfaError(null);
                 }}
                 className="px-4 py-2 border border-theme-border-default text-theme-text-secondary rounded-lg hover:bg-theme-bg-secondary transition-colors"
               >
@@ -375,7 +362,6 @@ export default function SettingsPage() {
                 onClick={() => {
                   setMfaStep('setup');
                   setVerifyCode('');
-                  setMfaError(null);
                 }}
                 className="px-4 py-2 border border-theme-border-default text-theme-text-secondary rounded-lg hover:bg-theme-bg-secondary transition-colors"
               >
@@ -433,7 +419,6 @@ export default function SettingsPage() {
                   setMfaSetupData(null);
                   setNewBackupCodes([]);
                   setVerifyCode('');
-                  setMfaError(null);
                 }}
                 className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors"
               >
@@ -466,7 +451,6 @@ export default function SettingsPage() {
                 onClick={() => {
                   setMfaStep('idle');
                   setDisablePassword('');
-                  setMfaError(null);
                 }}
                 className="px-4 py-2 border border-theme-border-default text-theme-text-secondary rounded-lg hover:bg-theme-bg-secondary transition-colors"
               >
@@ -506,7 +490,6 @@ export default function SettingsPage() {
                 onClick={() => {
                   setMfaStep('idle');
                   setRegeneratePassword('');
-                  setMfaError(null);
                 }}
                 className="px-4 py-2 border border-theme-border-default text-theme-text-secondary rounded-lg hover:bg-theme-bg-secondary transition-colors"
               >
@@ -562,10 +545,10 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {sessionsError && (
+        {sessionsError?.userMessage && (
           <div className="flex items-center gap-2 p-3 bg-theme-status-error-bg text-theme-status-error-text rounded-lg mb-4">
             <AlertTriangle size={16} />
-            <span className="text-sm">{sessionsError}</span>
+            <span className="text-sm">{sessionsError.userMessage}</span>
           </div>
         )}
 
@@ -614,10 +597,10 @@ export default function SettingsPage() {
                   {!session.isCurrent && (
                     <button
                       onClick={() => handleRevokeSession(session.id)}
-                      disabled={revokingSession === session.id}
+                      disabled={revokingSession}
                       className="p-2 text-theme-status-error-text hover:bg-theme-status-error-bg rounded-lg transition-colors disabled:opacity-50"
                     >
-                      {revokingSession === session.id ? (
+                      {revokingSession ? (
                         <RefreshCw size={16} className="animate-spin" />
                       ) : (
                         <Trash2 size={16} />

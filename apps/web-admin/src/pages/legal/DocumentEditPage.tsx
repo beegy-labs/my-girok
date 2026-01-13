@@ -1,13 +1,14 @@
 import { useEffect, useState, useMemo, FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
-import { ArrowLeft, Save, Loader2, AlertCircle, Eye, Code } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, Code } from 'lucide-react';
 import { legalApi, CreateDocumentRequest, UpdateDocumentRequest } from '../../api/legal';
 import { servicesApi, Service } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import MarkdownEditor from '../../components/MarkdownEditor';
 import { COUNTRY_OPTIONS } from '../../config/country.config';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 const DOCUMENT_TYPES = [
   { value: 'TERMS_OF_SERVICE', label: 'Terms of Service' },
@@ -32,8 +33,6 @@ export default function DocumentEditPage() {
   const isNew = !id;
 
   const [loading, setLoading] = useState(!isNew);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
 
@@ -64,6 +63,10 @@ export default function DocumentEditPage() {
     [t],
   );
 
+  const { executeWithErrorHandling } = useApiError({
+    context: 'DocumentEditPage.fetchDocument',
+  });
+
   // Fetch services on mount
   useEffect(() => {
     servicesApi.listServices({ isActive: true }).then((res) => setServices(res.data));
@@ -73,14 +76,16 @@ export default function DocumentEditPage() {
     if (id) {
       fetchDocument();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchDocument = async () => {
-    setLoading(true);
-    setError(null);
+    if (!id) return;
 
-    try {
-      const doc = await legalApi.getDocument(id!);
+    setLoading(true);
+    const doc = await executeWithErrorHandling(() => legalApi.getDocument(id));
+
+    if (doc) {
       setType(doc.type);
       setVersion(doc.version);
       setLocale(doc.locale);
@@ -91,56 +96,57 @@ export default function DocumentEditPage() {
       setIsActive(doc.isActive);
       setServiceId(doc.serviceId || '');
       setCountryCode(doc.countryCode || '');
-    } catch (err) {
-      setError(t('legal.loadFailed'));
-      logger.error('Failed to fetch document', { documentId: id, error: err });
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    try {
-      if (isNew) {
-        const data: CreateDocumentRequest = {
-          type,
-          version,
-          locale,
-          title,
-          content,
-          summary: summary || undefined,
-          effectiveDate: new Date(effectiveDate).toISOString(),
-          serviceId: serviceId || undefined,
-          countryCode: countryCode || undefined,
-        };
-        await legalApi.createDocument(data);
-      } else {
-        const data: UpdateDocumentRequest = {
-          title,
-          content,
-          summary: summary || undefined,
-          effectiveDate: new Date(effectiveDate).toISOString(),
-          isActive,
-        };
-        await legalApi.updateDocument(id!, data);
-      }
-
+  const { mutate: createDocument, isLoading: isCreating } = useApiMutation({
+    mutationFn: (data: CreateDocumentRequest) => legalApi.createDocument(data),
+    context: 'DocumentEditPage.createDocument',
+    successToast: t('legal.createSuccess', 'Document created successfully'),
+    onSuccess: () => {
       navigate('/compliance/documents');
-    } catch (err) {
-      setError(isNew ? t('legal.saveFailed') : t('legal.saveFailed'));
-      logger.error(isNew ? 'Failed to create document' : 'Failed to update document', {
-        documentId: id,
+    },
+  });
+
+  const { mutate: updateDocument, isLoading: isUpdating } = useApiMutation({
+    mutationFn: (data: UpdateDocumentRequest) => legalApi.updateDocument(id!, data),
+    context: 'DocumentEditPage.updateDocument',
+    successToast: t('legal.updateSuccess', 'Document updated successfully'),
+    onSuccess: () => {
+      navigate('/compliance/documents');
+    },
+  });
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    if (isNew) {
+      const data: CreateDocumentRequest = {
         type,
-        error: err,
-      });
-    } finally {
-      setSaving(false);
+        version,
+        locale,
+        title,
+        content,
+        summary: summary || undefined,
+        effectiveDate: new Date(effectiveDate).toISOString(),
+        serviceId: serviceId || undefined,
+        countryCode: countryCode || undefined,
+      };
+      createDocument(data);
+    } else {
+      const data: UpdateDocumentRequest = {
+        title,
+        content,
+        summary: summary || undefined,
+        effectiveDate: new Date(effectiveDate).toISOString(),
+        isActive,
+      };
+      updateDocument(data);
     }
   };
+
+  const isSaving = isCreating || isUpdating;
 
   const canEdit = isNew ? hasPermission('legal:create') : hasPermission('legal:update');
 
@@ -177,14 +183,6 @@ export default function DocumentEditPage() {
           <span>{showPreview ? 'Edit' : 'Preview'}</span>
         </button>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-          <AlertCircle size={20} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -359,12 +357,12 @@ export default function DocumentEditPage() {
           {canEdit && (
             <button
               type="submit"
-              disabled={saving || !title || !content}
+              disabled={isSaving || !title || !content}
               className="flex items-center gap-2 px-6 py-3 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving && <Loader2 size={18} className="animate-spin" />}
+              {isSaving && <Loader2 size={18} className="animate-spin" />}
               <Save size={18} />
-              <span>{saving ? 'Saving...' : 'Save'}</span>
+              <span>{isSaving ? 'Saving...' : 'Save'}</span>
             </button>
           )}
         </div>

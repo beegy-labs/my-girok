@@ -5,6 +5,7 @@ import { Search, ChevronLeft, ChevronRight, Loader2, Users, Globe, Monitor } fro
 import { analyticsApi, type UserOverviewItem } from '../../api/analytics';
 import { Card } from '../../components/atoms/Card';
 import { LocationBadge } from '../system/session-recordings/components/LocationBadge';
+import { useApiError } from '../../hooks/useApiError';
 
 // Pure helper function moved outside component for better performance
 function formatDate(dateString: string): string {
@@ -16,7 +17,6 @@ export default function UsersOverviewPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserOverviewItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -24,26 +24,27 @@ export default function UsersOverviewPage() {
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { executeWithErrorHandling } = useApiError({
+    context: 'UsersOverviewPage.fetchUsers',
+    retry: true,
+  });
 
-      const response = await analyticsApi.getUsersOverview({
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    const response = await executeWithErrorHandling(async () => {
+      return await analyticsApi.getUsersOverview({
         page,
         limit,
         search: search || undefined,
       });
-
+    });
+    if (response) {
       setUsers(response.data);
       setTotal(response.total);
       setTotalPages(response.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch users');
-    } finally {
-      setLoading(false);
     }
-  }, [page, limit, search]);
+    setLoading(false);
+  }, [page, limit, search, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchUsers();
@@ -94,13 +95,6 @@ export default function UsersOverviewPage() {
           </button>
         </div>
       </Card>
-
-      {/* Error */}
-      {error && (
-        <div className="p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-          {error}
-        </div>
-      )}
 
       {/* Loading */}
       {loading ? (

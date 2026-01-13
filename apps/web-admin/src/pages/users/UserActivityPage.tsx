@@ -11,6 +11,7 @@ import {
 import { UserSummaryCard } from './components/UserSummaryCard';
 import { UserSessionsList } from './components/UserSessionsList';
 import { UserLocationStats as UserLocationStatsComponent } from './components/UserLocationStats';
+import { useApiError } from '../../hooks/useApiError';
 
 export default function UserActivityPage() {
   const { t } = useTranslation();
@@ -24,29 +25,35 @@ export default function UserActivityPage() {
   const [total, setTotal] = useState(0);
   const [limit] = useState(20);
 
+  const { executeWithErrorHandling } = useApiError({
+    context: 'UserActivityPage.fetchData',
+    retry: true,
+  });
+
   const fetchData = useCallback(async () => {
     if (!userId) return;
 
-    try {
-      setLoading(true);
-      setError(null);
-
+    setLoading(true);
+    const result = await executeWithErrorHandling(async () => {
       const [summaryData, sessionsData, locationsData] = await Promise.all([
         analyticsApi.getUserSummary(userId),
         analyticsApi.getUserSessions(userId, { page, limit }),
         analyticsApi.getUserLocations(userId),
       ]);
+      return { summaryData, sessionsData, locationsData };
+    });
 
-      setSummary(summaryData);
-      setSessions(sessionsData.data);
-      setTotal(sessionsData.total);
-      setLocations(locationsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch user activity');
-    } finally {
-      setLoading(false);
+    if (result) {
+      setSummary(result.summaryData);
+      setSessions(result.sessionsData.data);
+      setTotal(result.sessionsData.total);
+      setLocations(result.locationsData);
+      setError(null);
+    } else {
+      setError(t('analytics.userNotFound', 'User not found'));
     }
-  }, [userId, page, limit]);
+    setLoading(false);
+  }, [userId, page, limit, executeWithErrorHandling, t]);
 
   useEffect(() => {
     fetchData();

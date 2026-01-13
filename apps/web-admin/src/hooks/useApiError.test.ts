@@ -194,7 +194,7 @@ describe('useApiError', () => {
     it('should use withRetry when retry is enabled', async () => {
       const mockData = { id: '123' };
       const apiCall = vi.fn().mockResolvedValue(mockData);
-      const retryConfig = { maxAttempts: 3, delayMs: 100 };
+      const retryConfig = { maxRetries: 3, initialDelayMs: 100 };
 
       vi.mocked(errorHandler.withRetry).mockImplementation(async (fn) => fn());
 

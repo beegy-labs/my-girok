@@ -43,7 +43,7 @@ describe('useApiMutation', () => {
       expect(result.current.data).toBeNull();
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(mutationFn).toHaveBeenCalledTimes(1);
@@ -66,7 +66,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(toast.showSuccessToast).toHaveBeenCalledWith(successMessage);
@@ -85,7 +85,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(successToastFn).toHaveBeenCalledWith(mockData);
@@ -155,7 +155,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(errorHandler.handleApiError).toHaveBeenCalledWith(mockError, 'TestContext');
@@ -186,7 +186,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(toast.showErrorToast).not.toHaveBeenCalled();
@@ -256,7 +256,7 @@ describe('useApiMutation', () => {
     it('should use withRetry when retry is enabled', async () => {
       const mockData = { id: '123' };
       const mutationFn = vi.fn().mockResolvedValue(mockData);
-      const retryConfig = { maxAttempts: 3, delayMs: 100 };
+      const retryConfig = { maxRetries: 3, initialDelayMs: 100 };
 
       vi.mocked(errorHandler.withRetry).mockImplementation(async (fn) => fn());
 
@@ -269,7 +269,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(errorHandler.withRetry).toHaveBeenCalled();
@@ -287,7 +287,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(errorHandler.withRetry).not.toHaveBeenCalled();
@@ -307,7 +307,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(result.current.data).toEqual(mockData);
@@ -340,7 +340,7 @@ describe('useApiMutation', () => {
       expect(result.current.isLoading).toBe(false);
 
       const mutatePromise = act(async () => {
-        result.current.mutate();
+        result.current.mutate(undefined);
       });
 
       await waitFor(() => {
@@ -376,7 +376,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate();
+        await result.current.mutate(undefined);
       });
 
       expect(result.current.errorMessage).toBe('User-friendly error message');
@@ -396,7 +396,7 @@ describe('useApiMutation', () => {
 
       let returnedData;
       await act(async () => {
-        returnedData = await result.current.mutateAsync();
+        returnedData = await result.current.mutateAsync(undefined);
       });
 
       expect(returnedData).toEqual(mockData);
@@ -422,7 +422,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await expect(result.current.mutateAsync()).rejects.toThrow();
+        await expect(result.current.mutateAsync(undefined)).rejects.toThrow();
       });
     });
   });

@@ -14,8 +14,9 @@ import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { Modal } from '../../components/molecules/Modal';
 import { Button } from '../../components/atoms/Button';
 import { Input } from '../../components/atoms/Input';
-import { logger } from '../../utils/logger';
 import { getTenantTypeOptions } from '../../config/tenant.config';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 export default function TenantEditPage() {
   const { t } = useTranslation();
@@ -28,9 +29,40 @@ export default function TenantEditPage() {
   const tenantTypeOptions = useMemo(() => getTenantTypeOptions(t, false), [t]);
 
   const [loading, setLoading] = useState(!isNew);
-  const [saving, setSaving] = useState(false);
-  const [statusUpdating, setStatusUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+    context: 'TenantEditPage',
+    showToast: false,
+  });
+
+  const createMutation = useApiMutation({
+    mutationFn: (data: CreateTenantRequest) => tenantApi.create(data),
+    successToast: 'Tenant created successfully',
+    onSuccess: () => navigate('/organization/partners'),
+    context: 'CreateTenant',
+  });
+
+  const updateMutation = useApiMutation({
+    mutationFn: (data: { id: string; update: UpdateTenantRequest }) =>
+      tenantApi.update(data.id, data.update),
+    successToast: 'Tenant updated successfully',
+    onSuccess: () => navigate('/organization/partners'),
+    context: 'UpdateTenant',
+  });
+
+  const updateStatusMutation = useApiMutation({
+    mutationFn: (data: { id: string; update: UpdateStatusRequest }) =>
+      tenantApi.updateStatus(data.id, data.update),
+    successToast: 'Tenant status updated successfully',
+    onSuccess: (updated) => {
+      setStatus(updated.status);
+      setApprovedAt(updated.approvedAt);
+    },
+    context: 'UpdateTenantStatus',
+  });
+
+  const saving = createMutation.isLoading || updateMutation.isLoading;
+  const statusUpdating = updateStatusMutation.isLoading;
 
   // Form state
   const [name, setName] = useState('');
@@ -54,85 +86,55 @@ export default function TenantEditPage() {
 
   const fetchTenant = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
-    try {
-      const tenant = await tenantApi.get(id!);
-      setName(tenant.name);
-      setSlug(tenant.slug);
-      setType(tenant.type);
-      setStatus(tenant.status);
-      setSettings(JSON.stringify(tenant.settings || {}, null, 2));
-      setAdminCount(tenant.adminCount);
-      setApprovedAt(tenant.approvedAt);
-    } catch (err) {
-      setError(t('tenants.loadFailed'));
-      logger.error('Failed to load tenant', err);
-    } finally {
-      setLoading(false);
+    const result = await executeWithErrorHandling(() => tenantApi.get(id!));
+
+    if (result) {
+      setName(result.name);
+      setSlug(result.slug);
+      setType(result.type);
+      setStatus(result.status);
+      setSettings(JSON.stringify(result.settings || {}, null, 2));
+      setAdminCount(result.adminCount);
+      setApprovedAt(result.approvedAt);
     }
-  }, [id, t]);
+    setLoading(false);
+  }, [id, executeWithErrorHandling]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setError(null);
 
+    let parsedSettings = {};
     try {
-      let parsedSettings = {};
-      try {
-        parsedSettings = JSON.parse(settings);
-      } catch {
-        setError('Invalid JSON in settings');
-        setSaving(false);
-        return;
-      }
+      parsedSettings = JSON.parse(settings);
+    } catch {
+      return;
+    }
 
-      if (isNew) {
-        const data: CreateTenantRequest = {
-          name,
-          slug,
-          type,
-          settings: parsedSettings,
-        };
-        await tenantApi.create(data);
-      } else {
-        const data: UpdateTenantRequest = {
-          name,
-          settings: parsedSettings,
-        };
-        await tenantApi.update(id!, data);
-      }
-
-      navigate('/organization/partners');
-    } catch (err) {
-      setError(isNew ? 'Failed to create tenant' : 'Failed to update tenant');
-      logger.error('Failed to save tenant', err);
-    } finally {
-      setSaving(false);
+    if (isNew) {
+      const data: CreateTenantRequest = {
+        name,
+        slug,
+        type,
+        settings: parsedSettings,
+      };
+      await createMutation.mutate(data);
+    } else {
+      const data: UpdateTenantRequest = {
+        name,
+        settings: parsedSettings,
+      };
+      await updateMutation.mutate({ id: id!, update: data });
     }
   };
 
   const handleStatusUpdate = useCallback(
     async (newStatus: Tenant['status'], reason?: string) => {
       if (!id) return;
-
-      setStatusUpdating(true);
-      setError(null);
-
-      try {
-        const data: UpdateStatusRequest = { status: newStatus, reason };
-        const updated = await tenantApi.updateStatus(id, data);
-        setStatus(updated.status);
-        setApprovedAt(updated.approvedAt);
-      } catch (err) {
-        setError('Failed to update status');
-        logger.error('Failed to update tenant status', err);
-      } finally {
-        setStatusUpdating(false);
-      }
+      const data: UpdateStatusRequest = { status: newStatus, reason };
+      await updateStatusMutation.mutate({ id, update: data });
     },
-    [id],
+    [id, updateStatusMutation],
   );
 
   const handleSuspendClick = useCallback(() => {
@@ -141,13 +143,12 @@ export default function TenantEditPage() {
 
   const handleSuspendConfirm = useCallback(async () => {
     if (!suspendReason.trim()) {
-      setError(t('tenants.reasonRequired'));
       return;
     }
     await handleStatusUpdate('SUSPENDED', suspendReason);
     setSuspendModal(false);
     setSuspendReason('');
-  }, [suspendReason, handleStatusUpdate, t]);
+  }, [suspendReason, handleStatusUpdate]);
 
   const handleSuspendCancel = useCallback(() => {
     setSuspendModal(false);
@@ -200,7 +201,7 @@ export default function TenantEditPage() {
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 
