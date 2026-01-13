@@ -37,11 +37,16 @@ spec:
         - name: http
           containerPort: {{ .Values.app.port }}
           protocol: TCP
+        - name: grpc
+          containerPort: {{ .Values.app.grpcPort }}
+          protocol: TCP
         env:
         - name: NODE_ENV
           value: {{ .Values.app.nodeEnv | quote }}
         - name: PORT
           value: {{ .Values.app.port | quote }}
+        - name: GRPC_PORT
+          value: {{ .Values.app.grpcPort | quote }}
         - name: CLICKHOUSE_HOST
           valueFrom:
             secretKeyRef:

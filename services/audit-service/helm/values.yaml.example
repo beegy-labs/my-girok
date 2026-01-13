@@ -45,6 +45,7 @@ securityContext:
 service:
   type: ClusterIP
   port: 3003
+  grpcPort: 50054
 
 ingress:
   enabled: true
@@ -102,6 +103,7 @@ affinity:
 app:
   nodeEnv: production
   port: 3003
+  grpcPort: 50054
 
   # ClickHouse Configuration
   clickhouse:
