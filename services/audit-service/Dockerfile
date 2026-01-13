@@ -20,7 +20,6 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY packages/types ./packages/types
 COPY packages/nest-common ./packages/nest-common
-COPY packages/proto ./packages/proto
 COPY services/audit-service ./services/audit-service
 
 # Build shared packages first
@@ -52,7 +51,6 @@ COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY --chown=node:node services/audit-service/package.json ./services/audit-service/
 COPY --chown=node:node packages/types/package.json ./packages/types/
 COPY --chown=node:node packages/nest-common/package.json ./packages/nest-common/
-COPY --chown=node:node packages/proto ./packages/proto
 
 # Copy built files
 COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
@@ -74,7 +72,7 @@ RUN mkdir -p /tmp && chown -R node:node /tmp
 USER node
 
 # Expose port
-EXPOSE 3003 50054
+EXPOSE 3003
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
