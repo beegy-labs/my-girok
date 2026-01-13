@@ -143,11 +143,18 @@ export class AuthorizationService {
   }
 
   /**
-   * Validate a model
+   * Validate a model (BFF-level basic validation only)
+   *
+   * NOTE: This function performs only basic, BFF-level validation (empty check).
+   * Full DSL syntax parsing, semantic validation, and type checking are handled
+   * by the authorization-service gRPC backend when createModel() is called.
+   *
+   * For comprehensive validation results including syntax errors, type errors,
+   * and relation validations, use createModel() which delegates to the backend.
    */
   async validateModel(dslSource: string) {
-    // Model validation is handled by authorization-service
-    // This is a simple validation
+    // BFF-level validation: basic empty check only
+    // Full DSL syntax analysis is performed by authorization-service
     if (!dslSource || dslSource.trim().length === 0) {
       return {
         valid: false,
