@@ -95,6 +95,33 @@ export interface ListModelsResponse {
   nextPageToken?: string;
 }
 
+export interface WriteModelRequest {
+  dslSource: string;
+  activate?: boolean;
+}
+
+export interface WriteModelResponse {
+  success: boolean;
+  modelId?: string;
+  versionId?: string;
+  errors?: Array<{
+    type: string;
+    relation?: string;
+    message: string;
+    line?: number;
+    column?: number;
+  }>;
+}
+
+export interface ActivateModelRequest {
+  modelId: string;
+}
+
+export interface ActivateModelResponse {
+  success: boolean;
+  message?: string;
+}
+
 export interface GetTeamRequest {
   teamId: string;
 }
@@ -163,6 +190,8 @@ interface AuthorizationServiceClient {
   listObjects(request: ListObjectsRequest): Observable<ListObjectsResponse>;
   listUsers(request: ListUsersRequest): Observable<ListUsersResponse>;
   listModels(request: ListModelsRequest): Observable<ListModelsResponse>;
+  writeModel(request: WriteModelRequest): Observable<WriteModelResponse>;
+  activateModel(request: ActivateModelRequest): Observable<ActivateModelResponse>;
   getTeam(request: GetTeamRequest): Observable<GetTeamResponse>;
   listTeams(request: ListTeamsRequest): Observable<ListTeamsResponse>;
   createTeam(request: CreateTeamRequest): Observable<CreateTeamResponse>;
@@ -388,6 +417,28 @@ export class AuthorizationGrpcClient implements OnModuleInit {
 
     const response = await firstValueFrom(this.authzService.deleteTeam({ teamId }));
     return response.success;
+  }
+
+  /**
+   * Write a new authorization model
+   */
+  async writeModel(dslSource: string, activate?: boolean): Promise<WriteModelResponse | null> {
+    if (!this.isConnected || !this.authzService) {
+      throw new Error('Authorization service not connected');
+    }
+
+    return await firstValueFrom(this.authzService.writeModel({ dslSource, activate }));
+  }
+
+  /**
+   * Activate a specific model version
+   */
+  async activateModel(modelId: string): Promise<ActivateModelResponse | null> {
+    if (!this.isConnected || !this.authzService) {
+      throw new Error('Authorization service not connected');
+    }
+
+    return await firstValueFrom(this.authzService.activateModel({ modelId }));
   }
 
   /**

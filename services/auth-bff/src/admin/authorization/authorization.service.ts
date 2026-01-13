@@ -116,11 +116,30 @@ export class AuthorizationService {
   /**
    * Create a new model
    */
-  async createModel(_dslSource: string) {
-    // Model creation is handled by authorization-service via WriteModel gRPC
-    // This is a placeholder - actual implementation would need WriteModel support
-    this.logger.warn('createModel not fully implemented - requires WriteModel gRPC method');
-    throw new Error('Model creation not supported via auth-bff');
+  async createModel(dslSource: string, activate?: boolean) {
+    try {
+      const result = await this.authzClient.writeModel(dslSource, activate);
+
+      if (!result) {
+        throw new Error('Failed to create model: No response from server');
+      }
+
+      if (!result.success) {
+        return {
+          success: false,
+          errors: result.errors || [],
+        };
+      }
+
+      return {
+        success: true,
+        modelId: result.modelId,
+        versionId: result.versionId,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to create model: ${error}`);
+      throw error;
+    }
   }
 
   /**
@@ -145,11 +164,26 @@ export class AuthorizationService {
   /**
    * Activate a model
    */
-  async activateModel(_id: string) {
-    // Model activation is handled by authorization-service via ActivateModel gRPC
-    // This is a placeholder - actual implementation would need ActivateModel support
-    this.logger.warn('activateModel not fully implemented - requires ActivateModel gRPC method');
-    throw new Error('Model activation not supported via auth-bff');
+  async activateModel(id: string) {
+    try {
+      const result = await this.authzClient.activateModel(id);
+
+      if (!result) {
+        throw new Error('Failed to activate model: No response from server');
+      }
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to activate model');
+      }
+
+      return {
+        success: true,
+        message: result.message || 'Model activated successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Failed to activate model: ${error}`);
+      throw error;
+    }
   }
 
   /**
