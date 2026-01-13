@@ -59,6 +59,7 @@ COPY --chown=node:node --from=builder /app/packages/types/package.json ./package
 COPY --chown=node:node --from=builder /app/packages/nest-common/dist ./packages/nest-common/dist
 COPY --chown=node:node --from=builder /app/packages/nest-common/package.json ./packages/nest-common/package.json
 COPY --chown=node:node --from=builder /app/services/audit-service/dist ./services/audit-service/dist
+COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
 
 # Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production
