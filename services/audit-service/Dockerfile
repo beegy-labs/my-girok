@@ -20,6 +20,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY packages/types ./packages/types
 COPY packages/nest-common ./packages/nest-common
+COPY packages/proto ./packages/proto
 COPY services/audit-service ./services/audit-service
 
 # Build shared packages first
@@ -72,7 +73,7 @@ RUN mkdir -p /tmp && chown -R node:node /tmp
 USER node
 
 # Expose port
-EXPOSE 3003
+EXPOSE 3003 50054
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
