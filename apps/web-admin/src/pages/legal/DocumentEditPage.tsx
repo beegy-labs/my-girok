@@ -32,7 +32,6 @@ export default function DocumentEditPage() {
   const { hasPermission } = useAdminAuthStore();
   const isNew = !id;
 
-  const [loading, setLoading] = useState(!isNew);
   const [showPreview, setShowPreview] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
 
@@ -63,7 +62,7 @@ export default function DocumentEditPage() {
     [t],
   );
 
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'DocumentEditPage.fetchDocument',
   });
 
@@ -82,7 +81,6 @@ export default function DocumentEditPage() {
   const fetchDocument = async () => {
     if (!id) return;
 
-    setLoading(true);
     const doc = await executeWithErrorHandling(() => legalApi.getDocument(id));
 
     if (doc) {
@@ -97,7 +95,6 @@ export default function DocumentEditPage() {
       setServiceId(doc.serviceId || '');
       setCountryCode(doc.countryCode || '');
     }
-    setLoading(false);
   };
 
   const { mutate: createDocument, isLoading: isCreating } = useApiMutation({

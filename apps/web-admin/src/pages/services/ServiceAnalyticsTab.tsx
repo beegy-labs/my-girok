@@ -61,16 +61,18 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
 export default function ServiceAnalyticsTab({ serviceId }: ServiceAnalyticsTabProps) {
   const { t } = useTranslation();
   const [metrics, setMetrics] = useState<ServiceMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceAnalyticsTab',
     showToast: false,
   });
 
   const fetchMetrics = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(async () => {
       // Fetch all data in parallel
       const [documentsRes, consentsRes, countriesRes, localesRes] = await Promise.all([
@@ -112,7 +114,6 @@ export default function ServiceAnalyticsTab({ serviceId }: ServiceAnalyticsTabPr
     if (result) {
       setMetrics(result);
     }
-    setLoading(false);
   }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {

@@ -27,7 +27,6 @@ export default function SupportedCountriesPage() {
   const canEdit = hasPermission('settings:update');
 
   const [countries, setCountries] = useState<SupportedCountry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -42,14 +41,16 @@ export default function SupportedCountriesPage() {
   });
 
   // API hooks
-  const { executeWithErrorHandling, error } = useApiError({
+  const {
+    executeWithErrorHandling,
+    error,
+    isLoading: loading,
+  } = useApiError({
     context: 'SupportedCountriesPage.fetchCountries',
     retry: true,
   });
 
   const fetchCountries = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(async () => {
       return await globalSettingsApi.listCountries();
     });
@@ -57,7 +58,6 @@ export default function SupportedCountriesPage() {
     if (result) {
       setCountries(result.data);
     }
-    setLoading(false);
   }, [executeWithErrorHandling]);
 
   const createMutation = useApiMutation({

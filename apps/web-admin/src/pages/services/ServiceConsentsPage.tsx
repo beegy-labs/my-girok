@@ -76,20 +76,24 @@ export default function ServiceConsentsPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const [service, setService] = useState<Service | null>(null);
   const [data, setData] = useState<ConsentRequirementListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditingRequirement>(emptyRequirement);
 
-  const { error, errorMessage, executeWithErrorHandling, clearError } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    clearError,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceConsentsPage',
     showToast: false,
   });
 
   const fetchData = async () => {
     if (!serviceId) return;
-    setLoading(true);
 
     const result = await executeWithErrorHandling(async () => {
       const [serviceResult, requirementsResult] = await Promise.all([
@@ -103,7 +107,6 @@ export default function ServiceConsentsPage() {
       setService(result.serviceResult);
       setData(result.requirementsResult);
     }
-    setLoading(false);
   };
 
   const createMutation = useApiMutation({

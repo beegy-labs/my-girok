@@ -17,17 +17,19 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
   const canEdit = hasPermission('service:update');
 
   const [countries, setCountries] = useState<ServiceCountry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState('');
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceCountriesTab',
     showToast: false,
   });
 
   const fetchCountries = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(() =>
       servicesApi.listServiceCountries(serviceId),
     );
@@ -35,7 +37,6 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
     if (result) {
       setCountries(result.data);
     }
-    setLoading(false);
   }, [serviceId, executeWithErrorHandling]);
 
   const addCountryMutation = useApiMutation({

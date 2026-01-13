@@ -22,7 +22,6 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
 
   const [userTesters, setUserTesters] = useState<TesterUser[]>([]);
   const [adminTesters, setAdminTesters] = useState<TesterAdmin[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'users' | 'admins'>('users');
 
   // Modal state
@@ -34,7 +33,12 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
   } | null>(null);
   const [deleteReason, setDeleteReason] = useState('');
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceTestersTab',
     showToast: false,
   });
@@ -121,8 +125,6 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
   });
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(async () => {
       const [usersResult, adminsResult] = await Promise.all([
         servicesApi.listUserTesters(serviceId),
@@ -135,7 +137,6 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
       setUserTesters(result.usersResult.data);
       setAdminTesters(result.adminsResult.data);
     }
-    setLoading(false);
   }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {

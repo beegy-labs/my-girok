@@ -6,8 +6,7 @@ import { useApiError } from '../../hooks/useApiError';
 
 export default function ServicesPage() {
   const [data, setData] = useState<ServiceListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'ServicesPage.fetchServices',
     retry: true,
   });
@@ -17,8 +16,6 @@ export default function ServicesPage() {
   }, []);
 
   const fetchServices = async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(async () => {
       return await servicesApi.listServices();
     });
@@ -26,7 +23,6 @@ export default function ServicesPage() {
     if (result) {
       setData(result);
     }
-    setLoading(false);
   };
 
   if (loading) {

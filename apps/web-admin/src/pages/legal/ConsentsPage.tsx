@@ -5,9 +5,8 @@ import { useApiError } from '../../hooks/useApiError';
 
 export default function ConsentsPage() {
   const [stats, setStats] = useState<ConsentStats | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'ConsentsPage.fetchStats',
   });
 
@@ -17,12 +16,10 @@ export default function ConsentsPage() {
   }, []);
 
   const fetchStats = async () => {
-    setLoading(true);
     const data = await executeWithErrorHandling(() => legalApi.getConsentStats());
     if (data) {
       setStats(data);
     }
-    setLoading(false);
   };
 
   if (loading) {

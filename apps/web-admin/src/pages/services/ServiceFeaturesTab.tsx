@@ -32,7 +32,6 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
   const canEdit = hasPermission('service:update');
 
   const [features, setFeatures] = useState<ServiceFeature[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // Modal state
@@ -40,7 +39,12 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
   const [editingFeature, setEditingFeature] = useState<ServiceFeature | null>(null);
   const [deletingFeature, setDeletingFeature] = useState<ServiceFeature | null>(null);
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceFeaturesTab',
     showToast: false,
   });
@@ -56,8 +60,6 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
   });
 
   const fetchFeatures = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(() =>
       servicesApi.listServiceFeatures(serviceId, {
         includeInactive: true,
@@ -68,7 +70,6 @@ export default function ServiceFeaturesTab({ serviceId }: ServiceFeaturesTabProp
     if (result) {
       setFeatures(result.data);
     }
-    setLoading(false);
   }, [serviceId, executeWithErrorHandling]);
 
   const createMutation = useApiMutation({

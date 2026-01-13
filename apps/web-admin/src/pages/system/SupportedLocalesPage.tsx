@@ -27,7 +27,6 @@ export default function SupportedLocalesPage() {
   const canEdit = hasPermission('settings:update');
 
   const [locales, setLocales] = useState<SupportedLocale[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -42,14 +41,16 @@ export default function SupportedLocalesPage() {
   });
 
   // API hooks
-  const { executeWithErrorHandling, error } = useApiError({
+  const {
+    executeWithErrorHandling,
+    error,
+    isLoading: loading,
+  } = useApiError({
     context: 'SupportedLocalesPage.fetchLocales',
     retry: true,
   });
 
   const fetchLocales = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(async () => {
       return await globalSettingsApi.listLocales();
     });
@@ -57,7 +58,6 @@ export default function SupportedLocalesPage() {
     if (result) {
       setLocales(result.data);
     }
-    setLoading(false);
   }, [executeWithErrorHandling]);
 
   const createMutation = useApiMutation({

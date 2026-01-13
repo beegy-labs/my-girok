@@ -303,6 +303,75 @@ describe('useApiError', () => {
     });
   });
 
+  describe('loading state management', () => {
+    it('should be false initially', () => {
+      const { result } = renderHook(() => useApiError());
+
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    it('should be false after successful API call', async () => {
+      const mockData = { id: '123' };
+      const apiCall = vi.fn().mockResolvedValue(mockData);
+
+      const { result } = renderHook(() => useApiError());
+
+      expect(result.current.isLoading).toBe(false);
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    it('should be false after API call fails', async () => {
+      const mockError = new Error('API Error');
+      const mockAppError = {
+        code: 'SERVER_ERROR',
+        message: 'Server error',
+        userMessage: 'Something went wrong',
+        isTransient: false,
+        shouldRetry: false,
+      };
+      const apiCall = vi.fn().mockRejectedValue(mockError);
+
+      vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
+
+      const { result } = renderHook(() => useApiError());
+
+      expect(result.current.isLoading).toBe(false);
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.hasError).toBe(true);
+    });
+
+    it('should handle multiple sequential calls', async () => {
+      const mockData1 = { id: '1' };
+      const mockData2 = { id: '2' };
+      const apiCall1 = vi.fn().mockResolvedValue(mockData1);
+      const apiCall2 = vi.fn().mockResolvedValue(mockData2);
+
+      const { result } = renderHook(() => useApiError());
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall1);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall2);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle null result from API call', async () => {
       const apiCall = vi.fn().mockResolvedValue(null);

@@ -28,7 +28,6 @@ export default function DocumentsPage() {
 
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -61,12 +60,11 @@ export default function DocumentsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'DocumentsPage.fetchDocuments',
   });
 
   const fetchDocuments = useCallback(async () => {
-    setLoading(true);
     const response = await executeWithErrorHandling(() =>
       legalApi.listDocuments({
         page,
@@ -84,7 +82,6 @@ export default function DocumentsPage() {
       setTotalPages(response.totalPages);
       setTotal(response.total);
     }
-    setLoading(false);
   }, [page, type, locale, isActive, serviceId, countryCode, executeWithErrorHandling]);
 
   useEffect(() => {

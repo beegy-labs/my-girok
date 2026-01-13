@@ -47,10 +47,14 @@ export default function ServiceDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const { trackTabChange } = useAuditEvent();
   const [service, setService] = useState<Service | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('countries');
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceDetailPage',
     showToast: false,
   });
@@ -63,14 +67,11 @@ export default function ServiceDetailPage() {
   const fetchService = useCallback(async () => {
     if (!serviceId) return;
 
-    setLoading(true);
-
     const result = await executeWithErrorHandling(() => servicesApi.getService(serviceId));
 
     if (result) {
       setService(result);
     }
-    setLoading(false);
   }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {

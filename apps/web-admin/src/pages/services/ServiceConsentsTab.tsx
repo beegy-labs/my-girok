@@ -73,20 +73,23 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
   const canEdit = hasPermission('service:update');
 
   const [requirements, setRequirements] = useState<ConsentRequirement[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditingRequirement>(emptyRequirement);
 
-  const { error, errorMessage, executeWithErrorHandling, clearError } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    clearError,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceConsentsTab',
     showToast: false,
   });
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(() =>
       servicesApi.listConsentRequirements(serviceId, selectedCountry || undefined),
     );
@@ -94,7 +97,6 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
     if (result) {
       setRequirements(result.data);
     }
-    setLoading(false);
   }, [serviceId, selectedCountry, executeWithErrorHandling]);
 
   const createMutation = useApiMutation({

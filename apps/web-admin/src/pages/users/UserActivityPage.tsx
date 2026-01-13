@@ -19,13 +19,12 @@ export default function UserActivityPage() {
   const [summary, setSummary] = useState<UserSummary | null>(null);
   const [sessions, setSessions] = useState<UserSessionSummary[]>([]);
   const [locations, setLocations] = useState<UserLocationStats[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [limit] = useState(20);
 
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'UserActivityPage.fetchData',
     retry: true,
   });
@@ -33,7 +32,6 @@ export default function UserActivityPage() {
   const fetchData = useCallback(async () => {
     if (!userId) return;
 
-    setLoading(true);
     const result = await executeWithErrorHandling(async () => {
       const [summaryData, sessionsData, locationsData] = await Promise.all([
         analyticsApi.getUserSummary(userId),
@@ -52,7 +50,6 @@ export default function UserActivityPage() {
     } else {
       setError(t('analytics.userNotFound', 'User not found'));
     }
-    setLoading(false);
   }, [userId, page, limit, executeWithErrorHandling, t]);
 
   useEffect(() => {

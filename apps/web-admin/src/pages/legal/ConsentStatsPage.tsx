@@ -62,20 +62,17 @@ const CONSENT_TYPE_LABELS: Record<string, string> = {
 export default function ConsentStatsPage() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<ConsentStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange>('30d');
 
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'ConsentStatsPage.fetchStats',
   });
 
   const fetchStats = useCallback(async () => {
-    setLoading(true);
     const response = await executeWithErrorHandling(() => legalApi.getConsentStats(dateRange));
     if (response) {
       setStats(response);
     }
-    setLoading(false);
   }, [dateRange, executeWithErrorHandling]);
 
   useEffect(() => {

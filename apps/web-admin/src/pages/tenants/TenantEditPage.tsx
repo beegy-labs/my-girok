@@ -28,9 +28,12 @@ export default function TenantEditPage() {
   // SSOT: Use config-based options
   const tenantTypeOptions = useMemo(() => getTenantTypeOptions(t, false), [t]);
 
-  const [loading, setLoading] = useState(!isNew);
-
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'TenantEditPage',
     showToast: false,
   });
@@ -85,8 +88,6 @@ export default function TenantEditPage() {
   }, [id]);
 
   const fetchTenant = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(() => tenantApi.get(id!));
 
     if (result) {
@@ -98,7 +99,6 @@ export default function TenantEditPage() {
       setAdminCount(result.adminCount);
       setApprovedAt(result.approvedAt);
     }
-    setLoading(false);
   }, [id, executeWithErrorHandling]);
 
   const handleSubmit = async (e: FormEvent) => {

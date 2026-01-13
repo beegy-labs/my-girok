@@ -30,7 +30,6 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
   );
 
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -38,7 +37,12 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
     documentId: string | null;
   }>({ isOpen: false, documentId: null });
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceDocumentsTab',
     showToast: false,
   });
@@ -55,8 +59,6 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
   const [total, setTotal] = useState(0);
 
   const fetchDocuments = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(() =>
       legalApi.listDocuments({
         page,
@@ -74,7 +76,6 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
       setTotalPages(result.totalPages);
       setTotal(result.total);
     }
-    setLoading(false);
   }, [page, serviceId, type, locale, isActive, countryCode, executeWithErrorHandling]);
 
   const deleteMutation = useApiMutation({

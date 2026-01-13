@@ -16,7 +16,6 @@ export default function UsersOverviewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserOverviewItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -24,13 +23,12 @@ export default function UsersOverviewPage() {
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'UsersOverviewPage.fetchUsers',
     retry: true,
   });
 
   const fetchUsers = useCallback(async () => {
-    setLoading(true);
     const response = await executeWithErrorHandling(async () => {
       return await analyticsApi.getUsersOverview({
         page,
@@ -43,7 +41,6 @@ export default function UsersOverviewPage() {
       setTotal(response.total);
       setTotalPages(response.totalPages);
     }
-    setLoading(false);
   }, [page, limit, search, executeWithErrorHandling]);
 
   useEffect(() => {

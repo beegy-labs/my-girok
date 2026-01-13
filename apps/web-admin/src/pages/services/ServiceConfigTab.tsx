@@ -35,14 +35,19 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
   // Config state
   const [config, setConfig] = useState<ServiceConfig | null>(null);
   const [domains, setDomains] = useState<DomainResponse | null>(null);
-  const [loading, setLoading] = useState(true);
 
   // Form state
   const [formData, setFormData] = useState<Partial<ServiceConfig>>({});
   const [newDomain, setNewDomain] = useState('');
   const [reason, setReason] = useState('');
 
-  const { error, errorMessage, executeWithErrorHandling, clearError } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    clearError,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceConfigTab',
     showToast: false,
   });
@@ -80,8 +85,6 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
   const addingDomain = addDomainMutation.isLoading;
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(async () => {
       const [configResult, domainsResult] = await Promise.all([
         servicesApi.getServiceConfig(serviceId),
@@ -95,7 +98,6 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       setDomains(result.domainsResult);
       setFormData(result.configResult);
     }
-    setLoading(false);
   }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {

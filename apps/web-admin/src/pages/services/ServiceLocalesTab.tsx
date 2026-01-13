@@ -17,23 +17,24 @@ export default function ServiceLocalesTab({ serviceId }: ServiceLocalesTabProps)
   const canEdit = hasPermission('service:update');
 
   const [locales, setLocales] = useState<ServiceLocale[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedLocale, setSelectedLocale] = useState('');
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceLocalesTab',
     showToast: false,
   });
 
   const fetchLocales = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(() => servicesApi.listServiceLocales(serviceId));
 
     if (result) {
       setLocales(result.data);
     }
-    setLoading(false);
   }, [serviceId, executeWithErrorHandling]);
 
   const addLocaleMutation = useApiMutation({

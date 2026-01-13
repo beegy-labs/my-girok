@@ -26,7 +26,6 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
   const { trackSearch } = useAuditEvent();
 
   const [logs, setLogs] = useState<AuditLogResponse[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedLog, setSelectedLog] = useState<AuditLogResponse | null>(null);
@@ -36,14 +35,17 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
   const [action, setAction] = useState<string>('');
   const [resource, setResource] = useState<string>('');
 
-  const { error, errorMessage, executeWithErrorHandling } = useApiError({
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
     context: 'ServiceAuditTab',
     showToast: false,
   });
 
   const fetchLogs = useCallback(async () => {
-    setLoading(true);
-
     const result = await executeWithErrorHandling(async () => {
       // Note: serviceId filter may need to be added to the audit API
       // For now, we filter by resource pattern that includes the serviceId
@@ -59,7 +61,6 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
       setLogs(result.data);
       setTotal(result.meta.total);
     }
-    setLoading(false);
   }, [serviceId, page, action, resource, executeWithErrorHandling]);
 
   useEffect(() => {
@@ -68,7 +69,6 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
 
   const handleSearch = useCallback(async () => {
     setPage(1);
-    setLoading(true);
 
     const result = await executeWithErrorHandling(async () => {
       return await auditApi.listLogs({
@@ -85,7 +85,6 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
       // Track search AFTER getting results with correct count
       trackSearch(`action:${action} resource:${resource}`, result.meta.total);
     }
-    setLoading(false);
   }, [serviceId, action, resource, limit, trackSearch, executeWithErrorHandling]);
 
   const formatDate = (dateStr: string) => {

@@ -14,7 +14,6 @@ export default function TenantsPage() {
   const statusOptions = getStatusOptions(t);
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Filters
   const [status, setStatus] = useState('');
@@ -25,13 +24,12 @@ export default function TenantsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const { executeWithErrorHandling } = useApiError({
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
     context: 'TenantsPage.fetchTenants',
     retry: true,
   });
 
   const fetchTenants = useCallback(async () => {
-    setLoading(true);
     const response = await executeWithErrorHandling(async () => {
       return await tenantApi.list({
         page,
@@ -45,7 +43,6 @@ export default function TenantsPage() {
       setTotalPages(response.totalPages);
       setTotal(response.total);
     }
-    setLoading(false);
   }, [page, status, search, executeWithErrorHandling]);
 
   useEffect(() => {
