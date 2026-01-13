@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle, Shield, Key, ArrowLeft } from 'lucide-react';
 import { authApi, resetRedirectFlag } from '../api';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
+import { useApiMutation } from '../hooks/useApiMutation';
 import type { MfaMethod } from '@my-girok/types';
 
 export default function MfaPage() {
@@ -14,8 +15,26 @@ export default function MfaPage() {
 
   const [code, setCode] = useState('');
   const [method, setMethod] = useState<MfaMethod>('totp');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    mutate: verifyMfa,
+    isLoading,
+    errorMessage,
+  } = useApiMutation({
+    mutationFn: (vars: { challengeId: string; code: string; method: MfaMethod }) =>
+      authApi.loginMfa(vars),
+    context: 'MfaPage.verifyMfa',
+    successToast: 'MFA verification successful',
+    onSuccess: (response) => {
+      if (response.admin) {
+        resetRedirectFlag();
+        setAuth(response.admin);
+        const from =
+          (location.state as { from?: { from?: Location } })?.from?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      }
+    },
+  });
 
   // Redirect if no MFA challenge or already authenticated
   useEffect(() => {
@@ -36,37 +55,11 @@ export default function MfaPage() {
     e.preventDefault();
     if (!mfaChallenge) return;
 
-    setError(null);
-    setLoading(true);
-
-    try {
-      const response = await authApi.loginMfa({
-        challengeId: mfaChallenge.challengeId,
-        code,
-        method,
-      });
-
-      if (!response.success) {
-        setError(response.message || t('auth.mfa.invalidCode'));
-        return;
-      }
-
-      if (response.admin) {
-        resetRedirectFlag(); // Reset the redirect flag after successful login
-        setAuth(response.admin);
-        const from =
-          (location.state as { from?: { from?: Location } })?.from?.from?.pathname || '/';
-        navigate(from, { replace: true });
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(t('auth.mfa.invalidCode'));
-      }
-    } finally {
-      setLoading(false);
-    }
+    await verifyMfa({
+      challengeId: mfaChallenge.challengeId,
+      code,
+      method,
+    });
   };
 
   if (!mfaChallenge) {
@@ -91,10 +84,10 @@ export default function MfaPage() {
         {/* MFA Form */}
         <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
+            {errorMessage && (
               <div className="flex items-center gap-2 p-3 bg-theme-status-error-bg text-theme-status-error-text rounded-lg text-sm">
                 <AlertCircle size={16} />
-                <span>{error}</span>
+                <span>{errorMessage}</span>
               </div>
             )}
 
@@ -156,11 +149,11 @@ export default function MfaPage() {
 
             <button
               type="submit"
-              disabled={loading || code.length < (method === 'totp' ? 6 : 8)}
+              disabled={isLoading || code.length < (method === 'totp' ? 6 : 8)}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading && <Loader2 size={18} className="animate-spin" />}
-              <span>{loading ? t('auth.mfa.verifying') : t('auth.mfa.verify')}</span>
+              {isLoading && <Loader2 size={18} className="animate-spin" />}
+              <span>{isLoading ? t('auth.mfa.verifying') : t('auth.mfa.verify')}</span>
             </button>
           </form>
 
