@@ -34,7 +34,7 @@ describe('useApiMutation', () => {
       const mutationFn = vi.fn().mockResolvedValue(mockData);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
         }),
       );
@@ -43,7 +43,7 @@ describe('useApiMutation', () => {
       expect(result.current.data).toBeNull();
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(mutationFn).toHaveBeenCalledTimes(1);
@@ -59,14 +59,14 @@ describe('useApiMutation', () => {
       const successMessage = 'Item created successfully';
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
           successToast: successMessage,
         }),
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(toast.showSuccessToast).toHaveBeenCalledWith(successMessage);
@@ -78,14 +78,14 @@ describe('useApiMutation', () => {
       const successToastFn = vi.fn((data: typeof mockData) => `Created "${data.name}"`);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
           successToast: successToastFn,
         }),
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(successToastFn).toHaveBeenCalledWith(mockData);
@@ -99,7 +99,7 @@ describe('useApiMutation', () => {
       const variables = { name: 'Test' };
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, { name: string }>({
           mutationFn,
           onSuccess,
         }),
@@ -119,7 +119,7 @@ describe('useApiMutation', () => {
       const variables = { name: 'Test' };
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, { name: string }>({
           mutationFn,
           onSettled,
         }),
@@ -148,14 +148,14 @@ describe('useApiMutation', () => {
       vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
           context: 'TestContext',
         }),
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(errorHandler.handleApiError).toHaveBeenCalledWith(mockError, 'TestContext');
@@ -179,14 +179,14 @@ describe('useApiMutation', () => {
       vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
           showErrorToast: false,
         }),
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(toast.showErrorToast).not.toHaveBeenCalled();
@@ -209,7 +209,7 @@ describe('useApiMutation', () => {
       vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, { name: string }>({
           mutationFn,
           onError,
         }),
@@ -238,7 +238,7 @@ describe('useApiMutation', () => {
       vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, { name: string }>({
           mutationFn,
           onSettled,
         }),
@@ -261,7 +261,7 @@ describe('useApiMutation', () => {
       vi.mocked(errorHandler.withRetry).mockImplementation(async (fn) => fn());
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
           retry: true,
           retryConfig,
@@ -269,7 +269,7 @@ describe('useApiMutation', () => {
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(errorHandler.withRetry).toHaveBeenCalled();
@@ -280,14 +280,14 @@ describe('useApiMutation', () => {
       const mutationFn = vi.fn().mockResolvedValue(mockData);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
           retry: false,
         }),
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(errorHandler.withRetry).not.toHaveBeenCalled();
@@ -301,13 +301,13 @@ describe('useApiMutation', () => {
       const mutationFn = vi.fn().mockResolvedValue(mockData);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
         }),
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(result.current.data).toEqual(mockData);
@@ -332,7 +332,7 @@ describe('useApiMutation', () => {
       const mutationFn = vi.fn().mockReturnValue(promise);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
         }),
       );
@@ -340,7 +340,7 @@ describe('useApiMutation', () => {
       expect(result.current.isLoading).toBe(false);
 
       const mutatePromise = act(async () => {
-        result.current.mutate(undefined);
+        result.current.mutate();
       });
 
       await waitFor(() => {
@@ -370,13 +370,13 @@ describe('useApiMutation', () => {
       vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
         }),
       );
 
       await act(async () => {
-        await result.current.mutate(undefined);
+        await result.current.mutate();
       });
 
       expect(result.current.errorMessage).toBe('User-friendly error message');
@@ -389,14 +389,14 @@ describe('useApiMutation', () => {
       const mutationFn = vi.fn().mockResolvedValue(mockData);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
         }),
       );
 
       let returnedData;
       await act(async () => {
-        returnedData = await result.current.mutateAsync(undefined);
+        returnedData = await result.current.mutateAsync();
       });
 
       expect(returnedData).toEqual(mockData);
@@ -416,13 +416,13 @@ describe('useApiMutation', () => {
       vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
-        useApiMutation({
+        useApiMutation<any, void>({
           mutationFn,
         }),
       );
 
       await act(async () => {
-        await expect(result.current.mutateAsync(undefined)).rejects.toThrow();
+        await expect(result.current.mutateAsync()).rejects.toThrow();
       });
     });
   });
