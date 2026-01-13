@@ -52,7 +52,6 @@ COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY --chown=node:node services/audit-service/package.json ./services/audit-service/
 COPY --chown=node:node packages/types/package.json ./packages/types/
 COPY --chown=node:node packages/nest-common/package.json ./packages/nest-common/
-COPY --chown=node:node packages/proto ./packages/proto
 
 # Copy built files
 COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
