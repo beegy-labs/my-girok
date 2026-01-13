@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Loader2, Download, TrendingUp, TrendingDown } from 'lucide-react';
 import { legalApi, ConsentStats } from '../../api/legal';
 import { useApiError } from '../../hooks/useApiError';
@@ -10,17 +10,16 @@ export default function ConsentsPage() {
     context: 'ConsentsPage.fetchStats',
   });
 
-  useEffect(() => {
-    fetchStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     const data = await executeWithErrorHandling(() => legalApi.getConsentStats());
     if (data) {
       setStats(data);
     }
-  };
+  }, [executeWithErrorHandling]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   if (loading) {
     return (

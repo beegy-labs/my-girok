@@ -199,25 +199,25 @@ describe('ToastProvider', () => {
       );
 
       // Toaster is called with toastOptions
-      expect(Toaster).toHaveBeenCalledWith(
-        expect.objectContaining({
-          toastOptions: expect.objectContaining({
-            classNames: expect.objectContaining({
-              toast: expect.any(String),
-              title: expect.any(String),
-              description: expect.any(String),
-              actionButton: expect.any(String),
-              cancelButton: expect.any(String),
-              closeButton: expect.any(String),
-              error: expect.any(String),
-              success: expect.any(String),
-              warning: expect.any(String),
-              info: expect.any(String),
-            }),
-          }),
-        }),
-        expect.anything(),
-      );
+      const lastCall = vi.mocked(Toaster).mock.calls[vi.mocked(Toaster).mock.calls.length - 1];
+      const props = lastCall[0];
+
+      expect(props).toMatchObject({
+        toastOptions: {
+          classNames: {
+            toast: expect.any(String),
+            title: expect.any(String),
+            description: expect.any(String),
+            actionButton: expect.any(String),
+            cancelButton: expect.any(String),
+            closeButton: expect.any(String),
+            error: expect.any(String),
+            success: expect.any(String),
+            warning: expect.any(String),
+            info: expect.any(String),
+          },
+        },
+      });
     });
 
     it('should use theme-aware CSS classes', () => {
@@ -230,11 +230,15 @@ describe('ToastProvider', () => {
       const lastCall = vi.mocked(Toaster).mock.calls[vi.mocked(Toaster).mock.calls.length - 1];
       const toastOptions = lastCall[0]?.toastOptions;
 
-      // Verify theme classes are used
-      expect(toastOptions?.classNames?.toast).toContain('bg-theme-bg-card');
-      expect(toastOptions?.classNames?.toast).toContain('border-theme-border-default');
-      expect(toastOptions?.classNames?.title).toContain('text-theme-text-primary');
-      expect(toastOptions?.classNames?.description).toContain('text-theme-text-secondary');
+      // Verify toastOptions and classNames are defined
+      expect(toastOptions).toBeDefined();
+      expect(toastOptions?.classNames).toBeDefined();
+
+      // Verify theme classes are used (using non-null assertion after toBeDefined check)
+      expect(toastOptions!.classNames!.toast).toContain('bg-theme-bg-card');
+      expect(toastOptions!.classNames!.toast).toContain('border-theme-border-default');
+      expect(toastOptions!.classNames!.title).toContain('text-theme-text-primary');
+      expect(toastOptions!.classNames!.description).toContain('text-theme-text-secondary');
     });
 
     it('should use status-specific CSS classes', () => {
@@ -247,11 +251,15 @@ describe('ToastProvider', () => {
       const lastCall = vi.mocked(Toaster).mock.calls[vi.mocked(Toaster).mock.calls.length - 1];
       const toastOptions = lastCall[0]?.toastOptions;
 
-      // Verify status-specific classes
-      expect(toastOptions?.classNames?.error).toContain('bg-theme-status-error-bg');
-      expect(toastOptions?.classNames?.success).toContain('bg-theme-status-success-bg');
-      expect(toastOptions?.classNames?.warning).toContain('bg-theme-status-warning-bg');
-      expect(toastOptions?.classNames?.info).toContain('bg-theme-status-info-bg');
+      // Verify toastOptions and classNames are defined
+      expect(toastOptions).toBeDefined();
+      expect(toastOptions?.classNames).toBeDefined();
+
+      // Verify status-specific classes (using non-null assertion after toBeDefined check)
+      expect(toastOptions!.classNames!.error).toContain('bg-theme-status-error-bg');
+      expect(toastOptions!.classNames!.success).toContain('bg-theme-status-success-bg');
+      expect(toastOptions!.classNames!.warning).toContain('bg-theme-status-warning-bg');
+      expect(toastOptions!.classNames!.info).toContain('bg-theme-status-info-bg');
     });
   });
 

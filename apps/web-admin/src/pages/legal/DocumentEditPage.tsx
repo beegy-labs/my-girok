@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, FormEvent } from 'react';
+import { useEffect, useState, useMemo, useCallback, FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Loader2, Eye, Code } from 'lucide-react';
@@ -71,14 +71,7 @@ export default function DocumentEditPage() {
     servicesApi.listServices({ isActive: true }).then((res) => setServices(res.data));
   }, []);
 
-  useEffect(() => {
-    if (id) {
-      fetchDocument();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const fetchDocument = async () => {
+  const fetchDocument = useCallback(async () => {
     if (!id) return;
 
     const doc = await executeWithErrorHandling(() => legalApi.getDocument(id));
@@ -95,7 +88,13 @@ export default function DocumentEditPage() {
       setServiceId(doc.serviceId || '');
       setCountryCode(doc.countryCode || '');
     }
-  };
+  }, [id, executeWithErrorHandling]);
+
+  useEffect(() => {
+    if (id) {
+      fetchDocument();
+    }
+  }, [id, fetchDocument]);
 
   const { mutate: createDocument, isLoading: isCreating } = useApiMutation({
     mutationFn: (data: CreateDocumentRequest) => legalApi.createDocument(data),
