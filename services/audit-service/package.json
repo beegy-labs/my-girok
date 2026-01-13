@@ -31,6 +31,7 @@
     "@nestjs/platform-express": "catalog:",
     "@nestjs/schedule": "^5.0.1",
     "@nestjs/swagger": "catalog:",
+    "@nestjs/throttler": "catalog:",
     "cache-manager": "^7.2.7",
     "keyv": "^5.5.5",
     "minio": "^8.0.5",
