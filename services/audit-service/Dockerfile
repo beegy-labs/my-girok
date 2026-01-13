@@ -81,4 +81,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3003/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
 # Start application
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/services/audit-service/src/main.js"]
