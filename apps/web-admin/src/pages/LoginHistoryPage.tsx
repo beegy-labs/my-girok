@@ -2,13 +2,12 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, ChevronLeft, ChevronRight, Eye, X, Filter } from 'lucide-react';
 import { auditApi, type LoginHistoryEvent, type LoginHistoryQuery } from '../api/audit';
-import { logger } from '../utils/logger';
+import { useApiError } from '../hooks/useApiError';
 
 export default function LoginHistoryPage() {
   const { t } = useTranslation();
   const [events, setEvents] = useState<LoginHistoryEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<LoginHistoryEvent | null>(null);
 
@@ -21,21 +20,23 @@ export default function LoginHistoryPage() {
   // Filters
   const [filters, setFilters] = useState<LoginHistoryQuery>({});
 
+  const { executeWithErrorHandling } = useApiError({
+    context: 'LoginHistoryPage.fetchEvents',
+    retry: true,
+  });
+
   const fetchEvents = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    try {
-      const response = await auditApi.getLoginHistory({ ...filters, page, limit });
+    const response = await executeWithErrorHandling(async () => {
+      return await auditApi.getLoginHistory({ ...filters, page, limit });
+    });
+    if (response) {
       setEvents(response.data);
       setTotalPages(response.totalPages);
       setTotal(response.total);
-    } catch (err) {
-      setError(t('loginHistory.loadFailed'));
-      logger.error('Failed to fetch login history', err);
-    } finally {
-      setLoading(false);
     }
-  }, [filters, page, t]);
+    setLoading(false);
+  }, [filters, page, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchEvents();
@@ -122,28 +123,6 @@ export default function LoginHistoryPage() {
     },
     [t],
   );
-
-  if (loading && events.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="animate-spin text-theme-primary" size={32} />
-      </div>
-    );
-  }
-
-  if (error && events.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-theme-status-error-text">{error}</p>
-        <button
-          onClick={fetchEvents}
-          className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/90 transition-colors"
-        >
-          {t('common.refresh')}
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

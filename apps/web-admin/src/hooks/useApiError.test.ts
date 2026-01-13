@@ -194,7 +194,7 @@ describe('useApiError', () => {
     it('should use withRetry when retry is enabled', async () => {
       const mockData = { id: '123' };
       const apiCall = vi.fn().mockResolvedValue(mockData);
-      const retryConfig = { maxAttempts: 3, delayMs: 100 };
+      const retryConfig = { maxRetries: 3, initialDelayMs: 100 };
 
       vi.mocked(errorHandler.withRetry).mockImplementation(async (fn) => fn());
 
@@ -300,6 +300,75 @@ describe('useApiError', () => {
 
       expect(result.current.error).toEqual(mockAppError2);
       expect(result.current.errorMessage).toBe('Second error message');
+    });
+  });
+
+  describe('loading state management', () => {
+    it('should be false initially', () => {
+      const { result } = renderHook(() => useApiError());
+
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    it('should be false after successful API call', async () => {
+      const mockData = { id: '123' };
+      const apiCall = vi.fn().mockResolvedValue(mockData);
+
+      const { result } = renderHook(() => useApiError());
+
+      expect(result.current.isLoading).toBe(false);
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    it('should be false after API call fails', async () => {
+      const mockError = new Error('API Error');
+      const mockAppError = {
+        code: 'SERVER_ERROR',
+        message: 'Server error',
+        userMessage: 'Something went wrong',
+        isTransient: false,
+        shouldRetry: false,
+      };
+      const apiCall = vi.fn().mockRejectedValue(mockError);
+
+      vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
+
+      const { result } = renderHook(() => useApiError());
+
+      expect(result.current.isLoading).toBe(false);
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.hasError).toBe(true);
+    });
+
+    it('should handle multiple sequential calls', async () => {
+      const mockData1 = { id: '1' };
+      const mockData2 = { id: '2' };
+      const apiCall1 = vi.fn().mockResolvedValue(mockData1);
+      const apiCall2 = vi.fn().mockResolvedValue(mockData2);
+
+      const { result } = renderHook(() => useApiError());
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall1);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+
+      await act(async () => {
+        await result.current.executeWithErrorHandling(apiCall2);
+      });
+
+      expect(result.current.isLoading).toBe(false);
     });
   });
 

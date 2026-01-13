@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import {
   BarChart3,
   FileText,
@@ -12,6 +11,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+import { useApiError } from '../../hooks/useApiError';
 import {
   BarChart,
   Bar,
@@ -61,14 +61,19 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
 export default function ServiceAnalyticsTab({ serviceId }: ServiceAnalyticsTabProps) {
   const { t } = useTranslation();
   const [metrics, setMetrics] = useState<ServiceMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceAnalyticsTab',
+    showToast: false,
+  });
 
   const fetchMetrics = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
+    const result = await executeWithErrorHandling(async () => {
       // Fetch all data in parallel
       const [documentsRes, consentsRes, countriesRes, localesRes] = await Promise.all([
         legalApi.listDocuments({ serviceId, limit: 100 }),
@@ -90,7 +95,7 @@ export default function ServiceAnalyticsTab({ serviceId }: ServiceAnalyticsTabPr
         consentsByCountry[country] = (consentsByCountry[country] || 0) + 1;
       });
 
-      setMetrics({
+      return {
         documentCount: documentsRes.total,
         consentRequirementCount: consentsRes.data.length,
         countryCount: countriesRes.data.length,
@@ -103,14 +108,13 @@ export default function ServiceAnalyticsTab({ serviceId }: ServiceAnalyticsTabPr
           country,
           count,
         })),
-      });
-    } catch (err) {
-      setError(t('services.loadAnalyticsFailed'));
-      logger.error('Failed to load service analytics', err);
-    } finally {
-      setLoading(false);
+      };
+    });
+
+    if (result) {
+      setMetrics(result);
     }
-  }, [serviceId, t]);
+  }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchMetrics();
@@ -144,7 +148,7 @@ export default function ServiceAnalyticsTab({ serviceId }: ServiceAnalyticsTabPr
     return (
       <div className="flex flex-col items-center gap-4 py-12">
         <AlertCircle size={48} className="text-theme-status-error-text" />
-        <p className="text-theme-text-secondary">{error}</p>
+        <p className="text-theme-text-secondary">{errorMessage}</p>
         <button
           onClick={fetchMetrics}
           className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90"

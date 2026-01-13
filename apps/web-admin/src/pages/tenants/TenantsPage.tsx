@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Search, Filter, AlertCircle, Loader2 } from 'lucide-react';
-import { tenantApi, Tenant, TenantListResponse } from '../../api/tenant';
+import { Plus, Pencil, Search, Filter, Loader2 } from 'lucide-react';
+import { tenantApi, Tenant } from '../../api/tenant';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { getStatusOptions, getStatusConfig, type TenantStatus } from '../../config/tenant.config';
-import { logger } from '../../utils/logger';
+import { useApiError } from '../../hooks/useApiError';
 
 export default function TenantsPage() {
   const { t } = useTranslation();
@@ -14,8 +14,6 @@ export default function TenantsPage() {
   const statusOptions = getStatusOptions(t);
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Filters
   const [status, setStatus] = useState('');
@@ -26,28 +24,26 @@ export default function TenantsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const fetchTenants = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
+    context: 'TenantsPage.fetchTenants',
+    retry: true,
+  });
 
-    try {
-      const response: TenantListResponse = await tenantApi.list({
+  const fetchTenants = useCallback(async () => {
+    const response = await executeWithErrorHandling(async () => {
+      return await tenantApi.list({
         page,
         limit: 20,
         status: status || undefined,
         search: search || undefined,
       });
-
+    });
+    if (response) {
       setTenants(response.items);
       setTotalPages(response.totalPages);
       setTotal(response.total);
-    } catch (err) {
-      setError(t('tenants.loadFailed'));
-      logger.error('Failed to load tenants', err);
-    } finally {
-      setLoading(false);
     }
-  }, [page, status, search, t]);
+  }, [page, status, search, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchTenants();
@@ -126,14 +122,6 @@ export default function TenantsPage() {
           {t('tenants.tenantCount', { count: total })}
         </div>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-          <AlertCircle size={20} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Table */}
       <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">

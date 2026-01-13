@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import {
   Languages,
   Plus,
@@ -19,6 +18,8 @@ import {
   CreateSupportedLocaleDto,
 } from '../../api/globalSettings';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 export default function SupportedLocalesTab() {
   const { t } = useTranslation();
@@ -26,9 +27,6 @@ export default function SupportedLocalesTab() {
   const canEdit = hasPermission('settings:update');
 
   const [locales, setLocales] = useState<SupportedLocale[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -42,36 +40,30 @@ export default function SupportedLocalesTab() {
     displayOrder: 0,
   });
 
+  // API hooks
+  const {
+    executeWithErrorHandling,
+    error,
+    isLoading: loading,
+  } = useApiError({
+    context: 'SupportedLocalesTab.fetchLocales',
+    retry: true,
+  });
+
   const fetchLocales = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    const result = await executeWithErrorHandling(async () => {
+      return await globalSettingsApi.listLocales();
+    });
 
-    try {
-      const result = await globalSettingsApi.listLocales();
+    if (result) {
       setLocales(result.data);
-    } catch (err) {
-      setError(t('settings.loadLocalesFailed'));
-      logger.error('Failed to fetch supported locales', err);
-    } finally {
-      setLoading(false);
     }
-  }, [t]);
+  }, [executeWithErrorHandling]);
 
-  useEffect(() => {
-    fetchLocales();
-  }, [fetchLocales]);
-
-  const handleAdd = async () => {
-    if (!formData.code || !formData.name) return;
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.createLocale({
-        ...formData,
-        code: formData.code.toLowerCase(),
-      });
+  const createMutation = useApiMutation({
+    mutationFn: (data: CreateSupportedLocaleDto) => globalSettingsApi.createLocale(data),
+    context: 'SupportedLocalesTab.createLocale',
+    onSuccess: () => {
       setShowAddForm(false);
       setFormData({
         code: '',
@@ -82,68 +74,65 @@ export default function SupportedLocalesTab() {
         displayOrder: 0,
       });
       fetchLocales();
-    } catch (err) {
-      setError(t('settings.saveLocaleFailed'));
-      logger.error('Failed to create locale', { code: formData.code, error: err });
-    } finally {
-      setSaving(false);
-    }
+    },
+  });
+
+  const updateMutation = useApiMutation({
+    mutationFn: ({ code, data }: { code: string; data: Partial<CreateSupportedLocaleDto> }) =>
+      globalSettingsApi.updateLocale(code, data),
+    context: 'SupportedLocalesTab.updateLocale',
+    onSuccess: () => {
+      setEditingCode(null);
+      fetchLocales();
+    },
+  });
+
+  const deleteMutation = useApiMutation({
+    mutationFn: (code: string) => globalSettingsApi.deleteLocale(code),
+    context: 'SupportedLocalesTab.deleteLocale',
+    onSuccess: () => {
+      fetchLocales();
+    },
+  });
+
+  useEffect(() => {
+    fetchLocales();
+  }, [fetchLocales]);
+
+  const handleAdd = async () => {
+    if (!formData.code || !formData.name) return;
+
+    await createMutation.mutate({
+      ...formData,
+      code: formData.code.toLowerCase(),
+    });
   };
 
   const handleUpdate = async (code: string) => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.updateLocale(code, {
+    await updateMutation.mutate({
+      code,
+      data: {
         name: formData.name,
         nativeName: formData.nativeName || undefined,
         flagEmoji: formData.flagEmoji || undefined,
         isActive: formData.isActive,
         displayOrder: formData.displayOrder,
-      });
-      setEditingCode(null);
-      fetchLocales();
-    } catch (err) {
-      setError(t('settings.saveLocaleFailed'));
-      logger.error('Failed to update locale', { code, error: err });
-    } finally {
-      setSaving(false);
-    }
+      },
+    });
   };
 
   const handleDelete = async (code: string) => {
     if (!confirm(t('settings.deleteLocaleConfirm'))) return;
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.deleteLocale(code);
-      fetchLocales();
-    } catch (err) {
-      setError(t('settings.deleteLocaleFailed'));
-      logger.error('Failed to delete locale', { code, error: err });
-    } finally {
-      setSaving(false);
-    }
+    await deleteMutation.mutate(code);
   };
 
   const handleToggleActive = async (locale: SupportedLocale) => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      await globalSettingsApi.updateLocale(locale.code, {
+    await updateMutation.mutate({
+      code: locale.code,
+      data: {
         isActive: !locale.isActive,
-      });
-      fetchLocales();
-    } catch (err) {
-      setError(t('settings.saveLocaleFailed'));
-      logger.error('Failed to toggle locale status', { code: locale.code, error: err });
-    } finally {
-      setSaving(false);
-    }
+      },
+    });
   };
 
   const startEditing = (locale: SupportedLocale) => {
@@ -157,6 +146,9 @@ export default function SupportedLocalesTab() {
       displayOrder: locale.displayOrder,
     });
   };
+
+  const saving = createMutation.isLoading || updateMutation.isLoading || deleteMutation.isLoading;
+  const errorMessage = error?.userMessage || null;
 
   if (loading) {
     return (
@@ -182,10 +174,10 @@ export default function SupportedLocalesTab() {
       )}
 
       {/* Error */}
-      {error && (
+      {errorMessage && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 

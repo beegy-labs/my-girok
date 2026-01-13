@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import { Plus, X, Loader2, AlertCircle, Globe } from 'lucide-react';
 import { servicesApi, ServiceCountry } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { COUNTRY_OPTIONS } from '../../config/country.config';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 interface ServiceCountriesTabProps {
   serviceId: string;
@@ -16,26 +17,47 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
   const canEdit = hasPermission('service:update');
 
   const [countries, setCountries] = useState<ServiceCountry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [removing, setRemoving] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState('');
 
-  const fetchCountries = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceCountriesTab',
+    showToast: false,
+  });
 
-    try {
-      const result = await servicesApi.listServiceCountries(serviceId);
+  const fetchCountries = useCallback(async () => {
+    const result = await executeWithErrorHandling(() =>
+      servicesApi.listServiceCountries(serviceId),
+    );
+
+    if (result) {
       setCountries(result.data);
-    } catch (err) {
-      setError(t('services.loadCountriesFailed'));
-      logger.error('Failed to fetch service countries', { serviceId, error: err });
-    } finally {
-      setLoading(false);
     }
-  }, [serviceId, t]);
+  }, [serviceId, executeWithErrorHandling]);
+
+  const addCountryMutation = useApiMutation({
+    mutationFn: (countryCode: string) => servicesApi.addServiceCountry(serviceId, countryCode),
+    successToast: 'Country added successfully',
+    onSuccess: () => {
+      setSelectedCountry('');
+      fetchCountries();
+    },
+    context: 'AddServiceCountry',
+  });
+
+  const removeCountryMutation = useApiMutation({
+    mutationFn: (countryCode: string) => servicesApi.removeServiceCountry(serviceId, countryCode),
+    successToast: 'Country removed successfully',
+    onSuccess: fetchCountries,
+    context: 'RemoveServiceCountry',
+  });
+
+  const adding = addCountryMutation.isLoading;
+  const isRemoving = removeCountryMutation.isLoading;
 
   useEffect(() => {
     fetchCountries();
@@ -43,39 +65,11 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
 
   const handleAddCountry = async () => {
     if (!selectedCountry) return;
-
-    setAdding(true);
-    setError(null);
-
-    try {
-      await servicesApi.addServiceCountry(serviceId, selectedCountry);
-      setSelectedCountry('');
-      fetchCountries();
-    } catch (err) {
-      setError(t('services.addCountryFailed'));
-      logger.error('Failed to add service country', {
-        serviceId,
-        countryCode: selectedCountry,
-        error: err,
-      });
-    } finally {
-      setAdding(false);
-    }
+    await addCountryMutation.mutate(selectedCountry);
   };
 
   const handleRemoveCountry = async (countryCode: string) => {
-    setRemoving(countryCode);
-    setError(null);
-
-    try {
-      await servicesApi.removeServiceCountry(serviceId, countryCode);
-      fetchCountries();
-    } catch (err) {
-      setError(t('services.removeCountryFailed'));
-      logger.error('Failed to remove service country', { serviceId, countryCode, error: err });
-    } finally {
-      setRemoving(null);
-    }
+    await removeCountryMutation.mutate(countryCode);
   };
 
   // Filter out already added countries
@@ -102,7 +96,7 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 
@@ -163,15 +157,11 @@ export default function ServiceCountriesTab({ serviceId }: ServiceCountriesTabPr
                 {canEdit && (
                   <button
                     onClick={() => handleRemoveCountry(country.countryCode)}
-                    disabled={removing === country.countryCode}
+                    disabled={isRemoving}
                     className="ml-1 p-1 text-theme-text-tertiary hover:text-theme-status-error-text rounded transition-colors disabled:opacity-50"
                     title={t('common.remove')}
                   >
-                    {removing === country.countryCode ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <X size={14} />
-                    )}
+                    {isRemoving ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
                   </button>
                 )}
               </div>

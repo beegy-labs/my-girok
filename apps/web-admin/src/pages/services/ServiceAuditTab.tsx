@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import { Loader2, AlertCircle, RefreshCw, Eye } from 'lucide-react';
 import { auditApi, type AuditLogResponse } from '../../api/audit';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { Pagination } from '../../components/molecules/Pagination';
 import { useAuditEvent } from '../../hooks';
+import { useApiError } from '../../hooks/useApiError';
 
 interface ServiceAuditTabProps {
   serviceId: string;
@@ -26,8 +26,6 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
   const { trackSearch } = useAuditEvent();
 
   const [logs, setLogs] = useState<AuditLogResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedLog, setSelectedLog] = useState<AuditLogResponse | null>(null);
@@ -37,37 +35,33 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
   const [action, setAction] = useState<string>('');
   const [resource, setResource] = useState<string>('');
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceAuditTab',
+    showToast: false,
+  });
 
-    try {
+  const fetchLogs = useCallback(async () => {
+    const result = await executeWithErrorHandling(async () => {
       // Note: serviceId filter may need to be added to the audit API
       // For now, we filter by resource pattern that includes the serviceId
-      const result = await auditApi.listLogs({
+      return await auditApi.listLogs({
         page,
         limit,
         action: action || undefined,
         resource: resource || `service:${serviceId}`,
       });
+    });
+
+    if (result) {
       setLogs(result.data);
       setTotal(result.meta.total);
-    } catch (err) {
-      setError(t('audit.loadFailed'));
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        logger.error('Failed to fetch audit logs', {
-          serviceId,
-          page,
-          action,
-          resource,
-          error: err,
-        });
-      }
-    } finally {
-      setLoading(false);
     }
-  }, [serviceId, page, action, resource, t]);
+  }, [serviceId, page, action, resource, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchLogs();
@@ -75,30 +69,23 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
 
   const handleSearch = useCallback(async () => {
     setPage(1);
-    setLoading(true);
-    setError(null);
 
-    try {
-      const result = await auditApi.listLogs({
+    const result = await executeWithErrorHandling(async () => {
+      return await auditApi.listLogs({
         page: 1,
         limit,
         action: action || undefined,
         resource: resource || `service:${serviceId}`,
       });
+    });
+
+    if (result) {
       setLogs(result.data);
       setTotal(result.meta.total);
       // Track search AFTER getting results with correct count
       trackSearch(`action:${action} resource:${resource}`, result.meta.total);
-    } catch (err) {
-      setError(t('audit.loadFailed'));
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        logger.error('Failed to search audit logs', { serviceId, action, resource, error: err });
-      }
-    } finally {
-      setLoading(false);
     }
-  }, [serviceId, action, resource, limit, trackSearch, t]);
+  }, [serviceId, action, resource, limit, trackSearch, executeWithErrorHandling]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString();
@@ -109,7 +96,7 @@ export default function ServiceAuditTab({ serviceId }: ServiceAuditTabProps) {
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 

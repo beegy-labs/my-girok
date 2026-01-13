@@ -3,43 +3,48 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Loader2, Users, Trash2, Edit } from 'lucide-react';
 import { teamsApi, type Team } from '../../../api/teams';
 import { Card } from '../../../components/atoms/Card';
+import { useApiError } from '../../../hooks/useApiError';
+import { useApiMutation } from '../../../hooks/useApiMutation';
 
 export default function TeamsTab() {
   const { t } = useTranslation();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { executeWithErrorHandling } = useApiError({
+    context: 'TeamsTab.fetchTeams',
+  });
 
   const fetchTeams = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await teamsApi.listTeams({ limit: 100 });
+    setLoading(true);
+    const response = await executeWithErrorHandling(() => teamsApi.listTeams({ limit: 100 }));
+    if (response) {
       setTeams(response.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch teams');
-    } finally {
-      setLoading(false);
     }
-  }, []);
+    setLoading(false);
+  }, [executeWithErrorHandling]);
 
   useEffect(() => {
     fetchTeams();
   }, [fetchTeams]);
 
-  const handleDelete = async (id: string) => {
+  const { mutate: deleteTeam } = useApiMutation({
+    mutationFn: (id: string) => teamsApi.deleteTeam(id),
+    context: 'TeamsTab.deleteTeam',
+    successToast: t('authorization.teamDeletedSuccess', 'Team deleted successfully'),
+    onSuccess: () => {
+      fetchTeams();
+    },
+  });
+
+  const handleDelete = (id: string) => {
     if (
       !confirm(t('authorization.confirmDeleteTeam', 'Are you sure you want to delete this team?'))
     ) {
       return;
     }
 
-    try {
-      await teamsApi.deleteTeam(id);
-      fetchTeams();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete team');
-    }
+    deleteTeam(id);
   };
 
   if (loading) {
@@ -62,13 +67,6 @@ export default function TeamsTab() {
           {t('authorization.createTeam', 'Create Team')}
         </button>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-          {error}
-        </div>
-      )}
 
       {/* Teams Grid */}
       {teams.length === 0 ? (

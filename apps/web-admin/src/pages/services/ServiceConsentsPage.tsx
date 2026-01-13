@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router';
-import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -13,6 +12,8 @@ import {
   Save,
   X,
 } from 'lucide-react';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 import {
   servicesApi,
   Service,
@@ -75,43 +76,73 @@ export default function ServiceConsentsPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const [service, setService] = useState<Service | null>(null);
   const [data, setData] = useState<ConsentRequirementListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditingRequirement>(emptyRequirement);
-  const [saving, setSaving] = useState(false);
+
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    clearError,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceConsentsPage',
+    showToast: false,
+  });
+
+  const fetchData = async () => {
+    if (!serviceId) return;
+
+    const result = await executeWithErrorHandling(async () => {
+      const [serviceResult, requirementsResult] = await Promise.all([
+        servicesApi.getService(serviceId),
+        servicesApi.listConsentRequirements(serviceId, selectedCountry || undefined),
+      ]);
+      return { serviceResult, requirementsResult };
+    });
+
+    if (result) {
+      setService(result.serviceResult);
+      setData(result.requirementsResult);
+    }
+  };
+
+  const createMutation = useApiMutation({
+    mutationFn: (dto: CreateConsentRequirementDto) =>
+      servicesApi.createConsentRequirement(serviceId!, dto),
+    successToast: 'Consent requirement created successfully',
+    onSuccess: () => {
+      handleCancelEdit();
+      fetchData();
+    },
+    context: 'CreateConsentRequirement',
+  });
+
+  const updateMutation = useApiMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateConsentRequirementDto }) =>
+      servicesApi.updateConsentRequirement(serviceId!, id, dto),
+    successToast: 'Consent requirement updated successfully',
+    onSuccess: () => {
+      handleCancelEdit();
+      fetchData();
+    },
+    context: 'UpdateConsentRequirement',
+  });
+
+  const deleteMutation = useApiMutation({
+    mutationFn: (id: string) => servicesApi.deleteConsentRequirement(serviceId!, id),
+    successToast: 'Consent requirement deleted successfully',
+    onSuccess: fetchData,
+    context: 'DeleteConsentRequirement',
+  });
 
   useEffect(() => {
     if (serviceId) {
       fetchData();
     }
   }, [serviceId, selectedCountry]);
-
-  const fetchData = async () => {
-    if (!serviceId) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const [serviceResult, requirementsResult] = await Promise.all([
-        servicesApi.getService(serviceId),
-        servicesApi.listConsentRequirements(serviceId, selectedCountry || undefined),
-      ]);
-      setService(serviceResult);
-      setData(requirementsResult);
-    } catch (err) {
-      setError('Failed to load service data');
-      logger.error('Failed to fetch service consents', {
-        serviceId,
-        countryCode: selectedCountry,
-        error: err,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleStartAdd = () => {
     setEditForm({ ...emptyRequirement });
@@ -142,58 +173,33 @@ export default function ServiceConsentsPage() {
 
   const handleSave = async () => {
     if (!serviceId) return;
-    setSaving(true);
 
-    try {
-      if (isAdding) {
-        const dto: CreateConsentRequirementDto = {
-          countryCode: editForm.countryCode,
-          consentType: editForm.consentType,
-          isRequired: editForm.isRequired,
-          documentType: editForm.documentType,
-          displayOrder: editForm.displayOrder,
-          labelKey: editForm.labelKey,
-          descriptionKey: editForm.descriptionKey,
-        };
-        await servicesApi.createConsentRequirement(serviceId, dto);
-      } else if (editingId) {
-        const dto: UpdateConsentRequirementDto = {
-          isRequired: editForm.isRequired,
-          documentType: editForm.documentType,
-          displayOrder: editForm.displayOrder,
-          labelKey: editForm.labelKey,
-          descriptionKey: editForm.descriptionKey,
-        };
-        await servicesApi.updateConsentRequirement(serviceId, editingId, dto);
-      }
-      handleCancelEdit();
-      await fetchData();
-    } catch (err) {
-      logger.error('Failed to save consent requirement', {
-        serviceId,
-        consentId: editingId,
-        error: err,
-      });
-      setError('Failed to save consent requirement');
-    } finally {
-      setSaving(false);
+    if (isAdding) {
+      const dto: CreateConsentRequirementDto = {
+        countryCode: editForm.countryCode,
+        consentType: editForm.consentType,
+        isRequired: editForm.isRequired,
+        documentType: editForm.documentType,
+        displayOrder: editForm.displayOrder,
+        labelKey: editForm.labelKey,
+        descriptionKey: editForm.descriptionKey,
+      };
+      await createMutation.mutate(dto);
+    } else if (editingId) {
+      const dto: UpdateConsentRequirementDto = {
+        isRequired: editForm.isRequired,
+        documentType: editForm.documentType,
+        displayOrder: editForm.displayOrder,
+        labelKey: editForm.labelKey,
+        descriptionKey: editForm.descriptionKey,
+      };
+      await updateMutation.mutate({ id: editingId, dto });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!serviceId || !confirm('Are you sure you want to delete this consent requirement?')) return;
-
-    try {
-      await servicesApi.deleteConsentRequirement(serviceId, id);
-      await fetchData();
-    } catch (err) {
-      logger.error('Failed to delete consent requirement', {
-        serviceId,
-        consentId: id,
-        error: err,
-      });
-      setError('Failed to delete consent requirement');
-    }
+    if (!confirm('Are you sure you want to delete this consent requirement?')) return;
+    await deleteMutation.mutate(id);
   };
 
   if (loading && !data) {
@@ -208,10 +214,12 @@ export default function ServiceConsentsPage() {
     return (
       <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
         <AlertCircle size={20} />
-        <span>{error}</span>
+        <span>{errorMessage}</span>
       </div>
     );
   }
+
+  const saving = createMutation.isLoading || updateMutation.isLoading || deleteMutation.isLoading;
 
   return (
     <div className="space-y-6">
@@ -262,8 +270,8 @@ export default function ServiceConsentsPage() {
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
+          <span>{errorMessage}</span>
+          <button onClick={clearError} className="ml-auto">
             <X size={16} />
           </button>
         </div>
