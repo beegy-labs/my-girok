@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import { Loader2, AlertCircle, Plus, Trash2, Users, Shield, Clock } from 'lucide-react';
 import { servicesApi, TesterUser, TesterAdmin } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
@@ -8,6 +7,8 @@ import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { Modal } from '../../components/molecules/Modal';
 import { useAuditEvent } from '../../hooks';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 interface ServiceTestersTabProps {
   serviceId: string;
@@ -21,8 +22,6 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
 
   const [userTesters, setUserTesters] = useState<TesterUser[]>([]);
   const [adminTesters, setAdminTesters] = useState<TesterAdmin[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'admins'>('users');
 
   // Modal state
@@ -32,8 +31,85 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
     id: string;
     name: string;
   } | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deleteReason, setDeleteReason] = useState('');
+
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceTestersTab',
+    showToast: false,
+  });
+
+  const createUserTesterMutation = useApiMutation({
+    mutationFn: (data: any) => servicesApi.createUserTester(serviceId, data),
+    successToast: 'User tester added successfully',
+    onSuccess: () => {
+      setShowAddModal(false);
+      setFormData({
+        userId: '',
+        adminId: '',
+        bypassAll: true,
+        bypassDomain: false,
+        bypassIP: false,
+        bypassRate: false,
+        note: '',
+        expiresAt: '',
+        reason: '',
+      });
+      fetchData();
+    },
+    context: 'CreateUserTester',
+  });
+
+  const createAdminTesterMutation = useApiMutation({
+    mutationFn: (data: any) => servicesApi.createAdminTester(serviceId, data),
+    successToast: 'Admin tester added successfully',
+    onSuccess: () => {
+      setShowAddModal(false);
+      setFormData({
+        userId: '',
+        adminId: '',
+        bypassAll: true,
+        bypassDomain: false,
+        bypassIP: false,
+        bypassRate: false,
+        note: '',
+        expiresAt: '',
+        reason: '',
+      });
+      fetchData();
+    },
+    context: 'CreateAdminTester',
+  });
+
+  const deleteUserTesterMutation = useApiMutation({
+    mutationFn: (data: { id: string; reason: string }) =>
+      servicesApi.deleteUserTester(serviceId, data.id, data.reason),
+    successToast: 'User tester removed successfully',
+    onSuccess: () => {
+      setDeletingTester(null);
+      setDeleteReason('');
+      fetchData();
+    },
+    context: 'DeleteUserTester',
+  });
+
+  const deleteAdminTesterMutation = useApiMutation({
+    mutationFn: (data: { id: string; reason: string }) =>
+      servicesApi.deleteAdminTester(serviceId, data.id, data.reason),
+    successToast: 'Admin tester removed successfully',
+    onSuccess: () => {
+      setDeletingTester(null);
+      setDeleteReason('');
+      fetchData();
+    },
+    context: 'DeleteAdminTester',
+  });
+
+  const saving = createUserTesterMutation.isLoading || createAdminTesterMutation.isLoading;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -49,23 +125,19 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
   });
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
+    const result = await executeWithErrorHandling(async () => {
       const [usersResult, adminsResult] = await Promise.all([
         servicesApi.listUserTesters(serviceId),
         servicesApi.listAdminTesters(serviceId),
       ]);
-      setUserTesters(usersResult.data);
-      setAdminTesters(adminsResult.data);
-    } catch (err) {
-      setError(t('services.loadTestersFailed'));
-      logger.error('Failed to fetch service testers', { serviceId, error: err });
-    } finally {
-      setLoading(false);
+      return { usersResult, adminsResult };
+    });
+
+    if (result) {
+      setUserTesters(result.usersResult.data);
+      setAdminTesters(result.adminsResult.data);
     }
-  }, [serviceId, t]);
+  }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchData();
@@ -73,78 +145,41 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
 
   const handleAdd = async () => {
     if (!formData.reason.trim()) {
-      setError(t('services.reasonRequired'));
       return;
     }
 
-    setSaving(true);
-    setError(null);
-
-    try {
-      if (activeTab === 'users') {
-        await servicesApi.createUserTester(serviceId, {
-          userId: formData.userId,
-          bypassAll: formData.bypassAll,
-          bypassDomain: formData.bypassDomain,
-          bypassIP: formData.bypassIP,
-          bypassRate: formData.bypassRate,
-          note: formData.note || undefined,
-          expiresAt: formData.expiresAt || undefined,
-          reason: formData.reason,
-        });
-      } else {
-        await servicesApi.createAdminTester(serviceId, {
-          adminId: formData.adminId,
-          bypassAll: formData.bypassAll,
-          bypassDomain: formData.bypassDomain,
-          note: formData.note || undefined,
-          expiresAt: formData.expiresAt || undefined,
-          reason: formData.reason,
-        });
-      }
-      trackFormSubmit('TesterForm', 'create', true);
-      setShowAddModal(false);
-      setFormData({
-        userId: '',
-        adminId: '',
-        bypassAll: true,
-        bypassDomain: false,
-        bypassIP: false,
-        bypassRate: false,
-        note: '',
-        expiresAt: '',
-        reason: '',
+    if (activeTab === 'users') {
+      await createUserTesterMutation.mutate({
+        userId: formData.userId,
+        bypassAll: formData.bypassAll,
+        bypassDomain: formData.bypassDomain,
+        bypassIP: formData.bypassIP,
+        bypassRate: formData.bypassRate,
+        note: formData.note || undefined,
+        expiresAt: formData.expiresAt || undefined,
+        reason: formData.reason,
       });
-      fetchData();
-    } catch (err) {
-      setError(t('services.addTesterFailed'));
-      trackFormSubmit('TesterForm', 'create', false);
-      logger.error('Failed to add tester', { serviceId, type: activeTab, error: err });
-    } finally {
-      setSaving(false);
+      trackFormSubmit('TesterForm', 'create', !createUserTesterMutation.isError);
+    } else {
+      await createAdminTesterMutation.mutate({
+        adminId: formData.adminId,
+        bypassAll: formData.bypassAll,
+        bypassDomain: formData.bypassDomain,
+        note: formData.note || undefined,
+        expiresAt: formData.expiresAt || undefined,
+        reason: formData.reason,
+      });
+      trackFormSubmit('TesterForm', 'create', !createAdminTesterMutation.isError);
     }
   };
 
   const handleDelete = async () => {
     if (!deletingTester || !deleteReason.trim()) return;
 
-    try {
-      if (deletingTester.type === 'user') {
-        await servicesApi.deleteUserTester(serviceId, deletingTester.id, deleteReason);
-      } else {
-        await servicesApi.deleteAdminTester(serviceId, deletingTester.id, deleteReason);
-      }
-      setDeletingTester(null);
-      setDeleteReason('');
-      fetchData();
-    } catch (err) {
-      setError(t('services.deleteTesterFailed'));
-      logger.error('Failed to delete tester', {
-        serviceId,
-        testerId: deletingTester.id,
-        type: deletingTester.type,
-        error: err,
-      });
+    if (deletingTester.type === 'user') {
+      await deleteUserTesterMutation.mutate({ id: deletingTester.id, reason: deleteReason });
+    } else {
+      await deleteAdminTesterMutation.mutate({ id: deletingTester.id, reason: deleteReason });
     }
   };
 
@@ -169,7 +204,7 @@ export default function ServiceTestersTab({ serviceId }: ServiceTestersTabProps)
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 

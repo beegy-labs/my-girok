@@ -16,6 +16,8 @@ import {
   Globe,
 } from 'lucide-react';
 import { recordingsApi, type SessionRecordingEvents } from '../../../api/recordings';
+import { useApiError } from '../../../hooks/useApiError';
+
 // TODO: Replace with @my-girok/tracking-sdk/react when available
 const SessionPlayer = ({ events }: { events: any }) => (
   <div className="p-8 bg-theme-background-secondary rounded-lg text-center text-theme-text-secondary">
@@ -72,20 +74,26 @@ export default function SessionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { executeWithErrorHandling } = useApiError({
+    context: 'SessionDetailPage.fetchSession',
+    retry: true,
+  });
+
   const fetchSession = useCallback(async () => {
     if (!sessionId) return;
 
-    try {
-      setLoading(true);
-      setError(null);
-      const sessionData = await recordingsApi.getSessionEvents(sessionId);
+    setLoading(true);
+    const sessionData = await executeWithErrorHandling(async () => {
+      return await recordingsApi.getSessionEvents(sessionId);
+    });
+    if (sessionData) {
       setSession(sessionData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load session');
-    } finally {
-      setLoading(false);
+      setError(null);
+    } else {
+      setError(t('sessionRecordings.notFound', 'Session not found'));
     }
-  }, [sessionId]);
+    setLoading(false);
+  }, [sessionId, executeWithErrorHandling, t]);
 
   useEffect(() => {
     fetchSession();

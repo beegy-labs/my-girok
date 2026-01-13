@@ -1,45 +1,30 @@
-import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Download, TrendingUp, TrendingDown } from 'lucide-react';
-import { logger } from '../../utils/logger';
+import { useEffect, useState, useCallback } from 'react';
+import { Loader2, Download, TrendingUp, TrendingDown } from 'lucide-react';
 import { legalApi, ConsentStats } from '../../api/legal';
+import { useApiError } from '../../hooks/useApiError';
 
 export default function ConsentsPage() {
   const [stats, setStats] = useState<ConsentStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
+    context: 'ConsentsPage.fetchStats',
+  });
+
+  const fetchStats = useCallback(async () => {
+    const data = await executeWithErrorHandling(() => legalApi.getConsentStats());
+    if (data) {
+      setStats(data);
+    }
+  }, [executeWithErrorHandling]);
 
   useEffect(() => {
     fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await legalApi.getConsentStats();
-      setStats(data);
-    } catch (err) {
-      setError('Failed to load consent statistics');
-      logger.error('Failed to fetch consent stats', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchStats]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-theme-text-tertiary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-        <AlertCircle size={20} />
-        <span>{error}</span>
       </div>
     );
   }

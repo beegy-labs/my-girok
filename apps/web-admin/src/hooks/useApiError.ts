@@ -61,6 +61,11 @@ export interface UseApiErrorResult {
   hasError: boolean;
 
   /**
+   * Whether an async operation is in progress
+   */
+  isLoading: boolean;
+
+  /**
    * Clear the current error
    */
   clearError: () => void;
@@ -76,6 +81,7 @@ export interface UseApiErrorResult {
  */
 export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorResult {
   const [error, setError] = useState<AppError | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -83,6 +89,7 @@ export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorResult
 
   const executeWithErrorHandling = useCallback(
     async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      setIsLoading(true);
       try {
         clearError();
 
@@ -101,6 +108,8 @@ export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorResult
 
         options.onError?.(appError);
         return null;
+      } finally {
+        setIsLoading(false);
       }
     },
     [options, clearError],
@@ -110,6 +119,7 @@ export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorResult
     error,
     errorMessage: error ? error.userMessage : null,
     hasError: error !== null,
+    isLoading,
     clearError,
     executeWithErrorHandling,
   };

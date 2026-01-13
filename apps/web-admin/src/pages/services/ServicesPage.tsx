@@ -1,30 +1,27 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { logger } from '../../utils/logger';
-import { Loader2, AlertCircle, Settings, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Settings, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 import { servicesApi, ServiceListResponse } from '../../api/services';
+import { useApiError } from '../../hooks/useApiError';
 
 export default function ServicesPage() {
   const [data, setData] = useState<ServiceListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
+    context: 'ServicesPage.fetchServices',
+    retry: true,
+  });
 
   useEffect(() => {
     fetchServices();
   }, []);
 
   const fetchServices = async () => {
-    setLoading(true);
-    setError(null);
+    const result = await executeWithErrorHandling(async () => {
+      return await servicesApi.listServices();
+    });
 
-    try {
-      const result = await servicesApi.listServices();
+    if (result) {
       setData(result);
-    } catch (err) {
-      setError('Failed to load services');
-      logger.error('Failed to fetch services list', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -32,15 +29,6 @@ export default function ServicesPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-theme-text-tertiary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-        <AlertCircle size={20} />
-        <span>{error}</span>
       </div>
     );
   }

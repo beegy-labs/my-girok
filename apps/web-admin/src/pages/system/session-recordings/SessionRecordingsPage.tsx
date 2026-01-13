@@ -20,6 +20,8 @@ import {
   type SessionRecordingMetadata,
   type SessionRecordingEvents,
 } from '../../../api/recordings';
+import { useApiError } from '../../../hooks/useApiError';
+
 // TODO: Replace with @my-girok/tracking-sdk/react when available
 const SessionPlayer = ({ events }: { events: any }) => (
   <div className="p-8 bg-theme-background-secondary rounded-lg text-center text-theme-text-secondary">
@@ -71,7 +73,6 @@ export default function SessionRecordingsPage() {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<SessionRecordingMetadata[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
@@ -86,42 +87,42 @@ export default function SessionRecordingsPage() {
   const [selectedSession, setSelectedSession] = useState<SessionRecordingEvents | null>(null);
   const [loadingSession, setLoadingSession] = useState(false);
 
-  const fetchSessions = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { executeWithErrorHandling } = useApiError({
+    context: 'SessionRecordingsPage.fetchSessions',
+    retry: true,
+  });
 
-      const response = await recordingsApi.listSessions({
+  const fetchSessions = useCallback(async () => {
+    setLoading(true);
+    const response = await executeWithErrorHandling(async () => {
+      return await recordingsApi.listSessions({
         deviceType: deviceType as 'desktop' | 'mobile' | 'tablet' | undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         page,
         limit,
       });
-
+    });
+    if (response) {
       setSessions(response.data);
       setTotal(response.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch sessions');
-    } finally {
-      setLoading(false);
     }
-  }, [deviceType, startDate, endDate, page, limit]);
+    setLoading(false);
+  }, [deviceType, startDate, endDate, page, limit, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
 
   const handleViewSession = async (sessionId: string) => {
-    try {
-      setLoadingSession(true);
-      const sessionData = await recordingsApi.getSessionEvents(sessionId);
+    setLoadingSession(true);
+    const sessionData = await executeWithErrorHandling(async () => {
+      return await recordingsApi.getSessionEvents(sessionId);
+    });
+    if (sessionData) {
       setSelectedSession(sessionData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load session');
-    } finally {
-      setLoadingSession(false);
     }
+    setLoadingSession(false);
   };
 
   const handleViewDetail = (sessionId: string) => {
@@ -207,13 +208,6 @@ export default function SessionRecordingsPage() {
               />
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Error */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg">
-          {error}
         </div>
       )}
 

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -20,6 +19,8 @@ import {
 } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { COUNTRY_OPTIONS } from '../../config/country.config';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 const CONSENT_TYPES = [
   'TERMS_OF_SERVICE',
@@ -72,35 +73,62 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
   const canEdit = hasPermission('service:update');
 
   const [requirements, setRequirements] = useState<ConsentRequirement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditingRequirement>(emptyRequirement);
-  const [saving, setSaving] = useState(false);
+
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    clearError,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceConsentsTab',
+    showToast: false,
+  });
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    const result = await executeWithErrorHandling(() =>
+      servicesApi.listConsentRequirements(serviceId, selectedCountry || undefined),
+    );
 
-    try {
-      const result = await servicesApi.listConsentRequirements(
-        serviceId,
-        selectedCountry || undefined,
-      );
+    if (result) {
       setRequirements(result.data);
-    } catch (err) {
-      setError(t('services.loadConsentsFailed'));
-      logger.error('Failed to fetch consent requirements', {
-        serviceId,
-        countryCode: selectedCountry,
-        error: err,
-      });
-    } finally {
-      setLoading(false);
     }
-  }, [serviceId, selectedCountry, t]);
+  }, [serviceId, selectedCountry, executeWithErrorHandling]);
+
+  const createMutation = useApiMutation({
+    mutationFn: (data: CreateConsentRequirementDto) =>
+      servicesApi.createConsentRequirement(serviceId, data),
+    successToast: 'Consent requirement created successfully',
+    onSuccess: () => {
+      handleCancelEdit();
+      fetchData();
+    },
+    context: 'CreateConsentRequirement',
+  });
+
+  const updateMutation = useApiMutation({
+    mutationFn: (data: { id: string; dto: UpdateConsentRequirementDto }) =>
+      servicesApi.updateConsentRequirement(serviceId, data.id, data.dto),
+    successToast: 'Consent requirement updated successfully',
+    onSuccess: () => {
+      handleCancelEdit();
+      fetchData();
+    },
+    context: 'UpdateConsentRequirement',
+  });
+
+  const deleteMutation = useApiMutation({
+    mutationFn: (id: string) => servicesApi.deleteConsentRequirement(serviceId, id),
+    successToast: 'Consent requirement deleted successfully',
+    onSuccess: fetchData,
+    context: 'DeleteConsentRequirement',
+  });
+
+  const saving = createMutation.isLoading || updateMutation.isLoading;
 
   useEffect(() => {
     fetchData();
@@ -134,59 +162,32 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      if (isAdding) {
-        const dto: CreateConsentRequirementDto = {
-          countryCode: editForm.countryCode,
-          consentType: editForm.consentType,
-          isRequired: editForm.isRequired,
-          documentType: editForm.documentType,
-          displayOrder: editForm.displayOrder,
-          labelKey: editForm.labelKey,
-          descriptionKey: editForm.descriptionKey,
-        };
-        await servicesApi.createConsentRequirement(serviceId, dto);
-      } else if (editingId) {
-        const dto: UpdateConsentRequirementDto = {
-          isRequired: editForm.isRequired,
-          documentType: editForm.documentType,
-          displayOrder: editForm.displayOrder,
-          labelKey: editForm.labelKey,
-          descriptionKey: editForm.descriptionKey,
-        };
-        await servicesApi.updateConsentRequirement(serviceId, editingId, dto);
-      }
-      handleCancelEdit();
-      await fetchData();
-    } catch (err) {
-      logger.error('Failed to save consent requirement', {
-        serviceId,
-        consentId: editingId,
-        error: err,
-      });
-      setError(t('services.saveConsentFailed'));
-    } finally {
-      setSaving(false);
+    if (isAdding) {
+      const dto: CreateConsentRequirementDto = {
+        countryCode: editForm.countryCode,
+        consentType: editForm.consentType,
+        isRequired: editForm.isRequired,
+        documentType: editForm.documentType,
+        displayOrder: editForm.displayOrder,
+        labelKey: editForm.labelKey,
+        descriptionKey: editForm.descriptionKey,
+      };
+      await createMutation.mutate(dto);
+    } else if (editingId) {
+      const dto: UpdateConsentRequirementDto = {
+        isRequired: editForm.isRequired,
+        documentType: editForm.documentType,
+        displayOrder: editForm.displayOrder,
+        labelKey: editForm.labelKey,
+        descriptionKey: editForm.descriptionKey,
+      };
+      await updateMutation.mutate({ id: editingId, dto });
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm(t('services.deleteConsentConfirm'))) return;
-
-    try {
-      await servicesApi.deleteConsentRequirement(serviceId, id);
-      await fetchData();
-    } catch (err) {
-      logger.error('Failed to delete consent requirement', {
-        serviceId,
-        consentId: id,
-        error: err,
-      });
-      setError(t('services.deleteConsentFailed'));
-    }
+    await deleteMutation.mutate(id);
   };
 
   if (loading && requirements.length === 0) {
@@ -234,8 +235,8 @@ export default function ServiceConsentsTab({ serviceId }: ServiceConsentsTabProp
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
+          <span>{errorMessage}</span>
+          <button onClick={clearError} className="ml-auto">
             <X size={16} />
           </button>
         </div>

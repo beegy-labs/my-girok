@@ -1,12 +1,13 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Loader2, AlertCircle, Globe, Languages, Sun, Moon } from 'lucide-react';
+import { Loader2, Globe, Languages, Sun, Moon } from 'lucide-react';
 import { authApi, resetRedirectFlag } from '../api';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { REGIONS, type SupportedRegion } from '../config/region.config';
+import { useApiMutation } from '../hooks/useApiMutation';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇺🇸' },
@@ -25,11 +26,38 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<SupportedRegion>(() => {
     const saved = localStorage.getItem('admin-region');
     return (saved as SupportedRegion) || 'KR';
+  });
+
+  const {
+    mutate: login,
+    isLoading,
+    errorMessage,
+  } = useApiMutation({
+    mutationFn: authApi.login,
+    context: 'LoginPage.login',
+    showErrorToast: false, // Handle errors manually due to custom logic
+    onSuccess: (response) => {
+      // MFA required - redirect to MFA page
+      if (response.mfaRequired && response.challengeId) {
+        setMfaChallenge(response.challengeId, response.availableMethods || ['totp']);
+        navigate('/login/mfa', {
+          state: { from: location.state },
+          replace: true,
+        });
+        return;
+      }
+
+      // Login complete
+      if (response.admin) {
+        resetRedirectFlag();
+        setAuth(response.admin);
+        const from = (location.state as { from?: Location })?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      }
+    },
   });
 
   const toggleTheme = () => {
@@ -55,43 +83,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    try {
-      const response = await authApi.login({ email, password });
-
-      if (!response.success) {
-        setError(response.message || t('auth.invalidCredentials'));
-        return;
-      }
-
-      // MFA required - redirect to MFA page
-      if (response.mfaRequired && response.challengeId) {
-        setMfaChallenge(response.challengeId, response.availableMethods || ['totp']);
-        navigate('/login/mfa', {
-          state: { from: location.state },
-          replace: true,
-        });
-        return;
-      }
-
-      // Login complete
-      if (response.admin) {
-        resetRedirectFlag(); // Reset the redirect flag after successful login
-        setAuth(response.admin);
-        const from = (location.state as { from?: Location })?.from?.pathname || '/';
-        navigate(from, { replace: true });
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(t('auth.invalidCredentials'));
-      }
-    } finally {
-      setLoading(false);
-    }
+    await login({ email, password });
   };
 
   return (
@@ -106,10 +98,9 @@ export default function LoginPage() {
         {/* Login form */}
         <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
+            {errorMessage && (
               <div className="flex items-center gap-2 p-3 bg-theme-status-error-bg text-theme-status-error-text rounded-lg text-sm">
-                <AlertCircle size={16} />
-                <span>{error}</span>
+                <span>{errorMessage}</span>
               </div>
             )}
 
@@ -153,11 +144,11 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading && <Loader2 size={18} className="animate-spin" />}
-              <span>{loading ? t('auth.loginLoading') : t('auth.login')}</span>
+              {isLoading && <Loader2 size={18} className="animate-spin" />}
+              <span>{isLoading ? t('auth.loginLoading') : t('auth.login')}</span>
             </button>
           </form>
         </div>

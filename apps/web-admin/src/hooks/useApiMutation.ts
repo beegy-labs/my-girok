@@ -9,11 +9,15 @@ import { useState, useCallback } from 'react';
 import { handleApiError, withRetry, AppError, RetryConfig } from '../lib/error-handler';
 import { showErrorToast, showSuccessToast } from '../lib/toast';
 
-export interface UseApiMutationOptions<TData, TVariables> {
+export interface UseApiMutationOptions<TData, TVariables = void> {
   /**
    * The mutation function to execute
+   * - If TVariables is void, can be called without parameters
+   * - Otherwise, requires parameters of type TVariables
    */
-  mutationFn: (variables: TVariables) => Promise<TData>;
+  mutationFn: TVariables extends void
+    ? (variables?: TVariables) => Promise<TData>
+    : (variables: TVariables) => Promise<TData>;
 
   /**
    * Enable automatic retry for transient errors
@@ -59,13 +63,21 @@ export interface UseApiMutationOptions<TData, TVariables> {
 export interface UseApiMutationResult<TData, TVariables> {
   /**
    * Execute the mutation
+   * - If TVariables is void, the parameter is optional: mutate() or mutate(undefined)
+   * - Otherwise, the parameter is required: mutate(variables)
    */
-  mutate: (variables: TVariables) => Promise<void>;
+  mutate: TVariables extends void
+    ? (variables?: TVariables) => Promise<void>
+    : (variables: TVariables) => Promise<void>;
 
   /**
    * Execute the mutation and return the result
+   * - If TVariables is void, the parameter is optional: mutateAsync() or mutateAsync(undefined)
+   * - Otherwise, the parameter is required: mutateAsync(variables)
    */
-  mutateAsync: (variables: TVariables) => Promise<TData>;
+  mutateAsync: TVariables extends void
+    ? (variables?: TVariables) => Promise<TData>
+    : (variables: TVariables) => Promise<TData>;
 
   /**
    * The mutation result data
@@ -174,6 +186,8 @@ export function useApiMutation<TData = unknown, TVariables = void>(
     [mutateAsync],
   );
 
+  // Type assertion needed for conditional types to work correctly
+  // When TVariables extends void, mutate/mutateAsync parameters become optional
   return {
     mutate,
     mutateAsync,
@@ -184,5 +198,5 @@ export function useApiMutation<TData = unknown, TVariables = void>(
     isSuccess: data !== null && error === null,
     isError: error !== null,
     reset,
-  };
+  } as UseApiMutationResult<TData, TVariables>;
 }

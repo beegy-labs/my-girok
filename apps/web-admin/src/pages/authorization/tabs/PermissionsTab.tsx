@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, X, Play } from 'lucide-react';
 import { authorizationApi, type PermissionCheckResponse } from '../../../api/authorization';
 import { Card } from '../../../components/atoms/Card';
+import { useApiMutation } from '../../../hooks/useApiMutation';
 
 export default function PermissionsTab() {
   const { t } = useTranslation();
@@ -10,26 +11,26 @@ export default function PermissionsTab() {
   const [relation, setRelation] = useState('');
   const [object, setObject] = useState('');
   const [result, setResult] = useState<PermissionCheckResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleCheck = async () => {
+  const { mutate: checkPermission, isLoading: loading } = useApiMutation({
+    mutationFn: () => authorizationApi.check({ user, relation, object }),
+    context: 'PermissionsTab.checkPermission',
+    showErrorToast: true,
+    onSuccess: (response) => {
+      setResult(response);
+      setValidationError(null);
+    },
+  });
+
+  const handleCheck = () => {
     if (!user || !relation || !object) {
-      setError(t('authorization.fillAllFields', 'Please fill all fields'));
+      setValidationError(t('authorization.fillAllFields', 'Please fill all fields'));
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await authorizationApi.check({ user, relation, object });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Permission check failed');
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+    setValidationError(null);
+    checkPermission();
   };
 
   return (
@@ -97,10 +98,10 @@ export default function PermissionsTab() {
             </p>
           </div>
 
-          {/* Error */}
-          {error && (
+          {/* Validation Error */}
+          {validationError && (
             <div className="p-3 bg-theme-status-error-bg text-theme-status-error-text rounded-lg text-sm">
-              {error}
+              {validationError}
             </div>
           )}
 

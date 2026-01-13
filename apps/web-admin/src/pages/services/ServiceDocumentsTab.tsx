@@ -7,9 +7,10 @@ import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { FilterBar } from '../../components/molecules/FilterBar';
 import { Select } from '../../components/atoms/Select';
-import { logger } from '../../utils/logger';
 import { getDocumentTypeOptions, getLocaleOptions } from '../../config/legal.config';
 import { COUNTRY_OPTIONS } from '../../config/country.config';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 interface ServiceDocumentsTabProps {
   serviceId: string;
@@ -29,15 +30,22 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
   );
 
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
 
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     documentId: string | null;
   }>({ isOpen: false, documentId: null });
+
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceDocumentsTab',
+    showToast: false,
+  });
 
   // Filters
   const [type, setType] = useState('');
@@ -51,30 +59,33 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
   const [total, setTotal] = useState(0);
 
   const fetchDocuments = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await legalApi.listDocuments({
+    const result = await executeWithErrorHandling(() =>
+      legalApi.listDocuments({
         page,
         limit: 20,
-        serviceId, // Always filter by this service
+        serviceId,
         type: type || undefined,
         locale: locale || undefined,
         isActive,
         countryCode: countryCode || undefined,
-      });
+      }),
+    );
 
-      setDocuments(response.items);
-      setTotalPages(response.totalPages);
-      setTotal(response.total);
-    } catch (err) {
-      setError(t('legal.loadFailed'));
-      logger.error('Failed to load documents', err);
-    } finally {
-      setLoading(false);
+    if (result) {
+      setDocuments(result.items);
+      setTotalPages(result.totalPages);
+      setTotal(result.total);
     }
-  }, [page, serviceId, type, locale, isActive, countryCode, t]);
+  }, [page, serviceId, type, locale, isActive, countryCode, executeWithErrorHandling]);
+
+  const deleteMutation = useApiMutation({
+    mutationFn: (id: string) => legalApi.deleteDocument(id),
+    successToast: 'Document deleted successfully',
+    onSuccess: fetchDocuments,
+    context: 'DeleteDocument',
+  });
+
+  const deleting = deleteMutation.isLoading;
 
   useEffect(() => {
     fetchDocuments();
@@ -86,19 +97,9 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteDialog.documentId) return;
-
-    setDeleting(deleteDialog.documentId);
-    try {
-      await legalApi.deleteDocument(deleteDialog.documentId);
-      fetchDocuments();
-    } catch (err) {
-      setError(t('legal.deleteFailed'));
-      logger.error('Failed to delete document', err);
-    } finally {
-      setDeleting(null);
-      setDeleteDialog({ isOpen: false, documentId: null });
-    }
-  }, [deleteDialog.documentId, fetchDocuments, t]);
+    await deleteMutation.mutate(deleteDialog.documentId);
+    setDeleteDialog({ isOpen: false, documentId: null });
+  }, [deleteDialog.documentId, deleteMutation]);
 
   const handleDeleteCancel = useCallback(() => {
     setDeleteDialog({ isOpen: false, documentId: null });
@@ -168,7 +169,7 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 
@@ -254,11 +255,11 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
                         {canDelete && (
                           <button
                             onClick={() => handleDeleteClick(doc.id)}
-                            disabled={deleting === doc.id}
+                            disabled={deleting}
                             className="p-2 text-theme-text-secondary hover:text-theme-status-error-text hover:bg-theme-status-error-bg rounded-lg transition-colors disabled:opacity-50"
                             title={t('common.delete')}
                           >
-                            {deleting === doc.id ? (
+                            {deleting ? (
                               <Loader2 size={16} className="animate-spin" />
                             ) : (
                               <Trash2 size={16} />
@@ -307,7 +308,7 @@ export default function ServiceDocumentsTab({ serviceId }: ServiceDocumentsTabPr
         variant="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
-        loading={deleting === deleteDialog.documentId}
+        loading={deleting}
       />
     </div>
   );

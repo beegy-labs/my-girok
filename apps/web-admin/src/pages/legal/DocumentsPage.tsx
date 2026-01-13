@@ -1,16 +1,17 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, AlertCircle, Loader2 } from 'lucide-react';
-import { legalApi, LegalDocument, DocumentListResponse } from '../../api/legal';
+import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { legalApi, LegalDocument } from '../../api/legal';
 import { servicesApi, Service } from '../../api/services';
 import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { FilterBar } from '../../components/molecules/FilterBar';
 import { Select } from '../../components/atoms/Select';
-import { logger } from '../../utils/logger';
 import { getDocumentTypeOptions, getLocaleOptions } from '../../config/legal.config';
 import { COUNTRY_OPTIONS } from '../../config/country.config';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 export default function DocumentsPage() {
   const { t } = useTranslation();
@@ -27,9 +28,6 @@ export default function DocumentsPage() {
 
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
 
   // Delete confirmation dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -62,12 +60,13 @@ export default function DocumentsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const fetchDocuments = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
+    context: 'DocumentsPage.fetchDocuments',
+  });
 
-    try {
-      const response: DocumentListResponse = await legalApi.listDocuments({
+  const fetchDocuments = useCallback(async () => {
+    const response = await executeWithErrorHandling(() =>
+      legalApi.listDocuments({
         page,
         limit: 20,
         type: type || undefined,
@@ -75,42 +74,38 @@ export default function DocumentsPage() {
         isActive,
         serviceId: serviceId || undefined,
         countryCode: countryCode || undefined,
-      });
+      }),
+    );
 
+    if (response) {
       setDocuments(response.items);
       setTotalPages(response.totalPages);
       setTotal(response.total);
-    } catch (err) {
-      setError(t('legal.loadFailed'));
-      logger.error('Failed to load documents', err);
-    } finally {
-      setLoading(false);
     }
-  }, [page, type, locale, isActive, serviceId, countryCode, t]);
+  }, [page, type, locale, isActive, serviceId, countryCode, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
 
+  const { mutate: deleteDocument, isLoading: isDeleting } = useApiMutation({
+    mutationFn: (documentId: string) => legalApi.deleteDocument(documentId),
+    context: 'DocumentsPage.deleteDocument',
+    successToast: t('legal.deleteSuccess', 'Document deleted successfully'),
+    onSuccess: () => {
+      fetchDocuments();
+      setDeleteDialog({ isOpen: false, documentId: null });
+    },
+  });
+
   const handleDeleteClick = useCallback((id: string) => {
     setDeleteDialog({ isOpen: true, documentId: id });
   }, []);
 
-  const handleDeleteConfirm = useCallback(async () => {
+  const handleDeleteConfirm = useCallback(() => {
     if (!deleteDialog.documentId) return;
-
-    setDeleting(deleteDialog.documentId);
-    try {
-      await legalApi.deleteDocument(deleteDialog.documentId);
-      fetchDocuments();
-    } catch (err) {
-      setError(t('legal.deleteFailed'));
-      logger.error('Failed to delete document', err);
-    } finally {
-      setDeleting(null);
-      setDeleteDialog({ isOpen: false, documentId: null });
-    }
-  }, [deleteDialog.documentId, fetchDocuments, t]);
+    deleteDocument(deleteDialog.documentId);
+  }, [deleteDialog.documentId, deleteDocument]);
 
   const handleDeleteCancel = useCallback(() => {
     setDeleteDialog({ isOpen: false, documentId: null });
@@ -186,14 +181,6 @@ export default function DocumentsPage() {
           ]}
         />
       </FilterBar>
-
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-          <AlertCircle size={20} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Table */}
       <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
@@ -273,11 +260,11 @@ export default function DocumentsPage() {
                         {canDelete && (
                           <button
                             onClick={() => handleDeleteClick(doc.id)}
-                            disabled={deleting === doc.id}
+                            disabled={isDeleting && deleteDialog.documentId === doc.id}
                             className="p-2 text-theme-text-secondary hover:text-theme-status-error-text hover:bg-theme-status-error-bg rounded-lg transition-colors disabled:opacity-50"
                             title={t('common.delete')}
                           >
-                            {deleting === doc.id ? (
+                            {isDeleting && deleteDialog.documentId === doc.id ? (
                               <Loader2 size={16} className="animate-spin" />
                             ) : (
                               <Trash2 size={16} />
@@ -326,7 +313,7 @@ export default function DocumentsPage() {
         variant="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
-        loading={deleting === deleteDialog.documentId}
+        loading={isDeleting}
       />
     </div>
   );

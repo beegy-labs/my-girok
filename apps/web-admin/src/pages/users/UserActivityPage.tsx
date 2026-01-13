@@ -11,6 +11,7 @@ import {
 import { UserSummaryCard } from './components/UserSummaryCard';
 import { UserSessionsList } from './components/UserSessionsList';
 import { UserLocationStats as UserLocationStatsComponent } from './components/UserLocationStats';
+import { useApiError } from '../../hooks/useApiError';
 
 export default function UserActivityPage() {
   const { t } = useTranslation();
@@ -18,35 +19,38 @@ export default function UserActivityPage() {
   const [summary, setSummary] = useState<UserSummary | null>(null);
   const [sessions, setSessions] = useState<UserSessionSummary[]>([]);
   const [locations, setLocations] = useState<UserLocationStats[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [limit] = useState(20);
 
+  const { executeWithErrorHandling, isLoading: loading } = useApiError({
+    context: 'UserActivityPage.fetchData',
+    retry: true,
+  });
+
   const fetchData = useCallback(async () => {
     if (!userId) return;
 
-    try {
-      setLoading(true);
-      setError(null);
-
+    const result = await executeWithErrorHandling(async () => {
       const [summaryData, sessionsData, locationsData] = await Promise.all([
         analyticsApi.getUserSummary(userId),
         analyticsApi.getUserSessions(userId, { page, limit }),
         analyticsApi.getUserLocations(userId),
       ]);
+      return { summaryData, sessionsData, locationsData };
+    });
 
-      setSummary(summaryData);
-      setSessions(sessionsData.data);
-      setTotal(sessionsData.total);
-      setLocations(locationsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch user activity');
-    } finally {
-      setLoading(false);
+    if (result) {
+      setSummary(result.summaryData);
+      setSessions(result.sessionsData.data);
+      setTotal(result.sessionsData.total);
+      setLocations(result.locationsData);
+      setError(null);
+    } else {
+      setError(t('analytics.userNotFound', 'User not found'));
     }
-  }, [userId, page, limit]);
+  }, [userId, page, limit, executeWithErrorHandling, t]);
 
   useEffect(() => {
     fetchData();

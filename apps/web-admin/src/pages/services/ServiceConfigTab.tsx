@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../../utils/logger';
 import {
   Loader2,
   AlertCircle,
@@ -18,6 +17,8 @@ import { useAdminAuthStore } from '../../stores/adminAuthStore';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
 import { useAuditEvent } from '../../hooks';
+import { useApiError } from '../../hooks/useApiError';
+import { useApiMutation } from '../../hooks/useApiMutation';
 
 interface ServiceConfigTabProps {
   serviceId: string;
@@ -34,35 +35,70 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
   // Config state
   const [config, setConfig] = useState<ServiceConfig | null>(null);
   const [domains, setDomains] = useState<DomainResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<Partial<ServiceConfig>>({});
   const [newDomain, setNewDomain] = useState('');
-  const [addingDomain, setAddingDomain] = useState(false);
   const [reason, setReason] = useState('');
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const {
+    error,
+    errorMessage,
+    executeWithErrorHandling,
+    clearError,
+    isLoading: loading,
+  } = useApiError({
+    context: 'ServiceConfigTab',
+    showToast: false,
+  });
 
-    try {
+  const updateConfigMutation = useApiMutation({
+    mutationFn: (data: any) => servicesApi.updateServiceConfig(serviceId, data),
+    successToast: 'Service configuration updated successfully',
+    onSuccess: () => {
+      setReason('');
+      fetchData();
+    },
+    context: 'UpdateServiceConfig',
+  });
+
+  const addDomainMutation = useApiMutation({
+    mutationFn: (domain: string) => servicesApi.addServiceDomain(serviceId, domain),
+    successToast: 'Domain added successfully',
+    onSuccess: async () => {
+      setNewDomain('');
+      const domainsResult = await servicesApi.getServiceDomains(serviceId);
+      setDomains(domainsResult);
+    },
+    context: 'AddServiceDomain',
+  });
+
+  const removeDomainMutation = useApiMutation({
+    mutationFn: (domain: string) => servicesApi.removeServiceDomain(serviceId, domain),
+    successToast: 'Domain removed successfully',
+    onSuccess: (result) => setDomains(result),
+    context: 'RemoveServiceDomain',
+  });
+
+  const saving =
+    updateConfigMutation.isLoading || addDomainMutation.isLoading || removeDomainMutation.isLoading;
+  const addingDomain = addDomainMutation.isLoading;
+
+  const fetchData = useCallback(async () => {
+    const result = await executeWithErrorHandling(async () => {
       const [configResult, domainsResult] = await Promise.all([
         servicesApi.getServiceConfig(serviceId),
         servicesApi.getServiceDomains(serviceId),
       ]);
-      setConfig(configResult);
-      setDomains(domainsResult);
-      setFormData(configResult);
-    } catch (err) {
-      setError(t('services.loadConfigFailed'));
-      logger.error('Failed to fetch service config', { serviceId, error: err });
-    } finally {
-      setLoading(false);
+      return { configResult, domainsResult };
+    });
+
+    if (result) {
+      setConfig(result.configResult);
+      setDomains(result.domainsResult);
+      setFormData(result.configResult);
     }
-  }, [serviceId, t]);
+  }, [serviceId, executeWithErrorHandling]);
 
   useEffect(() => {
     fetchData();
@@ -70,70 +106,33 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
 
   const handleSave = async () => {
     if (!reason.trim()) {
-      setError(t('services.reasonRequired'));
       return;
     }
 
-    setSaving(true);
-    setError(null);
+    await updateConfigMutation.mutate({
+      jwtValidation: formData.jwtValidation,
+      domainValidation: formData.domainValidation,
+      ipWhitelistEnabled: formData.ipWhitelistEnabled,
+      ipWhitelist: formData.ipWhitelist,
+      rateLimitEnabled: formData.rateLimitEnabled,
+      rateLimitRequests: formData.rateLimitRequests,
+      rateLimitWindow: formData.rateLimitWindow,
+      maintenanceMode: formData.maintenanceMode,
+      maintenanceMessage: formData.maintenanceMessage ?? undefined,
+      auditLevel: formData.auditLevel,
+      reason,
+    });
 
-    try {
-      await servicesApi.updateServiceConfig(serviceId, {
-        jwtValidation: formData.jwtValidation,
-        domainValidation: formData.domainValidation,
-        ipWhitelistEnabled: formData.ipWhitelistEnabled,
-        ipWhitelist: formData.ipWhitelist,
-        rateLimitEnabled: formData.rateLimitEnabled,
-        rateLimitRequests: formData.rateLimitRequests,
-        rateLimitWindow: formData.rateLimitWindow,
-        maintenanceMode: formData.maintenanceMode,
-        maintenanceMessage: formData.maintenanceMessage ?? undefined,
-        auditLevel: formData.auditLevel,
-        reason,
-      });
-      trackFormSubmit('ServiceConfigForm', 'update', true);
-      setReason('');
-      fetchData();
-    } catch (err) {
-      setError(t('services.saveConfigFailed'));
-      trackFormSubmit('ServiceConfigForm', 'update', false);
-      logger.error('Failed to save service config', { serviceId, error: err });
-    } finally {
-      setSaving(false);
-    }
+    trackFormSubmit('ServiceConfigForm', 'update', !updateConfigMutation.isError);
   };
 
   const handleAddDomain = async () => {
     if (!newDomain.trim()) return;
-
-    setAddingDomain(true);
-    setError(null);
-
-    try {
-      await servicesApi.addServiceDomain(serviceId, newDomain.trim());
-      setNewDomain('');
-      const domainsResult = await servicesApi.getServiceDomains(serviceId);
-      setDomains(domainsResult);
-    } catch (err) {
-      setError(t('services.addDomainFailed'));
-      logger.error('Failed to add service domain', {
-        serviceId,
-        domain: newDomain.trim(),
-        error: err,
-      });
-    } finally {
-      setAddingDomain(false);
-    }
+    await addDomainMutation.mutate(newDomain.trim());
   };
 
   const handleRemoveDomain = async (domain: string) => {
-    try {
-      const result = await servicesApi.removeServiceDomain(serviceId, domain);
-      setDomains(result);
-    } catch (err) {
-      setError(t('services.removeDomainFailed'));
-      logger.error('Failed to remove service domain', { serviceId, domain, error: err });
-    }
+    await removeDomainMutation.mutate(domain);
   };
 
   const updateFormData = (key: keyof ServiceConfig, value: unknown) => {
@@ -152,7 +151,7 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
     return (
       <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
         <AlertCircle size={20} />
-        <span>{error || t('services.configNotFound')}</span>
+        <span>{errorMessage || t('services.configNotFound')}</span>
       </div>
     );
   }
@@ -164,7 +163,10 @@ export default function ServiceConfigTab({ serviceId }: ServiceConfigTabProps) {
       {error && (
         <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>{errorMessage}</span>
+          <button onClick={clearError} className="ml-auto">
+            <X size={16} />
+          </button>
         </div>
       )}
 

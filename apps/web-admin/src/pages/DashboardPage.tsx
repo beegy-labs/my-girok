@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { logger } from '../utils/logger';
-import { FileText, Users, Building2, TrendingUp, AlertCircle } from 'lucide-react';
+import { FileText, Users, Building2, TrendingUp } from 'lucide-react';
 import { legalApi, ConsentStats } from '../api/legal';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
+import { useApiError } from '../hooks/useApiError';
 
 interface StatCard {
   titleKey: string;
@@ -18,7 +18,11 @@ export default function DashboardPage() {
   const { admin, hasPermission } = useAdminAuthStore();
   const [stats, setStats] = useState<ConsentStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { executeWithErrorHandling } = useApiError({
+    context: 'DashboardPage.fetchStats',
+    retry: true,
+  });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -27,19 +31,18 @@ export default function DashboardPage() {
         return;
       }
 
-      try {
-        const data = await legalApi.getConsentStats();
+      setLoading(true);
+      const data = await executeWithErrorHandling(async () => {
+        return await legalApi.getConsentStats();
+      });
+      if (data) {
         setStats(data);
-      } catch (err) {
-        setError(t('dashboard.failedToLoad'));
-        logger.error('Failed to fetch dashboard stats', err);
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
 
     fetchStats();
-  }, [hasPermission, t]);
+  }, [hasPermission, executeWithErrorHandling]);
 
   const statCards: StatCard[] = stats
     ? [
@@ -79,14 +82,6 @@ export default function DashboardPage() {
           {t('dashboard.welcome', { name: admin?.name })}
         </p>
       </div>
-
-      {/* Error state */}
-      {error && (
-        <div className="flex items-center gap-2 p-4 bg-theme-status-error-bg text-theme-status-error-text rounded-lg">
-          <AlertCircle size={20} />
-          <span>{error}</span>
-        </div>
-      )}
 
       {/* Stats grid */}
       {loading ? (
