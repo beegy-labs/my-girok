@@ -1,0 +1,173 @@
+name: Reusable Web App CI
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        description: 'App name (e.g., web-admin, web-main)'
+        required: true
+        type: string
+      app_path:
+        description: 'App directory path relative to repo root (e.g., apps/web-admin)'
+        required: true
+        type: string
+      image_name:
+        description: 'Docker image name (e.g., beegy-labs/web-admin)'
+        required: true
+        type: string
+      gitops_file_prefix:
+        description: 'GitOps file prefix (e.g., my-girok-web-admin)'
+        required: true
+        type: string
+      build_args:
+        description: 'Docker build args as JSON object (e.g., {"VITE_API_URL": "..."})'
+        required: false
+        type: string
+        default: '{}'
+    secrets:
+      GITEA_USERNAME:
+        required: true
+      GITEA_TOKEN:
+        required: true
+      GITOPS_PAT:
+        required: true
+
+env:
+  REGISTRY: gitea.girok.dev
+
+jobs:
+  check:
+    name: Check
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Build dependencies
+        run: |
+          pnpm --filter @my-girok/types build
+          pnpm --filter @my-girok/ui-components build
+      - name: Lint and type-check
+        working-directory: ${{ inputs.app_path }}
+        run: pnpm lint & pnpm type-check & wait
+      - name: Build for bundle analysis
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ inputs.app_path }}
+        run: pnpm build
+      - name: Bundle size report
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ inputs.app_path }}
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          find dist/assets -name "*.js" -exec ls -lh {} \; | awk '{print "| " $NF " | " $5 " |"}' >> $GITHUB_STEP_SUMMARY
+          TOTAL=$(du -sh dist | cut -f1)
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total: ${TOTAL}**" >> $GITHUB_STEP_SUMMARY
+
+  build:
+    name: Build
+    if: github.event_name == 'push' && contains(fromJSON('["develop", "release", "main"]'), github.ref_name)
+    needs: check
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 60
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      skipped: ${{ steps.check_image.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.GITEA_USERNAME }}
+          password: ${{ secrets.GITEA_TOKEN }}
+      - name: Meta
+        id: meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          case "${{ github.ref_name }}" in
+            main) TAG="latest"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:latest" ;;
+            develop) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:${TAG},${{ env.REGISTRY }}/${{ inputs.image_name }}:develop-latest" ;;
+            release) TAG="release-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:${TAG},${{ env.REGISTRY }}/${{ inputs.image_name }}:release" ;;
+            *) TAG="develop-${SHORT_SHA}"; TAGS="${{ env.REGISTRY }}/${{ inputs.image_name }}:${TAG}" ;;
+          esac
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+      - name: Check if image exists
+        id: check_image
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            "${{ env.REGISTRY }}/api/v1/packages/beegy-labs/container/${{ inputs.app_name }}/${TAG}")
+          if [ "$RESPONSE" = "200" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Image ${TAG} already exists, skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "🔨 Image ${TAG} not found, proceeding with build"
+          fi
+      - uses: docker/build-push-action@v5
+        if: steps.check_image.outputs.exists != 'true'
+        with:
+          context: .
+          file: ./${{ inputs.app_path }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ inputs.image_name }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ inputs.image_name }}:buildcache,mode=max
+          build-args: ${{ inputs.build_args }}
+
+  deploy:
+    name: Deploy
+    if: always() && needs.build.result == 'success'
+    needs: build
+    runs-on: [self-hosted, kubernetes, gitops]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: beegy-labs/platform-gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          path: gitops
+      - name: Update & Push
+        run: |
+          cd gitops && git pull --rebase
+          case "${{ github.ref_name }}" in
+            main) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-prod.yaml"; ENV="production" ;;
+            develop) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-dev.yaml"; ENV="development" ;;
+            release) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-staging.yaml"; ENV="staging" ;;
+            *) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-dev.yaml"; ENV="development" ;;
+          esac
+          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ${FILE}
+          git diff --staged --quiet || git commit -m "chore(${ENV}): update ${{ inputs.app_name }} to ${{ needs.build.outputs.tag }}"
+          for i in 1 2 3; do git push && break || { sleep 3; git pull --rebase; }; done
+      - name: Cleanup
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          case "${{ github.ref_name }}" in
+            main) P="" ;;
+            develop) P="develop-" ;;
+            release) P="release-" ;;
+            *) P="develop-" ;;
+          esac
+          curl -s -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/${{ inputs.app_name }}" | \
+            jq -r ".[] | select(.version | startswith(\"${P}\")) | \"\(.created_at)|\(.version)\"" | sort -r | tail -n +11 | \
+            while IFS='|' read -r _ v; do curl -sX DELETE -H "Authorization: token ${GITEA_TOKEN}" "https://gitea.girok.dev/api/v1/packages/beegy-labs/container/${{ inputs.app_name }}/${v}"; done
