@@ -2,6 +2,24 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ModelExport } from './ModelExport';
 
+// Mock react-i18next
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        'authorization.exportModel': 'Export Model',
+        'authorization.selectFormat': 'Export Format',
+        'authorization.formatJson': 'JSON (with metadata)',
+        'authorization.formatDsl': 'DSL (code only)',
+        'authorization.exporting': 'Exporting...',
+        'authorization.download': 'Download',
+        'authorization.exportSuccess': `Model v${params?.version} exported successfully`,
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 // Mock API client
 vi.mock('../api/client', () => ({
   default: {
@@ -42,14 +60,14 @@ describe('ModelExport', () => {
       expect(screen.getByText('Export Format')).toBeInTheDocument();
       expect(screen.getByText('JSON')).toBeInTheDocument();
       expect(screen.getByText('DSL')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Download as JSON/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Download/i })).toBeInTheDocument();
     });
 
     it('should show format descriptions', () => {
       render(<ModelExport modelId={mockModelId} version={mockVersion} onClose={mockOnClose} />);
 
-      expect(screen.getByText(/With metadata and version info/i)).toBeInTheDocument();
-      expect(screen.getByText(/Code only/i)).toBeInTheDocument();
+      expect(screen.getByText(/JSON \(with metadata\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/DSL \(code only\)/i)).toBeInTheDocument();
     });
   });
 
@@ -57,30 +75,36 @@ describe('ModelExport', () => {
     it('should default to JSON format', () => {
       render(<ModelExport modelId={mockModelId} version={mockVersion} onClose={mockOnClose} />);
 
-      expect(screen.getByRole('button', { name: /Download as JSON/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Download/i })).toBeInTheDocument();
     });
 
     it('should switch to DSL format when DSL button is clicked', () => {
-      render(<ModelExport modelId={mockModelId} version={mockVersion} onClose={mockOnClose} />);
+      const { container } = render(
+        <ModelExport modelId={mockModelId} version={mockVersion} onClose={mockOnClose} />,
+      );
 
-      const dslButton = screen.getByRole('button', { name: /DSL Code only/i });
+      const dslButton = screen.getByText('DSL');
       fireEvent.click(dslButton);
 
-      expect(screen.getByRole('button', { name: /Download as DSL/i })).toBeInTheDocument();
+      // Verify DSL button is now selected (has primary border color)
+      const dslContainer = dslButton.closest('button');
+      expect(dslContainer).toHaveClass('border-primary-500');
     });
 
     it('should switch back to JSON format', () => {
       render(<ModelExport modelId={mockModelId} version={mockVersion} onClose={mockOnClose} />);
 
       // Switch to DSL
-      const dslButton = screen.getByRole('button', { name: /DSL Code only/i });
+      const dslButton = screen.getByText('DSL');
       fireEvent.click(dslButton);
 
       // Switch back to JSON
-      const jsonButton = screen.getByRole('button', { name: /JSON With metadata/i });
+      const jsonButton = screen.getByText('JSON');
       fireEvent.click(jsonButton);
 
-      expect(screen.getByRole('button', { name: /Download as JSON/i })).toBeInTheDocument();
+      // Verify JSON button is now selected
+      const jsonContainer = jsonButton.closest('button');
+      expect(jsonContainer).toHaveClass('border-primary-500');
     });
   });
 

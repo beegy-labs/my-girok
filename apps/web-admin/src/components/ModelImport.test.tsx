@@ -2,6 +2,32 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ModelImport } from './ModelImport';
 
+// Mock react-i18next
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        'authorization.importModel': 'Import Model',
+        'authorization.selectFile': 'Select File',
+        'authorization.contentPreview': 'Content Preview (Read-Only)',
+        'authorization.reviewContent': "Review the content before importing to ensure it's correct",
+        'authorization.versionNotes': 'Version Notes (Optional)',
+        'authorization.versionNotesPlaceholder': 'Add notes about this imported model...',
+        'authorization.activateAfterImport': 'Activate after import',
+        'authorization.activateWarning':
+          'Activating will immediately replace the current active model. Make sure the imported model is valid.',
+        'authorization.importing': 'Importing...',
+        'authorization.importSuccess': 'Authorization model imported successfully',
+        'authorization.fileSizeError': `File size exceeds 5MB limit. Selected file: ${params?.size}MB`,
+        'authorization.fileTypeError': 'Only .json and .dsl files are supported',
+        'authorization.fileReadError': 'Failed to read file content',
+        'authorization.selectFileError': 'Please select a file',
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 // Mock useApiMutation hook
 vi.mock('../hooks/useApiMutation', () => ({
   useApiMutation: vi.fn(() => ({
@@ -9,6 +35,11 @@ vi.mock('../hooks/useApiMutation', () => ({
     isLoading: false,
     errorMessage: null,
   })),
+}));
+
+// Mock MonacoAuthDSLEditor
+vi.mock('./MonacoAuthDSLEditor', () => ({
+  MonacoAuthDSLEditor: vi.fn(() => <div data-testid="monaco-editor" />),
 }));
 
 describe('ModelImport', () => {
