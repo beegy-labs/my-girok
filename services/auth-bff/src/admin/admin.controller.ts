@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AdminService } from './admin.service';
 import { Public, CurrentSession, RequireMfa, AllowedAccountTypes } from '../common/decorators';
@@ -208,6 +208,7 @@ export class AdminController {
 
   // Login History
   @Get('login-history')
+  @SkipThrottle()
   @ApiCookieAuth()
   @ApiOperation({ summary: 'Get login history from audit service' })
   @ApiResponse({ status: 200, type: LoginHistoryResponseDto })
