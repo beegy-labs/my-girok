@@ -14,11 +14,25 @@ interface FilterBarProps {
 export const FilterBar = memo<FilterBarProps>(
   ({ children, summary, showIcon = true, className = '' }) => (
     <div
-      className={`flex flex-wrap items-center gap-4 bg-theme-bg-card border border-theme-border-default rounded-xl p-4 ${className}`}
+      className={`bg-theme-bg-card border border-theme-border-default rounded-xl p-3 sm:p-4 ${className}`}
     >
-      {showIcon && <Filter size={18} className="text-theme-text-tertiary" aria-hidden="true" />}
-      {children}
-      {summary && <div className="ml-auto text-sm text-theme-text-tertiary">{summary}</div>}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 flex-1">
+          {showIcon && (
+            <Filter
+              size={18}
+              className="text-theme-text-tertiary hidden sm:block"
+              aria-hidden="true"
+            />
+          )}
+          {children}
+        </div>
+        {summary && (
+          <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
+            {summary}
+          </div>
+        )}
+      </div>
     </div>
   ),
 );

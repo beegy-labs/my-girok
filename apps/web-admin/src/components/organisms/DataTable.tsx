@@ -27,40 +27,42 @@ function DataTableComponent<T>({
 }: DataTableProps<T>) {
   return (
     <Card padding="none" className="overflow-hidden">
-      <table className="admin-table">
-        <thead>
-          <tr>
-            {columns.map((col) => (
-              <th key={col.key} style={{ width: col.width }}>
-                {col.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
+      <div className="overflow-x-auto">
+        <table className="admin-table min-w-full">
+          <thead>
             <tr>
-              <td colSpan={columns.length} className="text-center py-8">
-                <Spinner />
-              </td>
+              {columns.map((col) => (
+                <th key={col.key} style={{ width: col.width }}>
+                  {col.header}
+                </th>
+              ))}
             </tr>
-          ) : data.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="text-center py-8 text-theme-text-tertiary">
-                {emptyMessage}
-              </td>
-            </tr>
-          ) : (
-            data.map((item) => (
-              <tr key={keyExtractor(item)}>
-                {columns.map((col) => (
-                  <td key={col.key}>{col.render(item)}</td>
-                ))}
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length} className="text-center py-8">
+                  <Spinner />
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="text-center py-8 text-theme-text-tertiary">
+                  {emptyMessage}
+                </td>
+              </tr>
+            ) : (
+              data.map((item) => (
+                <tr key={keyExtractor(item)}>
+                  {columns.map((col) => (
+                    <td key={col.key}>{col.render(item)}</td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </Card>
   );
 }

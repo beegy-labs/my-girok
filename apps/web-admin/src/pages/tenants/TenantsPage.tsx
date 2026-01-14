@@ -61,15 +61,19 @@ export default function TenantsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-theme-text-primary">{t('tenants.title')}</h1>
-          <p className="text-theme-text-secondary mt-1">{t('tenants.description')}</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
+            {t('tenants.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-theme-text-secondary mt-1">
+            {t('tenants.description')}
+          </p>
         </div>
         {canCreate && (
           <Link
             to="/organization/partners/new"
-            className="flex items-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg hover:opacity-90 transition-opacity w-full sm:w-auto"
           >
             <Plus size={18} />
             <span>{t('tenants.newTenant')}</span>
@@ -78,145 +82,152 @@ export default function TenantsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 bg-theme-bg-card border border-theme-border-default rounded-xl p-4">
-        <Filter size={18} className="text-theme-text-tertiary" />
+      <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-3 sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <Filter size={18} className="text-theme-text-tertiary hidden sm:block" />
 
-        <form onSubmit={handleSearch} className="flex items-center gap-2">
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-tertiary"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('tenants.searchPlaceholder')}
-              className="pl-10 pr-4 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm w-64"
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg text-sm hover:opacity-90"
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto"
           >
-            {t('common.search')}
-          </button>
-        </form>
+            <div className="relative flex-1 sm:flex-none">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-tertiary"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t('tenants.searchPlaceholder')}
+                className="w-full sm:w-64 pl-10 pr-4 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-theme-primary text-btn-primary-text rounded-lg text-sm hover:opacity-90"
+            >
+              {t('common.search')}
+            </button>
+          </form>
 
-        <select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            setPage(1);
-          }}
-          className="px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
-        >
-          {statusOptions.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            className="w-full sm:w-auto px-3 py-2 bg-theme-bg-secondary border border-theme-border-default rounded-lg text-theme-text-primary text-sm"
+          >
+            {statusOptions.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
 
-        <div className="ml-auto text-sm text-theme-text-tertiary">
-          {t('tenants.tenantCount', { count: total })}
+          <div className="text-xs sm:text-sm text-theme-text-tertiary pt-2 border-t border-theme-border-default sm:pt-0 sm:border-t-0 sm:ml-auto">
+            {t('tenants.tenantCount', { count: total })}
+          </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="bg-theme-bg-card border border-theme-border-default rounded-xl overflow-hidden">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>{t('tenants.name')}</th>
-              <th>{t('tenants.slug')}</th>
-              <th>{t('tenants.tenantType')}</th>
-              <th>{t('tenants.status')}</th>
-              <th>Admins</th>
-              <th>{t('tenants.createdAt')}</th>
-              <th>{t('common.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        <div className="overflow-x-auto">
+          <table className="admin-table min-w-full">
+            <thead>
               <tr>
-                <td colSpan={7} className="text-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-theme-text-tertiary" />
-                </td>
+                <th>{t('tenants.name')}</th>
+                <th>{t('tenants.slug')}</th>
+                <th>{t('tenants.tenantType')}</th>
+                <th>{t('tenants.status')}</th>
+                <th>Admins</th>
+                <th>{t('tenants.createdAt')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
-            ) : tenants.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="text-center py-8 text-theme-text-tertiary">
-                  {t('tenants.noTenants')}
-                </td>
-              </tr>
-            ) : (
-              tenants.map((tenant) => {
-                const statusConfig = getStatusConfig(tenant.status as TenantStatus);
-                const StatusIcon = statusConfig.icon;
-                const variantStyles: Record<string, string> = {
-                  success: 'bg-theme-status-success-bg text-theme-status-success-text',
-                  warning: 'bg-theme-status-warning-bg text-theme-status-warning-text',
-                  error: 'bg-theme-status-error-bg text-theme-status-error-text',
-                  default: 'bg-theme-bg-secondary text-theme-text-primary',
-                };
-                return (
-                  <tr key={tenant.id}>
-                    <td className="font-medium text-theme-text-primary">{tenant.name}</td>
-                    <td className="text-theme-text-secondary font-mono text-sm">{tenant.slug}</td>
-                    <td>
-                      <span className="px-2 py-1 bg-theme-bg-secondary rounded text-xs font-medium">
-                        {tenant.type}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${variantStyles[statusConfig.variant]}`}
-                      >
-                        <StatusIcon size={12} />
-                        {t(statusConfig.labelKey)}
-                      </span>
-                    </td>
-                    <td className="text-theme-text-secondary">{tenant.adminCount}</td>
-                    <td className="text-theme-text-secondary">
-                      {new Date(tenant.createdAt).toLocaleDateString()}
-                    </td>
-                    <td>
-                      {canEdit && (
-                        <button
-                          onClick={() => navigate(`/organization/partners/${tenant.id}`)}
-                          className="p-2 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded-lg transition-colors"
-                          title={t('common.edit')}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-theme-text-tertiary" />
+                  </td>
+                </tr>
+              ) : tenants.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-8 text-theme-text-tertiary">
+                    {t('tenants.noTenants')}
+                  </td>
+                </tr>
+              ) : (
+                tenants.map((tenant) => {
+                  const statusConfig = getStatusConfig(tenant.status as TenantStatus);
+                  const StatusIcon = statusConfig.icon;
+                  const variantStyles: Record<string, string> = {
+                    success: 'bg-theme-status-success-bg text-theme-status-success-text',
+                    warning: 'bg-theme-status-warning-bg text-theme-status-warning-text',
+                    error: 'bg-theme-status-error-bg text-theme-status-error-text',
+                    default: 'bg-theme-bg-secondary text-theme-text-primary',
+                  };
+                  return (
+                    <tr key={tenant.id}>
+                      <td className="font-medium text-theme-text-primary">{tenant.name}</td>
+                      <td className="text-theme-text-secondary font-mono text-sm">{tenant.slug}</td>
+                      <td>
+                        <span className="px-2 py-1 bg-theme-bg-secondary rounded text-xs font-medium">
+                          {tenant.type}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${variantStyles[statusConfig.variant]}`}
                         >
-                          <Pencil size={16} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                          <StatusIcon size={12} />
+                          {t(statusConfig.labelKey)}
+                        </span>
+                      </td>
+                      <td className="text-theme-text-secondary">{tenant.adminCount}</td>
+                      <td className="text-theme-text-secondary">
+                        {new Date(tenant.createdAt).toLocaleDateString()}
+                      </td>
+                      <td>
+                        {canEdit && (
+                          <button
+                            onClick={() => navigate(`/organization/partners/${tenant.id}`)}
+                            className="p-2 text-theme-text-secondary hover:text-theme-primary hover:bg-theme-bg-secondary rounded-lg transition-colors"
+                            title={t('common.edit')}
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {t('common.previous')}
           </button>
-          <span className="px-4 py-2 text-theme-text-secondary">
+          <span className="px-4 py-2 text-sm text-theme-text-secondary order-first sm:order-none">
             {t('common.page', { current: page, total: totalPages })}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2 border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {t('common.next')}
           </button>

@@ -21,31 +21,36 @@ export const Pagination = memo<PaginationProps>(
     const to = Math.min(page * limit, total || page * limit);
 
     return (
-      <div className="flex items-center justify-center gap-4">
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={ChevronLeft}
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-        >
-          {t('common.previous')}
-        </Button>
-        <span className="text-sm text-theme-text-secondary">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+        <span className="text-xs sm:text-sm text-theme-text-secondary order-first sm:order-none mb-2 sm:mb-0">
           {total
             ? t('common.showing', { from, to, total })
             : t('common.page', { current: page, total: totalPages })}
         </span>
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={ChevronRight}
-          iconPosition="right"
-          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages}
-        >
-          {t('common.next')}
-        </Button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={ChevronLeft}
+            onClick={() => onPageChange(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="flex-1 sm:flex-none"
+          >
+            <span className="hidden sm:inline">{t('common.previous')}</span>
+            <span className="sm:hidden">{t('common.prev')}</span>
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={ChevronRight}
+            iconPosition="right"
+            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="flex-1 sm:flex-none"
+          >
+            {t('common.next')}
+          </Button>
+        </div>
       </div>
     );
   },
