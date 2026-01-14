@@ -134,3 +134,5 @@ apps/web-admin/.vite-cache/
 # Documentation generation failed files
 .docs-generate-failed.json
 .docs-translate-failed.json
+.tmp_pr_info.json
+.tmp_pr_557_review.md

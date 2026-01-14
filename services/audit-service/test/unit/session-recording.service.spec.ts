@@ -10,7 +10,7 @@ describe('SessionRecordingService', () => {
     insert: MockInstance;
     query: MockInstance;
   };
-  let configService: {
+  let _configService: {
     get: MockInstance;
   };
 
@@ -46,7 +46,7 @@ describe('SessionRecordingService', () => {
 
     service = module.get<SessionRecordingService>(SessionRecordingService);
     clickhouseService = module.get(ClickHouseService);
-    configService = module.get(ConfigService);
+    _configService = module.get(ConfigService);
   });
 
   describe('saveEventBatch', () => {
