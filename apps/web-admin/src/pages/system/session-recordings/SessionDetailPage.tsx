@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import { recordingsApi, type SessionRecordingEvents } from '../../../api/recordings';
 import { useApiError } from '../../../hooks/useApiError';
-import { SessionPlayer } from '@my-girok/tracking-sdk/react';
-import type { eventWithTime } from 'rrweb';
+import { SessionPlayer, type eventWithTime } from '@my-girok/tracking-sdk/react';
 
 import { LocationBadge } from './components/LocationBadge';
 import { EventTimeline } from './components/EventTimeline';
