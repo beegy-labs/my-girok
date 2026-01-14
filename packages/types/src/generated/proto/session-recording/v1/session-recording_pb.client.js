@@ -2,7 +2,7 @@
 // @generated from protobuf file "session-recording/v1/session-recording.proto" (package "session_recording.v1", syntax proto3)
 // tslint:disable
 // @ts-nocheck
-import { SessionRecordingService } from "./session-recording_pb";
+import { SessionRecordingService } from "./session-recording_pb.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 /**
  * SessionRecordingService handles session recording for replay functionality

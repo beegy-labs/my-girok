@@ -7,7 +7,7 @@
     "lint": "buf lint",
     "format": "buf format -w",
     "breaking": "buf breaking --against .git#branch=main",
-    "generate": "buf generate",
+    "generate": "buf generate && node scripts/fix-imports.js",
     "clean": "rm -rf ../types/src/generated/proto"
   },
   "devDependencies": {

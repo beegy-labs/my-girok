@@ -6,17 +6,23 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
-# Copy workspace configuration
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .npmrc ./
+# Copy lock file first for pnpm fetch (best cache layer)
+COPY pnpm-lock.yaml ./
 
-# Copy package files for dependency resolution
+# Fetch dependencies into pnpm store (cached independently)
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm fetch --frozen-lockfile
+
+# Copy workspace configuration and package files
+COPY package.json pnpm-workspace.yaml tsconfig.json .npmrc ./
 COPY packages/types/package.json ./packages/types/
 COPY packages/nest-common/package.json ./packages/nest-common/
 COPY packages/proto/package.json ./packages/proto/
 COPY services/identity-service/package.json ./services/identity-service/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies from cache (very fast)
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --offline --prefer-offline
 
 # Copy source code
 COPY packages/types ./packages/types
@@ -79,7 +85,8 @@ COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
 
 # Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm-prod,target=/root/.local/share/pnpm/store \
+    pnpm install --prod --frozen-lockfile --ignore-scripts --prefer-offline
 
 WORKDIR /app/services/identity-service
 

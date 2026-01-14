@@ -2,7 +2,7 @@
 // @generated from protobuf file "identity/v1/identity.proto" (package "identity.v1", syntax proto3)
 // tslint:disable
 // @ts-nocheck
-import { IdentityService } from "./identity_pb";
+import { IdentityService } from "./identity_pb.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 /**
  * IdentityService provides account, session, and device management operations

@@ -6,17 +6,23 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
-# Copy workspace configuration
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .npmrc ./
+# Copy lock file first for pnpm fetch (best cache layer)
+COPY pnpm-lock.yaml ./
 
-# Copy package files for dependency resolution
+# Fetch dependencies into pnpm store (cached independently)
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm fetch --frozen-lockfile
+
+# Copy workspace configuration and package files
+COPY package.json pnpm-workspace.yaml tsconfig.json .npmrc ./
 COPY packages/types/package.json ./packages/types/
 COPY packages/nest-common/package.json ./packages/nest-common/
 COPY packages/proto/package.json ./packages/proto/
 COPY services/auth-service/package.json ./services/auth-service/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies from cache (very fast)
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --offline --prefer-offline
 
 # Copy source code
 COPY packages/types ./packages/types
@@ -50,57 +56,3 @@ RUN apk upgrade --no-cache && \
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
-
-# Copy workspace configuration
-COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-
-# Copy package files
-COPY --chown=node:node services/auth-service/package.json ./services/auth-service/
-COPY --chown=node:node packages/types/package.json ./packages/types/
-COPY --chown=node:node packages/nest-common/package.json ./packages/nest-common/
-
-# Copy prisma schema BEFORE installing dependencies so it's available for prisma generate
-COPY --chown=node:node --from=builder /app/services/auth-service/prisma ./services/auth-service/prisma
-
-# Copy built files
-COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/dist
-COPY --chown=node:node --from=builder /app/packages/types/package.json ./packages/types/package.json
-COPY --chown=node:node --from=builder /app/packages/nest-common/dist ./packages/nest-common/dist
-COPY --chown=node:node --from=builder /app/packages/nest-common/package.json ./packages/nest-common/package.json
-COPY --chown=node:node --from=builder /app/services/auth-service/dist ./services/auth-service/dist
-
-# Copy goose migrations
-COPY --chown=node:node --from=builder /app/services/auth-service/migrations ./services/auth-service/migrations
-
-# Copy proto files for gRPC
-COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
-
-# Install production dependencies (skip lifecycle scripts like husky)
-ENV NODE_ENV=production
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
-
-WORKDIR /app/services/auth-service
-
-# Generate Prisma Client
-RUN pnpm prisma:generate
-
-# Create temp directory with proper permissions
-RUN mkdir -p /tmp && chown -R node:node /tmp
-
-# Switch to non-root user (node user is provided by node:alpine image)
-USER node
-
-# Set working directory
-WORKDIR /app/services/auth-service
-
-# Expose port
-EXPOSE 3001
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
-
-# Start application
-CMD ["node", "dist/main.js"]
