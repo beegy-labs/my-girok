@@ -1,5 +1,4 @@
 import { Logger } from '@nestjs/common';
-import type { PrismaClient } from '@prisma/client';
 import { trace, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api';
 import {
   getTransactionContext,
@@ -10,7 +9,14 @@ import {
   suspendAndRunInTransaction,
   TransactionContext,
   PrismaTransactionClient,
+  PrismaClientLike,
 } from './transaction-context';
+
+/**
+ * Type alias for PrismaClient that uses our minimal interface.
+ * This allows the decorator to work without requiring schema generation.
+ */
+type PrismaClient = PrismaClientLike;
 import {
   CircuitBreaker,
   CircuitBreakerError,
