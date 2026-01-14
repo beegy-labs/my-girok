@@ -26,9 +26,8 @@ test.describe('User Activity', () => {
       // Find search input
       const searchInput = page.getByPlaceholder(/search.*email/i);
       await searchInput.fill('test@example.com');
-      await page.waitForTimeout(500); // Debounce
 
-      // Verify search is applied
+      // Wait for search results to update (debounce handled by waiting for results)
       await expect(page.locator('[data-testid="users-list"]')).toBeVisible();
     });
 
@@ -64,10 +63,7 @@ test.describe('User Activity', () => {
       if ((await nextButton.isVisible()) && !(await nextButton.isDisabled())) {
         await nextButton.click();
 
-        // Wait for page to load
-        await page.waitForTimeout(300);
-
-        // Verify we're on page 2
+        // Wait for next page to load
         await expect(page.locator('[data-testid="users-list"]')).toBeVisible();
       }
     });
@@ -250,7 +246,9 @@ test.describe('User Activity', () => {
 
             // Click next button
             await nextButton.click();
-            await page.waitForTimeout(300);
+
+            // Wait for page navigation to complete
+            await page.waitForLoadState('networkidle');
 
             // Verify page indicator updates
             if (await pageIndicator.isVisible()) {
@@ -265,7 +263,7 @@ test.describe('User Activity', () => {
             const prevButton = page.getByRole('button', { name: /prev|previous/i });
             if ((await prevButton.isVisible()) && !(await prevButton.isDisabled())) {
               await prevButton.click();
-              await page.waitForTimeout(300);
+              // Wait for previous page to load
               await expect(page.locator('[data-testid="user-sessions-list"]')).toBeVisible();
             }
           }
@@ -458,8 +456,8 @@ test.describe('User Activity', () => {
         if (await sessionsTab.isVisible()) {
           await sessionsTab.click();
 
-          // Wait for content to load
-          await page.waitForTimeout(500);
+          // Wait for sessions list to load
+          await page.waitForLoadState('networkidle');
 
           // Check if sessions list is empty
           const sessionsList = page.locator('[data-testid="user-sessions-list"]');
@@ -581,8 +579,7 @@ test.describe('User Activity', () => {
           await rangeSelector.click();
           await page.getByRole('menuitem', { name: /30 days/i }).click();
 
-          // Verify chart updates
-          await page.waitForTimeout(500);
+          // Wait for chart to update with new data range
           await expect(page.locator('[data-testid="activity-chart"]')).toBeVisible();
         }
       }

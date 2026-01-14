@@ -52,9 +52,8 @@ test.describe('Authorization Management', () => {
       // Find search input
       const searchInput = page.getByPlaceholder(/search.*team/i);
       await searchInput.fill('engineering');
-      await page.waitForTimeout(500); // Debounce
 
-      // Verify search results
+      // Wait for search results to update (debounce handled by waiting for results)
       await expect(page.locator('[data-testid="teams-list"]')).toBeVisible();
     });
 
@@ -110,8 +109,7 @@ test.describe('Authorization Management', () => {
           // Submit
           await page.getByRole('button', { name: /add|save/i }).click();
 
-          // Verify member was added
-          await page.waitForTimeout(500);
+          // Wait for member to be added to the list
           await expect(page.getByText('user-123')).toBeVisible();
         }
       }
@@ -136,8 +134,8 @@ test.describe('Authorization Management', () => {
           // Confirm removal
           await page.getByRole('button', { name: /confirm|yes|remove/i }).click();
 
-          // Verify member was removed
-          await page.waitForTimeout(500);
+          // Wait for removal confirmation to complete
+          await page.waitForLoadState('networkidle');
         }
       }
     });
@@ -161,8 +159,8 @@ test.describe('Authorization Management', () => {
           // Select new role
           await page.getByRole('option', { name: /admin/i }).click();
 
-          // Verify role was updated
-          await page.waitForTimeout(500);
+          // Wait for role update to complete
+          await page.waitForLoadState('networkidle');
         }
       }
     });
@@ -179,10 +177,10 @@ test.describe('Authorization Management', () => {
         await createButton.click();
         await page.getByLabel(/team name/i).fill('Team to Delete');
         await page.getByRole('button', { name: /create|save/i }).click();
-        await page.waitForTimeout(500);
 
-        // Find and delete the team
+        // Wait for team to be created
         const teamToDelete = page.getByText('Team to Delete');
+        await expect(teamToDelete).toBeVisible();
         if (await teamToDelete.isVisible()) {
           await teamToDelete.click();
 
@@ -194,8 +192,8 @@ test.describe('Authorization Management', () => {
             // Confirm deletion
             await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
 
-            // Verify team was deleted
-            await page.waitForTimeout(500);
+            // Wait for deletion to complete
+            await page.waitForLoadState('networkidle');
           }
         }
       }
@@ -214,10 +212,10 @@ test.describe('Authorization Management', () => {
         await page.getByLabel(/team name/i).fill('Role Assignment Test Team');
         await page.getByLabel(/description/i).fill('Team for testing role assignments');
         await page.getByRole('button', { name: /create|save/i }).click();
-        await page.waitForTimeout(500);
 
-        // Find and click on the newly created team
+        // Wait for team to be created
         const testTeam = page.getByText('Role Assignment Test Team');
+        await expect(testTeam).toBeVisible();
         if (await testTeam.isVisible()) {
           await testTeam.click();
 
@@ -234,8 +232,7 @@ test.describe('Authorization Management', () => {
             // Submit
             await page.getByRole('button', { name: /add|save/i }).click();
 
-            // Verify member added with correct role
-            await page.waitForTimeout(500);
+            // Wait for member to be added to the list
             await expect(page.getByText('test-user-456')).toBeVisible();
 
             // Verify member role badge shows "member"
@@ -255,8 +252,8 @@ test.describe('Authorization Management', () => {
               await roleDropdown.click();
               await page.getByRole('option', { name: /admin/i }).click();
 
-              // Verify role updated successfully
-              await page.waitForTimeout(500);
+              // Wait for role update to complete
+              await page.waitForLoadState('networkidle');
 
               // Verify role badge/indicator reflects change
               const adminBadge = page
@@ -290,10 +287,10 @@ test.describe('Authorization Management', () => {
         await page.getByLabel(/team name/i).fill('Team with Members');
         await page.getByLabel(/description/i).fill('Team to test cascade deletion');
         await page.getByRole('button', { name: /create|save/i }).click();
-        await page.waitForTimeout(500);
 
-        // Find and click on the newly created team
+        // Wait for team to be created
         const testTeam = page.getByText('Team with Members');
+        await expect(testTeam).toBeVisible();
         if (await testTeam.isVisible()) {
           await testTeam.click();
 
@@ -305,9 +302,8 @@ test.describe('Authorization Management', () => {
             await page.getByRole('combobox', { name: /role/i }).click();
             await page.getByRole('option', { name: /member/i }).click();
             await page.getByRole('button', { name: /add|save/i }).click();
-            await page.waitForTimeout(500);
 
-            // Verify member was added
+            // Wait for member to be added
             await expect(page.getByText('member-to-remove-789')).toBeVisible();
 
             // Now try to delete the team
@@ -325,9 +321,8 @@ test.describe('Authorization Management', () => {
 
               // Confirm deletion
               await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
-              await page.waitForTimeout(500);
 
-              // Verify team deleted
+              // Wait for deletion to complete
               const deletedTeamCheck = page.getByText('Team with Members');
               await expect(deletedTeamCheck).not.toBeVisible();
 
@@ -366,10 +361,7 @@ test.describe('Authorization Management', () => {
       if (await validateButton.isVisible()) {
         await validateButton.click();
 
-        // Wait for validation result
-        await page.waitForTimeout(1000);
-
-        // Check for success or error message
+        // Wait for validation result to appear
         await expect(page.getByText(/valid|invalid|error/i)).toBeVisible();
       }
     });
@@ -391,8 +383,7 @@ test.describe('Authorization Management', () => {
         if (await saveButton.isVisible()) {
           await saveButton.click();
 
-          // Wait for save confirmation
-          await page.waitForTimeout(1000);
+          // Wait for save confirmation to appear
           await expect(page.getByText(/saved|success/i)).toBeVisible();
         }
       }
@@ -444,10 +435,7 @@ type document
         if (await validateButton.isVisible()) {
           await validateButton.click();
 
-          // Wait for validation result
-          await page.waitForTimeout(1000);
-
-          // Verify error message displayed
+          // Wait for validation error to appear
           const errorMessage = page.getByText(/error|invalid|syntax|parse/i);
           await expect(errorMessage).toBeVisible();
 
@@ -476,9 +464,8 @@ type document
       const historyButton = page.getByRole('button', { name: /history|versions/i });
       if (await historyButton.isVisible()) {
         await historyButton.click();
-        await page.waitForTimeout(500);
 
-        // Verify version list displays
+        // Wait for version list to load
         const versionList = page.locator('[data-testid="version-list"]');
         await expect(versionList).toBeVisible();
 
@@ -535,7 +522,9 @@ type document
       const historyButton = page.getByRole('button', { name: /history|versions/i });
       if (await historyButton.isVisible()) {
         await historyButton.click();
-        await page.waitForTimeout(500);
+
+        // Wait for version list to load
+        await page.waitForLoadState('networkidle');
 
         // Select two versions to compare
         const versionCheckboxes = page.locator('[data-testid="version-checkbox"]');
@@ -550,9 +539,8 @@ type document
           const compareButton = page.getByRole('button', { name: /view diff|compare/i });
           if (await compareButton.isVisible()) {
             await compareButton.click();
-            await page.waitForTimeout(500);
 
-            // Verify diff modal/panel opens
+            // Wait for diff viewer to appear
             const diffModal = page.locator('[data-testid="diff-modal"]');
             const diffPanel = page.locator('[data-testid="diff-panel"]');
 
@@ -594,7 +582,9 @@ type document
       const historyButton = page.getByRole('button', { name: /history|versions/i });
       if (await historyButton.isVisible()) {
         await historyButton.click();
-        await page.waitForTimeout(500);
+
+        // Wait for version history to load
+        await page.waitForLoadState('networkidle');
 
         // Select a previous version (not current)
         const inactiveVersion = page
@@ -615,9 +605,8 @@ type document
 
             // Confirm rollback
             await page.getByRole('button', { name: /confirm|yes|rollback/i }).click();
-            await page.waitForTimeout(1000);
 
-            // Verify success message
+            // Wait for rollback to complete and success message to appear
             const successMessage = page.getByText(/rollback.*success|successfully.*rolled back/i);
             if (await successMessage.isVisible()) {
               await expect(successMessage).toBeVisible();
@@ -643,7 +632,9 @@ type document
       const historyButton = page.getByRole('button', { name: /history|versions/i });
       if (await historyButton.isVisible()) {
         await historyButton.click();
-        await page.waitForTimeout(500);
+
+        // Wait for version history to load
+        await page.waitForLoadState('networkidle');
 
         // Select an inactive version
         const inactiveVersion = page
@@ -667,7 +658,8 @@ type document
             const confirmButton = page.getByRole('button', { name: /confirm|yes/i });
             if (await confirmButton.isVisible()) {
               await confirmButton.click();
-              await page.waitForTimeout(1000);
+              // Wait for activation to complete
+              await page.waitForLoadState('networkidle');
             }
 
             // Verify version becomes active
@@ -712,14 +704,17 @@ type document
           expect(fileName).toMatch(/model\.(yaml|dsl|txt)/i);
         }
 
-        await page.waitForTimeout(500);
+        // Wait for download to complete
+        await page.waitForLoadState('networkidle');
       }
 
       // Test Import functionality
       const importButton = page.getByRole('button', { name: /import/i });
       if (await importButton.isVisible()) {
         await importButton.click();
-        await page.waitForTimeout(500);
+
+        // Wait for import dialog to open
+        await page.waitForLoadState('networkidle');
 
         // Upload file or paste model
         const fileInput = page.locator('input[type="file"]');
@@ -746,9 +741,8 @@ type document
           const submitButton = page.getByRole('button', { name: /import|upload/i });
           if (await submitButton.isVisible()) {
             await submitButton.click();
-            await page.waitForTimeout(1000);
 
-            // Verify import successful
+            // Wait for import to complete and success message to appear
             const successMessage = page.getByText(/import.*success|successfully.*imported/i);
             if (await successMessage.isVisible()) {
               await expect(successMessage).toBeVisible();
@@ -797,10 +791,7 @@ type document
       const checkButton = page.getByRole('button', { name: /check/i });
       await checkButton.click();
 
-      // Wait for result
-      await page.waitForTimeout(1000);
-
-      // Verify result is displayed
+      // Wait for permission check result to appear
       await expect(page.getByText(/allowed|denied/i)).toBeVisible();
     });
 
@@ -824,10 +815,7 @@ type document
         const submitButton = page.getByRole('button', { name: /list|search/i });
         await submitButton.click();
 
-        // Wait for results
-        await page.waitForTimeout(1000);
-
-        // Verify results are displayed
+        // Wait for objects list to load
         await expect(page.locator('[data-testid="objects-list"]')).toBeVisible();
       }
     });
@@ -851,10 +839,7 @@ type document
         const submitButton = page.getByRole('button', { name: /list|search/i });
         await submitButton.click();
 
-        // Wait for results
-        await page.waitForTimeout(1000);
-
-        // Verify results are displayed
+        // Wait for users list to load
         await expect(page.locator('[data-testid="users-list"]')).toBeVisible();
       }
     });
@@ -872,9 +857,8 @@ type document
 
       const checkButton = page.getByRole('button', { name: /check/i });
       await checkButton.click();
-      await page.waitForTimeout(1000);
 
-      // Verify result: Allowed (green)
+      // Wait for permission check result to appear
       const allowedResult = page.locator('[data-testid="permission-result-allowed"]');
       const allowedText = page.getByText(/allowed/i);
 
@@ -890,9 +874,8 @@ type document
       await page.getByLabel(/object/i).fill('document:123');
 
       await checkButton.click();
-      await page.waitForTimeout(1000);
 
-      // Verify result: Denied (red)
+      // Wait for permission check result
       const deniedResult = page.locator('[data-testid="permission-result-denied"]');
       const deniedText = page.getByText(/denied/i);
 
@@ -908,9 +891,8 @@ type document
       await page.getByLabel(/object/i).fill('session_recording:*');
 
       await checkButton.click();
-      await page.waitForTimeout(1000);
 
-      // Verify appropriate result
+      // Wait for wildcard permission check result
       const wildcardResult = page.getByText(/allowed|denied/i);
       await expect(wildcardResult).toBeVisible();
     });
@@ -927,9 +909,8 @@ type document
       await page.getByLabel(/relation/i).fill('can_view');
       await page.getByLabel(/object/i).fill('document:123');
       await checkButton.click();
-      await page.waitForTimeout(500);
 
-      // Verify validation error
+      // Wait for validation error to appear
       let validationError = page.getByText(/user.*required|required.*user/i);
       if (await validationError.isVisible()) {
         await expect(validationError).toBeVisible();
@@ -940,9 +921,8 @@ type document
       await page.getByLabel(/relation/i).fill('');
       await page.getByLabel(/object/i).fill('document:123');
       await checkButton.click();
-      await page.waitForTimeout(500);
 
-      // Verify validation error
+      // Wait for validation error
       validationError = page.getByText(/relation.*required|required.*relation/i);
       if (await validationError.isVisible()) {
         await expect(validationError).toBeVisible();
@@ -953,9 +933,8 @@ type document
       await page.getByLabel(/relation/i).fill('can_view');
       await page.getByLabel(/object/i).fill('');
       await checkButton.click();
-      await page.waitForTimeout(500);
 
-      // Verify validation error
+      // Wait for validation error
       validationError = page.getByText(/object.*required|required.*object/i);
       if (await validationError.isVisible()) {
         await expect(validationError).toBeVisible();
@@ -966,9 +945,8 @@ type document
       await page.getByLabel(/relation/i).fill('can_view');
       await page.getByLabel(/object/i).fill('document123');
       await checkButton.click();
-      await page.waitForTimeout(500);
 
-      // Verify validation error message
+      // Wait for validation error
       validationError = page.getByText(/invalid.*format|format.*invalid|must.*include.*colon/i);
       if (await validationError.isVisible()) {
         await expect(validationError).toBeVisible();
@@ -985,7 +963,9 @@ type document
       const batchCheckButton = page.getByRole('button', { name: /batch.*check|bulk.*check/i });
       if (await batchCheckButton.isVisible()) {
         await batchCheckButton.click();
-        await page.waitForTimeout(500);
+
+        // Wait for batch check form to load
+        await page.waitForLoadState('networkidle');
 
         // Add 3 permission checks
         const addCheckButton = page.getByRole('button', { name: /add.*check|add.*permission/i });
@@ -1018,9 +998,8 @@ type document
         const submitBatchButton = page.getByRole('button', { name: /submit.*batch|check.*all/i });
         if (await submitBatchButton.isVisible()) {
           await submitBatchButton.click();
-          await page.waitForTimeout(1000);
 
-          // Verify results displayed for all 3 checks
+          // Wait for batch results to appear
           const batchResults = page.locator('[data-testid="batch-results"]');
           await expect(batchResults).toBeVisible();
 

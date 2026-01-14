@@ -57,9 +57,7 @@ test.describe('Analytics', () => {
       const topUsersTab = page.getByRole('tab', { name: /top users/i });
       if (await topUsersTab.isVisible()) {
         await topUsersTab.click();
-        await page.waitForTimeout(300);
-
-        // Verify top users list is displayed
+        // Wait for tab content to load
         await expect(page.locator('[data-testid="top-users-list"]')).toBeVisible();
       } else {
         // Alternative: Check if top users section exists on main page
@@ -77,7 +75,8 @@ test.describe('Analytics', () => {
       const topUsersTab = page.getByRole('tab', { name: /top users/i });
       if (await topUsersTab.isVisible()) {
         await topUsersTab.click();
-        await page.waitForTimeout(300);
+        // Wait for tab content to load
+        await page.waitForLoadState('networkidle');
       }
 
       // Find sort dropdown
@@ -91,9 +90,8 @@ test.describe('Analytics', () => {
         });
         if (await sessionsSortOption.isVisible()) {
           await sessionsSortOption.click();
-          await page.waitForTimeout(300);
 
-          // Verify sorting is applied
+          // Wait for sorted results to load
           await expect(page.locator('[data-testid="top-users-list"]')).toBeVisible();
         }
       }
@@ -106,7 +104,8 @@ test.describe('Analytics', () => {
       const topUsersTab = page.getByRole('tab', { name: /top users/i });
       if (await topUsersTab.isVisible()) {
         await topUsersTab.click();
-        await page.waitForTimeout(300);
+        // Wait for tab navigation to complete
+        await page.waitForLoadState('networkidle');
       }
 
       // Click on first user in top users list
@@ -162,10 +161,9 @@ test.describe('Analytics', () => {
         const sessionsTab = page.getByRole('tab', { name: /sessions/i });
         if (await sessionsTab.isVisible()) {
           await sessionsTab.click();
-          await page.waitForTimeout(300);
         }
 
-        // Verify sessions list is visible
+        // Wait for sessions list to load
         await expect(page.locator('[data-testid="user-sessions-list"]')).toBeVisible();
 
         // Check if session items are displayed
@@ -192,9 +190,8 @@ test.describe('Analytics', () => {
         const locationsTab = page.getByRole('tab', { name: /locations/i });
         if (await locationsTab.isVisible()) {
           await locationsTab.click();
-          await page.waitForTimeout(300);
 
-          // Verify location stats are visible
+          // Wait for location stats to load
           const locationStats = page.locator('[data-testid="location-stats"]');
           await expect(locationStats).toBeVisible();
         } else {
@@ -238,9 +235,8 @@ test.describe('Analytics', () => {
           const thirtyDaysOption = page.getByRole('button', { name: /last 30 days/i });
           if (await thirtyDaysOption.isVisible()) {
             await thirtyDaysOption.click();
-            await page.waitForTimeout(500);
 
-            // Verify chart updates
+            // Wait for chart to update with new data
             await expect(page.locator('[data-testid="activity-chart"]')).toBeVisible();
           }
         }
@@ -278,7 +274,8 @@ test.describe('Analytics', () => {
         const sessionsTab = page.getByRole('tab', { name: /sessions/i });
         if (await sessionsTab.isVisible()) {
           await sessionsTab.click();
-          await page.waitForTimeout(300);
+          // Wait for sessions list to load
+          await expect(page.locator('[data-testid="session-item"]')).toBeVisible();
         }
 
         // Click on a session to view recording

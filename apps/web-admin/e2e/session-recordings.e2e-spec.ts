@@ -59,9 +59,8 @@ test.describe('Session Recordings', () => {
       const searchInput = page.getByPlaceholder(/search.*email/i);
       if (await searchInput.isVisible()) {
         await searchInput.fill('test@example.com');
-        await page.waitForTimeout(500); // Debounce
 
-        // Verify search is applied
+        // Wait for search results to update (debounce handled by waiting for results)
         await expect(page.locator('[data-testid="session-list"]')).toBeVisible();
       }
     });
@@ -74,10 +73,7 @@ test.describe('Session Recordings', () => {
       if ((await nextButton.isVisible()) && !(await nextButton.isDisabled())) {
         await nextButton.click();
 
-        // Wait for page to load
-        await page.waitForTimeout(300);
-
-        // Verify we're on page 2
+        // Wait for next page to load
         await expect(page.locator('[data-testid="session-list"]')).toBeVisible();
       }
     });
@@ -99,7 +95,8 @@ test.describe('Session Recordings', () => {
           let isNextEnabled = !(await nextButton.isDisabled());
           while (isNextEnabled) {
             await nextButton.click();
-            await page.waitForTimeout(300);
+            // Wait for navigation to complete
+            await page.waitForLoadState('networkidle');
             isNextEnabled = !(await nextButton.isDisabled());
           }
 
@@ -127,9 +124,8 @@ test.describe('Session Recordings', () => {
         const customRangeOption = page.getByRole('button', { name: /last 14 days/i });
         if (await customRangeOption.isVisible()) {
           await customRangeOption.click();
-          await page.waitForTimeout(400);
 
-          // Verify filter is applied
+          // Wait for filtered results to load
           await expect(page.locator('[data-testid="session-list"]')).toBeVisible();
 
           // Check that sessions fall within date range by verifying date column
@@ -144,9 +140,8 @@ test.describe('Session Recordings', () => {
         const thirtyDaysOption = page.getByRole('button', { name: /last 30 days/i });
         if (await thirtyDaysOption.isVisible()) {
           await thirtyDaysOption.click();
-          await page.waitForTimeout(400);
 
-          // Verify filter is applied
+          // Wait for filtered results to load
           await expect(page.locator('[data-testid="session-list"]')).toBeVisible();
         }
       }
@@ -170,17 +165,8 @@ test.describe('Session Recordings', () => {
       if (await refreshButton.isVisible()) {
         await refreshButton.click();
 
-        // Wait for loading state to appear
-        await page.waitForTimeout(200);
-
-        // Verify loading indicator if present
-        const loadingIndicator = page.locator('[data-testid="loading-spinner"]');
-        if (await loadingIndicator.isVisible()) {
-          await expect(loadingIndicator).toBeVisible();
-        }
-
         // Wait for reload to complete
-        await page.waitForTimeout(400);
+        await page.waitForLoadState('networkidle');
 
         // Verify list is reloaded and visible
         await expect(page.locator('[data-testid="session-list"]')).toBeVisible();
@@ -228,7 +214,7 @@ test.describe('Session Recordings', () => {
         await firstSession.click();
 
         // Wait for detail page to load
-        await page.waitForTimeout(300);
+        await expect(page).toHaveURL(/\/system\/session-recordings\/[^/]+/);
 
         // Verify location metadata
         const locationField = page.getByText(/location|country/i);
@@ -303,7 +289,6 @@ test.describe('Session Recordings', () => {
 
         // Wait for detail page to load
         await expect(page).toHaveURL(/\/system\/session-recordings\/[^/]+/);
-        await page.waitForTimeout(300);
 
         // Click back button (try multiple possible selectors)
         const backButton = page.getByRole('button', { name: /back/i });
@@ -337,7 +322,7 @@ test.describe('Session Recordings', () => {
         await firstSession.click();
 
         // Wait for detail page to load
-        await page.waitForTimeout(300);
+        await expect(page).toHaveURL(/\/system\/session-recordings\/[^/]+/);
 
         // Check for status badge (active/completed/abandoned)
         const statusBadge = page.locator('[data-testid="session-status-badge"]');
@@ -364,8 +349,8 @@ test.describe('Session Recordings', () => {
 
           // Verify tooltip or description if present
           await statusBadge.hover();
-          await page.waitForTimeout(200);
 
+          // Wait for tooltip to appear
           const tooltip = page.locator('[role="tooltip"]');
           if (await tooltip.isVisible()) {
             await expect(tooltip).toBeVisible();
@@ -421,8 +406,8 @@ test.describe('Session Recordings', () => {
         if (await firstEvent.isVisible()) {
           await firstEvent.click();
 
-          // Verify player jumped to that timestamp
-          await page.waitForTimeout(300);
+          // Wait for player to jump to timestamp (no explicit verification needed as UI should update)
+          await page.waitForLoadState('networkidle');
         }
       }
     });
@@ -459,14 +444,12 @@ test.describe('Session Recordings', () => {
         if (await playButton.isVisible()) {
           await playButton.click();
 
-          // Wait for playback
-          await page.waitForTimeout(1000);
-
-          // Pause
+          // Wait for play button to change to pause button
           const pauseButton = page.getByRole('button', { name: /pause/i });
-          if (await pauseButton.isVisible()) {
-            await pauseButton.click();
-          }
+          await expect(pauseButton).toBeVisible();
+
+          // Pause the session
+          await pauseButton.click();
         }
       }
     });
@@ -500,13 +483,15 @@ test.describe('Session Recordings', () => {
         const skipForward = page.getByRole('button', { name: /skip forward|10s/i });
         if (await skipForward.isVisible()) {
           await skipForward.click();
-          await page.waitForTimeout(300);
+          // Wait for player to update position
+          await page.waitForLoadState('networkidle');
         }
 
         const skipBackward = page.getByRole('button', { name: /skip backward|10s/i });
         if (await skipBackward.isVisible()) {
           await skipBackward.click();
-          await page.waitForTimeout(300);
+          // Wait for player to update position
+          await page.waitForLoadState('networkidle');
         }
       }
     });

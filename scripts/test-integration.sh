@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+# Configuration - can be overridden via environment variables
+AUTH_BFF_URL=${AUTH_BFF_URL:-"http://localhost:4005"}
+WEB_ADMIN_URL=${WEB_ADMIN_URL:-"http://localhost:3002"}
+ANALYTICS_PORT=${ANALYTICS_PORT:-50056}
+AUTHORIZATION_PORT=${AUTHORIZATION_PORT:-50055}
+AUDIT_PORT=${AUDIT_PORT:-50054}
+SESSION_COOKIE="${SESSION_COOKIE:-}"
+TEST_USER="${TEST_USER:-testuser}"
+TEST_TEAM="${TEST_TEAM:-test-team}"
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -8,11 +18,43 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-AUTH_BFF_URL="${AUTH_BFF_URL:-http://localhost:4005}"
-SESSION_COOKIE="${SESSION_COOKIE:-}"
-TEST_USER="${TEST_USER:-testuser}"
-TEST_TEAM="${TEST_TEAM:-test-team}"
+# Usage instructions
+usage() {
+  cat <<EOF
+Integration Testing Script
+
+Usage:
+  $0 [options]
+
+Environment Variables:
+  AUTH_BFF_URL          Auth BFF service URL (default: http://localhost:4005)
+  WEB_ADMIN_URL         Web admin URL (default: http://localhost:3002)
+  ANALYTICS_PORT        Analytics gRPC port (default: 50056)
+  AUTHORIZATION_PORT    Authorization gRPC port (default: 50055)
+  AUDIT_PORT           Audit gRPC port (default: 50054)
+  SESSION_COOKIE       Session cookie for authenticated requests
+
+Examples:
+  # Run with defaults
+  ./test-integration.sh
+
+  # Run with custom URLs
+  AUTH_BFF_URL=http://staging.example.com:4005 ./test-integration.sh
+
+  # Run with session cookie for authenticated tests
+  SESSION_COOKIE='sessionId=abc123' ./test-integration.sh
+
+  # Run with custom ports
+  ANALYTICS_PORT=60056 AUTHORIZATION_PORT=60055 ./test-integration.sh
+
+EOF
+  exit 0
+}
+
+# Check for help flag
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+  usage
+fi
 
 # Counters
 TESTS_PASSED=0
@@ -101,13 +143,13 @@ fi
 # Test 2: gRPC Service Connectivity
 # ===================================
 print_test "2/6" "Verifying gRPC service connections"
-print_info "Expected services: analytics:50056, authorization:50055, audit:50054"
+print_info "Expected services: analytics:${ANALYTICS_PORT}, authorization:${AUTHORIZATION_PORT}, audit:${AUDIT_PORT}"
 
 # Check if gRPC ports are listening
 GRPC_SERVICES_OK=true
 
 if command -v nc &> /dev/null; then
-    for port in 50054 50055 50056; do
+    for port in ${AUDIT_PORT} ${AUTHORIZATION_PORT} ${ANALYTICS_PORT}; do
         if nc -z localhost "$port" 2>/dev/null; then
             print_info "  Port $port is listening"
         else
@@ -115,7 +157,7 @@ if command -v nc &> /dev/null; then
             GRPC_SERVICES_OK=false
         fi
     done
-    
+
     if [ "$GRPC_SERVICES_OK" = true ]; then
         print_success "gRPC services are reachable"
     else
@@ -123,7 +165,7 @@ if command -v nc &> /dev/null; then
     fi
 else
     print_warning "nc (netcat) not available - skipping port checks"
-    print_info "gRPC services assumed connected (analytics:50056, authorization:50055, audit:50054)"
+    print_info "gRPC services assumed connected (analytics:${ANALYTICS_PORT}, authorization:${AUTHORIZATION_PORT}, audit:${AUDIT_PORT})"
 fi
 
 # ===================================

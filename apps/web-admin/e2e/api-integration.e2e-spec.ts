@@ -1,8 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { TEST_CONFIG } from './fixtures/test-config';
+import { testData } from './fixtures/test-data';
 
 /**
  * API Integration E2E Tests
  * Tests direct API endpoints using Playwright's request context
+ *
+ * Uses environment variables for credentials:
+ * - E2E_TEST_EMAIL: Admin user email
+ * - E2E_TEST_PASSWORD: Admin user password
  */
 
 /**
@@ -11,8 +17,8 @@ import { test, expect } from '@playwright/test';
 async function getAdminSessionCookie(request: any): Promise<string> {
   const response = await request.post('/api/auth/login', {
     data: {
-      email: 'super_admin@girok.dev',
-      password: 'SuperAdmin123!',
+      email: TEST_CONFIG.admin.email,
+      password: TEST_CONFIG.admin.password,
     },
   });
 
@@ -70,7 +76,7 @@ test.describe('Analytics API', () => {
   test('GET /admin/analytics/users/:userId/summary - should return user summary', async ({
     request,
   }) => {
-    const userId = 'test-user-123';
+    const userId = testData.userId();
     const response = await request.get(`/admin/analytics/users/${userId}/summary`, {
       headers: { Cookie: sessionCookie },
       params: {
@@ -92,7 +98,7 @@ test.describe('Analytics API', () => {
   test('GET /admin/analytics/users/:userId/sessions - should test pagination', async ({
     request,
   }) => {
-    const userId = 'test-user-123';
+    const userId = testData.userId();
     const response = await request.get(`/admin/analytics/users/${userId}/sessions`, {
       headers: { Cookie: sessionCookie },
       params: {
@@ -129,7 +135,7 @@ test.describe('Analytics API', () => {
   test('GET /admin/analytics/users/:userId/locations - should verify country data', async ({
     request,
   }) => {
-    const userId = 'test-user-123';
+    const userId = testData.userId();
     const response = await request.get(`/admin/analytics/users/${userId}/locations`, {
       headers: { Cookie: sessionCookie },
       params: {
@@ -200,9 +206,9 @@ test.describe('Authorization API', () => {
     const response = await request.post('/admin/authorization/check', {
       headers: { Cookie: sessionCookie },
       data: {
-        user: 'user:test-123',
-        relation: 'can_view',
-        object: 'session_recording:rec-456',
+        user: testData.permission.user(),
+        relation: testData.permission.relation,
+        object: testData.permission.object('session_recording'),
       },
     });
 
@@ -217,24 +223,26 @@ test.describe('Authorization API', () => {
   test('POST /admin/authorization/batch-check - should test batch operations', async ({
     request,
   }) => {
+    const userId = testData.permission.user();
+    const objectId = testData.permission.object('session_recording');
     const response = await request.post('/admin/authorization/batch-check', {
       headers: { Cookie: sessionCookie },
       data: {
         checks: [
           {
-            user: 'user:test-123',
+            user: userId,
             relation: 'can_view',
-            object: 'session_recording:rec-1',
+            object: objectId,
           },
           {
-            user: 'user:test-123',
+            user: userId,
             relation: 'can_edit',
-            object: 'session_recording:rec-1',
+            object: objectId,
           },
           {
-            user: 'user:test-123',
+            user: userId,
             relation: 'can_delete',
-            object: 'session_recording:rec-1',
+            object: objectId,
           },
         ],
       },
@@ -386,8 +394,8 @@ type document
     const response = await request.get('/admin/authorization/list-objects', {
       headers: { Cookie: sessionCookie },
       params: {
-        user: 'user:test-123',
-        relation: 'can_view',
+        user: testData.permission.user(),
+        relation: testData.permission.relation,
         objectType: 'session_recording',
       },
     });
@@ -410,8 +418,8 @@ type document
     const response = await request.get('/admin/authorization/list-users', {
       headers: { Cookie: sessionCookie },
       params: {
-        object: 'session_recording:rec-123',
-        relation: 'can_view',
+        object: testData.permission.object('session_recording'),
+        relation: testData.permission.relation,
       },
     });
 
@@ -554,10 +562,11 @@ test.describe('Teams API', () => {
     const teamId = createData.data.id;
 
     // Add a member
+    const memberId = testData.userId();
     const addMemberResponse = await request.post(`/admin/teams/${teamId}/members`, {
       headers: { Cookie: sessionCookie },
       data: {
-        userId: 'user-test-123',
+        userId: memberId,
         role: 'member',
       },
     });
@@ -569,7 +578,7 @@ test.describe('Teams API', () => {
     expect(addMemberData.data).toHaveProperty('userId');
     expect(addMemberData.data).toHaveProperty('teamId');
     expect(addMemberData.data).toHaveProperty('role');
-    expect(addMemberData.data.userId).toBe('user-test-123');
+    expect(addMemberData.data.userId).toBe(memberId);
     expect(addMemberData.data.role).toBe('member');
   });
 
@@ -590,10 +599,11 @@ test.describe('Teams API', () => {
     const teamId = createData.data.id;
 
     // Add a member
+    const memberToRemoveId = testData.userId();
     const addMemberResponse = await request.post(`/admin/teams/${teamId}/members`, {
       headers: { Cookie: sessionCookie },
       data: {
-        userId: 'user-to-remove',
+        userId: memberToRemoveId,
         role: 'member',
       },
     });
@@ -601,9 +611,12 @@ test.describe('Teams API', () => {
     expect(addMemberResponse.ok()).toBeTruthy();
 
     // Remove the member
-    const removeResponse = await request.delete(`/admin/teams/${teamId}/members/user-to-remove`, {
-      headers: { Cookie: sessionCookie },
-    });
+    const removeResponse = await request.delete(
+      `/admin/teams/${teamId}/members/${memberToRemoveId}`,
+      {
+        headers: { Cookie: sessionCookie },
+      },
+    );
 
     expect(removeResponse.ok()).toBeTruthy();
     const removeData = await removeResponse.json();
@@ -666,7 +679,7 @@ test.describe('Session Recordings API', () => {
         limit: '25',
         sortBy: 'createdAt',
         sortOrder: 'desc',
-        userId: 'test-user-123',
+        userId: testData.userId(),
         startDate: '2026-01-01',
         endDate: '2026-01-31',
       },
@@ -701,7 +714,7 @@ test.describe('Session Recordings API', () => {
   test('GET /recordings/sessions/:sessionId/events - should verify event structure', async ({
     request,
   }) => {
-    const sessionId = 'test-session-123';
+    const sessionId = testData.sessionId();
     const response = await request.get(`/recordings/sessions/${sessionId}/events`, {
       headers: { Cookie: sessionCookie },
       params: {
