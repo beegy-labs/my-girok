@@ -427,10 +427,10 @@ export class SessionRecordingGrpcController {
         actorId: request.actorId,
         deviceType: request.deviceType ? this.deviceTypeToString(request.deviceType) : undefined,
         startDate: request.startDate
-          ? new Date(request.startDate.seconds * 1000).toISOString()
+          ? new Date(request.startDate.seconds * 1000).toISOString().split('T')[0]
           : undefined,
         endDate: request.endDate
-          ? new Date(request.endDate.seconds * 1000).toISOString()
+          ? new Date(request.endDate.seconds * 1000).toISOString().split('T')[0]
           : undefined,
         page: request.page || 1,
         limit: request.limit || 20,
