@@ -74,9 +74,9 @@ export default function PoliciesTab() {
     },
   });
 
-  const handleValidate = () => {
+  const handleValidate = useCallback(() => {
     validateModel();
-  };
+  }, [validateModel]);
 
   const { mutate: saveModel, isLoading: isSaving } = useApiMutation({
     mutationFn: () => authorizationApi.createModel(content),
@@ -88,9 +88,9 @@ export default function PoliciesTab() {
     },
   });
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     saveModel();
-  };
+  }, [saveModel]);
 
   const { mutate: activateModel } = useApiMutation({
     mutationFn: (modelId: string) => authorizationApi.activateModel(modelId),
@@ -103,47 +103,56 @@ export default function PoliciesTab() {
     },
   });
 
-  const handleActivate = (modelId: string) => {
-    if (
-      !confirm(
-        t('authorization.confirmActivate', 'Are you sure you want to activate this model version?'),
-      )
-    ) {
-      return;
-    }
+  const handleActivate = useCallback(
+    (modelId: string) => {
+      if (
+        !confirm(
+          t(
+            'authorization.confirmActivate',
+            'Are you sure you want to activate this model version?',
+          ),
+        )
+      ) {
+        return;
+      }
 
-    activateModel(modelId);
-  };
+      activateModel(modelId);
+    },
+    [t, activateModel],
+  );
 
-  const handleViewDiff = (version: AuthorizationModel) => {
+  const handleViewDiff = useCallback((version: AuthorizationModel) => {
     setSelectedVersion(version);
     setShowDiff(true);
-  };
+  }, []);
 
-  const handleRollback = (version: AuthorizationModel) => {
-    if (
-      !confirm(
-        t(
-          'authorization.confirmRollback',
-          `Are you sure you want to rollback to version ${version.version}? This will activate the selected version.`,
-        ),
-      )
-    ) {
-      return;
-    }
+  const handleRollback = useCallback(
+    (version: AuthorizationModel) => {
+      if (
+        !confirm(
+          t(
+            'authorization.confirmRollback',
+            `Are you sure you want to rollback to version ${version.version}? This will activate the selected version.`,
+          ),
+        )
+      ) {
+        return;
+      }
 
-    handleActivate(version.id);
-  };
+      handleActivate(version.id);
+    },
+    [t, handleActivate],
+  );
 
-  const handleExport = (version: AuthorizationModel) => {
+  const handleExport = useCallback((version: AuthorizationModel) => {
     setExportingVersion(version);
     setShowExportModal(true);
-  };
+  }, []);
 
-  const handleImportComplete = () => {
+  const handleImportComplete = useCallback(() => {
     setShowImportModal(false);
     fetchModel();
-  };
+  }, [fetchModel]);
 
   if (loading) {
     return (

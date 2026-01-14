@@ -25,3 +25,5 @@ export type {
   LogAdminActionRequest,
   LogAdminActionResponse,
 } from '../generated/proto/audit/v1/audit_pb.js';
+
+export * from './session-recording.enums.js';

@@ -53,13 +53,19 @@ export default function LiveSessionsPage() {
           <div className="flex items-center gap-3">
             <div
               className={`w-3 h-3 rounded-full ${
-                isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                isConnected
+                  ? 'bg-green-500 animate-pulse'
+                  : !connectionError
+                    ? 'bg-yellow-500 animate-pulse'
+                    : 'bg-red-500'
               }`}
             />
             <span className="text-sm font-medium text-theme-text-primary">
               {isConnected
                 ? t('sessions.liveConnected', 'Connected - Receiving real-time updates')
-                : t('sessions.liveDisconnected', 'Disconnected')}
+                : !connectionError
+                  ? t('sessions.liveReconnecting', 'Disconnected. Reconnecting...')
+                  : t('sessions.liveDisconnected', 'Disconnected')}
             </span>
           </div>
           {connectionError && (

@@ -56,6 +56,18 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
         return;
       }
 
+      // Check file size (5MB limit)
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        setFileError(
+          `File size exceeds 5MB limit. Selected file: ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB`,
+        );
+        setFile(null);
+        setDslContent('');
+        setShowPreview(false);
+        return;
+      }
+
       setFileError(null);
       setFile(selectedFile);
 
