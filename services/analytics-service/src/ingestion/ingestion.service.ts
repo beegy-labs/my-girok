@@ -109,7 +109,7 @@ export class IngestionService {
       element_text: null,
     }));
 
-    await this.clickhouse.insert('${this.database}.events', rows);
+    await this.clickhouse.insert(`${this.database}.events`, rows);
     this.logger.debug(`Tracked ${events.length} events from ${anonymizedIp}`);
   }
 
@@ -131,7 +131,7 @@ export class IngestionService {
       cls: null,
     };
 
-    await this.clickhouse.insert('${this.database}.page_views', [row]);
+    await this.clickhouse.insert(`${this.database}.page_views`, [row]);
   }
 
   async identify(dto: IdentifyDto): Promise<void> {
@@ -141,7 +141,7 @@ export class IngestionService {
     this.validateUUID(dto.anonymousId, 'anonymousId');
 
     // Validate table name against whitelist
-    const mutationTable = '${this.database}.sessions_local';
+    const mutationTable = `${this.database}.sessions_local`;
     this.validateMutationTable(mutationTable);
 
     // ClickHouse ALTER TABLE UPDATE doesn't support parameterized queries.
@@ -156,7 +156,7 @@ export class IngestionService {
     );
 
     // Validate insert table
-    const profileTable = '${this.database}.user_profiles';
+    const profileTable = `${this.database}.user_profiles`;
     this.validateInsertTable(profileTable);
 
     // Update user profile using ReplacingMergeTree (insert replaces existing row)
@@ -229,7 +229,7 @@ export class IngestionService {
       conversion_value: null,
     };
 
-    await this.clickhouse.insert('${this.database}.sessions', [row]);
+    await this.clickhouse.insert(`${this.database}.sessions`, [row]);
   }
 
   /**
