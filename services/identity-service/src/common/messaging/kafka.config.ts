@@ -27,12 +27,15 @@ export function getKafkaConfig(): KafkaConfig {
     clientId,
     brokers,
     logLevel: logLevel.WARN,
-    ssl: process.env.REDPANDA_SSL === 'true',
-    sasl: process.env.REDPANDA_SASL_USERNAME
+    ssl: process.env.KAFKA_SSL === 'true',
+    sasl: process.env.KAFKA_SASL_USERNAME
       ? {
-          mechanism: 'plain' as const,
-          username: process.env.REDPANDA_SASL_USERNAME,
-          password: process.env.REDPANDA_SASL_PASSWORD || '',
+          mechanism: (process.env.KAFKA_SASL_MECHANISM || 'scram-sha-512') as
+            | 'plain'
+            | 'scram-sha-256'
+            | 'scram-sha-512',
+          username: process.env.KAFKA_SASL_USERNAME,
+          password: process.env.KAFKA_SASL_PASSWORD || '',
         }
       : undefined,
     retry: {
