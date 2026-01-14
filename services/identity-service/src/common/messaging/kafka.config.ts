@@ -23,21 +23,37 @@ export function getKafkaConfig(): KafkaConfig {
   const brokers = process.env.KAFKA_BROKERS?.split(',') || ['localhost:9092'];
   const clientId = process.env.KAFKA_CLIENT_ID || 'identity-service';
 
+  // Build SASL configuration
+  let sasl: KafkaConfig['sasl'];
+  if (process.env.KAFKA_SASL_USERNAME) {
+    const mechanism = process.env.KAFKA_SASL_MECHANISM || 'scram-sha-512';
+    if (mechanism === 'plain') {
+      sasl = {
+        mechanism: 'plain' as const,
+        username: process.env.KAFKA_SASL_USERNAME,
+        password: process.env.KAFKA_SASL_PASSWORD || '',
+      };
+    } else if (mechanism === 'scram-sha-256') {
+      sasl = {
+        mechanism: 'scram-sha-256' as const,
+        username: process.env.KAFKA_SASL_USERNAME,
+        password: process.env.KAFKA_SASL_PASSWORD || '',
+      };
+    } else {
+      sasl = {
+        mechanism: 'scram-sha-512' as const,
+        username: process.env.KAFKA_SASL_USERNAME,
+        password: process.env.KAFKA_SASL_PASSWORD || '',
+      };
+    }
+  }
+
   return {
     clientId,
     brokers,
     logLevel: logLevel.WARN,
     ssl: process.env.KAFKA_SSL === 'true',
-    sasl: process.env.KAFKA_SASL_USERNAME
-      ? {
-          mechanism: (process.env.KAFKA_SASL_MECHANISM || 'scram-sha-512') as
-            | 'plain'
-            | 'scram-sha-256'
-            | 'scram-sha-512',
-          username: process.env.KAFKA_SASL_USERNAME,
-          password: process.env.KAFKA_SASL_PASSWORD || '',
-        }
-      : undefined,
+    sasl,
     retry: {
       initialRetryTime: 100,
       retries: 8,
