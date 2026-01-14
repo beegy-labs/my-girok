@@ -42,6 +42,7 @@ interface DeviceStats {
   deviceType: string;
   count: number;
   avgDuration: number;
+  [key: string]: string | number;
 }
 
 interface PageStats {
@@ -215,7 +216,6 @@ export default function SessionAnalyticsPage() {
                     innerRadius={60}
                     outerRadius={100}
                     paddingAngle={2}
-                    label={(entry) => `${entry.deviceType}: ${entry.count}`}
                   >
                     {deviceStats.map((entry, index) => (
                       <Cell
