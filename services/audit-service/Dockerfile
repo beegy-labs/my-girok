@@ -12,6 +12,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .npmrc ./
 # Copy package files for dependency resolution
 COPY packages/types/package.json ./packages/types/
 COPY packages/nest-common/package.json ./packages/nest-common/
+COPY packages/proto/package.json ./packages/proto/
 COPY services/audit-service/package.json ./services/audit-service/
 
 # Install dependencies
