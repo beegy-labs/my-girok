@@ -7,7 +7,7 @@
 | Do                   | Don't            |
 | -------------------- | ---------------- |
 | goose for migrations | `prisma migrate` |
-| TEXT for IDs         | UUID type        |
+| UUIDv7 for IDs       | TEXT/varchar IDs |
 | TIMESTAMPTZ(6)       | TIMESTAMP        |
 
 ## React 19+
