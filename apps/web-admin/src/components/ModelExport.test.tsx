@@ -79,9 +79,7 @@ describe('ModelExport', () => {
     });
 
     it('should switch to DSL format when DSL button is clicked', () => {
-      const { container } = render(
-        <ModelExport modelId={mockModelId} version={mockVersion} onClose={mockOnClose} />,
-      );
+      render(<ModelExport modelId={mockModelId} version={mockVersion} onClose={mockOnClose} />);
 
       const dslButton = screen.getByText('DSL');
       fireEvent.click(dslButton);

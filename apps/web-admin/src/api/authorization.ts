@@ -29,6 +29,7 @@ export interface AuthorizationModel {
   isActive: boolean;
   createdAt: string;
   createdBy: string;
+  notes?: string;
 }
 
 /**
@@ -105,8 +106,11 @@ export const authorizationApi = {
   /**
    * Create new model version
    */
-  createModel: async (content: string): Promise<AuthorizationModel> => {
-    const response = await apiClient.post<AuthorizationModel>('/authorization/model', { content });
+  createModel: async (content: string, notes?: string): Promise<AuthorizationModel> => {
+    const response = await apiClient.post<AuthorizationModel>('/authorization/model', {
+      content,
+      notes,
+    });
     return response.data;
   },
 

@@ -38,6 +38,7 @@ export default function PoliciesTab() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportingVersion, setExportingVersion] = useState<AuthorizationModel | null>(null);
+  const [versionNotes, setVersionNotes] = useState('');
 
   const { executeWithErrorHandling } = useApiError({
     context: 'PoliciesTab.fetchModel',
@@ -79,12 +80,13 @@ export default function PoliciesTab() {
   }, [validateModel]);
 
   const { mutate: saveModel, isLoading: isSaving } = useApiMutation({
-    mutationFn: () => authorizationApi.createModel(content),
+    mutationFn: () => authorizationApi.createModel(content, versionNotes || undefined),
     context: 'PoliciesTab.saveModel',
     successToast: t('authorization.modelSavedSuccess', 'Model saved successfully'),
     onSuccess: () => {
       fetchModel();
       setValidationResult(null);
+      setVersionNotes(''); // Clear notes after successful save
     },
   });
 
@@ -272,6 +274,23 @@ export default function PoliciesTab() {
                   {isSaving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
                 </button>
               </div>
+
+              {/* Version Notes Input */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                  {t('authorization.versionNotes', 'Version Notes (Optional)')}
+                </label>
+                <input
+                  type="text"
+                  placeholder={t(
+                    'authorization.versionNotesPlaceholder',
+                    'e.g., Added team permissions for QA environment',
+                  )}
+                  value={versionNotes}
+                  onChange={(e) => setVersionNotes(e.target.value)}
+                  className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-background-primary text-theme-text-primary focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
             </div>
 
             {/* Validation Result */}
@@ -367,6 +386,11 @@ export default function PoliciesTab() {
                     <div className="text-xs text-theme-text-tertiary mb-2">
                       {t('common.by', 'By')}: {version.createdBy}
                     </div>
+                    {version.notes && (
+                      <div className="text-xs text-theme-text-secondary mt-2 italic border-l-2 border-theme-border-default pl-2">
+                        "{version.notes}"
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-2 mt-2">
                       <button

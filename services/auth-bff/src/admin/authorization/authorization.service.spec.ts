@@ -226,9 +226,33 @@ describe('AuthorizationService', () => {
       const result = await service.getModelVersions();
 
       expect(result).toEqual([
-        { id: 'model-1', version: 3, isActive: true, createdAt: '2024-01-15T10:00:00Z' },
-        { id: 'model-2', version: 2, isActive: false, createdAt: '2024-01-14T10:00:00Z' },
-        { id: 'model-3', version: 1, isActive: false, createdAt: '2024-01-13T10:00:00Z' },
+        {
+          id: 'model-1',
+          version: 3,
+          isActive: true,
+          createdAt: '2024-01-15T10:00:00Z',
+          content: undefined,
+          createdBy: 'system',
+          notes: undefined,
+        },
+        {
+          id: 'model-2',
+          version: 2,
+          isActive: false,
+          createdAt: '2024-01-14T10:00:00Z',
+          content: undefined,
+          createdBy: 'system',
+          notes: undefined,
+        },
+        {
+          id: 'model-3',
+          version: 1,
+          isActive: false,
+          createdAt: '2024-01-13T10:00:00Z',
+          content: undefined,
+          createdBy: 'system',
+          notes: undefined,
+        },
       ]);
       expect(authzClient.listModels).toHaveBeenCalledWith(100);
     });
@@ -267,7 +291,7 @@ describe('AuthorizationService', () => {
         modelId: 'model-new-123',
         versionId: '1',
       });
-      expect(authzClient.writeModel).toHaveBeenCalledWith(dslSource, undefined);
+      expect(authzClient.writeModel).toHaveBeenCalledWith(dslSource, undefined, undefined);
     });
 
     it('should create and activate model when activate flag is true', async () => {
@@ -286,7 +310,7 @@ describe('AuthorizationService', () => {
         modelId: 'model-new-456',
         versionId: '1',
       });
-      expect(authzClient.writeModel).toHaveBeenCalledWith(dslSource, true);
+      expect(authzClient.writeModel).toHaveBeenCalledWith(dslSource, true, undefined);
     });
 
     it('should return validation errors when model is invalid', async () => {
