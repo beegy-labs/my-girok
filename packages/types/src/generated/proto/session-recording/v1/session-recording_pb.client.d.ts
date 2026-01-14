@@ -4,6 +4,12 @@
 // @ts-nocheck
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import type { ServiceInfo } from '@protobuf-ts/runtime-rpc';
+import type { GetTopPagesResponse } from './session-recording_pb';
+import type { GetTopPagesRequest } from './session-recording_pb';
+import type { GetDeviceBreakdownResponse } from './session-recording_pb';
+import type { GetDeviceBreakdownRequest } from './session-recording_pb';
+import type { GetSessionStatsResponse } from './session-recording_pb';
+import type { GetSessionStatsRequest } from './session-recording_pb';
 import type { GetSessionEventsResponse } from './session-recording_pb';
 import type { GetSessionEventsRequest } from './session-recording_pb';
 import type { ListSessionsResponse } from './session-recording_pb';
@@ -85,6 +91,29 @@ export interface ISessionRecordingServiceClient {
     input: GetSessionEventsRequest,
     options?: RpcOptions,
   ): UnaryCall<GetSessionEventsRequest, GetSessionEventsResponse>;
+  /**
+   * Analytics
+   *
+   * @generated from protobuf rpc: GetSessionStats
+   */
+  getSessionStats(
+    input: GetSessionStatsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetSessionStatsRequest, GetSessionStatsResponse>;
+  /**
+   * @generated from protobuf rpc: GetDeviceBreakdown
+   */
+  getDeviceBreakdown(
+    input: GetDeviceBreakdownRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetDeviceBreakdownRequest, GetDeviceBreakdownResponse>;
+  /**
+   * @generated from protobuf rpc: GetTopPages
+   */
+  getTopPages(
+    input: GetTopPagesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetTopPagesRequest, GetTopPagesResponse>;
 }
 /**
  * SessionRecordingService handles session recording for replay functionality
@@ -158,4 +187,27 @@ export declare class SessionRecordingServiceClient
     input: GetSessionEventsRequest,
     options?: RpcOptions,
   ): UnaryCall<GetSessionEventsRequest, GetSessionEventsResponse>;
+  /**
+   * Analytics
+   *
+   * @generated from protobuf rpc: GetSessionStats
+   */
+  getSessionStats(
+    input: GetSessionStatsRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetSessionStatsRequest, GetSessionStatsResponse>;
+  /**
+   * @generated from protobuf rpc: GetDeviceBreakdown
+   */
+  getDeviceBreakdown(
+    input: GetDeviceBreakdownRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetDeviceBreakdownRequest, GetDeviceBreakdownResponse>;
+  /**
+   * @generated from protobuf rpc: GetTopPages
+   */
+  getTopPages(
+    input: GetTopPagesRequest,
+    options?: RpcOptions,
+  ): UnaryCall<GetTopPagesRequest, GetTopPagesResponse>;
 }

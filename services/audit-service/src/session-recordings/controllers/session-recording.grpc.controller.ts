@@ -137,6 +137,54 @@ interface GetSessionEventsResponse {
   events: Buffer;
 }
 
+interface GetSessionStatsRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+}
+
+interface GetSessionStatsResponse {
+  totalSessions: number;
+  avgDuration: number;
+  totalPageViews: number;
+  totalClicks: number;
+  uniqueUsers: number;
+}
+
+interface GetDeviceBreakdownRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+}
+
+interface DeviceStats {
+  deviceType: string;
+  count: number;
+  percentage: number;
+}
+
+interface GetDeviceBreakdownResponse {
+  devices: DeviceStats[];
+}
+
+interface GetTopPagesRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+  limit: number;
+}
+
+interface PageStats {
+  path: string;
+  title: string;
+  views: number;
+  uniqueSessions: number;
+}
+
+interface GetTopPagesResponse {
+  pages: PageStats[];
+}
+
 @Controller()
 export class SessionRecordingGrpcController {
   private readonly logger = new Logger(SessionRecordingGrpcController.name);
@@ -475,6 +523,97 @@ export class SessionRecordingGrpcController {
       throw new RpcException({
         code: status.NOT_FOUND,
         message: 'Session not found',
+      });
+    }
+  }
+
+  @GrpcMethod('SessionRecordingService', 'GetSessionStats')
+  async getSessionStats(request: GetSessionStatsRequest): Promise<GetSessionStatsResponse> {
+    this.logger.debug(
+      `GetSessionStats: service=${request.serviceSlug}, startDate=${request.startDate?.seconds}`,
+    );
+
+    try {
+      const stats = await this.sessionRecordingService.getSessionStats({
+        startDate: request.startDate ? new Date(request.startDate.seconds * 1000) : undefined,
+        endDate: request.endDate ? new Date(request.endDate.seconds * 1000) : undefined,
+        serviceSlug: request.serviceSlug,
+      });
+
+      return {
+        totalSessions: stats.totalSessions,
+        avgDuration: stats.avgDuration,
+        totalPageViews: stats.totalPageViews,
+        totalClicks: stats.totalClicks,
+        uniqueUsers: stats.uniqueUsers,
+      };
+    } catch (error) {
+      this.logger.error(`GetSessionStats failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Failed to get session stats',
+      });
+    }
+  }
+
+  @GrpcMethod('SessionRecordingService', 'GetDeviceBreakdown')
+  async getDeviceBreakdown(
+    request: GetDeviceBreakdownRequest,
+  ): Promise<GetDeviceBreakdownResponse> {
+    this.logger.debug(
+      `GetDeviceBreakdown: service=${request.serviceSlug}, startDate=${request.startDate?.seconds}`,
+    );
+
+    try {
+      const devices = await this.sessionRecordingService.getDeviceBreakdown({
+        startDate: request.startDate ? new Date(request.startDate.seconds * 1000) : undefined,
+        endDate: request.endDate ? new Date(request.endDate.seconds * 1000) : undefined,
+        serviceSlug: request.serviceSlug,
+      });
+
+      return {
+        devices: devices.map((d) => ({
+          deviceType: d.deviceType,
+          count: d.count,
+          percentage: d.percentage,
+        })),
+      };
+    } catch (error) {
+      this.logger.error(`GetDeviceBreakdown failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Failed to get device breakdown',
+      });
+    }
+  }
+
+  @GrpcMethod('SessionRecordingService', 'GetTopPages')
+  async getTopPages(request: GetTopPagesRequest): Promise<GetTopPagesResponse> {
+    this.logger.debug(
+      `GetTopPages: service=${request.serviceSlug}, limit=${request.limit}, startDate=${request.startDate?.seconds}`,
+    );
+
+    try {
+      const pages = await this.sessionRecordingService.getTopPages({
+        startDate: request.startDate ? new Date(request.startDate.seconds * 1000) : undefined,
+        endDate: request.endDate ? new Date(request.endDate.seconds * 1000) : undefined,
+        serviceSlug: request.serviceSlug,
+        limit: request.limit || 10,
+      });
+
+      return {
+        pages: pages.map((p) => ({
+          path: p.path,
+          title: p.title,
+          views: p.views,
+          uniqueSessions: p.uniqueSessions,
+        })),
+      };
+    } catch (error) {
+      this.logger.error(`GetTopPages failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Failed to get top pages',
       });
     }
   }

@@ -75,4 +75,27 @@ export class SessionRecordingServiceClient {
         const method = this.methods[6], opt = this._transport.mergeOptions(options);
         return stackIntercept("unary", this._transport, method, opt, input);
     }
+    /**
+     * Analytics
+     *
+     * @generated from protobuf rpc: GetSessionStats
+     */
+    getSessionStats(input, options) {
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetDeviceBreakdown
+     */
+    getDeviceBreakdown(input, options) {
+        const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetTopPages
+     */
+    getTopPages(input, options) {
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        return stackIntercept("unary", this._transport, method, opt, input);
+    }
 }

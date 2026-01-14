@@ -1346,6 +1346,501 @@ class GetSessionEventsResponse$Type extends MessageType {
  * @generated MessageType for protobuf message session_recording.v1.GetSessionEventsResponse
  */
 export const GetSessionEventsResponse = new GetSessionEventsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetSessionStatsRequest$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.GetSessionStatsRequest", [
+            { no: 1, name: "start_date", kind: "message", T: () => Timestamp },
+            { no: 2, name: "end_date", kind: "message", T: () => Timestamp },
+            { no: 3, name: "service_slug", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* optional google.protobuf.Timestamp start_date */ 1:
+                    message.startDate = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.startDate);
+                    break;
+                case /* optional google.protobuf.Timestamp end_date */ 2:
+                    message.endDate = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.endDate);
+                    break;
+                case /* optional string service_slug */ 3:
+                    message.serviceSlug = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* optional google.protobuf.Timestamp start_date = 1; */
+        if (message.startDate)
+            Timestamp.internalBinaryWrite(message.startDate, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* optional google.protobuf.Timestamp end_date = 2; */
+        if (message.endDate)
+            Timestamp.internalBinaryWrite(message.endDate, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* optional string service_slug = 3; */
+        if (message.serviceSlug !== undefined)
+            writer.tag(3, WireType.LengthDelimited).string(message.serviceSlug);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetSessionStatsRequest
+ */
+export const GetSessionStatsRequest = new GetSessionStatsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetSessionStatsResponse$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.GetSessionStatsResponse", [
+            { no: 1, name: "total_sessions", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "avg_duration", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 3, name: "total_page_views", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "total_clicks", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "unique_users", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.totalSessions = 0;
+        message.avgDuration = 0;
+        message.totalPageViews = 0;
+        message.totalClicks = 0;
+        message.uniqueUsers = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 total_sessions */ 1:
+                    message.totalSessions = reader.int32();
+                    break;
+                case /* double avg_duration */ 2:
+                    message.avgDuration = reader.double();
+                    break;
+                case /* int32 total_page_views */ 3:
+                    message.totalPageViews = reader.int32();
+                    break;
+                case /* int32 total_clicks */ 4:
+                    message.totalClicks = reader.int32();
+                    break;
+                case /* int32 unique_users */ 5:
+                    message.uniqueUsers = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* int32 total_sessions = 1; */
+        if (message.totalSessions !== 0)
+            writer.tag(1, WireType.Varint).int32(message.totalSessions);
+        /* double avg_duration = 2; */
+        if (message.avgDuration !== 0)
+            writer.tag(2, WireType.Bit64).double(message.avgDuration);
+        /* int32 total_page_views = 3; */
+        if (message.totalPageViews !== 0)
+            writer.tag(3, WireType.Varint).int32(message.totalPageViews);
+        /* int32 total_clicks = 4; */
+        if (message.totalClicks !== 0)
+            writer.tag(4, WireType.Varint).int32(message.totalClicks);
+        /* int32 unique_users = 5; */
+        if (message.uniqueUsers !== 0)
+            writer.tag(5, WireType.Varint).int32(message.uniqueUsers);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetSessionStatsResponse
+ */
+export const GetSessionStatsResponse = new GetSessionStatsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceBreakdownRequest$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.GetDeviceBreakdownRequest", [
+            { no: 1, name: "start_date", kind: "message", T: () => Timestamp },
+            { no: 2, name: "end_date", kind: "message", T: () => Timestamp },
+            { no: 3, name: "service_slug", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* optional google.protobuf.Timestamp start_date */ 1:
+                    message.startDate = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.startDate);
+                    break;
+                case /* optional google.protobuf.Timestamp end_date */ 2:
+                    message.endDate = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.endDate);
+                    break;
+                case /* optional string service_slug */ 3:
+                    message.serviceSlug = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* optional google.protobuf.Timestamp start_date = 1; */
+        if (message.startDate)
+            Timestamp.internalBinaryWrite(message.startDate, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* optional google.protobuf.Timestamp end_date = 2; */
+        if (message.endDate)
+            Timestamp.internalBinaryWrite(message.endDate, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* optional string service_slug = 3; */
+        if (message.serviceSlug !== undefined)
+            writer.tag(3, WireType.LengthDelimited).string(message.serviceSlug);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetDeviceBreakdownRequest
+ */
+export const GetDeviceBreakdownRequest = new GetDeviceBreakdownRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeviceStats$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.DeviceStats", [
+            { no: 1, name: "device_type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "percentage", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.deviceType = "";
+        message.count = 0;
+        message.percentage = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string device_type */ 1:
+                    message.deviceType = reader.string();
+                    break;
+                case /* int32 count */ 2:
+                    message.count = reader.int32();
+                    break;
+                case /* double percentage */ 3:
+                    message.percentage = reader.double();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string device_type = 1; */
+        if (message.deviceType !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.deviceType);
+        /* int32 count = 2; */
+        if (message.count !== 0)
+            writer.tag(2, WireType.Varint).int32(message.count);
+        /* double percentage = 3; */
+        if (message.percentage !== 0)
+            writer.tag(3, WireType.Bit64).double(message.percentage);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.DeviceStats
+ */
+export const DeviceStats = new DeviceStats$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceBreakdownResponse$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.GetDeviceBreakdownResponse", [
+            { no: 1, name: "devices", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => DeviceStats }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.devices = [];
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated session_recording.v1.DeviceStats devices */ 1:
+                    message.devices.push(DeviceStats.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* repeated session_recording.v1.DeviceStats devices = 1; */
+        for (let i = 0; i < message.devices.length; i++)
+            DeviceStats.internalBinaryWrite(message.devices[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetDeviceBreakdownResponse
+ */
+export const GetDeviceBreakdownResponse = new GetDeviceBreakdownResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetTopPagesRequest$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.GetTopPagesRequest", [
+            { no: 1, name: "start_date", kind: "message", T: () => Timestamp },
+            { no: 2, name: "end_date", kind: "message", T: () => Timestamp },
+            { no: 3, name: "service_slug", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "limit", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.limit = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* optional google.protobuf.Timestamp start_date */ 1:
+                    message.startDate = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.startDate);
+                    break;
+                case /* optional google.protobuf.Timestamp end_date */ 2:
+                    message.endDate = Timestamp.internalBinaryRead(reader, reader.uint32(), options, message.endDate);
+                    break;
+                case /* optional string service_slug */ 3:
+                    message.serviceSlug = reader.string();
+                    break;
+                case /* int32 limit */ 4:
+                    message.limit = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* optional google.protobuf.Timestamp start_date = 1; */
+        if (message.startDate)
+            Timestamp.internalBinaryWrite(message.startDate, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* optional google.protobuf.Timestamp end_date = 2; */
+        if (message.endDate)
+            Timestamp.internalBinaryWrite(message.endDate, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* optional string service_slug = 3; */
+        if (message.serviceSlug !== undefined)
+            writer.tag(3, WireType.LengthDelimited).string(message.serviceSlug);
+        /* int32 limit = 4; */
+        if (message.limit !== 0)
+            writer.tag(4, WireType.Varint).int32(message.limit);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetTopPagesRequest
+ */
+export const GetTopPagesRequest = new GetTopPagesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class PageStats$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.PageStats", [
+            { no: 1, name: "path", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "title", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "views", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "unique_sessions", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.path = "";
+        message.title = "";
+        message.views = 0;
+        message.uniqueSessions = 0;
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string path */ 1:
+                    message.path = reader.string();
+                    break;
+                case /* string title */ 2:
+                    message.title = reader.string();
+                    break;
+                case /* int32 views */ 3:
+                    message.views = reader.int32();
+                    break;
+                case /* int32 unique_sessions */ 4:
+                    message.uniqueSessions = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* string path = 1; */
+        if (message.path !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.path);
+        /* string title = 2; */
+        if (message.title !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.title);
+        /* int32 views = 3; */
+        if (message.views !== 0)
+            writer.tag(3, WireType.Varint).int32(message.views);
+        /* int32 unique_sessions = 4; */
+        if (message.uniqueSessions !== 0)
+            writer.tag(4, WireType.Varint).int32(message.uniqueSessions);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.PageStats
+ */
+export const PageStats = new PageStats$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetTopPagesResponse$Type extends MessageType {
+    constructor() {
+        super("session_recording.v1.GetTopPagesResponse", [
+            { no: 1, name: "pages", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => PageStats }
+        ]);
+    }
+    create(value) {
+        const message = globalThis.Object.create((this.messagePrototype));
+        message.pages = [];
+        if (value !== undefined)
+            reflectionMergePartial(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader, length, options, target) {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated session_recording.v1.PageStats pages */ 1:
+                    message.pages.push(PageStats.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message, writer, options) {
+        /* repeated session_recording.v1.PageStats pages = 1; */
+        for (let i = 0; i < message.pages.length; i++)
+            PageStats.internalBinaryWrite(message.pages[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetTopPagesResponse
+ */
+export const GetTopPagesResponse = new GetTopPagesResponse$Type();
 /**
  * @generated ServiceType for protobuf service session_recording.v1.SessionRecordingService
  */
@@ -1356,5 +1851,8 @@ export const SessionRecordingService = new ServiceType("session_recording.v1.Ses
     { name: "SavePageView", options: {}, I: SavePageViewRequest, O: SavePageViewResponse },
     { name: "SaveCustomEvent", options: {}, I: SaveCustomEventRequest, O: SaveCustomEventResponse },
     { name: "ListSessions", options: {}, I: ListSessionsRequest, O: ListSessionsResponse },
-    { name: "GetSessionEvents", options: {}, I: GetSessionEventsRequest, O: GetSessionEventsResponse }
+    { name: "GetSessionEvents", options: {}, I: GetSessionEventsRequest, O: GetSessionEventsResponse },
+    { name: "GetSessionStats", options: {}, I: GetSessionStatsRequest, O: GetSessionStatsResponse },
+    { name: "GetDeviceBreakdown", options: {}, I: GetDeviceBreakdownRequest, O: GetDeviceBreakdownResponse },
+    { name: "GetTopPages", options: {}, I: GetTopPagesRequest, O: GetTopPagesResponse }
 ]);

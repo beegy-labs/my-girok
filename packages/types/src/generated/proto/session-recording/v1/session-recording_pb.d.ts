@@ -446,6 +446,142 @@ export interface GetSessionEventsResponse {
   events: Uint8Array;
 }
 /**
+ * @generated from protobuf message session_recording.v1.GetSessionStatsRequest
+ */
+export interface GetSessionStatsRequest {
+  /**
+   * @generated from protobuf field: optional google.protobuf.Timestamp start_date = 1
+   */
+  startDate?: Timestamp;
+  /**
+   * @generated from protobuf field: optional google.protobuf.Timestamp end_date = 2
+   */
+  endDate?: Timestamp;
+  /**
+   * @generated from protobuf field: optional string service_slug = 3
+   */
+  serviceSlug?: string;
+}
+/**
+ * @generated from protobuf message session_recording.v1.GetSessionStatsResponse
+ */
+export interface GetSessionStatsResponse {
+  /**
+   * @generated from protobuf field: int32 total_sessions = 1
+   */
+  totalSessions: number;
+  /**
+   * @generated from protobuf field: double avg_duration = 2
+   */
+  avgDuration: number;
+  /**
+   * @generated from protobuf field: int32 total_page_views = 3
+   */
+  totalPageViews: number;
+  /**
+   * @generated from protobuf field: int32 total_clicks = 4
+   */
+  totalClicks: number;
+  /**
+   * @generated from protobuf field: int32 unique_users = 5
+   */
+  uniqueUsers: number;
+}
+/**
+ * @generated from protobuf message session_recording.v1.GetDeviceBreakdownRequest
+ */
+export interface GetDeviceBreakdownRequest {
+  /**
+   * @generated from protobuf field: optional google.protobuf.Timestamp start_date = 1
+   */
+  startDate?: Timestamp;
+  /**
+   * @generated from protobuf field: optional google.protobuf.Timestamp end_date = 2
+   */
+  endDate?: Timestamp;
+  /**
+   * @generated from protobuf field: optional string service_slug = 3
+   */
+  serviceSlug?: string;
+}
+/**
+ * @generated from protobuf message session_recording.v1.DeviceStats
+ */
+export interface DeviceStats {
+  /**
+   * @generated from protobuf field: string device_type = 1
+   */
+  deviceType: string;
+  /**
+   * @generated from protobuf field: int32 count = 2
+   */
+  count: number;
+  /**
+   * @generated from protobuf field: double percentage = 3
+   */
+  percentage: number;
+}
+/**
+ * @generated from protobuf message session_recording.v1.GetDeviceBreakdownResponse
+ */
+export interface GetDeviceBreakdownResponse {
+  /**
+   * @generated from protobuf field: repeated session_recording.v1.DeviceStats devices = 1
+   */
+  devices: DeviceStats[];
+}
+/**
+ * @generated from protobuf message session_recording.v1.GetTopPagesRequest
+ */
+export interface GetTopPagesRequest {
+  /**
+   * @generated from protobuf field: optional google.protobuf.Timestamp start_date = 1
+   */
+  startDate?: Timestamp;
+  /**
+   * @generated from protobuf field: optional google.protobuf.Timestamp end_date = 2
+   */
+  endDate?: Timestamp;
+  /**
+   * @generated from protobuf field: optional string service_slug = 3
+   */
+  serviceSlug?: string;
+  /**
+   * @generated from protobuf field: int32 limit = 4
+   */
+  limit: number;
+}
+/**
+ * @generated from protobuf message session_recording.v1.PageStats
+ */
+export interface PageStats {
+  /**
+   * @generated from protobuf field: string path = 1
+   */
+  path: string;
+  /**
+   * @generated from protobuf field: string title = 2
+   */
+  title: string;
+  /**
+   * @generated from protobuf field: int32 views = 3
+   */
+  views: number;
+  /**
+   * @generated from protobuf field: int32 unique_sessions = 4
+   */
+  uniqueSessions: number;
+}
+/**
+ * @generated from protobuf message session_recording.v1.GetTopPagesResponse
+ */
+export interface GetTopPagesResponse {
+  /**
+   * @generated from protobuf field: repeated session_recording.v1.PageStats pages = 1
+   */
+  pages: PageStats[];
+}
+/**
  * @generated from protobuf enum session_recording.v1.DeviceType
  */
 export declare enum DeviceType {
@@ -809,6 +945,158 @@ declare class GetSessionEventsResponse$Type extends MessageType<GetSessionEvents
  * @generated MessageType for protobuf message session_recording.v1.GetSessionEventsResponse
  */
 export declare const GetSessionEventsResponse: GetSessionEventsResponse$Type;
+declare class GetSessionStatsRequest$Type extends MessageType<GetSessionStatsRequest> {
+  constructor();
+  create(value?: PartialMessage<GetSessionStatsRequest>): GetSessionStatsRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetSessionStatsRequest,
+  ): GetSessionStatsRequest;
+  internalBinaryWrite(
+    message: GetSessionStatsRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetSessionStatsRequest
+ */
+export declare const GetSessionStatsRequest: GetSessionStatsRequest$Type;
+declare class GetSessionStatsResponse$Type extends MessageType<GetSessionStatsResponse> {
+  constructor();
+  create(value?: PartialMessage<GetSessionStatsResponse>): GetSessionStatsResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetSessionStatsResponse,
+  ): GetSessionStatsResponse;
+  internalBinaryWrite(
+    message: GetSessionStatsResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetSessionStatsResponse
+ */
+export declare const GetSessionStatsResponse: GetSessionStatsResponse$Type;
+declare class GetDeviceBreakdownRequest$Type extends MessageType<GetDeviceBreakdownRequest> {
+  constructor();
+  create(value?: PartialMessage<GetDeviceBreakdownRequest>): GetDeviceBreakdownRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetDeviceBreakdownRequest,
+  ): GetDeviceBreakdownRequest;
+  internalBinaryWrite(
+    message: GetDeviceBreakdownRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetDeviceBreakdownRequest
+ */
+export declare const GetDeviceBreakdownRequest: GetDeviceBreakdownRequest$Type;
+declare class DeviceStats$Type extends MessageType<DeviceStats> {
+  constructor();
+  create(value?: PartialMessage<DeviceStats>): DeviceStats;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: DeviceStats,
+  ): DeviceStats;
+  internalBinaryWrite(
+    message: DeviceStats,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.DeviceStats
+ */
+export declare const DeviceStats: DeviceStats$Type;
+declare class GetDeviceBreakdownResponse$Type extends MessageType<GetDeviceBreakdownResponse> {
+  constructor();
+  create(value?: PartialMessage<GetDeviceBreakdownResponse>): GetDeviceBreakdownResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetDeviceBreakdownResponse,
+  ): GetDeviceBreakdownResponse;
+  internalBinaryWrite(
+    message: GetDeviceBreakdownResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetDeviceBreakdownResponse
+ */
+export declare const GetDeviceBreakdownResponse: GetDeviceBreakdownResponse$Type;
+declare class GetTopPagesRequest$Type extends MessageType<GetTopPagesRequest> {
+  constructor();
+  create(value?: PartialMessage<GetTopPagesRequest>): GetTopPagesRequest;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetTopPagesRequest,
+  ): GetTopPagesRequest;
+  internalBinaryWrite(
+    message: GetTopPagesRequest,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetTopPagesRequest
+ */
+export declare const GetTopPagesRequest: GetTopPagesRequest$Type;
+declare class PageStats$Type extends MessageType<PageStats> {
+  constructor();
+  create(value?: PartialMessage<PageStats>): PageStats;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: PageStats,
+  ): PageStats;
+  internalBinaryWrite(
+    message: PageStats,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.PageStats
+ */
+export declare const PageStats: PageStats$Type;
+declare class GetTopPagesResponse$Type extends MessageType<GetTopPagesResponse> {
+  constructor();
+  create(value?: PartialMessage<GetTopPagesResponse>): GetTopPagesResponse;
+  internalBinaryRead(
+    reader: IBinaryReader,
+    length: number,
+    options: BinaryReadOptions,
+    target?: GetTopPagesResponse,
+  ): GetTopPagesResponse;
+  internalBinaryWrite(
+    message: GetTopPagesResponse,
+    writer: IBinaryWriter,
+    options: BinaryWriteOptions,
+  ): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message session_recording.v1.GetTopPagesResponse
+ */
+export declare const GetTopPagesResponse: GetTopPagesResponse$Type;
 /**
  * @generated ServiceType for protobuf service session_recording.v1.SessionRecordingService
  */
