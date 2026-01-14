@@ -49,11 +49,10 @@ import PretendardBold from '@my-girok/design-tokens/fonts/pretendard/Pretendard-
 
 ## 허용된 외부 서비스
 
-| 서비스           | 도메인               | 이유             |
-| ---------------- | -------------------- | ---------------- |
-| Rybbit Analytics | rybbit.girok.dev     | 자체 호스팅 분석 |
-| API Backend      | my-api-dev.girok.dev | 우리 인프라      |
-| OAuth Providers  | Various              | 런타임 요구사항  |
+| 서비스          | 도메인               | 이유            |
+| --------------- | -------------------- | --------------- |
+| API Backend     | my-api-dev.girok.dev | 우리 인프라     |
+| OAuth Providers | Various              | 런타임 요구사항 |
 
 ## 새 폰트 추가
 
