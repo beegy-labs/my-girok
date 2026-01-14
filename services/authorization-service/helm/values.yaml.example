@@ -14,6 +14,10 @@
 # Development: 1, Staging: 2, Production: 2+
 replicaCount: 2
 
+# Database migration (goose)
+migration:
+  enabled: true
+
 image:
   repository: your-registry.io/my-girok/authorization-service
   pullPolicy: IfNotPresent

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 import {
   SessionQueryDto,
@@ -10,7 +11,14 @@ import {
 
 @Injectable()
 export class SessionService {
-  constructor(private readonly clickhouse: ClickHouseService) {}
+  private readonly database: string;
+
+  constructor(
+    private readonly clickhouse: ClickHouseService,
+    private readonly configService: ConfigService,
+  ) {
+    this.database = this.configService.get<string>('CLICKHOUSE_DATABASE') || 'analytics_db';
+  }
 
   async getSummary(query: SessionQueryDto): Promise<SessionSummary> {
     const { conditions, params } = this.buildFilters(query);
@@ -59,7 +67,7 @@ export class SessionService {
         utm_source as utmSource,
         utm_medium as utmMedium,
         utm_campaign as utmCampaign
-      FROM analytics_db.sessions
+      FROM ${this.database}.sessions
       WHERE ${whereClause}
       ORDER BY started_at DESC
       LIMIT {limit:UInt32}
@@ -188,7 +196,7 @@ export class SessionService {
         avg(event_count) as avgEvents,
         countIf(is_bounce = true) * 100.0 / count() as bounceRate,
         countIf(is_converted = true) * 100.0 / count() as conversionRate
-      FROM analytics_db.sessions
+      FROM ${this.database}.sessions
       WHERE ${whereClause}
     `;
 
@@ -226,7 +234,7 @@ export class SessionService {
       SELECT
         ${dimension} as dimension,
         count() as count
-      FROM analytics_db.sessions
+      FROM ${this.database}.sessions
       WHERE ${whereClause}
         AND ${dimension} IS NOT NULL
         AND ${dimension} != ''
@@ -253,7 +261,7 @@ export class SessionService {
         toString(timestamp) as timestamp,
         page_path as pagePath,
         page_title as pageTitle
-      FROM analytics_db.page_views
+      FROM ${this.database}.page_views
       WHERE session_id = {sessionId:UUID}
       ORDER BY timestamp ASC
     `;
@@ -274,7 +282,7 @@ export class SessionService {
         toString(timestamp) as timestamp,
         event_name as eventName,
         properties
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE session_id = {sessionId:UUID}
       ORDER BY timestamp ASC
     `;
@@ -305,7 +313,7 @@ export class SessionService {
           '>30m'
         ) as range,
         count() as count
-      FROM analytics_db.sessions
+      FROM ${this.database}.sessions
       WHERE ${whereClause}
       GROUP BY range
       ORDER BY
@@ -343,7 +351,7 @@ export class SessionService {
           '>10 pages'
         ) as range,
         count() as count
-      FROM analytics_db.sessions
+      FROM ${this.database}.sessions
       WHERE ${whereClause}
       GROUP BY range
       ORDER BY
@@ -373,7 +381,7 @@ export class SessionService {
       SELECT
         toHour(started_at) as hour,
         count() as count
-      FROM analytics_db.sessions
+      FROM ${this.database}.sessions
       WHERE ${whereClause}
       GROUP BY hour
       ORDER BY hour
@@ -397,7 +405,7 @@ export class SessionService {
       SELECT
         toDayOfWeek(started_at) as dayNum,
         count() as count
-      FROM analytics_db.sessions
+      FROM ${this.database}.sessions
       WHERE ${whereClause}
       GROUP BY dayNum
       ORDER BY dayNum

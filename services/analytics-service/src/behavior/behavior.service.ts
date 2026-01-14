@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 import {
   BehaviorQueryDto,
@@ -25,7 +26,14 @@ const DATE_TRUNC_FUNCTIONS: Record<AggregationInterval, string> = {
 
 @Injectable()
 export class BehaviorService {
-  constructor(private readonly clickhouse: ClickHouseService) {}
+  private readonly database: string;
+
+  constructor(
+    private readonly clickhouse: ClickHouseService,
+    private readonly configService: ConfigService,
+  ) {
+    this.database = this.configService.get<string>('CLICKHOUSE_DATABASE') || 'analytics_db';
+  }
 
   async getSummary(query: BehaviorQueryDto): Promise<BehaviorSummary> {
     const [totalEvents, uniqueUsers, uniqueSessions, topEvents, eventsByCategory, timeSeries] =
@@ -71,7 +79,7 @@ export class BehaviorService {
         event_name as eventName,
         event_category as category,
         count() as count
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE ${whereClause}
       GROUP BY event_name, event_category
       ORDER BY count DESC
@@ -105,7 +113,7 @@ export class BehaviorService {
       SELECT
         ${truncFunc}(timestamp) as timestamp,
         count() as count
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}
       GROUP BY timestamp
@@ -162,7 +170,7 @@ export class BehaviorService {
       SELECT
         event_category as category,
         count() as count
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}
       GROUP BY event_category
@@ -192,7 +200,7 @@ export class BehaviorService {
   private async getTotalEvents(query: BehaviorQueryDto): Promise<number> {
     const sql = `
       SELECT count() as count
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}
     `;
@@ -207,7 +215,7 @@ export class BehaviorService {
   private async getUniqueUsers(query: BehaviorQueryDto): Promise<number> {
     const sql = `
       SELECT uniq(user_id) as count
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}
         AND user_id IS NOT NULL
@@ -223,7 +231,7 @@ export class BehaviorService {
   private async getUniqueSessions(query: BehaviorQueryDto): Promise<number> {
     const sql = `
       SELECT uniq(session_id) as count
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE timestamp >= {startDate:DateTime64}
         AND timestamp <= {endDate:DateTime64}
     `;
@@ -245,7 +253,7 @@ export class BehaviorService {
         uniq(session_id) as uniqueSessions,
         min(timestamp) as firstSeen,
         max(timestamp) as lastSeen
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE ${whereClause}
     `;
 
@@ -275,7 +283,7 @@ export class BehaviorService {
         event_name as eventName,
         event_category as category,
         count() as count
-      FROM analytics_db.events
+      FROM ${this.database}.events
       WHERE ${whereClause}
       GROUP BY event_name, event_category
       ORDER BY count DESC

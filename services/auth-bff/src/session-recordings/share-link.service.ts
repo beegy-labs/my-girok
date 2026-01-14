@@ -19,13 +19,14 @@ export class ShareLinkService {
     this.baseUrl = this.configService.get<string>('SHARE_LINK_BASE_URL') || 'http://localhost:3002';
 
     // Initialize Valkey/Redis client
-    const redisHost = this.configService.get<string>('REDIS_HOST') || 'localhost';
-    const redisPort = this.configService.get<number>('REDIS_PORT') || 6379;
+    const valkeyHost = this.configService.get<string>('VALKEY_HOST') || 'localhost';
+    const valkeyPort = this.configService.get<number>('VALKEY_PORT') || 6379;
+    const valkeyDb = this.configService.get<number>('VALKEY_DB') || 3;
 
     this.redisClient = new Redis({
-      host: redisHost,
-      port: redisPort,
-      db: this.configService.get<number>('REDIS_DB_SHARE_LINKS') || 3,
+      host: valkeyHost,
+      port: valkeyPort,
+      db: valkeyDb,
       retryStrategy: (times: number) => {
         if (times > 3) {
           this.logger.error('Failed to connect to Valkey after 3 retries');
