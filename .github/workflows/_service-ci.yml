@@ -80,11 +80,8 @@ jobs:
 
   build:
     name: Build
-    if: |
-      github.event_name == 'push' &&
-      contains(fromJSON('["develop", "release", "main"]'), github.ref_name) &&
-      (needs.check.result == 'success' || needs.check.result == 'skipped')
-    needs: [check]
+    # Run independently of check job (check only runs on PR)
+    if: github.event_name == 'push' && contains(fromJSON('["develop", "release", "main"]'), github.ref_name)
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 60
     outputs:
