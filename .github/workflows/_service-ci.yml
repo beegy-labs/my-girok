@@ -39,9 +39,16 @@ on:
 env:
   REGISTRY: gitea.girok.dev
 
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.service_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     name: Check
+    # Only run on PR (push to protected branches already passed PR checks)
+    if: github.event_name == 'pull_request'
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 60
     steps:
@@ -73,8 +80,11 @@ jobs:
 
   build:
     name: Build
-    if: github.event_name == 'push' && contains(fromJSON('["develop", "release", "main"]'), github.ref_name)
-    needs: check
+    if: |
+      github.event_name == 'push' &&
+      contains(fromJSON('["develop", "release", "main"]'), github.ref_name) &&
+      (needs.check.result == 'success' || needs.check.result == 'skipped')
+    needs: [check]
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 60
     outputs:
