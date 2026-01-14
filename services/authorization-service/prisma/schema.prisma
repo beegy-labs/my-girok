@@ -41,8 +41,8 @@ model AuthorizationModel {
   compiledModel   Json      @map("compiled_model")
   typeDefinitions Json      @map("type_definitions")
   isActive        Boolean?  @default(false) @map("is_active")
-  notes           String?   @map("notes")
   createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  notes           String?   @map("notes")
 
   @@index([isActive], map: "idx_authorization_models_active")
   @@index([versionId], map: "idx_authorization_models_version")
