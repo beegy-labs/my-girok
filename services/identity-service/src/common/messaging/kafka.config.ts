@@ -20,8 +20,8 @@ export interface RedpandaConfig {
  * Get Kafka configuration from environment
  */
 export function getKafkaConfig(): KafkaConfig {
-  const brokers = process.env.REDPANDA_BROKERS?.split(',') || ['localhost:9092'];
-  const clientId = process.env.REDPANDA_CLIENT_ID || 'identity-service';
+  const brokers = process.env.KAFKA_BROKERS?.split(',') || ['localhost:9092'];
+  const clientId = process.env.KAFKA_CLIENT_ID || 'identity-service';
 
   return {
     clientId,
