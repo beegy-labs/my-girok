@@ -185,12 +185,14 @@ CREATE INDEX idx_teams_service ON teams (service_id);
 -- ============================================
 -- Returns the current transaction ID for tuple versioning
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION get_current_txid()
 RETURNS BIGINT AS $$
 BEGIN
     RETURN txid_current();
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 
 -- +goose Down
