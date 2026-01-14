@@ -106,10 +106,43 @@ export class AuthorizationService {
         version: parseInt(m.versionId, 10) || 0,
         isActive: m.isActive,
         createdAt: m.createdAt,
+        content: m.dslSource,
+        createdBy: 'system',
       }));
     } catch (error) {
       this.logger.error(`Failed to get model versions: ${error}`);
       return [];
+    }
+  }
+
+  /**
+   * Get model by ID
+   */
+  async getModelById(modelId: string) {
+    try {
+      const result = await this.authzClient.listModels(100);
+
+      if (!result) {
+        throw new Error('Failed to get model: No response from server');
+      }
+
+      const model = result.models.find((m) => m.modelId === modelId);
+
+      if (!model) {
+        throw new Error(`Model not found: ${modelId}`);
+      }
+
+      return {
+        id: model.modelId,
+        version: parseInt(model.versionId, 10) || 0,
+        isActive: model.isActive,
+        createdAt: model.createdAt,
+        content: model.dslSource,
+        createdBy: 'system',
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get model by ID: ${error}`);
+      throw error;
     }
   }
 

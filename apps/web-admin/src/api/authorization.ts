@@ -131,6 +131,22 @@ export const authorizationApi = {
   },
 
   /**
+   * Import model from JSON or DSL
+   */
+  importModel: async (
+    content: string,
+    notes?: string,
+    activate?: boolean,
+  ): Promise<AuthorizationModel> => {
+    const response = await apiClient.post<AuthorizationModel>('/authorization/model/import', {
+      content,
+      notes,
+      activate,
+    });
+    return response.data;
+  },
+
+  /**
    * Grant permission
    */
   grant: async (request: GrantRevokeRequest): Promise<void> => {

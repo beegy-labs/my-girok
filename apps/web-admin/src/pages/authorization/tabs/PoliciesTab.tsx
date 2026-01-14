@@ -1,9 +1,24 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Save, Check, X, Loader2, History, Eye, RotateCcw, AlertCircle } from 'lucide-react';
+import {
+  Save,
+  Check,
+  X,
+  Loader2,
+  History,
+  Eye,
+  RotateCcw,
+  AlertCircle,
+  Upload,
+  Download,
+} from 'lucide-react';
 import { authorizationApi, type AuthorizationModel } from '../../../api/authorization';
 import { Card } from '../../../components/atoms/Card';
 import { ModelDiff } from '../../../components/ModelDiff';
+import { MonacoDiffViewer } from '../../../components/MonacoDiffViewer';
+import { ModelExport } from '../../../components/ModelExport';
+import { ModelImport } from '../../../components/ModelImport';
+import { Modal } from '../../../components/molecules/Modal';
 import { useApiError } from '../../../hooks/useApiError';
 import { useApiMutation } from '../../../hooks/useApiMutation';
 
@@ -19,6 +34,10 @@ export default function PoliciesTab() {
   } | null>(null);
   const [selectedVersion, setSelectedVersion] = useState<AuthorizationModel | null>(null);
   const [showDiff, setShowDiff] = useState(false);
+  const [diffMode, setDiffMode] = useState<'simple' | 'monaco'>('simple');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportingVersion, setExportingVersion] = useState<AuthorizationModel | null>(null);
 
   const { executeWithErrorHandling } = useApiError({
     context: 'PoliciesTab.fetchModel',
@@ -116,6 +135,16 @@ export default function PoliciesTab() {
     handleActivate(version.id);
   };
 
+  const handleExport = (version: AuthorizationModel) => {
+    setExportingVersion(version);
+    setShowExportModal(true);
+  };
+
+  const handleImportComplete = () => {
+    setShowImportModal(false);
+    fetchModel();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -134,6 +163,28 @@ export default function PoliciesTab() {
               {t('authorization.comparingVersions', 'Comparing Versions')}
             </h3>
             <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 px-2 py-1 bg-theme-background-secondary rounded-lg border border-theme-border-default">
+                <button
+                  onClick={() => setDiffMode('simple')}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    diffMode === 'simple'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-theme-text-secondary hover:text-theme-text-primary'
+                  }`}
+                >
+                  {t('authorization.simpleDiff', 'Simple')}
+                </button>
+                <button
+                  onClick={() => setDiffMode('monaco')}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    diffMode === 'monaco'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-theme-text-secondary hover:text-theme-text-primary'
+                  }`}
+                >
+                  {t('authorization.sideBySide', 'Side-by-Side')}
+                </button>
+              </div>
               <button
                 onClick={() => handleRollback(selectedVersion)}
                 className="flex items-center gap-2 px-3 py-2 text-sm bg-theme-status-warning-background text-theme-status-warning-text rounded-lg hover:opacity-80 transition-colors"
@@ -162,12 +213,22 @@ export default function PoliciesTab() {
             </div>
           </div>
 
-          <ModelDiff
-            oldContent={selectedVersion.content}
-            newContent={activeModel.content}
-            oldLabel={`v${selectedVersion.version} (${new Date(selectedVersion.createdAt).toLocaleString()})`}
-            newLabel={`v${activeModel.version} - Active (${new Date(activeModel.createdAt).toLocaleString()})`}
-          />
+          {diffMode === 'simple' ? (
+            <ModelDiff
+              oldContent={selectedVersion.content}
+              newContent={activeModel.content}
+              oldLabel={`v${selectedVersion.version} (${new Date(selectedVersion.createdAt).toLocaleString()})`}
+              newLabel={`v${activeModel.version} - Active (${new Date(activeModel.createdAt).toLocaleString()})`}
+            />
+          ) : (
+            <MonacoDiffViewer
+              oldContent={selectedVersion.content}
+              newContent={activeModel.content}
+              oldLabel={`v${selectedVersion.version} (${new Date(selectedVersion.createdAt).toLocaleString()})`}
+              newLabel={`v${activeModel.version} - Active (${new Date(activeModel.createdAt).toLocaleString()})`}
+              height="600px"
+            />
+          )}
         </Card>
       )}
 
@@ -180,6 +241,13 @@ export default function PoliciesTab() {
                 {t('authorization.policyEditor', 'Policy Editor')}
               </h3>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
+                >
+                  <Upload className="w-4 h-4" />
+                  {t('authorization.import', 'Import')}
+                </button>
                 <button
                   onClick={handleValidate}
                   className="px-3 py-2 text-sm border border-theme-border-default rounded-lg hover:bg-theme-bg-secondary transition-colors"
@@ -291,23 +359,32 @@ export default function PoliciesTab() {
                       {t('common.by', 'By')}: {version.createdBy}
                     </div>
 
-                    {!version.isActive && activeModel && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() => handleViewDiff(version)}
-                          className="flex items-center gap-1 px-2 py-1 text-xs border border-theme-border-default rounded hover:bg-theme-bg-secondary transition-colors"
-                        >
-                          <Eye className="w-3 h-3" />
-                          {t('authorization.viewDiff', 'View Diff')}
-                        </button>
-                        <button
-                          onClick={() => handleActivate(version.id)}
-                          className="flex items-center gap-1 px-2 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors"
-                        >
-                          {t('authorization.activate', 'Activate')}
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => handleExport(version)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs border border-theme-border-default rounded hover:bg-theme-bg-secondary transition-colors"
+                      >
+                        <Download className="w-3 h-3" />
+                        {t('authorization.export', 'Export')}
+                      </button>
+                      {!version.isActive && activeModel && (
+                        <>
+                          <button
+                            onClick={() => handleViewDiff(version)}
+                            className="flex items-center gap-1 px-2 py-1 text-xs border border-theme-border-default rounded hover:bg-theme-bg-secondary transition-colors"
+                          >
+                            <Eye className="w-3 h-3" />
+                            {t('authorization.viewDiff', 'View Diff')}
+                          </button>
+                          <button
+                            onClick={() => handleActivate(version.id)}
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors"
+                          >
+                            {t('authorization.activate', 'Activate')}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -315,6 +392,34 @@ export default function PoliciesTab() {
           </Card>
         </div>
       </div>
+
+      {/* Import Modal */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        title={t('authorization.import', 'Import Model')}
+      >
+        <ModelImport onImported={handleImportComplete} onClose={() => setShowImportModal(false)} />
+      </Modal>
+
+      {/* Export Modal */}
+      <Modal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        title={
+          exportingVersion
+            ? `${t('authorization.export', 'Export')} v${exportingVersion.version}`
+            : t('authorization.export', 'Export')
+        }
+      >
+        {exportingVersion && (
+          <ModelExport
+            modelId={exportingVersion.id}
+            version={exportingVersion.version}
+            onClose={() => setShowExportModal(false)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

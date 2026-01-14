@@ -28,9 +28,13 @@ const SessionRecordingsPage = lazy(
   () => import('./pages/system/session-recordings/SessionRecordingsPage'),
 );
 const SessionDetailPage = lazy(() => import('./pages/system/session-recordings/SessionDetailPage'));
+const SessionAnalyticsPage = lazy(
+  () => import('./pages/system/session-recordings/SessionAnalyticsPage'),
+);
 const UsersOverviewPage = lazy(() => import('./pages/users/UsersOverviewPage'));
 const UserActivityPage = lazy(() => import('./pages/users/UserActivityPage'));
 const AuthorizationPage = lazy(() => import('./pages/authorization/AuthorizationPage'));
+const SharedSessionPage = lazy(() => import('./pages/shared/SharedSessionPage'));
 
 // Page wrapper with Suspense and Error Boundary
 function PageWrapper() {
@@ -57,6 +61,20 @@ export const router = createBrowserRouter([
   {
     path: '/login/mfa',
     element: <MfaPage />,
+  },
+  {
+    path: '/shared/:shareToken',
+    element: (
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-screen">
+            <Spinner size="lg" />
+          </div>
+        }
+      >
+        <SharedSessionPage />
+      </Suspense>
+    ),
   },
   {
     path: '/',
@@ -215,6 +233,14 @@ export const router = createBrowserRouter([
             element: (
               <PrivateRoute permission="audit:read">
                 <SessionRecordingsPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: 'system/session-recordings/analytics',
+            element: (
+              <PrivateRoute permission="audit:read">
+                <SessionAnalyticsPage />
               </PrivateRoute>
             ),
           },

@@ -26,37 +26,24 @@ export function SessionExport({ sessionId, onClose }: SessionExportProps) {
     setExporting(true);
     try {
       const response = await apiClient.post(
-        `/admin/session-recordings/export/${sessionId}`,
+        `/recordings/sessions/${sessionId}/export`,
         {
           format: exportFormat,
           includeMetadata,
           includeEvents,
         },
         {
-          responseType: exportFormat === 'json' ? 'json' : 'blob',
+          responseType: 'blob',
         },
       );
 
-      if (exportFormat === 'json') {
-        // Download JSON
-        const blob = new Blob([JSON.stringify(response.data, null, 2)], {
-          type: 'application/json',
-        });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `session-${sessionId}.json`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } else {
-        // Download binary (video/pdf)
-        const url = window.URL.createObjectURL(response.data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `session-${sessionId}.${exportFormat}`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      }
+      // Download the file
+      const url = window.URL.createObjectURL(response.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `session-${sessionId}.${exportFormat}`;
+      a.click();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Export failed:', error);
       alert('Export failed. Please try again.');
@@ -68,7 +55,7 @@ export function SessionExport({ sessionId, onClose }: SessionExportProps) {
   const handleGenerateLink = async () => {
     setExporting(true);
     try {
-      const response = await apiClient.post(`/admin/session-recordings/share/${sessionId}`, {
+      const response = await apiClient.post(`/recordings/sessions/${sessionId}/share`, {
         expiresIn: linkExpiry,
       });
 

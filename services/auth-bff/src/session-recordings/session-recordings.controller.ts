@@ -8,9 +8,10 @@ import {
   HttpCode,
   HttpStatus,
   Req,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiQuery } from '@nestjs/swagger';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { Public, AllowedAccountTypes } from '../common/decorators';
 import { AccountType } from '../config/constants';
 import {
@@ -18,6 +19,7 @@ import {
   DeviceType,
   ActorType,
 } from '../grpc-clients/session-recording.client';
+import { ShareLinkService } from './share-link.service';
 
 // ============================================================
 // DTOs
@@ -83,6 +85,12 @@ class ListSessionsQueryDto {
   endDate?: string;
   page?: number;
   limit?: number;
+}
+
+class ExportSessionDto {
+  format!: 'json';
+  includeMetadata?: boolean;
+  includeEvents?: boolean;
 }
 
 // ============================================================
@@ -190,7 +198,10 @@ function timestampFromProto(timestamp: { seconds: number; nanos: number }): stri
 @ApiTags('recordings')
 @Controller('recordings')
 export class SessionRecordingsController {
-  constructor(private readonly sessionRecordingClient: SessionRecordingGrpcClient) {}
+  constructor(
+    private readonly sessionRecordingClient: SessionRecordingGrpcClient,
+    private readonly shareLinkService: ShareLinkService,
+  ) {}
 
   /**
    * Save event batch from tracking SDK
@@ -417,5 +428,204 @@ export class SessionRecordingsController {
       },
       events: JSON.parse(result.events.toString('utf8')),
     };
+  }
+
+  /**
+   * Export session to JSON (admin only)
+   */
+  @Post('sessions/:sessionId/export')
+  @AllowedAccountTypes(AccountType.ADMIN)
+  @ApiCookieAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Export session to JSON' })
+  @ApiResponse({ status: 200, description: 'Session exported as JSON file' })
+  @ApiResponse({ status: 404, description: 'Session not found' })
+  async exportSession(
+    @Param('sessionId') sessionId: string,
+    @Body() dto: ExportSessionDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const result = await this.sessionRecordingClient.getSessionEvents({ sessionId });
+
+    if (!result) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    const includeMetadata = dto.includeMetadata !== false;
+    const includeEvents = dto.includeEvents !== false;
+
+    const exportData: Record<string, unknown> = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      sessionId: result.sessionId,
+    };
+
+    if (includeMetadata) {
+      const m = result.metadata;
+      exportData.metadata = {
+        sessionId: m.sessionId,
+        actorId: m.actorId,
+        actorType: actorTypeFromEnum(m.actorType || 0),
+        actorEmail: m.actorEmail,
+        serviceSlug: m.serviceSlug,
+        startedAt: timestampFromProto(m.startedAt),
+        endedAt: m.endedAt ? timestampFromProto(m.endedAt) : undefined,
+        durationSeconds: m.durationSeconds,
+        totalEvents: m.totalEvents,
+        pageViews: m.pageViews,
+        clicks: m.clicks,
+        entryPage: m.entryPage,
+        exitPage: m.exitPage,
+        browser: m.browser,
+        os: m.os,
+        deviceType: deviceTypeFromEnum(m.deviceType),
+        countryCode: m.countryCode,
+        status: m.status === 1 ? 'active' : 'ended',
+      };
+    }
+
+    if (includeEvents) {
+      exportData.events = JSON.parse(result.events.toString('utf8'));
+    }
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="session-${sessionId}.json"`);
+    res.send(JSON.stringify(exportData, null, 2));
+  }
+
+  /**
+   * Generate share link for session (admin only)
+   */
+  @Post('sessions/:sessionId/share')
+  @AllowedAccountTypes(AccountType.ADMIN)
+  @ApiCookieAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Generate share link for session' })
+  @ApiResponse({ status: 200, description: 'Share link generated' })
+  @ApiResponse({ status: 404, description: 'Session not found' })
+  async generateShareLink(
+    @Param('sessionId') sessionId: string,
+    @Body() body: { expiresIn: string },
+  ): Promise<{ shareUrl: string }> {
+    // Verify session exists
+    const result = await this.sessionRecordingClient.getSessionEvents({ sessionId });
+    if (!result) {
+      throw new Error('Session not found');
+    }
+
+    const shareUrl = await this.shareLinkService.generateLink(sessionId, body.expiresIn);
+    return { shareUrl };
+  }
+
+  /**
+   * View shared session (public endpoint)
+   */
+  @Get('shared/:shareToken')
+  @Public()
+  @ApiOperation({ summary: 'View shared session recording' })
+  @ApiResponse({ status: 200, description: 'Session data' })
+  @ApiResponse({ status: 404, description: 'Share link not found or expired' })
+  async viewSharedSession(@Param('shareToken') shareToken: string): Promise<SessionEventsResponse> {
+    const sessionId = await this.shareLinkService.validateAndGetSession(shareToken);
+
+    if (!sessionId) {
+      throw new Error('Share link not found or expired');
+    }
+
+    const result = await this.sessionRecordingClient.getSessionEvents({ sessionId });
+
+    if (!result) {
+      throw new Error('Session not found');
+    }
+
+    const m = result.metadata;
+    return {
+      sessionId: result.sessionId,
+      metadata: {
+        sessionId: m.sessionId,
+        actorId: m.actorId,
+        actorType: actorTypeFromEnum(m.actorType || 0),
+        actorEmail: m.actorEmail,
+        serviceSlug: m.serviceSlug,
+        startedAt: timestampFromProto(m.startedAt),
+        endedAt: m.endedAt ? timestampFromProto(m.endedAt) : undefined,
+        durationSeconds: m.durationSeconds,
+        totalEvents: m.totalEvents,
+        pageViews: m.pageViews,
+        clicks: m.clicks,
+        entryPage: m.entryPage,
+        exitPage: m.exitPage,
+        browser: m.browser,
+        os: m.os,
+        deviceType: deviceTypeFromEnum(m.deviceType),
+        countryCode: m.countryCode,
+        status: m.status === 1 ? 'active' : 'ended',
+      },
+      events: JSON.parse(result.events.toString('utf8')),
+    };
+  }
+
+  /**
+   * Get session analytics stats (admin only)
+   */
+  @Get('analytics/stats')
+  @AllowedAccountTypes(AccountType.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Get session analytics stats' })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  @ApiQuery({ name: 'serviceSlug', required: false })
+  async getAnalyticsStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('serviceSlug') serviceSlug?: string,
+  ) {
+    // TODO: Call audit-service getSessionStats
+    return {
+      totalSessions: 0,
+      avgDuration: 0,
+      totalPageViews: 0,
+      totalClicks: 0,
+      uniqueUsers: 0,
+    };
+  }
+
+  /**
+   * Get device breakdown (admin only)
+   */
+  @Get('analytics/devices')
+  @AllowedAccountTypes(AccountType.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Get device breakdown' })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  @ApiQuery({ name: 'serviceSlug', required: false })
+  async getDeviceBreakdown(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('serviceSlug') serviceSlug?: string,
+  ) {
+    // TODO: Call audit-service getDeviceBreakdown
+    return [];
+  }
+
+  /**
+   * Get top pages (admin only)
+   */
+  @Get('analytics/pages')
+  @AllowedAccountTypes(AccountType.ADMIN)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Get top pages' })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  @ApiQuery({ name: 'serviceSlug', required: false })
+  async getTopPages(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('serviceSlug') serviceSlug?: string,
+  ) {
+    // TODO: Call audit-service getTopPages
+    return [];
   }
 }

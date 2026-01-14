@@ -516,6 +516,29 @@ describe('SessionRecordingService', () => {
       });
     });
 
+    describe('convertActorTypeFromNumber', () => {
+      it('should convert 1 to USER', () => {
+        expect(service.convertActorTypeFromNumber(1)).toBe('USER');
+      });
+
+      it('should convert 2 to OPERATOR', () => {
+        expect(service.convertActorTypeFromNumber(2)).toBe('OPERATOR');
+      });
+
+      it('should convert 3 to ADMIN', () => {
+        expect(service.convertActorTypeFromNumber(3)).toBe('ADMIN');
+      });
+
+      it('should return USER for 0', () => {
+        expect(service.convertActorTypeFromNumber(0)).toBe('USER');
+      });
+
+      it('should return USER for unknown numbers', () => {
+        expect(service.convertActorTypeFromNumber(99)).toBe('USER');
+        expect(service.convertActorTypeFromNumber(-1)).toBe('USER');
+      });
+    });
+
     describe('convertStatusToNumber', () => {
       it('should convert active to 1', () => {
         expect(service.convertStatusToNumber('active')).toBe(1);
