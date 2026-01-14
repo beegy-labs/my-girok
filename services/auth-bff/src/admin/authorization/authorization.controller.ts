@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthorizationService } from './authorization.service';
 import { AllowedAccountTypes } from '../../common/decorators/account-type.decorator';
 import { AccountType } from '../../config/constants';
@@ -64,6 +65,64 @@ export class AuthorizationController {
   @Post('model/:id/activate')
   async activateModel(@Param('id') id: string) {
     return this.authorizationService.activateModel(id);
+  }
+
+  /**
+   * Export model as JSON with metadata
+   */
+  @Get('model/:id/export')
+  async exportModel(@Param('id') id: string, @Res() res: Response) {
+    const model = await this.authorizationService.getModelById(id);
+
+    const exportData = {
+      version: model.version,
+      content: model.content,
+      isActive: model.isActive,
+      createdAt: model.createdAt,
+      createdBy: model.createdBy,
+      exportedAt: new Date().toISOString(),
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="authz-model-v${model.version}.json"`,
+    );
+    res.send(JSON.stringify(exportData, null, 2));
+  }
+
+  /**
+   * Export model as DSL file
+   */
+  @Get('model/:id/export-dsl')
+  async exportModelDSL(@Param('id') id: string, @Res() res: Response) {
+    const model = await this.authorizationService.getModelById(id);
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="authz-model-v${model.version}.dsl"`,
+    );
+    res.send(model.content);
+  }
+
+  /**
+   * Import model from JSON or DSL
+   */
+  @Post('model/import')
+  async importModel(@Body() body: { content: string; notes?: string; activate?: boolean }) {
+    let dslContent = body.content;
+
+    try {
+      const parsed = JSON.parse(body.content);
+      if (parsed.content) {
+        dslContent = parsed.content;
+      }
+    } catch {
+      // Not JSON, use content as-is (assume it's DSL)
+    }
+
+    return this.authorizationService.createModel(dslContent, body.activate);
   }
 
   /**

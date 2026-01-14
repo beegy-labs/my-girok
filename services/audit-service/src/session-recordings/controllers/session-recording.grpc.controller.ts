@@ -197,8 +197,9 @@ export class SessionRecordingGrpcController {
           sessionId: metadata.sessionId,
           startedAt: new Date().toISOString(),
           actorId: metadata.actorId,
-          actorType:
-            metadata.actorType === 1 ? 'USER' : metadata.actorType === 2 ? 'OPERATOR' : 'ADMIN',
+          actorType: this.sessionRecordingService.convertActorTypeFromNumber(
+            metadata.actorType || 0,
+          ),
           actorEmail: metadata.actorEmail,
           serviceSlug: metadata.serviceSlug,
           browser: metadata.browser,

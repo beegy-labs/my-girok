@@ -10,3 +10,4 @@ export * from './sanction.enums.js';
 export * from './sanction.types.js';
 export * from './global-settings.types.js';
 export * from './law.types.js';
+export * from './authorization.enums.js';

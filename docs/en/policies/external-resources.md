@@ -49,11 +49,10 @@ import PretendardBold from '@my-girok/design-tokens/fonts/pretendard/Pretendard-
 
 ## Allowed External Services
 
-| Service          | Domain               | Reason                |
-| ---------------- | -------------------- | --------------------- |
-| Rybbit Analytics | rybbit.girok.dev     | Self-hosted analytics |
-| API Backend      | my-api-dev.girok.dev | Our infrastructure    |
-| OAuth Providers  | Various              | Runtime requirement   |
+| Service         | Domain               | Reason              |
+| --------------- | -------------------- | ------------------- |
+| API Backend     | my-api-dev.girok.dev | Our infrastructure  |
+| OAuth Providers | Various              | Runtime requirement |
 
 ## Adding New Fonts
 

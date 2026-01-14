@@ -545,6 +545,7 @@ export class AuthorizationGrpcController {
           versionId: m.versionId,
           isActive: m.isActive,
           createdAt: m.createdAt.toISOString(),
+          dslSource: m.dslSource,
         })),
         nextPageToken: hasNext ? (offset + limit).toString() : undefined,
       };

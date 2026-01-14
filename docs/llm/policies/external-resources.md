@@ -44,11 +44,10 @@ import PretendardRegular from '@my-girok/design-tokens/fonts/pretendard/Pretenda
 
 ## Allowed External
 
-| Service          | Domain               | Reason           |
-| ---------------- | -------------------- | ---------------- |
-| Rybbit Analytics | rybbit.girok.dev     | Self-hosted      |
-| API Backend      | my-api-dev.girok.dev | Our infra        |
-| OAuth providers  | Various              | Runtime required |
+| Service         | Domain               | Reason           |
+| --------------- | -------------------- | ---------------- |
+| API Backend     | my-api-dev.girok.dev | Our infra        |
+| OAuth providers | Various              | Runtime required |
 
 ## Adding Fonts
 

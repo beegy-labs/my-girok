@@ -88,6 +88,7 @@ export interface ModelSummary {
   versionId: string;
   isActive: boolean;
   createdAt: string;
+  dslSource: string;
 }
 
 export interface ListModelsResponse {
