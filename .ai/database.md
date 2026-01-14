@@ -2,18 +2,26 @@
 
 > goose (SSOT) + Prisma (client) + ArgoCD | **Last Updated**: 2026-01-06
 
+## Databases
+
+| Service               | Dev DB               | Type       |
+| --------------------- | -------------------- | ---------- |
+| auth-service          | girok_auth_dev       | PostgreSQL |
+| personal-service      | girok_personal_dev   | PostgreSQL |
+| authorization-service | authorization_db_dev | PostgreSQL |
+| audit-service         | audit_db_dev         | ClickHouse |
+| analytics-service     | analytics_db_dev     | ClickHouse |
+
 ## Commands
 
 ```bash
-# PostgreSQL
+# Create migration
 goose -dir migrations create add_feature sql
+
+# Run migrations (auto in ArgoCD PreSync)
 goose -dir migrations postgres "$DATABASE_URL" up
-goose -dir migrations postgres "$DATABASE_URL" status
 
-# ClickHouse
-goose -dir migrations clickhouse "$CLICKHOUSE_URL" up
-
-# Sync Prisma
+# Sync Prisma after migration
 pnpm prisma db pull && pnpm prisma generate
 ```
 
@@ -39,4 +47,7 @@ DROP TABLE IF EXISTS features;
 | TIMESTAMPTZ(6)           | TIMESTAMP        |
 | Include `-- +goose Down` | Skip rollback    |
 
-**SSOT**: `docs/llm/database.md`
+**SSOT**:
+
+- Policy: `docs/llm/policies/database.md`
+- Migration Guide: `docs/llm/guides/db-migration.md`

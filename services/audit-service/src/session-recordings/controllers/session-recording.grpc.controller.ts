@@ -137,11 +137,125 @@ interface GetSessionEventsResponse {
   events: Buffer;
 }
 
+interface GetSessionStatsRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+}
+
+interface GetSessionStatsResponse {
+  totalSessions: number;
+  avgDuration: number;
+  totalPageViews: number;
+  totalClicks: number;
+  uniqueUsers: number;
+}
+
+interface GetDeviceBreakdownRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+}
+
+interface DeviceStats {
+  deviceType: string;
+  count: number;
+  percentage: number;
+}
+
+interface GetDeviceBreakdownResponse {
+  devices: DeviceStats[];
+}
+
+interface GetTopPagesRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+  limit: number;
+}
+
+interface PageStats {
+  path: string;
+  title: string;
+  views: number;
+  uniqueSessions: number;
+}
+
+interface GetTopPagesResponse {
+  pages: PageStats[];
+}
+
 @Controller()
 export class SessionRecordingGrpcController {
   private readonly logger = new Logger(SessionRecordingGrpcController.name);
 
   constructor(private readonly sessionRecordingService: SessionRecordingService) {}
+
+  // ============================================================
+  // Private Proto Conversion Methods
+  // ============================================================
+
+  /**
+   * Convert proto device type number to string
+   */
+  private deviceTypeToString(proto: number): string {
+    const map: Record<number, string> = {
+      0: 'desktop',
+      1: 'desktop',
+      2: 'mobile',
+      3: 'tablet',
+    };
+    return map[proto] ?? 'desktop';
+  }
+
+  /**
+   * Convert device type string to proto number
+   */
+  private deviceTypeToProto(str: string): number {
+    const map: Record<string, number> = {
+      desktop: 1,
+      mobile: 2,
+      tablet: 3,
+    };
+    return map[str] ?? 1;
+  }
+
+  /**
+   * Convert proto actor type number to string
+   */
+  private actorTypeToString(proto: number): string {
+    const map: Record<number, string> = {
+      1: 'USER',
+      2: 'OPERATOR',
+      3: 'ADMIN',
+    };
+    return map[proto] ?? 'USER';
+  }
+
+  /**
+   * Convert actor type string to proto number
+   */
+  private actorTypeToProto(str: string): number {
+    const map: Record<string, number> = {
+      USER: 1,
+      OPERATOR: 2,
+      ADMIN: 3,
+    };
+    return map[str] ?? 1;
+  }
+
+  /**
+   * Convert session status string to proto number
+   */
+  private sessionStatusToProto(str: string): number {
+    const map: Record<string, number> = {
+      active: 1,
+      recording: 1,
+      ended: 2,
+      completed: 2,
+    };
+    return map[str] ?? 0;
+  }
 
   @GrpcMethod('SessionRecordingService', 'SaveEventBatch')
   async saveEventBatch(request: SaveEventBatchRequest): Promise<SaveEventBatchResponse> {
@@ -197,16 +311,15 @@ export class SessionRecordingGrpcController {
           sessionId: metadata.sessionId,
           startedAt: new Date().toISOString(),
           actorId: metadata.actorId,
-          actorType: this.sessionRecordingService.convertActorTypeFromNumber(
-            metadata.actorType || 0,
-          ),
+          actorType: this.actorTypeToString(metadata.actorType || 0),
           actorEmail: metadata.actorEmail,
           serviceSlug: metadata.serviceSlug,
           browser: metadata.browser,
           os: metadata.os,
-          deviceType: this.sessionRecordingService.convertDeviceTypeToString(
-            metadata.deviceType,
-          ) as 'desktop' | 'mobile' | 'tablet',
+          deviceType: this.deviceTypeToString(metadata.deviceType) as
+            | 'desktop'
+            | 'mobile'
+            | 'tablet',
           screenResolution: metadata.screenResolution,
           timezone: metadata.timezone,
           language: metadata.language,
@@ -312,9 +425,7 @@ export class SessionRecordingGrpcController {
       const result = await this.sessionRecordingService.listSessions({
         serviceSlug: request.serviceSlug,
         actorId: request.actorId,
-        deviceType: request.deviceType
-          ? this.sessionRecordingService.convertDeviceTypeToString(request.deviceType)
-          : undefined,
+        deviceType: request.deviceType ? this.deviceTypeToString(request.deviceType) : undefined,
         startDate: request.startDate
           ? new Date(request.startDate.seconds * 1000).toISOString()
           : undefined,
@@ -328,9 +439,7 @@ export class SessionRecordingGrpcController {
       const sessions: SessionSummary[] = result.data.map((s) => ({
         sessionId: s.sessionId,
         actorId: s.actorId,
-        actorType: s.actorType
-          ? this.sessionRecordingService.convertActorTypeToNumber(s.actorType)
-          : 0,
+        actorType: s.actorType ? this.actorTypeToProto(s.actorType) : 0,
         actorEmail: s.actorEmail,
         serviceSlug: s.serviceSlug,
         startedAt: { seconds: Math.floor(new Date(s.startedAt).getTime() / 1000), nanos: 0 },
@@ -345,9 +454,9 @@ export class SessionRecordingGrpcController {
         exitPage: s.exitPage,
         browser: s.browser,
         os: s.os,
-        deviceType: this.sessionRecordingService.convertDeviceTypeToNumber(s.deviceType),
+        deviceType: this.deviceTypeToProto(s.deviceType),
         countryCode: s.countryCode,
-        status: this.sessionRecordingService.convertStatusToNumber(s.status),
+        status: this.sessionStatusToProto(s.status),
       }));
 
       return {
@@ -384,9 +493,7 @@ export class SessionRecordingGrpcController {
       const sessionSummary: SessionSummary = {
         sessionId: metadata.sessionId,
         actorId: metadata.actorId,
-        actorType: metadata.actorType
-          ? this.sessionRecordingService.convertActorTypeToNumber(metadata.actorType)
-          : 0,
+        actorType: metadata.actorType ? this.actorTypeToProto(metadata.actorType) : 0,
         actorEmail: metadata.actorEmail,
         serviceSlug: metadata.serviceSlug,
         startedAt: { seconds: Math.floor(new Date(metadata.startedAt).getTime() / 1000), nanos: 0 },
@@ -401,9 +508,9 @@ export class SessionRecordingGrpcController {
         exitPage: metadata.exitPage,
         browser: metadata.browser,
         os: metadata.os,
-        deviceType: this.sessionRecordingService.convertDeviceTypeToNumber(metadata.deviceType),
+        deviceType: this.deviceTypeToProto(metadata.deviceType),
         countryCode: metadata.countryCode,
-        status: this.sessionRecordingService.convertStatusToNumber(metadata.status),
+        status: this.sessionStatusToProto(metadata.status),
       };
 
       return {
@@ -416,6 +523,97 @@ export class SessionRecordingGrpcController {
       throw new RpcException({
         code: status.NOT_FOUND,
         message: 'Session not found',
+      });
+    }
+  }
+
+  @GrpcMethod('SessionRecordingService', 'GetSessionStats')
+  async getSessionStats(request: GetSessionStatsRequest): Promise<GetSessionStatsResponse> {
+    this.logger.debug(
+      `GetSessionStats: service=${request.serviceSlug}, startDate=${request.startDate?.seconds}`,
+    );
+
+    try {
+      const stats = await this.sessionRecordingService.getSessionStats({
+        startDate: request.startDate ? new Date(request.startDate.seconds * 1000) : undefined,
+        endDate: request.endDate ? new Date(request.endDate.seconds * 1000) : undefined,
+        serviceSlug: request.serviceSlug,
+      });
+
+      return {
+        totalSessions: stats.totalSessions,
+        avgDuration: stats.avgDuration,
+        totalPageViews: stats.totalPageViews,
+        totalClicks: stats.totalClicks,
+        uniqueUsers: stats.uniqueUsers,
+      };
+    } catch (error) {
+      this.logger.error(`GetSessionStats failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Failed to get session stats',
+      });
+    }
+  }
+
+  @GrpcMethod('SessionRecordingService', 'GetDeviceBreakdown')
+  async getDeviceBreakdown(
+    request: GetDeviceBreakdownRequest,
+  ): Promise<GetDeviceBreakdownResponse> {
+    this.logger.debug(
+      `GetDeviceBreakdown: service=${request.serviceSlug}, startDate=${request.startDate?.seconds}`,
+    );
+
+    try {
+      const devices = await this.sessionRecordingService.getDeviceBreakdown({
+        startDate: request.startDate ? new Date(request.startDate.seconds * 1000) : undefined,
+        endDate: request.endDate ? new Date(request.endDate.seconds * 1000) : undefined,
+        serviceSlug: request.serviceSlug,
+      });
+
+      return {
+        devices: devices.map((d) => ({
+          deviceType: d.deviceType,
+          count: d.count,
+          percentage: d.percentage,
+        })),
+      };
+    } catch (error) {
+      this.logger.error(`GetDeviceBreakdown failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Failed to get device breakdown',
+      });
+    }
+  }
+
+  @GrpcMethod('SessionRecordingService', 'GetTopPages')
+  async getTopPages(request: GetTopPagesRequest): Promise<GetTopPagesResponse> {
+    this.logger.debug(
+      `GetTopPages: service=${request.serviceSlug}, limit=${request.limit}, startDate=${request.startDate?.seconds}`,
+    );
+
+    try {
+      const pages = await this.sessionRecordingService.getTopPages({
+        startDate: request.startDate ? new Date(request.startDate.seconds * 1000) : undefined,
+        endDate: request.endDate ? new Date(request.endDate.seconds * 1000) : undefined,
+        serviceSlug: request.serviceSlug,
+        limit: request.limit || 10,
+      });
+
+      return {
+        pages: pages.map((p) => ({
+          path: p.path,
+          title: p.title,
+          views: p.views,
+          uniqueSessions: p.uniqueSessions,
+        })),
+      };
+    } catch (error) {
+      this.logger.error(`GetTopPages failed: ${error}`);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Failed to get top pages',
       });
     }
   }

@@ -138,6 +138,54 @@ export interface GetSessionEventsResponse {
   events: Buffer;
 }
 
+export interface GetSessionStatsRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+}
+
+export interface GetSessionStatsResponse {
+  totalSessions: number;
+  avgDuration: number;
+  totalPageViews: number;
+  totalClicks: number;
+  uniqueUsers: number;
+}
+
+export interface GetDeviceBreakdownRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+}
+
+export interface DeviceStats {
+  deviceType: string;
+  count: number;
+  percentage: number;
+}
+
+export interface GetDeviceBreakdownResponse {
+  devices: DeviceStats[];
+}
+
+export interface GetTopPagesRequest {
+  startDate?: { seconds: number; nanos: number };
+  endDate?: { seconds: number; nanos: number };
+  serviceSlug?: string;
+  limit: number;
+}
+
+export interface PageStats {
+  path: string;
+  title: string;
+  views: number;
+  uniqueSessions: number;
+}
+
+export interface GetTopPagesResponse {
+  pages: PageStats[];
+}
+
 // Device type enum mapping
 export const DeviceType = {
   UNSPECIFIED: 0,
@@ -169,6 +217,9 @@ interface SessionRecordingServiceClient {
   saveCustomEvent(request: SaveCustomEventRequest): Observable<SaveCustomEventResponse>;
   listSessions(request: ListSessionsRequest): Observable<ListSessionsResponse>;
   getSessionEvents(request: GetSessionEventsRequest): Observable<GetSessionEventsResponse>;
+  getSessionStats(request: GetSessionStatsRequest): Observable<GetSessionStatsResponse>;
+  getDeviceBreakdown(request: GetDeviceBreakdownRequest): Observable<GetDeviceBreakdownResponse>;
+  getTopPages(request: GetTopPagesRequest): Observable<GetTopPagesResponse>;
 }
 
 @Injectable()
@@ -377,6 +428,89 @@ export class SessionRecordingGrpcClient implements OnModuleInit {
     } catch (error) {
       this.logger.warn(`Failed to get session events: ${error}`);
       return null;
+    }
+  }
+
+  async getSessionStats(request: GetSessionStatsRequest): Promise<GetSessionStatsResponse> {
+    if (!this.isConnected || !this.sessionRecordingService) {
+      this.logger.debug('Session recording service not connected');
+      return {
+        totalSessions: 0,
+        avgDuration: 0,
+        totalPageViews: 0,
+        totalClicks: 0,
+        uniqueUsers: 0,
+      };
+    }
+
+    try {
+      return await firstValueFrom(
+        this.sessionRecordingService.getSessionStats(request).pipe(
+          catchError((error) => {
+            this.logger.warn(`Failed to get session stats: ${error.message}`);
+            return of({
+              totalSessions: 0,
+              avgDuration: 0,
+              totalPageViews: 0,
+              totalClicks: 0,
+              uniqueUsers: 0,
+            });
+          }),
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to get session stats: ${error}`);
+      return {
+        totalSessions: 0,
+        avgDuration: 0,
+        totalPageViews: 0,
+        totalClicks: 0,
+        uniqueUsers: 0,
+      };
+    }
+  }
+
+  async getDeviceBreakdown(
+    request: GetDeviceBreakdownRequest,
+  ): Promise<GetDeviceBreakdownResponse> {
+    if (!this.isConnected || !this.sessionRecordingService) {
+      this.logger.debug('Session recording service not connected');
+      return { devices: [] };
+    }
+
+    try {
+      return await firstValueFrom(
+        this.sessionRecordingService.getDeviceBreakdown(request).pipe(
+          catchError((error) => {
+            this.logger.warn(`Failed to get device breakdown: ${error.message}`);
+            return of({ devices: [] });
+          }),
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to get device breakdown: ${error}`);
+      return { devices: [] };
+    }
+  }
+
+  async getTopPages(request: GetTopPagesRequest): Promise<GetTopPagesResponse> {
+    if (!this.isConnected || !this.sessionRecordingService) {
+      this.logger.debug('Session recording service not connected');
+      return { pages: [] };
+    }
+
+    try {
+      return await firstValueFrom(
+        this.sessionRecordingService.getTopPages(request).pipe(
+          catchError((error) => {
+            this.logger.warn(`Failed to get top pages: ${error.message}`);
+            return of({ pages: [] });
+          }),
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(`Failed to get top pages: ${error}`);
+      return { pages: [] };
     }
   }
 }

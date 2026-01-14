@@ -8,12 +8,19 @@
 | Security events    | Session management |
 | Admin actions      | Authorization      |
 | Compliance reports | User data storage  |
+| Session recordings | Identity data      |
+| Session analytics  |                    |
 
 ## gRPC (Summary)
 
 ```
+Auth & Security:
 LogAuthEvent, LogSecurityEvent, LogAdminAction
 Get*Events, GenerateComplianceReport
+
+Session Recording:
+RecordEvent, ListSessions, GetSession, GetSessionEvents
+GetSessionStats, GetDeviceBreakdown, GetTopPages
 ```
 
 **SSOT**: `docs/llm/services/audit-service.md`

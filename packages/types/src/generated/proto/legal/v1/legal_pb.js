@@ -11,7 +11,7 @@ import { WireType } from "@protobuf-ts/runtime";
 import { UnknownFieldHandler } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { Timestamp } from "../../google/protobuf/timestamp_pb.js";
+import { Timestamp } from "../../google/protobuf/timestamp_pb";
 /**
  * ConsentType categorizes the consent
  *

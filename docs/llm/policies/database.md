@@ -21,18 +21,19 @@ prisma/schema.prisma -> Client only (synced from DB)
 
 ### PostgreSQL
 
-| Service          | Dev DB                            | Prod DB               |
-| ---------------- | --------------------------------- | --------------------- |
-| auth-service     | girok_auth_dev                    | girok_auth            |
-| personal-service | girok_personal_dev                | girok_personal        |
-| identity-service | identity_dev, auth_dev, legal_dev | identity, auth, legal |
+| Service               | Dev DB                            | Release DB                            | Prod DB               |
+| --------------------- | --------------------------------- | ------------------------------------- | --------------------- |
+| auth-service          | girok_auth_dev                    | girok_auth_release                    | girok_auth            |
+| personal-service      | girok_personal_dev                | girok_personal_release                | girok_personal        |
+| authorization-service | authorization_db_dev              | authorization_db_release              | authorization_db      |
+| identity-service      | identity_dev, auth_dev, legal_dev | identity_release, auth_rel, legal_rel | identity, auth, legal |
 
 ### ClickHouse
 
-| Service           | Database     | Retention |
-| ----------------- | ------------ | --------- |
-| audit-service     | audit_db     | 5 years   |
-| analytics-service | analytics_db | 90d-1y    |
+| Service           | Dev DB           | Release DB           | Prod DB      | Retention |
+| ----------------- | ---------------- | -------------------- | ------------ | --------- |
+| audit-service     | audit_db_dev     | audit_db_release     | audit_db     | 5 years   |
+| analytics-service | analytics_db_dev | analytics_db_release | analytics_db | 90d-1y    |
 
 ## Structure
 

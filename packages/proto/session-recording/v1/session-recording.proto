@@ -24,6 +24,11 @@ service SessionRecordingService {
   // Session Queries
   rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
   rpc GetSessionEvents(GetSessionEventsRequest) returns (GetSessionEventsResponse);
+
+  // Analytics
+  rpc GetSessionStats(GetSessionStatsRequest) returns (GetSessionStatsResponse);
+  rpc GetDeviceBreakdown(GetDeviceBreakdownRequest) returns (GetDeviceBreakdownResponse);
+  rpc GetTopPages(GetTopPagesRequest) returns (GetTopPagesResponse);
 }
 
 // ============================================================
@@ -223,4 +228,56 @@ message GetSessionEventsResponse {
   string session_id = 1;
   SessionSummary metadata = 2;
   bytes events = 3;  // JSON-encoded rrweb events array
+}
+
+// ============================================================
+// Analytics Messages
+// ============================================================
+
+message GetSessionStatsRequest {
+  optional google.protobuf.Timestamp start_date = 1;
+  optional google.protobuf.Timestamp end_date = 2;
+  optional string service_slug = 3;
+}
+
+message GetSessionStatsResponse {
+  int32 total_sessions = 1;
+  double avg_duration = 2;
+  int32 total_page_views = 3;
+  int32 total_clicks = 4;
+  int32 unique_users = 5;
+}
+
+message GetDeviceBreakdownRequest {
+  optional google.protobuf.Timestamp start_date = 1;
+  optional google.protobuf.Timestamp end_date = 2;
+  optional string service_slug = 3;
+}
+
+message DeviceStats {
+  string device_type = 1;
+  int32 count = 2;
+  double percentage = 3;
+}
+
+message GetDeviceBreakdownResponse {
+  repeated DeviceStats devices = 1;
+}
+
+message GetTopPagesRequest {
+  optional google.protobuf.Timestamp start_date = 1;
+  optional google.protobuf.Timestamp end_date = 2;
+  optional string service_slug = 3;
+  int32 limit = 4;
+}
+
+message PageStats {
+  string path = 1;
+  string title = 2;
+  int32 views = 3;
+  int32 unique_sessions = 4;
+}
+
+message GetTopPagesResponse {
+  repeated PageStats pages = 1;
 }
