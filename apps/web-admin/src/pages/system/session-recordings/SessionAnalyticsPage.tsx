@@ -7,8 +7,28 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar, Users, Clock, MousePointer2, Eye, Loader2 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { Card } from '../../../components/atoms/Card';
 import apiClient from '../../../api/client';
+
+// Device colors for pie chart
+const DEVICE_COLORS: Record<string, string> = {
+  desktop: 'var(--color-primary)',
+  mobile: 'var(--color-status-success)',
+  tablet: 'var(--color-status-warning)',
+};
 
 interface SessionStats {
   totalSessions: number;
@@ -181,28 +201,34 @@ export default function SessionAnalyticsPage() {
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Device Breakdown</h3>
-            <div className="space-y-3">
-              {deviceStats.map((device) => (
-                <div key={device.deviceType} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="capitalize text-theme-text-primary font-medium">
-                      {device.deviceType}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-theme-text-primary font-semibold">
-                      {device.count.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-theme-text-tertiary">
-                      Avg: {Math.floor(device.avgDuration / 60)}m
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {deviceStats.length === 0 && (
-                <p className="text-center text-theme-text-tertiary py-4">No data available</p>
-              )}
-            </div>
+            {deviceStats.length === 0 ? (
+              <p className="text-center text-theme-text-tertiary py-4">No data available</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={deviceStats}
+                    dataKey="count"
+                    nameKey="deviceType"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    label={(entry) => `${entry.deviceType}: ${entry.count}`}
+                  >
+                    {deviceStats.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={DEVICE_COLORS[entry.deviceType] || 'var(--color-gray-400)'}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
 
@@ -210,31 +236,31 @@ export default function SessionAnalyticsPage() {
         <Card>
           <div className="p-6">
             <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Top Pages</h3>
-            <div className="space-y-3">
-              {pageStats.map((page, index) => (
-                <div key={page.page} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-bold">
-                      {index + 1}
-                    </div>
-                    <div className="text-theme-text-primary font-mono text-sm truncate">
-                      {page.page}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-theme-text-primary font-semibold">
-                      {page.visits.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-theme-text-tertiary">
-                      Avg: {Math.floor(page.avgDuration / 60)}m
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {pageStats.length === 0 && (
-                <p className="text-center text-theme-text-tertiary py-4">No data available</p>
-              )}
-            </div>
+            {pageStats.length === 0 ? (
+              <p className="text-center text-theme-text-tertiary py-4">No data available</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={pageStats.slice(0, 10)} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-default)" />
+                  <XAxis type="number" stroke="var(--color-text-secondary)" />
+                  <YAxis
+                    type="category"
+                    dataKey="page"
+                    width={200}
+                    stroke="var(--color-text-secondary)"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--color-background-card)',
+                      border: '1px solid var(--color-border-default)',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Bar dataKey="visits" fill="var(--color-primary)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
       </div>
