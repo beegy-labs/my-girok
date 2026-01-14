@@ -23,7 +23,11 @@ COPY packages/nest-common ./packages/nest-common
 COPY packages/proto ./packages/proto
 COPY services/audit-service ./services/audit-service
 
-# Build shared packages first
+# Generate protobuf files first
+WORKDIR /app/packages/proto
+RUN pnpm generate
+
+# Build shared packages
 WORKDIR /app/packages/types
 RUN pnpm build
 WORKDIR /app/packages/nest-common
