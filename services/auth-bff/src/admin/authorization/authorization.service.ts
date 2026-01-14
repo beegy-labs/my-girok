@@ -108,6 +108,7 @@ export class AuthorizationService {
         createdAt: m.createdAt,
         content: m.dslSource,
         createdBy: 'system',
+        notes: m.notes,
       }));
     } catch (error) {
       this.logger.error(`Failed to get model versions: ${error}`);
@@ -139,6 +140,7 @@ export class AuthorizationService {
         createdAt: model.createdAt,
         content: model.dslSource,
         createdBy: 'system',
+        notes: model.notes,
       };
     } catch (error) {
       this.logger.error(`Failed to get model by ID: ${error}`);
@@ -149,9 +151,9 @@ export class AuthorizationService {
   /**
    * Create a new model
    */
-  async createModel(dslSource: string, activate?: boolean) {
+  async createModel(dslSource: string, activate?: boolean, notes?: string) {
     try {
-      const result = await this.authzClient.writeModel(dslSource, activate);
+      const result = await this.authzClient.writeModel(dslSource, activate, notes);
 
       if (!result) {
         throw new Error('Failed to create model: No response from server');

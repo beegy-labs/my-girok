@@ -280,6 +280,9 @@ message WriteModelRequest {
 
   // Whether to activate this model immediately
   bool activate = 2;
+
+  // Optional version notes (for changelog/documentation)
+  optional string notes = 3;
 }
 
 message WriteModelResponse {
@@ -358,6 +361,7 @@ message ModelSummary {
   string version_id = 2;
   bool is_active = 3;
   string created_at = 4;
+  optional string notes = 5;
 }
 
 // ============================================================
