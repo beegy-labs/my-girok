@@ -197,6 +197,11 @@ export interface AuthorizationModel {
    * When this model was created
    */
   createdAt: Date;
+
+  /**
+   * Optional version notes (for changelog/documentation)
+   */
+  notes?: string;
 }
 
 /**

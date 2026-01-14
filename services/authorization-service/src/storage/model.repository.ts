@@ -17,6 +17,7 @@ import { compile, CompilationResult } from '../dsl';
 export interface CreateModelOptions {
   dslSource: string;
   activate?: boolean;
+  notes?: string;
 }
 
 /**
@@ -31,6 +32,7 @@ interface PrismaModel {
   typeDefinitions: unknown;
   isActive: boolean | null;
   createdAt: Date | null;
+  notes: string | null;
 }
 
 @Injectable()
@@ -73,6 +75,7 @@ export class ModelRepository {
           compiledModel: JSON.parse(JSON.stringify(model.types)),
           typeDefinitions: JSON.parse(JSON.stringify(model.types)),
           isActive: options.activate ?? false,
+          notes: options.notes ?? null,
         },
       });
     });
@@ -238,6 +241,7 @@ export class ModelRepository {
       types: model.compiledModel as Record<string, TypeDefinition>,
       isActive: model.isActive ?? false,
       createdAt: model.createdAt ?? new Date(),
+      notes: model.notes ?? undefined,
     };
   }
 }

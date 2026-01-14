@@ -87,6 +87,7 @@ interface ListUsersResponse {
 interface WriteModelRequest {
   dslSource: string;
   activate?: boolean;
+  notes?: string;
 }
 
 interface WriteModelResponse {
@@ -138,6 +139,7 @@ interface ListModelsResponse {
     versionId: string;
     isActive: boolean;
     createdAt: string;
+    notes?: string;
   }>;
   nextPageToken?: string;
 }
@@ -455,6 +457,7 @@ export class AuthorizationGrpcController {
       const result = await this.modelRepository.create({
         dslSource: request.dslSource,
         activate: request.activate,
+        notes: request.notes,
       });
 
       return {
@@ -546,6 +549,7 @@ export class AuthorizationGrpcController {
           isActive: m.isActive,
           createdAt: m.createdAt.toISOString(),
           dslSource: m.dslSource,
+          notes: m.notes,
         })),
         nextPageToken: hasNext ? (offset + limit).toString() : undefined,
       };

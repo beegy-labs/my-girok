@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { vi, describe, it, expect, beforeEach, type MockInstance } from 'vitest';
+import { ConfigService } from '@nestjs/config';
 import { SessionRecordingService } from '../../src/session-recordings/services/session-recording.service';
 import { ClickHouseService } from '@my-girok/nest-common/clickhouse';
 
@@ -8,6 +9,9 @@ describe('SessionRecordingService', () => {
   let clickhouseService: {
     insert: MockInstance;
     query: MockInstance;
+  };
+  let configService: {
+    get: MockInstance;
   };
 
   const mockContext = {
@@ -31,11 +35,18 @@ describe('SessionRecordingService', () => {
             query: vi.fn(),
           },
         },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: vi.fn().mockReturnValue('analytics_db'),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<SessionRecordingService>(SessionRecordingService);
     clickhouseService = module.get(ClickHouseService);
+    configService = module.get(ConfigService);
   });
 
   describe('saveEventBatch', () => {
@@ -434,151 +445,212 @@ describe('SessionRecordingService', () => {
     });
   });
 
-  describe('Enum Conversion Methods', () => {
-    describe('convertDeviceTypeToNumber', () => {
-      it('should convert desktop to 1', () => {
-        expect(service.convertDeviceTypeToNumber('desktop')).toBe(1);
-      });
+  describe('Analytics Methods', () => {
+    describe('getSessionStats', () => {
+      it('should return session statistics', async () => {
+        const mockStats = {
+          totalSessions: 150,
+          avgDuration: 245.5,
+          totalPageViews: 750,
+          totalClicks: 320,
+          uniqueUsers: 85,
+        };
 
-      it('should convert mobile to 2', () => {
-        expect(service.convertDeviceTypeToNumber('mobile')).toBe(2);
-      });
+        clickhouseService.query.mockResolvedValue({ data: [mockStats] });
 
-      it('should convert tablet to 3', () => {
-        expect(service.convertDeviceTypeToNumber('tablet')).toBe(3);
-      });
-
-      it('should return 0 for unknown device type', () => {
-        expect(service.convertDeviceTypeToNumber('unknown')).toBe(0);
-        expect(service.convertDeviceTypeToNumber('')).toBe(0);
-      });
-    });
-
-    describe('convertDeviceTypeToString', () => {
-      it('should convert 0 to desktop', () => {
-        expect(service.convertDeviceTypeToString(0)).toBe('desktop');
-      });
-
-      it('should convert 1 to desktop', () => {
-        expect(service.convertDeviceTypeToString(1)).toBe('desktop');
-      });
-
-      it('should convert 2 to mobile', () => {
-        expect(service.convertDeviceTypeToString(2)).toBe('mobile');
-      });
-
-      it('should convert 3 to tablet', () => {
-        expect(service.convertDeviceTypeToString(3)).toBe('tablet');
-      });
-
-      it('should return desktop for unknown numbers', () => {
-        expect(service.convertDeviceTypeToString(99)).toBe('desktop');
-        expect(service.convertDeviceTypeToString(-1)).toBe('desktop');
-      });
-    });
-
-    describe('convertActorTypeToNumber', () => {
-      it('should convert USER to 1', () => {
-        expect(service.convertActorTypeToNumber('USER')).toBe(1);
-      });
-
-      it('should convert OPERATOR to 2', () => {
-        expect(service.convertActorTypeToNumber('OPERATOR')).toBe(2);
-      });
-
-      it('should convert ADMIN to 3', () => {
-        expect(service.convertActorTypeToNumber('ADMIN')).toBe(3);
-      });
-
-      it('should return 0 for unknown actor type', () => {
-        expect(service.convertActorTypeToNumber('UNKNOWN')).toBe(0);
-        expect(service.convertActorTypeToNumber('')).toBe(0);
-      });
-    });
-
-    describe('convertActorTypeToString', () => {
-      it('should convert 1 to USER', () => {
-        expect(service.convertActorTypeToString(1)).toBe('USER');
-      });
-
-      it('should convert 2 to OPERATOR', () => {
-        expect(service.convertActorTypeToString(2)).toBe('OPERATOR');
-      });
-
-      it('should convert 3 to ADMIN', () => {
-        expect(service.convertActorTypeToString(3)).toBe('ADMIN');
-      });
-
-      it('should return USER for unknown numbers', () => {
-        expect(service.convertActorTypeToString(0)).toBe('USER');
-        expect(service.convertActorTypeToString(99)).toBe('USER');
-        expect(service.convertActorTypeToString(-1)).toBe('USER');
-      });
-    });
-
-    describe('convertActorTypeFromNumber', () => {
-      it('should convert 1 to USER', () => {
-        expect(service.convertActorTypeFromNumber(1)).toBe('USER');
-      });
-
-      it('should convert 2 to OPERATOR', () => {
-        expect(service.convertActorTypeFromNumber(2)).toBe('OPERATOR');
-      });
-
-      it('should convert 3 to ADMIN', () => {
-        expect(service.convertActorTypeFromNumber(3)).toBe('ADMIN');
-      });
-
-      it('should return USER for 0', () => {
-        expect(service.convertActorTypeFromNumber(0)).toBe('USER');
-      });
-
-      it('should return USER for unknown numbers', () => {
-        expect(service.convertActorTypeFromNumber(99)).toBe('USER');
-        expect(service.convertActorTypeFromNumber(-1)).toBe('USER');
-      });
-    });
-
-    describe('convertStatusToNumber', () => {
-      it('should convert active to 1', () => {
-        expect(service.convertStatusToNumber('active')).toBe(1);
-      });
-
-      it('should convert recording to 1', () => {
-        expect(service.convertStatusToNumber('recording')).toBe(1);
-      });
-
-      it('should convert ended to 2', () => {
-        expect(service.convertStatusToNumber('ended')).toBe(2);
-      });
-
-      it('should convert completed to 2', () => {
-        expect(service.convertStatusToNumber('completed')).toBe(2);
-      });
-
-      it('should return 0 for unknown status', () => {
-        expect(service.convertStatusToNumber('unknown')).toBe(0);
-        expect(service.convertStatusToNumber('')).toBe(0);
-      });
-    });
-
-    describe('Round-trip conversions', () => {
-      it('should maintain device type through round-trip conversion', () => {
-        const deviceTypes = ['desktop', 'mobile', 'tablet'];
-        deviceTypes.forEach((type) => {
-          const num = service.convertDeviceTypeToNumber(type);
-          const converted = service.convertDeviceTypeToString(num);
-          expect(converted).toBe(type);
+        const result = await service.getSessionStats({
+          startDate: new Date('2026-01-01'),
+          endDate: new Date('2026-01-31'),
+          serviceSlug: 'web-app',
         });
+
+        expect(result.totalSessions).toBe(150);
+        expect(result.avgDuration).toBe(245.5);
+        expect(result.totalPageViews).toBe(750);
+        expect(result.totalClicks).toBe(320);
+        expect(result.uniqueUsers).toBe(85);
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.stringContaining('count() as totalSessions'),
+          expect.any(Object),
+        );
       });
 
-      it('should maintain actor type through round-trip conversion', () => {
-        const actorTypes = ['USER', 'OPERATOR', 'ADMIN'];
-        actorTypes.forEach((type) => {
-          const num = service.convertActorTypeToNumber(type);
-          const converted = service.convertActorTypeToString(num);
-          expect(converted).toBe(type);
+      it('should handle date filters correctly', async () => {
+        clickhouseService.query.mockResolvedValue({ data: [{}] });
+
+        await service.getSessionStats({
+          startDate: new Date('2026-01-01'),
+          endDate: new Date('2026-01-31'),
         });
+
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            startDate: expect.any(String),
+            endDate: expect.any(String),
+          }),
+        );
+      });
+
+      it('should filter by service slug when provided', async () => {
+        clickhouseService.query.mockResolvedValue({ data: [{}] });
+
+        await service.getSessionStats({
+          serviceSlug: 'web-app',
+        });
+
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.stringContaining('service_slug'),
+          expect.objectContaining({
+            serviceSlug: 'web-app',
+          }),
+        );
+      });
+
+      it('should return default values on query failure', async () => {
+        clickhouseService.query.mockRejectedValue(new Error('ClickHouse timeout'));
+
+        const result = await service.getSessionStats({});
+
+        expect(result.totalSessions).toBe(0);
+        expect(result.avgDuration).toBe(0);
+        expect(result.totalPageViews).toBe(0);
+        expect(result.totalClicks).toBe(0);
+        expect(result.uniqueUsers).toBe(0);
+      });
+    });
+
+    describe('getDeviceBreakdown', () => {
+      it('should return device breakdown with percentages', async () => {
+        const mockDevices = [
+          { deviceType: 'desktop', count: 100, percentage: 66.67 },
+          { deviceType: 'mobile', count: 40, percentage: 26.67 },
+          { deviceType: 'tablet', count: 10, percentage: 6.67 },
+        ];
+
+        clickhouseService.query.mockResolvedValue({ data: mockDevices });
+
+        const result = await service.getDeviceBreakdown({
+          startDate: new Date('2026-01-01'),
+          endDate: new Date('2026-01-31'),
+        });
+
+        expect(result).toHaveLength(3);
+        expect(result[0].deviceType).toBe('desktop');
+        expect(result[0].count).toBe(100);
+        expect(result[0].percentage).toBeCloseTo(66.67, 1);
+      });
+
+      it('should filter by date range', async () => {
+        clickhouseService.query.mockResolvedValue({ data: [] });
+
+        await service.getDeviceBreakdown({
+          startDate: new Date('2026-01-01'),
+          endDate: new Date('2026-01-31'),
+        });
+
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.stringContaining('GROUP BY device_type'),
+          expect.objectContaining({
+            startDate: expect.any(String),
+            endDate: expect.any(String),
+          }),
+        );
+      });
+
+      it('should filter by service slug when provided', async () => {
+        clickhouseService.query.mockResolvedValue({ data: [] });
+
+        await service.getDeviceBreakdown({
+          serviceSlug: 'web-app',
+        });
+
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.stringContaining('service_slug'),
+          expect.objectContaining({
+            serviceSlug: 'web-app',
+          }),
+        );
+      });
+
+      it('should return empty array on query failure', async () => {
+        clickhouseService.query.mockRejectedValue(new Error('ClickHouse timeout'));
+
+        const result = await service.getDeviceBreakdown({});
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('getTopPages', () => {
+      it('should return top pages ordered by views', async () => {
+        const mockPages = [
+          { path: '/home', title: 'Home', views: 500, uniqueSessions: 250 },
+          { path: '/about', title: 'About', views: 300, uniqueSessions: 180 },
+          { path: '/contact', title: 'Contact', views: 150, uniqueSessions: 100 },
+        ];
+
+        clickhouseService.query.mockResolvedValue({ data: mockPages });
+
+        const result = await service.getTopPages({
+          startDate: new Date('2026-01-01'),
+          endDate: new Date('2026-01-31'),
+          limit: 10,
+        });
+
+        expect(result).toHaveLength(3);
+        expect(result[0].path).toBe('/home');
+        expect(result[0].views).toBe(500);
+        expect(result[0].uniqueSessions).toBe(250);
+      });
+
+      it('should respect limit parameter', async () => {
+        clickhouseService.query.mockResolvedValue({ data: [] });
+
+        await service.getTopPages({ limit: 5 });
+
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.stringContaining('LIMIT'),
+          expect.objectContaining({
+            limit: 5,
+          }),
+        );
+      });
+
+      it('should use default limit of 10 when not provided', async () => {
+        clickhouseService.query.mockResolvedValue({ data: [] });
+
+        await service.getTopPages({});
+
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            limit: 10,
+          }),
+        );
+      });
+
+      it('should filter by service slug when provided', async () => {
+        clickhouseService.query.mockResolvedValue({ data: [] });
+
+        await service.getTopPages({
+          serviceSlug: 'web-app',
+        });
+
+        expect(clickhouseService.query).toHaveBeenCalledWith(
+          expect.stringContaining('service_slug'),
+          expect.objectContaining({
+            serviceSlug: 'web-app',
+          }),
+        );
+      });
+
+      it('should return empty array on query failure', async () => {
+        clickhouseService.query.mockRejectedValue(new Error('ClickHouse timeout'));
+
+        const result = await service.getTopPages({});
+
+        expect(result).toEqual([]);
       });
     });
   });

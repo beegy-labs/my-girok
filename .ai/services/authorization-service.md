@@ -10,13 +10,17 @@
 
 ## Core APIs (gRPC)
 
-| Method      | Purpose                     |
-| ----------- | --------------------------- |
-| Check       | Permission evaluation       |
-| BatchCheck  | Bulk permission check       |
-| Write       | Add/remove tuples           |
-| ListObjects | Objects user can access     |
-| ListUsers   | Users with access to object |
+| Method        | Purpose                     |
+| ------------- | --------------------------- |
+| Check         | Permission evaluation       |
+| BatchCheck    | Bulk permission check       |
+| Write         | Add/remove tuples           |
+| ListObjects   | Objects user can access     |
+| ListUsers     | Users with access to object |
+| WriteModel    | Create model (with notes)   |
+| ListModels    | List versions (shows notes) |
+| GetModel      | Get model by ID/version     |
+| ActivateModel | Activate specific version   |
 
 ## Key Components
 

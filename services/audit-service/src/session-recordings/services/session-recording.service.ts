@@ -19,35 +19,6 @@ export class SessionRecordingService {
   private readonly circuitBreaker: CircuitBreaker;
   private readonly database: string;
 
-  // Device type enum mapping
-  private readonly DeviceTypeMap: Record<string, number> = {
-    desktop: 1,
-    mobile: 2,
-    tablet: 3,
-  };
-
-  private readonly DeviceTypeReverseMap: Record<number, string> = {
-    0: 'desktop',
-    1: 'desktop',
-    2: 'mobile',
-    3: 'tablet',
-  };
-
-  // Actor type enum mapping
-  private readonly ActorTypeMap: Record<string, number> = {
-    USER: 1,
-    OPERATOR: 2,
-    ADMIN: 3,
-  };
-
-  // Session status enum mapping
-  private readonly SessionStatusMap: Record<string, number> = {
-    active: 1,
-    ended: 2,
-    recording: 1,
-    completed: 2,
-  };
-
   constructor(
     private readonly clickhouse: ClickHouseService,
     private readonly configService: ConfigService,
@@ -59,63 +30,6 @@ export class SessionRecordingService {
       resetTimeout: 30000,
       successThreshold: 2,
     });
-  }
-
-  // Enum conversion methods
-
-  /**
-   * Convert device type string to number for gRPC
-   */
-  convertDeviceTypeToNumber(deviceType: string): number {
-    return this.DeviceTypeMap[deviceType] || 0;
-  }
-
-  /**
-   * Convert device type number to string
-   */
-  convertDeviceTypeToString(deviceType: number): string {
-    return this.DeviceTypeReverseMap[deviceType] || 'desktop';
-  }
-
-  /**
-   * Convert actor type string to number for gRPC
-   */
-  convertActorTypeToNumber(actorType: string): number {
-    return this.ActorTypeMap[actorType] || 0;
-  }
-
-  /**
-   * Convert actor type number to string
-   */
-  convertActorTypeToString(actorType: number): string {
-    const entries = Object.entries(this.ActorTypeMap);
-    for (const [key, value] of entries) {
-      if (value === actorType) {
-        return key;
-      }
-    }
-    return 'USER';
-  }
-
-  /**
-   * Convert actor type number from gRPC to string for internal processing
-   * @param actorType - Actor type number from gRPC (1=USER, 2=OPERATOR, 3=ADMIN)
-   * @returns Actor type string for database storage
-   */
-  convertActorTypeFromNumber(actorType: number): string {
-    const map: Record<number, string> = {
-      1: 'USER',
-      2: 'OPERATOR',
-      3: 'ADMIN',
-    };
-    return map[actorType] || 'USER';
-  }
-
-  /**
-   * Convert session status string to number for gRPC
-   */
-  convertStatusToNumber(status: string): number {
-    return this.SessionStatusMap[status] || 0;
   }
 
   private async executeQuery<T>(
@@ -438,82 +352,6 @@ export class SessionRecordingService {
     };
   }
 
-  /**
-   * Get session statistics for analytics
-   */
-  async getSessionStats(query: { startDate?: string; endDate?: string; serviceSlug?: string }) {
-    const result = await this.executeQuery(() =>
-      this.clickhouse.query(
-        `SELECT
-          count() as totalSessions,
-          avg(duration_seconds) as avgDuration,
-          sum(page_views) as totalPageViews,
-          sum(clicks) as totalClicks,
-          uniq(actor_id) as uniqueUsers
-        FROM ${this.database}.session_recording_metadata
-        WHERE date BETWEEN {startDate:Date} AND {endDate:Date}
-          ${query.serviceSlug ? 'AND service_slug = {serviceSlug:String}' : ''}`,
-        {
-          startDate: query.startDate || '1970-01-01',
-          endDate: query.endDate || '2099-12-31',
-          serviceSlug: query.serviceSlug,
-        },
-      ),
-    );
-
-    return result.data[0] || {};
-  }
-
-  /**
-   * Get device breakdown statistics
-   */
-  async getDeviceBreakdown(query: { startDate?: string; endDate?: string }) {
-    const result = await this.executeQuery(() =>
-      this.clickhouse.query(
-        `SELECT
-          device_type as deviceType,
-          count() as count,
-          avg(duration_seconds) as avgDuration
-        FROM ${this.database}.session_recording_metadata
-        WHERE date BETWEEN {startDate:Date} AND {endDate:Date}
-        GROUP BY device_type`,
-        {
-          startDate: query.startDate || '1970-01-01',
-          endDate: query.endDate || '2099-12-31',
-        },
-      ),
-    );
-
-    return result.data;
-  }
-
-  /**
-   * Get top pages by visits
-   */
-  async getTopPages(query: { startDate?: string; endDate?: string; limit?: number }) {
-    const result = await this.executeQuery(() =>
-      this.clickhouse.query(
-        `SELECT
-          entry_page as page,
-          count() as visits,
-          avg(duration_seconds) as avgDuration,
-          sum(clicks) as totalClicks
-        FROM ${this.database}.session_recording_metadata
-        WHERE date BETWEEN {startDate:Date} AND {endDate:Date}
-        GROUP BY entry_page
-        ORDER BY visits DESC
-        LIMIT {limit:UInt32}`,
-        {
-          startDate: query.startDate || '1970-01-01',
-          endDate: query.endDate || '2099-12-31',
-          limit: query.limit || 10,
-        },
-      ),
-    );
-
-    return result.data;
-  }
-
   // Helper methods
 
   private parseUserAgent(userAgent: string): {
@@ -589,5 +427,208 @@ export class SessionRecordingService {
     const date = new Date();
     date.setDate(date.getDate() + days);
     return date.toISOString().split('T')[0];
+  }
+
+  // ============================================================
+  // Analytics Methods
+  // ============================================================
+
+  /**
+   * Get session statistics
+   */
+  async getSessionStats(options?: {
+    startDate?: Date;
+    endDate?: Date;
+    serviceSlug?: string;
+  }): Promise<{
+    totalSessions: number;
+    avgDuration: number;
+    totalPageViews: number;
+    totalClicks: number;
+    uniqueUsers: number;
+  }> {
+    try {
+      const conditions: string[] = [];
+      const params: Record<string, unknown> = {};
+
+      if (options?.startDate) {
+        conditions.push('started_at >= {startDate:DateTime}');
+        params.startDate = options.startDate.toISOString();
+      }
+      if (options?.endDate) {
+        conditions.push('started_at <= {endDate:DateTime}');
+        params.endDate = options.endDate.toISOString();
+      }
+      if (options?.serviceSlug) {
+        conditions.push('service_slug = {serviceSlug:String}');
+        params.serviceSlug = options.serviceSlug;
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const sql = `
+        SELECT
+          count() as totalSessions,
+          avg(duration_seconds) as avgDuration,
+          sum(page_views) as totalPageViews,
+          sum(clicks) as totalClicks,
+          count(DISTINCT actor_id) as uniqueUsers
+        FROM ${this.database}.session_recordings_local
+        ${whereClause}
+      `;
+
+      const result = await this.clickhouse.query<{
+        totalSessions: string;
+        avgDuration: string;
+        totalPageViews: string;
+        totalClicks: string;
+        uniqueUsers: string;
+      }>(sql, params);
+
+      const row = result.data[0];
+      if (!row) {
+        return {
+          totalSessions: 0,
+          avgDuration: 0,
+          totalPageViews: 0,
+          totalClicks: 0,
+          uniqueUsers: 0,
+        };
+      }
+
+      return {
+        totalSessions: parseInt(row.totalSessions, 10) || 0,
+        avgDuration: parseFloat(row.avgDuration) || 0,
+        totalPageViews: parseInt(row.totalPageViews, 10) || 0,
+        totalClicks: parseInt(row.totalClicks, 10) || 0,
+        uniqueUsers: parseInt(row.uniqueUsers, 10) || 0,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get session stats: ${error}`);
+      return {
+        totalSessions: 0,
+        avgDuration: 0,
+        totalPageViews: 0,
+        totalClicks: 0,
+        uniqueUsers: 0,
+      };
+    }
+  }
+
+  /**
+   * Get device breakdown statistics
+   */
+  async getDeviceBreakdown(options?: {
+    startDate?: Date;
+    endDate?: Date;
+    serviceSlug?: string;
+  }): Promise<Array<{ deviceType: string; count: number; percentage: number }>> {
+    try {
+      const conditions: string[] = [];
+      const params: Record<string, unknown> = {};
+
+      if (options?.startDate) {
+        conditions.push('started_at >= {startDate:DateTime}');
+        params.startDate = options.startDate.toISOString();
+      }
+      if (options?.endDate) {
+        conditions.push('started_at <= {endDate:DateTime}');
+        params.endDate = options.endDate.toISOString();
+      }
+      if (options?.serviceSlug) {
+        conditions.push('service_slug = {serviceSlug:String}');
+        params.serviceSlug = options.serviceSlug;
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const sql = `
+        SELECT
+          device_type as deviceType,
+          count() as count,
+          (count() * 100.0 / (SELECT count() FROM ${this.database}.session_recordings_local ${whereClause})) as percentage
+        FROM ${this.database}.session_recordings_local
+        ${whereClause}
+        GROUP BY device_type
+        ORDER BY count DESC
+      `;
+
+      const result = await this.clickhouse.query<{
+        deviceType: string;
+        count: string;
+        percentage: string;
+      }>(sql, params);
+
+      return result.data.map((row) => ({
+        deviceType: row.deviceType,
+        count: parseInt(row.count, 10) || 0,
+        percentage: parseFloat(row.percentage) || 0,
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get device breakdown: ${error}`);
+      return [];
+    }
+  }
+
+  /**
+   * Get top pages statistics
+   */
+  async getTopPages(options?: {
+    startDate?: Date;
+    endDate?: Date;
+    serviceSlug?: string;
+    limit?: number;
+  }): Promise<Array<{ path: string; title: string; views: number; uniqueSessions: number }>> {
+    try {
+      const conditions: string[] = [];
+      const params: Record<string, unknown> = {
+        limit: options?.limit || 10,
+      };
+
+      if (options?.startDate) {
+        conditions.push('started_at >= {startDate:DateTime}');
+        params.startDate = options.startDate.toISOString();
+      }
+      if (options?.endDate) {
+        conditions.push('started_at <= {endDate:DateTime}');
+        params.endDate = options.endDate.toISOString();
+      }
+      if (options?.serviceSlug) {
+        conditions.push('service_slug = {serviceSlug:String}');
+        params.serviceSlug = options.serviceSlug;
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const sql = `
+        SELECT
+          entry_page as path,
+          '' as title,
+          count() as views,
+          count(DISTINCT session_id) as uniqueSessions
+        FROM ${this.database}.session_recordings_local
+        ${whereClause}
+        GROUP BY entry_page
+        ORDER BY views DESC
+        LIMIT {limit:UInt32}
+      `;
+
+      const result = await this.clickhouse.query<{
+        path: string;
+        title: string;
+        views: string;
+        uniqueSessions: string;
+      }>(sql, params);
+
+      return result.data.map((row) => ({
+        path: row.path,
+        title: row.title,
+        views: parseInt(row.views, 10) || 0,
+        uniqueSessions: parseInt(row.uniqueSessions, 10) || 0,
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get top pages: ${error}`);
+      return [];
+    }
   }
 }

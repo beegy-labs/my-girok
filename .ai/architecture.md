@@ -12,12 +12,13 @@
 
 ## Communication
 
-| Direction             | Protocol |
-| --------------------- | -------- |
-| Client → BFF          | GraphQL  |
-| Client → Service      | REST     |
-| BFF/Service → Service | gRPC     |
-| Async Events          | Redpanda |
+| Direction             | Protocol  |
+| --------------------- | --------- |
+| Client → BFF          | GraphQL   |
+| Client → Service      | REST      |
+| BFF/Service → Service | gRPC      |
+| Async Events          | Redpanda  |
+| Real-time Updates     | WebSocket |
 
 ## Service Discovery (CoreDNS)
 
@@ -55,6 +56,26 @@ Redpanda (Kafka API, no JVM)
 | MongoDB    | feed, chat                      | Flexible/Throughput |
 | ClickHouse | audit, analytics                | Analytics/Retention |
 | Valkey     | matching                        | Realtime            |
+
+## Real-time Communication
+
+| Pattern   | Implementation       | Use Case              |
+| --------- | -------------------- | --------------------- |
+| WebSocket | @nestjs/platform-ws  | Live session updates  |
+| Polling   | 5-second intervals   | Active session status |
+| Gateway   | SessionRecordingsGWY | Broadcast to clients  |
+
+**Path**: `/ws/sessions` (auth-bff)
+
+## Resiliency Patterns
+
+| Pattern         | Implementation | Use Case               |
+| --------------- | -------------- | ---------------------- |
+| Circuit Breaker | Custom class   | ClickHouse fault guard |
+| Fallback        | Default values | Graceful degradation   |
+| Retry           | Exponential    | Transient failures     |
+
+**Thresholds**: 5 failures → open, 30s reset, 2 success → close
 
 ## ID Strategy
 

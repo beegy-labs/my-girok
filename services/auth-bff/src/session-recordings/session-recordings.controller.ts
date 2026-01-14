@@ -581,14 +581,15 @@ export class SessionRecordingsController {
     @Query('endDate') endDate?: string,
     @Query('serviceSlug') serviceSlug?: string,
   ) {
-    // TODO: Call audit-service getSessionStats
-    return {
-      totalSessions: 0,
-      avgDuration: 0,
-      totalPageViews: 0,
-      totalClicks: 0,
-      uniqueUsers: 0,
-    };
+    return await this.sessionRecordingClient.getSessionStats({
+      startDate: startDate
+        ? { seconds: Math.floor(new Date(startDate).getTime() / 1000), nanos: 0 }
+        : undefined,
+      endDate: endDate
+        ? { seconds: Math.floor(new Date(endDate).getTime() / 1000), nanos: 0 }
+        : undefined,
+      serviceSlug,
+    });
   }
 
   /**
@@ -606,8 +607,16 @@ export class SessionRecordingsController {
     @Query('endDate') endDate?: string,
     @Query('serviceSlug') serviceSlug?: string,
   ) {
-    // TODO: Call audit-service getDeviceBreakdown
-    return [];
+    const result = await this.sessionRecordingClient.getDeviceBreakdown({
+      startDate: startDate
+        ? { seconds: Math.floor(new Date(startDate).getTime() / 1000), nanos: 0 }
+        : undefined,
+      endDate: endDate
+        ? { seconds: Math.floor(new Date(endDate).getTime() / 1000), nanos: 0 }
+        : undefined,
+      serviceSlug,
+    });
+    return result.devices;
   }
 
   /**
@@ -620,12 +629,23 @@ export class SessionRecordingsController {
   @ApiQuery({ name: 'startDate', required: false })
   @ApiQuery({ name: 'endDate', required: false })
   @ApiQuery({ name: 'serviceSlug', required: false })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getTopPages(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('serviceSlug') serviceSlug?: string,
+    @Query('limit') limit?: number,
   ) {
-    // TODO: Call audit-service getTopPages
-    return [];
+    const result = await this.sessionRecordingClient.getTopPages({
+      startDate: startDate
+        ? { seconds: Math.floor(new Date(startDate).getTime() / 1000), nanos: 0 }
+        : undefined,
+      endDate: endDate
+        ? { seconds: Math.floor(new Date(endDate).getTime() / 1000), nanos: 0 }
+        : undefined,
+      serviceSlug,
+      limit: limit || 10,
+    });
+    return result.pages;
   }
 }

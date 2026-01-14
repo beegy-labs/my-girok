@@ -122,7 +122,7 @@ export class AuthorizationController {
       // Not JSON, use content as-is (assume it's DSL)
     }
 
-    return this.authorizationService.createModel(dslContent, body.activate);
+    return this.authorizationService.createModel(dslContent, body.activate, body.notes);
   }
 
   /**

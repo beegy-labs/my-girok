@@ -89,6 +89,7 @@ export interface ModelSummary {
   isActive: boolean;
   createdAt: string;
   dslSource: string;
+  notes?: string;
 }
 
 export interface ListModelsResponse {
@@ -99,6 +100,7 @@ export interface ListModelsResponse {
 export interface WriteModelRequest {
   dslSource: string;
   activate?: boolean;
+  notes?: string;
 }
 
 export interface WriteModelResponse {
@@ -423,12 +425,16 @@ export class AuthorizationGrpcClient implements OnModuleInit {
   /**
    * Write a new authorization model
    */
-  async writeModel(dslSource: string, activate?: boolean): Promise<WriteModelResponse | null> {
+  async writeModel(
+    dslSource: string,
+    activate?: boolean,
+    notes?: string,
+  ): Promise<WriteModelResponse | null> {
     if (!this.isConnected || !this.authzService) {
       throw new Error('Authorization service not connected');
     }
 
-    return await firstValueFrom(this.authzService.writeModel({ dslSource, activate }));
+    return await firstValueFrom(this.authzService.writeModel({ dslSource, activate, notes }));
   }
 
   /**
