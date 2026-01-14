@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin } from './admin-auth.spec';
+import { loginAsAdmin } from './helpers/auth';
 
 /**
  * Tenant Management E2E Tests

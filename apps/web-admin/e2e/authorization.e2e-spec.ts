@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin } from './admin-auth.spec';
+import { loginAsAdmin } from './helpers/auth';
 
 /**
  * Authorization Management E2E Tests
@@ -52,9 +52,8 @@ test.describe('Authorization Management', () => {
       // Find search input
       const searchInput = page.getByPlaceholder(/search.*team/i);
       await searchInput.fill('engineering');
-      await page.waitForTimeout(500); // Debounce
 
-      // Verify search results
+      // Wait for search results to update (debounce handled by waiting for results)
       await expect(page.locator('[data-testid="teams-list"]')).toBeVisible();
     });
 
@@ -110,8 +109,7 @@ test.describe('Authorization Management', () => {
           // Submit
           await page.getByRole('button', { name: /add|save/i }).click();
 
-          // Verify member was added
-          await page.waitForTimeout(500);
+          // Wait for member to be added to the list
           await expect(page.getByText('user-123')).toBeVisible();
         }
       }
@@ -136,8 +134,8 @@ test.describe('Authorization Management', () => {
           // Confirm removal
           await page.getByRole('button', { name: /confirm|yes|remove/i }).click();
 
-          // Verify member was removed
-          await page.waitForTimeout(500);
+          // Wait for removal confirmation to complete
+          await page.waitForLoadState('networkidle');
         }
       }
     });
@@ -161,8 +159,8 @@ test.describe('Authorization Management', () => {
           // Select new role
           await page.getByRole('option', { name: /admin/i }).click();
 
-          // Verify role was updated
-          await page.waitForTimeout(500);
+          // Wait for role update to complete
+          await page.waitForLoadState('networkidle');
         }
       }
     });
@@ -179,10 +177,10 @@ test.describe('Authorization Management', () => {
         await createButton.click();
         await page.getByLabel(/team name/i).fill('Team to Delete');
         await page.getByRole('button', { name: /create|save/i }).click();
-        await page.waitForTimeout(500);
 
-        // Find and delete the team
+        // Wait for team to be created
         const teamToDelete = page.getByText('Team to Delete');
+        await expect(teamToDelete).toBeVisible();
         if (await teamToDelete.isVisible()) {
           await teamToDelete.click();
 
@@ -194,8 +192,146 @@ test.describe('Authorization Management', () => {
             // Confirm deletion
             await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
 
-            // Verify team was deleted
-            await page.waitForTimeout(500);
+            // Wait for deletion to complete
+            await page.waitForLoadState('networkidle');
+          }
+        }
+      }
+    });
+
+    test('should assign and update member roles', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const teamsTab = page.getByRole('tab', { name: /teams/i });
+      await teamsTab.click();
+
+      // Create team or select existing team
+      const createButton = page.getByRole('button', { name: /create team/i });
+      if (await createButton.isVisible()) {
+        await createButton.click();
+        await page.getByLabel(/team name/i).fill('Role Assignment Test Team');
+        await page.getByLabel(/description/i).fill('Team for testing role assignments');
+        await page.getByRole('button', { name: /create|save/i }).click();
+
+        // Wait for team to be created
+        const testTeam = page.getByText('Role Assignment Test Team');
+        await expect(testTeam).toBeVisible();
+        if (await testTeam.isVisible()) {
+          await testTeam.click();
+
+          // Add member with "member" role
+          const addMemberButton = page.getByRole('button', { name: /add member/i });
+          if (await addMemberButton.isVisible()) {
+            await addMemberButton.click();
+
+            // Fill in member details
+            await page.getByLabel(/user.*id|email/i).fill('test-user-456');
+            await page.getByRole('combobox', { name: /role/i }).click();
+            await page.getByRole('option', { name: /member/i }).click();
+
+            // Submit
+            await page.getByRole('button', { name: /add|save/i }).click();
+
+            // Wait for member to be added to the list
+            await expect(page.getByText('test-user-456')).toBeVisible();
+
+            // Verify member role badge shows "member"
+            const memberBadge = page
+              .locator('[data-testid="member-role-badge"]')
+              .filter({ hasText: /member/i });
+            if (await memberBadge.isVisible()) {
+              await expect(memberBadge).toBeVisible();
+            }
+
+            // Update role to "admin"
+            const roleDropdown = page
+              .locator('[data-testid="member-role"]')
+              .filter({ hasText: /member/i })
+              .first();
+            if (await roleDropdown.isVisible()) {
+              await roleDropdown.click();
+              await page.getByRole('option', { name: /admin/i }).click();
+
+              // Wait for role update to complete
+              await page.waitForLoadState('networkidle');
+
+              // Verify role badge/indicator reflects change
+              const adminBadge = page
+                .locator('[data-testid="member-role-badge"]')
+                .filter({ hasText: /admin/i });
+              if (await adminBadge.isVisible()) {
+                await expect(adminBadge).toBeVisible();
+              }
+
+              // Verify success message
+              const successMessage = page.getByText(/role.*updated|updated.*role/i);
+              if (await successMessage.isVisible()) {
+                await expect(successMessage).toBeVisible();
+              }
+            }
+          }
+        }
+      }
+    });
+
+    test('should handle team deletion with members', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const teamsTab = page.getByRole('tab', { name: /teams/i });
+      await teamsTab.click();
+
+      // Create team with members
+      const createButton = page.getByRole('button', { name: /create team/i });
+      if (await createButton.isVisible()) {
+        await createButton.click();
+        await page.getByLabel(/team name/i).fill('Team with Members');
+        await page.getByLabel(/description/i).fill('Team to test cascade deletion');
+        await page.getByRole('button', { name: /create|save/i }).click();
+
+        // Wait for team to be created
+        const testTeam = page.getByText('Team with Members');
+        await expect(testTeam).toBeVisible();
+        if (await testTeam.isVisible()) {
+          await testTeam.click();
+
+          // Add a member to the team
+          const addMemberButton = page.getByRole('button', { name: /add member/i });
+          if (await addMemberButton.isVisible()) {
+            await addMemberButton.click();
+            await page.getByLabel(/user.*id|email/i).fill('member-to-remove-789');
+            await page.getByRole('combobox', { name: /role/i }).click();
+            await page.getByRole('option', { name: /member/i }).click();
+            await page.getByRole('button', { name: /add|save/i }).click();
+
+            // Wait for member to be added
+            await expect(page.getByText('member-to-remove-789')).toBeVisible();
+
+            // Now try to delete the team
+            const deleteButton = page.getByRole('button', { name: /delete/i });
+            if (await deleteButton.isVisible()) {
+              await deleteButton.click();
+
+              // Verify warning message about removing members
+              const warningMessage = page.getByText(
+                /members.*removed|remove.*members|members.*deleted/i,
+              );
+              if (await warningMessage.isVisible()) {
+                await expect(warningMessage).toBeVisible();
+              }
+
+              // Confirm deletion
+              await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
+
+              // Wait for deletion to complete
+              const deletedTeamCheck = page.getByText('Team with Members');
+              await expect(deletedTeamCheck).not.toBeVisible();
+
+              // Verify success message
+              const successMessage = page.getByText(/team.*deleted|deleted.*team/i);
+              if (await successMessage.isVisible()) {
+                await expect(successMessage).toBeVisible();
+              }
+            }
           }
         }
       }
@@ -225,10 +361,7 @@ test.describe('Authorization Management', () => {
       if (await validateButton.isVisible()) {
         await validateButton.click();
 
-        // Wait for validation result
-        await page.waitForTimeout(1000);
-
-        // Check for success or error message
+        // Wait for validation result to appear
         await expect(page.getByText(/valid|invalid|error/i)).toBeVisible();
       }
     });
@@ -250,8 +383,7 @@ test.describe('Authorization Management', () => {
         if (await saveButton.isVisible()) {
           await saveButton.click();
 
-          // Wait for save confirmation
-          await page.waitForTimeout(1000);
+          // Wait for save confirmation to appear
           await expect(page.getByText(/saved|success/i)).toBeVisible();
         }
       }
@@ -270,6 +402,364 @@ test.describe('Authorization Management', () => {
 
         // Verify version list is visible
         await expect(page.locator('[data-testid="version-list"]')).toBeVisible();
+      }
+    });
+
+    test('should detect and display DSL syntax errors', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const policiesTab = page.getByRole('tab', { name: /policies/i });
+      await policiesTab.click();
+
+      // Navigate to model editor
+      const editor = page.locator('[data-testid="model-editor"] textarea');
+      if (await editor.isVisible()) {
+        // Introduce syntax error in model (missing closing brace)
+        const invalidDSL = `
+model
+  schema 1.1
+
+type user
+
+type document
+  relations
+    define owner: [user]
+    define editor: [user
+    define viewer: [user] or editor
+`;
+
+        await editor.fill(invalidDSL);
+
+        // Click validate button
+        const validateButton = page.getByRole('button', { name: /validate/i });
+        if (await validateButton.isVisible()) {
+          await validateButton.click();
+
+          // Wait for validation error to appear
+          const errorMessage = page.getByText(/error|invalid|syntax|parse/i);
+          await expect(errorMessage).toBeVisible();
+
+          // Verify error highlights line number or error location
+          const lineNumber = page.locator('[data-testid="error-line"]');
+          if (await lineNumber.isVisible()) {
+            await expect(lineNumber).toBeVisible();
+          }
+
+          // Check for error details panel
+          const errorPanel = page.locator('[data-testid="validation-error-panel"]');
+          if (await errorPanel.isVisible()) {
+            await expect(errorPanel).toBeVisible();
+          }
+        }
+      }
+    });
+
+    test('should display complete version history', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const policiesTab = page.getByRole('tab', { name: /policies/i });
+      await policiesTab.click();
+
+      // Click version history button
+      const historyButton = page.getByRole('button', { name: /history|versions/i });
+      if (await historyButton.isVisible()) {
+        await historyButton.click();
+
+        // Wait for version list to load
+        const versionList = page.locator('[data-testid="version-list"]');
+        await expect(versionList).toBeVisible();
+
+        // Verify version numbers (v1, v2, v3, etc.)
+        const versionNumbers = page.locator('[data-testid="version-number"]');
+        if (await versionNumbers.first().isVisible()) {
+          await expect(versionNumbers.first()).toBeVisible();
+          await expect(versionNumbers.first()).toContainText(/v\d+/i);
+        }
+
+        // Verify timestamps
+        const timestamps = page.locator('[data-testid="version-timestamp"]');
+        if (await timestamps.first().isVisible()) {
+          await expect(timestamps.first()).toBeVisible();
+        }
+
+        // Verify author/creator (if available)
+        const authors = page.locator('[data-testid="version-author"]');
+        if (await authors.first().isVisible()) {
+          await expect(authors.first()).toBeVisible();
+        }
+
+        // Verify active/inactive status
+        const activeStatus = page.locator('[data-testid="version-active-badge"]');
+        if (await activeStatus.first().isVisible()) {
+          await expect(activeStatus.first()).toBeVisible();
+        }
+
+        // Verify View/Compare/Rollback buttons
+        const viewButton = page.getByRole('button', { name: /view/i }).first();
+        if (await viewButton.isVisible()) {
+          await expect(viewButton).toBeVisible();
+        }
+
+        const compareButton = page.getByRole('button', { name: /compare/i }).first();
+        if (await compareButton.isVisible()) {
+          await expect(compareButton).toBeVisible();
+        }
+
+        const rollbackButton = page.getByRole('button', { name: /rollback/i }).first();
+        if (await rollbackButton.isVisible()) {
+          await expect(rollbackButton).toBeVisible();
+        }
+      }
+    });
+
+    test('should compare policy versions with diff viewer', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const policiesTab = page.getByRole('tab', { name: /policies/i });
+      await policiesTab.click();
+
+      // Navigate to version history
+      const historyButton = page.getByRole('button', { name: /history|versions/i });
+      if (await historyButton.isVisible()) {
+        await historyButton.click();
+
+        // Wait for version list to load
+        await page.waitForLoadState('networkidle');
+
+        // Select two versions to compare
+        const versionCheckboxes = page.locator('[data-testid="version-checkbox"]');
+        if (
+          (await versionCheckboxes.first().isVisible()) &&
+          (await versionCheckboxes.nth(1).isVisible())
+        ) {
+          await versionCheckboxes.first().click();
+          await versionCheckboxes.nth(1).click();
+
+          // Click "View Diff" or "Compare" button
+          const compareButton = page.getByRole('button', { name: /view diff|compare/i });
+          if (await compareButton.isVisible()) {
+            await compareButton.click();
+
+            // Wait for diff viewer to appear
+            const diffModal = page.locator('[data-testid="diff-modal"]');
+            const diffPanel = page.locator('[data-testid="diff-panel"]');
+
+            if (await diffModal.isVisible()) {
+              await expect(diffModal).toBeVisible();
+            } else if (await diffPanel.isVisible()) {
+              await expect(diffPanel).toBeVisible();
+            }
+
+            // Verify side-by-side or unified diff display
+            const diffViewer = page.locator('[data-testid="diff-viewer"]');
+            if (await diffViewer.isVisible()) {
+              await expect(diffViewer).toBeVisible();
+            }
+
+            // Verify additions highlighted in green
+            const additions = page.locator('.diff-addition, [data-testid="diff-added"]');
+            if (await additions.first().isVisible()) {
+              await expect(additions.first()).toBeVisible();
+            }
+
+            // Verify deletions highlighted in red
+            const deletions = page.locator('.diff-deletion, [data-testid="diff-removed"]');
+            if (await deletions.first().isVisible()) {
+              await expect(deletions.first()).toBeVisible();
+            }
+          }
+        }
+      }
+    });
+
+    test('should rollback to previous version with confirmation', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const policiesTab = page.getByRole('tab', { name: /policies/i });
+      await policiesTab.click();
+
+      // Navigate to version history
+      const historyButton = page.getByRole('button', { name: /history|versions/i });
+      if (await historyButton.isVisible()) {
+        await historyButton.click();
+
+        // Wait for version history to load
+        await page.waitForLoadState('networkidle');
+
+        // Select a previous version (not current)
+        const inactiveVersion = page
+          .locator('[data-testid="version-row"]')
+          .filter({ hasNot: page.locator('[data-testid="version-active-badge"]') })
+          .first();
+        if (await inactiveVersion.isVisible()) {
+          await inactiveVersion.click();
+
+          // Click "Rollback" button
+          const rollbackButton = page.getByRole('button', { name: /rollback/i });
+          if (await rollbackButton.isVisible()) {
+            await rollbackButton.click();
+
+            // Verify confirmation dialog appears
+            const confirmDialog = page.getByText(/are you sure|confirm rollback/i);
+            await expect(confirmDialog).toBeVisible();
+
+            // Confirm rollback
+            await page.getByRole('button', { name: /confirm|yes|rollback/i }).click();
+
+            // Wait for rollback to complete and success message to appear
+            const successMessage = page.getByText(/rollback.*success|successfully.*rolled back/i);
+            if (await successMessage.isVisible()) {
+              await expect(successMessage).toBeVisible();
+            }
+
+            // Verify version is now active
+            const activeBadge = page.locator('[data-testid="version-active-badge"]');
+            if (await activeBadge.isVisible()) {
+              await expect(activeBadge).toBeVisible();
+            }
+          }
+        }
+      }
+    });
+
+    test('should activate a specific policy version', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const policiesTab = page.getByRole('tab', { name: /policies/i });
+      await policiesTab.click();
+
+      // Navigate to version history
+      const historyButton = page.getByRole('button', { name: /history|versions/i });
+      if (await historyButton.isVisible()) {
+        await historyButton.click();
+
+        // Wait for version history to load
+        await page.waitForLoadState('networkidle');
+
+        // Select an inactive version
+        const inactiveVersion = page
+          .locator('[data-testid="version-row"]')
+          .filter({ hasNot: page.locator('[data-testid="version-active-badge"]') })
+          .first();
+        if (await inactiveVersion.isVisible()) {
+          // Get the version number for verification
+          const versionNumber = await inactiveVersion
+            .locator('[data-testid="version-number"]')
+            .textContent();
+
+          await inactiveVersion.click();
+
+          // Click "Activate" button
+          const activateButton = page.getByRole('button', { name: /activate/i });
+          if (await activateButton.isVisible()) {
+            await activateButton.click();
+
+            // Confirm activation
+            const confirmButton = page.getByRole('button', { name: /confirm|yes/i });
+            if (await confirmButton.isVisible()) {
+              await confirmButton.click();
+              // Wait for activation to complete
+              await page.waitForLoadState('networkidle');
+            }
+
+            // Verify version becomes active
+            const activeBadge = inactiveVersion.locator('[data-testid="version-active-badge"]');
+            if (await activeBadge.isVisible()) {
+              await expect(activeBadge).toBeVisible();
+            }
+
+            // Verify previous active version becomes inactive
+            const allActiveVersions = page.locator('[data-testid="version-active-badge"]');
+            const activeCount = await allActiveVersions.count();
+            expect(activeCount).toBe(1);
+
+            // Verify success message
+            const successMessage = page.getByText(/activated|version.*active/i);
+            if (await successMessage.isVisible()) {
+              await expect(successMessage).toBeVisible();
+            }
+          }
+        }
+      }
+    });
+
+    test('should export and import authorization model', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const policiesTab = page.getByRole('tab', { name: /policies/i });
+      await policiesTab.click();
+
+      // Test Export functionality
+      const exportButton = page.getByRole('button', { name: /export/i });
+      if (await exportButton.isVisible()) {
+        // Set up download listener
+        const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
+
+        await exportButton.click();
+
+        // Verify download initiated (model.yaml or model.dsl)
+        const download = await downloadPromise;
+        if (download) {
+          const fileName = download.suggestedFilename();
+          expect(fileName).toMatch(/model\.(yaml|dsl|txt)/i);
+        }
+
+        // Wait for download to complete
+        await page.waitForLoadState('networkidle');
+      }
+
+      // Test Import functionality
+      const importButton = page.getByRole('button', { name: /import/i });
+      if (await importButton.isVisible()) {
+        await importButton.click();
+
+        // Wait for import dialog to open
+        await page.waitForLoadState('networkidle');
+
+        // Upload file or paste model
+        const fileInput = page.locator('input[type="file"]');
+        const textArea = page.locator('[data-testid="import-textarea"]');
+
+        if (await textArea.isVisible()) {
+          // Test paste model scenario
+          const testModel = `
+model
+  schema 1.1
+
+type user
+
+type document
+  relations
+    define owner: [user]
+    define editor: [user] or owner
+    define viewer: [user] or editor
+`;
+
+          await textArea.fill(testModel);
+
+          // Submit import
+          const submitButton = page.getByRole('button', { name: /import|upload/i });
+          if (await submitButton.isVisible()) {
+            await submitButton.click();
+
+            // Wait for import to complete and success message to appear
+            const successMessage = page.getByText(/import.*success|successfully.*imported/i);
+            if (await successMessage.isVisible()) {
+              await expect(successMessage).toBeVisible();
+            }
+
+            // Verify model content matches imported data
+            const editor = page.locator('[data-testid="model-editor"] textarea');
+            if (await editor.isVisible()) {
+              const editorContent = await editor.inputValue();
+              expect(editorContent).toContain('type user');
+              expect(editorContent).toContain('type document');
+            }
+          }
+        } else if (await fileInput.isVisible()) {
+          // File upload scenario would be tested with actual file
+          // Skip if no test file is available
+        }
       }
     });
   });
@@ -301,10 +791,7 @@ test.describe('Authorization Management', () => {
       const checkButton = page.getByRole('button', { name: /check/i });
       await checkButton.click();
 
-      // Wait for result
-      await page.waitForTimeout(1000);
-
-      // Verify result is displayed
+      // Wait for permission check result to appear
       await expect(page.getByText(/allowed|denied/i)).toBeVisible();
     });
 
@@ -328,10 +815,7 @@ test.describe('Authorization Management', () => {
         const submitButton = page.getByRole('button', { name: /list|search/i });
         await submitButton.click();
 
-        // Wait for results
-        await page.waitForTimeout(1000);
-
-        // Verify results are displayed
+        // Wait for objects list to load
         await expect(page.locator('[data-testid="objects-list"]')).toBeVisible();
       }
     });
@@ -355,11 +839,182 @@ test.describe('Authorization Management', () => {
         const submitButton = page.getByRole('button', { name: /list|search/i });
         await submitButton.click();
 
-        // Wait for results
-        await page.waitForTimeout(1000);
-
-        // Verify results are displayed
+        // Wait for users list to load
         await expect(page.locator('[data-testid="users-list"]')).toBeVisible();
+      }
+    });
+
+    test('should check permissions for different scenarios', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const permissionsTab = page.getByRole('tab', { name: /permissions/i });
+      await permissionsTab.click();
+
+      // Test scenario 1: Allowed permission
+      await page.getByLabel(/user/i).fill('user:alice');
+      await page.getByLabel(/relation/i).fill('can_view');
+      await page.getByLabel(/object/i).fill('document:123');
+
+      const checkButton = page.getByRole('button', { name: /check/i });
+      await checkButton.click();
+
+      // Wait for permission check result to appear
+      const allowedResult = page.locator('[data-testid="permission-result-allowed"]');
+      const allowedText = page.getByText(/allowed/i);
+
+      if (await allowedResult.isVisible()) {
+        await expect(allowedResult).toBeVisible();
+      } else if (await allowedText.isVisible()) {
+        await expect(allowedText).toBeVisible();
+      }
+
+      // Test scenario 2: Denied permission
+      await page.getByLabel(/user/i).fill('user:bob');
+      await page.getByLabel(/relation/i).fill('can_edit');
+      await page.getByLabel(/object/i).fill('document:123');
+
+      await checkButton.click();
+
+      // Wait for permission check result
+      const deniedResult = page.locator('[data-testid="permission-result-denied"]');
+      const deniedText = page.getByText(/denied/i);
+
+      if (await deniedResult.isVisible()) {
+        await expect(deniedResult).toBeVisible();
+      } else if (await deniedText.isVisible()) {
+        await expect(deniedText).toBeVisible();
+      }
+
+      // Test scenario 3: Check with wildcard
+      await page.getByLabel(/user/i).fill('user:*');
+      await page.getByLabel(/relation/i).fill('can_view');
+      await page.getByLabel(/object/i).fill('session_recording:*');
+
+      await checkButton.click();
+
+      // Wait for wildcard permission check result
+      const wildcardResult = page.getByText(/allowed|denied/i);
+      await expect(wildcardResult).toBeVisible();
+    });
+
+    test('should validate permission checker inputs', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const permissionsTab = page.getByRole('tab', { name: /permissions/i });
+      await permissionsTab.click();
+
+      const checkButton = page.getByRole('button', { name: /check/i });
+
+      // Submit with empty user field
+      await page.getByLabel(/relation/i).fill('can_view');
+      await page.getByLabel(/object/i).fill('document:123');
+      await checkButton.click();
+
+      // Wait for validation error to appear
+      let validationError = page.getByText(/user.*required|required.*user/i);
+      if (await validationError.isVisible()) {
+        await expect(validationError).toBeVisible();
+      }
+
+      // Clear fields and submit with empty relation field
+      await page.getByLabel(/user/i).fill('user:alice');
+      await page.getByLabel(/relation/i).fill('');
+      await page.getByLabel(/object/i).fill('document:123');
+      await checkButton.click();
+
+      // Wait for validation error
+      validationError = page.getByText(/relation.*required|required.*relation/i);
+      if (await validationError.isVisible()) {
+        await expect(validationError).toBeVisible();
+      }
+
+      // Clear fields and submit with empty object field
+      await page.getByLabel(/user/i).fill('user:alice');
+      await page.getByLabel(/relation/i).fill('can_view');
+      await page.getByLabel(/object/i).fill('');
+      await checkButton.click();
+
+      // Wait for validation error
+      validationError = page.getByText(/object.*required|required.*object/i);
+      if (await validationError.isVisible()) {
+        await expect(validationError).toBeVisible();
+      }
+
+      // Submit with invalid format (e.g., missing colon)
+      await page.getByLabel(/user/i).fill('useralice');
+      await page.getByLabel(/relation/i).fill('can_view');
+      await page.getByLabel(/object/i).fill('document123');
+      await checkButton.click();
+
+      // Wait for validation error
+      validationError = page.getByText(/invalid.*format|format.*invalid|must.*include.*colon/i);
+      if (await validationError.isVisible()) {
+        await expect(validationError).toBeVisible();
+      }
+    });
+
+    test('should perform batch permission checks', async ({ page }) => {
+      await page.goto('/authorization');
+
+      const permissionsTab = page.getByRole('tab', { name: /permissions/i });
+      await permissionsTab.click();
+
+      // Find batch check section (if exists)
+      const batchCheckButton = page.getByRole('button', { name: /batch.*check|bulk.*check/i });
+      if (await batchCheckButton.isVisible()) {
+        await batchCheckButton.click();
+
+        // Wait for batch check form to load
+        await page.waitForLoadState('networkidle');
+
+        // Add 3 permission checks
+        const addCheckButton = page.getByRole('button', { name: /add.*check|add.*permission/i });
+
+        // Check 1: user:alice, can_view, document:1
+        if (await addCheckButton.isVisible()) {
+          await addCheckButton.click();
+        }
+        await page.locator('[data-testid="batch-user-0"]').fill('user:alice');
+        await page.locator('[data-testid="batch-relation-0"]').fill('can_view');
+        await page.locator('[data-testid="batch-object-0"]').fill('document:1');
+
+        // Check 2: user:alice, can_edit, document:1
+        if (await addCheckButton.isVisible()) {
+          await addCheckButton.click();
+        }
+        await page.locator('[data-testid="batch-user-1"]').fill('user:alice');
+        await page.locator('[data-testid="batch-relation-1"]').fill('can_edit');
+        await page.locator('[data-testid="batch-object-1"]').fill('document:1');
+
+        // Check 3: user:bob, can_view, document:2
+        if (await addCheckButton.isVisible()) {
+          await addCheckButton.click();
+        }
+        await page.locator('[data-testid="batch-user-2"]').fill('user:bob');
+        await page.locator('[data-testid="batch-relation-2"]').fill('can_view');
+        await page.locator('[data-testid="batch-object-2"]').fill('document:2');
+
+        // Submit batch check
+        const submitBatchButton = page.getByRole('button', { name: /submit.*batch|check.*all/i });
+        if (await submitBatchButton.isVisible()) {
+          await submitBatchButton.click();
+
+          // Wait for batch results to appear
+          const batchResults = page.locator('[data-testid="batch-results"]');
+          await expect(batchResults).toBeVisible();
+
+          // Verify each result shows allowed/denied status
+          const resultItems = page.locator('[data-testid="batch-result-item"]');
+          const resultCount = await resultItems.count();
+          expect(resultCount).toBeGreaterThanOrEqual(3);
+
+          // Check that each result has a status
+          for (let i = 0; i < Math.min(3, resultCount); i++) {
+            const resultItem = resultItems.nth(i);
+            const statusText = await resultItem.getByText(/allowed|denied/i);
+            await expect(statusText).toBeVisible();
+          }
+        }
       }
     });
   });

@@ -266,3 +266,133 @@ export default createNestJsConfig(__dirname, {
 | --------------- | ------------ |
 | Unit with mocks | Shared DB    |
 | Isolated state  | Global state |
+
+## E2E Testing Best Practices
+
+### Test Pattern Guidelines
+
+**DO**:
+
+- Use semantic selectors: `getByRole()`, `getByLabel()`, `getByText()`
+- Use data-testid for complex components without semantic meaning
+- Use Playwright's auto-waiting: `expect(locator).toBeVisible()`
+- Wait for specific conditions: `page.waitForLoadState('networkidle')`
+- Use environment variables for test credentials
+- Use test data factories for consistent test data generation
+- Isolate tests - each test should be independent
+- Use descriptive test names explaining what is being tested
+
+**DON'T**:
+
+- Use `page.waitForTimeout()` - causes flaky tests
+- Hardcode credentials or sensitive data
+- Use CSS selectors tied to implementation (`.css-abc123`)
+- Use XPath selectors
+- Rely on timing or test execution order
+- Use hardcoded test IDs - use factory functions instead
+
+### Test Data Management
+
+- Use fixture files: `e2e/fixtures/test-config.ts` for configuration
+- Use factory functions: `e2e/fixtures/test-data.ts` for test data
+- Configure via environment variables in `.env.test` file
+- Never commit test credentials to version control
+
+**Example**:
+
+```typescript
+import { TEST_CONFIG } from './fixtures/test-config';
+import { testData } from './fixtures/test-data';
+
+test('should create team', async ({ page }) => {
+  await loginAsAdmin(page);
+
+  const teamName = testData.team().name;
+  await page.getByLabel(/team name/i).fill(teamName);
+
+  await page.getByRole('button', { name: /save/i }).click();
+  await expect(page.getByText(teamName)).toBeVisible();
+});
+```
+
+**Reference**: See `apps/web-admin/e2e/README.md` for detailed E2E testing guide.
+
+## API Integration Testing
+
+### Purpose
+
+API integration tests verify backend endpoints without UI, testing the API contract directly.
+
+**Benefits**:
+
+- Faster than E2E tests (no browser overhead)
+- More stable (no UI flakiness)
+- Tests API contract independently
+- Validates request/response schemas
+
+### Implementation
+
+**Location**: `apps/web-admin/e2e/api-integration.e2e-spec.ts`
+
+**Pattern**:
+
+```typescript
+test('should return user summary via API', async ({ request }) => {
+  const response = await request.get('/admin/analytics/users/top', {
+    headers: { Cookie: sessionCookie },
+  });
+
+  expect(response.ok()).toBeTruthy();
+  const data = await response.json();
+  expect(data).toHaveProperty('data');
+  expect(Array.isArray(data.data)).toBeTruthy();
+});
+```
+
+**Coverage**: Analytics, Authorization, Teams, Session Recordings APIs
+
+### System Integration Testing
+
+**Script**: `scripts/test-integration.sh`
+
+**Purpose**: Verify backend service health and connectivity before running E2E tests.
+
+**Checks**:
+
+- Service health endpoints
+- gRPC port availability
+- API endpoint responses
+- Service-to-service communication
+
+**Usage**:
+
+```bash
+# With defaults
+./scripts/test-integration.sh
+
+# With custom URLs
+AUTH_BFF_URL=http://staging:4005 ./scripts/test-integration.sh
+```
+
+**Environment Variables**:
+
+- `AUTH_BFF_URL` - Auth BFF service URL
+- `ANALYTICS_PORT` - Analytics gRPC port
+- `AUTHORIZATION_PORT` - Authorization gRPC port
+- `AUDIT_PORT` - Audit gRPC port
+- `SESSION_COOKIE` - Session cookie for authenticated tests
+
+## Test Types Overview
+
+| Test Type             | Pattern                       | Purpose                          | Location                                         |
+| --------------------- | ----------------------------- | -------------------------------- | ------------------------------------------------ |
+| Unit                  | `*.spec.ts`                   | Service logic, isolated          | `src/**/*.spec.ts`                               |
+| E2E                   | `*.e2e-spec.ts`               | User flows, full stack           | `apps/web-admin/e2e/*.e2e-spec.ts`               |
+| API Integration Tests | `api-integration.e2e-spec.ts` | Backend endpoints, API contract  | `apps/web-admin/e2e/api-integration.e2e-spec.ts` |
+| System Integration    | `test-integration.sh`         | Service health, connectivity     | `scripts/test-integration.sh`                    |
+| gRPC Controller       | `*.grpc.controller.spec.ts`   | gRPC endpoints, proto conversion | `src/**/*.grpc.controller.spec.ts`               |
+
+## References
+
+- **E2E Testing Guide**: `apps/web-admin/e2e/README.md` - Detailed Playwright E2E testing patterns
+- **Frontend Error Handling**: `docs/llm/guides/frontend-error-handling.md` - Error handling patterns for frontend

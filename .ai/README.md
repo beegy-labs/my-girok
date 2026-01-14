@@ -66,4 +66,22 @@
 | Monaco Editor           | Monaco integration guide         | [monaco-editor.md](../docs/llm/guides/monaco-editor.md)                     |
 | Frontend Error Handling | Error handling patterns          | [frontend-error-handling.md](../docs/llm/guides/frontend-error-handling.md) |
 
+### Working on error handling or API calls?
+
+Read: `.ai/rules.md` + `docs/llm/guides/frontend-error-handling.md`
+Pattern: **Always use useApiMutation/useApiError** - never manual try-catch
+
+### Writing E2E tests?
+
+Read: `.ai/rules.md` + `apps/web-admin/e2e/README.md`
+Policy: `docs/llm/policies/testing.md`
+Pattern: **Use semantic selectors, avoid waitForTimeout, use test fixtures**
+
 **Policy**: `docs/llm/policies/documentation-architecture.md`
+
+## Other Tasks
+
+**Writing tests?**
+Read: `.ai/rules.md` + `docs/llm/policies/testing.md`
+E2E Guide: `apps/web-admin/e2e/README.md`
+Error Handling: `docs/llm/guides/frontend-error-handling.md`

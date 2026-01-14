@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin } from './admin-auth.spec';
+import { loginAsAdmin } from './helpers/auth';
 
 /**
  * Hierarchical Menu Navigation E2E Tests
