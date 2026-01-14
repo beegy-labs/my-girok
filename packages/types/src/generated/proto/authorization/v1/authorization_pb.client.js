@@ -2,7 +2,7 @@
 // @generated from protobuf file "authorization/v1/authorization.proto" (package "authorization.v1", syntax proto3)
 // tslint:disable
 // @ts-nocheck
-import { AuthorizationService } from "./authorization_pb";
+import { AuthorizationService } from "./authorization_pb.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 /**
  * AuthorizationService provides Zanzibar-style ReBAC permission checking

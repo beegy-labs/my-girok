@@ -2,7 +2,7 @@
 // @generated from protobuf file "audit/v1/audit.proto" (package "audit.v1", syntax proto3)
 // tslint:disable
 // @ts-nocheck
-import { AuditService } from "./audit_pb";
+import { AuditService } from "./audit_pb.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 /**
  * AuditService provides authentication event logging and security monitoring

@@ -2,7 +2,7 @@
 // @generated from protobuf file "legal/v1/legal.proto" (package "legal.v1", syntax proto3)
 // tslint:disable
 // @ts-nocheck
-import { LegalService } from "./legal_pb";
+import { LegalService } from "./legal_pb.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 /**
  * LegalService provides consent, document, and compliance operations
