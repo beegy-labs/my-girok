@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { loginAsAdmin } from './helpers/auth';
 
 /**
  * Admin Authentication E2E Tests
@@ -42,12 +43,8 @@ test.describe('Admin Authentication', () => {
   });
 
   test('should logout successfully', async ({ page }) => {
-    // Login first
-    await page.getByLabel(/email/i).fill('super_admin@girok.dev');
-    await page.getByLabel(/password/i).fill('SuperAdmin123!');
-    await page.getByRole('button', { name: /sign in/i }).click();
-
-    await expect(page).toHaveURL('/');
+    // Login first using helper
+    await loginAsAdmin(page);
 
     // Open user menu and click logout
     await page.getByRole('button', { name: /super/i }).click();
@@ -57,14 +54,3 @@ test.describe('Admin Authentication', () => {
     await expect(page).toHaveURL(/\/login/);
   });
 });
-
-/**
- * Helper to login as admin
- */
-export async function loginAsAdmin(page: import('@playwright/test').Page) {
-  await page.goto('/login');
-  await page.getByLabel(/email/i).fill('super_admin@girok.dev');
-  await page.getByLabel(/password/i).fill('SuperAdmin123!');
-  await page.getByRole('button', { name: /sign in/i }).click();
-  await expect(page).toHaveURL('/');
-}
