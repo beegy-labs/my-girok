@@ -93,6 +93,20 @@ export class SessionRecordingService {
   }
 
   /**
+   * Convert actor type number from gRPC to string for internal processing
+   * @param actorType - Actor type number from gRPC (1=USER, 2=OPERATOR, 3=ADMIN)
+   * @returns Actor type string for database storage
+   */
+  convertActorTypeFromNumber(actorType: number): string {
+    const map: Record<number, string> = {
+      1: 'USER',
+      2: 'OPERATOR',
+      3: 'ADMIN',
+    };
+    return map[actorType] || 'USER';
+  }
+
+  /**
    * Convert session status string to number for gRPC
    */
   convertStatusToNumber(status: string): number {
@@ -417,6 +431,82 @@ export class SessionRecordingService {
       metadata: metadataResult.data[0],
       events: allEvents,
     };
+  }
+
+  /**
+   * Get session statistics for analytics
+   */
+  async getSessionStats(query: { startDate?: string; endDate?: string; serviceSlug?: string }) {
+    const result = await this.executeQuery(() =>
+      this.clickhouse.query(
+        `SELECT
+          count() as totalSessions,
+          avg(duration_seconds) as avgDuration,
+          sum(page_views) as totalPageViews,
+          sum(clicks) as totalClicks,
+          uniq(actor_id) as uniqueUsers
+        FROM ${this.database}.session_recording_metadata
+        WHERE date BETWEEN {startDate:Date} AND {endDate:Date}
+          ${query.serviceSlug ? 'AND service_slug = {serviceSlug:String}' : ''}`,
+        {
+          startDate: query.startDate || '1970-01-01',
+          endDate: query.endDate || '2099-12-31',
+          serviceSlug: query.serviceSlug,
+        },
+      ),
+    );
+
+    return result.data[0] || {};
+  }
+
+  /**
+   * Get device breakdown statistics
+   */
+  async getDeviceBreakdown(query: { startDate?: string; endDate?: string }) {
+    const result = await this.executeQuery(() =>
+      this.clickhouse.query(
+        `SELECT
+          device_type as deviceType,
+          count() as count,
+          avg(duration_seconds) as avgDuration
+        FROM ${this.database}.session_recording_metadata
+        WHERE date BETWEEN {startDate:Date} AND {endDate:Date}
+        GROUP BY device_type`,
+        {
+          startDate: query.startDate || '1970-01-01',
+          endDate: query.endDate || '2099-12-31',
+        },
+      ),
+    );
+
+    return result.data;
+  }
+
+  /**
+   * Get top pages by visits
+   */
+  async getTopPages(query: { startDate?: string; endDate?: string; limit?: number }) {
+    const result = await this.executeQuery(() =>
+      this.clickhouse.query(
+        `SELECT
+          entry_page as page,
+          count() as visits,
+          avg(duration_seconds) as avgDuration,
+          sum(clicks) as totalClicks
+        FROM ${this.database}.session_recording_metadata
+        WHERE date BETWEEN {startDate:Date} AND {endDate:Date}
+        GROUP BY entry_page
+        ORDER BY visits DESC
+        LIMIT {limit:UInt32}`,
+        {
+          startDate: query.startDate || '1970-01-01',
+          endDate: query.endDate || '2099-12-31',
+          limit: query.limit || 10,
+        },
+      ),
+    );
+
+    return result.data;
   }
 
   // Helper methods
