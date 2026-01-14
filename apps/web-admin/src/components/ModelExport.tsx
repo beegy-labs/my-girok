@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, X } from 'lucide-react';
 import apiClient from '../api/client';
 import { showErrorToast, showSuccessToast } from '../lib/toast';
@@ -17,6 +18,7 @@ export interface ModelExportProps {
 }
 
 export function ModelExport({ modelId, version, onClose }: ModelExportProps) {
+  const { t } = useTranslation();
   const [exportFormat, setExportFormat] = useState<'json' | 'dsl'>('json');
   const [exporting, setExporting] = useState(false);
 
@@ -40,7 +42,7 @@ export function ModelExport({ modelId, version, onClose }: ModelExportProps) {
       a.click();
       window.URL.revokeObjectURL(url);
 
-      showSuccessToast(`Model v${version} exported successfully`);
+      showSuccessToast(t('authorization.exportSuccess', { version }));
 
       if (onClose) {
         onClose();
@@ -58,7 +60,7 @@ export function ModelExport({ modelId, version, onClose }: ModelExportProps) {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-theme-text-primary flex items-center gap-2">
           <Download className="w-5 h-5" />
-          Export Model v{version}
+          {t('authorization.exportModel')} v{version}
         </h3>
         {onClose && (
           <button
@@ -74,7 +76,7 @@ export function ModelExport({ modelId, version, onClose }: ModelExportProps) {
         {/* Format Selection */}
         <div>
           <label className="block text-sm font-medium text-theme-text-primary mb-2">
-            Export Format
+            {t('authorization.selectFormat')}
           </label>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -88,7 +90,7 @@ export function ModelExport({ modelId, version, onClose }: ModelExportProps) {
               <div className="text-left">
                 <div className="font-medium">JSON</div>
                 <div className="text-xs text-theme-text-tertiary mt-0.5">
-                  With metadata and version info
+                  {t('authorization.formatJson')}
                 </div>
               </div>
             </button>
@@ -102,7 +104,9 @@ export function ModelExport({ modelId, version, onClose }: ModelExportProps) {
             >
               <div className="text-left">
                 <div className="font-medium">DSL</div>
-                <div className="text-xs text-theme-text-tertiary mt-0.5">Code only</div>
+                <div className="text-xs text-theme-text-tertiary mt-0.5">
+                  {t('authorization.formatDsl')}
+                </div>
               </div>
             </button>
           </div>
@@ -115,7 +119,7 @@ export function ModelExport({ modelId, version, onClose }: ModelExportProps) {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
         >
           <Download className="w-4 h-4" />
-          {exporting ? 'Downloading...' : `Download as ${exportFormat.toUpperCase()}`}
+          {exporting ? t('authorization.exporting') : t('authorization.download')}
         </button>
       </div>
     </div>

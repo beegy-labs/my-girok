@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, X, FileText, AlertCircle, Eye } from 'lucide-react';
 import { authorizationApi, type AuthorizationModel } from '../api/authorization';
 import { useApiMutation } from '../hooks/useApiMutation';
@@ -22,6 +23,7 @@ interface ImportVariables {
 }
 
 export function ModelImport({ onImported, onClose }: ModelImportProps) {
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [dslContent, setDslContent] = useState<string>('');
   const [showPreview, setShowPreview] = useState(false);
@@ -36,7 +38,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
   } = useApiMutation<AuthorizationModel, ImportVariables>({
     mutationFn: (vars) => authorizationApi.importModel(vars.content, vars.notes, vars.activate),
     context: 'ModelImport.importModel',
-    successToast: 'Authorization model imported successfully',
+    successToast: t('authorization.importSuccess'),
     onSuccess: () => {
       onImported?.();
       onClose?.();
@@ -49,7 +51,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
       // Check file extension
       const ext = selectedFile.name.split('.').pop()?.toLowerCase();
       if (ext !== 'json' && ext !== 'dsl') {
-        setFileError('Only .json and .dsl files are supported');
+        setFileError(t('authorization.fileTypeError'));
         setFile(null);
         setDslContent('');
         setShowPreview(false);
@@ -60,7 +62,9 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
       const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
       if (selectedFile.size > MAX_FILE_SIZE) {
         setFileError(
-          `File size exceeds 5MB limit. Selected file: ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB`,
+          t('authorization.fileSizeError', {
+            size: (selectedFile.size / 1024 / 1024).toFixed(2),
+          }),
         );
         setFile(null);
         setDslContent('');
@@ -88,7 +92,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
         setDslContent(extractedDsl);
         setShowPreview(true);
       } catch (error) {
-        setFileError('Failed to read file content');
+        setFileError(t('authorization.fileReadError'));
         setFile(null);
         setDslContent('');
         setShowPreview(false);
@@ -98,7 +102,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
 
   const handleImport = async () => {
     if (!file || !dslContent) {
-      setFileError('Please select a file');
+      setFileError(t('authorization.selectFileError'));
       return;
     }
 
@@ -114,7 +118,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-theme-text-primary flex items-center gap-2">
           <Upload className="w-5 h-5" />
-          Import Model
+          {t('authorization.importModel')}
         </h3>
         {onClose && (
           <button
@@ -130,7 +134,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
         {/* File Input */}
         <div>
           <label className="block text-sm font-medium text-theme-text-primary mb-2">
-            Select File
+            {t('authorization.selectFile')}
           </label>
           <div className="relative">
             <input
@@ -162,7 +166,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
           <div>
             <label className="block text-sm font-medium text-theme-text-primary mb-2 flex items-center gap-2">
               <Eye className="w-4 h-4" />
-              Content Preview (Read-Only)
+              {t('authorization.contentPreview')}
             </label>
             <div className="border border-theme-border-default rounded-lg overflow-hidden">
               <MonacoAuthDSLEditor
@@ -173,7 +177,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
               />
             </div>
             <p className="mt-2 text-xs text-theme-text-tertiary">
-              Review the content before importing to ensure it's correct
+              {t('authorization.reviewContent')}
             </p>
           </div>
         )}
@@ -181,12 +185,12 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
         {/* Notes Input */}
         <div>
           <label className="block text-sm font-medium text-theme-text-primary mb-2">
-            Version Notes (Optional)
+            {t('authorization.versionNotes')}
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add notes about this imported model..."
+            placeholder={t('authorization.versionNotesPlaceholder')}
             className="w-full px-3 py-2 border border-theme-border-default rounded-lg bg-theme-background-primary text-theme-text-primary placeholder-theme-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500"
             rows={3}
           />
@@ -200,17 +204,14 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
             onChange={(e) => setActivate(e.target.checked)}
             className="w-4 h-4 rounded border-theme-border-default"
           />
-          Activate after import
+          {t('authorization.activateAfterImport')}
         </label>
 
         {/* Warning */}
         {activate && (
           <div className="flex items-start gap-2 p-3 bg-theme-status-warning-background text-theme-status-warning-text rounded-lg text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>
-              Activating will immediately replace the current active model. Make sure the imported
-              model is valid.
-            </span>
+            <span>{t('authorization.activateWarning')}</span>
           </div>
         )}
 
@@ -229,7 +230,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
         >
           <Upload className="w-4 h-4" />
-          {isLoading ? 'Importing...' : 'Import Model'}
+          {isLoading ? t('authorization.importing') : t('authorization.importModel')}
         </button>
       </div>
     </div>
