@@ -30,6 +30,8 @@ Please refer to the `.env.example` file for required environment variables.
 
 ## 5. API Specification
 
+<!-- Last rebuild: 2026-01-14 -->
+
 - `GET /health`: Checks the service status.
 - `GET /users/:id`: Retrieves a specific user's information.
 - `POST /users`: Creates a new user.
