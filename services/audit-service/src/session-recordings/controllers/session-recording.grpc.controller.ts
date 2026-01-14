@@ -143,6 +143,72 @@ export class SessionRecordingGrpcController {
 
   constructor(private readonly sessionRecordingService: SessionRecordingService) {}
 
+  // ============================================================
+  // Private Proto Conversion Methods
+  // ============================================================
+
+  /**
+   * Convert proto device type number to string
+   */
+  private deviceTypeToString(proto: number): string {
+    const map: Record<number, string> = {
+      0: 'desktop',
+      1: 'desktop',
+      2: 'mobile',
+      3: 'tablet',
+    };
+    return map[proto] ?? 'desktop';
+  }
+
+  /**
+   * Convert device type string to proto number
+   */
+  private deviceTypeToProto(str: string): number {
+    const map: Record<string, number> = {
+      desktop: 1,
+      mobile: 2,
+      tablet: 3,
+    };
+    return map[str] ?? 1;
+  }
+
+  /**
+   * Convert proto actor type number to string
+   */
+  private actorTypeToString(proto: number): string {
+    const map: Record<number, string> = {
+      1: 'USER',
+      2: 'OPERATOR',
+      3: 'ADMIN',
+    };
+    return map[proto] ?? 'USER';
+  }
+
+  /**
+   * Convert actor type string to proto number
+   */
+  private actorTypeToProto(str: string): number {
+    const map: Record<string, number> = {
+      USER: 1,
+      OPERATOR: 2,
+      ADMIN: 3,
+    };
+    return map[str] ?? 1;
+  }
+
+  /**
+   * Convert session status string to proto number
+   */
+  private sessionStatusToProto(str: string): number {
+    const map: Record<string, number> = {
+      active: 1,
+      recording: 1,
+      ended: 2,
+      completed: 2,
+    };
+    return map[str] ?? 0;
+  }
+
   @GrpcMethod('SessionRecordingService', 'SaveEventBatch')
   async saveEventBatch(request: SaveEventBatchRequest): Promise<SaveEventBatchResponse> {
     this.logger.debug(
@@ -197,16 +263,15 @@ export class SessionRecordingGrpcController {
           sessionId: metadata.sessionId,
           startedAt: new Date().toISOString(),
           actorId: metadata.actorId,
-          actorType: this.sessionRecordingService.convertActorTypeFromNumber(
-            metadata.actorType || 0,
-          ),
+          actorType: this.actorTypeToString(metadata.actorType || 0),
           actorEmail: metadata.actorEmail,
           serviceSlug: metadata.serviceSlug,
           browser: metadata.browser,
           os: metadata.os,
-          deviceType: this.sessionRecordingService.convertDeviceTypeToString(
-            metadata.deviceType,
-          ) as 'desktop' | 'mobile' | 'tablet',
+          deviceType: this.deviceTypeToString(metadata.deviceType) as
+            | 'desktop'
+            | 'mobile'
+            | 'tablet',
           screenResolution: metadata.screenResolution,
           timezone: metadata.timezone,
           language: metadata.language,
@@ -312,9 +377,7 @@ export class SessionRecordingGrpcController {
       const result = await this.sessionRecordingService.listSessions({
         serviceSlug: request.serviceSlug,
         actorId: request.actorId,
-        deviceType: request.deviceType
-          ? this.sessionRecordingService.convertDeviceTypeToString(request.deviceType)
-          : undefined,
+        deviceType: request.deviceType ? this.deviceTypeToString(request.deviceType) : undefined,
         startDate: request.startDate
           ? new Date(request.startDate.seconds * 1000).toISOString()
           : undefined,
@@ -328,9 +391,7 @@ export class SessionRecordingGrpcController {
       const sessions: SessionSummary[] = result.data.map((s) => ({
         sessionId: s.sessionId,
         actorId: s.actorId,
-        actorType: s.actorType
-          ? this.sessionRecordingService.convertActorTypeToNumber(s.actorType)
-          : 0,
+        actorType: s.actorType ? this.actorTypeToProto(s.actorType) : 0,
         actorEmail: s.actorEmail,
         serviceSlug: s.serviceSlug,
         startedAt: { seconds: Math.floor(new Date(s.startedAt).getTime() / 1000), nanos: 0 },
@@ -345,9 +406,9 @@ export class SessionRecordingGrpcController {
         exitPage: s.exitPage,
         browser: s.browser,
         os: s.os,
-        deviceType: this.sessionRecordingService.convertDeviceTypeToNumber(s.deviceType),
+        deviceType: this.deviceTypeToProto(s.deviceType),
         countryCode: s.countryCode,
-        status: this.sessionRecordingService.convertStatusToNumber(s.status),
+        status: this.sessionStatusToProto(s.status),
       }));
 
       return {
@@ -384,9 +445,7 @@ export class SessionRecordingGrpcController {
       const sessionSummary: SessionSummary = {
         sessionId: metadata.sessionId,
         actorId: metadata.actorId,
-        actorType: metadata.actorType
-          ? this.sessionRecordingService.convertActorTypeToNumber(metadata.actorType)
-          : 0,
+        actorType: metadata.actorType ? this.actorTypeToProto(metadata.actorType) : 0,
         actorEmail: metadata.actorEmail,
         serviceSlug: metadata.serviceSlug,
         startedAt: { seconds: Math.floor(new Date(metadata.startedAt).getTime() / 1000), nanos: 0 },
@@ -401,9 +460,9 @@ export class SessionRecordingGrpcController {
         exitPage: metadata.exitPage,
         browser: metadata.browser,
         os: metadata.os,
-        deviceType: this.sessionRecordingService.convertDeviceTypeToNumber(metadata.deviceType),
+        deviceType: this.deviceTypeToProto(metadata.deviceType),
         countryCode: metadata.countryCode,
-        status: this.sessionRecordingService.convertStatusToNumber(metadata.status),
+        status: this.sessionStatusToProto(metadata.status),
       };
 
       return {

@@ -19,35 +19,6 @@ export class SessionRecordingService {
   private readonly circuitBreaker: CircuitBreaker;
   private readonly database: string;
 
-  // Device type enum mapping
-  private readonly DeviceTypeMap: Record<string, number> = {
-    desktop: 1,
-    mobile: 2,
-    tablet: 3,
-  };
-
-  private readonly DeviceTypeReverseMap: Record<number, string> = {
-    0: 'desktop',
-    1: 'desktop',
-    2: 'mobile',
-    3: 'tablet',
-  };
-
-  // Actor type enum mapping
-  private readonly ActorTypeMap: Record<string, number> = {
-    USER: 1,
-    OPERATOR: 2,
-    ADMIN: 3,
-  };
-
-  // Session status enum mapping
-  private readonly SessionStatusMap: Record<string, number> = {
-    active: 1,
-    ended: 2,
-    recording: 1,
-    completed: 2,
-  };
-
   constructor(
     private readonly clickhouse: ClickHouseService,
     private readonly configService: ConfigService,
@@ -59,63 +30,6 @@ export class SessionRecordingService {
       resetTimeout: 30000,
       successThreshold: 2,
     });
-  }
-
-  // Enum conversion methods
-
-  /**
-   * Convert device type string to number for gRPC
-   */
-  convertDeviceTypeToNumber(deviceType: string): number {
-    return this.DeviceTypeMap[deviceType] || 0;
-  }
-
-  /**
-   * Convert device type number to string
-   */
-  convertDeviceTypeToString(deviceType: number): string {
-    return this.DeviceTypeReverseMap[deviceType] || 'desktop';
-  }
-
-  /**
-   * Convert actor type string to number for gRPC
-   */
-  convertActorTypeToNumber(actorType: string): number {
-    return this.ActorTypeMap[actorType] || 0;
-  }
-
-  /**
-   * Convert actor type number to string
-   */
-  convertActorTypeToString(actorType: number): string {
-    const entries = Object.entries(this.ActorTypeMap);
-    for (const [key, value] of entries) {
-      if (value === actorType) {
-        return key;
-      }
-    }
-    return 'USER';
-  }
-
-  /**
-   * Convert actor type number from gRPC to string for internal processing
-   * @param actorType - Actor type number from gRPC (1=USER, 2=OPERATOR, 3=ADMIN)
-   * @returns Actor type string for database storage
-   */
-  convertActorTypeFromNumber(actorType: number): string {
-    const map: Record<number, string> = {
-      1: 'USER',
-      2: 'OPERATOR',
-      3: 'ADMIN',
-    };
-    return map[actorType] || 'USER';
-  }
-
-  /**
-   * Convert session status string to number for gRPC
-   */
-  convertStatusToNumber(status: string): number {
-    return this.SessionStatusMap[status] || 0;
   }
 
   private async executeQuery<T>(
