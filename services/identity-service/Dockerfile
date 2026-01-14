@@ -3,8 +3,10 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+# Install pnpm and buf
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate && \
+    wget -qO /usr/local/bin/buf https://github.com/bufbuild/buf/releases/download/v1.28.0/buf-Linux-x86_64 && \
+    chmod +x /usr/local/bin/buf
 
 # Copy lock file first for pnpm fetch (best cache layer)
 COPY pnpm-lock.yaml ./
@@ -22,7 +24,7 @@ COPY services/identity-service/package.json ./services/identity-service/
 
 # Install dependencies from cache (very fast)
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --prefer-offline
+    CI=true pnpm install --frozen-lockfile --prefer-offline
 
 # Copy source code
 COPY packages/types ./packages/types
@@ -86,7 +88,7 @@ COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
 # Install production dependencies (skip lifecycle scripts like husky)
 ENV NODE_ENV=production
 RUN --mount=type=cache,id=pnpm-prod,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile --ignore-scripts --prefer-offline
+    CI=true pnpm install --prod --frozen-lockfile --ignore-scripts --prefer-offline
 
 WORKDIR /app/services/identity-service
 
