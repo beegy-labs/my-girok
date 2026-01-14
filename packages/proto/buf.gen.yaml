@@ -11,4 +11,3 @@ plugins:
       - ts_nocheck
       - add_pb_suffix
       - output_javascript
-      - import_extension=.js

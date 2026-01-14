@@ -2,7 +2,7 @@
 // @generated from protobuf file "auth/v1/auth.proto" (package "auth.v1", syntax proto3)
 // tslint:disable
 // @ts-nocheck
-import { AuthService } from "./auth_pb";
+import { AuthService } from "./auth_pb.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 /**
  * AuthService provides authentication, authorization, and sanction operations

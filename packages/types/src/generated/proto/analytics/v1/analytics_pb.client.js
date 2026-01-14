@@ -2,7 +2,7 @@
 // @generated from protobuf file "analytics/v1/analytics.proto" (package "analytics.v1", syntax proto3)
 // tslint:disable
 // @ts-nocheck
-import { AnalyticsService } from "./analytics_pb";
+import { AnalyticsService } from "./analytics_pb.js";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 /**
  * AnalyticsService provides user activity analytics and insights
