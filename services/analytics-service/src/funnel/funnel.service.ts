@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 import {
   FunnelQueryDto,
@@ -12,7 +13,14 @@ const EVENT_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 @Injectable()
 export class FunnelService {
-  constructor(private readonly clickhouse: ClickHouseService) {}
+  private readonly database: string;
+
+  constructor(
+    private readonly clickhouse: ClickHouseService,
+    private readonly configService: ConfigService,
+  ) {
+    this.database = this.configService.get<string>('CLICKHOUSE_DATABASE') || 'analytics_db';
+  }
 
   async analyzeFunnel(query: FunnelQueryDto): Promise<FunnelResult> {
     // Validate step names to prevent SQL injection
@@ -110,7 +118,7 @@ export class FunnelService {
     const sql = `
       WITH completed AS (
         SELECT DISTINCT ${groupColumn} as id, max(timestamp) as completed_time
-        FROM analytics_db.events
+        FROM ${this.database}.events
         WHERE event_name = {completedStep:String}
           AND timestamp >= {startDate:DateTime64}
           AND timestamp <= {endDate:DateTime64}
@@ -118,7 +126,7 @@ export class FunnelService {
       ),
       progressed AS (
         SELECT DISTINCT ${groupColumn} as id
-        FROM analytics_db.events
+        FROM ${this.database}.events
         WHERE event_name = {nextStep:String}
           AND timestamp >= {startDate:DateTime64}
           AND timestamp <= {endDate:DateTime64}
@@ -186,7 +194,7 @@ export class FunnelService {
         SELECT
           ${groupColumn},
           windowFunnel({conversionWindow:UInt32})(timestamp, ${stepConditions}) as level
-        FROM analytics_db.events
+        FROM ${this.database}.events
         WHERE timestamp >= {startDate:DateTime64}
           AND timestamp <= {endDate:DateTime64}
           AND event_name IN ({steps:Array(String)})
@@ -233,7 +241,7 @@ export class FunnelService {
         FROM (
           SELECT
             dateDiff('second', e1.timestamp, e2.timestamp) as time_diff
-          FROM analytics_db.events e1
+          FROM ${this.database}.events e1
           JOIN analytics_db.events e2
             ON e1.${groupColumn} = e2.${groupColumn}
             AND e2.timestamp > e1.timestamp

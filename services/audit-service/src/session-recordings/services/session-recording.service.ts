@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClickHouseService } from '@my-girok/nest-common/clickhouse';
 import { CircuitBreaker } from '@my-girok/nest-common';
 import { randomUUID } from 'crypto';
@@ -16,7 +17,7 @@ import {
 export class SessionRecordingService {
   private readonly logger = new Logger(SessionRecordingService.name);
   private readonly circuitBreaker: CircuitBreaker;
-  private readonly database = 'analytics_db';
+  private readonly database: string;
 
   // Device type enum mapping
   private readonly DeviceTypeMap: Record<string, number> = {
@@ -47,7 +48,11 @@ export class SessionRecordingService {
     completed: 2,
   };
 
-  constructor(private readonly clickhouse: ClickHouseService) {
+  constructor(
+    private readonly clickhouse: ClickHouseService,
+    private readonly configService: ConfigService,
+  ) {
+    this.database = this.configService.get<string>('CLICKHOUSE_DATABASE') || 'analytics_db';
     this.circuitBreaker = new CircuitBreaker({
       name: 'clickhouse-recordings',
       failureThreshold: 5,

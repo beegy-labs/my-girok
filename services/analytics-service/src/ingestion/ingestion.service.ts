@@ -1,4 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClickHouseService } from '../shared/clickhouse/clickhouse.service';
 import { ID } from '@my-girok/nest-common';
 import { TrackEventDto } from './dto/track-event.dto';
@@ -12,25 +13,20 @@ import { IdentifyDto } from './dto/identify.dto';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Whitelist of allowed tables for mutation operations
+ * Whitelist of allowed table names (without database prefix) for mutation operations
  * Prevents SQL injection in ALTER TABLE commands
  */
 const ALLOWED_MUTATION_TABLES = new Set([
-  'analytics_db.sessions_local',
-  'analytics_db.events_local',
-  'analytics_db.page_views_local',
-  'analytics_db.user_profiles_local',
+  'sessions_local',
+  'events_local',
+  'page_views_local',
+  'user_profiles_local',
 ]);
 
 /**
- * Whitelist of allowed tables for insert operations
+ * Whitelist of allowed table names (without database prefix) for insert operations
  */
-const ALLOWED_INSERT_TABLES = new Set([
-  'analytics_db.events',
-  'analytics_db.page_views',
-  'analytics_db.sessions',
-  'analytics_db.user_profiles',
-]);
+const ALLOWED_INSERT_TABLES = new Set(['events', 'page_views', 'sessions', 'user_profiles']);
 
 /**
  * Maximum batch size for event ingestion
@@ -41,26 +37,36 @@ const MAX_BATCH_SIZE = 1000;
 @Injectable()
 export class IngestionService {
   private readonly logger = new Logger(IngestionService.name);
+  private readonly database: string;
 
-  constructor(private readonly clickhouse: ClickHouseService) {}
+  constructor(
+    private readonly clickhouse: ClickHouseService,
+    private readonly configService: ConfigService,
+  ) {
+    this.database = this.configService.get<string>('CLICKHOUSE_DATABASE') || 'analytics_db';
+  }
 
   /**
    * Validate table name against whitelist
+   * @param fullTableName - Full table name (database.table)
    * @throws BadRequestException if table is not allowed
    */
-  private validateInsertTable(table: string): void {
-    if (!ALLOWED_INSERT_TABLES.has(table)) {
-      throw new BadRequestException(`Invalid table name: ${table}`);
+  private validateInsertTable(fullTableName: string): void {
+    const tableName = fullTableName.split('.').pop() || '';
+    if (!ALLOWED_INSERT_TABLES.has(tableName)) {
+      throw new BadRequestException(`Invalid table name: ${fullTableName}`);
     }
   }
 
   /**
    * Validate mutation table name against whitelist
+   * @param fullTableName - Full table name (database.table)
    * @throws BadRequestException if table is not allowed
    */
-  private validateMutationTable(table: string): void {
-    if (!ALLOWED_MUTATION_TABLES.has(table)) {
-      throw new BadRequestException(`Invalid mutation table name: ${table}`);
+  private validateMutationTable(fullTableName: string): void {
+    const tableName = fullTableName.split('.').pop() || '';
+    if (!ALLOWED_MUTATION_TABLES.has(tableName)) {
+      throw new BadRequestException(`Invalid mutation table name: ${fullTableName}`);
     }
   }
 
@@ -103,7 +109,7 @@ export class IngestionService {
       element_text: null,
     }));
 
-    await this.clickhouse.insert('analytics_db.events', rows);
+    await this.clickhouse.insert('${this.database}.events', rows);
     this.logger.debug(`Tracked ${events.length} events from ${anonymizedIp}`);
   }
 
@@ -125,7 +131,7 @@ export class IngestionService {
       cls: null,
     };
 
-    await this.clickhouse.insert('analytics_db.page_views', [row]);
+    await this.clickhouse.insert('${this.database}.page_views', [row]);
   }
 
   async identify(dto: IdentifyDto): Promise<void> {
@@ -135,7 +141,7 @@ export class IngestionService {
     this.validateUUID(dto.anonymousId, 'anonymousId');
 
     // Validate table name against whitelist
-    const mutationTable = 'analytics_db.sessions_local';
+    const mutationTable = '${this.database}.sessions_local';
     this.validateMutationTable(mutationTable);
 
     // ClickHouse ALTER TABLE UPDATE doesn't support parameterized queries.
@@ -150,7 +156,7 @@ export class IngestionService {
     );
 
     // Validate insert table
-    const profileTable = 'analytics_db.user_profiles';
+    const profileTable = '${this.database}.user_profiles';
     this.validateInsertTable(profileTable);
 
     // Update user profile using ReplacingMergeTree (insert replaces existing row)
@@ -223,7 +229,7 @@ export class IngestionService {
       conversion_value: null,
     };
 
-    await this.clickhouse.insert('analytics_db.sessions', [row]);
+    await this.clickhouse.insert('${this.database}.sessions', [row]);
   }
 
   /**
