@@ -20,6 +20,8 @@ COPY packages/types/tsconfig.json ./packages/types/
 COPY packages/design-tokens/package.json ./packages/design-tokens/
 COPY packages/ui-components/package.json ./packages/ui-components/
 COPY packages/ui-components/tsconfig.json ./packages/ui-components/
+COPY packages/tracking-sdk/package.json ./packages/tracking-sdk/
+COPY packages/tracking-sdk/tsconfig.json ./packages/tracking-sdk/
 
 # Install dependencies including devDependencies for build
 RUN pnpm install --frozen-lockfile
@@ -28,10 +30,15 @@ RUN pnpm install --frozen-lockfile
 COPY packages/types ./packages/types
 COPY packages/design-tokens ./packages/design-tokens
 COPY packages/ui-components ./packages/ui-components
+COPY packages/tracking-sdk ./packages/tracking-sdk
 COPY apps/web-admin ./apps/web-admin
 
 # Build shared packages first
 WORKDIR /app/packages/types
+RUN pnpm build
+
+# Build tracking SDK
+WORKDIR /app/packages/tracking-sdk
 RUN pnpm build
 
 # Build UI components

@@ -24,7 +24,7 @@ COPY services/legal-service/package.json ./services/legal-service/
 
 # Install dependencies from cache (very fast)
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --offline --prefer-offline
+    pnpm install --frozen-lockfile --prefer-offline
 
 # Copy source code
 COPY packages/types ./packages/types
