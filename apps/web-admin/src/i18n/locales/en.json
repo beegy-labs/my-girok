@@ -82,6 +82,9 @@
     "invalidCredentials": "Invalid email or password",
     "protectedArea": "Protected administrative area. Unauthorized access is prohibited.",
     "sessionExpired": "Session expired. Please login again.",
+    "rateLimited": "Too many login attempts",
+    "rateLimitedMessage": "Please wait {{seconds}} seconds before trying again",
+    "rateLimitedRetry": "You can try again now",
     "mfa": {
       "title": "Two-Factor Authentication",
       "subtitle": "Enter the verification code to continue",

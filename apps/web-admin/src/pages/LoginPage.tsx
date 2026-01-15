@@ -1,13 +1,14 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, useCallback, FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Globe, Languages, Sun, Moon } from 'lucide-react';
+import { Loader2, Globe, Languages, Sun, Moon, AlertTriangle } from 'lucide-react';
 import { authApi, resetRedirectFlag } from '../api';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { REGIONS, type SupportedRegion } from '../config/region.config';
 import { useApiMutation } from '../hooks/useApiMutation';
+import { ErrorCode } from '../lib/error-handler';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇺🇸' },
@@ -31,9 +32,36 @@ export default function LoginPage() {
     return (saved as SupportedRegion) || 'KR';
   });
 
+  // Rate limit countdown state
+  const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
+  const isRateLimited = rateLimitCountdown > 0;
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (rateLimitCountdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setRateLimitCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [rateLimitCountdown]);
+
+  const handleRateLimitError = useCallback(() => {
+    // Set 60 second countdown (matches server TTL)
+    setRateLimitCountdown(60);
+  }, []);
+
   const {
     mutate: login,
     isLoading,
+    error,
     errorMessage,
   } = useApiMutation({
     mutationFn: authApi.login,
@@ -58,7 +86,16 @@ export default function LoginPage() {
         navigate(from, { replace: true });
       }
     },
+    onError: (appError) => {
+      // Handle rate limiting specifically
+      if (appError.code === ErrorCode.RATE_LIMITED) {
+        handleRateLimitError();
+      }
+    },
   });
+
+  // Check if current error is rate limited
+  const isRateLimitError = error?.code === ErrorCode.RATE_LIMITED;
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -98,7 +135,28 @@ export default function LoginPage() {
         {/* Login form */}
         <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-5 sm:p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-            {errorMessage && (
+            {/* Rate limit warning */}
+            {(isRateLimited || isRateLimitError) && (
+              <div className="flex items-start gap-3 p-4 bg-theme-status-warning-bg border border-theme-status-warning-text/20 rounded-lg">
+                <AlertTriangle
+                  size={20}
+                  className="text-theme-status-warning-text flex-shrink-0 mt-0.5"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-theme-status-warning-text">
+                    {t('auth.rateLimited')}
+                  </p>
+                  <p className="text-sm text-theme-status-warning-text/80 mt-1">
+                    {isRateLimited
+                      ? t('auth.rateLimitedMessage', { seconds: rateLimitCountdown })
+                      : t('auth.rateLimitedRetry')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* General error message (excluding rate limit) */}
+            {errorMessage && !isRateLimitError && (
               <div className="flex items-center gap-2 p-3 bg-theme-status-error-bg text-theme-status-error-text rounded-lg text-sm">
                 <span>{errorMessage}</span>
               </div>
@@ -144,11 +202,17 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isRateLimited}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-btn-primary-from to-btn-primary-to text-btn-primary-text font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading && <Loader2 size={18} className="animate-spin" />}
-              <span>{isLoading ? t('auth.loginLoading') : t('auth.login')}</span>
+              <span>
+                {isLoading
+                  ? t('auth.loginLoading')
+                  : isRateLimited
+                    ? t('auth.rateLimitedMessage', { seconds: rateLimitCountdown })
+                    : t('auth.login')}
+              </span>
             </button>
           </form>
         </div>
