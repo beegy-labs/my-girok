@@ -20,6 +20,7 @@
     "clearFilters": "フィルターをクリア",
     "showing": "{{from}} - {{to}} / 全{{total}}件",
     "previous": "前へ",
+    "prev": "前",
     "next": "次へ",
     "page": "{{current}} / {{total}} ページ",
     "noResults": "結果がありません",

@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useApiMutation } from './useApiMutation';
 import * as errorHandler from '../lib/error-handler';
 import * as toast from '../lib/toast';
@@ -339,19 +339,20 @@ describe('useApiMutation', () => {
 
       expect(result.current.isLoading).toBe(false);
 
-      const mutatePromise = act(async () => {
-        result.current.mutate();
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(true);
-      });
-
+      // Start mutation without awaiting to check isLoading during execution
+      let mutatePromise: Promise<void>;
       act(() => {
-        resolvePromise!({ id: '123' });
+        mutatePromise = result.current.mutate();
       });
 
-      await mutatePromise;
+      // isLoading should be true while mutation is in progress
+      expect(result.current.isLoading).toBe(true);
+
+      // Resolve the promise
+      await act(async () => {
+        resolvePromise({ id: '123' });
+        await mutatePromise;
+      });
 
       expect(result.current.isLoading).toBe(false);
     });
@@ -367,7 +368,7 @@ describe('useApiMutation', () => {
       };
       const mutationFn = vi.fn().mockRejectedValue(mockError);
 
-      vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
+      vi.spyOn(errorHandler, 'handleApiError').mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
         useApiMutation<any, void>({
@@ -394,7 +395,7 @@ describe('useApiMutation', () => {
         }),
       );
 
-      let returnedData;
+      let returnedData: unknown;
       await act(async () => {
         returnedData = await result.current.mutateAsync();
       });
@@ -413,7 +414,7 @@ describe('useApiMutation', () => {
       };
       const mutationFn = vi.fn().mockRejectedValue(mockError);
 
-      vi.mocked(errorHandler.handleApiError).mockReturnValue(mockAppError);
+      vi.spyOn(errorHandler, 'handleApiError').mockReturnValue(mockAppError);
 
       const { result } = renderHook(() =>
         useApiMutation<any, void>({
@@ -421,9 +422,16 @@ describe('useApiMutation', () => {
         }),
       );
 
+      let thrownError: unknown;
       await act(async () => {
-        await expect(result.current.mutateAsync()).rejects.toThrow();
+        try {
+          await result.current.mutateAsync();
+        } catch (e) {
+          thrownError = e;
+        }
       });
+
+      expect(thrownError).toBeDefined();
     });
   });
 });

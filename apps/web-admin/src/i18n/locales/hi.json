@@ -20,6 +20,7 @@
     "clearFilters": "फ़िल्टर साफ़ करें",
     "showing": "{{from}} - {{to}} / {{total}} में से",
     "previous": "पिछला",
+    "prev": "पिछ",
     "next": "अगला",
     "page": "पृष्ठ {{current}} / {{total}}",
     "noResults": "कोई परिणाम नहीं मिला",

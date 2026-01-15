@@ -128,9 +128,13 @@ export default function LoginHistoryPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-theme-text-primary">{t('loginHistory.title')}</h1>
-          <p className="text-theme-text-secondary mt-1">{t('loginHistory.subtitle', { total })}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
+            {t('loginHistory.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-theme-text-secondary mt-1">
+            {t('loginHistory.subtitle', { total })}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">

@@ -7,6 +7,7 @@ import {
   useRef,
   ReactNode,
 } from 'react';
+import { AxiosError } from 'axios';
 import { useAdminAuthStore } from '../stores/adminAuthStore';
 import { authApi } from '../api';
 import { logger } from '../utils/logger';
@@ -96,9 +97,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuth(adminInfo);
         logger.info('Session validated successfully');
       } catch (error) {
-        // Session invalid - clear auth (401 interceptor will also clear)
-        logger.warn('Session validation failed, clearing auth');
-        clearAuth();
+        // Only clear auth on 401 (unauthorized) errors
+        // Other errors (network, 5xx) should not cause logout
+        const axiosError = error as AxiosError;
+        if (axiosError.response?.status === 401) {
+          logger.warn('Session validation failed (401), clearing auth');
+          clearAuth();
+        } else {
+          // Log other errors but don't clear auth
+          // The session might still be valid, just the validation request failed
+          logger.warn('Session validation request failed, but keeping auth', error);
+        }
       } finally {
         setIsInitializing(false);
       }

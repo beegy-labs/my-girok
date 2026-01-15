@@ -7,7 +7,7 @@
  * - Error state management
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   handleApiError,
   withRetry,
@@ -83,6 +83,11 @@ export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorResult
   const [error, setError] = useState<AppError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Use ref to store options to prevent callback recreation on every render
+  // This fixes infinite re-render loops when executeWithErrorHandling is used in useEffect dependencies
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -93,26 +98,28 @@ export function useApiError(options: UseApiErrorOptions = {}): UseApiErrorResult
       try {
         clearError();
 
-        const executor = options.retry ? () => withRetry(fn, options.retryConfig) : fn;
+        const opts = optionsRef.current;
+        const executor = opts.retry ? () => withRetry(fn, opts.retryConfig) : fn;
 
         const result = await executor();
         return result;
       } catch (err) {
-        const appError = handleApiError(err, options.context);
+        const opts = optionsRef.current;
+        const appError = handleApiError(err, opts.context);
         setError(appError);
 
         // Show error toast by default (unless explicitly disabled)
-        if (options.showToast !== false) {
+        if (opts.showToast !== false) {
           showErrorToast(appError);
         }
 
-        options.onError?.(appError);
+        opts.onError?.(appError);
         return null;
       } finally {
         setIsLoading(false);
       }
     },
-    [options, clearError],
+    [clearError],
   );
 
   return {

@@ -5,7 +5,7 @@
  * Similar to React Query's useMutation but with enhanced error handling.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { handleApiError, withRetry, AppError, RetryConfig } from '../lib/error-handler';
 import { showErrorToast, showSuccessToast } from '../lib/toast';
 
@@ -125,55 +125,57 @@ export function useApiMutation<TData = unknown, TVariables = void>(
   const [error, setError] = useState<AppError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Use ref to store options to prevent callback recreation on every render
+  // This fixes infinite re-render loops when mutate/mutateAsync is used in dependencies
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const reset = useCallback(() => {
     setData(null);
     setError(null);
     setIsLoading(false);
   }, []);
 
-  const mutateAsync = useCallback(
-    async (variables: TVariables): Promise<TData> => {
-      setIsLoading(true);
-      setError(null);
+  const mutateAsync = useCallback(async (variables: TVariables): Promise<TData> => {
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const executor = options.retry
-          ? () => withRetry(() => options.mutationFn(variables), options.retryConfig)
-          : () => options.mutationFn(variables);
+    const opts = optionsRef.current;
 
-        const result = await executor();
-        setData(result);
+    try {
+      const executor = opts.retry
+        ? () => withRetry(() => opts.mutationFn(variables), opts.retryConfig)
+        : () => opts.mutationFn(variables);
 
-        // Show success toast if configured
-        if (options.successToast) {
-          const message =
-            typeof options.successToast === 'function'
-              ? options.successToast(result)
-              : options.successToast;
-          showSuccessToast(message);
-        }
+      const result = await executor();
+      setData(result);
 
-        options.onSuccess?.(result, variables);
-        options.onSettled?.(result, null, variables);
-        return result;
-      } catch (err) {
-        const appError = handleApiError(err, options.context);
-        setError(appError);
-
-        // Show error toast by default (unless explicitly disabled)
-        if (options.showErrorToast !== false) {
-          showErrorToast(appError);
-        }
-
-        options.onError?.(appError, variables);
-        options.onSettled?.(null, appError, variables);
-        throw err;
-      } finally {
-        setIsLoading(false);
+      // Show success toast if configured
+      if (opts.successToast) {
+        const message =
+          typeof opts.successToast === 'function' ? opts.successToast(result) : opts.successToast;
+        showSuccessToast(message);
       }
-    },
-    [options],
-  );
+
+      opts.onSuccess?.(result, variables);
+      opts.onSettled?.(result, null, variables);
+      return result;
+    } catch (err) {
+      const appError = handleApiError(err, opts.context);
+      setError(appError);
+
+      // Show error toast by default (unless explicitly disabled)
+      if (opts.showErrorToast !== false) {
+        showErrorToast(appError);
+      }
+
+      opts.onError?.(appError, variables);
+      opts.onSettled?.(null, appError, variables);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const mutate = useCallback(
     async (variables: TVariables): Promise<void> => {

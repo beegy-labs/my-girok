@@ -155,9 +155,9 @@ test.describe('Session Recordings', () => {
 
       // Note the first session ID if available for comparison
       const firstSessionRow = page.locator('[data-testid="session-row"]').first();
-      let firstSessionId = '';
+      let _firstSessionId = '';
       if (await firstSessionRow.isVisible()) {
-        firstSessionId = (await firstSessionRow.getAttribute('data-session-id')) || '';
+        _firstSessionId = (await firstSessionRow.getAttribute('data-session-id')) || '';
       }
 
       // Click refresh button
