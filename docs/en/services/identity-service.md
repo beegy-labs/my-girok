@@ -150,6 +150,14 @@ JWT_PUBLIC_KEY=-----BEGIN PUBLIC KEY-----...
 # Token expiration
 JWT_ACCESS_EXPIRATION=15m
 JWT_REFRESH_EXPIRATION=7d
+
+# Kafka (SASL Authentication)
+KAFKA_BROKERS=localhost:9092
+KAFKA_CLIENT_ID=identity-service
+KAFKA_SASL_USERNAME=your-username
+KAFKA_SASL_PASSWORD=your-password
+KAFKA_SASL_MECHANISM=scram-sha-512
+KAFKA_SSL=true
 ```
 
 ---
