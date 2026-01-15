@@ -82,6 +82,9 @@
     "invalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다",
     "protectedArea": "보호된 관리 영역입니다. 무단 접근은 금지되어 있습니다.",
     "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요.",
+    "rateLimited": "로그인 시도 횟수 초과",
+    "rateLimitedMessage": "{{seconds}}초 후에 다시 시도해 주세요",
+    "rateLimitedRetry": "다시 시도할 수 있습니다",
     "mfa": {
       "title": "2단계 인증",
       "subtitle": "계속하려면 인증 코드를 입력하세요",

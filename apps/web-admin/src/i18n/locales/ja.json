@@ -79,7 +79,10 @@
     "passwordPlaceholder": "パスワードを入力",
     "invalidCredentials": "メールまたはパスワードが無効です",
     "protectedArea": "保護された管理エリアです。不正アクセスは禁止されています。",
-    "sessionExpired": "セッションが期限切れです。再度サインインしてください。"
+    "sessionExpired": "セッションが期限切れです。再度サインインしてください。",
+    "rateLimited": "ログイン試行回数の上限に達しました",
+    "rateLimitedMessage": "{{seconds}}秒後に再試行してください",
+    "rateLimitedRetry": "再試行できます"
   },
   "dashboard": {
     "title": "ダッシュボード",
