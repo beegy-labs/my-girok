@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClickHouseService } from '@my-girok/nest-common/clickhouse';
 import { ID } from '@my-girok/nest-common';
 import { Audit } from '@my-girok/types';
@@ -75,8 +76,14 @@ interface AuthEventRow {
 @Injectable()
 export class AuthEventService {
   private readonly logger = new Logger(AuthEventService.name);
+  private readonly database: string;
 
-  constructor(private readonly clickhouse: ClickHouseService) {}
+  constructor(
+    private readonly clickhouse: ClickHouseService,
+    private readonly configService: ConfigService,
+  ) {
+    this.database = this.configService.get<string>('clickhouse.database') || 'audit_db';
+  }
 
   /**
    * Log an authentication event to ClickHouse
@@ -93,7 +100,7 @@ export class AuthEventService {
       const accountTypeStr = this.protoToAccountType(request.accountType);
       const resultStr = this.protoToResult(request.result);
 
-      await this.clickhouse.insert('audit_db.auth_events', [
+      await this.clickhouse.insert(`${this.database}.auth_events`, [
         {
           id: eventId,
           event_type: eventTypeStr,
@@ -107,7 +114,8 @@ export class AuthEventService {
           result: resultStr,
           failure_reason: request.failureReason ?? '',
           metadata: request.metadata ? JSON.stringify(request.metadata) : '{}',
-          timestamp: now.toISOString(),
+          // ClickHouse DateTime64(3) expects 'YYYY-MM-DD HH:mm:ss.SSS' format
+          timestamp: now.toISOString().replace('T', ' ').replace('Z', ''),
         },
       ]);
 
@@ -200,7 +208,7 @@ export class AuthEventService {
       const orderDirection = request.descending !== false ? 'DESC' : 'ASC';
 
       // Count query
-      const countSql = `SELECT count() as total FROM audit_db.auth_events ${whereClause}`;
+      const countSql = `SELECT count() as total FROM ${this.database}.auth_events ${whereClause}`;
       const countResult = await this.clickhouse.query<{ total: string }>(countSql, params);
       const totalCount = parseInt(countResult.data[0]?.total ?? '0', 10);
 
@@ -210,7 +218,7 @@ export class AuthEventService {
           id, event_type, account_type, account_id, session_id,
           ip_address, user_agent, device_fingerprint, country_code,
           result, failure_reason, metadata, timestamp
-        FROM audit_db.auth_events
+        FROM ${this.database}.auth_events
         ${whereClause}
         ORDER BY ${orderBy} ${orderDirection}
         LIMIT {limit:UInt32}
