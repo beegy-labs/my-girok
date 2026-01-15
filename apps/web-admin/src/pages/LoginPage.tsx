@@ -96,8 +96,8 @@ export default function LoginPage() {
         </div>
 
         {/* Login form */}
-        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-5 sm:p-8 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {errorMessage && (
               <div className="flex items-center gap-2 p-3 bg-theme-status-error-bg text-theme-status-error-text rounded-lg text-sm">
                 <span>{errorMessage}</span>
@@ -154,7 +154,7 @@ export default function LoginPage() {
         </div>
 
         {/* Language, Region & Theme Selectors */}
-        <div className="mt-6 flex items-center justify-center gap-4">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-4">
           {/* Language Selector */}
           <div className="relative">
             <div className="flex items-center gap-1 text-theme-text-tertiary">
@@ -162,7 +162,7 @@ export default function LoginPage() {
               <select
                 value={i18n.language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
-                className="appearance-none bg-transparent text-sm cursor-pointer hover:text-theme-text-secondary focus:outline-none pr-4"
+                className="appearance-none bg-transparent text-xs sm:text-sm cursor-pointer hover:text-theme-text-secondary focus:outline-none pr-4"
                 aria-label={t('common.selectLanguage')}
               >
                 {LANGUAGES.map((lang) => (
@@ -174,7 +174,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <span className="text-theme-text-tertiary">|</span>
+          <span className="text-theme-text-tertiary hidden sm:inline">|</span>
 
           {/* Region Selector */}
           <div className="relative">
@@ -183,7 +183,7 @@ export default function LoginPage() {
               <select
                 value={selectedRegion}
                 onChange={(e) => handleRegionChange(e.target.value as SupportedRegion)}
-                className="appearance-none bg-transparent text-sm cursor-pointer hover:text-theme-text-secondary focus:outline-none pr-4"
+                className="appearance-none bg-transparent text-xs sm:text-sm cursor-pointer hover:text-theme-text-secondary focus:outline-none pr-4"
                 aria-label={t('common.selectRegion')}
               >
                 {REGIONS.map((region) => (
@@ -195,7 +195,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <span className="text-theme-text-tertiary">|</span>
+          <span className="text-theme-text-tertiary hidden sm:inline">|</span>
 
           {/* Theme Toggle */}
           <button
@@ -205,7 +205,7 @@ export default function LoginPage() {
             aria-label={resolvedTheme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
           >
             {resolvedTheme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-            <span className="text-sm">
+            <span className="text-xs sm:text-sm">
               {resolvedTheme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
             </span>
           </button>
