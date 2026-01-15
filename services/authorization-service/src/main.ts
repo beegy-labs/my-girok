@@ -38,7 +38,12 @@ async function bootstrap() {
   const httpPort = parseInt(process.env.HTTP_PORT || '3012', 10);
   const httpApp = await NestFactory.create(AppModule);
 
-  httpApp.enableCors();
+  // CORS configuration - consistent with other services
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'];
+  httpApp.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+  });
   await httpApp.listen(httpPort);
   logger.log(`Authorization HTTP service running on port ${httpPort}`);
 }

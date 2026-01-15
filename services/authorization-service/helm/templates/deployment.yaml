@@ -50,6 +50,10 @@ spec:
           value: {{ .Values.app.httpPort | quote }}
         - name: GRPC_PORT
           value: {{ .Values.app.grpcPort | quote }}
+        {{- if .Values.app.corsOrigins }}
+        - name: CORS_ORIGINS
+          value: {{ .Values.app.corsOrigins | quote }}
+        {{- end }}
 
         # ============================================================================
         # PostgreSQL Configuration

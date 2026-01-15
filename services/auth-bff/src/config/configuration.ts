@@ -63,8 +63,17 @@ export default () => ({
     secret: process.env.SESSION_SECRET || UNSAFE_DEFAULTS.SESSION_SECRET,
     cookieName: process.env.SESSION_COOKIE_NAME || COOKIE_NAMES.SESSION,
     maxAge: parseInt(process.env.SESSION_MAX_AGE || '604800000', 10), // 7 days
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: (process.env.SESSION_SAME_SITE as 'strict' | 'lax' | 'none') || 'strict',
+    // secure: true required for sameSite='none' (cross-origin cookies over HTTPS)
+    // Allow explicit override via SESSION_SECURE, default to true when sameSite='none'
+    secure:
+      process.env.SESSION_SECURE === 'true' ||
+      process.env.SESSION_SECURE === '1' ||
+      (process.env.SESSION_SAME_SITE === 'none' && process.env.NODE_ENV !== 'test') ||
+      process.env.NODE_ENV === 'production',
+    // Use 'none' for cross-origin cookie sharing (requires secure: true)
+    sameSite: (process.env.SESSION_SAME_SITE as 'strict' | 'lax' | 'none') || 'none',
+    // Cookie domain for subdomain sharing (e.g., '.girok.dev')
+    domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
   },
 
   encryption: {
