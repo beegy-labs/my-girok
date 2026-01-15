@@ -15,15 +15,11 @@ on:
       - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
-      deploy_env:
-        description: 'Deploy environment'
+      force_build:
+        description: 'Force rebuild even if image exists'
         required: false
-        default: 'develop'
-        type: choice
-        options:
-          - develop
-          - release
-          - main
+        default: true
+        type: boolean
 
 jobs:
   ci:
@@ -35,6 +31,7 @@ jobs:
       gitops_file_prefix: my-girok-auth-bff
       needs_prisma: false
       pnpm_filter: '@my-girok/auth-bff'
+      force_build: ${{ github.event.inputs.force_build == 'true' }}
     secrets:
       GITEA_USERNAME: ${{ secrets.GITEA_USERNAME }}
       GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
