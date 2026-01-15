@@ -1,0 +1,49 @@
+# Dependencies (installed in container)
+node_modules
+**/node_modules
+
+# Build outputs (rebuilt in container)
+**/dist
+**/.next
+**/build
+**/coverage
+**/*.tsbuildinfo
+
+# Development files
+.git
+.gitignore
+**/.env*
+**/*.log
+
+# IDE/Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentation (not needed for runtime)
+docs
+*.md
+!packages/proto/*.md
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/test
+**/tests
+**/__tests__
+**/__mocks__
+**/e2e
+
+# CI/CD
+.github
+.gitlab-ci.yml
+Jenkinsfile
+
+# Misc
+.DS_Store
+Thumbs.db
+*.tgz
+.turbo
