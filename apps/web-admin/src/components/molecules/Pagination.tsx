@@ -35,6 +35,7 @@ export const Pagination = memo<PaginationProps>(
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
             className="flex-1 sm:flex-none"
+            aria-label={t('common.previous')}
           >
             <span className="hidden sm:inline">{t('common.previous')}</span>
             <span className="sm:hidden">{t('common.prev')}</span>
@@ -47,6 +48,7 @@ export const Pagination = memo<PaginationProps>(
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
             className="flex-1 sm:flex-none"
+            aria-label={t('common.next')}
           >
             {t('common.next')}
           </Button>

@@ -20,6 +20,7 @@
     "clearFilters": "필터 초기화",
     "showing": "{{from}} - {{to}} / 전체 {{total}}",
     "previous": "이전",
+    "prev": "이전",
     "next": "다음",
     "page": "{{current}} / {{total}} 페이지",
     "noResults": "결과가 없습니다",
