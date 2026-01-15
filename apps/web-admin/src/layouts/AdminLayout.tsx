@@ -84,17 +84,18 @@ export default function AdminLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-theme-bg-card border-b border-theme-border-default flex items-center justify-between px-6">
+        <header className="h-14 sm:h-16 bg-theme-bg-card border-b border-theme-border-default flex items-center justify-between px-3 sm:px-6">
           {/* Mobile menu button */}
           <button
             className="lg:hidden p-2 rounded-lg hover:bg-theme-bg-secondary transition-colors"
             onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
           >
             <Menu size={20} />
           </button>
           <div className="hidden lg:block" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Language switcher */}
             <div className="relative">
               <button
@@ -139,18 +140,18 @@ export default function AdminLayout() {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-theme-bg-secondary transition-colors"
+                className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg hover:bg-theme-bg-secondary transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-theme-primary/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-theme-primary/20 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm font-medium text-theme-primary">
                     {admin?.name?.[0]?.toUpperCase() || 'A'}
                   </span>
                 </div>
-                <div className="text-left">
+                <div className="text-left hidden sm:block">
                   <div className="text-sm font-medium text-theme-text-primary">{admin?.name}</div>
                   <div className="text-xs text-theme-text-tertiary">{admin?.roleName}</div>
                 </div>
-                <ChevronDown size={16} className="text-theme-text-tertiary" />
+                <ChevronDown size={16} className="text-theme-text-tertiary hidden sm:block" />
               </button>
 
               {showUserMenu && (
