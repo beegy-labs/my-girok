@@ -225,6 +225,14 @@ spec:
           value: {{ .Values.app.rateLimit.register.ipTtl | quote }}
 
         # ============================================================================
+        # Throttle Configuration (NestJS Throttler - per endpoint)
+        # ============================================================================
+        - name: THROTTLE_ADMIN_LOGIN_LIMIT
+          value: {{ .Values.app.throttle.adminLogin.limit | quote }}
+        - name: THROTTLE_ADMIN_LOGIN_TTL
+          value: {{ .Values.app.throttle.adminLogin.ttl | quote }}
+
+        # ============================================================================
         # OpenTelemetry Configuration
         # ============================================================================
         {{- if .Values.otel.enabled }}

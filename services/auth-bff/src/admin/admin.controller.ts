@@ -41,7 +41,12 @@ export class AdminController {
 
   @Post('login')
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: parseInt(process.env.THROTTLE_ADMIN_LOGIN_LIMIT || '5', 10),
+      ttl: parseInt(process.env.THROTTLE_ADMIN_LOGIN_TTL || '60000', 10),
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Admin login (step 1)' })
   @ApiResponse({ status: 200, type: AdminLoginResponseDto })
@@ -56,7 +61,7 @@ export class AdminController {
 
   @Post('login-mfa')
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Admin MFA verification (step 2)' })
   @ApiResponse({ status: 200, type: AdminLoginResponseDto })
