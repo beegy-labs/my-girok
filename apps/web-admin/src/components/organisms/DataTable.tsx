@@ -7,6 +7,8 @@ interface Column<T> {
   key: string;
   header: string;
   width?: string;
+  /** Hide this column on mobile card view */
+  hideOnMobile?: boolean;
   render: (item: T) => ReactNode;
 }
 
@@ -16,6 +18,8 @@ interface DataTableProps<T> {
   keyExtractor: (item: T) => string;
   loading?: boolean;
   emptyMessage?: string;
+  /** Enable mobile card view (converts table rows to cards on small screens) */
+  mobileCardView?: boolean;
 }
 
 function DataTableComponent<T>({
@@ -24,11 +28,16 @@ function DataTableComponent<T>({
   keyExtractor,
   loading = false,
   emptyMessage = 'No data found',
+  mobileCardView = false,
 }: DataTableProps<T>) {
+  const tableClassName = mobileCardView
+    ? 'admin-table mobile-card-view min-w-full sm:min-w-0'
+    : 'admin-table min-w-full';
+
   return (
     <Card padding="none" className="overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="admin-table min-w-full">
+        <table className={tableClassName}>
           <thead>
             <tr>
               {columns.map((col) => (
@@ -55,7 +64,13 @@ function DataTableComponent<T>({
               data.map((item) => (
                 <tr key={keyExtractor(item)}>
                   {columns.map((col) => (
-                    <td key={col.key}>{col.render(item)}</td>
+                    <td
+                      key={col.key}
+                      data-label={col.header}
+                      className={col.hideOnMobile && mobileCardView ? 'hidden sm:table-cell' : ''}
+                    >
+                      {col.render(item)}
+                    </td>
                   ))}
                 </tr>
               ))
