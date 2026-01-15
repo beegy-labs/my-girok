@@ -386,7 +386,7 @@ test.describe('User Activity', () => {
       const firstUser = page.locator('[data-testid="user-row"]').first();
       if (await firstUser.isVisible()) {
         // Store user ID if possible
-        const userUrl = await page.url();
+        const _userUrl = await page.url();
 
         await firstUser.click();
 

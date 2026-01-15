@@ -77,8 +77,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-theme-text-primary">{t('dashboard.title')}</h1>
-        <p className="text-theme-text-secondary mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary">
+          {t('dashboard.title')}
+        </h1>
+        <p className="text-sm sm:text-base text-theme-text-secondary mt-1">
           {t('dashboard.welcome', { name: admin?.name })}
         </p>
       </div>
@@ -119,25 +121,28 @@ export default function DashboardPage() {
 
       {/* Consent by type */}
       {stats && stats.byType.length > 0 && (
-        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-theme-text-primary mb-4">
             {t('dashboard.consentsByType')}
           </h2>
           <div className="space-y-4">
             {stats.byType.map((item) => (
-              <div key={item.type} className="flex items-center gap-4">
-                <div className="w-32 text-sm text-theme-text-secondary">
+              <div
+                key={item.type}
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
+              >
+                <div className="text-xs sm:text-sm text-theme-text-secondary sm:w-32 truncate">
                   {item.type.replace(/_/g, ' ')}
                 </div>
                 <div className="flex-1">
-                  <div className="h-4 bg-theme-bg-secondary rounded-full overflow-hidden">
+                  <div className="h-3 sm:h-4 bg-theme-bg-secondary rounded-full overflow-hidden">
                     <div
                       className="h-full bg-theme-primary rounded-full"
                       style={{ width: `${item.rate * 100}%` }}
                     />
                   </div>
                 </div>
-                <div className="w-20 text-right text-sm">
+                <div className="text-right text-xs sm:text-sm sm:w-20">
                   <span className="text-theme-text-primary font-medium">{item.agreed}</span>
                   <span className="text-theme-text-tertiary"> / {item.total}</span>
                 </div>
@@ -149,18 +154,18 @@ export default function DashboardPage() {
 
       {/* Recent activity */}
       {stats && stats.recentActivity.length > 0 && (
-        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-theme-text-primary mb-4">
+        <div className="bg-theme-bg-card border border-theme-border-default rounded-xl p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-theme-text-primary mb-4">
             {t('dashboard.recentActivity')}
           </h2>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 overflow-x-auto">
             {stats.recentActivity.slice(0, 14).map((day) => (
-              <div key={day.date} className="text-center">
-                <div className="text-xs text-theme-text-tertiary mb-1">
+              <div key={day.date} className="text-center min-w-[32px]">
+                <div className="text-[10px] sm:text-xs text-theme-text-tertiary mb-1 truncate">
                   {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
                 </div>
                 <div
-                  className={`h-8 rounded flex items-center justify-center text-xs font-medium ${
+                  className={`h-6 sm:h-8 rounded flex items-center justify-center text-[10px] sm:text-xs font-medium ${
                     day.agreed > 0
                       ? 'bg-green-100 text-green-800'
                       : 'bg-theme-bg-secondary text-theme-text-tertiary'

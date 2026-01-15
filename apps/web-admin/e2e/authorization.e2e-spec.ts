@@ -643,7 +643,7 @@ type document
           .first();
         if (await inactiveVersion.isVisible()) {
           // Get the version number for verification
-          const versionNumber = await inactiveVersion
+          const _versionNumber = await inactiveVersion
             .locator('[data-testid="version-number"]')
             .textContent();
 

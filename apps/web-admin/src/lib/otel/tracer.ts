@@ -59,13 +59,11 @@ export function initOtel(): void {
 
     // Production-safe logging (only in development)
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.info('[OTEL] Initialized successfully');
     }
   } catch (error) {
     // Always log errors but avoid stack traces in production
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.error('[OTEL] Failed to initialize:', error);
     }
   }

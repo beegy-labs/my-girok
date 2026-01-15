@@ -90,13 +90,13 @@ describe('SessionExport', () => {
 
       await waitFor(() => {
         expect(apiClient.post).toHaveBeenCalledWith(
-          `/admin/session-recordings/export/${sessionId}`,
-          expect.objectContaining({
+          `/recordings/sessions/${sessionId}/export`,
+          {
             format: 'json',
             includeMetadata: true,
             includeEvents: true,
-          }),
-          expect.any(Object),
+          },
+          { responseType: 'blob' },
         );
       });
     });
@@ -163,12 +163,9 @@ describe('SessionExport', () => {
       fireEvent.click(generateButton);
 
       await waitFor(() => {
-        expect(apiClient.post).toHaveBeenCalledWith(
-          `/admin/session-recordings/share/${sessionId}`,
-          expect.objectContaining({
-            expiresIn: '24h',
-          }),
-        );
+        expect(apiClient.post).toHaveBeenCalledWith(`/recordings/sessions/${sessionId}/share`, {
+          expiresIn: '24h',
+        });
       });
 
       await waitFor(() => {

@@ -152,7 +152,7 @@ export default function SettingsPage() {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       // Silent fail for clipboard
     }
   }, []);

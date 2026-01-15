@@ -20,6 +20,7 @@
     "clearFilters": "Clear Filters",
     "showing": "Showing {{from}} - {{to}} of {{total}}",
     "previous": "Previous",
+    "prev": "Prev",
     "next": "Next",
     "page": "Page {{current}} of {{total}}",
     "noResults": "No results found",

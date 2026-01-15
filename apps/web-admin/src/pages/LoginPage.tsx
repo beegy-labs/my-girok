@@ -214,6 +214,11 @@ export default function LoginPage() {
         <p className="mt-4 text-center text-sm text-theme-text-tertiary">
           {t('auth.protectedArea')}
         </p>
+
+        {/* Version */}
+        <p className="mt-2 text-center text-xs text-theme-text-tertiary opacity-50">
+          v{__BUILD_VERSION__}
+        </p>
       </div>
     </div>
   );
