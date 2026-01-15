@@ -1,5 +1,28 @@
 import { AsyncLocalStorage } from 'async_hooks';
-import type { PrismaClient } from '@prisma/client';
+
+/**
+ * Minimal PrismaClient interface for transaction management.
+ *
+ * This interface defines the minimum shape required for transaction context,
+ * allowing nest-common to be used with any Prisma client without requiring
+ * schema generation at build time.
+ *
+ * Services using this package should cast their generated PrismaClient
+ * to this interface when interacting with the transaction context.
+ */
+export interface PrismaClientLike {
+  $connect(): Promise<void>;
+  $disconnect(): Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $transaction<T>(fn: (tx: any) => Promise<T>, options?: unknown): Promise<T>;
+  $on?(event: string, callback: (e: unknown) => void): void;
+  $use?(middleware: unknown): void;
+  $extends?(extension: unknown): unknown;
+  $executeRaw(query: TemplateStringsArray, ...values: unknown[]): Promise<number>;
+  $executeRawUnsafe(query: string, ...values: unknown[]): Promise<number>;
+  $queryRaw<T = unknown>(query: TemplateStringsArray, ...values: unknown[]): Promise<T>;
+  $queryRawUnsafe<T = unknown>(query: string, ...values: unknown[]): Promise<T>;
+}
 
 /**
  * Prisma interactive transaction client type.
@@ -29,7 +52,7 @@ import type { PrismaClient } from '@prisma/client';
  * @see https://www.prisma.io/docs/concepts/components/prisma-client/transactions#interactive-transactions
  */
 export type PrismaTransactionClient = Omit<
-  PrismaClient,
+  PrismaClientLike,
   '$connect' | '$disconnect' | '$transaction' | '$on' | '$use' | '$extends'
 >;
 
