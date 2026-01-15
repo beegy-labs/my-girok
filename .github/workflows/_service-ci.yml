@@ -28,6 +28,11 @@ on:
         description: 'pnpm filter name (e.g., @my-girok/auth-bff)'
         required: true
         type: string
+      force_build:
+        description: 'Force build even if image exists'
+        required: false
+        type: boolean
+        default: false
     secrets:
       GITEA_USERNAME:
         required: true
@@ -80,8 +85,8 @@ jobs:
 
   build:
     name: Build
-    # Run independently of check job (check only runs on PR)
-    if: github.event_name == 'push' && contains(fromJSON('["develop", "release", "main"]'), github.ref_name)
+    # Run on push or workflow_dispatch to protected branches
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(fromJSON('["develop", "release", "main"]'), github.ref_name)
     runs-on: [self-hosted, kubernetes, gitops]
     timeout-minutes: 60
     outputs:
@@ -112,6 +117,11 @@ jobs:
         env:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
+          if [ "${{ inputs.force_build }}" = "true" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "🔨 Force build requested, skipping image check"
+            exit 0
+          fi
           TAG="${{ steps.meta.outputs.tag }}"
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: token ${GITEA_TOKEN}" \
@@ -154,7 +164,14 @@ jobs:
             release) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-staging.yaml"; ENV="staging" ;;
             *) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-dev.yaml"; ENV="development" ;;
           esac
-          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
+          # Only update the service image tag (under top-level image:), not migration image tags
+          # Use awk to update only the first tag: after image: section starts
+          awk -v newtag="${{ needs.build.outputs.tag }}" '
+            /^image:/ { in_image=1 }
+            in_image && /^[a-z]/ && !/^image:/ { in_image=0 }
+            in_image && /tag:/ { sub(/tag: ".*"/, "tag: \"" newtag "\""); in_image=0 }
+            { print }
+          ' ${FILE} > ${FILE}.tmp && mv ${FILE}.tmp ${FILE}
           git config user.name "GitHub Actions Bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ${FILE}

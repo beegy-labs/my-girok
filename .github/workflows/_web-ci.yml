@@ -153,7 +153,13 @@ jobs:
             release) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-staging.yaml"; ENV="staging" ;;
             *) FILE="clusters/home/values/${{ inputs.gitops_file_prefix }}-dev.yaml"; ENV="development" ;;
           esac
-          sed -i "s|tag: \".*\"|tag: \"${{ needs.build.outputs.tag }}\"|g" ${FILE}
+          # Only update the app image tag (under top-level image:), not other image tags
+          awk -v newtag="${{ needs.build.outputs.tag }}" '
+            /^image:/ { in_image=1 }
+            in_image && /^[a-z]/ && !/^image:/ { in_image=0 }
+            in_image && /tag:/ { sub(/tag: ".*"/, "tag: \"" newtag "\""); in_image=0 }
+            { print }
+          ' ${FILE} > ${FILE}.tmp && mv ${FILE}.tmp ${FILE}
           git config user.name "GitHub Actions Bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ${FILE}
