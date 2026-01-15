@@ -1,0 +1,190 @@
+{{- if .Values.clickhouseMigration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "audit-service.fullname" . }}-migrate
+  labels:
+    {{- include "audit-service.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "audit-service.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "audit-service.serviceAccountName" . }}
+      restartPolicy: Never
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.clickhouseMigration.image.repository }}:{{ .Values.clickhouseMigration.image.tag }}"
+          imagePullPolicy: {{ .Values.clickhouseMigration.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Running ClickHouse migrations..."
+              # Build ClickHouse connection string (native protocol port 9000)
+              CLICKHOUSE_URL="clickhouse://${CLICKHOUSE_USERNAME}:${CLICKHOUSE_PASSWORD}@${CLICKHOUSE_HOST}:${CLICKHOUSE_PORT}/${CLICKHOUSE_DATABASE}"
+              goose -dir /migrations clickhouse "$CLICKHOUSE_URL" up
+              echo "Migrations completed."
+          env:
+            - name: CLICKHOUSE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: audit-service-clickhouse-credentials
+                  key: host
+            - name: CLICKHOUSE_PORT
+              value: {{ .Values.clickhouseMigration.nativePort | quote }}
+            - name: CLICKHOUSE_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: audit-service-clickhouse-credentials
+                  key: database
+            - name: CLICKHOUSE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: audit-service-clickhouse-credentials
+                  key: username
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: audit-service-clickhouse-credentials
+                  key: password
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: migrations
+          configMap:
+            name: {{ include "audit-service.fullname" . }}-migrations
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "audit-service.fullname" . }}-migrations
+  labels:
+    {{- include "audit-service.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-6"
+data:
+  20260115000000_create_session_recording_schema.sql: |
+    -- +goose Up
+    -- +goose StatementBegin
+    CREATE DATABASE IF NOT EXISTS {{ .Values.app.clickhouse.database }};
+    -- +goose StatementEnd
+
+    -- +goose StatementBegin
+    CREATE TABLE IF NOT EXISTS {{ .Values.app.clickhouse.database }}.session_recording_metadata (
+        session_id String,
+        date Date DEFAULT toDate(started_at),
+        actor_id Nullable(UUID),
+        actor_type Nullable(String),
+        actor_email Nullable(String),
+        service_slug String,
+        started_at DateTime64(3) DEFAULT now64(3),
+        ended_at Nullable(DateTime64(3)),
+        last_event_at DateTime64(3) DEFAULT now64(3),
+        duration_seconds UInt32 DEFAULT 0,
+        total_events UInt32 DEFAULT 0,
+        total_batches UInt32 DEFAULT 0,
+        total_bytes UInt64 DEFAULT 0,
+        page_views UInt32 DEFAULT 0,
+        clicks UInt32 DEFAULT 0,
+        inputs UInt32 DEFAULT 0,
+        scrolls UInt32 DEFAULT 0,
+        errors UInt32 DEFAULT 0,
+        entry_page String DEFAULT '',
+        exit_page String DEFAULT '',
+        pages_visited Array(String) DEFAULT [],
+        browser String DEFAULT '',
+        os String DEFAULT '',
+        device_type String DEFAULT 'desktop',
+        screen_resolution String DEFAULT '',
+        country_code String DEFAULT '',
+        device_fingerprint Nullable(String),
+        status String DEFAULT 'recording',
+        has_errors Bool DEFAULT false,
+        retention_until Date DEFAULT addDays(today(), 90)
+    ) ENGINE = MergeTree()
+    PARTITION BY toYYYYMM(date)
+    ORDER BY (service_slug, date, session_id)
+    TTL retention_until
+    SETTINGS index_granularity = 8192;
+    -- +goose StatementEnd
+
+    -- +goose StatementBegin
+    CREATE TABLE IF NOT EXISTS {{ .Values.app.clickhouse.database }}.session_recordings (
+        id UUID DEFAULT generateUUIDv7(),
+        timestamp DateTime64(3) DEFAULT now64(3),
+        date Date DEFAULT toDate(timestamp),
+        session_id String,
+        sequence_start UInt32,
+        sequence_end UInt32,
+        actor_id Nullable(UUID),
+        actor_type Nullable(String),
+        actor_email Nullable(String),
+        service_slug String,
+        service_version Nullable(String),
+        events String,
+        events_count UInt32 DEFAULT 0,
+        events_compressed Bool DEFAULT false,
+        browser String DEFAULT '',
+        browser_version String DEFAULT '',
+        os String DEFAULT '',
+        os_version String DEFAULT '',
+        device_type String DEFAULT 'desktop',
+        screen_resolution String DEFAULT '',
+        viewport_width UInt16 DEFAULT 0,
+        viewport_height UInt16 DEFAULT 0,
+        timezone String DEFAULT '',
+        language String DEFAULT '',
+        user_agent String DEFAULT '',
+        device_fingerprint Nullable(String),
+        ip_address String DEFAULT '',
+        ip_anonymized String DEFAULT '',
+        country_code String DEFAULT '',
+        trace_id Nullable(String),
+        span_id Nullable(String),
+        retention_until Date DEFAULT addDays(today(), 90)
+    ) ENGINE = MergeTree()
+    PARTITION BY toYYYYMM(date)
+    ORDER BY (session_id, sequence_start, id)
+    TTL retention_until
+    SETTINGS index_granularity = 8192;
+    -- +goose StatementEnd
+
+    -- +goose Down
+    -- +goose StatementBegin
+    DROP TABLE IF EXISTS {{ .Values.app.clickhouse.database }}.session_recordings;
+    DROP TABLE IF EXISTS {{ .Values.app.clickhouse.database }}.session_recording_metadata;
+    -- +goose StatementEnd
+{{- end }}
