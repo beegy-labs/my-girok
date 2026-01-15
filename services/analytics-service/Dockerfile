@@ -20,6 +20,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY packages/types ./packages/types
 COPY packages/nest-common ./packages/nest-common
+COPY packages/proto ./packages/proto
 COPY services/analytics-service ./services/analytics-service
 
 # Build shared packages first
@@ -57,6 +58,7 @@ COPY --chown=node:node --from=builder /app/packages/types/dist ./packages/types/
 COPY --chown=node:node --from=builder /app/packages/types/package.json ./packages/types/package.json
 COPY --chown=node:node --from=builder /app/packages/nest-common/dist ./packages/nest-common/dist
 COPY --chown=node:node --from=builder /app/packages/nest-common/package.json ./packages/nest-common/package.json
+COPY --chown=node:node --from=builder /app/packages/proto ./packages/proto
 COPY --chown=node:node --from=builder /app/services/analytics-service/dist ./services/analytics-service/dist
 
 # Install production dependencies (skip lifecycle scripts like husky)
@@ -72,11 +74,11 @@ RUN mkdir -p /tmp && chown -R node:node /tmp
 USER node
 
 # Expose port
-EXPOSE 3004
+EXPOSE 3006
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3004/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+  CMD node -e "require('http').get('http://localhost:3006/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
 # Start application
 CMD ["node", "dist/main.js"]
