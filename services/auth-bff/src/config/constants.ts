@@ -137,8 +137,6 @@ export const RATE_LIMIT_CONFIG = {
   },
 } as const;
 
-export const DEVICE_FINGERPRINT_HEADERS = [
-  'user-agent',
-  'accept-language',
-  'accept-encoding',
-] as const;
+// Device fingerprint headers for session binding
+// Note: accept-encoding excluded - varies between requests (Cloudflare/browser modifications)
+export const DEVICE_FINGERPRINT_HEADERS = ['user-agent', 'accept-language'] as const;

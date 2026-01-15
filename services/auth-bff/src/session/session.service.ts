@@ -22,6 +22,8 @@ export class SessionService {
   private readonly logger = new Logger(SessionService.name);
   private readonly cookieName: string;
   private readonly isSecure: boolean;
+  private readonly sameSite: 'strict' | 'lax' | 'none';
+  private readonly cookieDomain: string | undefined;
 
   constructor(
     private readonly sessionStore: SessionStore,
@@ -29,6 +31,8 @@ export class SessionService {
   ) {
     this.cookieName = this.configService.get<string>('session.cookieName', 'girok_session');
     this.isSecure = this.configService.get<boolean>('session.secure', false);
+    this.sameSite = this.configService.get<'strict' | 'lax' | 'none'>('session.sameSite', 'none');
+    this.cookieDomain = this.configService.get<string>('session.domain');
   }
 
   /**
@@ -265,8 +269,10 @@ export class SessionService {
     const path = SESSION_CONFIG.COOKIE_PATH[accountType];
 
     res.cookie(this.cookieName, sessionId, {
-      ...COOKIE_OPTIONS,
+      httpOnly: COOKIE_OPTIONS.httpOnly,
       secure: this.isSecure,
+      sameSite: this.sameSite,
+      domain: this.cookieDomain,
       path,
       maxAge,
     });
@@ -274,8 +280,10 @@ export class SessionService {
 
   private clearCookie(res: Response): void {
     res.clearCookie(this.cookieName, {
-      ...COOKIE_OPTIONS,
+      httpOnly: COOKIE_OPTIONS.httpOnly,
       secure: this.isSecure,
+      sameSite: this.sameSite,
+      domain: this.cookieDomain,
     });
   }
 

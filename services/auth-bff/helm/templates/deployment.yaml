@@ -60,6 +60,10 @@ spec:
           value: {{ .Values.app.session.maxAge | quote }}
         - name: SESSION_SAME_SITE
           value: {{ .Values.app.session.sameSite | quote }}
+        {{- if .Values.app.session.domain }}
+        - name: SESSION_COOKIE_DOMAIN
+          value: {{ .Values.app.session.domain | quote }}
+        {{- end }}
 
         # ============================================================================
         # Encryption Key (SECURITY CRITICAL)
