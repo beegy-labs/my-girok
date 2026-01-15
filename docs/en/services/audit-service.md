@@ -6,8 +6,8 @@
 
 | Property | Value                     |
 | -------- | ------------------------- |
-| REST     | :3003                     |
-| gRPC     | N/A                       |
+| REST     | :4002                     |
+| gRPC     | :50054                    |
 | Database | audit_db (ClickHouse)     |
 | Cache    | Valkey DB 3               |
 | Events   | N/A                       |
@@ -55,6 +55,39 @@
 | GET    | `/v1/exports/:id/download` | Download export           |
 | GET    | `/v1/retention/policies`   | Get retention policies    |
 | PUT    | `/v1/retention/policies`   | Update retention policies |
+
+## gRPC Server (:50054)
+
+### Auth Event Service
+
+| Method                   | Description                 |
+| ------------------------ | --------------------------- |
+| LogAuthEvent             | Log authentication event    |
+| GetAuthEvents            | Query authentication events |
+| LogSecurityEvent         | Log security-related event  |
+| GetSecurityEvents        | Query security events       |
+| LogAdminAction           | Log admin action            |
+| GetAdminAuditLog         | Query admin audit log       |
+| GenerateComplianceReport | Generate compliance report  |
+
+**Proto file**: `packages/proto/audit/v1/audit.proto`
+
+### Session Recording Service
+
+| Method             | Description                         |
+| ------------------ | ----------------------------------- |
+| SaveEventBatch     | Save rrweb events batch             |
+| StartSession       | Start session recording             |
+| EndSession         | End session recording               |
+| SavePageView       | Save page view event                |
+| SaveCustomEvent    | Save custom tracking event          |
+| ListSessions       | Query recorded sessions             |
+| GetSessionEvents   | Get all events for a session        |
+| GetSessionStats    | Get session analytics statistics    |
+| GetDeviceBreakdown | Get device type breakdown analytics |
+| GetTopPages        | Get top pages analytics             |
+
+**Proto file**: `packages/proto/session-recording/v1/session-recording.proto`
 
 ## Database Tables (ClickHouse)
 

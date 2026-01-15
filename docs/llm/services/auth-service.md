@@ -4,7 +4,7 @@
 port: 3001
 grpc: 50052
 db: auth_db (PostgreSQL)
-cache: Valkey DB 0
+cache: Valkey DB 2
 events: auth.* (Redpanda)
 codebase: services/auth-service/
 ```

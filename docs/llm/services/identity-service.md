@@ -4,7 +4,7 @@
 port: 3005
 grpc: 50051
 db: identity_db (PostgreSQL)
-cache: Valkey DB 0
+cache: Valkey DB 7
 events: identity.* (Redpanda)
 codebase: services/identity-service/
 ```
@@ -91,6 +91,14 @@ DATABASE_URL=postgresql://...identity_db
 VALKEY_HOST=localhost
 JWT_PRIVATE_KEY=...
 JWT_PUBLIC_KEY=...
+
+# Kafka (SASL)
+KAFKA_BROKERS=localhost:9092
+KAFKA_CLIENT_ID=identity-service
+KAFKA_SASL_USERNAME=...
+KAFKA_SASL_PASSWORD=...
+KAFKA_SASL_MECHANISM=scram-sha-512
+KAFKA_SSL=true
 ```
 
 ---

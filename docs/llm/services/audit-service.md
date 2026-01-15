@@ -47,6 +47,23 @@ GET/PUT /v1/retention/policies
 
 Proto: `packages/proto/audit/v1/audit.proto`
 
+## Session Recording gRPC (50054)
+
+| Method             | Desc              |
+| ------------------ | ----------------- |
+| SaveEventBatch     | Save rrweb events |
+| StartSession       | Start recording   |
+| EndSession         | End recording     |
+| SavePageView       | Save page view    |
+| SaveCustomEvent    | Save custom event |
+| ListSessions       | Query sessions    |
+| GetSessionEvents   | Get session data  |
+| GetSessionStats    | Session analytics |
+| GetDeviceBreakdown | Device stats      |
+| GetTopPages        | Top pages stats   |
+
+Proto: `packages/proto/session-recording/v1/session-recording.proto`
+
 ## Tables
 
 | Table            | TTL | Purpose      |

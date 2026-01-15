@@ -4,7 +4,7 @@
 port: 3006
 grpc: 50053
 db: legal_db (PostgreSQL)
-cache: Valkey DB 0
+cache: Valkey DB 8
 events: legal.* (Redpanda)
 codebase: services/legal-service/
 ```

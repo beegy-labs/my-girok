@@ -1,6 +1,6 @@
 # Auth BFF
 
-> Session-based BFF gateway (IETF pattern) | Port: 4005 | Valkey DB 3
+> Session-based BFF gateway (IETF pattern) | Port: 4005 | Valkey DB 5
 
 | Owns                 | Delegates To                  |
 | -------------------- | ----------------------------- |

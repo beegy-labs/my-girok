@@ -4,7 +4,7 @@
 port: 4005
 grpc: N/A (client only)
 db: N/A (stateless)
-cache: Valkey DB 3 (sessions)
+cache: Valkey DB 5 (sessions)
 events: N/A
 codebase: services/auth-bff/
 ```
