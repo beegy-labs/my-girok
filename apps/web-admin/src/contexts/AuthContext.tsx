@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Update store with fresh admin info
         setAuth(adminInfo);
         logger.info('Session validated successfully');
-      } catch (error) {
+      } catch (_error) {
         // Session invalid - clear auth (401 interceptor will also clear)
         logger.warn('Session validation failed, clearing auth');
         clearAuth();

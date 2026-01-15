@@ -443,7 +443,7 @@ type document
  */
 test.describe('Teams API', () => {
   let sessionCookie: string;
-  let testTeamId: string;
+  let _testTeamId: string;
 
   test.beforeAll(async ({ request }) => {
     sessionCookie = await getAdminSessionCookie(request);

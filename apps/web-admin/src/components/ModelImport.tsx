@@ -91,7 +91,7 @@ export function ModelImport({ onImported, onClose }: ModelImportProps) {
         }
         setDslContent(extractedDsl);
         setShowPreview(true);
-      } catch (error) {
+      } catch (_error) {
         setFileError(t('authorization.fileReadError'));
         setFile(null);
         setDslContent('');
