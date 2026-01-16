@@ -179,11 +179,34 @@ pnpm prisma studio      # GUI
 | StatementBegin/End for $$ | Auto-sync ArgoCD for DB    |
 | UUIDv7 (ClickHouse)       | UUIDv4                     |
 
+## Critical Warnings
+
+### NEVER Bypass goose
+
+**Violation**: Using Prisma Migrate, manual SQL, or schema imports outside of goose
+
+**Consequence**: Causes `goose_db_version` desynchronization where:
+
+- Database contains schema objects
+- goose thinks migrations haven't been applied
+- Future migrations fail with "already exists" errors
+- Deployments blocked, requires manual recovery
+
+**If this happens**: See `docs/llm/guides/migration-troubleshooting.md` for recovery procedures.
+
+**Prevention**:
+
+- ✅ Always use goose for schema changes
+- ✅ Verify `goose status` after changes
+- ❌ Never use `prisma migrate dev` or `prisma db push`
+- ❌ Never execute schema SQL directly
+
 ## Troubleshooting
 
-| Error            | Solution               |
-| ---------------- | ---------------------- |
-| FK type mismatch | Use TEXT not UUID      |
-| PL/pgSQL parsing | Add StatementBegin/End |
-| Prisma drift     | pnpm prisma db pull    |
-| ClickHouse error | Check cluster config   |
+| Error                     | Solution                                       |
+| ------------------------- | ---------------------------------------------- |
+| FK type mismatch          | Use TEXT not UUID                              |
+| PL/pgSQL parsing          | Add StatementBegin/End                         |
+| Prisma drift              | pnpm prisma db pull                            |
+| ClickHouse error          | Check cluster config                           |
+| goose_db_version out-sync | `docs/llm/guides/migration-troubleshooting.md` |
