@@ -48,8 +48,8 @@ ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_code TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS job_family job_family;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS organization_unit_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS cost_center TEXT;
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS manager_admin_id TEXT REFERENCES admins(id);
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS dotted_line_manager_id TEXT REFERENCES admins(id);
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS manager_admin_id TEXT;
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS dotted_line_manager_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS direct_reports_count INT DEFAULT 0;
 
 ------------------------------------------------------------
@@ -90,8 +90,8 @@ ALTER TABLE admins ADD COLUMN IF NOT EXISTS exit_interview_completed BOOLEAN DEF
 -- NHI (Non-Human Identity)
 ------------------------------------------------------------
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS identity_type identity_type DEFAULT 'HUMAN';
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS owner_admin_id TEXT REFERENCES admins(id);
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS secondary_owner_id TEXT REFERENCES admins(id);
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS owner_admin_id TEXT;
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS secondary_owner_id TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS nhi_purpose TEXT;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS service_account_type service_account_type;
 ALTER TABLE admins ADD COLUMN IF NOT EXISTS credential_type nhi_credential_type;
