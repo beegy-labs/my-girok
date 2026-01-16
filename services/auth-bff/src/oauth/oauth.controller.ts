@@ -211,6 +211,7 @@ export class OAuthController {
 
   /**
    * Check if OAuth provider is enabled via auth-service
+   * Fail-Close: Returns false on error for security (prevents unintended access)
    */
   private async checkProviderEnabled(provider: OAuthProvider): Promise<boolean> {
     try {
@@ -220,9 +221,8 @@ export class OAuthController {
       return response.data.enabled === true;
     } catch (error) {
       this.logger.error(`Failed to check provider ${provider} status:`, error);
-      // Default to enabled on error to avoid blocking OAuth flow
-      // In production, you might want to default to disabled for security
-      return true;
+      // Fail-Close: Return false on error to prevent unintended access during service disruption
+      return false;
     }
   }
 }

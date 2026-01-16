@@ -96,7 +96,113 @@ Phase 2 introduces 11 new enum types defined in `packages/types/src/admin/`:
 - `POST /auth/logout`: Invalidate current session.
 - `GET /auth/session`: Get current session details.
 
-### 4.2. Admin Profile Management (Phase 2)
+### 4.2. OAuth Provider Configuration
+
+Dynamic OAuth provider management with encrypted credential storage.
+
+#### GET /oauth-config
+
+Get all OAuth provider configurations with masked secrets.
+
+**Access**: MASTER role only
+**Response**: `OAuthProviderResponseDto[]`
+
+```typescript
+[
+  {
+    provider: 'GOOGLE',
+    enabled: true,
+    clientId: 'your-client-id.apps.googleusercontent.com',
+    clientSecretMasked: '********cret', // Last 4 chars visible
+    callbackUrl: 'https://auth-bff.girok.dev/v1/oauth/google/callback',
+    displayName: 'Google',
+    description: 'Login with Google',
+    updatedAt: '2026-01-16T12:00:00Z',
+    updatedBy: 'admin-uuid',
+  },
+  // ... other providers
+];
+```
+
+#### GET /oauth-config/enabled
+
+Get list of enabled OAuth providers (public endpoint for dynamic UI rendering).
+
+**Access**: Public (no authentication required)
+**Response**: `EnabledProvidersResponseDto`
+
+```typescript
+{
+  providers: [
+    {
+      provider: 'GOOGLE',
+      displayName: 'Google',
+      description: 'Login with Google',
+    },
+    {
+      provider: 'KAKAO',
+      displayName: 'Kakao',
+      description: 'Login with Kakao',
+    },
+  ];
+}
+```
+
+#### PATCH /oauth-config/:provider
+
+Update OAuth provider credentials (clientId, clientSecret, callbackUrl).
+
+**Access**: MASTER role only
+**Request**: `UpdateCredentialsDto`
+
+```typescript
+{
+  clientId?: string;
+  clientSecret?: string; // Will be encrypted with AES-256-GCM
+  callbackUrl?: string;  // Validated against domain whitelist
+}
+```
+
+**Response**: `OAuthProviderResponseDto` with masked secret
+
+**Security**:
+
+- Client secret encrypted before storage using AES-256-GCM
+- Callback URL validated against whitelist: localhost, girok.dev, auth.girok.dev, auth-bff.girok.dev
+- Changes logged via audit service
+
+#### PATCH /oauth-config/:provider/toggle
+
+Enable or disable an OAuth provider.
+
+**Access**: MASTER role only
+**Request**: `ToggleProviderDto`
+
+```typescript
+{
+  enabled: boolean;
+}
+```
+
+**Response**: Updated provider configuration
+
+**Note**: LOCAL provider cannot be disabled.
+
+#### GET /oauth-config/:provider/status
+
+Check if a specific OAuth provider is enabled (public endpoint).
+
+**Access**: Public
+**Response**:
+
+```typescript
+{
+  provider: 'GOOGLE',
+  enabled: true
+}
+```
+
+### 4.3. Admin Profile Management (Phase 2)
 
 #### GET /admin/profile/me
 
@@ -268,7 +374,7 @@ Update multiple profile sections at once.
 }
 ```
 
-### 4.3. Admin Enterprise Management (Phase 2)
+### 4.4. Admin Enterprise Management (Phase 2)
 
 #### GET /admin/enterprise/list
 
@@ -499,7 +605,7 @@ Update multiple enterprise sections at once.
 }
 ```
 
-### 4.4. Organization Management (Phase 2)
+### 4.5. Organization Management (Phase 2)
 
 This service manages organizational entities that define company structure and relationships.
 
@@ -720,7 +826,7 @@ The organization module provides CRUD APIs for 7 entity types:
 }
 ```
 
-### 4.5. AdminDetailResponse Structure
+### 4.6. AdminDetailResponse Structure
 
 All profile and enterprise endpoints return `AdminDetailResponse`:
 
